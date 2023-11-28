@@ -1,2 +1,2 @@
 # dmr.is
-Monorepo for Dómsmálaráðuneytið
+Monorepo DMR
