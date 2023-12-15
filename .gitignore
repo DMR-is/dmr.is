@@ -1,16 +1,93 @@
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# Swap the comments on the following lines if you wish to use zero-installs
-# In that case, don't forget to run `yarn config set enableGlobalCache false`!
-# Documentation here: https://yarnpkg.com/features/caching#zero-installs
+# compiled output
+/dist
+/tmp
+/out-tsc
+**/tsconfig.tsbuildinfo
+# Contentful extensions
+libs/contentful-extensions/translation/build
+libs/contentful-extensions/translation/.cache
 
-#!.yarn/cache
-.pnp.*
+# dependencies
+node_modules/
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/releases
+!**/.yarn/plugins
+!**/.yarn/sdks
+!**/.yarn/versions
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+TODO
+*.todo
+.env
+.env.*
+.envrc.*
+.nvmrc
+.node-version
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+/debug.log
+*.log
+
+# System Files
+.DS_Store
+Thumbs.db
+.cache
+cache
 
 
-.nx/cache
+# Extracted strings for localization
+libs/localization/messages.json
+
+# Ignore automatically openapi, generated schemas, types definitions, fragments types from codegen/autoSchemaFile/servers scripts
+/generated_files.tar.gz
+openapi.yaml
+api.graphql
+schema.d.ts
+schema.tsx
+schema.ts
+possibleTypes.json
+fragmentTypes.json
+**/gen/fetch/**
+**/gen/graphql.ts
+*.generated.ts
+/apps/**/src/index.html
+
+# IDE - Visual Studio
+*.suo
+/.vs
+
+# Honkit
+_book
+.vscode/settings.json
+
+# Ignore generated .html files when running `serve`
+apps/**/index.html
+
+# Next.js
+.next
+
+.nx/

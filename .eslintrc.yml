@@ -1,0 +1,121 @@
+---
+root: true
+ignorePatterns:
+- "**/*"
+plugins:
+- "@nx"
+- eslint-plugin-local-rules
+overrides:
+- files:
+  - "*.ts"
+  - "*.tsx"
+  - "*.js"
+  - "*.jsx"
+  rules: "@nx/enforce-module-boundaries":
+    - error
+    - enforceBuildableLibDependency: true  # Can be used to enforce module boundaries as needed
+      allow: []
+      depConstraints:
+      - sourceTag: "*"
+        onlyDependOnLibsWithTags:
+        - "*"
+    no-restricted-imports:
+    - error
+    - paths:
+      - lodash
+      - date-fns
+      - date-fns/locale
+      - styled-components
+      - "."
+      # Add more paths here as needed
+    no-irregular-whitespace:
+    - error
+    - skipStrings: true
+      skipComments: true
+      skipTemplates: true
+    local-rules/require-reduce-defaults: error
+    local-rules/disallow-kennitalas: warn
+    local-rules/no-async-module-init: error
+- files:
+  - "*.ts"
+  - "*.tsx"
+  extends:
+  - plugin:@nx/typescript
+  rules: "@typescript-eslint/no-extra-semi": 'off'
+    "@typescript-eslint/explicit-member-accessibility": 'off'
+    "@typescript-eslint/explicit-function-return-type": 'off'
+    "@typescript-eslint/no-parameter-properties": 'off'
+    "@typescript-eslint/ban-types": warn
+    "@typescript-eslint/no-unused-vars":
+    - warn
+    - ignoreRestSiblings: true
+      argsIgnorePattern: "^_[a-zA-Z0-9]*$"
+      varsIgnorePattern: "^_[a-zA-Z0-9]*$""@typescript-eslint/naming-convention":
+    - warn
+    - selector: default
+      format:
+      - camelCase
+    - selector: variable
+      format: []
+      custom:
+        regex: "^_[a-zA-Z0-9]*$"
+        match: true
+    - selector: variable
+      format:
+      - camelCase
+      - PascalCase
+      - UPPER_CASE
+      filter:
+        regex: "^_[a-zA-Z0-9]*$"
+        match: false
+    - selector: variable
+      modifiers:
+      - destructured
+      leadingUnderscore: allow
+      format:
+      - camelCase
+      - PascalCase
+    - selector: parameter
+      leadingUnderscore: allow
+      format:
+      - camelCase
+      - PascalCase
+    - selector: function
+      format:
+      - camelCase
+      - PascalCase
+    - selector: objectLiteralMethod
+      format:
+      - camelCase
+      - PascalCase
+      filter:
+        regex: "^(__resolveType)$"
+        match: false
+    - selector: property
+      format:
+    - selector: typeLike
+      format:
+      - PascalCase
+    - selector: typeAlias
+      format:
+      - camelCase
+      - PascalCase
+    - selector: enumMember
+      format:
+      - camelCase
+      - UPPER_CASE
+      - PascalCase
+    "@typescript-eslint/no-empty-interface":
+    - error
+    - allowSingleExtends: true
+- files:
+  - "*.js"
+  - "*.jsx"
+  extends:
+  - plugin:@nx/javascript
+  rules: {}
+- files:
+  - schema.d.ts
+  rules: "@typescript-eslint/no-explicit-any": 'off'
+extends:
+- plugin:storybook/recommended

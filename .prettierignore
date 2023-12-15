@@ -1,0 +1,14 @@
+# Add files here to ignore them from prettier formatting
+
+/dist
+/coverage
+.github/actions/dist*
+.github/workflows/stale-prs.yml
+/libs/api/domains/application/gen
+/tmp
+/cache
+/.cache
+/tools/**/*.js
+**/*.hbs
+.yarn
+/infra/helm/
