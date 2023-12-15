@@ -1,0 +1,61 @@
+{
+  "name": "hello-world-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/hello-world-api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/hello-world-api",
+        "main": "apps/hello-world-api/src/main.ts",
+        "tsConfig": "apps/hello-world-api/tsconfig.app.json",
+        "assets": [
+          "apps/hello-world-api/src/assets"
+        ],
+        "webpackConfig": "apps/hello-world-api/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "hello-world-api:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "hello-world-api:build:development"
+        },
+        "production": {
+          "buildTarget": "hello-world-api:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/hello-world-api/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
