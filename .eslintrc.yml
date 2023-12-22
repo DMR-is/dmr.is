@@ -23,7 +23,7 @@ overrides:
             - date-fns/locale
             - styled-components
             - .
-             # Add more paths here as needed
+              # Add more paths here as needed
       no-irregular-whitespace:
         - error
         - skipStrings: true
