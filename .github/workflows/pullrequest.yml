@@ -1,0 +1,191 @@
+name: Monorepo pipeline - pull request
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+
+concurrency:
+  # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
+  group: pullrequest-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    env:
+      CHUNK_SIZE: 7
+    outputs:
+      # TEST_CHUNKS: ${{ steps.test_projects.outputs.CHUNKS }}
+      # LINT_CHUNKS: ${{ steps.lint_projects.outputs.CHUNKS }}
+      # UNAFFECTED: ${{ steps.unaffected.outputs.UNAFFECTED }}
+      # BUILD_CHUNKS: ${{ steps.build_projects.outputs.CHUNKS }}
+      # BUILD_MAP: ${{ steps.build_map.outputs.BUILD_MAP }}
+      node-modules-hash: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.10.0'
+
+      - name: Check node version
+        run: |
+          node -v
+          ls -l `which node`
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+
+      - name: Calculate cache key for node_modules
+        id: calculate_node_modules_hash
+        run: |
+          PACKAGE_JSON_HASH=$(cat package.json | jq '{resolutions,dependencies,devDependencies}' | sha1sum -t | cut -f1 -d" ")
+          echo "PACKAGE_JSON_HASH: $PACKAGE_JSON_HASH"
+          export NODE_MODULES_HASH=${{ runner.os }}-${{ hashFiles('yarn.lock') }}-$PACKAGE_JSON_HASH
+          echo "NODE_MODULES_HASH: $NODE_MODULES_HASH"
+          echo "node-modules-hash=$NODE_MODULES_HASH" >> $GITHUB_OUTPUT
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
+
+      - name: Building NodeJS dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+      # - name: Preparing HEAD and BASE tags
+      #   run: |
+      #     echo "HEAD=$GITHUB_SHA" >> $GITHUB_ENV
+      #     export HEAD_REF="$GITHUB_HEAD_REF"
+      #     export BASE_REF="$GITHUB_BASE_REF"
+      #     export PR_REF=$GITHUB_SHA
+      #     export SHELL=/usr/bin/bash
+      #     export WORKFLOW_ID=pullrequest
+      #     source ./scripts/ci/00_prepare-base-tags.sh $(git merge-base HEAD $GITHUB_BASE_REF)
+      #     git checkout $GITHUB_SHA
+      #     echo "BASE=$BASE" >> $GITHUB_ENV
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     HTML_URL: ${{ github.event.pull_request.html_url }}
+
+
+      # - name: Prepare lint targets
+      #   id: lint_projects
+      #   run: |
+      #     CHUNKS=$(./scripts/ci/generate-chunks.sh lint)
+      #     if [[ $CHUNKS != "[]" ]]; then
+      #       echo "CHUNKS={\"projects\":$CHUNKS}" >> $GITHUB_OUTPUT
+      #     fi
+
+      # - name: Prepare test targets
+      #   id: test_projects
+      #   run: |
+      #     CHUNKS=$(./scripts/ci/generate-chunks.sh test)
+      #     if [[ $CHUNKS != "[]" ]]; then
+      #       echo "CHUNKS={\"projects\":$CHUNKS}" >> $GITHUB_OUTPUT
+      #     fi
+
+      # - name: Prepare build targets
+      #   id: build_projects
+      #   env:
+      #     CHUNK_SIZE: 4
+      #   run: |
+      #     CHUNKS=$(./scripts/ci/generate-chunks.sh build)
+      #     if [[ $CHUNKS != "[]" ]]; then
+      #       echo "CHUNKS={\"projects\":$CHUNKS}" >> $GITHUB_OUTPUT
+      #     fi
+
+
+  linting:
+    needs:
+      - prepare
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        continue-on-error: true
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
+
+      - name: Linting
+        run: yarn run nx run-many -t lint
+
+  formatting:
+    needs:
+      - prepare
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        continue-on-error: true
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
+
+      - name: Check formatting
+        run: yarn nx format:write --all
+
+
+  testing:
+    needs:
+      - prepare
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        continue-on-error: true
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
+
+      - name: Run tests
+        run: yarn run nx run-many -t test
