@@ -8,9 +8,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": [
-          "libs/logging/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["libs/logging/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
@@ -19,9 +17,7 @@
         "jestConfig": "libs/logging/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": [
-        "{workspaceRoot}/coverage/libs/logging"
-      ]
+      "outputs": ["{workspaceRoot}/coverage/libs/logging"]
     }
   },
   "tags": []
