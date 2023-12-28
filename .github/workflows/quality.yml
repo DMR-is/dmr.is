@@ -12,7 +12,6 @@ concurrency:
   group: pullrequest-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -69,7 +68,6 @@ jobs:
       - prepare
     runs-on: ubuntu-latest
 
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -97,7 +95,6 @@ jobs:
       - prepare
     runs-on: ubuntu-latest
 
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -120,12 +117,10 @@ jobs:
       - name: Check formatting
         run: yarn nx format:write --all
 
-
   testing:
     needs:
       - prepare
     runs-on: ubuntu-latest
-
 
     steps:
       - uses: actions/checkout@v3
