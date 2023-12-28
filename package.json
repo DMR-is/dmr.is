@@ -5,7 +5,8 @@
     "nx": "nx",
     "start": "nx serve",
     "test": "nx test",
-    "lint": "nx lint"
+    "lint": "nx lint",
+    "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.1",
@@ -26,6 +27,7 @@
     "@testing-library/react": "14.0.0",
     "@types/eslint": "^8",
     "@types/jest": "^29.4.0",
+    "@types/license-checker": "^25",
     "@types/node": "18.16.9",
     "@types/react": "18.2.33",
     "@types/react-dom": "18.2.14",
@@ -61,6 +63,7 @@
     "@nestjs/platform-express": "^10.0.2",
     "axios": "^1.0.0",
     "kennitala": "^2.0.0-beta.3",
+    "license-checker": "^25.0.1",
     "next": "14.0.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
