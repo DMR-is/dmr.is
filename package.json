@@ -1,6 +1,12 @@
 {
   "name": "dmr.is",
   "packageManager": "yarn@4.0.2",
+  "scripts": {
+    "nx": "nx",
+    "start": "nx serve",
+    "test": "nx test",
+    "lint": "nx lint"
+  },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.0.2",
