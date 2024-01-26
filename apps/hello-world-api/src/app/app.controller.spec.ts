@@ -32,7 +32,7 @@ describe('AppController', () => {
     it('should return "Hello API"', () => {
       const result = appController.getData()
 
-      expect(result).toEqual({ message: 'Hello API' })
+      expect(result).toEqual(1)
     })
   })
 })
