@@ -43,7 +43,7 @@ export class JournalController {
         category: LOGGING_CATEGORY,
         metadata: { id },
       })
-      throw new NotFoundException('Advert not found', {
+      throw new NotFoundException('advert not found', {
         cause: 'advert not found',
       })
     }
@@ -93,10 +93,6 @@ export class JournalController {
       category: LOGGING_CATEGORY,
     })
     this.journalService.error()
-    this.logger.log(
-      'called error method without try/catch, this should not be logged',
-      { category: LOGGING_CATEGORY },
-    )
   }
 
   @Get('health')
@@ -104,7 +100,7 @@ export class JournalController {
     status: 200,
     description: 'Health check endpoint.',
   })
-  health(): string {
-    return 'OK'
+  health(): Promise<string> {
+    return Promise.resolve('OK')
   }
 }
