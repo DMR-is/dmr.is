@@ -13,6 +13,7 @@ import {
 } from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
+import { JournalAdvertDepartment } from '../dto/journal-department.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -63,6 +64,19 @@ export class JournalController {
     search?: string,
   ): Promise<Array<JournalAdvert>> {
     return this.journalService.getAdverts({ search })
+  }
+
+  @Get('departments')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertsResponse,
+    description: 'List of journal advert departments.',
+  })
+  departments(
+    @Query('search')
+    search?: string,
+  ): Promise<Array<JournalAdvertDepartment>> {
+    return this.journalService.getDepartments({ search })
   }
 
   @Get('error')

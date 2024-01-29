@@ -58,6 +58,18 @@ describe('JournalController', () => {
     })
   })
 
+  describe('departments', () => {
+    it('should return correct amount of mocked departments', async () => {
+      const results = await journalController.departments()
+      expect(results.length).toEqual(3)
+    })
+
+    it('should return no results when searching for non-existing department', async () => {
+      const results = await journalController.departments('foo')
+      expect(results.length).toEqual(0)
+    })
+  })
+
   describe('error', () => {
     it('should throw error', async () => {
       expect(() => {

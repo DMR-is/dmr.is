@@ -10,11 +10,11 @@ export class JournalAdvertCategory {
   readonly id!: string
 
   @ApiProperty({
-    description: 'Name of the advert category.',
+    description: 'Title of the advert category.',
     example: 'Evrópska efnahagssvæðið',
     required: true,
   })
-  readonly name!: string
+  readonly title!: string
 
   @ApiProperty({
     description: 'Slug of the advert category, used in URLs and API requests.',

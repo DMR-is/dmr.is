@@ -1,8 +1,13 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Inject, Injectable, LoggerService } from '@nestjs/common'
 import { JournalAdvert } from '../dto/journal-advert.dto'
-import { ADVERT_B_1278_2023, ADVERT_B_866_2006 } from '../mock/journal.mock'
+import {
+  ADVERT_B_1278_2023,
+  ADVERT_B_866_2006,
+  allMockAdvertDepartments,
+} from '../mock/journal.mock'
 import { IJournalService } from './journal.service.interface'
+import { JournalAdvertDepartment } from '../dto/journal-department.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -37,6 +42,24 @@ export class MockJournalService implements IJournalService {
     })
 
     return Promise.resolve(filteredMockAdverts)
+  }
+
+  getDepartments({
+    search,
+  }: {
+    search?: string | undefined
+  }): Promise<JournalAdvertDepartment[]> {
+    const mockDepartments = allMockAdvertDepartments
+
+    const filtered = mockDepartments.filter((advert) => {
+      if (!search) {
+        return true
+      }
+
+      return advert.title.includes(search)
+    })
+
+    return Promise.resolve(filtered)
   }
 
   error(): void {

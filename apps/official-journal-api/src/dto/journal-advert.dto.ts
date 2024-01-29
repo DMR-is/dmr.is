@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { JournalAdvertPublicationNumber } from './journal-advert-publication-number.dto'
 import { JournalAdvertCategory } from './journal-category.dto'
-import { JournalAdvertStatus, JournalDepartment } from './journal-constants.dto'
+import { JournalAdvertStatus } from './journal-constants.dto'
 import { JournalDocument } from './journal-document'
 import { JournalInvolvedParty } from './journal-involved-party.dto'
+import { JournalAdvertDepartment } from './journal-department.dto'
 
 export class JournalAdvert {
   @ApiProperty({
@@ -15,13 +16,12 @@ export class JournalAdvert {
   readonly id!: string
 
   @ApiProperty({
-    enum: JournalDepartment,
     description: 'The department the advert is for.',
     required: true,
     nullable: false,
     example: 'A deild',
   })
-  readonly department!: JournalDepartment
+  readonly department!: JournalAdvertDepartment
 
   @ApiProperty({
     description:

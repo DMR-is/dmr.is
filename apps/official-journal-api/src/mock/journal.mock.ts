@@ -1,12 +1,56 @@
 import { JournalAdvert } from '../dto/journal-advert.dto'
-import {
-  JournalAdvertStatus,
-  JournalDepartment,
-} from '../dto/journal-constants.dto'
+import { JournalAdvertCategory } from '../dto/journal-category.dto'
+import { JournalAdvertStatus } from '../dto/journal-constants.dto'
+import { JournalAdvertDepartment } from '../dto/journal-department.dto'
+
+const JOURNAL_DEPARTMENT_A: JournalAdvertDepartment = {
+  id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+  title: 'A deild',
+}
+
+const JOURNAL_DEPARTMENT_B: JournalAdvertDepartment = {
+  id: '8ad799e0-93ac-4c69-9e5b-83d4b230da8a',
+  title: 'B deild',
+}
+
+const JOURNAL_DEPARTMENT_C: JournalAdvertDepartment = {
+  id: 'a9bb9a6a-61aa-42a4-8638-e9e5f5f2b676',
+  title: 'C deild',
+}
+
+export const allMockAdvertDepartments = [
+  JOURNAL_DEPARTMENT_A,
+  JOURNAL_DEPARTMENT_B,
+  JOURNAL_DEPARTMENT_C,
+]
+
+const MOCK_CATEGORY_GAELUDYR: JournalAdvertCategory = {
+  id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
+  title: 'Gæludýr',
+  slug: 'gaeludyr',
+}
+
+const MOCK_CATEGORY_SKIPULAGSMAL: JournalAdvertCategory = {
+  id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
+  title: 'Skipulagsmál',
+  slug: 'skipulagsmal',
+}
+
+const MOCK_CATEGORY_REYKJAVIK: JournalAdvertCategory = {
+  id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
+  title: 'Reykjavík',
+  slug: 'reykjavik',
+}
+
+export const allMockAdvertCategories = [
+  MOCK_CATEGORY_GAELUDYR,
+  MOCK_CATEGORY_SKIPULAGSMAL,
+  MOCK_CATEGORY_REYKJAVIK,
+]
 
 export const emptyAdvert: JournalAdvert = {
   id: '',
-  department: JournalDepartment.DepartmentB,
+  department: JOURNAL_DEPARTMENT_B,
   type: '',
   subject: '',
   title: '',
@@ -23,7 +67,7 @@ export const emptyAdvert: JournalAdvert = {
   categories: [],
   involvedParty: {
     id: '',
-    name: '',
+    title: '',
   },
   document: {
     isLegacy: false,
@@ -34,7 +78,7 @@ export const emptyAdvert: JournalAdvert = {
 
 export const ADVERT_B_866_2006: JournalAdvert = {
   id: 'bcbefaf4-c021-4b63-877b-001dde880052',
-  department: JournalDepartment.DepartmentB,
+  department: JOURNAL_DEPARTMENT_B,
   type: 'AUGLÝSING',
   subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
   title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
@@ -48,21 +92,10 @@ export const ADVERT_B_866_2006: JournalAdvert = {
   updatedDate: '2006-10-19 15:11:39.000',
   signatureDate: '2006-10-17 00:00:00.0000',
   publicationDate: '2006-10-19 00:00:00.000',
-  categories: [
-    {
-      id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
-      name: 'Skipulagsmál',
-      slug: 'skipulagsmal',
-    },
-    {
-      id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
-      name: 'Reykjavík',
-      slug: 'reykjavik',
-    },
-  ],
+  categories: [MOCK_CATEGORY_SKIPULAGSMAL, MOCK_CATEGORY_REYKJAVIK],
   involvedParty: {
     id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
-    name: 'Skipulags- og byggingarsvið Reykjavíkur',
+    title: 'Skipulags- og byggingarsvið Reykjavíkur',
   },
   document: {
     isLegacy: true,
@@ -73,7 +106,7 @@ export const ADVERT_B_866_2006: JournalAdvert = {
 
 export const ADVERT_B_1278_2023: JournalAdvert = {
   id: '749f1eff-236d-4c67-a4cc-eb7a7bbd373f',
-  department: JournalDepartment.DepartmentB,
+  department: JOURNAL_DEPARTMENT_B,
   type: 'GJALDSKRÁ',
   subject: 'fyrir hundahald í Reykjavíkurborg.',
   title: 'GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.',
@@ -87,21 +120,10 @@ export const ADVERT_B_1278_2023: JournalAdvert = {
   updatedDate: '',
   signatureDate: '2023-11-15 00:00:00.000',
   publicationDate: '2023-11-29 00:00:00.000',
-  categories: [
-    {
-      id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
-      name: 'Gæludýr',
-      slug: 'gaeludyr',
-    },
-    {
-      id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
-      name: 'Reykjavík',
-      slug: 'reykjavik',
-    },
-  ],
+  categories: [MOCK_CATEGORY_GAELUDYR, MOCK_CATEGORY_REYKJAVIK],
   involvedParty: {
     id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
-    name: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
+    title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   },
   document: {
     isLegacy: true,
