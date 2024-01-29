@@ -13,13 +13,14 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/official-journal-api",
+        "outputPath": "apps/official-journal-api/dist",
         "main": "apps/official-journal-api/src/main.ts",
         "tsConfig": "apps/official-journal-api/tsconfig.app.json",
         "assets": [
           "apps/official-journal-api/src/assets"
         ],
-        "webpackConfig": "apps/official-journal-api/webpack.config.js"
+        "webpackConfig": "apps/official-journal-api/webpack.config.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "development": {},
@@ -54,6 +55,18 @@
       ],
       "options": {
         "jestConfig": "apps/official-journal-api/jest.config.ts"
+      }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
       }
     }
   },
