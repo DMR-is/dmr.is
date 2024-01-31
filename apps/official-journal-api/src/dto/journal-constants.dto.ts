@@ -18,3 +18,8 @@ export enum JournalAdvertStatus {
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
 }
+
+export enum JournalAdvertValidationStatus {
+  Valid = 'valid',
+  Invalid = 'invalid',
+}

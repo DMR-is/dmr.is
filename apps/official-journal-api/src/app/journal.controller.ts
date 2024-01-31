@@ -1,14 +1,22 @@
 import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  Body,
   Controller,
   Get,
   Inject,
   NotFoundException,
+  Post,
   Query,
 } from '@nestjs/common'
-import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBody,
+  ApiNotFoundResponse,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 import {
   AdvertNotFound,
+  JournalAdvertValidationResponse,
   JournalAdvertsResponse,
 } from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
@@ -63,6 +71,19 @@ export class JournalController {
     search?: string,
   ): Promise<Array<JournalAdvert>> {
     return this.journalService.getAdverts({ search })
+  }
+
+  @Get('validate')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertValidationResponse,
+    description: 'Validate advert.',
+  })
+  @ApiBody({ type: JournalAdvert })
+  validate(
+    @Body('input') input: JournalAdvert,
+  ): Promise<JournalAdvertValidationResponse> {
+    return this.journalService.validateAdvert(input)
   }
 
   @Get('error')
