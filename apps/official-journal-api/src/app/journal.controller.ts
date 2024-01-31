@@ -22,6 +22,7 @@ import {
 } from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
+import { ValidationResponses } from '../decorators/response.decorators'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -75,21 +76,21 @@ export class JournalController {
   }
 
   @Get('validate')
-  @ApiResponse({
-    status: 200,
-    type: JournalValidateSuccessResponse,
-    description: 'Validation success',
-  })
-  @ApiResponse({
-    status: 400,
-    type: JournalValidateErrorResponse,
-    description: 'Validation failed',
-  })
+  @ValidationResponses()
   @ApiBody({ type: JournalAdvert })
   validate(
     @Body('input') input: JournalAdvert,
   ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
     return this.journalService.validateAdvert(input)
+  }
+
+  @Post('submit')
+  @ValidationResponses()
+  @ApiBody({ type: JournalAdvert })
+  submit(
+    @Body('input') input: JournalAdvert,
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+    return this.journalService.submitAdvert(input)
   }
 
   @Get('error')

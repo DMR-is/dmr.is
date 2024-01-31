@@ -10,6 +10,9 @@ export interface IJournalService {
   validateAdvert(
     advert: JournalAdvert,
   ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse>
+  submitAdvert(
+    advert: JournalAdvert,
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse>
 
   // TODO Testing logging process only, remove later
   error(): void

@@ -67,6 +67,19 @@ export class MockJournalService implements IJournalService {
     // })
   }
 
+  submitAdvert(
+    advert: JournalAdvert,
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+    this.logger.log('submitAdvert', {
+      category: LOGGING_CATEGORY,
+      metadata: { advert },
+    })
+
+    return Promise.resolve({
+      status: JournalResponseStatus.Success,
+    })
+  }
+
   error(): void {
     this.logger.warn('about to throw error from service', {
       category: LOGGING_CATEGORY,
