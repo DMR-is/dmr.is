@@ -91,3 +91,4 @@ apps/**/index.html
 .next
 
 .nx/
+apps/*/dist/
