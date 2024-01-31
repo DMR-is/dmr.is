@@ -16,13 +16,12 @@ import {
 } from '@nestjs/swagger'
 import {
   AdvertNotFound,
-  JournalValidateSuccessResponse,
   JournalAdvertsResponse,
-  JournalValidateErrorResponse,
 } from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
 import { ValidationResponses } from '../decorators/response.decorators'
+import { JournalValidationResponse } from '../lib/types'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -80,7 +79,7 @@ export class JournalController {
   @ApiBody({ type: JournalAdvert })
   validate(
     @Body('input') input: JournalAdvert,
-  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+  ): Promise<JournalValidationResponse> {
     return this.journalService.validateAdvert(input)
   }
 
@@ -89,7 +88,7 @@ export class JournalController {
   @ApiBody({ type: JournalAdvert })
   submit(
     @Body('input') input: JournalAdvert,
-  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+  ): Promise<JournalValidationResponse> {
     return this.journalService.submitAdvert(input)
   }
 

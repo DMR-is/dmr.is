@@ -3,11 +3,8 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { ADVERT_B_1278_2023, ADVERT_B_866_2006 } from '../mock/journal.mock'
 import { IJournalService } from './journal.service.interface'
-import {
-  JournalValidateErrorResponse,
-  JournalValidateSuccessResponse,
-} from '../dto/journal-advert-responses.dto'
 import { JournalResponseStatus } from '../dto/journal-constants.dto'
+import { JournalValidationResponse } from '../lib/types'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -44,9 +41,7 @@ export class MockJournalService implements IJournalService {
     return Promise.resolve(filteredMockAdverts)
   }
 
-  validateAdvert(
-    advert: JournalAdvert,
-  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+  validateAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
     this.logger.log('validateAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { advert },
@@ -61,15 +56,9 @@ export class MockJournalService implements IJournalService {
         },
       ],
     })
-
-    // return Promise.resolve({
-    //   status: JournalResponseStatus.Success,
-    // })
   }
 
-  submitAdvert(
-    advert: JournalAdvert,
-  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
+  submitAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
     this.logger.log('submitAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { advert },
