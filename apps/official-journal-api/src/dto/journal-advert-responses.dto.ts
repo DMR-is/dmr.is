@@ -2,8 +2,8 @@ import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 import { JournalAdvert } from './journal-advert.dto'
 import { JournalPaging } from './journal-paging.dto'
 import { HttpStatus } from '@nestjs/common'
-import { JournalAdvertValidationStatus } from './journal-constants.dto'
-import { JournalAdvertValidationError } from './journal-validation'
+import { JournalResponseStatus } from './journal-constants.dto'
+import { JournalError } from './journal-error'
 
 @ApiResponse({
   status: 404,
@@ -40,19 +40,29 @@ export class JournalAdvertsResponse {
   readonly paging!: JournalPaging
 }
 
-export class JournalAdvertValidationResponse {
+export class JournalValidateSuccessResponse {
   @ApiProperty({
-    description: 'Validation status',
+    description: 'Status is always success',
     required: true,
-    enum: JournalAdvertValidationStatus,
-    example: JournalAdvertValidationStatus.Invalid,
+    enum: JournalResponseStatus,
+    example: JournalResponseStatus.Success,
   })
-  readonly status!: JournalAdvertValidationStatus
+  readonly status!: JournalResponseStatus.Success
+}
+
+export class JournalValidateErrorResponse {
+  @ApiProperty({
+    description: 'Status is always error',
+    required: true,
+    enum: JournalResponseStatus,
+    example: JournalResponseStatus.Error,
+  })
+  readonly status!: JournalResponseStatus.Error
 
   @ApiProperty({
-    description: 'Validation errors',
-    required: false,
-    type: [JournalAdvertValidationError],
+    description: 'Array of errors',
+    required: true,
+    type: [JournalError],
   })
-  readonly errors?: Array<JournalAdvertValidationError>
+  readonly errors!: Array<JournalError>
 }

@@ -3,8 +3,11 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { ADVERT_B_1278_2023, ADVERT_B_866_2006 } from '../mock/journal.mock'
 import { IJournalService } from './journal.service.interface'
-import { JournalAdvertValidationResponse } from '../dto/journal-advert-responses.dto'
-import { JournalAdvertValidationStatus } from '../dto/journal-constants.dto'
+import {
+  JournalValidateErrorResponse,
+  JournalValidateSuccessResponse,
+} from '../dto/journal-advert-responses.dto'
+import { JournalResponseStatus } from '../dto/journal-constants.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -43,15 +46,25 @@ export class MockJournalService implements IJournalService {
 
   validateAdvert(
     advert: JournalAdvert,
-  ): Promise<JournalAdvertValidationResponse> {
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
     this.logger.log('validateAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { advert },
     })
+
     return Promise.resolve({
-      status: JournalAdvertValidationStatus.Valid,
-      errors: [],
+      status: JournalResponseStatus.Error,
+      errors: [
+        {
+          path: 'document.title',
+          message: 'Title must be atleast 10 characters long',
+        },
+      ],
     })
+
+    // return Promise.resolve({
+    //   status: JournalResponseStatus.Success,
+    // })
   }
 
   error(): void {

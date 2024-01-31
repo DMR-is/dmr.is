@@ -19,7 +19,7 @@ export enum JournalAdvertStatus {
   Published = 'Útgefin',
 }
 
-export enum JournalAdvertValidationStatus {
-  Valid = 'valid',
-  Invalid = 'invalid',
+export enum JournalResponseStatus {
+  Success = 'success',
+  Error = 'error',
 }

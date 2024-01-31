@@ -1,4 +1,7 @@
-import { JournalAdvertValidationResponse } from '../dto/journal-advert-responses.dto'
+import {
+  JournalValidateErrorResponse,
+  JournalValidateSuccessResponse,
+} from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 
 export interface IJournalService {
@@ -6,7 +9,7 @@ export interface IJournalService {
   getAdvert(id: string): Promise<JournalAdvert | null>
   validateAdvert(
     advert: JournalAdvert,
-  ): Promise<JournalAdvertValidationResponse>
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse>
 
   // TODO Testing logging process only, remove later
   error(): void

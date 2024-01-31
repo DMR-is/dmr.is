@@ -16,8 +16,9 @@ import {
 } from '@nestjs/swagger'
 import {
   AdvertNotFound,
-  JournalAdvertValidationResponse,
+  JournalValidateSuccessResponse,
   JournalAdvertsResponse,
+  JournalValidateErrorResponse,
 } from '../dto/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
@@ -76,13 +77,18 @@ export class JournalController {
   @Get('validate')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertValidationResponse,
-    description: 'Validate advert.',
+    type: JournalValidateSuccessResponse,
+    description: 'Validation success',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalValidateErrorResponse,
+    description: 'Validation failed',
   })
   @ApiBody({ type: JournalAdvert })
   validate(
     @Body('input') input: JournalAdvert,
-  ): Promise<JournalAdvertValidationResponse> {
+  ): Promise<JournalValidateSuccessResponse | JournalValidateErrorResponse> {
     return this.journalService.validateAdvert(input)
   }
 
