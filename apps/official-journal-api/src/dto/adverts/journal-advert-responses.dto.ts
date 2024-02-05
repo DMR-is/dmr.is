@@ -12,12 +12,14 @@ export class AdvertNotFound {
   @ApiProperty({
     description: 'HTTP status code of response',
     required: true,
+    type: Number,
   })
   statusCode!: HttpStatus
 
   @ApiProperty({
     description: 'Response message',
     required: true,
+    type: String,
   })
   message!: string
   error?: string
@@ -34,6 +36,7 @@ export class JournalAdvertsResponse {
   @ApiProperty({
     description: 'Paging info',
     required: true,
+    type: JournalPaging,
   })
   readonly paging!: JournalPaging
 }
@@ -42,6 +45,7 @@ export class JournalAdvertsValidationResponse {
   @ApiProperty({
     description: 'Array of error messages',
     required: true,
+    type: [String],
     example: ['message must be shorter than or equal to 10 characters'],
   })
   message!: Array<string>
@@ -49,6 +53,7 @@ export class JournalAdvertsValidationResponse {
   @ApiProperty({
     description: 'Error type',
     required: false,
+    type: String,
     example: 'Bad Request',
   })
   error?: string
@@ -56,6 +61,7 @@ export class JournalAdvertsValidationResponse {
   @ApiProperty({
     description: 'HTTP status code of response',
     required: true,
+    type: Number,
     example: 400,
   })
   statusCode!: HttpStatus

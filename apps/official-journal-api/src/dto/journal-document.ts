@@ -5,6 +5,7 @@ export class JournalDocument {
     description: 'Is the `html` from the legacy system?',
     example: 'false',
     required: true,
+    type: Boolean,
   })
   readonly isLegacy!: boolean
 
@@ -14,6 +15,7 @@ export class JournalDocument {
     example: '<html string>',
     required: true,
     nullable: true,
+    type: String,
   })
   readonly html!: string | null
 
@@ -22,6 +24,7 @@ export class JournalDocument {
     example: '<url>',
     required: false,
     nullable: true,
+    type: String,
   })
   readonly pdfUrl!: string | null
 }

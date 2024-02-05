@@ -6,6 +6,7 @@ export class JournalInvolvedParty {
     example: '00000000-0000-0000-0000-000000000000',
     required: true,
     nullable: false,
+    type: String,
   })
   readonly id!: string
 
@@ -14,6 +15,7 @@ export class JournalInvolvedParty {
     example: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
     required: true,
     nullable: false,
+    type: String,
   })
   readonly title!: string
 
@@ -21,6 +23,7 @@ export class JournalInvolvedParty {
     description: 'Slug of the involved party, used in URLs and API requests.',
     example: 'umhvefis-og-skipulagssvid-reykjavikurborgar',
     required: true,
+    type: String,
   })
   readonly slug!: string
 }

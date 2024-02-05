@@ -14,7 +14,7 @@ import {
 } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
-import { JournalGetAdvertsQueryParams } from '../dto/journal-getadverts-query.dto'
+import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'

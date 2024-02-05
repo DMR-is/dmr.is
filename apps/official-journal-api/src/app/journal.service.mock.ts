@@ -11,7 +11,7 @@ import {
 } from '../mock/journal.mock'
 import { IJournalService } from './journal.service.interface'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
-import { JournalGetAdvertsQueryParams } from '../dto/journal-getadverts-query.dto'
+import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'

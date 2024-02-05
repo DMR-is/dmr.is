@@ -2,27 +2,32 @@ import { ApiProperty } from '@nestjs/swagger'
 import { PAGING_MAXIMUM_PAGE_SIZE } from './journal-constants.dto'
 
 export class JournalPaging {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ type: Number, example: 1 })
   page!: number
 
-  @ApiProperty({ example: 10 })
+  @ApiProperty({ type: Number, example: 10 })
   totalPages!: number
 
-  @ApiProperty({ example: 1000 })
+  @ApiProperty({ type: Number, example: 1000 })
   totalItems!: number
 
-  @ApiProperty({ example: 2, nullable: true })
+  @ApiProperty({ type: Number, example: 2, nullable: true })
   nextPage!: number | null
 
-  @ApiProperty({ example: 1, nullable: true })
+  @ApiProperty({ type: Number, example: 1, nullable: true })
   previousPage!: number | null
 
-  @ApiProperty({ example: 10, minimum: 1, maximum: PAGING_MAXIMUM_PAGE_SIZE })
+  @ApiProperty({
+    type: Number,
+    example: 10,
+    minimum: 1,
+    maximum: PAGING_MAXIMUM_PAGE_SIZE,
+  })
   pageSize!: number
 
-  @ApiProperty({ example: true })
+  @ApiProperty({ type: Boolean, example: true })
   hasNextPage!: boolean
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ type: Boolean, example: false })
   hasPreviousPage!: boolean | null
 }

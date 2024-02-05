@@ -7,6 +7,7 @@ export class JournalAdvertType {
     example: '00000000-0000-0000-0000-000000000000',
     required: true,
     nullable: false,
+    type: String,
   })
   readonly id!: string
 
@@ -14,6 +15,7 @@ export class JournalAdvertType {
     description: 'Title of the advert type, always uppercased.',
     example: 'AUGLÝSING',
     required: true,
+    type: String,
   })
   readonly title!: string
 
@@ -21,6 +23,7 @@ export class JournalAdvertType {
     description: 'Slug of the advert type, used in URLs and API requests.',
     example: 'auglysing',
     required: true,
+    type: String,
   })
   readonly slug!: string
 
@@ -28,6 +31,7 @@ export class JournalAdvertType {
     description: 'Department the advert type belongs to.',
     required: true,
     nullable: false,
+    type: String,
   })
   readonly department!: JournalAdvertDepartment
 }

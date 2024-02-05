@@ -13,6 +13,7 @@ export class JournalAdvertCategoriesResponse {
   @ApiProperty({
     description: 'Paging info',
     required: true,
+    type: JournalPaging,
   })
   readonly paging!: JournalPaging
 }
