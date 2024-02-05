@@ -2,7 +2,6 @@ import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Inject, Injectable } from '@nestjs/common'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
-import { JournalValidationResponse } from '../lib/types'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -49,14 +48,6 @@ export class JournalService implements IJournalService {
   }
 
   getAdvert(): Promise<JournalAdvert | null> {
-    throw new Error('Method not implemented.')
-  }
-
-  validateAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
-    throw new Error('Method not implemented.')
-  }
-
-  submitAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
     throw new Error('Method not implemented.')
   }
 

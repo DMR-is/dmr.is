@@ -1,4 +1,3 @@
-import { JournalValidationResponse } from '../lib/types'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
@@ -15,8 +14,6 @@ export interface IJournalService {
   ): Promise<JournalAdvertsResponse>
 
   getAdvert(id: string): Promise<JournalAdvert | null>
-  validateAdvert(advert: JournalAdvert): Promise<JournalValidationResponse>
-  submitAdvert(advert: JournalAdvert): Promise<JournalValidationResponse>
 
   getDepartments(
     params?: JournalGetDepartmentsQueryParams,

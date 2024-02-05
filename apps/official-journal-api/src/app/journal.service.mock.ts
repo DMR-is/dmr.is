@@ -10,8 +10,6 @@ import {
   MOCK_PAGING_SINGLE_PAGE,
 } from '../mock/journal.mock'
 import { IJournalService } from './journal.service.interface'
-import { JournalResponseStatus } from '../dto/journal-constants.dto'
-import { JournalValidationResponse } from '../lib/types'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -182,34 +180,6 @@ export class MockJournalService implements IJournalService {
     }
 
     return Promise.resolve(data)
-  }
-
-  validateAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
-    this.logger.log('validateAdvert', {
-      category: LOGGING_CATEGORY,
-      metadata: { advert },
-    })
-
-    return Promise.resolve({
-      status: JournalResponseStatus.Error,
-      errors: [
-        {
-          path: 'document.title',
-          message: 'Title must be atleast 10 characters long',
-        },
-      ],
-    })
-  }
-
-  submitAdvert(advert: JournalAdvert): Promise<JournalValidationResponse> {
-    this.logger.log('submitAdvert', {
-      category: LOGGING_CATEGORY,
-      metadata: { advert },
-    })
-
-    return Promise.resolve({
-      status: JournalResponseStatus.Success,
-    })
   }
 
   error(): void {

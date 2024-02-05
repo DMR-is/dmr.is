@@ -1,19 +1,12 @@
 import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  Body,
   Controller,
   Get,
   Inject,
   NotFoundException,
-  Post,
   Query,
 } from '@nestjs/common'
-import {
-  ApiBody,
-  ApiNotFoundResponse,
-  ApiQuery,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import {
   AdvertNotFound,
   JournalAdvertsResponse,
@@ -21,8 +14,6 @@ import {
 } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
-import { ValidationResponses } from '../decorators/response.decorators'
-import { JournalValidationResponse } from '../lib/types'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -138,24 +129,6 @@ export class JournalController {
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse> {
     return this.journalService.getCategories(params)
-  }
-
-  @Get('validate')
-  @ValidationResponses()
-  @ApiBody({ type: JournalAdvert })
-  validate(
-    @Body('input') input: JournalAdvert,
-  ): Promise<JournalValidationResponse> {
-    return this.journalService.validateAdvert(input)
-  }
-
-  @Post('submit')
-  @ValidationResponses()
-  @ApiBody({ type: JournalAdvert })
-  submit(
-    @Body('input') input: JournalAdvert,
-  ): Promise<JournalValidationResponse> {
-    return this.journalService.submitAdvert(input)
   }
 
   @Get('error')

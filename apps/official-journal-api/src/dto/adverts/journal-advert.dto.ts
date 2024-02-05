@@ -113,7 +113,6 @@ export class JournalAdvert {
     required: true,
     type: [JournalAdvertCategory],
     nullable: false,
-    type: [JournalAdvertCategory],
   })
   readonly categories!: JournalAdvertCategory[]
 
