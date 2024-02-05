@@ -5,6 +5,7 @@ export class JournalAdvertPublicationNumber {
     description: 'Serial number of the publication number.',
     example: '1',
     required: true,
+    type: Number,
   })
   readonly number!: number
 
@@ -12,6 +13,7 @@ export class JournalAdvertPublicationNumber {
     description: 'Year of the publication number.',
     example: '2024',
     required: true,
+    type: Number,
   })
   readonly year!: number
 
@@ -20,6 +22,7 @@ export class JournalAdvertPublicationNumber {
       'Full publication number, with both `number` and `year` separated with `/`.',
     example: '1/2024',
     required: true,
+    type: String,
   })
   readonly full!: string
 }

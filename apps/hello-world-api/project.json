@@ -13,13 +13,14 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/hello-world-api",
+        "outputPath": "apps/dist/hello-world-api",
         "main": "apps/hello-world-api/src/main.ts",
         "tsConfig": "apps/hello-world-api/tsconfig.app.json",
         "assets": [
           "apps/hello-world-api/src/assets"
         ],
-        "webpackConfig": "apps/hello-world-api/webpack.config.js"
+        "webpackConfig": "apps/hello-world-api/webpack.config.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "development": {},

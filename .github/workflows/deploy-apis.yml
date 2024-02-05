@@ -1,0 +1,122 @@
+name: Deploy APIs to AWS Dev
+
+on:
+  workflow_run:
+    workflows: ["Monorepo pipeline - quality"]
+    branches: ["main"]
+    types:
+      - completed
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_SHARED_ACCOUNT_ID: 592944621100
+  AWS_DEV_ACCOUNT_ID: 555454216281
+
+permissions:
+  id-token: write # Required f. IAM Token
+  contents: read
+
+jobs:
+  build-and-push:
+    strategy:
+      matrix:
+        api: [official-journal-api]
+    name: "Build and push images: ${{ matrix.api }}"
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+    
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.10.0'
+
+      - name: Check node version
+        run: |
+          node -v
+          ls -l `which node`
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+    
+
+      - name: Calculate cache key for node_modules
+        id: calculate_node_modules_hash
+        run: |
+          PACKAGE_JSON_HASH=$(cat package.json | jq '{resolutions,dependencies,devDependencies}' | sha1sum -t | cut -f1 -d" ")
+          echo "PACKAGE_JSON_HASH: $PACKAGE_JSON_HASH"
+          export NODE_MODULES_HASH=${{ runner.os }}-${{ hashFiles('yarn.lock') }}-$PACKAGE_JSON_HASH
+          echo "NODE_MODULES_HASH: $NODE_MODULES_HASH"
+          echo "node-modules-hash=$NODE_MODULES_HASH" >> $GITHUB_OUTPUT
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
+
+      - name: Building NodeJS dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_SHARED_ACCOUNT_ID }}:role/shared-github-ecr-role
+          role-session-name: GitHub-Action-Role
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+    
+      - name: Docker Metadata
+        uses: docker/metadata-action@v4
+        id: meta
+        with:
+          images: "${{ steps.login-ecr.outputs.registry }}/${{ matrix.api }}"
+          tags: |
+            latest
+            type=sha,prefix=sha-
+            type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+
+            
+      - name: Build and push image
+        run: yarn nx run ${{ matrix.api }}:container
+        env:
+          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAGS: ${{ steps.meta.outputs.tags }}
+          INPUT_PUSH: true
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    strategy:
+      matrix: 
+        api: [official-journal-api]
+    name: Deploy to ${{ matrix.api }} - dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
+          role-session-name: GitHub-Action-Role
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Deploy to Amazon ECS
+        run: |
+          aws ecs update-service \
+            --cluster dev-dmr-utgafa \
+            --service ${{ matrix.api }} \
+            --force-new-deployment
+

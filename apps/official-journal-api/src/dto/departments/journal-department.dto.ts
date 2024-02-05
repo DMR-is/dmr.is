@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class JournalInvolvedParty {
+export class JournalAdvertDepartment {
   @ApiProperty({
-    description: 'Unique ID for the involved party, GUID format.',
+    description: 'Unique ID for the advert department, GUID format.',
     example: '00000000-0000-0000-0000-000000000000',
     required: true,
     nullable: false,
@@ -11,17 +11,17 @@ export class JournalInvolvedParty {
   readonly id!: string
 
   @ApiProperty({
-    description: 'Title of the involved party.',
-    example: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
+    description: 'Title of the advert department.',
+    example: 'A deild',
     required: true,
-    nullable: false,
     type: String,
   })
   readonly title!: string
 
   @ApiProperty({
-    description: 'Slug of the involved party, used in URLs and API requests.',
-    example: 'umhvefis-og-skipulagssvid-reykjavikurborgar',
+    description:
+      'Slug of the advert department, used in URLs and API requests.',
+    example: 'a-deild',
     required: true,
     type: String,
   })

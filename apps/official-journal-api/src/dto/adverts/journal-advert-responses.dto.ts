@@ -1,9 +1,7 @@
 import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 import { JournalAdvert } from './journal-advert.dto'
-import { JournalPaging } from './journal-paging.dto'
+import { JournalPaging } from '../journal-paging.dto'
 import { HttpStatus } from '@nestjs/common'
-import { JournalResponseStatus } from './journal-constants.dto'
-import { JournalError } from './journal-error'
 
 @ApiResponse({
   status: 404,
@@ -14,12 +12,14 @@ export class AdvertNotFound {
   @ApiProperty({
     description: 'HTTP status code of response',
     required: true,
+    type: Number,
   })
   statusCode!: HttpStatus
 
   @ApiProperty({
     description: 'Response message',
     required: true,
+    type: String,
   })
   message!: string
   error?: string
@@ -36,33 +36,33 @@ export class JournalAdvertsResponse {
   @ApiProperty({
     description: 'Paging info',
     required: true,
+    type: JournalPaging,
   })
   readonly paging!: JournalPaging
 }
 
-export class JournalValidateSuccessResponse {
+export class JournalAdvertsValidationResponse {
   @ApiProperty({
-    description: 'Status is always success',
+    description: 'Array of error messages',
     required: true,
-    enum: JournalResponseStatus,
-    example: JournalResponseStatus.Success,
+    type: [String],
+    example: ['message must be shorter than or equal to 10 characters'],
   })
-  readonly status!: JournalResponseStatus.Success
-}
-
-export class JournalValidateErrorResponse {
-  @ApiProperty({
-    description: 'Status is always error',
-    required: true,
-    enum: JournalResponseStatus,
-    example: JournalResponseStatus.Error,
-  })
-  readonly status!: JournalResponseStatus.Error
+  message!: Array<string>
 
   @ApiProperty({
-    description: 'Array of errors',
-    required: true,
-    type: [JournalError],
+    description: 'Error type',
+    required: false,
+    type: String,
+    example: 'Bad Request',
   })
-  readonly errors!: Array<JournalError>
+  error?: string
+
+  @ApiProperty({
+    description: 'HTTP status code of response',
+    required: true,
+    type: Number,
+    example: 400,
+  })
+  statusCode!: HttpStatus
 }
