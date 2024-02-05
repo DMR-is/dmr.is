@@ -10,10 +10,17 @@ import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import {
   AdvertNotFound,
   JournalAdvertsResponse,
-} from '../dto/journal-advert-responses.dto'
-import { JournalAdvert } from '../dto/journal-advert.dto'
+  JournalAdvertsValidationResponse,
+} from '../dto/adverts/journal-advert-responses.dto'
+import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
-import { JournalAdvertDepartment } from '../dto/journal-department.dto'
+import { JournalGetAdvertsQueryParams } from '../dto/journal-getadverts-query.dto'
+import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
+import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
+import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
+import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -53,17 +60,21 @@ export class JournalController {
   }
 
   @Get('adverts')
-  @ApiQuery({ name: 'search', type: String, required: false })
   @ApiResponse({
     status: 200,
     type: JournalAdvertsResponse,
     description: 'List of journal adverts, optional query parameters.',
   })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
   adverts(
-    @Query('search')
-    search?: string,
-  ): Promise<Array<JournalAdvert>> {
-    return this.journalService.getAdverts({ search })
+    @Query()
+    params?: JournalGetAdvertsQueryParams,
+  ): Promise<JournalAdvertsResponse> {
+    return this.journalService.getAdverts(params)
   }
 
   @Get('departments')
@@ -72,11 +83,52 @@ export class JournalController {
     type: JournalAdvertsResponse,
     description: 'List of journal advert departments.',
   })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
   departments(
-    @Query('search')
-    search?: string,
-  ): Promise<Array<JournalAdvertDepartment>> {
-    return this.journalService.getDepartments({ search })
+    @Query()
+    params?: JournalGetDepartmentsQueryParams,
+  ): Promise<JournalAdvertDepartmentsResponse> {
+    return this.journalService.getDepartments(params)
+  }
+
+  @Get('types')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertTypesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  types(
+    @Query()
+    params?: JournalGetTypesQueryParams,
+  ): Promise<JournalAdvertTypesResponse> {
+    return this.journalService.getTypes(params)
+  }
+
+  @Get('categories')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertTypesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  categories(
+    @Query()
+    params?: JournalGetCategoriesQueryParams,
+  ): Promise<JournalAdvertCategoriesResponse> {
+    return this.journalService.getCategories(params)
   }
 
   @Get('error')

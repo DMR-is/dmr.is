@@ -11,8 +11,16 @@ export class JournalAdvertDepartment {
 
   @ApiProperty({
     description: 'Title of the advert department.',
-    example: 'A-deild',
+    example: 'A deild',
     required: true,
   })
   readonly title!: string
+
+  @ApiProperty({
+    description:
+      'Slug of the advert department, used in URLs and API requests.',
+    example: 'a-deild',
+    required: true,
+  })
+  readonly slug!: string
 }

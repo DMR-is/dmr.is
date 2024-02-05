@@ -1,6 +1,6 @@
 import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 import { JournalAdvert } from './journal-advert.dto'
-import { JournalPaging } from './journal-paging.dto'
+import { JournalPaging } from '../journal-paging.dto'
 import { HttpStatus } from '@nestjs/common'
 
 @ApiResponse({
@@ -36,4 +36,27 @@ export class JournalAdvertsResponse {
     required: true,
   })
   readonly paging!: JournalPaging
+}
+
+export class JournalAdvertsValidationResponse {
+  @ApiProperty({
+    description: 'Array of error messages',
+    required: true,
+    example: ['message must be shorter than or equal to 10 characters'],
+  })
+  message!: Array<string>
+
+  @ApiProperty({
+    description: 'Error type',
+    required: false,
+    example: 'Bad Request',
+  })
+  error?: string
+
+  @ApiProperty({
+    description: 'HTTP status code of response',
+    required: true,
+    example: 400,
+  })
+  statusCode!: HttpStatus
 }

@@ -34,12 +34,12 @@ describe('JournalController', () => {
   describe('adverts', () => {
     it('should return correct amount of mocked adverts', async () => {
       const results = await journalController.adverts()
-      expect(results.length).toEqual(2)
+      expect(results.adverts.length).toEqual(2)
     })
 
     it('should return no results when searching for non-existing advert', async () => {
-      const results = await journalController.adverts('foo')
-      expect(results.length).toEqual(0)
+      const results = await journalController.adverts({ search: 'foo' })
+      expect(results.adverts.length).toEqual(0)
     })
   })
 
@@ -61,12 +61,12 @@ describe('JournalController', () => {
   describe('departments', () => {
     it('should return correct amount of mocked departments', async () => {
       const results = await journalController.departments()
-      expect(results.length).toEqual(3)
+      expect(results.departments.length).toEqual(3)
     })
 
     it('should return no results when searching for non-existing department', async () => {
-      const results = await journalController.departments('foo')
-      expect(results.length).toEqual(0)
+      const results = await journalController.departments({ search: 'foo' })
+      expect(results.departments.length).toEqual(0)
     })
   })
 

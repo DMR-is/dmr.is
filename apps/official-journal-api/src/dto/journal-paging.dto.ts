@@ -11,8 +11,8 @@ export class JournalPaging {
   @ApiProperty({ example: 1000 })
   totalItems!: number
 
-  @ApiProperty({ example: 2 })
-  nextPage!: number
+  @ApiProperty({ example: 2, nullable: true })
+  nextPage!: number | null
 
   @ApiProperty({ example: 1, nullable: true })
   previousPage!: number | null
@@ -24,5 +24,5 @@ export class JournalPaging {
   hasNextPage!: boolean
 
   @ApiProperty({ example: false })
-  hasPreviousPage?: boolean
+  hasPreviousPage!: boolean | null
 }

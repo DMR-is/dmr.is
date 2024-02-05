@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { JournalAdvertPublicationNumber } from './journal-advert-publication-number.dto'
-import { JournalAdvertCategory } from './journal-category.dto'
-import { JournalAdvertStatus } from './journal-constants.dto'
-import { JournalDocument } from './journal-document'
-import { JournalInvolvedParty } from './journal-involved-party.dto'
-import { JournalAdvertDepartment } from './journal-department.dto'
+import { JournalAdvertCategory } from '../categories/journal-category.dto'
+import { JournalAdvertStatus } from '../journal-constants.dto'
+import { JournalDocument } from '../journal-document'
+import { JournalInvolvedParty } from '../journal-involved-party.dto'
+import { JournalAdvertDepartment } from '../departments/journal-department.dto'
+import { JournalAdvertType } from '../types/journal-advert-type.dto'
 
 export class JournalAdvert {
   @ApiProperty({
@@ -24,12 +25,11 @@ export class JournalAdvert {
   readonly department!: JournalAdvertDepartment
 
   @ApiProperty({
-    description:
-      'Type of the advert, always uppercased. Must be available under the given `department`.',
+    description: 'Type of the advert.',
     example: 'GJALDSKRÁ',
     required: true,
   })
-  readonly type!: string
+  readonly type!: JournalAdvertType
 
   @ApiProperty({
     description: 'Subject of the advert, always dependant on the `type`.',

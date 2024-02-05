@@ -5,5 +5,5 @@ export const openApi = new DocumentBuilder()
   .setDescription(
     'API for advarts and publication in the Official Journal of Iceland.',
   )
-  .setVersion('0.1')
+  .setVersion('1.0')
   .build()

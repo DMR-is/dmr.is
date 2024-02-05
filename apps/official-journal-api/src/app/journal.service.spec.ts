@@ -28,10 +28,10 @@ describe('JournalService', () => {
     service = app.get<IJournalService>(IJournalService)
   })
 
-  describe('getData', () => {
-    it('should return empty', async () => {
-      const results = await service.getAdverts({})
-      expect(results.length).toEqual(2)
+  describe('getAdverts', () => {
+    it('should return two mock adverts', async () => {
+      const results = await service.getAdverts()
+      expect(results.adverts.length).toEqual(2)
     })
   })
 })

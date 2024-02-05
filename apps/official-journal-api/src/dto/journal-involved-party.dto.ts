@@ -16,4 +16,11 @@ export class JournalInvolvedParty {
     nullable: false,
   })
   readonly title!: string
+
+  @ApiProperty({
+    description: 'Slug of the involved party, used in URLs and API requests.',
+    example: 'umhvefis-og-skipulagssvid-reykjavikurborgar',
+    required: true,
+  })
+  readonly slug!: string
 }
