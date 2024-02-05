@@ -10,9 +10,17 @@ import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import {
   AdvertNotFound,
   JournalAdvertsResponse,
-} from '../dto/journal-advert-responses.dto'
-import { JournalAdvert } from '../dto/journal-advert.dto'
+  JournalAdvertsValidationResponse,
+} from '../dto/adverts/journal-advert-responses.dto'
+import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
+import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
+import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
+import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
+import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
+import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -43,7 +51,7 @@ export class JournalController {
         category: LOGGING_CATEGORY,
         metadata: { id },
       })
-      throw new NotFoundException('Advert not found', {
+      throw new NotFoundException('advert not found', {
         cause: 'advert not found',
       })
     }
@@ -52,17 +60,75 @@ export class JournalController {
   }
 
   @Get('adverts')
-  @ApiQuery({ name: 'search', type: String, required: false })
   @ApiResponse({
     status: 200,
     type: JournalAdvertsResponse,
     description: 'List of journal adverts, optional query parameters.',
   })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
   adverts(
-    @Query('search')
-    search?: string,
-  ): Promise<Array<JournalAdvert>> {
-    return this.journalService.getAdverts({ search })
+    @Query()
+    params?: JournalGetAdvertsQueryParams,
+  ): Promise<JournalAdvertsResponse> {
+    return this.journalService.getAdverts(params)
+  }
+
+  @Get('departments')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertsResponse,
+    description: 'List of journal advert departments.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  departments(
+    @Query()
+    params?: JournalGetDepartmentsQueryParams,
+  ): Promise<JournalAdvertDepartmentsResponse> {
+    return this.journalService.getDepartments(params)
+  }
+
+  @Get('types')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertTypesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  types(
+    @Query()
+    params?: JournalGetTypesQueryParams,
+  ): Promise<JournalAdvertTypesResponse> {
+    return this.journalService.getTypes(params)
+  }
+
+  @Get('categories')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertTypesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  categories(
+    @Query()
+    params?: JournalGetCategoriesQueryParams,
+  ): Promise<JournalAdvertCategoriesResponse> {
+    return this.journalService.getCategories(params)
   }
 
   @Get('error')
@@ -93,10 +159,6 @@ export class JournalController {
       category: LOGGING_CATEGORY,
     })
     this.journalService.error()
-    this.logger.log(
-      'called error method without try/catch, this should not be logged',
-      { category: LOGGING_CATEGORY },
-    )
   }
 
   @Get('health')
@@ -104,7 +166,7 @@ export class JournalController {
     status: 200,
     description: 'Health check endpoint.',
   })
-  health(): string {
-    return 'OK'
+  health(): Promise<string> {
+    return Promise.resolve('OK')
   }
 }
