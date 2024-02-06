@@ -7,6 +7,8 @@ import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-respon
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
 import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
+import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
+import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 
 export interface IJournalService {
   getAdverts(
@@ -26,6 +28,10 @@ export interface IJournalService {
   getCategories(
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse>
+
+  submitApplication(
+    body: JournalPostApplicationBody,
+  ): Promise<JournalPostApplicationResponse>
 
   // TODO Testing logging process only, remove later
   error(): void

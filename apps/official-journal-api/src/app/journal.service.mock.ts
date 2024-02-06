@@ -19,6 +19,8 @@ import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-get
 import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPaging } from '../dto/journal-paging.dto'
+import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
+import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -180,6 +182,16 @@ export class MockJournalService implements IJournalService {
     }
 
     return Promise.resolve(data)
+  }
+
+  submitApplication(
+    body: JournalPostApplicationBody,
+  ): Promise<JournalPostApplicationResponse> {
+    // todo: validate fields
+
+    return Promise.resolve({
+      application: body.application,
+    })
   }
 
   error(): void {
