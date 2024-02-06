@@ -16,8 +16,8 @@ import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPaging } from '../dto/journal-paging.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]

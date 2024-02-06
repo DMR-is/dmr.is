@@ -5,8 +5,8 @@ import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-get
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 
 export interface IJournalService {
   getAdverts(

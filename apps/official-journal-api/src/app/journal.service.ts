@@ -8,8 +8,8 @@ import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 

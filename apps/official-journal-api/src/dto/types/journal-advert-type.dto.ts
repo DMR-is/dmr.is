@@ -31,7 +31,7 @@ export class JournalAdvertType {
     description: 'Department the advert type belongs to.',
     required: true,
     nullable: false,
-    type: String,
+    type: JournalAdvertDepartment,
   })
   readonly department!: JournalAdvertDepartment
 }

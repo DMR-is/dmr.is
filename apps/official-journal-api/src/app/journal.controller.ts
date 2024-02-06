@@ -19,8 +19,8 @@ import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-get
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -80,7 +80,7 @@ export class JournalController {
   @Get('departments')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertsResponse,
+    type: JournalAdvertDepartmentsResponse,
     description: 'List of journal advert departments.',
   })
   @ApiResponse({
@@ -116,7 +116,7 @@ export class JournalController {
   @Get('categories')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertTypesResponse,
+    type: JournalAdvertCategoriesResponse,
     description: 'List of journal advert types.',
   })
   @ApiResponse({
