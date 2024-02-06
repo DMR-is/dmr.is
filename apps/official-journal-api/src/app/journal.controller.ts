@@ -1,9 +1,11 @@
 import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  Body,
   Controller,
   Get,
   Inject,
   NotFoundException,
+  Post,
   Query,
 } from '@nestjs/common'
 import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
@@ -19,8 +21,10 @@ import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-get
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
+import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
+import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -80,7 +84,7 @@ export class JournalController {
   @Get('departments')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertsResponse,
+    type: JournalAdvertDepartmentsResponse,
     description: 'List of journal advert departments.',
   })
   @ApiResponse({
@@ -116,7 +120,7 @@ export class JournalController {
   @Get('categories')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertTypesResponse,
+    type: JournalAdvertCategoriesResponse,
     description: 'List of journal advert types.',
   })
   @ApiResponse({
@@ -129,6 +133,18 @@ export class JournalController {
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse> {
     return this.journalService.getCategories(params)
+  }
+
+  @Post('application')
+  @ApiResponse({
+    status: 200,
+    type: JournalPostApplicationResponse,
+    description: 'Submit a journal advert application',
+  })
+  application(
+    @Body() application: JournalPostApplicationBody,
+  ): Promise<JournalPostApplicationResponse> {
+    return this.journalService.submitApplication(application)
   }
 
   @Get('error')

@@ -8,8 +8,10 @@ import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
 import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-category-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-category-responses.dto'
+import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
+import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
+import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 
@@ -48,6 +50,13 @@ export class JournalService implements IJournalService {
   }
 
   getAdvert(): Promise<JournalAdvert | null> {
+    throw new Error('Method not implemented.')
+  }
+
+  submitApplication(
+    body: JournalPostApplicationBody,
+  ): Promise<JournalPostApplicationResponse> {
+    this.logger.log('submitApplication', { body })
     throw new Error('Method not implemented.')
   }
 

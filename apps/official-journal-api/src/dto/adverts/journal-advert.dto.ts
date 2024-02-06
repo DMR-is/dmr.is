@@ -111,8 +111,8 @@ export class JournalAdvert {
   @ApiProperty({
     description: 'List of advert categories.',
     required: true,
-    nullable: false,
     type: [JournalAdvertCategory],
+    nullable: false,
   })
   readonly categories!: JournalAdvertCategory[]
 
