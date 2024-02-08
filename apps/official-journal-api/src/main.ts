@@ -3,7 +3,7 @@
  * This is only a minimal backend to get started.
  */
 
-import { Logger, VersioningType } from '@nestjs/common'
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { SwaggerModule } from '@nestjs/swagger'
@@ -17,6 +17,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(JournalModule)
 
+  app.useGlobalPipes(new ValidationPipe({ transform: true }))
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({

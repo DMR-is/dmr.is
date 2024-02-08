@@ -1,11 +1,5 @@
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
-export enum JournalDepartment {
-  DepartmentA = 'A deild',
-  DepartmentB = 'B deild',
-  DepartmentC = 'C deild',
-}
-
 export enum JournalAdvertStatus {
   Active = 'Virk',
   Revoked = 'Afturkölluð',
@@ -17,4 +11,9 @@ export enum JournalAdvertStatus {
   Submitted = 'Innsend',
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
+}
+
+export enum JournalResponseStatus {
+  Success = 'success',
+  Error = 'error',
 }
