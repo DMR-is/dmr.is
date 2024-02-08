@@ -9,6 +9,7 @@ import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 import { JournalModule } from './app/journal.module'
 import { openApi } from './openApi'
+import { apmInit } from '@dmr.is/apm'
 
 async function bootstrap() {
   const globalPrefix = 'api'
@@ -25,6 +26,8 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, openApi)
   SwaggerModule.setup(swaggerPath, app, document)
+
+  apmInit()
 
   const port = process.env.PORT || 3000
   await app.listen(port)
