@@ -1,5 +1,10 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Inject, Injectable, LoggerService } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  LoggerService,
+} from '@nestjs/common'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import {
   ADVERT_B_1278_2023,
@@ -21,6 +26,10 @@ import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getca
 import { JournalPaging } from '../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
+import { v4 as uuid } from 'uuid'
+import { JournalAdvertStatus } from '../dto/journal-constants.dto'
+import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
+import { JournalDocument } from '../dto/journal-document'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -131,8 +140,9 @@ export class MockJournalService implements IJournalService {
     params?: JournalGetTypesQueryParams,
   ): Promise<JournalAdvertTypesResponse> {
     const mockTypes = ALL_MOCK_JOURNAL_TYPES
+
     const filtered = mockTypes.filter((type) => {
-      if (params?.department && params.department !== type.department.slug) {
+      if (params?.department && params.department !== type.department.id) {
         return false
       }
 
@@ -187,11 +197,69 @@ export class MockJournalService implements IJournalService {
   submitApplication(
     body: JournalPostApplicationBody,
   ): Promise<JournalPostApplicationResponse> {
-    // todo: validate fields
+    this.logger.log({ ...body })
+    const department = ALL_MOCK_JOURNAL_DEPARTMENTS.find(
+      (d) => d.id === body.department,
+    )
 
-    return Promise.resolve({
-      application: body.application,
+    if (!department) {
+      throw new BadRequestException('Department not found') // We need to return the field and reason
+    }
+
+    const categories = ALL_MOCK_JOURNAL_CATEGORIES.filter((c) =>
+      body.categories.includes(c.id),
+    )
+
+    if (!categories.length) {
+      throw new BadRequestException('Invalid category') // We need to return the field and reason
+    }
+
+    const type = ALL_MOCK_JOURNAL_TYPES.find((t) => t.id === body.type)
+
+    if (!type) {
+      throw new BadRequestException('Type not found') // We need to return the field and reason
+    }
+
+    this.logger.log('submitApplication', {
+      category: LOGGING_CATEGORY,
+      metadata: { body },
     })
+
+    const advertTitle = `${type.title} ${body.subject}` // this results in AUGLÝSING AUGLÝSING um hundahald í ..., because the user needs to type in subject himself with the type included ()
+
+    const advertDocument: JournalDocument = {
+      isLegacy: false, // always false since it's coming from the application system
+      html: body.document, // validate?
+      pdfUrl: null, // generate this earlier in the process? (preview step)
+    }
+
+    // needs to be created at same time as the advert
+    const year = new Date().getFullYear()
+    const publicationNumber = 1 // leaving this as 1 for now until we get the real number
+    const advertPublicationNumber: JournalAdvertPublicationNumber = {
+      number: publicationNumber,
+      year: year,
+      full: `${publicationNumber}/${year}`,
+    }
+
+    const advert: JournalAdvert = {
+      id: uuid(),
+      title: advertTitle,
+      department: department,
+      type: type,
+      categories: categories,
+      subject: body.subject,
+      signatureDate: null, // this will be located with the signature object when that has been implemented
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
+      publicationDate: null, // always null when coming from the application system
+      publicationNumber: advertPublicationNumber,
+      document: advertDocument,
+      involvedParty: null, // not implemented
+      status: JournalAdvertStatus.Submitted, // always submitted when coming from the application system
+    }
+
+    return Promise.resolve({ advert })
   }
 
   error(): void {

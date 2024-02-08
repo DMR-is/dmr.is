@@ -122,7 +122,7 @@ export class JournalAdvert {
     nullable: false,
     type: JournalInvolvedParty,
   })
-  readonly involvedParty!: JournalInvolvedParty
+  readonly involvedParty!: JournalInvolvedParty | null
 
   @ApiProperty({
     description: 'Advert document in different formats.',
