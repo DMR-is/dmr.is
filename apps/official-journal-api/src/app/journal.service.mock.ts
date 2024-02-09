@@ -121,13 +121,11 @@ export class MockJournalService implements IJournalService {
     const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
 
     const filtered = mockDepartments.filter((department) => {
-      if (!params?.search) {
-        return true
+      if (params?.search && department.id !== params.search) {
+        return false
       }
 
-      return department.title
-        .toLocaleLowerCase()
-        .includes(params.search.toLocaleLowerCase())
+      return true
     })
 
     return Promise.resolve({
@@ -148,9 +146,7 @@ export class MockJournalService implements IJournalService {
 
       if (
         params?.search &&
-        !type.title
-          .toLocaleLowerCase()
-          .includes(params.search.toLocaleLowerCase())
+        !type.id.toLocaleLowerCase().includes(params.search.toLocaleLowerCase())
       ) {
         return false
       }
@@ -172,12 +168,7 @@ export class MockJournalService implements IJournalService {
   ): Promise<JournalAdvertCategoriesResponse> {
     const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
     const filtered = mockCategories.filter((category) => {
-      if (
-        params?.search &&
-        !category.title
-          .toLocaleLowerCase()
-          .includes(params.search.toLocaleLowerCase())
-      ) {
+      if (params?.search && category.id !== params.search) {
         return false
       }
 
@@ -197,7 +188,6 @@ export class MockJournalService implements IJournalService {
   submitApplication(
     body: JournalPostApplicationBody,
   ): Promise<JournalPostApplicationResponse> {
-    this.logger.log({ ...body })
     const department = ALL_MOCK_JOURNAL_DEPARTMENTS.find(
       (d) => d.id === body.department,
     )

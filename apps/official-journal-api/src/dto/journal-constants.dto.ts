@@ -12,8 +12,3 @@ export enum JournalAdvertStatus {
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
 }
-
-export enum JournalResponseStatus {
-  Success = 'success',
-  Error = 'error',
-}
