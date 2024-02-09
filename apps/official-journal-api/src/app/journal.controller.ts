@@ -8,7 +8,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 import {
   AdvertNotFound,
   JournalAdvertsResponse,
@@ -140,6 +145,9 @@ export class JournalController {
     status: 200,
     type: JournalPostApplicationResponse,
     description: 'Submit a journal advert application',
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
   })
   application(
     @Body() application: JournalPostApplicationBody,
