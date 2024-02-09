@@ -1,4 +1,4 @@
-import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Inject, Injectable } from '@nestjs/common'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
@@ -17,8 +17,8 @@ const LOGGING_CATEGORY = 'JournalService'
 
 @Injectable()
 export class JournalService implements IJournalService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: CustomLogger) {
-    this.logger.log('JournalService')
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
+    this.logger.info('JournalService')
   }
 
   getAdverts(

@@ -3,18 +3,22 @@
  * This is only a minimal backend to get started.
  */
 
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
+import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { SwaggerModule } from '@nestjs/swagger'
 import { JournalModule } from './app/journal.module'
 import { openApi } from './openApi'
+import { logger } from '@dmr.is/logging'
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
   const app = await NestFactory.create(JournalModule)
+
+  // TODO make this behave with nest
+  // app.useLogger(logger)
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }))
   app.setGlobalPrefix(globalPrefix)
@@ -28,7 +32,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000
   await app.listen(port)
-  Logger.log(
+  logger.info(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   )
 }

@@ -1,4 +1,4 @@
-import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Body,
   Controller,
@@ -34,7 +34,7 @@ const LOGGING_CATEGORY = 'JournalController'
 export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
-    @Inject(LOGGER_PROVIDER) private readonly logger: CustomLogger,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('advert')
@@ -153,6 +153,8 @@ export class JournalController {
     description: 'Explicit error from service to test logging.',
   })
   error(): void {
+    this.logger.info('Testing to log national id 010101-0101 0101010101')
+
     this.logger.debug(
       'about to call the error method (this is a debug message)',
       { category: LOGGING_CATEGORY },
