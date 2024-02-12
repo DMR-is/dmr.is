@@ -8,7 +8,7 @@ export const ALL_SIGNATURES_MOCK: JournalSignature[] = [
     additionalSignature: '',
     signature: [
       {
-        id: '00000000-0000-0000-0000-000000000001',
+        // maybe add id here too?
         date: '2024-01-01T09:00:00Z',
         institution: 'Borgarstjórn Reykjavíkur',
         members: [
@@ -39,7 +39,7 @@ export const ALL_SIGNATURES_MOCK: JournalSignature[] = [
     additionalSignature: '',
     type: JournalSignatureType.Committee,
     signature: {
-      id: '00000000-0000-0000-0000-000000000003',
+      // maybe add id here too ?
       institution: 'Borgarstjórn Reykjavíkur',
       date: '2024-01-01T09:00:00Z',
       chairman: {
