@@ -32,6 +32,8 @@ import { JournalPostApplicationResponse } from '../dto/application/journal-posta
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
 import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
+import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
+import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -165,6 +167,16 @@ export class JournalController {
   })
   signatures(@Query() params?: JournalGetSignaturesQueryParams) {
     return this.journalService.getSignatures(params)
+  }
+
+  @Post('signature')
+  @ApiResponse({
+    status: 200,
+    type: JournalPostSignatureResponse,
+    description: 'Newly created signature',
+  })
+  signature(@Body() body: JournalPostSignatureBody) {
+    return this.journalService.postSignature(body)
   }
 
   @Get('error')
