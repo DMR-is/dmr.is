@@ -12,3 +12,8 @@ export enum JournalAdvertStatus {
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
 }
+
+export enum JournalSignatureType {
+  Regular = 'Hefðbundin',
+  Committee = 'Nefnd',
+}

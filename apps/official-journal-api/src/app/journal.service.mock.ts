@@ -30,6 +30,9 @@ import { v4 as uuid } from 'uuid'
 import { JournalAdvertStatus } from '../dto/journal-constants.dto'
 import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
 import { JournalDocument } from '../dto/journal-document'
+import { JournalSignaturesResponse } from '../dto/signatures/jounal-getsignatures-response.dto'
+import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
+import { ALL_SIGNATURES_MOCK } from '../mock/signatures.mock'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -250,6 +253,30 @@ export class MockJournalService implements IJournalService {
     }
 
     return Promise.resolve({ advert })
+  }
+
+  getSignatures(
+    params?: JournalGetSignaturesQueryParams,
+  ): Promise<JournalSignaturesResponse> {
+    const filtered = ALL_SIGNATURES_MOCK.filter((signature) => {
+      if (params?.type && params.type !== signature.type) {
+        return false
+      }
+
+      if (params?.search) {
+        // todo implement search
+      }
+
+      return true
+    })
+
+    const page = params?.page ?? 1
+    const paged = slicePagedData(filtered, page)
+
+    return Promise.resolve({
+      signatures: paged,
+      paging: generatePaging(filtered, page),
+    })
   }
 
   error(): void {
