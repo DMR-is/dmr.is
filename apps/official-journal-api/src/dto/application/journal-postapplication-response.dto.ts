@@ -7,5 +7,5 @@ export class JournalPostApplicationResponse {
     required: true,
     description: 'Return the submitted application',
   })
-  application!: JournalAdvert
+  advert!: JournalAdvert
 }
