@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { JournalSignatureMemberDetailed } from './journal-signature-member-detailed.dto'
 import { JournalSignatureMember } from './journal-signature-member.dto'
 
-export class JournalSignatureCommittee {
+export class JournalPostSignatureCommitteeBody {
   @ApiProperty({
     description: 'The institution that the signature is for.',
     example: 'Borgarstjórn Reykjavíkur',

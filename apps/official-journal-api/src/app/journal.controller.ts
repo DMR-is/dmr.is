@@ -30,7 +30,7 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
-import { JournalSignaturesResponse } from '../dto/signatures/jounal-getsignatures-response.dto'
+import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
 import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
 
 const LOGGING_CATEGORY = 'JournalController'

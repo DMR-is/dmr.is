@@ -5,15 +5,6 @@ import { JournalSignatureMemberDetailed } from './journal-signature-member-detai
 
 export class JournalSignatureRegular {
   @ApiProperty({
-    description: 'Unique ID for the signature, GUID format.',
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
-    type: String,
-  })
-  id!: string
-
-  @ApiProperty({
     description: 'The institution that the signature is for.',
     example: 'Borgarstjórn Reykjavíkur',
     required: true,

@@ -27,12 +27,18 @@ import { JournalPaging } from '../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 import { v4 as uuid } from 'uuid'
-import { JournalAdvertStatus } from '../dto/journal-constants.dto'
+import {
+  JournalAdvertStatus,
+  JournalSignatureType,
+} from '../dto/journal-constants.dto'
 import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
 import { JournalDocument } from '../dto/journal-document'
-import { JournalSignaturesResponse } from '../dto/signatures/jounal-getsignatures-response.dto'
+import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
 import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
 import { ALL_SIGNATURES_MOCK } from '../mock/signatures.mock'
+import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
+import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
+import { JournalSignature } from '../dto/signatures/journal-signature.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -277,6 +283,43 @@ export class MockJournalService implements IJournalService {
       signatures: paged,
       paging: generatePaging(filtered, page),
     })
+  }
+
+  postSignature(
+    body: JournalPostSignatureBody,
+  ): Promise<JournalPostSignatureResponse> {
+    if (
+      Array.isArray(body.signature) &&
+      body.type === JournalSignatureType.Regular
+    ) {
+      const signature: JournalSignature = {
+        id: uuid(),
+        type: JournalSignatureType.Regular,
+        additionalSignature: body.additionalSignature,
+        signature: body.signature.map((s) => ({
+          institution: s.institution,
+          date: s.date,
+          members: s.members,
+        })),
+      }
+      return Promise.resolve({
+        signature,
+      })
+    } else if (
+      'chairman' in body.signature &&
+      body.type === JournalSignatureType.Committee
+    ) {
+      const signature: JournalSignature = {
+        id: uuid(),
+        type: JournalSignatureType.Committee,
+        additionalSignature: body.additionalSignature,
+        signature: body.signature,
+      }
+
+      return Promise.resolve({ signature })
+    }
+
+    throw new BadRequestException('Bad request')
   }
 
   error(): void {

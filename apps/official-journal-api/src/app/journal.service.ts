@@ -12,8 +12,10 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
-import { JournalSignaturesResponse } from '../dto/signatures/jounal-getsignatures-response.dto'
+import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
 import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
+import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
+import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 
@@ -65,6 +67,12 @@ export class JournalService implements IJournalService {
   getSignatures(
     params?: JournalGetSignaturesQueryParams | undefined,
   ): Promise<JournalSignaturesResponse> {
+    throw new Error('Method not implemented')
+  }
+
+  postSignature(
+    body: JournalPostSignatureBody,
+  ): Promise<JournalPostSignatureResponse> {
     throw new Error('Method not implemented')
   }
 
