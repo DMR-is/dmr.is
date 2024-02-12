@@ -1,7 +1,7 @@
 // borrowed from here https://github.com/HermannBjorgvin/Kennitala/blob/1.2.6/kennitala.js#L150
 function isPerson(kt: string) {
   const d = Number.parseInt(kt.substring(0, 2), 10)
-  const m = Number.parseInt(kt.substring(2, 2), 10)
+  const m = Number.parseInt(kt.substring(2, 4), 10)
 
   return d > 0 && d <= 31 && m > 0 && m <= 12
 }

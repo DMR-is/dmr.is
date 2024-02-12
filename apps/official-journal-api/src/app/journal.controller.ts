@@ -161,7 +161,7 @@ export class JournalController {
     description: 'Explicit error from service to test logging.',
   })
   error(): void {
-    this.logger.info('Testing to log national id 010101-0101 0101010101')
+    this.logger.info('Testing to log national id 221101-0101 1212990101')
 
     this.logger.debug(
       'about to call the error method (this is a debug message)',
