@@ -56,7 +56,7 @@ export class JournalController {
   async advert(@Query('id') id: string): Promise<JournalAdvert | null> {
     const advert = await this.journalService.getAdvert(id)
     if (!advert) {
-      this.logger.log('advert not found', {
+      this.logger.info('advert not found', {
         category: LOGGING_CATEGORY,
         metadata: { id },
       })

@@ -24,28 +24,28 @@ export class JournalService implements IJournalService {
   getAdverts(
     params: JournalGetAdvertsQueryParams | undefined,
   ): Promise<JournalAdvertsResponse> {
-    console.log(params)
+    this.logger.info(params)
     throw new Error('Method not implemented.')
   }
 
   getDepartments(
     params?: JournalGetDepartmentsQueryParams | undefined,
   ): Promise<JournalAdvertDepartmentsResponse> {
-    this.logger.log('getDepartments', { params })
+    this.logger.info('getDepartments', { params })
     throw new Error('Method not implemented.')
   }
 
   getTypes(
     params?: JournalGetTypesQueryParams | undefined,
   ): Promise<JournalAdvertTypesResponse> {
-    this.logger.log('getTypes', { params })
+    this.logger.info('getTypes', { params })
     throw new Error('Method not implemented.')
   }
 
   getCategories(
     params?: JournalGetCategoriesQueryParams | undefined,
   ): Promise<JournalAdvertCategoriesResponse> {
-    this.logger.log('getCategories', { params })
+    this.logger.info('getCategories', { params })
     throw new Error('Method not implemented.')
   }
 
@@ -56,7 +56,7 @@ export class JournalService implements IJournalService {
   submitApplication(
     body: JournalPostApplicationBody,
   ): Promise<JournalPostApplicationResponse> {
-    this.logger.log('submitApplication', { body })
+    this.logger.info('submitApplication', { body })
     throw new Error('Method not implemented.')
   }
 

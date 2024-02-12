@@ -1,9 +1,4 @@
-import winston, {
-  createLogger,
-  format,
-  LoggerOptions,
-  transports,
-} from 'winston'
+import { createLogger, format, LoggerOptions, transports } from 'winston'
 import { utilities } from 'nest-winston'
 
 import { maskNationalIdFormatter } from './formatters'
