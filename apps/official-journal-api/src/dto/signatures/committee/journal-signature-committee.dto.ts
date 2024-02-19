@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty } from 'class-validator'
-import { JournalSignatureMemberDetailed } from './journal-signature-member-detailed.dto'
 
-export class JournalPostSignatureRegularBody {
+import { JournalSignatureMemberDetailed } from '../models/journal-signature-member-detailed.dto'
+import { JournalSignatureMember } from '../models/journal-signature-member.dto'
+
+export class JournalSignatureCommittee {
   @ApiProperty({
     description: 'The institution that the signature is for.',
     example: 'Borgarstjórn Reykjavíkur',
@@ -21,6 +22,17 @@ export class JournalPostSignatureRegularBody {
   readonly date!: string
 
   @ApiProperty({
+    description: 'Chairman of the committee that signed the advert.',
+    required: true,
+    example: {
+      name: 'Dagur B. Eggertsson',
+      textBelow: 'borgarstjóri',
+    },
+    type: JournalSignatureMemberDetailed,
+  })
+  chairman!: JournalSignatureMemberDetailed
+
+  @ApiProperty({
     description: 'Members of the committee that signed the advert.',
     example: [
       {
@@ -32,7 +44,7 @@ export class JournalPostSignatureRegularBody {
         textBlow: 'skrifstofustjóri',
       },
     ],
-    type: [JournalSignatureMemberDetailed],
+    type: JournalSignatureMember,
   })
-  members!: JournalSignatureMemberDetailed[]
+  memebers!: JournalSignatureMember[]
 }

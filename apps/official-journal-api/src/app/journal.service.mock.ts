@@ -39,6 +39,7 @@ import { ALL_SIGNATURES_MOCK } from '../mock/signatures.mock'
 import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
 import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
 import { JournalSignature } from '../dto/signatures/journal-signature.dto'
+import { JournalSignatureRegular } from '../dto/signatures/regular/journal-signature-regular.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -285,7 +286,7 @@ export class MockJournalService implements IJournalService {
     })
   }
 
-  postSignature(
+  async postSignature(
     body: JournalPostSignatureBody,
   ): Promise<JournalPostSignatureResponse> {
     if (
@@ -296,15 +297,16 @@ export class MockJournalService implements IJournalService {
         id: uuid(),
         type: JournalSignatureType.Regular,
         additionalSignature: body.additionalSignature,
-        signature: body.signature.map((s) => ({
-          institution: s.institution,
-          date: s.date,
-          members: s.members,
-        })),
+        committeeSignature: null,
+        regularSignature: body.signature.map((s) => {
+          return {
+            id: uuid(),
+            ...s,
+          } as JournalSignatureRegular
+        }),
       }
-      return Promise.resolve({
-        signature,
-      })
+
+      return Promise.resolve({ signature })
     } else if (
       'chairman' in body.signature &&
       body.type === JournalSignatureType.Committee
@@ -313,7 +315,8 @@ export class MockJournalService implements IJournalService {
         id: uuid(),
         type: JournalSignatureType.Committee,
         additionalSignature: body.additionalSignature,
-        signature: body.signature,
+        committeeSignature: body.signature,
+        regularSignature: null,
       }
 
       return Promise.resolve({ signature })

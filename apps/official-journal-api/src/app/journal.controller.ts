@@ -165,7 +165,9 @@ export class JournalController {
     type: JournalSignaturesResponse,
     description: 'List of signatures',
   })
-  signatures(@Query() params?: JournalGetSignaturesQueryParams) {
+  signatures(
+    @Query() params?: JournalGetSignaturesQueryParams,
+  ): Promise<JournalSignaturesResponse> {
     return this.journalService.getSignatures(params)
   }
 
@@ -175,7 +177,9 @@ export class JournalController {
     type: JournalPostSignatureResponse,
     description: 'Newly created signature',
   })
-  signature(@Body() body: JournalPostSignatureBody) {
+  signature(
+    @Body() body: JournalPostSignatureBody,
+  ): Promise<JournalPostSignatureResponse> {
     return this.journalService.postSignature(body)
   }
 
