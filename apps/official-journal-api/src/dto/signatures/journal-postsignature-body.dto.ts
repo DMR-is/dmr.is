@@ -1,12 +1,8 @@
 import { ApiProperty, getSchemaPath } from '@nestjs/swagger'
 import { JournalSignatureType } from '../journal-constants.dto'
 import { IsEnum, IsNotEmpty, Length } from 'class-validator'
-import { JournalPostSignatureRegularBody } from './regular/journal-postsignature-regular-body.dto'
-import { JournalPostSignatureCommitteeBody } from './committee/journal-postsignature-committee.dto'
-
-type Signature =
-  | Array<JournalPostSignatureRegularBody>
-  | JournalPostSignatureCommitteeBody
+import { JournalSignatureCommittee } from './committee/journal-signature-committee.dto'
+import { JournalSignatureRegular } from './regular/journal-signature-regular.dto'
 
 export class JournalPostSignatureBody {
   @ApiProperty({
@@ -34,11 +30,11 @@ export class JournalPostSignatureBody {
   additionalSignature!: string | null
 
   @ApiProperty({
-    required: true,
+    description: 'Signature data',
     oneOf: [
-      { $ref: getSchemaPath(JournalPostSignatureRegularBody) },
-      { $ref: getSchemaPath(JournalPostSignatureCommitteeBody) },
+      { $ref: getSchemaPath(JournalSignatureCommittee) },
+      { $ref: getSchemaPath(JournalSignatureRegular) },
     ],
   })
-  signature!: Signature
+  signature!: JournalSignatureCommittee | JournalSignatureRegular
 }

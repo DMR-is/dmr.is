@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { JournalSignatureMemberDetailed } from '../models/journal-signature-member-detailed.dto'
 
-export class JournalSignatureRegular {
+export class RegularSignature {
   @ApiProperty({
     description: 'The institution that the signature is for.',
     example: 'Borgarstjórn Reykjavíkur',
@@ -35,4 +35,14 @@ export class JournalSignatureRegular {
     type: [JournalSignatureMemberDetailed],
   })
   members!: JournalSignatureMemberDetailed[]
+}
+
+export class JournalSignatureRegular {
+  @ApiProperty({
+    description: 'The type of the signature.',
+    example: 'Regular',
+    required: true,
+    type: [RegularSignature],
+  })
+  items!: RegularSignature[]
 }

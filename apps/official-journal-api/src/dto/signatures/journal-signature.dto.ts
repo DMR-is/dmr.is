@@ -30,16 +30,11 @@ export class JournalSignature {
   additionalSignature!: string | null
 
   @ApiProperty({
-    description: 'Committee signature',
-    required: false,
-    type: JournalSignatureCommittee,
+    description: 'Signature data',
+    oneOf: [
+      { $ref: getSchemaPath(JournalSignatureCommittee) },
+      { $ref: getSchemaPath(JournalSignatureRegular) },
+    ],
   })
-  committeeSignature!: JournalSignatureCommittee | null
-
-  @ApiProperty({
-    description: 'Regular signature',
-    required: false,
-    type: [JournalSignatureRegular],
-  })
-  regularSignature!: JournalSignatureRegular[] | null
+  signature!: JournalSignatureCommittee | JournalSignatureRegular
 }
