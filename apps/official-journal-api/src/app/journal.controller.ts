@@ -1,4 +1,4 @@
-import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Body,
   Controller,
@@ -43,7 +43,7 @@ const LOGGING_CATEGORY = 'JournalController'
 export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
-    @Inject(LOGGER_PROVIDER) private readonly logger: CustomLogger,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('advert')
@@ -60,7 +60,7 @@ export class JournalController {
   async advert(@Query('id') id: string): Promise<JournalAdvert | null> {
     const advert = await this.journalService.getAdvert(id)
     if (!advert) {
-      this.logger.log('advert not found', {
+      this.logger.info('advert not found', {
         category: LOGGING_CATEGORY,
         metadata: { id },
       })
@@ -189,6 +189,8 @@ export class JournalController {
     description: 'Explicit error from service to test logging.',
   })
   error(): void {
+    this.logger.info('Testing to log national id 221101-0101 1212990101')
+
     this.logger.debug(
       'about to call the error method (this is a debug message)',
       { category: LOGGING_CATEGORY },

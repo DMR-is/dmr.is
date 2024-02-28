@@ -17,7 +17,7 @@ describe('JournalService', () => {
         {
           provide: LOGGER_PROVIDER,
           useValue: {
-            log: jest.fn(),
+            info: jest.fn(),
             warn: jest.fn(),
             error: jest.fn(),
           },

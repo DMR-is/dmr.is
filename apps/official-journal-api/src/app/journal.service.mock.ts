@@ -1,11 +1,6 @@
 import { v4 as uuid } from 'uuid'
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  LoggerService,
-} from '@nestjs/common'
+import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
 import {
   ADVERT_B_1278_2023,
@@ -82,12 +77,12 @@ function generatePaging(
 
 @Injectable()
 export class MockJournalService implements IJournalService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: LoggerService) {
-    this.logger.log('Using MockJournalService')
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
+    this.logger.info('Using MockJournalService')
   }
 
   getAdvert(id: string): Promise<JournalAdvert | null> {
-    this.logger.log('getAdvert', {
+    this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
@@ -99,7 +94,7 @@ export class MockJournalService implements IJournalService {
   getAdverts(
     params?: JournalGetAdvertsQueryParams,
   ): Promise<JournalAdvertsResponse> {
-    this.logger.log('getAdverts', {
+    this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
@@ -223,7 +218,7 @@ export class MockJournalService implements IJournalService {
       throw new BadRequestException('Type not found') // We need to return the field and reason
     }
 
-    this.logger.log('submitApplication', {
+    this.logger.info('submitApplication', {
       category: LOGGING_CATEGORY,
       metadata: { body },
     })
