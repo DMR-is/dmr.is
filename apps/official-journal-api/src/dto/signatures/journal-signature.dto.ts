@@ -3,7 +3,7 @@ import { JournalSignatureType } from '../journal-constants.dto'
 import { JournalSignatureMember } from './journal-signature-member.dto'
 import { IsArray, ArrayMinSize } from 'class-validator'
 
-class JournalSignatureData {
+export class JournalSignatureData {
   @ApiProperty({
     description: 'Institution of the signature',
     example: 'Reykjavíkurborg',

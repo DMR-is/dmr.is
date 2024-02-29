@@ -1,42 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { JournalSignatureType } from '../journal-constants.dto'
-import { JournalSignatureMember } from './journal-signature-member.dto'
-import {
-  ArrayMinSize,
-  IsArray,
-  IsEnum,
-  IsString,
-  ValidateIf,
-} from 'class-validator'
-import { Type } from 'class-transformer'
+import { ArrayMinSize, IsArray } from 'class-validator'
+import { JournalSignatureData } from './journal-signature.dto'
 
 export class JournalSignatureBody {
   @ApiProperty({
+    description: 'Type of the signature',
     enum: JournalSignatureType,
     example: JournalSignatureType.Regular,
-    required: true,
-    nullable: false,
+    type: JournalSignatureType,
   })
-  @IsEnum(JournalSignatureType)
-  type!: JournalSignatureType
+  type!: string
 
   @ApiProperty({
+    description: 'Optional addiational signature',
+    example: 'Guðrún Jónsdóttir',
+    required: false,
     type: String,
-    example: 'Dagur B. Eggertsson',
-    required: true,
-    nullable: false,
   })
-  @IsString()
-  @ValidateIf((_, value) => value !== null)
   additional!: string | null
 
   @ApiProperty({
-    type: [JournalSignatureMember],
+    description: 'Signature data',
+    example: true,
     required: true,
     nullable: false,
+    type: [JournalSignatureData], // leaving this as array for the time being, we might decide to use a discriminator later
   })
   @IsArray()
   @ArrayMinSize(1)
-  @Type(() => JournalSignatureMember)
-  members!: JournalSignatureMember[]
+  // could set max size of type is committee -> @ValidateIf
+  data!: JournalSignatureData[]
 }

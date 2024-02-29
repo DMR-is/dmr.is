@@ -32,7 +32,6 @@ import { JournalPostApplicationResponse } from '../dto/application/journal-posta
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
 import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
-import { JournalSignatureBody } from '../dto/signatures/journal-signature-body.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 

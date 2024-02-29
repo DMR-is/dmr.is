@@ -233,15 +233,13 @@ export class MockJournalService implements IJournalService {
 
     const advertId = uuid()
 
-    const signature: JournalSignature[] = body.signature.map((s) => {
-      return {
-        id: uuid(),
-        advertId: advertId,
-        type: s.type,
-        additional: s.additional,
-        data: s.data,
-      }
-    })
+    const signature: JournalSignature = {
+      id: uuid(),
+      advertId: advertId,
+      additional: body.signature.additional,
+      type: body.signature.type,
+      data: body.signature.data,
+    }
 
     const advert: JournalAdvert = {
       id: advertId,

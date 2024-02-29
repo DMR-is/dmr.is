@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { JournalSignature } from '../signatures/journal-signature.dto'
+import { JournalSignatureBody } from '../signatures/journal-signature-body.dto'
 
 export class JournalPostApplicationBody {
   @ApiProperty({
@@ -72,9 +73,9 @@ export class JournalPostApplicationBody {
   readonly document!: string
 
   @ApiProperty({
-    type: [JournalSignature],
+    type: JournalSignatureBody,
     required: true,
     nullable: false,
   })
-  readonly signature!: JournalSignature[]
+  readonly signature!: JournalSignatureBody
 }

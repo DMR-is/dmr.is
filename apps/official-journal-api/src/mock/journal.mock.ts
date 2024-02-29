@@ -262,7 +262,7 @@ export const ADVERT_B_866_2006: JournalAdvert = {
     pdfUrl: null,
   },
   signature:
-    ALL_MOCK_SIGNATURES.filter(
+    ALL_MOCK_SIGNATURES.find(
       (s) => s.advertId === 'bcbefaf4-c021-4b63-877b-001dde880052',
     ) || null,
 }
@@ -295,7 +295,7 @@ export const ADVERT_B_1278_2023: JournalAdvert = {
     pdfUrl: null,
   },
   signature:
-    ALL_MOCK_SIGNATURES.filter(
+    ALL_MOCK_SIGNATURES.find(
       (s) => s.advertId === '749f1eff-236d-4c67-a4cc-eb7a7bbd373f',
     ) || null,
 }

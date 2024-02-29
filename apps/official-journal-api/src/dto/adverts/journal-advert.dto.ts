@@ -7,6 +7,7 @@ import { JournalInvolvedParty } from '../journal-involved-party.dto'
 import { JournalAdvertDepartment } from '../departments/journal-department.dto'
 import { JournalAdvertType } from '../types/journal-advert-type.dto'
 import { JournalSignature } from '../signatures/journal-signature.dto'
+import { JournalSignatureBody } from '../signatures/journal-signature-body.dto'
 
 export class JournalAdvert {
   @ApiProperty({
@@ -134,9 +135,9 @@ export class JournalAdvert {
   readonly document!: JournalDocument
 
   @ApiProperty({
-    type: [JournalSignature],
+    type: JournalSignature,
     description: 'Signatures for the advert.',
     required: true,
   })
-  readonly signature!: JournalSignature[] | null
+  readonly signature!: JournalSignatureBody | null
 }
