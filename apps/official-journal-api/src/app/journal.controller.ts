@@ -30,10 +30,9 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
-import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
-import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
-import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
-import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
+import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
+import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
+import { JournalSignatureBody } from '../dto/signatures/journal-signature-body.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -162,25 +161,13 @@ export class JournalController {
   @Get('signatures')
   @ApiResponse({
     status: 200,
-    type: JournalSignaturesResponse,
+    type: JournalSignatureGetResponse,
     description: 'List of signatures',
   })
   signatures(
-    @Query() params?: JournalGetSignaturesQueryParams,
-  ): Promise<JournalSignaturesResponse> {
+    @Query() params?: JournalSignatureQuery,
+  ): Promise<JournalSignatureGetResponse> {
     return this.journalService.getSignatures(params)
-  }
-
-  @Post('signature')
-  @ApiResponse({
-    status: 200,
-    type: JournalPostSignatureResponse,
-    description: 'Newly created signature',
-  })
-  signature(
-    @Body() body: JournalPostSignatureBody,
-  ): Promise<JournalPostSignatureResponse> {
-    return this.journalService.postSignature(body)
   }
 
   @Get('error')

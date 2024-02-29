@@ -12,8 +12,6 @@ import { openApi } from './openApi'
 import { logger } from '@dmr.is/logging'
 import { apmInit } from '@dmr.is/apm'
 import { WinstonModule } from 'nest-winston'
-import { JournalSignatureRegular } from './dto/signatures/regular/journal-signature-regular.dto'
-import { JournalSignatureCommittee } from './dto/signatures/committee/journal-signature-committee.dto'
 
 async function bootstrap() {
   const globalPrefix = 'api'
@@ -33,9 +31,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   })
 
-  const document = SwaggerModule.createDocument(app, openApi, {
-    extraModels: [JournalSignatureCommittee, JournalSignatureRegular],
-  })
+  const document = SwaggerModule.createDocument(app, openApi)
   SwaggerModule.setup(swaggerPath, app, document)
 
   apmInit()

@@ -22,22 +22,13 @@ import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getca
 import { JournalPaging } from '../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
-import {
-  JournalAdvertStatus,
-  JournalSignatureType,
-} from '../dto/journal-constants.dto'
+import { JournalAdvertStatus } from '../dto/journal-constants.dto'
 import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
 import { JournalDocument } from '../dto/journal-document'
-import { JournalSignaturesResponse } from '../dto/signatures/journal-getsignatures-response.dto'
-import { JournalGetSignaturesQueryParams } from '../dto/signatures/journal-getsignatures-query.dto'
-import { JournalPostSignatureBody } from '../dto/signatures/journal-postsignature-body.dto'
-import { JournalPostSignatureResponse } from '../dto/signatures/journal-postsignature-response.dto'
-import { ALL_SIGNATURES_MOCK } from '../mock/signatures.mock'
+import { ALL_MOCK_SIGNATURES } from '../mock/signatures.mock'
 import { JournalSignature } from '../dto/signatures/journal-signature.dto'
-import {
-  JournalSignatureRegular,
-  RegularSignature,
-} from '../dto/signatures/regular/journal-signature-regular.dto'
+import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
+import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -240,8 +231,20 @@ export class MockJournalService implements IJournalService {
       full: `${publicationNumber}/${year}`,
     }
 
+    const advertId = uuid()
+
+    const signature: JournalSignature[] = body.signature.map((s) => {
+      return {
+        id: uuid(),
+        advertId: advertId,
+        type: s.type,
+        additional: s.additional,
+        data: s.data,
+      }
+    })
+
     const advert: JournalAdvert = {
-      id: uuid(),
+      id: advertId,
       title: advertTitle,
       department: department,
       type: type,
@@ -255,21 +258,34 @@ export class MockJournalService implements IJournalService {
       document: advertDocument,
       involvedParty: null, // not implemented
       status: JournalAdvertStatus.Submitted, // always submitted when coming from the application system
+      signature: signature,
     }
 
     return Promise.resolve({ advert })
   }
 
   getSignatures(
-    params?: JournalGetSignaturesQueryParams,
-  ): Promise<JournalSignaturesResponse> {
-    const filtered = ALL_SIGNATURES_MOCK.filter((signature) => {
+    params?: JournalSignatureQuery,
+  ): Promise<JournalSignatureGetResponse> {
+    const filtered = ALL_MOCK_SIGNATURES.filter((signature) => {
+      if (params?.id && params.id !== signature.id) {
+        return false
+      }
+
       if (params?.type && params.type !== signature.type) {
         return false
       }
 
       if (params?.search) {
-        // todo implement search
+        const search = params.search.toLocaleLowerCase()
+
+        signature.data.forEach((signature) =>
+          signature.members.forEach((m) => {
+            if (!m.name.toLocaleLowerCase().includes(search)) {
+              return false
+            }
+          }),
+        )
       }
 
       return true
@@ -279,48 +295,9 @@ export class MockJournalService implements IJournalService {
     const paged = slicePagedData(filtered, page)
 
     return Promise.resolve({
-      signatures: paged,
+      items: paged,
       paging: generatePaging(filtered, page),
     })
-  }
-
-  async postSignature(
-    body: JournalPostSignatureBody,
-  ): Promise<JournalPostSignatureResponse> {
-    if (
-      Array.isArray(body.signature) &&
-      body.type === JournalSignatureType.Regular
-    ) {
-      const signature: JournalSignature = {
-        id: uuid(),
-        type: JournalSignatureType.Regular,
-        additionalSignature: body.additionalSignature,
-        signature: {
-          items: body.signature.map((s) => {
-            return {
-              id: uuid(),
-              ...s,
-            } as RegularSignature
-          }),
-        },
-      }
-
-      return Promise.resolve({ signature })
-    } else if (
-      'chairman' in body.signature &&
-      body.type === JournalSignatureType.Committee
-    ) {
-      const signature: JournalSignature = {
-        id: uuid(),
-        type: JournalSignatureType.Committee,
-        additionalSignature: body.additionalSignature,
-        signature: body.signature,
-      }
-
-      return Promise.resolve({ signature })
-    }
-
-    throw new BadRequestException('Bad request')
   }
 
   error(): void {

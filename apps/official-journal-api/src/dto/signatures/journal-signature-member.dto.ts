@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class JournalSignatureMemberDetailed {
+export class JournalSignatureMember {
+  @ApiProperty({
+    description: 'Marks the members as chairman or not',
+    example: true,
+    required: true,
+    nullable: false,
+    type: Boolean,
+  })
+  isChairman!: boolean | null
+
   @ApiProperty({
     description: 'Name of the committee chairman',
     example: 'Dagur B. Eggertsson',

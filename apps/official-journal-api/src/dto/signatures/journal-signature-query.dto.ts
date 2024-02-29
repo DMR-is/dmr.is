@@ -1,33 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
-  IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
 } from 'class-validator'
-import { JournalSignatureType } from '../journal-constants.dto'
 
-export class JournalGetSignaturesQueryParams {
+export class JournalSignatureQuery {
   @ApiProperty({
-    name: 'type',
-    description: 'To fetch specfic type of signatures',
-    enum: JournalSignatureType,
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(JournalSignatureType)
-  type?: JournalSignatureType
-
-  @ApiProperty({
-    name: 'search',
-    description: 'String to search for in categories.',
     type: String,
+    description: 'Search for a specific signature by id',
     required: false,
   })
-  @IsOptional()
   @IsString()
+  @IsOptional()
+  id?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Search for a specific signature by type',
+    example: 'Regular',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  type?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Search for a specific signature',
+    example: 'Dagur B. Eggertsson',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
   search?: string
 
   @ApiProperty({

@@ -2,18 +2,20 @@ import { ApiProperty } from '@nestjs/swagger'
 import { JournalPaging } from '../journal-paging.dto'
 import { JournalSignature } from './journal-signature.dto'
 
-export class JournalSignaturesResponse {
+export class JournalSignatureGetResponse {
   @ApiProperty({
+    type: [JournalSignature],
     description: 'List of signatures',
     required: true,
-    type: [JournalSignature],
+    nullable: false,
   })
-  readonly signatures!: JournalSignature[]
+  items!: JournalSignature[]
 
   @ApiProperty({
-    description: 'Paging info',
-    required: true,
     type: JournalPaging,
+    description: 'Paging information',
+    required: true,
+    nullable: false,
   })
-  readonly paging!: JournalPaging
+  paging!: JournalPaging
 }
