@@ -11,7 +11,28 @@
       ],
       "@dmr.is/apm": [
         "libs/apm/src/index.ts"
-      ]
+      ],
+      "@island.is/island-ui/theme": [
+        "libs/island-ui/theme/src/index.ts"
+      ],
+      "@island.is/island-ui/utils": [
+        "libs/island-ui/utils/src/index.ts"
+      ],
+      "@island.is/island-ui/vanilla-extract-utils": [
+        "libs/island-ui/vanilla-extract-utils/src/index.ts"
+      ],
+      "@island.is/island-ui/contentful": [
+        "libs/island-ui/contentful/src/index.ts"
+      ],
+      "@island.is/island-ui/core": [
+        "libs/island-ui/core/src/index.ts"
+      ],
+      "@island.is/shared/utils": [
+        "libs/shared/utils/src/index.ts"
+      ],
+      "@island.is/shared/constants": [
+        "libs/shared/constants/src/index.ts"
+      ],
     },
     "sourceMap": true,
     "importHelpers": true,
