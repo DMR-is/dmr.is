@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "commonjs",
+    "baseUrl": ".",
+    "paths": {
+      "@dmr.is/logging": [
+        "libs/logging/src/index.ts"
+      ],
+      "@dmr.is/apm": [
+        "libs/apm/src/index.ts"
+      ],
+      "@island.is/island-ui/theme": [
+        "libs/island-ui/theme/src/index.ts"
+      ],
+      "@island.is/island-ui/utils": [
+        "libs/island-ui/utils/src/index.ts"
+      ],
+      "@island.is/island-ui/vanilla-extract-utils": [
+        "libs/island-ui/vanilla-extract-utils/src/index.ts"
+      ],
+      "@island.is/island-ui/contentful": [
+        "libs/island-ui/contentful/src/index.ts"
+      ],
+      "@island.is/island-ui/core": [
+        "libs/island-ui/core/src/index.ts"
+      ],
+      "@island.is/shared/utils": [
+        "libs/shared/utils/src/index.ts"
+      ],
+      "@island.is/shared/types": [
+        "libs/shared/types/src/index.ts"
+      ],
+      "@island.is/shared/constants": [
+        "libs/shared/constants/src/index.ts"
+      ],
+      "@island.is/shared/components": [
+        "libs/shared/components/src/index.ts"
+      ],
+    },
+    "sourceMap": true,
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
+}
