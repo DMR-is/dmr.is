@@ -1,21 +1,87 @@
-import { Footer, Header } from '@island.is/island-ui/core'
+import { Footer } from '@island.is/island-ui/core'
+import Head from 'next/head'
+
+import { Header } from '../header/Header'
 
 type Props = {
   children?: React.ReactNode
 }
 
 export const Layout = ({ children }: Props) => {
+  const preloadedFonts = [
+    '/fonts/ibm-plex-sans-v7-latin-300.woff2',
+    '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
+    '/fonts/ibm-plex-sans-v7-latin-italic.woff2',
+    '/fonts/ibm-plex-sans-v7-latin-500.woff2',
+    '/fonts/ibm-plex-sans-v7-latin-600.woff2',
+  ]
+
   return (
     <>
-      <Header
-        info={{
-          title: 'Stjórnartíðindi',
-          description: 'Allar auglýgngar Íslands',
-        }}
-        logoRender={(logo) => <a href="/minarsidur/umsoknir">{logo}</a>}
-      />
-      {children}
+      <Head>
+        {preloadedFonts.map((href, index) => {
+          return (
+            <link
+              key={index}
+              rel="preload"
+              href={href}
+              as="font"
+              type="font/woff2"
+              crossOrigin="anonymous"
+            />
+          )
+        })}
+      </Head>
+      <Header />
+      <main>{children}</main>
       <Footer />
+      <style jsx global>{`
+        @font-face {
+          font-family: 'IBM Plex Sans';
+          font-style: normal;
+          font-weight: 300;
+          font-display: swap;
+          src: local('IBM Plex Sans Light'), local('IBMPlexSans-Light'),
+            url('/fonts/ibm-plex-sans-v7-latin-300.woff2') format('woff2'),
+            url('/fonts/ibm-plex-sans-v7-latin-300.woff') format('woff');
+        }
+        @font-face {
+          font-family: 'IBM Plex Sans';
+          font-style: normal;
+          font-weight: 400;
+          font-display: swap;
+          src: local('IBM Plex Sans'), local('IBMPlexSans'),
+            url('/fonts/ibm-plex-sans-v7-latin-regular.woff2') format('woff2'),
+            url('/fonts/ibm-plex-sans-v7-latin-regular.woff') format('woff');
+        }
+        @font-face {
+          font-family: 'IBM Plex Sans';
+          font-style: italic;
+          font-weight: 400;
+          font-display: swap;
+          src: local('IBM Plex Sans Italic'), local('IBMPlexSans-Italic'),
+            url('/fonts/ibm-plex-sans-v7-latin-italic.woff2') format('woff2'),
+            url('/fonts/ibm-plex-sans-v7-latin-italic.woff') format('woff');
+        }
+        @font-face {
+          font-family: 'IBM Plex Sans';
+          font-style: normal;
+          font-weight: 500;
+          font-display: swap;
+          src: local('IBM Plex Sans Medium'), local('IBMPlexSans-Medium'),
+            url('/fonts/ibm-plex-sans-v7-latin-500.woff2') format('woff2'),
+            url('/fonts/ibm-plex-sans-v7-latin-500.woff') format('woff');
+        }
+        @font-face {
+          font-family: 'IBM Plex Sans';
+          font-style: normal;
+          font-weight: 600;
+          font-display: swap;
+          src: local('IBM Plex Sans SemiBold'), local('IBMPlexSans-SemiBold'),
+            url('/fonts/ibm-plex-sans-v7-latin-600.woff2') format('woff2'),
+            url('/fonts/ibm-plex-sans-v7-latin-600.woff') format('woff');
+        }
+      `}</style>
     </>
   )
 }

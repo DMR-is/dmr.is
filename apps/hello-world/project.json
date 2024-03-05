@@ -11,13 +11,16 @@
       ],
       "defaultConfiguration": "production",
       "options": {
+        "generatePackageJson": true,
         "outputPath": "apps/hello-world/dist"
       },
       "configurations": {
         "development": {
           "outputPath": "apps/hello-world"
         },
-        "production": {}
+        "production": {
+
+        }
       }
     },
     "serve": {

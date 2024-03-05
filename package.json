@@ -6,7 +6,8 @@
     "start": "nx serve",
     "test": "nx test",
     "lint": "nx lint",
-    "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary"
+    "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary",
+    "analyze": "cross-env ANALYZE=true nx run hello-world:build"
   },
   "devDependencies": {
     "@anatine/esbuild-decorators": "0.2.4",
