@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
@@ -21,10 +22,13 @@ import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getca
 import { JournalPaging } from '../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
-import { v4 as uuid } from 'uuid'
 import { JournalAdvertStatus } from '../dto/journal-constants.dto'
 import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
 import { JournalDocument } from '../dto/journal-document'
+import { ALL_MOCK_SIGNATURES } from '../mock/signatures.mock'
+import { JournalSignature } from '../dto/signatures/journal-signature.dto'
+import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
+import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -227,8 +231,18 @@ export class MockJournalService implements IJournalService {
       full: `${publicationNumber}/${year}`,
     }
 
-    const advert: JournalAdvert = {
+    const advertId = uuid()
+
+    const signature: JournalSignature = {
       id: uuid(),
+      advertId: advertId,
+      additional: body.signature.additional,
+      type: body.signature.type,
+      data: body.signature.data,
+    }
+
+    const advert: JournalAdvert = {
+      id: advertId,
       title: advertTitle,
       department: department,
       type: type,
@@ -242,9 +256,46 @@ export class MockJournalService implements IJournalService {
       document: advertDocument,
       involvedParty: null, // not implemented
       status: JournalAdvertStatus.Submitted, // always submitted when coming from the application system
+      signature: signature,
     }
 
     return Promise.resolve({ advert })
+  }
+
+  getSignatures(
+    params?: JournalSignatureQuery,
+  ): Promise<JournalSignatureGetResponse> {
+    const filtered = ALL_MOCK_SIGNATURES.filter((signature) => {
+      if (params?.id && params.id !== signature.id) {
+        return false
+      }
+
+      if (params?.type && params.type !== signature.type) {
+        return false
+      }
+
+      if (params?.search) {
+        const search = params.search.toLocaleLowerCase()
+
+        signature.data.forEach((signature) =>
+          signature.members.forEach((m) => {
+            if (!m.name.toLocaleLowerCase().includes(search)) {
+              return false
+            }
+          }),
+        )
+      }
+
+      return true
+    })
+
+    const page = params?.page ?? 1
+    const paged = slicePagedData(filtered, page)
+
+    return Promise.resolve({
+      items: paged,
+      paging: generatePaging(filtered, page),
+    })
   }
 
   error(): void {

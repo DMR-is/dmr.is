@@ -18,7 +18,7 @@ async function bootstrap() {
   const swaggerPath = 'swagger'
 
   const app = await NestFactory.create(JournalModule, {
-    logger: WinstonModule.createLogger({ instance: logger })
+    logger: WinstonModule.createLogger({ instance: logger }),
   })
 
   // TODO make this behave with nest
