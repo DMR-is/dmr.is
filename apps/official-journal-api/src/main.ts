@@ -7,17 +7,18 @@ import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { SwaggerModule } from '@nestjs/swagger'
-import { JournalModule } from './app/journal.module'
+
 import { openApi } from './openApi'
 import { logger } from '@dmr.is/logging'
 import { apmInit } from '@dmr.is/apm'
 import { WinstonModule } from 'nest-winston'
+import { AppModule } from './app/app.module'
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
-  const app = await NestFactory.create(JournalModule, {
+  const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 
@@ -41,6 +42,23 @@ async function bootstrap() {
   logger.info(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   )
+  const server = app.getHttpServer()
+  const router = server._events.request._router
+  const availableRoutes: [] = router.stack
+    .map(
+      (layer: { route: { path: unknown; stack: { method: unknown }[] } }) => {
+        if (layer.route) {
+          return {
+            route: {
+              path: layer.route?.path,
+              method: layer.route?.stack[0].method,
+            },
+          }
+        }
+      },
+    )
+    .filter((item: undefined) => item !== undefined)
+  console.log(availableRoutes)
 }
 
 bootstrap()
