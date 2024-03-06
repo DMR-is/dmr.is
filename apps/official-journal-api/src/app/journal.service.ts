@@ -12,6 +12,8 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
+import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
+import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 
@@ -57,6 +59,13 @@ export class JournalService implements IJournalService {
     body: JournalPostApplicationBody,
   ): Promise<JournalPostApplicationResponse> {
     this.logger.info('submitApplication', { body })
+    throw new Error('Method not implemented.')
+  }
+
+  getSignatures(
+    params?: JournalSignatureQuery | undefined,
+  ): Promise<JournalSignatureGetResponse> {
+    this.logger.info('getSignatures', { params })
     throw new Error('Method not implemented.')
   }
 
