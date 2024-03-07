@@ -22,7 +22,7 @@ export class StatisticsController {
     type: StatisticsDepartmentResponse,
     description: 'Gets statistics for individual department (a, b or c)',
   })
-  getDepartment(@Query() params?: StatisticsDepartmentQuery) {
+  department(@Query() params?: StatisticsDepartmentQuery) {
     return this.statisticsService.getDepartment(params)
   }
 }
