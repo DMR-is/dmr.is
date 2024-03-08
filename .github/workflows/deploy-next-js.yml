@@ -1,0 +1,86 @@
+name: Deploy APIs to AWS Dev
+
+on:
+  pull_request:
+  workflow_run:
+    workflows: ["Monorepo pipeline - quality"]
+    branches: ["main"]
+    types:
+      - completed
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_DEV_ACCOUNT_ID: 555454216281
+
+
+permissions:
+  id-token: write # Required f. IAM Token
+  contents: read
+
+jobs:
+  build-and-store:
+    strategy:
+      matrix:
+        next-app: [official-journal-web]
+    name: "Build and push next-app: ${{ matrix.next-app }} to S3"
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.10.0'
+
+      - name: Check node version
+        run: |
+          node -v
+          ls -l `which node`
+
+      - name: Setup yarn
+        run: |
+          sudo npm i -g corepack
+          corepack prepare yarn@4.0.2 --activate
+    
+
+      - name: Calculate cache key for node_modules
+        id: calculate_node_modules_hash
+        run: |
+          PACKAGE_JSON_HASH=$(cat package.json | jq '{resolutions,dependencies,devDependencies}' | sha1sum -t | cut -f1 -d" ")
+          echo "PACKAGE_JSON_HASH: $PACKAGE_JSON_HASH"
+          export NODE_MODULES_HASH=${{ runner.os }}-${{ hashFiles('yarn.lock') }}-$PACKAGE_JSON_HASH
+          echo "NODE_MODULES_HASH: $NODE_MODULES_HASH"
+          echo "node-modules-hash=$NODE_MODULES_HASH" >> $GITHUB_OUTPUT
+
+      - name: Cache for NodeJS dependencies - host OS
+        id: node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
+
+      - name: Checkout island-is submodules
+        run: |
+          ./.githooks/post-checkout
+
+      - name: Building NodeJS dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
+          role-session-name: GitHub-Action-Role
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Build and push to S3
+        run: |
+          yarn nx run ${{ matrix.next-app }}:open-next-build
+          pushd "dist/apps/${{ matrix.next-app }}/.open-next"
+          zip -r -q "../../../../${{ github.sha }}.zip" "." 
+          popd
+          aws s3 cp "${{ github.sha }}.zip" "s3://official-journal-web-dev-next-builds/${{ matrix.next-app }}/${{ github.sha }}.zip" 
