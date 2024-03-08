@@ -300,6 +300,8 @@ export const ADVERT_B_1278_2023: JournalAdvert = {
     ) || null,
 }
 
+export const ALL_MOCK_ADVERTS = [ADVERT_B_866_2006, ADVERT_B_1278_2023]
+
 export const MOCK_PAGING_SINGLE_PAGE: JournalPaging = {
   page: 1,
   pageSize: 10,

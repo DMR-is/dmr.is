@@ -7,17 +7,18 @@ import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { SwaggerModule } from '@nestjs/swagger'
-import { JournalModule } from './app/journal.module'
+
 import { openApi } from './openApi'
 import { logger } from '@dmr.is/logging'
 import { apmInit } from '@dmr.is/apm'
 import { WinstonModule } from 'nest-winston'
+import { AppModule } from './app/app.module'
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
-  const app = await NestFactory.create(JournalModule, {
+  const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 

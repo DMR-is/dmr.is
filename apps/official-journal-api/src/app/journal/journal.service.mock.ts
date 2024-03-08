@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
+import { JournalAdvert } from '../../dto/adverts/journal-advert.dto'
 import {
   ADVERT_B_1278_2023,
   ADVERT_B_866_2006,
@@ -9,26 +9,26 @@ import {
   ALL_MOCK_JOURNAL_DEPARTMENTS,
   ALL_MOCK_JOURNAL_TYPES,
   MOCK_PAGING_SINGLE_PAGE,
-} from '../mock/journal.mock'
+} from '../../mock/journal.mock'
+import { JournalAdvertsResponse } from '../../dto/adverts/journal-advert-responses.dto'
+import { JournalGetAdvertsQueryParams } from '../../dto/adverts/journal-getadverts-query.dto'
+import { JournalGetTypesQueryParams } from '../../dto/types/journal-gettypes-query.dto'
+import { JournalAdvertDepartmentsResponse } from '../../dto/departments/journal-getdepartments-response.dto'
+import { JournalAdvertTypesResponse } from '../../dto/types/journal-gettypes-response.dto'
+import { JournalGetDepartmentsQueryParams } from '../../dto/departments/journal-getdepartments-query.dto'
+import { JournalGetCategoriesQueryParams } from '../../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../../dto/categories/journal-getcategories-responses.dto'
+import { JournalPaging } from '../../dto/journal-paging.dto'
+import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
+import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
+import { JournalAdvertStatus } from '../../dto/journal-constants.dto'
+import { JournalAdvertPublicationNumber } from '../../dto/adverts/journal-advert-publication-number.dto'
+import { JournalDocument } from '../../dto/journal-document'
+import { ALL_MOCK_SIGNATURES } from '../../mock/signatures.mock'
+import { JournalSignature } from '../../dto/signatures/journal-signature.dto'
+import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
+import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
 import { IJournalService } from './journal.service.interface'
-import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
-import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
-import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
-import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
-import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
-import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
-import { JournalPaging } from '../dto/journal-paging.dto'
-import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
-import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
-import { JournalAdvertStatus } from '../dto/journal-constants.dto'
-import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
-import { JournalDocument } from '../dto/journal-document'
-import { ALL_MOCK_SIGNATURES } from '../mock/signatures.mock'
-import { JournalSignature } from '../dto/signatures/journal-signature.dto'
-import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
-import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
