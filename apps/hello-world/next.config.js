@@ -22,23 +22,6 @@ const nextConfig = {
       )
     }
 
-    const modules = path.resolve(__dirname, '../..', 'node_modules')
-
-    config.resolve.alias = {
-      ...(config.resolve.alias || {}),
-      '@babel/runtime': path.resolve(modules, '@babel/runtime'),
-      'bn.js': path.resolve(modules, 'bn.js'),
-      'date-fns': path.resolve(modules, 'date-fns'),
-      'es-abstract': path.resolve(modules, 'es-abstract'),
-      'escape-string-regexp': path.resolve(modules, 'escape-string-regexp'),
-      'readable-stream': path.resolve(modules, 'readable-stream'),
-      'react-popper': path.resolve(modules, 'react-popper'),
-      inherits: path.resolve(modules, 'inherits'),
-      'graphql-tag': path.resolve(modules, 'graphql-tag'),
-      'safe-buffer': path.resolve(modules, 'safe-buffer'),
-      scheduler: path.resolve(modules, 'scheduler'),
-    }
-
     return config
   },
 
