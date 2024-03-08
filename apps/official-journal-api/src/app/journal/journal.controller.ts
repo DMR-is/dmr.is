@@ -18,20 +18,20 @@ import {
   AdvertNotFound,
   JournalAdvertsResponse,
   JournalAdvertsValidationResponse,
-} from '../dto/adverts/journal-advert-responses.dto'
-import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
+} from '../../dto/adverts/journal-advert-responses.dto'
+import { JournalAdvert } from '../../dto/adverts/journal-advert.dto'
 import { IJournalService } from './journal.service.interface'
-import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
-import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
-import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
-import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-response.dto'
-import { JournalAdvertDepartmentsResponse } from '../dto/departments/journal-getdepartments-response.dto'
-import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
-import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
-import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
-import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
-import { JournalSignatureGetResponse } from '../dto/signatures/journal-signature-get-response.dto'
-import { JournalSignatureQuery } from '../dto/signatures/journal-signature-query.dto'
+import { JournalGetAdvertsQueryParams } from '../../dto/adverts/journal-getadverts-query.dto'
+import { JournalGetDepartmentsQueryParams } from '../../dto/departments/journal-getdepartments-query.dto'
+import { JournalGetTypesQueryParams } from '../../dto/types/journal-gettypes-query.dto'
+import { JournalAdvertTypesResponse } from '../../dto/types/journal-gettypes-response.dto'
+import { JournalAdvertDepartmentsResponse } from '../../dto/departments/journal-getdepartments-response.dto'
+import { JournalGetCategoriesQueryParams } from '../../dto/categories/journal-getcategories-query.dto'
+import { JournalAdvertCategoriesResponse } from '../../dto/categories/journal-getcategories-responses.dto'
+import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
+import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
+import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
+import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
