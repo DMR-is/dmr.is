@@ -42,23 +42,6 @@ async function bootstrap() {
   logger.info(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   )
-  const server = app.getHttpServer()
-  const router = server._events.request._router
-  const availableRoutes: [] = router.stack
-    .map(
-      (layer: { route: { path: unknown; stack: { method: unknown }[] } }) => {
-        if (layer.route) {
-          return {
-            route: {
-              path: layer.route?.path,
-              method: layer.route?.stack[0].method,
-            },
-          }
-        }
-      },
-    )
-    .filter((item: undefined) => item !== undefined)
-  console.log(availableRoutes)
 }
 
 bootstrap()

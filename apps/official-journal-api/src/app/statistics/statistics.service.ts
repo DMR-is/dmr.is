@@ -4,8 +4,6 @@ import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-depar
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 
-const LOGGING_CATEGORY = 'StatisticsService'
-
 @Injectable()
 export class StatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
