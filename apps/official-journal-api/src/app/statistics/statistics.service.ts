@@ -3,6 +3,8 @@ import { IStatisticsService } from './statistics.service.interface'
 import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-department-query.dto'
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
+import { StatisticsOverview } from '../../dto/statistics/statistics-overview-dto'
+import { StatisticsOverviewQuery } from '../../dto/statistics/statistics-overview-query.dto'
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {
@@ -13,6 +15,13 @@ export class StatisticsService implements IStatisticsService {
     params?: StatisticsDepartmentQuery | undefined,
   ): Promise<StatisticsDepartmentResponse> {
     this.logger.info('getDepartment', { params })
+    throw new Error('Method not implemented.')
+  }
+
+  getOverview(
+    params?: StatisticsOverviewQuery | undefined,
+  ): Promise<StatisticsOverview> {
+    this.logger.info('getOverview', { params })
     throw new Error('Method not implemented.')
   }
 }
