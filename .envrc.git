@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+HOOKS_DIR=$(git rev-parse --git-dir)/hooks
+CUSTOM_HOOKS_DIR=$(git rev-parse --show-toplevel)/.githooks
+
+for hook in post-checkout post-merge; do
+  if [ ! -f "$HOOKS_DIR/$hook" ] && [ -f "$CUSTOM_HOOKS_DIR/$hook" ]; then
+    cp "$CUSTOM_HOOKS_DIR/$hook" "$HOOKS_DIR/$hook"
+  fi
+done

@@ -1,0 +1,4 @@
+#/bin/bash
+
+git_root=$(git rev-parse --show-toplevel)
+${git_root}/.gitscripts/handle-submodule-and-sparse-checkout
