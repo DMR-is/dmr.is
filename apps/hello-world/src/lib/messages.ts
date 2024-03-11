@@ -99,7 +99,7 @@ export const messages = {
       print_version: {
         title: 'Prentvæn útgáfa',
         description:
-          'Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+          'Rorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
         linkText: 'Sækja prentútgáfu',
       },
     },

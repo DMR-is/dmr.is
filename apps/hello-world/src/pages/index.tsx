@@ -13,6 +13,7 @@ import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
 import { messages } from '../lib/messages'
 import { StatisticsNotPublished } from '../components/statistics/NotPublished'
+import { ImageWithText } from '../components/image-with-text/ImageWithText'
 export default function HomePage() {
   const ritstjornTabs = [
     {
@@ -137,7 +138,33 @@ export default function HomePage() {
           </GridRow>
         </GridContainer>
       </Section>
-      <Section></Section>
+      <Section>
+        <ImageWithText
+          title={messages.components.image_with_text.new_adverts.title}
+          image="/assets/image-with-text-1.svg"
+          linkText={messages.components.image_with_text.new_adverts.linkText}
+          link="#"
+          linkIcon="open"
+          linkIconType="outline"
+        >
+          <Text variant="intro">
+            {messages.components.image_with_text.print_version.description}
+          </Text>
+        </ImageWithText>
+        <ImageWithText
+          title={messages.components.image_with_text.print_version.title}
+          image="/assets/image-with-text-2.svg"
+          linkText={messages.components.image_with_text.print_version.linkText}
+          link="#"
+          linkIcon="arrowForward"
+          linkIconType="outline"
+          align="rtl"
+        >
+          <Text variant="intro">
+            {messages.components.image_with_text.print_version.description}
+          </Text>
+        </ImageWithText>
+      </Section>
     </Layout>
   )
 }
