@@ -3,6 +3,11 @@ import { IStatisticsService } from './statistics.service.interface'
 import { LoggingModule } from '@dmr.is/logging'
 import { MockStatisticsService } from './statistics.service.mock'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '../../mock/journal.mock'
+import {
+  StatisticsOverviewQuery,
+  StatisticsOverviewQueryType,
+} from '../../dto/statistics/statistics-overview-query.dto'
+import { NotImplementedException } from '@nestjs/common'
 
 describe('StatisticsService', () => {
   let service: IStatisticsService
@@ -32,6 +37,34 @@ describe('StatisticsService', () => {
     it('Should return total count larger than 0', async () => {
       const results = await service.getDepartment({ id: idWithAdverts })
       expect(results.totalAdverts).toBeGreaterThan(0)
+    })
+  })
+
+  describe('getOverview', () => {
+    it('Should return bad request when missing parameter', async () => {
+      expect(async () => {
+        await service.getOverview()
+      }).rejects.toThrow('Missing parameters')
+    })
+
+    it('Should return total count larger than 0', async () => {
+      const results = await service.getOverview({
+        type: StatisticsOverviewQueryType.General,
+      })
+      expect(results.totalAdverts).toEqual(0)
+    })
+
+    it('Should throw not implemented error', async () => {
+      try {
+        await service.getOverview({
+          type: StatisticsOverviewQueryType.Personal,
+        })
+      } catch (error) {
+        if (error instanceof NotImplementedException) {
+          expect(error.message).toEqual('Not Implemented')
+          expect(error.getStatus()).toEqual(501)
+        }
+      }
     })
   })
 })
