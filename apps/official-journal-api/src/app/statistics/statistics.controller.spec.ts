@@ -4,6 +4,8 @@ import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '../../mock/journal.mock'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { StatisticsOverviewQueryType } from '../../dto/statistics/statistics-overview-query.dto'
+import { NotImplementedException } from '@nestjs/common'
 
 describe('StatisticsController', () => {
   let statistics: TestingModule
@@ -49,6 +51,32 @@ describe('StatisticsController', () => {
       expect(async () => {
         await controller.department()
       }).rejects.toThrow('Missing parameters')
+    })
+  })
+
+  describe('overview', () => {
+    it('Should return bad request when missing parameter', async () => {
+      expect(async () => {
+        await controller.overview()
+      }).rejects.toThrow('Missing parameters')
+    })
+
+    it('Should return total count larger than 0', async () => {
+      const results = await controller.overview({
+        type: StatisticsOverviewQueryType.General,
+      })
+      expect(results.totalAdverts).toEqual(0)
+    })
+
+    it('Should throw not implemented error', async () => {
+      try {
+        await controller.overview({ type: StatisticsOverviewQueryType.General })
+      } catch (error) {
+        if (error instanceof NotImplementedException) {
+          expect(error.message).toEqual('Not Implemented')
+          expect(error.getStatus()).toEqual(501)
+        }
+      }
     })
   })
 })
