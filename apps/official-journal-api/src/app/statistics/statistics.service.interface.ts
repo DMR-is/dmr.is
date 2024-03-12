@@ -1,6 +1,6 @@
 import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-department-query.dto'
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import { StatisticsOverview } from '../../dto/statistics/statistics-overview-dto'
+import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
 import { StatisticsOverviewQuery } from '../../dto/statistics/statistics-overview-query.dto'
 
 export interface IStatisticsService {
@@ -8,7 +8,9 @@ export interface IStatisticsService {
     params?: StatisticsDepartmentQuery,
   ): Promise<StatisticsDepartmentResponse>
 
-  getOverview(params?: StatisticsOverviewQuery): Promise<StatisticsOverview>
+  getOverview(
+    params?: StatisticsOverviewQuery,
+  ): Promise<StatisticsOverviewResponse>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')
