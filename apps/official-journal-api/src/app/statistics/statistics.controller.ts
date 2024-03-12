@@ -5,6 +5,7 @@ import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-depar
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
 import { StatisticsOverviewQuery } from '../../dto/statistics/statistics-overview-query.dto'
+import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
 
 @Controller({
   version: '1',
@@ -31,7 +32,7 @@ export class StatisticsController {
   @ApiQuery({ name: 'params', type: StatisticsOverviewQuery })
   @ApiResponse({
     status: 200,
-    type: StatisticsDepartmentResponse,
+    type: StatisticsOverviewResponse,
     description: 'Gets statistics for all departments',
   })
   overview(@Query() params?: StatisticsOverviewQuery) {

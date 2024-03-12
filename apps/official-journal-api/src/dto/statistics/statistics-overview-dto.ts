@@ -14,7 +14,7 @@ export class StatisticsOverviewCategory {
   text!: string
 }
 
-export class StatisticsOverview {
+export class StatisticsOverviewResponse {
   @ApiProperty({
     type: Number,
     required: true,

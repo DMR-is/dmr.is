@@ -12,7 +12,7 @@ import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-de
 import { ALL_MOCK_ADVERTS } from '../../mock/journal.mock'
 import { JournalAdvertStatus } from '../../dto/journal-constants.dto'
 import {
-  StatisticsOverview,
+  StatisticsOverviewResponse,
   StatisticsOverviewCategory,
 } from '../../dto/statistics/statistics-overview-dto'
 import {
@@ -98,7 +98,9 @@ export class MockStatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(params?: StatisticsOverviewQuery): Promise<StatisticsOverview> {
+  getOverview(
+    params?: StatisticsOverviewQuery,
+  ): Promise<StatisticsOverviewResponse> {
     if (!params?.type) {
       throw new BadRequestException('Missing parameters')
     }
