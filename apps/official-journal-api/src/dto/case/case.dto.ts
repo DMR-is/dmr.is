@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
+  IsArray,
   IsBoolean,
   IsDateString,
   IsEnum,
@@ -15,6 +16,7 @@ import { CaseStatus, CaseTag } from './case-constants'
 import { CaseInstitution } from './case-institution.dto'
 import { JournalAdvert } from '../adverts/journal-advert.dto'
 import { Type } from 'class-transformer'
+import { CaseComment } from './case-comment.dto'
 
 export class Case {
   @ApiProperty({
@@ -166,4 +168,27 @@ export class Case {
   })
   @IsBoolean()
   paid!: boolean
+
+  @ApiProperty({
+    type: [CaseComment],
+    description: 'Comments on the case.',
+    example: [
+      {
+        id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+        createdAt: '2024-01-01T09:00:00Z',
+        type: 'Comment',
+        task: {
+          from: 'Ármann',
+          to: null,
+          title: 'gerir athugasemd',
+          comment:
+            'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+        },
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CaseComment)
+  comments!: CaseComment[]
 }

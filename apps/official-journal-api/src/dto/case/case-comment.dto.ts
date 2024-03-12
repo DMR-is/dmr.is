@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { CaseTask as CaseTaskType } from './case-constants'
-import { IsDateString, IsEnum, IsUUID } from 'class-validator'
+import { CaseCommentType } from './case-constants'
+import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator'
+import { CaseCommentTask } from './case-comment-task.dto'
+import { Type } from 'class-transformer'
 
 export class CaseComment {
   @ApiProperty({
@@ -21,13 +23,25 @@ export class CaseComment {
   readonly createdAt!: string
 
   @ApiProperty({
-    enum: CaseTaskType,
-    example: CaseTaskType.Comment,
+    enum: CaseCommentType,
+    example: CaseCommentType.Comment,
     description: 'Type of the case task.',
   })
-  @IsEnum(CaseTaskType)
-  type!: CaseTaskType
+  @IsEnum(CaseCommentType)
+  type!: CaseCommentType
 
-  @ApiProperty({})
-  task!: string
+  @ApiProperty({
+    type: CaseCommentTask,
+    example: {
+      from: 'Ármann',
+      to: null,
+      title: 'gerir athugasemd',
+      comment: `Pálína, getur
+      þú tekið við og staðfest að upplýsingarnar séu réttar?`,
+    },
+    description: 'The task itself',
+  })
+  @Type(() => CaseCommentTask)
+  @ValidateNested()
+  task!: CaseCommentTask
 }

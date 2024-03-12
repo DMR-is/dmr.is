@@ -12,7 +12,7 @@ export enum CaseTag {
   RequiresReview = 'Þarf skoðun',
 }
 
-export enum CaseTask {
+export enum CaseCommentType {
   Submit = 'submit',
   Assign = 'assign',
   Update = 'update',
