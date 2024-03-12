@@ -38,12 +38,6 @@ describe('StatisticsService', () => {
   })
 
   describe('getOverview', () => {
-    it('Should return bad request when missing parameter', async () => {
-      expect(async () => {
-        await service.getOverview()
-      }).rejects.toThrow('Missing parameters')
-    })
-
     it('Should return total count larger than 0', async () => {
       const results = await service.getOverview(
         StatisticsOverviewQueryType.General,

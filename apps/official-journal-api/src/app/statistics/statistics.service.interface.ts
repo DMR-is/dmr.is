@@ -2,9 +2,9 @@ import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-de
 import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
 
 export interface IStatisticsService {
-  getDepartment(params?: string): Promise<StatisticsDepartmentResponse>
+  getDepartment(type: string): Promise<StatisticsDepartmentResponse>
 
-  getOverview(id?: string): Promise<StatisticsOverviewResponse>
+  getOverview(id: string): Promise<StatisticsOverviewResponse>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

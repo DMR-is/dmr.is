@@ -46,21 +46,9 @@ describe('StatisticsController', () => {
       const results = await controller.department(idWithStatistics)
       expect(results.totalAdverts).toBeGreaterThan(0)
     })
-
-    it('Should return a bad request when missing parameter', async () => {
-      expect(async () => {
-        await controller.department()
-      }).rejects.toThrow('Missing parameters')
-    })
   })
 
   describe('overview', () => {
-    it('Should return bad request when missing parameter', async () => {
-      expect(async () => {
-        await controller.overview()
-      }).rejects.toThrow('Missing parameters')
-    })
-
     it('Should return total count larger than 0', async () => {
       const results = await controller.overview(
         StatisticsOverviewQueryType.General,

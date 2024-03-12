@@ -21,8 +21,8 @@ export class MockStatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using StatisticsServiceMock')
   }
-  getDepartment(id?: string): Promise<StatisticsDepartmentResponse> {
-    if (id) {
+  getDepartment(id: string): Promise<StatisticsDepartmentResponse> {
+    if (!id) {
       throw new BadRequestException('Missing parameters')
     }
 
@@ -92,7 +92,7 @@ export class MockStatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(type?: string): Promise<StatisticsOverviewResponse> {
+  getOverview(type: string): Promise<StatisticsOverviewResponse> {
     if (!type) {
       throw new BadRequestException('Missing parameters')
     }
