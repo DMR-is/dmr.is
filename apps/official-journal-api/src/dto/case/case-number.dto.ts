@@ -8,7 +8,7 @@ export class CaseNumber {
   })
   @IsNumber()
   @Validate((value: number) => value > 999 && value < 10000)
-  year!: string
+  year!: number
 
   @ApiProperty({
     type: Number,
