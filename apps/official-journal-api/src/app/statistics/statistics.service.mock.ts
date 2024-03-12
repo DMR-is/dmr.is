@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-department-query.dto'
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
 import { ALL_MOCK_ADVERTS } from '../../mock/journal.mock'
 import { JournalAdvertStatus } from '../../dto/journal-constants.dto'
@@ -15,20 +14,15 @@ import {
   StatisticsOverviewResponse,
   StatisticsOverviewCategory,
 } from '../../dto/statistics/statistics-overview-dto'
-import {
-  StatisticsOverviewQuery,
-  StatisticsOverviewQueryType,
-} from '../../dto/statistics/statistics-overview-query.dto'
+import { StatisticsOverviewQueryType } from '../../dto/statistics/statistics-overview-query.dto'
 
 @Injectable()
 export class MockStatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using StatisticsServiceMock')
   }
-  getDepartment(
-    params?: StatisticsDepartmentQuery,
-  ): Promise<StatisticsDepartmentResponse> {
-    if (!params?.id) {
+  getDepartment(id: string): Promise<StatisticsDepartmentResponse> {
+    if (!id) {
       throw new BadRequestException('Missing parameters')
     }
 
@@ -41,7 +35,7 @@ export class MockStatisticsService implements IStatisticsService {
 
     const adverts = ALL_MOCK_ADVERTS.filter(
       (advert) =>
-        advert.department.id === params.id && statuses.includes(advert.status),
+        advert.department.id === id && statuses.includes(advert.status),
     )
 
     let submitted = 0
@@ -98,16 +92,20 @@ export class MockStatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(
-    params?: StatisticsOverviewQuery,
-  ): Promise<StatisticsOverviewResponse> {
-    if (!params?.type) {
+  getOverview(type: string): Promise<StatisticsOverviewResponse> {
+    if (!type) {
       throw new BadRequestException('Missing parameters')
     }
+
+    // check if type is in enum
+    if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
+      throw new BadRequestException('Invalid type')
+    }
+
     let categories: StatisticsOverviewCategory[] = []
     let totalAdverts = 0
 
-    if (params.type === StatisticsOverviewQueryType.General) {
+    if (type === StatisticsOverviewQueryType.General) {
       let submitted = 0
       let inProgress = 0
       // let submittedFastTrack = 0
@@ -144,11 +142,11 @@ export class MockStatisticsService implements IStatisticsService {
         },
       ]
       totalAdverts = adverts.length
-    } else if (params.type === StatisticsOverviewQueryType.Personal) {
+    } else if (type === StatisticsOverviewQueryType.Personal) {
       throw new NotImplementedException()
-    } else if (params.type === StatisticsOverviewQueryType.Inactive) {
+    } else if (type === StatisticsOverviewQueryType.Inactive) {
       throw new NotImplementedException()
-    } else if (params.type === StatisticsOverviewQueryType.Publishing) {
+    } else if (type === StatisticsOverviewQueryType.Publishing) {
       let today = 0
       let pastDue = 0
 

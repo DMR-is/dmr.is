@@ -1,10 +1,8 @@
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
-import { StatisticsDepartmentQuery } from '../../dto/statistics/statistics-department-query.dto'
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
 import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import { StatisticsOverviewQuery } from '../../dto/statistics/statistics-overview-query.dto'
 import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
 
 @Controller({
@@ -18,24 +16,28 @@ export class StatisticsController {
   ) {}
 
   @Get('department')
-  @ApiQuery({ name: 'params', type: StatisticsDepartmentQuery })
+  @ApiQuery({ name: 'id', type: String, required: true })
   @ApiResponse({
     status: 200,
     type: StatisticsDepartmentResponse,
     description: 'Gets statistics for individual department (a, b or c)',
   })
-  department(@Query() params?: StatisticsDepartmentQuery) {
-    return this.statisticsService.getDepartment(params)
+  async department(
+    @Query('id') id: string,
+  ): Promise<StatisticsDepartmentResponse> {
+    return this.statisticsService.getDepartment(id)
   }
 
   @Get('overview')
-  @ApiQuery({ name: 'params', type: StatisticsOverviewQuery })
+  @ApiQuery({ name: 'type', type: String, required: true })
   @ApiResponse({
     status: 200,
     type: StatisticsOverviewResponse,
-    description: 'Gets statistics for all departments',
+    description: 'Gets overview of statistics',
   })
-  overview(@Query() params?: StatisticsOverviewQuery) {
-    return this.statisticsService.getOverview(params)
+  async overview(
+    @Query('type') type: string,
+  ): Promise<StatisticsOverviewResponse> {
+    return this.statisticsService.getOverview(type)
   }
 }
