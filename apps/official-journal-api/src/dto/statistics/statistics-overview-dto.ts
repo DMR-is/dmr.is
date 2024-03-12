@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsArray, IsNumber, ValidateNested } from 'class-validator'
 
 export class StatisticsOverviewCategory {
   @ApiProperty({
@@ -16,14 +18,17 @@ export class StatisticsOverviewCategory {
 
 export class StatisticsOverviewResponse {
   @ApiProperty({
-    type: Number,
-    required: true,
+    type: [StatisticsOverviewCategory],
   })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StatisticsOverviewCategory)
   categories!: StatisticsOverviewCategory[]
 
   @ApiProperty({
     type: Number,
     required: true,
   })
+  @IsNumber()
   totalAdverts!: number
 }
