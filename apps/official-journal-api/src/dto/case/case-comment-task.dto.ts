@@ -6,7 +6,7 @@ export class CaseCommentTask {
     type: String,
     description:
       'From who or what initied the task, used by client to show who inited the task.',
-    examples: ['Ármann', 'Pálina J'],
+    example: 'Ármann',
   })
   @ValidateIf((o) => o.from !== null)
   @IsString()
@@ -15,7 +15,7 @@ export class CaseCommentTask {
   @ApiProperty({
     type: String,
     description: 'To whom or what the task is assigned to.',
-    examples: ['Ármann', 'Yfirlestur', 'Tilbúið til útgáfu'],
+    example: 'Pálina J',
   })
   @ValidateIf((o) => o.to !== null)
   @IsString()
@@ -23,7 +23,7 @@ export class CaseCommentTask {
 
   @ApiProperty({
     type: String,
-    examples: ['gerir athugasemd', 'færir mál á', 'uppfærir stöðu:'],
+    example: 'gerir athugasemd',
     description: 'The task title',
   })
   @IsString()
@@ -32,10 +32,8 @@ export class CaseCommentTask {
   @ApiProperty({
     type: String,
     description: 'The comment itself',
-    examples: [
+    example:
       'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
-      'Það er eitthvað bogið við þetta, hætti við útgáfu.',
-    ],
   })
   @ValidateIf((o) => o.comment !== null)
   @IsString()

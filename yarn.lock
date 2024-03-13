@@ -3082,6 +3082,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openapitools/openapi-generator-cli@npm:1.0.15-4.3.1":
+  version: 1.0.15-4.3.1
+  resolution: "@openapitools/openapi-generator-cli@npm:1.0.15-4.3.1"
+  bin:
+    openapi-generator: ./bin/openapi-generator
+  checksum: 4cbcdd775f0f159b32fe7d89b10752e07f1e33f1de1f460e935848332779848a5b6e6a05de8158908a71748146589509caba34373a040c9ee524a5f7397ee5d9
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/api@npm:^1.0.0":
   version: 1.7.0
   resolution: "@opentelemetry/api@npm:1.7.0"
@@ -6749,6 +6758,7 @@ __metadata:
     "@nx/node": "npm:^17.2.5"
     "@nx/react": "npm:^17.2.5"
     "@nx/webpack": "npm:v17.2.5"
+    "@openapitools/openapi-generator-cli": "npm:1.0.15-4.3.1"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.7"
     "@svgr/webpack": "npm:^8.0.1"
     "@swc-node/register": "npm:~1.6.7"

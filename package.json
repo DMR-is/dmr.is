@@ -6,7 +6,8 @@
     "start": "nx serve",
     "test": "nx test",
     "lint": "nx lint",
-    "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary"
+    "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary",
+    "openapi-generator": "openapi-generator generate -g typescript-fetch --additional-properties=typescriptThreePlus=true"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.1",
@@ -63,6 +64,7 @@
     "@nestjs/core": "^10.2.10",
     "@nestjs/platform-express": "^10.0.2",
     "@nestjs/swagger": "^7.1.17",
+    "@openapitools/openapi-generator-cli": "1.0.15-4.3.1",
     "@types/uuid": "^9.0.8",
     "axios": "^1.0.0",
     "class-transformer": "^0.5.1",
