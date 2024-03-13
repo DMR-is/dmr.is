@@ -42,4 +42,21 @@ describe('CaseService', () => {
       }).rejects.toThrow('Case not found')
     })
   })
+
+  describe('getCases', () => {
+    it('Should return all cases', async () => {
+      const results = await service.getCases()
+      expect(results.cases.length).toEqual(1)
+    })
+
+    it('Should return case with caseNumber 01905', async () => {
+      const results = await service.getCases({ caseNumber: '01905' })
+      expect(results.cases.length).toEqual(1)
+    })
+
+    it('Should return no results', async () => {
+      const results = await service.getCases({ caseNumber: '00000' })
+      expect(results.cases.length).toEqual(0)
+    })
+  })
 })

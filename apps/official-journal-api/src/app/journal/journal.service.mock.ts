@@ -18,7 +18,6 @@ import { JournalAdvertTypesResponse } from '../../dto/types/journal-gettypes-res
 import { JournalGetDepartmentsQueryParams } from '../../dto/departments/journal-getdepartments-query.dto'
 import { JournalGetCategoriesQueryParams } from '../../dto/categories/journal-getcategories-query.dto'
 import { JournalAdvertCategoriesResponse } from '../../dto/categories/journal-getcategories-responses.dto'
-import { JournalPaging } from '../../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
 import { JournalAdvertStatus } from '../../dto/journal-constants.dto'
@@ -29,12 +28,12 @@ import { JournalSignature } from '../../dto/signatures/journal-signature.dto'
 import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
 import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
 import { IJournalService } from './journal.service.interface'
+import { DEFAULT_PAGE_SIZE } from '../../constants'
+import { generatePaging } from '../../utils'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
 const LOGGING_CATEGORY = 'MockJournalService'
-
-const DEFAULT_PAGE_SIZE = 2
 
 function slicePagedData<T>(
   data: T[],
@@ -42,28 +41,6 @@ function slicePagedData<T>(
   pageSize = DEFAULT_PAGE_SIZE,
 ): T[] {
   return data.slice((page - 1) * pageSize, page * pageSize)
-}
-
-function generatePaging(
-  data: unknown[],
-  page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
-): JournalPaging {
-  const totalPages = Math.ceil(data.length / pageSize)
-  const totalItems = data.length
-  const nextPage = page + 1
-  const previousPage = page - 1
-
-  return {
-    page,
-    pageSize,
-    totalPages,
-    totalItems,
-    nextPage: nextPage <= totalPages ? nextPage : null,
-    previousPage: previousPage > 0 ? previousPage : null,
-    hasNextPage: nextPage <= totalPages,
-    hasPreviousPage: previousPage > 0,
-  }
 }
 
 @Injectable()

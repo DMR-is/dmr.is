@@ -43,4 +43,21 @@ describe('CaseController', () => {
       }).rejects.toThrow('Case not found')
     })
   })
+
+  describe('/', () => {
+    it('should return correct cases', async () => {
+      const result = await caseController.cases()
+      expect(result.cases.length).toEqual(1)
+    })
+
+    it('should return case with caseNumber 01905', async () => {
+      const result = await caseController.cases(undefined, undefined, '01905')
+      expect(result.cases.length).toEqual(1)
+    })
+
+    it('should return no results', async () => {
+      const result = await caseController.cases(undefined, undefined, '00000')
+      expect(result.cases.length).toEqual(0)
+    })
+  })
 })

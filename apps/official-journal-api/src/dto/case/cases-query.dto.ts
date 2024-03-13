@@ -41,10 +41,10 @@ export class CasesQuery {
   caseNumber?: string
 
   @ApiProperty({
+    enum: CaseStatus,
     name: 'status',
     description:
       'Status to filter cases on, takes into account `status` on `Case`.',
-    type: CaseStatus,
     required: false,
   })
   @IsOptional()
@@ -99,21 +99,21 @@ export class CasesQuery {
     name: 'dateFrom',
     description:
       'Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
-    type: Date,
+    type: String,
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  dateFrom?: Date
+  dateFrom?: string
 
   @ApiProperty({
     name: 'dateTo',
     description:
       'Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
-    type: Date,
+    type: String,
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  dateTo?: Date
+  dateTo?: string
 }
