@@ -1,5 +1,5 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { Controller, Get, Inject, Param } from '@nestjs/common'
+import { ApiResponse } from '@nestjs/swagger'
 import { Case } from '../../dto/case/case.dto'
 import { ICaseService } from './case.service.interface'
 

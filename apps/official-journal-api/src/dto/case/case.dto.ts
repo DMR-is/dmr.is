@@ -8,10 +8,11 @@ import {
   IsString,
   IsUUID,
   Length,
+  Max,
+  Min,
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
-import { CaseNumber } from './case-number.dto'
 import { CaseStatus, CaseTag } from './case-constants'
 import { CaseInstitution } from './case-institution.dto'
 import { JournalAdvert } from '../adverts/journal-advert.dto'
@@ -38,29 +39,23 @@ export class Case {
   readonly applicationId!: string | null
 
   @ApiProperty({
-    type: CaseNumber,
-    example: {
-      year: 2024,
-      number: 253,
-      full: '253/2024',
-    },
-    description:
-      'Case number gets generated automatically when a case is created.',
+    type: String,
+    example: 2024,
+    description: 'Year the case was created.',
   })
-  @ValidateNested()
-  @Type(() => CaseNumber)
-  readonly number!: CaseNumber
+  @IsNumber()
+  @Min(1000)
+  @Max(9999)
+  year!: number
 
   @ApiProperty({
     type: String,
-    examples: ['2024000000', '20209999'],
+    example: '01905',
     description:
-      'Publishing number is generated automatically when a case is published.',
+      'Case number (numeric string) gets generated automatically when a case is created.',
   })
-  @IsString()
-  @Length(8, 10)
-  @ValidateIf((o) => o.publishingNumber !== null)
-  publishingNumber!: string | null
+  @Type(() => String)
+  readonly caseNumber!: string
 
   @ApiProperty({
     enum: CaseStatus,

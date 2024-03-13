@@ -5,11 +5,8 @@ import { ADVERT_B_1278_2023 } from './journal.mock'
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
   applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134153',
-  number: {
-    year: 2024,
-    number: 253,
-    full: '253/2024',
-  },
+  year: 2024,
+  caseNumber: '01905',
   publishingNumber: null,
   status: CaseStatus.Submitted,
   tag: null,
