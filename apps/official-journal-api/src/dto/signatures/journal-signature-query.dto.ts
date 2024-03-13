@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
-import {
-  IsInt,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-} from 'class-validator'
+import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator'
 
 export class JournalSignatureQuery {
   @ApiProperty({
