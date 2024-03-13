@@ -10,14 +10,17 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
   SUBMODULE_PATH="${GIT_ROOT}/submodules/${NAME}"
   SHA=$(echo "${submodule}" | jq -r '.sha')
 
-  # Ensure submodule is initialized and updated
-  git submodule update --init "${SUBMODULE_PATH}"
+  # Quietly ensure submodule is initialized and updated
+  git submodule update --init --quiet "${SUBMODULE_PATH}"
 
-  # Fetch updates
-  git -C "${SUBMODULE_PATH}" fetch
+  # Fetch updates quietly
+  git -C "${SUBMODULE_PATH}" fetch --quiet
 
-  # Checkout to the specified SHA
-  git -C "${SUBMODULE_PATH}" checkout "${SHA}"
+  # Capture previous HEAD for later output
+  PREV_HEAD=$(git -C "${SUBMODULE_PATH}" rev-parse HEAD)
+
+  # Checkout to the specified SHA quietly
+  git -C "${SUBMODULE_PATH}" checkout --quiet "${SHA}"
 
   # Enable sparse-checkout
   git -C "${SUBMODULE_PATH}" config core.sparseCheckout true
@@ -27,17 +30,21 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
     git -C "${SUBMODULE_PATH}" config --add core.sparseCheckoutPath "${path}"
   done
 
-  # Refresh working directory
-  git -C "${SUBMODULE_PATH}" read-tree -mu HEAD
+  # Refresh working directory quietly
+  git -C "${SUBMODULE_PATH}" read-tree -mu --quiet HEAD
 
-  # List commits from the pinned SHA to the current HEAD in a more detailed and nicely formatted manner
-  COMMIT_COUNT=$(git -C "${SUBMODULE_PATH}" rev-list --count "${SHA}..origin/main")
+  # New HEAD after checkout
+  NEW_HEAD=$(git -C "${SUBMODULE_PATH}" rev-parse HEAD)
 
-  if [ "$COMMIT_COUNT" -gt 0 ]; then
-    echo -e "\n🚀 Commits in ${NAME} from ${SHA} (🔒) to origin/main (🎯):\n"
-    git -C "${SUBMODULE_PATH}" log --pretty=format:'%C(auto)%h %Creset%s%C(auto)%d %Creset%C(bold blue)<%an>%Creset %C(green)(%ar)%Creset' "${SHA}..origin/main"
+  echo -e "\nPrevious HEAD position was ${PREV_HEAD}"
+  echo -e "HEAD is now at ${NEW_HEAD}\n"
+
+  SPARSE_PATHS=$(echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' | xargs echo)
+  if [ -n "$SPARSE_PATHS" ]; then
+    echo -e "🚀 Commits in ${NAME} affecting paths: $SPARSE_PATHS\n"
+    # List commits quietly, focusing on the affected paths
+    git -C "${SUBMODULE_PATH}" log --color=always --pretty=format:'%C(auto)%h%C(reset) - %s%C(auto)%d %C(bold blue)<%an>%Creset %C(green)(%ar)%Creset' "${SHA}..origin/main" -- $SPARSE_PATHS
   else
-    echo "No new commits in ${NAME} from ${SHA} to origin/main. 🤷"
+    echo "No sparse-checkout paths configured for ${NAME}."
   fi
-
 done
