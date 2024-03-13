@@ -1,5 +1,4 @@
 import { Footer } from '@island.is/island-ui/core'
-import Head from 'next/head'
 
 import { Header } from '../header/Header'
 

@@ -96,7 +96,7 @@ export class Case {
     type: String,
     example: '0102030000',
     description:
-      'Someway of identifying the employee who is assigned to the case, defaults to null.',
+      'Someway of identifying the employee (employeeId?), defaults to null.',
   })
   @IsString()
   @ValidateIf((o) => o.assignedTo !== null)

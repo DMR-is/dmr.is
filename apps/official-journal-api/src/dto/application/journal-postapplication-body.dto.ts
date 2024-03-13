@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { JournalSignature } from '../signatures/journal-signature.dto'
 import { JournalSignatureBody } from '../signatures/journal-signature-body.dto'
 
 export class JournalPostApplicationBody {

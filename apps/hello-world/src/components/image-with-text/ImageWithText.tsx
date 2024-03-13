@@ -40,6 +40,11 @@ export const ImageWithText = ({
           {image && <Box component="img" src={image} />}
         </GridColumn>
         <GridColumn className={styles.contentColumn} span={['12/12', '5/12']}>
+          {kicker && (
+            <Text variant="eyebrow" marginBottom={2}>
+              {kicker}
+            </Text>
+          )}
           {title && (
             <Text marginBottom={1} variant="h2">
               {title}
