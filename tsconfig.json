@@ -1,28 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "es2016",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "module": "commonjs",
-    "baseUrl": ".",
-    "paths": {
-      "@dmr.is/logging": [
-        "libs/logging/src/index.ts"
-      ],
-      "@dmr.is/apm": [
-        "libs/apm/src/index.ts"
-      ]
-    },
-    "sourceMap": true,
-    "importHelpers": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
-  },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "extends": "./tsconfig.base.json",
 }
