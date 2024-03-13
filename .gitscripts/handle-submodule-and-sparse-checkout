@@ -1,13 +1,22 @@
 #!/bin/bash
 
-SUBMODULE_PATH=submodules/monorepo
+set -euo pipefail
+
+SUBMODULE_PATH="submodules/monorepo"
 SPARSE_CHECKOUT_PATH="${SUBMODULE_PATH}/.git/info/sparse-checkout"
 DESIRED_SPARSE_PATTERN="libs/shared/*"
+CURRENT_PINNED_SHA_PATH="submodules/.monorepo-sha"
 
-# Ensure the submodule is initialized and updated.
-git submodule update --init --recursive "${SUBMODULE_PATH}"
+git submodule update --init "${SUBMODULE_PATH}"
 
-# Enable sparse-checkout if it's not already.
+git -C "${SUBMODULE_PATH}" fetch
+
+if [ -f "$CURRENT_PINNED_SHA_PATH" ]; then
+  CURRENT_PINNED_SHA=$(cat "$CURRENT_PINNED_SHA_PATH")
+  echo "New commits in ${DESIRED_SPARSE_PATTERN} since last pinned SHA (${CURRENT_PINNED_SHA}):"
+  git -C "${SUBMODULE_PATH}" log --oneline "${CURRENT_PINNED_SHA}..origin/main" -- "${DESIRED_SPARSE_PATTERN}"
+fi
+
 git -C "${SUBMODULE_PATH}" config core.sparseCheckout true
 
 # Check and set the sparse-checkout configuration only if it's different.
