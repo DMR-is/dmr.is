@@ -7,7 +7,6 @@ export const CASE_SUBMITTED: Case = {
   applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134153',
   year: 2024,
   caseNumber: '01905',
-  publishingNumber: null,
   status: CaseStatus.Submitted,
   tag: null,
   createdAt: '2024-03-12T12:45:48.21Z',
