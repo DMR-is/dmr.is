@@ -2,6 +2,7 @@ import { Controller, Get, Inject, Param } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { Case } from '../../dto/case/case.dto'
 import { ICaseService } from './case.service.interface'
+import { CasesReponse } from '../../dto/case/cases-response'
 
 @Controller({
   version: '1',
@@ -23,5 +24,15 @@ export class CaseController {
   })
   async case(@Param('id') id: string): Promise<Case | null> {
     return this.caseService.getCase(id)
+  }
+
+  @Get('/')
+  @ApiResponse({
+    status: 200,
+    type: CasesReponse,
+    description: 'All cases.',
+  })
+  async cases(): Promise<CasesReponse> {
+    return this.caseService.getCases()
   }
 }
