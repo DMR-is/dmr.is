@@ -167,20 +167,18 @@ export class Case {
   @ApiProperty({
     type: [CaseComment],
     description: 'Comments on the case.',
-    example: [
-      {
-        id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
-        createdAt: '2024-01-01T09:00:00Z',
-        type: 'Comment',
-        task: {
-          from: 'Ármann',
-          to: null,
-          title: 'gerir athugasemd',
-          comment:
-            'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
-        },
+    example: {
+      id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+      createdAt: '2024-01-01T09:00:00Z',
+      type: 'Comment',
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: 'gerir athugasemd',
+        comment:
+          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
       },
-    ],
+    },
   })
   @IsArray()
   @ValidateNested({ each: true })

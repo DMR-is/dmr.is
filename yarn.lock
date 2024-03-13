@@ -3082,6 +3082,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openapitools/openapi-generator-cli@npm:1.0.15-4.3.1":
+  version: 1.0.15-4.3.1
+  resolution: "@openapitools/openapi-generator-cli@npm:1.0.15-4.3.1"
+  bin:
+    openapi-generator: ./bin/openapi-generator
+  checksum: 4cbcdd775f0f159b32fe7d89b10752e07f1e33f1de1f460e935848332779848a5b6e6a05de8158908a71748146589509caba34373a040c9ee524a5f7397ee5d9
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/api@npm:^1.0.0":
   version: 1.7.0
   resolution: "@opentelemetry/api@npm:1.7.0"
@@ -3936,6 +3945,16 @@ __metadata:
   version: 0.7.34
   resolution: "@types/ms@npm:0.7.34"
   checksum: ac80bd90012116ceb2d188fde62d96830ca847823e8ca71255616bc73991aa7d9f057b8bfab79e8ee44ffefb031ddd1bcce63ea82f9e66f7c31ec02d2d823ccc
+  languageName: node
+  linkType: hard
+
+"@types/node-fetch@npm:^2.6.11":
+  version: 2.6.11
+  resolution: "@types/node-fetch@npm:2.6.11"
+  dependencies:
+    "@types/node": "npm:*"
+    form-data: "npm:^4.0.0"
+  checksum: 5283d4e0bcc37a5b6d8e629aee880a4ffcfb33e089f4b903b2981b19c623972d1e64af7c3f9540ab990f0f5c89b9b5dda19c5bcb37a8e177079e93683bfd2f49
   languageName: node
   linkType: hard
 
@@ -6749,6 +6768,7 @@ __metadata:
     "@nx/node": "npm:^17.2.5"
     "@nx/react": "npm:^17.2.5"
     "@nx/webpack": "npm:v17.2.5"
+    "@openapitools/openapi-generator-cli": "npm:1.0.15-4.3.1"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.7"
     "@svgr/webpack": "npm:^8.0.1"
     "@swc-node/register": "npm:~1.6.7"
@@ -6758,6 +6778,7 @@ __metadata:
     "@types/jest": "npm:^29.4.0"
     "@types/license-checker": "npm:^25"
     "@types/node": "npm:18.16.9"
+    "@types/node-fetch": "npm:^2.6.11"
     "@types/pg": "npm:^8"
     "@types/react": "npm:18.2.33"
     "@types/react-dom": "npm:18.2.14"
@@ -6784,6 +6805,7 @@ __metadata:
     license-checker: "npm:^25.0.1"
     nest-winston: "npm:^1.9.4"
     next: "npm:14.0.4"
+    node-fetch: "npm:2.6.7"
     nx: "npm:v17.2.5"
     pg: "npm:^8.11.3"
     prettier: "npm:^2.6.2"
@@ -11203,9 +11225,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7":
-  version: 2.7.0
-  resolution: "node-fetch@npm:2.7.0"
+"node-fetch@npm:2.6.7":
+  version: 2.6.7
+  resolution: "node-fetch@npm:2.6.7"
   dependencies:
     whatwg-url: "npm:^5.0.0"
   peerDependencies:
@@ -11213,7 +11235,7 @@ __metadata:
   peerDependenciesMeta:
     encoding:
       optional: true
-  checksum: b55786b6028208e6fbe594ccccc213cab67a72899c9234eb59dba51062a299ea853210fcf526998eaa2867b0963ad72338824450905679ff0fa304b8c5093ae8
+  checksum: fcae80f5ac52fbf5012f5e19df2bd3915e67d3b3ad51cb5942943df2238d32ba15890fecabd0e166876a9f98a581ab50f3f10eb942b09405c49ef8da36b826c7
   languageName: node
   linkType: hard
 

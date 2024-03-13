@@ -1,11 +1,17 @@
+import { dmrApi } from '../lib/api'
 import styles from './page.module.scss'
 
+const fetchCase = () => {
+  return dmrApi.caseControllerCase({
+    id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
+  })
+}
+
 export default async function Index() {
-  /*
-   * Replace the elements below with your own.
-   *
-   * Note: The corresponding styles are in the ./index.scss file.
-   */
+  const caseData = await fetchCase()
+
+  console.log(caseData)
+
   return (
     <div className={styles.page}>
       <div className="wrapper">

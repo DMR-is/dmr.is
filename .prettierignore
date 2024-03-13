@@ -14,3 +14,4 @@
 /infra/helm/
 .nx/
 **/.next/
+/.nx/cache
