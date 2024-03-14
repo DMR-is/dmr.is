@@ -1,10 +1,21 @@
-import { Box, SkeletonLoader, Text } from '@island.is/island-ui/core'
+import { Box, Text } from '@island.is/island-ui/core'
 import type { AdvertCategory } from '../../hooks/useMockAdvertOverview'
-import { useMockAdvertOverview } from '../../hooks/useMockAdvertOverview'
 import * as styles from './AdvertsOverviewList.css'
 import { messages } from '../../lib/messages'
+
+type Category = {
+  text: string
+  totalAdverts: number
+}
+
+type AdvertOverviewData = {
+  categories: Category[]
+  totalAdverts: number
+}
+
 type Props = {
   variant?: AdvertCategory
+  data: AdvertOverviewData | null
 }
 
 type ItemProps = {
@@ -14,65 +25,8 @@ const AdvertsOverviewListItem = ({ children }: ItemProps) => {
   return <li className={styles.advertsOverviewListItem}>{children}</li>
 }
 
-export const AdvertsOverviewList = ({ variant = 'default' }: Props) => {
-  const [data, { loading }] = useMockAdvertOverview(variant)
-
-  const renderList = () => {
-    switch (data.__typename__) {
-      case 'regular':
-        return (
-          <>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.editorial.waitingForReview.replace(
-                '{total}',
-                data.unassignedAdverts.toString(),
-              )}
-            </AdvertsOverviewListItem>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.editorial.recentlyUpdated.replace(
-                '{total}',
-                data.recentlyUpdatedAdverts.toString(),
-              )}
-            </AdvertsOverviewListItem>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.editorial.fastTractSubmitted.replace(
-                '{total}',
-                data.submittedFastTrackAdverts.toString(),
-              )}
-            </AdvertsOverviewListItem>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.editorial.fastTrackInReview.replace(
-                '{total}',
-                data.inReadingFastTrackAdverts.toString(),
-              )}
-            </AdvertsOverviewListItem>
-          </>
-        )
-      case 'readyForPublishing':
-        return (
-          <>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.publishing.today.replace(
-                '{total}',
-                data.publishToday.toString(),
-              )}
-            </AdvertsOverviewListItem>
-            <AdvertsOverviewListItem>
-              {messages.components.adverts_overview_list.publishing.pastDue.replace(
-                '{total}',
-                data.pastPublishingDate.toString(),
-              )}
-            </AdvertsOverviewListItem>
-          </>
-        )
-      case 'assigned':
-        return null
-      case 'inactive':
-        return null
-    }
-  }
-
-  if (data.totalAdverts === 0) {
+export const AdvertsOverviewList = ({ variant = 'default', data }: Props) => {
+  if (!data || data?.totalAdverts === 0) {
     return (
       <Box className={styles.advertsOverviewListEmpty}>
         <div>
@@ -94,11 +48,14 @@ export const AdvertsOverviewList = ({ variant = 'default' }: Props) => {
     )
   }
 
-  if (loading) {
-    return (
-      <SkeletonLoader repeat={3} space={3} height={40} borderRadius="large" />
-    )
-  }
-
-  return <ul className={styles.advertsListOverview}>{renderList()}</ul>
+  return (
+    <ul className={styles.advertsListOverview}>
+      {data?.totalAdverts &&
+        data?.categories.map((category, index) => (
+          <AdvertsOverviewListItem key={index}>
+            {category.text}
+          </AdvertsOverviewListItem>
+        ))}
+    </ul>
+  )
 }

@@ -1,12 +1,17 @@
-import { Footer } from '@island.is/island-ui/core'
+import { Footer, Page } from '@island.is/island-ui/core'
 
-import { Header } from '../header/Header'
+import { Header } from '../components/header/Header'
+import Head from 'next/head'
+import { Main } from '../components/main/Main'
 
-type Props = {
+import type { Screen } from '../lib/types'
+
+type LayoutProps = {
   children?: React.ReactNode
+  showFooter?: boolean
 }
 
-export const Layout = ({ children }: Props) => {
+const Layout: Screen<LayoutProps> = ({ children, showFooter = false }) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -16,7 +21,7 @@ export const Layout = ({ children }: Props) => {
   ]
 
   return (
-    <>
+    <Page component="div">
       <Head>
         {preloadedFonts.map((href, index) => {
           return (
@@ -32,8 +37,8 @@ export const Layout = ({ children }: Props) => {
         })}
       </Head>
       <Header />
-      <main>{children}</main>
-      <Footer />
+      <Main>{children}</Main>
+      {showFooter && <Footer />}
       <style jsx global>{`
         @font-face {
           font-family: 'IBM Plex Sans';
@@ -81,6 +86,56 @@ export const Layout = ({ children }: Props) => {
             url('/fonts/ibm-plex-sans-v7-latin-600.woff') format('woff');
         }
       `}</style>
-    </>
+    </Page>
   )
+}
+
+Layout.getProps = async ({ req, res, query }) => {}
+
+type LayoutWrapper<T> = Screen<{ layoutProps: LayoutProps; componentProps: T }>
+
+export const withMainLayout = <T,>(
+  Component: Screen<T>,
+  layoutConfig: Partial<LayoutProps> = {},
+): LayoutWrapper<T> => {
+  const WithMainLayout: LayoutWrapper<T> = ({
+    layoutProps,
+    componentProps,
+  }) => {
+    return (
+      <Layout {...layoutProps}>
+        {/**
+         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+         // @ts-ignore make web strict */}
+        <Component {...componentProps} />
+      </Layout>
+    )
+  }
+
+  WithMainLayout.getProps = async (ctx) => {
+    // Configure default full-page caching.
+    // if (ctx.res) {
+    //   ctx.res.setHeader('Cache-Control', CACHE_CONTROL_HEADER)
+    // }
+
+    const getLayoutProps = Layout.getProps as Exclude<
+      typeof Layout.getProps,
+      undefined
+    >
+
+    const [layoutProps, componentProps] = await Promise.all([
+      getLayoutProps(ctx),
+      Component.getProps ? Component.getProps(ctx) : ({} as T),
+    ])
+
+    return {
+      layoutProps: {
+        ...layoutProps,
+        ...layoutConfig,
+      },
+      componentProps,
+    }
+  }
+
+  return WithMainLayout
 }

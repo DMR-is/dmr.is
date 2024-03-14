@@ -16,9 +16,7 @@
         "development": {
           "outputPath": "apps/hello-world"
         },
-        "production": {
-
-        }
+        "production": {}
       }
     },
     "serve": {
@@ -70,7 +68,7 @@
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "yarn openapi-generator -o apps/hello-world/gen/fetch -i apps/hello-world/clientConfig.json"
+        "command": "yarn openapi-generator -o apps/hello-world/src/gen/fetch -i apps/hello-world/clientConfig.json"
       },
       "outputs": ["{projectRoot}/gen/fetch"]
     }
