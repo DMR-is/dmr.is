@@ -4,12 +4,7 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "typescript-eslint/naming-convention": {
-          "selector": "import",
-          "format": ["camelCase", "PascalCase"]
-        }
-      }
+      "rules": {}
     },
     {
       "files": ["*.ts", "*.tsx"],
