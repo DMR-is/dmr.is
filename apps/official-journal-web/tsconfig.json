@@ -25,8 +25,8 @@
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "../../apps/hello-world/.next/types/**/*.ts",
-    "../../dist/apps/hello-world/.next/types/**/*.ts",
+    "../../apps/official-journal-web/.next/types/**/*.ts",
+    "../../dist/apps/official-journal-web/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
