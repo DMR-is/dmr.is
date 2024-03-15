@@ -33,30 +33,7 @@ export class CaseController {
     type: CasesReponse,
     description: 'All cases.',
   })
-  @ApiQuery({
-    name: 'params',
-    type: CasesQuery,
-    required: false,
-  })
-  async cases(
-    @Query('search') search?: string,
-    @Query('page') page?: number,
-    @Query('caseNumber') caseNumber?: string,
-    @Query('status') status?: string,
-    @Query('employeeId') employeeId?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('fastTrack') fastTrack?: boolean,
-  ): Promise<CasesReponse> {
-    return this.caseService.getCases({
-      search,
-      page: page ? page : undefined, // prevent NaN
-      caseNumber,
-      status,
-      employeeId,
-      dateFrom,
-      dateTo,
-      fastTrack,
-    })
+  async cases(@Query() params?: CasesQuery): Promise<CasesReponse> {
+    return this.caseService.getCases(params)
   }
 }
