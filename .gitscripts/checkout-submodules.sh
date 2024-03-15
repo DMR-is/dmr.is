@@ -16,9 +16,6 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
   # Fetch updates quietly
   git -C "${SUBMODULE_PATH}" fetch --quiet
 
-  # Capture previous HEAD for later output
-  PREV_HEAD=$(git -C "${SUBMODULE_PATH}" rev-parse HEAD)
-
   # Checkout to the specified SHA quietly
   git -C "${SUBMODULE_PATH}" checkout --quiet "${SHA}"
 
@@ -33,17 +30,11 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
   # Refresh working directory quietly
   git -C "${SUBMODULE_PATH}" read-tree -mu --quiet HEAD
 
-  # New HEAD after checkout
-  NEW_HEAD=$(git -C "${SUBMODULE_PATH}" rev-parse HEAD)
-
-  echo -e "\nPrevious HEAD position was ${PREV_HEAD}"
-  echo -e "HEAD is now at ${NEW_HEAD}\n"
-
-  SPARSE_PATHS=$(echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' | xargs echo)
+  SPARSE_PATHS=$(echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' | xargs)
   if [ -n "$SPARSE_PATHS" ]; then
-    echo -e "🚀 Commits in ${NAME} affecting paths: $SPARSE_PATHS\n"
-    # List commits quietly, focusing on the affected paths
-    git -C "${SUBMODULE_PATH}" log --color=always --pretty=format:'%C(auto)%h%C(reset) - %s%C(auto)%d %C(bold blue)<%an>%Creset %C(green)(%ar)%Creset' "${SHA}..origin/main" -- $SPARSE_PATHS
+    echo -e "🚀 Commits in ${NAME} from ${SHA} to origin/main affecting paths:\n"
+    git -C "${SUBMODULE_PATH}" log --color=always --pretty=format:'%C(auto)%h%C(reset) - %s %C(bold blue)<%an>%Creset %C(green)(%ar)%Creset' --name-only "${SHA}..origin/main" -- $SPARSE_PATHS |
+      awk '/^[0-9a-f]{7,}/ {print "\n"$0} !/^[0-9a-f]{7,}/ {print "    "$0}'
   else
     echo "No sparse-checkout paths configured for ${NAME}."
   fi
