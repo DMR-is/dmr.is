@@ -31,6 +31,10 @@ export default async function openNextBuildExecutor(
     const openNextBuildCommand = `open-next build --build-command "${buildCommand}" --build-output-path "${buildOptions.outputPath}" --app-path "${options.sourceRoot}" --minify`;
     const success = await runCommandProcess(openNextBuildCommand, context.root);
 
+    // These commands are essentially because of an issue with the open-next build not handling paths correctly
+    // and referencing the wrong path for the .next folder in some cases.
+    // Attempts for fixing this properly were made, but it did not seem possible.
+    // Hence the directory is copied to exist in both locations, `dist/` and `dist/dist/`.
     const mkdirCommand = `mkdir -p ${buildOptions.outputPath}/.open-next/server-function/dist/dist/apps/official-journal-web`;
     await runCommandProcess(mkdirCommand, context.root);
 
