@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -84,3 +84,37 @@ jobs:
           zip -r -q "../../../../${{ github.sha }}.zip" "." 
           popd
           aws s3 cp "${{ github.sha }}.zip" "s3://official-journal-web-dev-next-builds/${{ matrix.next-app }}/${{ github.sha }}.zip" 
+      
+      - uses: actions/checkout@v4
+        with:
+          repository: DMR-is/infrastructure
+          token: ${{ secrets.DMR_ACCOUNT_PAT }}
+
+      - uses: Homebrew/actions/setup-homebrew@master
+        name: Set up Homebrew
+        id: set-up-homebrew
+        
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ubuntu-latest-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ubuntu-latest-rubygems-
+      
+      - name: Install Terragrunt
+        run: brew install terragrunt
+
+      - name: Deploy
+        id: deploy
+        run: |
+          cd  utgafa
+          COMMIT_MSG=$(./scripts/update_next_app.sh --environment dev --sha ${{ github.sha }} --target official_journal_next_app --commit false)
+          echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: ${{ steps.deploy.outputs.COMMIT_MSG }}
+          skip_fetch: true
+        
