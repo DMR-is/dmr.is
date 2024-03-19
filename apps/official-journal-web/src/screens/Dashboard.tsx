@@ -224,6 +224,34 @@ Dashboard.getProps = async () => {
   }
 }
 
+const mockBannerCards = [
+  {
+    title: messages.components.banner.cards.editorial.title,
+    text: messages.components.banner.cards.editorial.description,
+    link: '/ritstjorn',
+    image: '/assets/ritstjorn-image.svg',
+  },
+  {
+    title: messages.components.banner.cards.publishing.title,
+    text: messages.components.banner.cards.publishing.description,
+    link: '/ritstjorn',
+    image: '/assets/utgafa-image.svg',
+  },
+  {
+    title: messages.components.banner.cards.all.title,
+    text: messages.components.banner.cards.all.description,
+    link: '/ritstjorn',
+    image: '/assets/heildar-image.svg',
+  },
+]
+
 export default withMainLayout(Dashboard, {
   showFooter: true,
+  bannerProps: {
+    showBanner: true,
+    cards: mockBannerCards,
+    description: messages.components.banner.description,
+    title: messages.components.banner.title,
+    imgSrc: '/assets/banner-image.svg',
+  },
 })

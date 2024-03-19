@@ -1,17 +1,51 @@
 import { Footer, Page } from '@island.is/island-ui/core'
 
 import { Header } from '../components/header/Header'
-import Head from 'next/head'
 import { Main } from '../components/main/Main'
+// eslint-disable-next-line @typescript-eslint/naming-convention
+import Head from 'next/head'
 
 import type { Screen } from '../lib/types'
+import { Banner } from '../components/banner/Banner'
+import { messages } from '../lib/messages'
+import { ComponentProps } from 'react'
+
+const mockBannerCards = [
+  {
+    title: messages.components.banner.cards.editorial.title,
+    text: messages.components.banner.cards.editorial.description,
+    link: '/ritstjorn',
+    image: '/assets/ritstjorn-image.svg',
+  },
+  {
+    title: messages.components.banner.cards.publishing.title,
+    text: messages.components.banner.cards.publishing.description,
+    link: '/ritstjorn',
+    image: '/assets/utgafa-image.svg',
+  },
+  {
+    title: messages.components.banner.cards.all.title,
+    text: messages.components.banner.cards.all.description,
+    link: '/ritstjorn',
+    image: '/assets/heildar-image.svg',
+  },
+]
+
+type BannerProps = ComponentProps<typeof Banner> & {
+  showBanner?: boolean
+}
 
 type LayoutProps = {
   children?: React.ReactNode
   showFooter?: boolean
+  bannerProps?: BannerProps
 }
 
-const Layout: Screen<LayoutProps> = ({ children, showFooter = false }) => {
+const Layout: Screen<LayoutProps> = ({
+  children,
+  showFooter = false,
+  bannerProps = { showBanner: true },
+}) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -37,7 +71,17 @@ const Layout: Screen<LayoutProps> = ({ children, showFooter = false }) => {
         })}
       </Head>
       <Header />
-      <Main>{children}</Main>
+      <Main>
+        {bannerProps.showBanner && (
+          <Banner
+            title={bannerProps.title}
+            description={bannerProps.description}
+            imgSrc={bannerProps.imgSrc}
+            cards={bannerProps.cards}
+          />
+        )}
+        {children}
+      </Main>
       {showFooter && <Footer />}
       <style jsx global>{`
         @font-face {
