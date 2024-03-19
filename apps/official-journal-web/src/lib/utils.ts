@@ -1,4 +1,13 @@
 import { FALLBACK_DOMAIN, JSON_ENDING } from './constants'
+import is from 'date-fns/locale/is'
+import format from 'date-fns/format'
+export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
+  try {
+    return format(new Date(date), df, { locale: is })
+  } catch (e) {
+    throw new Error(`Could not format date: ${date}`)
+  }
+}
 
 export const safelyExtractPathnameFromUrl = (url?: string) => {
   if (!url) return ''

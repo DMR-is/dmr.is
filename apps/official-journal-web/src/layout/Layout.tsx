@@ -12,20 +12,20 @@ import { ComponentProps } from 'react'
 
 const mockBannerCards = [
   {
-    title: messages.components.banner.cards.editorial.title,
-    text: messages.components.banner.cards.editorial.description,
+    title: messages.components.frontpageBanner.cards.editorial.title,
+    text: messages.components.frontpageBanner.cards.editorial.description,
     link: '/ritstjorn',
     image: '/assets/ritstjorn-image.svg',
   },
   {
-    title: messages.components.banner.cards.publishing.title,
-    text: messages.components.banner.cards.publishing.description,
+    title: messages.components.frontpageBanner.cards.publishing.title,
+    text: messages.components.frontpageBanner.cards.publishing.description,
     link: '/ritstjorn',
     image: '/assets/utgafa-image.svg',
   },
   {
-    title: messages.components.banner.cards.all.title,
-    text: messages.components.banner.cards.all.description,
+    title: messages.components.frontpageBanner.cards.all.title,
+    text: messages.components.frontpageBanner.cards.all.description,
     link: '/ritstjorn',
     image: '/assets/heildar-image.svg',
   },
@@ -78,6 +78,7 @@ const Layout: Screen<LayoutProps> = ({
             description={bannerProps.description}
             imgSrc={bannerProps.imgSrc}
             cards={bannerProps.cards}
+            fontSize={bannerProps.fontSize}
           />
         )}
         {children}

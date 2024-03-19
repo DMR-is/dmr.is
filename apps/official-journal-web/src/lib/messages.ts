@@ -14,6 +14,7 @@ export const messages = {
     review: 'Yfirlestur',
     ready: 'Tilbúið',
     advert_statuses: 'Staða mála',
+    see_more: 'Skoða nánar',
   },
   auth: {
     logout: 'Útskrá',
@@ -23,7 +24,7 @@ export const messages = {
       title: 'Stjórnborð',
       project: 'Stjórnartíðindi',
     },
-    banner: {
+    frontpageBanner: {
       title: 'Stjórnartíðindi',
       description:
         'Umsýslukerfi Stjórnartíðinda, morem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -42,6 +43,11 @@ export const messages = {
         },
       },
     },
+    ritstjornBanner: {
+      title: 'Vinnslusvæði Stjórnartíðinda',
+      description:
+        'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+    },
     tabs: {
       label: 'Veldu flokk',
       editorial: {
@@ -52,6 +58,21 @@ export const messages = {
       },
       inactive: {
         title: 'Óhreyfð mál',
+      },
+    },
+    tables: {
+      caseOverview: {
+        headCells: {
+          publicationDate: 'Birting',
+          registrationDate: 'Skráning',
+          department: 'Deild',
+          title: 'Heiti',
+        },
+        labels: {
+          fasttrack: 'Hraðbirting',
+          warning: 'Viðbrögð hafa borist frá auglýsanda',
+          info: 'Beðið svara',
+        },
       },
     },
     adverts_overview_list: {

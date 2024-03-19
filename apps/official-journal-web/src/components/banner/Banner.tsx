@@ -9,7 +9,6 @@ import {
 import * as styles from './Banner.css'
 import { BannerCard } from '../banner-card/BannerCard'
 import { Section } from '../section/Section'
-import { messages } from '../../lib/messages'
 
 type BannerCard = {
   title: string
@@ -23,9 +22,16 @@ type Props = {
   description?: string
   cards?: BannerCard[]
   imgSrc?: string
+  fontSize?: 'small' | 'large'
 }
 
-export const Banner = ({ title, description, cards, imgSrc }: Props) => {
+export const Banner = ({
+  title,
+  description,
+  cards,
+  imgSrc,
+  fontSize = 'large',
+}: Props) => {
   return (
     <Section className={styles.bannerSection}>
       <GridContainer>
@@ -37,7 +43,12 @@ export const Banner = ({ title, description, cards, imgSrc }: Props) => {
                 span={['12/12', '12/12', '5/12']}
                 className={styles.bannerContentColumn}
               >
-                <Text variant="h1">{title}</Text>
+                <Text
+                  marginBottom={1}
+                  variant={fontSize === 'large' ? 'h1' : 'h2'}
+                >
+                  {title}
+                </Text>
                 <Text>{description}</Text>
               </GridColumn>
             </>
