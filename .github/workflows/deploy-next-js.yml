@@ -113,8 +113,9 @@ jobs:
           echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
       - name: Commit
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: ${{ steps.deploy.outputs.COMMIT_MSG }}
+          branch: main
           skip_fetch: true
         
