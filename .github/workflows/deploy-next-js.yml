@@ -1,7 +1,6 @@
 name: Deploy APIs to AWS Dev
 
 on:
-  pull_request:
   workflow_run:
     workflows: ["Monorepo pipeline - quality"]
     branches: ["main"]
