@@ -1,28 +1,32 @@
 import { theme } from '@island.is/island-ui/theme'
 import { style } from '@vanilla-extract/css'
-import { BANNER_MAX_HEIGHT, BLEED_HEIGHT } from '../../lib/constants'
+import {
+  BANNER_LARGE_MAX_HEIGHT,
+  BANNER_SMALL_MAX_HEIGHT,
+} from '../../lib/constants'
+import { recipe } from '@vanilla-extract/recipes'
 
 const spacing = theme.spacing[3]
 
-export const bannerSection = style({
-  color: theme.color.white,
-  paddingBlock: '0px !important',
-  maxHeight: `${BANNER_MAX_HEIGHT}px`,
+export const bannerSection = recipe({
+  base: {
+    color: theme.color.white,
+    paddingBlock: '0px !important',
 
-  '@media': {
-    [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
-      maxHeight: 'initial',
+    '@media': {
+      [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
+        maxHeight: 'initial',
+      },
     },
   },
-})
-
-export const footerWrapper = style({
-  rowGap: spacing,
-  transform: `translateY(${BLEED_HEIGHT}px)`,
-  marginTop: `-${BLEED_HEIGHT}px`,
-  '@media': {
-    [`screen and (max-width: ${theme.breakpoints.md}px)`]: {
-      rowGap: `calc(${spacing}px / 2)`,
+  variants: {
+    variant: {
+      small: {
+        maxHeight: `${BANNER_SMALL_MAX_HEIGHT}px`,
+      },
+      large: {
+        maxHeight: `${BANNER_LARGE_MAX_HEIGHT}px`,
+      },
     },
   },
 })
@@ -35,6 +39,7 @@ export const bannerContentColumn = style({
   '@media': {
     [`screen and (max-width: ${theme.breakpoints.md}px)`]: {
       paddingBlockStart: spacing,
+      marginBlockEnd: spacing,
     },
   },
 })
@@ -42,7 +47,7 @@ export const bannerContentColumn = style({
 export const bannerImageColumn = style({
   '@media': {
     [`screen and (max-width: ${theme.breakpoints.md}px)`]: {
-      marginTop: spacing,
+      display: 'none',
     },
   },
 })

@@ -16,6 +16,7 @@ import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
+import { BannerCardList } from '../components/banner-card/BannerCardList'
 
 type StatisticsData = {
   totalAdverts: number

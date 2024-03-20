@@ -7,22 +7,15 @@ import {
 } from '@island.is/island-ui/core'
 
 import * as styles from './Banner.css'
-import { BannerCard } from '../banner-card/BannerCard'
 import { Section } from '../section/Section'
-
-type BannerCard = {
-  title: string
-  text: string
-  link: string
-  image: string
-}
+import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 
 type Props = {
   title?: string
   description?: string
   cards?: BannerCard[]
   imgSrc?: string
-  fontSize?: 'small' | 'large'
+  variant?: 'small' | 'large'
 }
 
 export const Banner = ({
@@ -30,10 +23,10 @@ export const Banner = ({
   description,
   cards,
   imgSrc,
-  fontSize = 'large',
+  variant = 'large',
 }: Props) => {
   return (
-    <Section className={styles.bannerSection}>
+    <Section className={styles.bannerSection({ variant: variant })}>
       <GridContainer>
         <GridRow>
           {(title || description) && (
@@ -45,7 +38,7 @@ export const Banner = ({
               >
                 <Text
                   marginBottom={1}
-                  variant={fontSize === 'large' ? 'h1' : 'h2'}
+                  variant={variant === 'large' ? 'h1' : 'h2'}
                 >
                   {title}
                 </Text>
@@ -64,20 +57,7 @@ export const Banner = ({
             </GridColumn>
           )}
         </GridRow>
-        {cards && (
-          <GridRow className={styles.footerWrapper}>
-            {cards.map((item, index) => (
-              <GridColumn span={['1/1', '1/2', '1/2', '1/3']} key={index}>
-                <BannerCard
-                  title={item.title}
-                  description={item.text}
-                  link={item.link}
-                  image={item.image}
-                />
-              </GridColumn>
-            ))}
-          </GridRow>
-        )}
+        {cards && <BannerCardList cards={cards} />}
       </GridContainer>
     </Section>
   )

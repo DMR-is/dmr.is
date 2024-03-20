@@ -7,6 +7,8 @@ import {
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
+import sortBy from 'lodash/sortBy'
+import reverse from 'lodash/reverse'
 
 import { messages } from '../../lib/messages'
 import { TableHeadCell } from './TableHeadCell'
@@ -14,9 +16,10 @@ import { TableHeadCell } from './TableHeadCell'
 import * as styles from './CaseOverviewTable.css'
 
 import { formatDate } from '../../lib/utils'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CaseLabelIcon } from './CaseLabelIcon'
 import useBreakpoints from '../../hooks/useBreakpoints'
+import { useFilterContext } from '../../hooks/useFilterContext'
 
 type TableRowData = {
   id: string
@@ -30,6 +33,8 @@ type TableRowData = {
 type Props = {
   data: TableRowData[]
 }
+
+type DataKey = keyof TableRowData
 
 const TableCell = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -50,7 +55,46 @@ export const CaseOverviewTable = ({ data }: Props) => {
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
+  const [sorting, setSorting] = useState<{
+    key: DataKey
+    direction: 'asc' | 'desc'
+  }>({
+    key: 'publicationDate',
+    direction: 'desc',
+  })
+
   const breakpoints = useBreakpoints()
+
+  const { searchFilter } = useFilterContext()
+
+  const filteredData = useMemo(() => {
+    const filtered = data.filter((row) => {
+      return (
+        row.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        row.department.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        row.publicationDate
+          .toLowerCase()
+          .includes(searchFilter.toLowerCase()) ||
+        row.registrationDate.toLowerCase().includes(searchFilter.toLowerCase())
+      )
+    })
+
+    const sorted = sortBy(filtered, sorting.key)
+
+    return sorting.direction === 'asc' ? sorted : reverse(sorted)
+  }, [searchFilter, sorting])
+
+  const onSortClick = (key: DataKey) => {
+    setSorting({
+      key: key,
+      direction:
+        sorting.key === key
+          ? sorting.direction === 'asc'
+            ? 'desc'
+            : 'asc'
+          : 'asc',
+    })
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -65,23 +109,35 @@ export const CaseOverviewTable = ({ data }: Props) => {
       <T.Head>
         <T.Row>
           <TableHeadCell small />
-          <TableHeadCell small sortable>
+          <TableHeadCell
+            small
+            sortable
+            onClick={() => onSortClick('publicationDate')}
+          >
             {messages.components.tables.caseOverview.headCells.publicationDate}
           </TableHeadCell>
-          <TableHeadCell small sortable>
+          <TableHeadCell
+            small
+            sortable
+            onClick={() => onSortClick('registrationDate')}
+          >
             {messages.components.tables.caseOverview.headCells.registrationDate}
           </TableHeadCell>
-          <TableHeadCell small sortable>
+          <TableHeadCell
+            small
+            sortable
+            onClick={() => onSortClick('department')}
+          >
             {messages.components.tables.caseOverview.headCells.department}
           </TableHeadCell>
-          <TableHeadCell sortable>
+          <TableHeadCell sortable onClick={() => onSortClick('name')}>
             {messages.components.tables.caseOverview.headCells.title}
           </TableHeadCell>
           <T.HeadData />
         </T.Row>
       </T.Head>
       <T.Body>
-        {data.map((row) => {
+        {filteredData.map((row) => {
           return (
             <tr
               className={styles.tableRow}

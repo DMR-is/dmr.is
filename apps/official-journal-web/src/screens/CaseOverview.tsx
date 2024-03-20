@@ -1,13 +1,19 @@
 import {
+  Box,
+  FilterContext,
   GridColumn,
   GridContainer,
   GridRow,
-  Table as T,
+  Input,
+  Tabs,
 } from '@island.is/island-ui/core'
 import { withMainLayout } from '../layout/Layout'
 import { CaseOverviewTable } from '../components/tables/CaseOverviewTable'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
+import { Section } from '../components/section/Section'
+import { SubpageContainer } from '../components/containers/SubpageContainer'
+import { CaseFilters } from '../components/case-filters/CaseFilters'
 
 const mockCaseData: CaseData[] = [
   {
@@ -83,13 +89,24 @@ type Props = {
 
 const CaseOverviewPage: Screen<Props> = ({ caseData }) => {
   return (
-    <GridContainer>
-      <GridRow>
-        <GridColumn offset={['0', '1/12']} span={['12/12', '10/12']}>
-          <CaseOverviewTable data={caseData} />
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+    <>
+      <GridContainer>
+        <GridRow rowGap={['p2', 3]}>
+          <GridColumn
+            offset={['0', '0', '0', '1/12']}
+            span={['12/12', '12/12', '12/12', '10/12']}
+          >
+            <CaseFilters />
+          </GridColumn>
+          <GridColumn
+            offset={['0', '0', '0', '1/12']}
+            span={['12/12', '12/12', '12/12', '10/12']}
+          >
+            <CaseOverviewTable data={caseData} />
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
+    </>
   )
 }
 
@@ -105,6 +122,6 @@ export default withMainLayout(CaseOverviewPage, {
     imgSrc: '/assets/banner-small-image.svg',
     title: messages.components.ritstjornBanner.title,
     description: messages.components.ritstjornBanner.description,
-    fontSize: 'small',
+    variant: 'small',
   },
 })
