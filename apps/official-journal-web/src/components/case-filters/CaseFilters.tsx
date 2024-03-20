@@ -1,9 +1,11 @@
 import { Box, Button, Input } from '@island.is/island-ui/core'
 import * as styles from './CaseFilters.css'
 import { useFilterContext } from '../../hooks/useFilterContext'
+import { Popover } from '../popover/Popover'
+import { FilterPopover } from '../filter-popover/FilterPopover'
 
 export const CaseFilters = () => {
-  const { setSearchFilter } = useFilterContext()
+  const { setSearchFilter, searchFilter } = useFilterContext()
 
   return (
     <Box className={styles.caseFilters()}>
@@ -13,11 +15,18 @@ export const CaseFilters = () => {
         backgroundColor="blue"
         name="filter"
         placeholder="Leita eftir málsnafni"
+        value={searchFilter}
         onChange={(e) => setSearchFilter(e.target.value)}
       />
-      <Button variant="utility" icon="filter">
-        Opna síu
-      </Button>
+      <Popover
+        disclosure={
+          <Button variant="utility" icon="filter">
+            Opna síu
+          </Button>
+        }
+      >
+        <FilterPopover />
+      </Popover>
     </Box>
   )
 }

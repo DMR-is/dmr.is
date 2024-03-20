@@ -1,7 +1,7 @@
 import uniqBy from 'lodash/uniqBy'
 import { createContext, useState } from 'react'
 
-type FilterOption = {
+export type FilterOption = {
   label: string
   value: string
 }
