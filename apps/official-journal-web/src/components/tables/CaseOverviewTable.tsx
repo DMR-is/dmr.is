@@ -16,7 +16,7 @@ import * as styles from './CaseOverviewTable.css'
 import { formatDate } from '../../lib/utils'
 import { useEffect, useState } from 'react'
 import { CaseLabelIcon } from './CaseLabelIcon'
-import useIsMobile from '../../hooks/useIsMobile'
+import useBreakpoints from '../../hooks/useBreakpoints'
 
 type TableRowData = {
   id: string
@@ -50,7 +50,7 @@ export const CaseOverviewTable = ({ data }: Props) => {
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
-  const { isMobile } = useIsMobile()
+  const breakpoints = useBreakpoints()
 
   useEffect(() => {
     setMounted(true)
@@ -122,7 +122,7 @@ export const CaseOverviewTable = ({ data }: Props) => {
                     visible: hoveredRow === row.id,
                   })}
                 >
-                  {isMobile ? (
+                  {!breakpoints.xl ? (
                     <LinkV2 href={`/ritstjorn/${row.id}`}>
                       <Icon icon="arrowForward" color="blue400" />
                     </LinkV2>

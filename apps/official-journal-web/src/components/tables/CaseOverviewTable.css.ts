@@ -16,10 +16,10 @@ export const iconWrapper = style({
 
 export const nameTableCell = style({
   overflow: 'hidden',
-  maxWidth: '70ch',
+  maxWidth: '66ch',
 
   '@media': {
-    [`screen and (max-width: ${theme.breakpoints.sm}px)`]: {
+    [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
       maxWidth: '50ch',
     },
   },
@@ -38,7 +38,7 @@ export const linkTableCell = style({
   borderBottom: `1px solid ${theme.color.blue200}`,
 
   '@media': {
-    [`screen and (max-width: ${theme.breakpoints.sm}px)`]: {
+    [`screen and (max-width: ${theme.breakpoints.xl}px)`]: {
       position: 'sticky',
       right: -1,
       top: 0,
@@ -58,7 +58,7 @@ export const seeMoreTableCellLink = recipe({
     },
 
     '@media': {
-      [`screen and (min-width: ${theme.breakpoints.sm}px)`]: {
+      [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
         display: 'none',
         position: 'absolute',
         right: theme.spacing[2],
@@ -71,7 +71,7 @@ export const seeMoreTableCellLink = recipe({
     visible: {
       true: {
         '@media': {
-          [`screen and (min-width: ${theme.breakpoints.sm}px)`]: {
+          [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
             display: 'block',
           },
         },
