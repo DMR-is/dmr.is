@@ -71,7 +71,17 @@ export const CaseTable = ({
   const { searchFilter } = useFilterContext()
 
   const filteredData = useMemo(() => {
-    const sorted = [...rows].sort((a, b) => {
+    const filtered = rows.filter((row) => {
+      const searchValue = searchFilter.toLowerCase()
+      return row.cells.some((cell) => {
+        return (
+          cell.sortingValue?.toLowerCase().includes(searchValue) ||
+          cell.children?.toString().toLowerCase().includes(searchValue)
+        )
+      })
+    })
+
+    const sorted = [...filtered].sort((a, b) => {
       const nameA = a.cells.find((cell) => cell.sortingKey === sorting.key)
       const nameB = b.cells.find((cell) => cell.sortingKey === sorting.key)
 
