@@ -11,6 +11,10 @@ import { JournalPostApplicationBody } from '../../dto/application/journal-postap
 import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
 import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
 import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
+import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
+import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
+import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
+import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
 
 export interface IJournalService {
   getAdverts(
@@ -27,9 +31,17 @@ export interface IJournalService {
     params?: JournalGetTypesQueryParams,
   ): Promise<JournalAdvertTypesResponse>
 
+  getMainCategories(
+    params?: JournalGetMainCategoriesQueryParams,
+  ): Promise<JournalAdvertMainCategoriesResponse>
+
   getCategories(
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse>
+
+  getInvolvedParties(
+    params?: JournalGetInvolvedPartiesQueryParams,
+  ): Promise<JournalAdvertInvolvedPartiesResponse>
 
   submitApplication(
     body: JournalPostApplicationBody,

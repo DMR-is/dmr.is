@@ -15,6 +15,10 @@ import { JournalPostApplicationResponse } from '../../dto/application/journal-po
 import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
 import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
 import { IJournalService } from './journal.service.interface'
+import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
+import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
+import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
+import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 
@@ -45,10 +49,24 @@ export class JournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
 
+  getMainCategories(
+    params?: JournalGetMainCategoriesQueryParams | undefined,
+  ): Promise<JournalAdvertMainCategoriesResponse> {
+    this.logger.info('getMainCategories', { params })
+    throw new Error('Method not implemented.')
+  }
+
   getCategories(
     params?: JournalGetCategoriesQueryParams | undefined,
   ): Promise<JournalAdvertCategoriesResponse> {
     this.logger.info('getCategories', { params })
+    throw new Error('Method not implemented.')
+  }
+
+  getInvolvedParties(
+    params?: JournalGetInvolvedPartiesQueryParams | undefined,
+  ): Promise<JournalAdvertInvolvedPartiesResponse> {
+    this.logger.info('getInvolvedParties', { params })
     throw new Error('Method not implemented.')
   }
 
