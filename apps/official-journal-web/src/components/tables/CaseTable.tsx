@@ -17,26 +17,33 @@ import * as styles from './CaseTable.css'
 import { useEffect, useMemo, useState } from 'react'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFilterContext } from '../../hooks/useFilterContext'
+import { TableCell } from './CaseTableCell'
 
-type TableHeadCellProps = {
+export type CaseTableHeadCellProps = {
   children?: React.ReactNode
   name: string
   sortable?: boolean
   small?: boolean
 }
 
-type TableRowProps = {
+export type CaseTableCellProps = {
+  sortingKey?: string
+  sortingValue?: string
+  children?: React.ReactNode
+}
+
+export type CaseTableRowProps = {
   caseId: string
-  cells: React.ReactNode[]
+  cells: CaseTableCellProps[]
 }
 
-type Props = {
-  defaultSort?: ColumnSort
-  columns: TableHeadCellProps[]
-  rows: TableRowProps[]
+export type Props = {
+  defaultSort?: CaseTableColumnSort
+  columns: CaseTableHeadCellProps[]
+  rows: CaseTableRowProps[]
 }
 
-type ColumnSort = {
+export type CaseTableColumnSort = {
   key: string
   direction: 'asc' | 'desc'
 }
@@ -46,7 +53,7 @@ export const CaseTable = ({
   rows,
   defaultSort = {
     direction: 'asc',
-    key: columns[1].name,
+    key: columns.find((column) => column.sortable)?.name || '',
   },
 }: Props) => {
   const [mounted, setMounted] = useState(false)
@@ -64,7 +71,20 @@ export const CaseTable = ({
   const { searchFilter } = useFilterContext()
 
   const filteredData = useMemo(() => {
-    const sorted = orderBy(rows, ['cells'])
+    const sorted = [...rows].sort((a, b) => {
+      const nameA = a.cells.find((cell) => cell.sortingKey === sorting.key)
+      const nameB = b.cells.find((cell) => cell.sortingKey === sorting.key)
+
+      if (!nameA?.sortingValue || !nameB?.sortingValue) return 0
+
+      if (nameA.sortingValue < nameB.sortingValue) {
+        return -1
+      }
+      if (nameA.sortingValue > nameB.sortingValue) {
+        return 1
+      }
+      return 0
+    })
 
     return sorting.direction === 'asc' ? sorted : reverse(sorted)
   }, [searchFilter, sorting])
@@ -114,7 +134,9 @@ export const CaseTable = ({
             onMouseOver={() => setHoveredRow(row.caseId)}
             key={index}
           >
-            {row.cells.map((cell) => cell)}
+            {row.cells.map((cell) => (
+              <TableCell>{cell.children}</TableCell>
+            ))}
             <td align="center" className={styles.linkTableCell}>
               <Box
                 className={styles.seeMoreTableCellLink({

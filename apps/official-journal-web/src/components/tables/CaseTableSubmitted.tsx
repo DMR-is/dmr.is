@@ -2,7 +2,6 @@ import { messages } from '../../lib/messages'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
-import { TableCell } from './CaseTableCell'
 import { Text } from '@island.is/island-ui/core'
 import * as styles from './CaseTable.css'
 export type SubmittedCaseData = {
@@ -56,33 +55,49 @@ export const CaseTableSubmitted = ({ data }: Props) => {
   const rows = data.map((row) => ({
     caseId: row.id,
     cells: [
-      <TableCell>
-        {row.labels.length > 0 && (
+      {
+        children: row.labels.length > 0 && (
           <div className={styles.iconWrapper}>
             {row.labels.map((label, index) => (
               <CaseLabelTooltip label={label} key={index} />
             ))}
           </div>
-        )}
-      </TableCell>,
-      <TableCell>
-        <Text variant="medium">{formatDate(row.publicationDate)}</Text>
-      </TableCell>,
-      <TableCell>
-        <Text variant="medium">{formatDate(row.registrationDate)}</Text>
-      </TableCell>,
-      <TableCell>
-        <Text truncate variant="medium">
-          {row.department}
-        </Text>
-      </TableCell>,
-      <TableCell>
-        <div className={styles.nameTableCell}>
+        ),
+      },
+      {
+        sortingKey: 'casePublishDate',
+        sortingValue: row.publicationDate,
+        children: (
+          <Text variant="medium">{formatDate(row.publicationDate)}</Text>
+        ),
+      },
+      {
+        sortingKey: 'caseRegistrationDate',
+        sortingValue: row.registrationDate,
+        children: (
+          <Text variant="medium">{formatDate(row.registrationDate)}</Text>
+        ),
+      },
+      {
+        sortingKey: 'caseDepartment',
+        sortingValue: row.department,
+        children: (
           <Text truncate variant="medium">
-            {row.name}
+            {row.department}
           </Text>
-        </div>
-      </TableCell>,
+        ),
+      },
+      {
+        sortingKey: 'caseName',
+        sortingValue: row.name,
+        children: (
+          <div className={styles.nameTableCell}>
+            <Text truncate variant="medium">
+              {row.name}
+            </Text>
+          </div>
+        ),
+      },
     ],
   }))
 
