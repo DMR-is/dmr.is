@@ -1,5 +1,6 @@
 import {
   Box,
+  Breadcrumbs,
   GridColumn,
   GridContainer,
   GridRow,
@@ -9,6 +10,7 @@ import {
 import * as styles from './Banner.css'
 import { Section } from '../section/Section'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
+import { CaseFilters } from '../case-filters/CaseFilters'
 
 type Props = {
   title?: string
@@ -16,6 +18,8 @@ type Props = {
   cards?: BannerCard[]
   imgSrc?: string
   variant?: 'small' | 'large'
+  showFilters?: boolean
+  breadcrumbs?: React.ComponentProps<typeof Breadcrumbs>['items']
 }
 
 export const Banner = ({
@@ -23,10 +27,12 @@ export const Banner = ({
   description,
   cards,
   imgSrc,
-  variant = 'large',
+  variant,
+  showFilters = false,
+  breadcrumbs = [],
 }: Props) => {
   return (
-    <Section className={styles.bannerSection({ variant: variant })}>
+    <Section className={styles.bannerSection}>
       <GridContainer>
         <GridRow>
           {(title || description) && (
@@ -36,13 +42,16 @@ export const Banner = ({
                 span={['12/12', '12/12', '5/12']}
                 className={styles.bannerContentColumn}
               >
+                <Breadcrumbs items={breadcrumbs} />
                 <Text
+                  marginTop={breadcrumbs.length ? 1 : 0}
                   marginBottom={1}
                   variant={variant === 'large' ? 'h1' : 'h2'}
                 >
                   {title}
                 </Text>
-                <Text>{description}</Text>
+                <Text marginBottom={showFilters ? 4 : 0}>{description}</Text>
+                {showFilters && <CaseFilters />}
               </GridColumn>
             </>
           )}

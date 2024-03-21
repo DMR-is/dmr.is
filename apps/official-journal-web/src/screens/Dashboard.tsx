@@ -7,7 +7,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
-import { Banner } from '../components/banner/Banner'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { StatisticsNotPublished } from '../components/statistics/NotPublished'
@@ -16,7 +15,6 @@ import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { BannerCardList } from '../components/banner-card/BannerCardList'
 
 type StatisticsData = {
   totalAdverts: number
@@ -98,8 +96,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
 
   return (
     <>
-      <Banner />
-      <Section variant="blue">
+      <Section bleed={true} variant="blue">
         <GridContainer>
           <GridRow>
             <GridColumn span="1/1">

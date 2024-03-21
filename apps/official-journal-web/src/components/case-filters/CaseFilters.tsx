@@ -9,7 +9,7 @@ export const CaseFilters = () => {
   const { setSearchFilter, searchFilter } = useFilterContext()
 
   return (
-    <Box className={styles.caseFilters()}>
+    <Box className={styles.caseFilters}>
       <Input
         size="sm"
         icon={{ name: 'search', type: 'outline' }}

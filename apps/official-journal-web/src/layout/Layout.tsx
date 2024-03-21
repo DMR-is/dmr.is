@@ -59,6 +59,8 @@ const Layout: Screen<LayoutProps> = ({
               imgSrc={bannerProps.imgSrc}
               variant={bannerProps.variant}
               cards={bannerProps.cards}
+              showFilters={bannerProps.showFilters}
+              breadcrumbs={bannerProps.breadcrumbs}
             />
           )}
           {children}

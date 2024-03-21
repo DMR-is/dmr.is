@@ -11,7 +11,7 @@ import {
 } from '../components/tables/CaseTableSubmitted'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
-import { CaseFilters } from '../components/case-filters/CaseFilters'
+import { Section } from '../components/section/Section'
 
 const mockCaseData: CaseData[] = [
   {
@@ -77,25 +77,43 @@ type Props = {
 }
 
 const CaseOverviewPage: Screen<Props> = ({ caseData }) => {
+  const tabs = [
+    {
+      label: messages.components.tabs.submitted.title,
+      content: <CaseTableSubmitted data={caseData} />,
+    },
+    {
+      label: messages.components.tabs.inProgress.title,
+      content: <CaseTableSubmitted data={caseData} />,
+    },
+    {
+      label: messages.components.tabs.inReview.title,
+      content: <CaseTableSubmitted data={caseData} />,
+    },
+    {
+      label: messages.components.tabs.ready.title,
+      content: <CaseTableSubmitted data={caseData} />,
+    },
+  ]
+
   return (
-    <>
+    <Section paddingTop="off">
       <GridContainer>
         <GridRow rowGap={['p2', 3]}>
           <GridColumn
+            paddingTop={3}
             offset={['0', '0', '0', '1/12']}
             span={['12/12', '12/12', '12/12', '10/12']}
           >
-            <CaseFilters />
-          </GridColumn>
-          <GridColumn
-            offset={['0', '0', '0', '1/12']}
-            span={['12/12', '12/12', '12/12', '10/12']}
-          >
-            <CaseTableSubmitted data={caseData} />
+            <Tabs
+              contentBackground="white"
+              label={messages.components.tabs.label}
+              tabs={tabs}
+            />
           </GridColumn>
         </GridRow>
       </GridContainer>
-    </>
+    </Section>
   )
 }
 
@@ -108,9 +126,20 @@ CaseOverviewPage.getProps = async () => {
 export default withMainLayout(CaseOverviewPage, {
   bannerProps: {
     showBanner: true,
+    showFilters: true,
     imgSrc: '/assets/banner-small-image.svg',
     title: messages.components.ritstjornBanner.title,
     description: messages.components.ritstjornBanner.description,
     variant: 'small',
+    breadcrumbs: [
+      {
+        title: messages.pages.frontpage.name,
+        href: '/',
+      },
+      {
+        title: messages.pages.caseOverview.name,
+        href: '/ritstjorn',
+      },
+    ],
   },
 })

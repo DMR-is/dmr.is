@@ -18,9 +18,18 @@ export const messages = {
     open_filter: 'Opna síu',
     clear_filter: 'Hreinsa allar síur',
     clear_filters: 'Hreinsa val',
+    page_name: 'Stjórnartíðindi',
   },
   auth: {
     logout: 'Útskrá',
+  },
+  pages: {
+    frontpage: {
+      name: 'Stjórnartíðindi',
+    },
+    caseOverview: {
+      name: 'Ritstjórn',
+    },
   },
   components: {
     controlPanel: {
@@ -61,6 +70,18 @@ export const messages = {
       },
       inactive: {
         title: 'Óhreyfð mál',
+      },
+      submitted: {
+        title: 'Innsendingar',
+      },
+      inProgress: {
+        title: 'Grunnvinnsla',
+      },
+      inReview: {
+        title: 'Yfirlestur',
+      },
+      ready: {
+        title: 'Tilbúið',
       },
     },
     tables: {
