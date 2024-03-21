@@ -15,6 +15,9 @@ export const messages = {
     ready: 'Tilbúið',
     advert_statuses: 'Staða mála',
     see_more: 'Skoða nánar',
+    open_filter: 'Opna síu',
+    clear_filter: 'Hreinsa allar síur',
+    clear_filters: 'Hreinsa val',
   },
   auth: {
     logout: 'Útskrá',

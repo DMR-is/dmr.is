@@ -3,6 +3,7 @@ import * as styles from './CaseFilters.css'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { Popover } from '../popover/Popover'
 import { FilterPopover } from '../filter-popover/FilterPopover'
+import { messages } from '../../lib/messages'
 
 export const CaseFilters = () => {
   const { setSearchFilter, searchFilter } = useFilterContext()
@@ -21,7 +22,7 @@ export const CaseFilters = () => {
       <Popover
         disclosure={
           <Button variant="utility" icon="filter">
-            Opna síu
+            {messages.general.open_filter}
           </Button>
         }
       >

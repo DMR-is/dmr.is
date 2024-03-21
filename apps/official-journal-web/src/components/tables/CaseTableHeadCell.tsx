@@ -1,7 +1,7 @@
 import { Table as T, Text, Icon } from '@island.is/island-ui/core'
-import * as styles from './CaseOverviewTable.css'
+import * as styles from './CaseTable.css'
 type Props = {
-  children?: string
+  children?: React.ReactNode | string
   sortable?: boolean
   onClick?: () => void
   className?: string
@@ -32,9 +32,13 @@ export const TableHeadCell = ({
         onClick={onClick}
         className={cn(styles.tableHeadCell, className)}
       >
-        <Text variant="medium" fontWeight="semiBold">
-          {children}
-        </Text>
+        {typeof children === 'string' ? (
+          <Text variant="medium" fontWeight="semiBold">
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
         {sortable && <Icon icon="caretDown" color="blue400" size="small" />}
       </Wrapper>
     </T.HeadData>

@@ -1,18 +1,16 @@
 import {
-  Box,
-  FilterContext,
   GridColumn,
   GridContainer,
   GridRow,
-  Input,
   Tabs,
 } from '@island.is/island-ui/core'
 import { withMainLayout } from '../layout/Layout'
-import { CaseOverviewTable } from '../components/tables/CaseOverviewTable'
+import {
+  CaseTableSubmitted,
+  SubmittedCaseData as CaseData,
+} from '../components/tables/CaseTableSubmitted'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
-import { Section } from '../components/section/Section'
-import { SubpageContainer } from '../components/containers/SubpageContainer'
 import { CaseFilters } from '../components/case-filters/CaseFilters'
 
 const mockCaseData: CaseData[] = [
@@ -74,15 +72,6 @@ const mockCaseData: CaseData[] = [
   },
 ]
 
-type CaseData = {
-  id: string
-  labels: string[]
-  publicationDate: string
-  registrationDate: string
-  department: string
-  name: string
-}
-
 type Props = {
   caseData: CaseData[]
 }
@@ -102,7 +91,7 @@ const CaseOverviewPage: Screen<Props> = ({ caseData }) => {
             offset={['0', '0', '0', '1/12']}
             span={['12/12', '12/12', '12/12', '10/12']}
           >
-            <CaseOverviewTable data={caseData} />
+            <CaseTableSubmitted data={caseData} />
           </GridColumn>
         </GridRow>
       </GridContainer>

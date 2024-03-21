@@ -2,6 +2,7 @@ import { Box, Icon, Text } from '@island.is/island-ui/core'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import * as styles from './FilterPopover.css'
 import { FilterGroups } from './FilterGroups'
+import { messages } from '../../lib/messages'
 
 export const FilterPopover = () => {
   const {
@@ -29,7 +30,7 @@ export const FilterPopover = () => {
         <button onClick={resetAllFilters} className={styles.resetAllButton}>
           <Box className={styles.resetAllButtonContent}>
             <Text fontWeight="semiBold" variant="small" color="blue400">
-              Hreinsa allar síur
+              {messages.general.clear_filters}
             </Text>
             <Icon size="small" icon="reload" color="blue400" />
           </Box>

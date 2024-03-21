@@ -9,3 +9,8 @@ export const tooltipStyle = style({
   paddingInline: spacing * 2,
   paddingBlock: spacing,
 })
+
+export const caseLabelTooltipIcon = style({
+  inlineSize: 24,
+  blockSize: 24,
+})

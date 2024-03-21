@@ -3,6 +3,7 @@ import * as styles from './FilterPopover.css'
 import { useState } from 'react'
 import { FilterOption } from '../../context/filterContext'
 import { useFilterContext } from '../../hooks/useFilterContext'
+import { messages } from '../../lib/messages'
 
 type FilterPopoverProps = {
   id: string
@@ -67,7 +68,7 @@ export const FilterGroup = ({
             onClick={() => setFilters([])}
             iconType="outline"
           >
-            Hreinsa val
+            {messages.general.clear_filter}
           </Button>
         </Box>
       </Box>
@@ -78,6 +79,8 @@ export const FilterGroup = ({
 export const FilterGroups = () => {
   const context = useFilterContext()
 
+  // Options will be fetched from the backend
+  // hardcoded for now
   return (
     <>
       <FilterGroup
