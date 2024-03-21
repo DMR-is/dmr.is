@@ -1,9 +1,4 @@
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Tabs,
-} from '@island.is/island-ui/core'
+import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 import { withMainLayout } from '../layout/Layout'
 import {
   CaseTableSubmitted,
@@ -12,6 +7,8 @@ import {
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 import { Section } from '../components/section/Section'
+import { Tabs } from '../components/tabs/Tabs'
+import { useState } from 'react'
 
 const mockCaseData: CaseData[] = [
   {
@@ -77,37 +74,47 @@ type Props = {
 }
 
 const CaseOverviewPage: Screen<Props> = ({ caseData }) => {
+  const [selectedTab, setSelectedTab] = useState('1')
+
+  const onTabChange = (id: string) => {
+    setSelectedTab(id)
+  }
+
   const tabs = [
     {
+      id: '1',
       label: messages.components.tabs.submitted.title,
       content: <CaseTableSubmitted data={caseData} />,
     },
     {
+      id: '2',
       label: messages.components.tabs.inProgress.title,
       content: <CaseTableSubmitted data={caseData} />,
     },
     {
+      id: '3',
       label: messages.components.tabs.inReview.title,
       content: <CaseTableSubmitted data={caseData} />,
     },
     {
+      id: '4',
       label: messages.components.tabs.ready.title,
       content: <CaseTableSubmitted data={caseData} />,
     },
   ]
 
   return (
-    <Section paddingTop="off">
+    <Section bleed paddingTop="off">
       <GridContainer>
         <GridRow rowGap={['p2', 3]}>
           <GridColumn
-            paddingTop={3}
+            paddingTop={2}
             offset={['0', '0', '0', '1/12']}
             span={['12/12', '12/12', '12/12', '10/12']}
           >
             <Tabs
-              contentBackground="white"
-              label={messages.components.tabs.label}
+              onTabChange={onTabChange}
+              selectedTab={selectedTab}
               tabs={tabs}
             />
           </GridColumn>
