@@ -7,6 +7,8 @@ import {
   ADVERT_B_866_2006,
   ALL_MOCK_JOURNAL_CATEGORIES,
   ALL_MOCK_JOURNAL_DEPARTMENTS,
+  ALL_MOCK_JOURNAL_INVOLVED_PARTIES,
+  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
   ALL_MOCK_JOURNAL_TYPES,
   MOCK_PAGING_SINGLE_PAGE,
 } from '../../mock/journal.mock'
@@ -30,6 +32,10 @@ import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signat
 import { IJournalService } from './journal.service.interface'
 import { DEFAULT_PAGE_SIZE } from '../../constants'
 import { generatePaging } from '../../utils'
+import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
+import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
+import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
+import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -139,6 +145,28 @@ export class MockJournalService implements IJournalService {
     })
   }
 
+  getMainCategories(
+    params?: JournalGetMainCategoriesQueryParams | undefined,
+  ): Promise<JournalAdvertMainCategoriesResponse> {
+    const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
+    const filtered = mockCategories.filter((category) => {
+      if (params?.search && category.id !== params.search) {
+        return false
+      }
+
+      return true
+    })
+
+    const page = params?.page ?? 1
+    const paged = slicePagedData(filtered, page)
+    const data: JournalAdvertMainCategoriesResponse = {
+      mainCategories: paged,
+      paging: generatePaging(filtered, page),
+    }
+
+    return Promise.resolve(data)
+  }
+
   getCategories(
     params?: JournalGetCategoriesQueryParams | undefined,
   ): Promise<JournalAdvertCategoriesResponse> {
@@ -155,6 +183,28 @@ export class MockJournalService implements IJournalService {
     const paged = slicePagedData(filtered, page)
     const data: JournalAdvertCategoriesResponse = {
       categories: paged,
+      paging: generatePaging(filtered, page),
+    }
+
+    return Promise.resolve(data)
+  }
+
+  getInvolvedParties(
+    params?: JournalGetInvolvedPartiesQueryParams | undefined,
+  ): Promise<JournalAdvertInvolvedPartiesResponse> {
+    const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
+    const filtered = mockCategories.filter((category) => {
+      if (params?.search && category.id !== params.search) {
+        return false
+      }
+
+      return true
+    })
+
+    const page = params?.page ?? 1
+    const paged = slicePagedData(filtered, page)
+    const data: JournalAdvertInvolvedPartiesResponse = {
+      involvedParties: paged,
       paging: generatePaging(filtered, page),
     }
 

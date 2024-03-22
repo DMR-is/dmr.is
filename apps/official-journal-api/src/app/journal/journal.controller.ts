@@ -32,6 +32,10 @@ import { JournalPostApplicationResponse } from '../../dto/application/journal-po
 import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
 import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
 import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
+import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
+import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
+import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
+import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -124,6 +128,24 @@ export class JournalController {
     return this.journalService.getTypes(params)
   }
 
+  @Get('maincategories')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertCategoriesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  mainCategories(
+    @Query()
+    params?: JournalGetMainCategoriesQueryParams,
+  ): Promise<JournalAdvertMainCategoriesResponse> {
+    return this.journalService.getMainCategories(params)
+  }
+
   @Get('categories')
   @ApiResponse({
     status: 200,
@@ -140,6 +162,24 @@ export class JournalController {
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse> {
     return this.journalService.getCategories(params)
+  }
+
+  @Get('involvedparties')
+  @ApiResponse({
+    status: 200,
+    type: JournalAdvertCategoriesResponse,
+    description: 'List of journal advert types.',
+  })
+  @ApiResponse({
+    status: 400,
+    type: JournalAdvertsValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  involvedParties(
+    @Query()
+    params?: JournalGetInvolvedPartiesQueryParams,
+  ): Promise<JournalAdvertInvolvedPartiesResponse> {
+    return this.journalService.getInvolvedParties(params)
   }
 
   @Post('application')

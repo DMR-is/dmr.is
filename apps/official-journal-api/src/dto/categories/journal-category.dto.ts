@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { JournalAdvertDepartment } from '../departments/journal-department.dto'
+import { JournalAdvertMainCategory } from '../main-categories/journal-maincategory.dto'
 
 export class JournalAdvertCategory {
   @ApiProperty({
@@ -25,4 +27,22 @@ export class JournalAdvertCategory {
     type: String,
   })
   readonly slug!: string
+
+  @ApiProperty({
+    description: 'The department the category belongs to.',
+    required: false,
+    nullable: true,
+    type: JournalAdvertDepartment,
+    example: 'A deild',
+  })
+  readonly department?: JournalAdvertDepartment
+
+  @ApiProperty({
+    description: 'The main category this category belongs to.',
+    required: false,
+    nullable: true,
+    type: JournalAdvertMainCategory,
+    example: 'Dómstólar og réttarfar',
+  })
+  readonly mainCategory?: JournalAdvertMainCategory
 }
