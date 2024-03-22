@@ -3,10 +3,10 @@ import {
   Box,
   Icon,
   LinkV2,
+  Pagination,
   SkeletonLoader,
   Table as T,
 } from '@island.is/island-ui/core'
-import orderBy from 'lodash/orderBy'
 import reverse from 'lodash/reverse'
 
 import { messages } from '../../lib/messages'
@@ -14,7 +14,7 @@ import { TableHeadCell } from './CaseTableHeadCell'
 
 import * as styles from './CaseTable.css'
 
-import { useEffect, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { TableCell } from './CaseTableCell'
@@ -41,6 +41,11 @@ export type Props = {
   defaultSort?: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
+  paging?: {
+    page: number
+    totalPages: number
+    totalItems: number
+  }
 }
 
 export type CaseTableColumnSort = {
@@ -55,6 +60,7 @@ export const CaseTable = ({
     direction: 'asc',
     key: columns.find((column) => column.sortable)?.name || '',
   },
+  paging,
 }: Props) => {
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
@@ -120,53 +126,69 @@ export const CaseTable = ({
   }
 
   return (
-    <T.Table>
-      <T.Head>
-        <T.Row>
-          {columns.map((column, index) => (
-            <TableHeadCell
-              key={index}
-              small={column.small}
-              sortable={column.sortable}
-              onClick={
-                column.sortable ? () => onSortClick(column.name) : undefined
-              }
-            >
-              {column.children}
-            </TableHeadCell>
-          ))}
-        </T.Row>
-      </T.Head>
-      <T.Body>
-        {filteredData.map((row, index) => (
-          <tr
-            className={styles.tableRow}
-            onMouseOver={() => setHoveredRow(row.caseId)}
-            key={index}
-          >
-            {row.cells.map((cell) => (
-              <TableCell>{cell.children}</TableCell>
-            ))}
-            <td align="center" className={styles.linkTableCell}>
-              <Box
-                className={styles.seeMoreTableCellLink({
-                  visible: hoveredRow === row.caseId,
-                })}
+    <>
+      <T.Table>
+        <T.Head>
+          <T.Row>
+            {columns.map((column, index) => (
+              <TableHeadCell
+                key={index}
+                small={column.small}
+                sortable={column.sortable}
+                onClick={
+                  column.sortable ? () => onSortClick(column.name) : undefined
+                }
               >
-                {!breakpoints.xl ? (
-                  <LinkV2 href={`/ritstjorn/${row.caseId}`}>
-                    <Icon icon="arrowForward" color="blue400" />
-                  </LinkV2>
-                ) : (
-                  <ArrowLink href={`/ritstjorn/${row.caseId}`}>
-                    {messages.general.see_more}
-                  </ArrowLink>
-                )}
-              </Box>
-            </td>
-          </tr>
-        ))}
-      </T.Body>
-    </T.Table>
+                {column.children}
+              </TableHeadCell>
+            ))}
+          </T.Row>
+        </T.Head>
+        <T.Body>
+          {filteredData.map((row, index) => (
+            <tr
+              className={styles.tableRow}
+              onMouseOver={() => setHoveredRow(row.caseId)}
+              key={index}
+            >
+              {row.cells.map((cell) => (
+                <TableCell>{cell.children}</TableCell>
+              ))}
+              <td align="center" className={styles.linkTableCell}>
+                <Box
+                  className={styles.seeMoreTableCellLink({
+                    visible: hoveredRow === row.caseId,
+                  })}
+                >
+                  {!breakpoints.xl ? (
+                    <LinkV2 href={`/ritstjorn/${row.caseId}`}>
+                      <Icon icon="arrowForward" color="blue400" />
+                    </LinkV2>
+                  ) : (
+                    <ArrowLink href={`/ritstjorn/${row.caseId}`}>
+                      {messages.general.see_more}
+                    </ArrowLink>
+                  )}
+                </Box>
+              </td>
+            </tr>
+          ))}
+        </T.Body>
+      </T.Table>
+      {paging && (
+        <Box marginTop={3}>
+          <Pagination
+            page={0}
+            renderLink={function (
+              page: number,
+              className: string,
+              children: ReactNode,
+            ): ReactNode {
+              throw new Error('Function not implemented.')
+            }}
+          />
+        </Box>
+      )}
+    </>
   )
 }

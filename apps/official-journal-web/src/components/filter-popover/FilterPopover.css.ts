@@ -50,6 +50,7 @@ export const filterGroup = recipe({
     display: 'none',
     flexDirection: 'column',
     gap: 8,
+    color: theme.color.dark400,
   },
 
   variants: {

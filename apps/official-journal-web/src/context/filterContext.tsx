@@ -1,5 +1,5 @@
 import uniqBy from 'lodash/uniqBy'
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 
 export type FilterOption = {
   label: string

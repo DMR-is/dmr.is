@@ -7,3 +7,10 @@ export const PIE_CHART_DIMENSION = 240
 export const FALLBACK_DOMAIN = 'https://admin.stjornartidindi.is' // THIS IS A MOCK, CHANGE TO CORRECT WHEN DEPLOYED
 
 export const JSON_ENDING = '.json'
+
+export enum CaseOverviewTabIds {
+  Ritstjorn = '1',
+  InProgress = '2',
+  InReview = '3',
+  Ready = '4',
+}

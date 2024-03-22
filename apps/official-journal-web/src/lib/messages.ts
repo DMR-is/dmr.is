@@ -91,6 +91,7 @@ export const messages = {
           registrationDate: 'Skráning',
           department: 'Deild',
           title: 'Heiti',
+          employee: 'Starfs.',
         },
         labels: {
           fasttrack: 'Hraðbirting',

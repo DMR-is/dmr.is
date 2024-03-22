@@ -32,7 +32,9 @@ export const FilterGroup = ({
         onClick={() => setLocalToggle(!localToggle)}
         className={styles.filterExpandButton}
       >
-        <Text variant="h5">{title}</Text>
+        <Text color="dark400" variant="h5">
+          {title}
+        </Text>
         <Box className={styles.filterExpandButtonIcon}>
           <Icon
             icon={localToggle ? 'remove' : 'add'}
