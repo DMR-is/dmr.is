@@ -131,8 +131,8 @@ export class JournalController {
   @Get('maincategories')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertCategoriesResponse,
-    description: 'List of journal advert types.',
+    type: JournalAdvertMainCategoriesResponse,
+    description: 'List of journal advert main categories.',
   })
   @ApiResponse({
     status: 400,
@@ -150,7 +150,7 @@ export class JournalController {
   @ApiResponse({
     status: 200,
     type: JournalAdvertCategoriesResponse,
-    description: 'List of journal advert types.',
+    description: 'List of journal advert categories.',
   })
   @ApiResponse({
     status: 400,
@@ -167,8 +167,8 @@ export class JournalController {
   @Get('involvedparties')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertCategoriesResponse,
-    description: 'List of journal advert types.',
+    type: JournalAdvertInvolvedPartiesResponse,
+    description: 'List of journal advert involved parties.',
   })
   @ApiResponse({
     status: 400,
