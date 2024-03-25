@@ -120,3 +120,8 @@ jobs:
             --service ${{ matrix.api }} \
             --force-new-deployment
 
+      - name: Wait for service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster dev-dmr-utgafa \
+            --services ${{ matrix.api }}
