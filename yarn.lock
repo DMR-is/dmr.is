@@ -2312,22 +2312,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@island.is/regulations-tools@npm:^0.7.14":
-  version: 0.7.14
-  resolution: "@island.is/regulations-tools@npm:0.7.14"
+"@island.is/regulations-tools@npm:^0.7.15":
+  version: 0.7.15
+  resolution: "@island.is/regulations-tools@npm:0.7.15"
   dependencies:
     "@hugsmidjan/htmldiff-js": "npm:^1.2.1"
     "@hugsmidjan/qj": "npm:^4.10.2"
     "@hugsmidjan/react": "npm:^0.4.23"
     "@tinymce/tinymce-react": "npm:^3.13.0"
     cleanup-prettier: "npm:prettier@2.2.0"
+    date-fns: "npm:^2.29.3"
     jsdom: "npm:^16.4.0"
     tinymce: "npm:^5.10.2"
     translate.js: "npm:^1.3.2"
   peerDependencies:
     react: ">=16.8 <19"
     react-dom: ">=16.8 <19"
-  checksum: 1c2ee04d0fe049046d9f027fef1c016fd0e6301c90211a0a826f4c95c27918ed602c2ae809aa37bf2453c8217590a440f64a770db7f157bbd16341e3a2a9d465
+  checksum: e42ef41507a73025cd903738f738632a0057dbb9cc2666d9be25fe378c4d19c793dfb0eaf8568849d5b2f7ee57e8f607879e4464a919540e9debb24a266272b1
   languageName: node
   linkType: hard
 
@@ -8197,7 +8198,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:^2.0.1, date-fns@npm:^2.24.0":
+"date-fns@npm:^2.0.1, date-fns@npm:^2.24.0, date-fns@npm:^2.29.3":
   version: 2.30.0
   resolution: "date-fns@npm:2.30.0"
   dependencies:
@@ -8571,7 +8572,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "dmr.is@workspace:."
   dependencies:
-    "@island.is/regulations-tools": "npm:^0.7.14"
+    "@island.is/regulations-tools": "npm:^0.7.15"
     "@nestjs/common": "npm:^10.2.10"
     "@nestjs/core": "npm:^10.2.10"
     "@nestjs/platform-express": "npm:^10.0.2"
