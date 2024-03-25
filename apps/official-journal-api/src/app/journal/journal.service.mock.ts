@@ -36,7 +36,8 @@ import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/j
 import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
 import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
 import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
-
+import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
+import { HTMLText } from '@island.is/regulations-tools/types'
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
 const LOGGING_CATEGORY = 'MockJournalService'
@@ -62,7 +63,20 @@ export class MockJournalService implements IJournalService {
     })
     const advert = allMockAdverts.find((advert) => advert.id === id)
 
-    return Promise.resolve(advert ?? null)
+    if (advert) {
+      return Promise.resolve({
+        ...advert,
+        document: {
+          isLegacy: advert.document.isLegacy,
+          html: advert.document.isLegacy
+            ? dirtyClean(advert.document.html as HTMLText)
+            : advert.document.html,
+          pdfUrl: advert.document.pdfUrl,
+        },
+      })
+    } else {
+      return Promise.resolve(null)
+    }
   }
 
   getAdverts(
