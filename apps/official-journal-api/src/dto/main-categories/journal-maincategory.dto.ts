@@ -19,7 +19,7 @@ export class JournalAdvertMainCategory {
   readonly title!: string
 
   @ApiProperty({
-    description: 'Slug of the main-category, used in URLs and API requests.',
+    description: 'Slug of the main category, used in URLs and API requests.',
     example: 'domstolar-og-rettarfar',
     required: true,
     type: String,
