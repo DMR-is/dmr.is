@@ -4,9 +4,8 @@ import { recipe } from '@vanilla-extract/recipes'
 
 export const tabsTablist = style({
   position: 'relative',
-  width: '100%',
+  display: 'flex',
   overflowX: 'auto',
-  whiteSpace: 'nowrap',
 })
 
 export const tabsTabPanel = style({

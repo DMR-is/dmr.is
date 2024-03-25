@@ -17,6 +17,7 @@ import {
 
 import { mapQueryParamToCaseOverviewTab } from '../lib/utils'
 import { useQueryParams } from '../hooks/useQueryParams'
+import { CaseOverviewTabIds } from '../lib/constants'
 
 type QueryParams = {
   category?: string
@@ -46,22 +47,22 @@ const CaseOverviewPage: Screen<Props> = ({
 
   const tabs = [
     {
-      id: '1',
+      id: CaseOverviewTabIds.Submitted,
       label: messages.components.tabs.submitted.title,
       content: <CaseTableSubmitted data={submittedCases} />,
     },
     {
-      id: '2',
+      id: CaseOverviewTabIds.InProgress,
       label: messages.components.tabs.inProgress.title,
       content: <CaseTableInProgress data={inProgressCases} />,
     },
     {
-      id: '3',
+      id: CaseOverviewTabIds.InReview,
       label: messages.components.tabs.inReview.title,
       content: <CaseTableSubmitted data={submittedCases} />,
     },
     {
-      id: '4',
+      id: CaseOverviewTabIds.Ready,
       label: messages.components.tabs.ready.title,
       content: <CaseTableSubmitted data={submittedCases} />,
     },

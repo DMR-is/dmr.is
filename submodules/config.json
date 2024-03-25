@@ -2,7 +2,7 @@
   "submodules": [
     {
       "name": "island.is",
-      "sha": "437710f",
+      "sha": "b93ab4b",
       "sparseCheckoutPaths": ["libs/shared"]
     }
   ]

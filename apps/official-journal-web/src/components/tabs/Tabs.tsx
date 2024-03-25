@@ -1,7 +1,7 @@
-import { Box, Text } from '@island.is/island-ui/core'
+import { Box, FocusableBox, Text } from '@island.is/island-ui/core'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 import * as styles from './Tabs.css'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 type Tab = {
   label: string
@@ -26,36 +26,27 @@ export const Tabs = ({ tabs, selectedTab, onTabChange }: Props) => {
   }, [tab.currentId])
 
   return (
-    <Box>
-      <Box className={styles.tabsTablist}>
-        <TabList {...tabs}>
-          {tabs.map(({ label, id }) => {
-            const isActive = id === selectedTab
-            return (
-              <Tab
-                {...tab}
-                id={id}
-                className={styles.tabsTab({ active: isActive })}
-                key={id}
-              >
-                <Text
-                  color={isActive ? 'blue400' : 'currentColor'}
-                  fontWeight={isActive ? 'semiBold' : 'regular'}
-                >
-                  {label}
-                </Text>
-              </Tab>
-            )
-          })}
-        </TabList>
-      </Box>
-      <Box>
-        {tabs.map(({ id, content }) => (
-          <TabPanel {...tab} key={id} id={id} className={styles.tabsTabPanel}>
-            {content}
-          </TabPanel>
-        ))}
-      </Box>
+    <Box position="relative">
+      <TabList {...tab} className={styles.tabsTablist}>
+        {tabs.map(({ label, id }, index) => {
+          const isActive = tab.currentId === id
+          return (
+            <Tab
+              {...tab}
+              key={index}
+              id={`${id ?? index}`}
+              className={styles.tabsTab({ active: isActive })}
+            >
+              <Text fontWeight={isActive ? 'medium' : 'regular'}>{label}</Text>
+            </Tab>
+          )
+        })}
+      </TabList>
+      {tabs.map(({ content }, index) => (
+        <TabPanel {...tab} key={index} className={styles.tabsTabPanel}>
+          <Box>{content}</Box>
+        </TabPanel>
+      ))}
     </Box>
   )
 }

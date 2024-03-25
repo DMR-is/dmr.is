@@ -34,8 +34,8 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
 
 export const mapQueryParamToCaseOverviewTab = (param?: string) => {
   switch (param) {
-    case CaseOverviewTabIds.Ritstjorn:
-      return CaseOverviewTabIds.Ritstjorn
+    case CaseOverviewTabIds.Submitted:
+      return CaseOverviewTabIds.Submitted
     case CaseOverviewTabIds.InProgress:
       return CaseOverviewTabIds.InProgress
     case CaseOverviewTabIds.InReview:
@@ -43,6 +43,6 @@ export const mapQueryParamToCaseOverviewTab = (param?: string) => {
     case CaseOverviewTabIds.Ready:
       return CaseOverviewTabIds.Ready
     default:
-      return CaseOverviewTabIds.Ritstjorn
+      return CaseOverviewTabIds.Submitted
   }
 }

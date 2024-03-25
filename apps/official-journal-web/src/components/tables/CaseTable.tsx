@@ -151,8 +151,8 @@ export const CaseTable = ({
               onMouseOver={() => setHoveredRow(row.caseId)}
               key={index}
             >
-              {row.cells.map((cell) => (
-                <TableCell>{cell.children}</TableCell>
+              {row.cells.map((cell, cellIndex) => (
+                <TableCell key={cellIndex}>{cell.children}</TableCell>
               ))}
               <td align="center" className={styles.linkTableCell}>
                 <Box
