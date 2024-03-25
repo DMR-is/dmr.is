@@ -11,7 +11,7 @@ import { Transform } from 'class-transformer'
 export class JournalGetInvolvedPartiesQueryParams {
   @ApiProperty({
     name: 'search',
-    description: 'String to search for in main categories.',
+    description: 'String to search for in involved parties.',
     type: String,
     required: false,
   })
