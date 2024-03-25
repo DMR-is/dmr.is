@@ -14,16 +14,29 @@ export const messages = {
     review: 'Yfirlestur',
     ready: 'Tilbúið',
     advert_statuses: 'Staða mála',
+    see_more: 'Skoða nánar',
+    open_filter: 'Opna síu',
+    clear_filter: 'Hreinsa allar síur',
+    clear_filters: 'Hreinsa val',
+    page_name: 'Stjórnartíðindi',
   },
   auth: {
     logout: 'Útskrá',
+  },
+  pages: {
+    frontpage: {
+      name: 'Stjórnartíðindi',
+    },
+    caseOverview: {
+      name: 'Ritstjórn',
+    },
   },
   components: {
     controlPanel: {
       title: 'Stjórnborð',
       project: 'Stjórnartíðindi',
     },
-    banner: {
+    frontpageBanner: {
       title: 'Stjórnartíðindi',
       description:
         'Umsýslukerfi Stjórnartíðinda, morem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -42,6 +55,11 @@ export const messages = {
         },
       },
     },
+    ritstjornBanner: {
+      title: 'Vinnslusvæði Stjórnartíðinda',
+      description:
+        'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+    },
     tabs: {
       label: 'Veldu flokk',
       editorial: {
@@ -52,6 +70,34 @@ export const messages = {
       },
       inactive: {
         title: 'Óhreyfð mál',
+      },
+      submitted: {
+        title: 'Innsendingar',
+      },
+      inProgress: {
+        title: 'Grunnvinnsla',
+      },
+      inReview: {
+        title: 'Yfirlestur',
+      },
+      ready: {
+        title: 'Tilbúið',
+      },
+    },
+    tables: {
+      caseOverview: {
+        headCells: {
+          publicationDate: 'Birting',
+          registrationDate: 'Skráning',
+          department: 'Deild',
+          title: 'Heiti',
+          employee: 'Starfs.',
+        },
+        labels: {
+          fasttrack: 'Hraðbirting',
+          warning: 'Viðbrögð hafa borist frá auglýsanda',
+          info: 'Beðið svara',
+        },
       },
     },
     adverts_overview_list: {

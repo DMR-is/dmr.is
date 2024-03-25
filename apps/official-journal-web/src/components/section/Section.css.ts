@@ -1,5 +1,4 @@
 import { theme } from '@island.is/island-ui/theme'
-import { globalStyle } from '@vanilla-extract/css'
 import { recipe } from '@vanilla-extract/recipes'
 import { BLEED_HEIGHT } from '../../lib/constants'
 
@@ -18,9 +17,16 @@ export const section = recipe({
         backgroundColor: theme.color.blue100,
       },
     },
+    bleed: {
+      true: {
+        paddingBlock: sectionSpacing + BLEED_HEIGHT,
+        marginTop: -BLEED_HEIGHT,
+      },
+      false: {},
+    },
+    paddingTop: {
+      default: {},
+      off: { paddingBlockStart: 0 },
+    },
   },
-})
-
-globalStyle(`${section()}:first-of-type + section`, {
-  paddingBlockStart: sectionSpacing + BLEED_HEIGHT,
 })

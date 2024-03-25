@@ -7,7 +7,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
-import { Banner } from '../components/banner/Banner'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { StatisticsNotPublished } from '../components/statistics/NotPublished'
@@ -97,8 +96,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
 
   return (
     <>
-      <Banner />
-      <Section variant="blue">
+      <Section bleed={true} variant="blue">
         <GridContainer>
           <GridRow>
             <GridColumn span="1/1">
@@ -224,6 +222,34 @@ Dashboard.getProps = async () => {
   }
 }
 
+const mockBannerCards = [
+  {
+    title: messages.components.frontpageBanner.cards.editorial.title,
+    text: messages.components.frontpageBanner.cards.editorial.description,
+    link: '/ritstjorn',
+    image: '/assets/ritstjorn-image.svg',
+  },
+  {
+    title: messages.components.frontpageBanner.cards.publishing.title,
+    text: messages.components.frontpageBanner.cards.publishing.description,
+    link: '/ritstjorn',
+    image: '/assets/utgafa-image.svg',
+  },
+  {
+    title: messages.components.frontpageBanner.cards.all.title,
+    text: messages.components.frontpageBanner.cards.all.description,
+    link: '/ritstjorn',
+    image: '/assets/heildar-image.svg',
+  },
+]
+
 export default withMainLayout(Dashboard, {
   showFooter: true,
+  bannerProps: {
+    showBanner: true,
+    cards: mockBannerCards,
+    description: messages.components.frontpageBanner.description,
+    title: messages.components.frontpageBanner.title,
+    imgSrc: '/assets/banner-image.svg',
+  },
 })

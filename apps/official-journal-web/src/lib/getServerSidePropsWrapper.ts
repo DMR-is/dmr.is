@@ -1,7 +1,6 @@
 import type { GetServerSideProps } from 'next'
 import { ScreenContext } from './types'
 import { CustomNextError } from '../units/error'
-import { safelyExtractPathnameFromUrl } from './utils'
 
 // Taken from here: https://github.com/vercel/next.js/discussions/11209#discussioncomment-38480
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,12 +22,13 @@ type Component = {
     pageProps: unknown
   }>
 }
-
 export const getServerSidePropsWrapper: (
   screen: Component,
 ) => GetServerSideProps = (screen) => async (ctx) => {
   try {
     const props = screen.getProps ? await screen.getProps(ctx) : ctx
+
+    console.log(ctx.query)
 
     deleteUndefined(props)
     return {

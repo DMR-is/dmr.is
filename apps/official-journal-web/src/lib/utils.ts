@@ -1,4 +1,13 @@
-import { FALLBACK_DOMAIN, JSON_ENDING } from './constants'
+import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
+import is from 'date-fns/locale/is'
+import format from 'date-fns/format'
+export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
+  try {
+    return format(new Date(date), df, { locale: is })
+  } catch (e) {
+    throw new Error(`Could not format date: ${date}`)
+  }
+}
 
 export const safelyExtractPathnameFromUrl = (url?: string) => {
   if (!url) return ''
@@ -21,4 +30,19 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   }
 
   return pathname
+}
+
+export const mapQueryParamToCaseOverviewTab = (param?: string) => {
+  switch (param) {
+    case CaseOverviewTabIds.Submitted:
+      return CaseOverviewTabIds.Submitted
+    case CaseOverviewTabIds.InProgress:
+      return CaseOverviewTabIds.InProgress
+    case CaseOverviewTabIds.InReview:
+      return CaseOverviewTabIds.InReview
+    case CaseOverviewTabIds.Ready:
+      return CaseOverviewTabIds.Ready
+    default:
+      return CaseOverviewTabIds.Submitted
+  }
 }

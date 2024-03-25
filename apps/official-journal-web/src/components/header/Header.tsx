@@ -50,10 +50,10 @@ export const Header = () => {
                     justifyContent="flexEnd"
                     width="full"
                   >
-                    <DropdownMenu
+                    {/* <DropdownMenu
                       title={mockUser.fullName}
                       items={[{ href: '#', title: messages.auth.logout }]}
-                    />
+                    /> */}
                   </Box>
                 </Column>
               </Columns>
