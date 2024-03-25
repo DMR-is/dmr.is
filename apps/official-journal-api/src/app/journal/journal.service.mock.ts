@@ -1,41 +1,43 @@
 import { v4 as uuid } from 'uuid'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { JournalAdvert } from '../../dto/adverts/journal-advert.dto'
+import { IJournalService } from './journal.service.interface'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import {
   ADVERT_B_1278_2023,
   ADVERT_B_866_2006,
-  ALL_MOCK_JOURNAL_CATEGORIES,
   ALL_MOCK_JOURNAL_DEPARTMENTS,
-  ALL_MOCK_JOURNAL_INVOLVED_PARTIES,
-  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
-  ALL_MOCK_JOURNAL_TYPES,
   MOCK_PAGING_SINGLE_PAGE,
-} from '../../mock/journal.mock'
-import { JournalAdvertsResponse } from '../../dto/adverts/journal-advert-responses.dto'
-import { JournalGetAdvertsQueryParams } from '../../dto/adverts/journal-getadverts-query.dto'
-import { JournalGetTypesQueryParams } from '../../dto/types/journal-gettypes-query.dto'
-import { JournalAdvertDepartmentsResponse } from '../../dto/departments/journal-getdepartments-response.dto'
-import { JournalAdvertTypesResponse } from '../../dto/types/journal-gettypes-response.dto'
-import { JournalGetDepartmentsQueryParams } from '../../dto/departments/journal-getdepartments-query.dto'
-import { JournalGetCategoriesQueryParams } from '../../dto/categories/journal-getcategories-query.dto'
-import { JournalAdvertCategoriesResponse } from '../../dto/categories/journal-getcategories-responses.dto'
-import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
-import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
-import { JournalAdvertStatus } from '../../dto/journal-constants.dto'
-import { JournalAdvertPublicationNumber } from '../../dto/adverts/journal-advert-publication-number.dto'
-import { JournalDocument } from '../../dto/journal-document'
-import { ALL_MOCK_SIGNATURES } from '../../mock/signatures.mock'
-import { JournalSignature } from '../../dto/signatures/journal-signature.dto'
-import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
-import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
-import { IJournalService } from './journal.service.interface'
-import { DEFAULT_PAGE_SIZE } from '../../constants'
-import { generatePaging } from '../../utils'
-import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
-import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
-import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
-import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
+  ALL_MOCK_JOURNAL_TYPES,
+  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
+  ALL_MOCK_JOURNAL_CATEGORIES,
+  ALL_MOCK_JOURNAL_INVOLVED_PARTIES,
+  ALL_MOCK_SIGNATURES,
+} from '@dmr.is/mocks'
+import {
+  JournalAdvert,
+  JournalGetAdvertsQueryParams,
+  JournalAdvertsResponse,
+  JournalGetDepartmentsQueryParams,
+  JournalAdvertDepartmentsResponse,
+  JournalGetTypesQueryParams,
+  JournalAdvertTypesResponse,
+  JournalGetMainCategoriesQueryParams,
+  JournalAdvertMainCategoriesResponse,
+  JournalGetCategoriesQueryParams,
+  JournalAdvertCategoriesResponse,
+  JournalGetInvolvedPartiesQueryParams,
+  JournalAdvertInvolvedPartiesResponse,
+  JournalPostApplicationBody,
+  JournalPostApplicationResponse,
+  JournalDocument,
+  JournalAdvertPublicationNumber,
+  JournalSignature,
+  JournalAdvertStatus,
+  JournalSignatureQuery,
+  JournalSignatureGetResponse,
+} from '@dmr.is/shared/dto/journal'
+import { generatePaging } from '@dmr.is/utils'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
@@ -60,7 +62,9 @@ export class MockJournalService implements IJournalService {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
-    const advert = allMockAdverts.find((advert) => advert.id === id)
+    const advert = (allMockAdverts as JournalAdvert[]).find(
+      (advert) => advert.id === id,
+    )
 
     return Promise.resolve(advert ?? null)
   }
@@ -72,13 +76,15 @@ export class MockJournalService implements IJournalService {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
-    const filteredMockAdverts = allMockAdverts.filter((advert) => {
-      if (!params?.search) {
-        return true
-      }
+    const filteredMockAdverts = (allMockAdverts as JournalAdvert[]).filter(
+      (advert) => {
+        if (!params?.search) {
+          return true
+        }
 
-      return advert.title.includes(params.search)
-    })
+        return advert.title.includes(params.search)
+      },
+    )
 
     const result: JournalAdvertsResponse = {
       adverts: filteredMockAdverts,
