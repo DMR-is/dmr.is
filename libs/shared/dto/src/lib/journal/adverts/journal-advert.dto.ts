@@ -68,7 +68,7 @@ export class JournalAdvert {
     nullable: true,
     type: JournalAdvertPublicationNumber,
   })
-  readonly publicationNumber!: JournalAdvertPublicationNumber
+  readonly publicationNumber!: JournalAdvertPublicationNumber | null
 
   @ApiProperty({
     description:
