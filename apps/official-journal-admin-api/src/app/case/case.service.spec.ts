@@ -2,6 +2,7 @@ import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { Test } from '@nestjs/testing'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 
 describe('CaseService', () => {
   let service: ICaseService
@@ -46,11 +47,11 @@ describe('CaseService', () => {
   describe('getCases', () => {
     it('Should return all cases', async () => {
       const results = await service.getCases()
-      expect(results.cases.length).toEqual(1)
+      expect(results.cases.length).toEqual(ALL_MOCK_CASES.length)
     })
 
-    it('Should return case with caseNumber 01905', async () => {
-      const results = await service.getCases({ caseNumber: '01905' })
+    it('Should return case with caseNumber 12345', async () => {
+      const results = await service.getCases({ caseNumber: '12345' })
       expect(results.cases.length).toEqual(1)
     })
 

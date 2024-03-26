@@ -3,6 +3,7 @@ import { CaseController } from './case.controller'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 
 describe('CaseController', () => {
   let theCase: TestingModule
@@ -47,11 +48,11 @@ describe('CaseController', () => {
   describe('/', () => {
     it('should return correct cases', async () => {
       const result = await caseController.cases()
-      expect(result.cases.length).toEqual(1)
+      expect(result.cases.length).toEqual(ALL_MOCK_CASES.length)
     })
 
-    it('should return case with caseNumber 01905', async () => {
-      const result = await caseController.cases({ caseNumber: '01905' })
+    it('should return case with caseNumber 12345', async () => {
+      const result = await caseController.cases({ caseNumber: '12345' })
       expect(result.cases.length).toEqual(1)
     })
 
