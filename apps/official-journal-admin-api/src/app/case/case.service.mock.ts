@@ -3,16 +3,15 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
-import { Case } from '../../dto/case/case.dto'
 
+import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
 import { ICaseService } from './case.service.interface'
-import { CasesReponse } from '../../dto/case/cases-response'
-import { CasesQuery } from '../../dto/case/cases-query.dto'
+
 import { generatePaging } from '@dmr.is/utils'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 
-const MOCK_CASES = ALL_MOCK_CASES as Case[]
+const MOCK_CASES = ALL_MOCK_CASES
 
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
@@ -65,14 +64,6 @@ export class CaseServiceMock implements ICaseService {
         }
 
         if (params?.fastTrack && c.fastTrack !== params?.fastTrack) {
-          return false
-        }
-
-        if (
-          params?.institution &&
-          (c.insititution.name !== params?.institution ||
-            c.insititution.ssn !== params?.institution)
-        ) {
           return false
         }
 

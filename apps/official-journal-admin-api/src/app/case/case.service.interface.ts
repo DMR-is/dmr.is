@@ -1,6 +1,4 @@
-import { Case } from '../../dto/case/case.dto'
-import { CasesQuery } from '../../dto/case/cases-query.dto'
-import { CasesReponse } from '../../dto/case/cases-response'
+import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
 
 export interface ICaseService {
   getCase(id: string): Promise<Case | null>
