@@ -51,13 +51,13 @@ describe('CaseController', () => {
       expect(result.cases.length).toEqual(ALL_MOCK_CASES.length)
     })
 
-    it('should return case with caseNumber 12345', async () => {
-      const result = await caseController.cases({ caseNumber: '12345' })
+    it('should return case with caseNumber 1234', async () => {
+      const result = await caseController.cases({ caseNumber: 1234 })
       expect(result.cases.length).toEqual(1)
     })
 
     it('should return no results', async () => {
-      const result = await caseController.cases({ caseNumber: 'not-found' })
+      const result = await caseController.cases({ caseNumber: 9999 })
       expect(result.cases.length).toEqual(0)
     })
   })
