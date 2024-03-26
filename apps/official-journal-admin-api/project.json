@@ -11,7 +11,7 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/official-journal-admin-api",
+        "outputPath": "apps/official-journal-admin-api/dist",
         "main": "apps/official-journal-admin-api/src/main.ts",
         "tsConfig": "apps/official-journal-admin-api/tsconfig.app.json",
         "assets": ["apps/official-journal-admin-api/src/assets"],
