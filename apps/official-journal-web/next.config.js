@@ -7,6 +7,7 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
 
@@ -23,7 +24,6 @@ const nextConfig = {
 
     return config
   },
-
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
   },
