@@ -1,11 +1,21 @@
-import { ADVERT_B_1278_2023, ADVERT_B_866_2006 } from './journal.mock'
+import {
+  Case,
+  CaseStatus,
+  CaseCommentType,
+  CaseTag,
+} from '@dmr.is/shared/dto/cases'
+import {
+  ADVERT_B_1278_2023,
+  ADVERT_B_866_2006,
+  ADVERT_NEW,
+} from './journal.mock'
 
-export const CASE_SUBMITTED = {
+export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
   applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134153',
   year: 2024,
-  caseNumber: '12345',
-  status: 'Innsent',
+  caseNumber: 1234,
+  status: CaseStatus.Submitted,
   tag: null,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
@@ -14,16 +24,12 @@ export const CASE_SUBMITTED = {
   paid: false,
   price: null,
   fastTrack: false,
-  insititution: {
-    name: 'Dómsmálaráðuneytið',
-    ssn: '5804170510',
-  },
   assignedTo: null,
-  advert: ADVERT_B_1278_2023,
+  advert: ADVERT_NEW,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-      type: 'submit',
+      type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       task: {
         from: null,
@@ -32,38 +38,15 @@ export const CASE_SUBMITTED = {
         comment: null,
       },
     },
-    {
-      id: 'a72e9b33-ad8c-4d83-84bf-92e109721e0f',
-      createdAt: '2024-03-13T12:45:48.21Z',
-      type: 'assign',
-      task: {
-        from: 'Ármann',
-        to: null,
-        title: 'merkir sér málið',
-        comment: null,
-      },
-    },
-    {
-      id: 'fb85443f-1d10-4c7c-bef3-d1b8dbc1d462',
-      type: 'comment',
-      createdAt: '2024-03-13T12:45:48.21Z',
-      task: {
-        from: 'Ármann',
-        to: null,
-        title: 'gerir athugasemd',
-        comment:
-          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
-      },
-    },
   ],
 }
 
-export const CASE_IN_PROGRESS = {
+export const CASE_IN_PROGRESS: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e358d',
   applicationId: '3ec5ef68-6dc8-42ee-9eha-1670ff134153',
   year: 2024,
-  caseNumber: '85264',
-  status: 'Grunnvinnsla',
+  caseNumber: 8526,
+  status: CaseStatus.InProgress,
   tag: null,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
@@ -72,16 +55,12 @@ export const CASE_IN_PROGRESS = {
   paid: false,
   price: null,
   fastTrack: false,
-  insititution: {
-    name: 'Dómsmálaráðuneytið',
-    ssn: '5804170510',
-  },
   assignedTo: null,
   advert: ADVERT_B_1278_2023,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
-      type: 'submit',
+      type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       task: {
         from: null,
@@ -93,7 +72,7 @@ export const CASE_IN_PROGRESS = {
     {
       id: 'a72e9b33-ad8c-4a83-84bf-92e109721e0f',
       createdAt: '2024-03-13T12:45:48.21Z',
-      type: 'assign',
+      type: CaseCommentType.Assign,
       task: {
         from: 'Ármann',
         to: null,
@@ -103,7 +82,7 @@ export const CASE_IN_PROGRESS = {
     },
     {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
-      type: 'comment',
+      type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       task: {
         from: 'Ármann',
@@ -116,30 +95,26 @@ export const CASE_IN_PROGRESS = {
   ],
 }
 
-export const CASE_IN_REVIEW = {
+export const CASE_IN_REVIEW: Case = {
   id: 'e637c050-a462-4183-972a-5c375e6e34ad',
   applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134z53',
   year: 2024,
-  caseNumber: '58242',
-  status: 'Yfirlestur',
-  tag: null,
+  caseNumber: 5824,
+  status: CaseStatus.InReview,
+  tag: CaseTag.InReview,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
   publishedAt: null,
-  paid: false,
-  price: null,
+  paid: true,
+  price: 23900,
   fastTrack: false,
-  insititution: {
-    name: 'Dómsmálaráðuneytið',
-    ssn: '5804170510',
-  },
-  assignedTo: null,
+  assignedTo: 'Pálína J',
   advert: ADVERT_B_866_2006,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-      type: 'submit',
+      type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       task: {
         from: null,
@@ -151,7 +126,7 @@ export const CASE_IN_REVIEW = {
     {
       id: 'a72e9b33-ad8c-4d83-84bf-92e109721z0f',
       createdAt: '2024-03-13T12:45:48.21Z',
-      type: 'assign',
+      type: CaseCommentType.Assign,
       task: {
         from: 'Ármann',
         to: null,
@@ -161,7 +136,7 @@ export const CASE_IN_REVIEW = {
     },
     {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d462',
-      type: 'comment',
+      type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       task: {
         from: 'Ármann',
@@ -174,30 +149,26 @@ export const CASE_IN_REVIEW = {
   ],
 }
 
-export const CASE_READY = {
+export const CASE_READY: Case = {
   id: 'e637c050-a462-4183-972a-5c375x6e34ad',
   applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
   year: 2024,
-  caseNumber: '32112',
-  status: 'Yfirlestur',
-  tag: null,
+  caseNumber: 3211,
+  status: CaseStatus.ReadyForPublishing,
+  tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
   publishedAt: null,
-  paid: false,
-  price: null,
+  paid: true,
+  price: 23000,
   fastTrack: false,
-  insititution: {
-    name: 'Dómsmálaráðuneytið',
-    ssn: '5804170510',
-  },
-  assignedTo: null,
+  assignedTo: 'Ármann',
   advert: ADVERT_B_866_2006,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
-      type: 'submit',
+      type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       task: {
         from: null,
@@ -209,7 +180,7 @@ export const CASE_READY = {
     {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
-      type: 'assign',
+      type: CaseCommentType.Assign,
       task: {
         from: 'Ármann',
         to: null,
@@ -219,7 +190,7 @@ export const CASE_READY = {
     },
     {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
-      type: 'comment',
+      type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       task: {
         from: 'Ármann',

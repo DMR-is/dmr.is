@@ -2,9 +2,10 @@ import { Test } from '@nestjs/testing'
 import { IStatisticsService } from './statistics.service.interface'
 import { LoggingModule } from '@dmr.is/logging'
 import { MockStatisticsService } from './statistics.service.mock'
-import { StatisticsOverviewQueryType } from '../../dto/statistics/statistics-overview-query.dto'
+
 import { NotImplementedException } from '@nestjs/common'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
+import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto/cases'
 
 describe('StatisticsService', () => {
   let service: IStatisticsService

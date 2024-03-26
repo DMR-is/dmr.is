@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Case } from './case.dto'
-import { Paging } from '@dmr.is/shared/dto/common'
+import { Paging } from '../../common'
+
 export class CasesReponse {
   @ApiProperty({
     type: [Case],

@@ -1,9 +1,8 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiQuery, ApiResponse } from '@nestjs/swagger'
-import { Case } from '../../dto/case/case.dto'
+import { ApiResponse } from '@nestjs/swagger'
 import { ICaseService } from './case.service.interface'
-import { CasesReponse } from '../../dto/case/cases-response'
-import { CasesQuery } from '../../dto/case/cases-query.dto'
+
+import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
 
 @Controller({
   version: '1',

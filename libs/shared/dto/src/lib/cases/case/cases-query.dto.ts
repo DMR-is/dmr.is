@@ -33,12 +33,12 @@ export class CasesQuery {
     name: 'caseNumber',
     description:
       'Case number to filter on, takes into account `caseNumber` on `Case`.',
-    type: String,
+    type: Number,
     required: false,
   })
   @IsOptional()
   @IsString()
-  caseNumber?: string
+  caseNumber?: number
 
   @ApiProperty({
     enum: CaseStatus,

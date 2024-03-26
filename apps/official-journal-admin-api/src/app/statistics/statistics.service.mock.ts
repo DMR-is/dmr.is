@@ -7,14 +7,15 @@ import {
 } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import {
-  StatisticsOverviewResponse,
-  StatisticsOverviewCategory,
-} from '../../dto/statistics/statistics-overview-dto'
-import { StatisticsOverviewQueryType } from '../../dto/statistics/statistics-overview-query.dto'
+
 import { JournalAdvert, JournalAdvertStatus } from '@dmr.is/shared/dto/journal'
 import { ALL_MOCK_ADVERTS as MockAdverts } from '@dmr.is/mocks'
+import {
+  StatisticsDepartmentResponse,
+  StatisticsOverviewCategory,
+  StatisticsOverviewQueryType,
+  StatisticsOverviewResponse,
+} from '@dmr.is/shared/dto/cases'
 
 const ALL_MOCK_ADVERTS = MockAdverts as JournalAdvert[]
 

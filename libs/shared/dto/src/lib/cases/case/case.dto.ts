@@ -13,10 +13,9 @@ import {
   ValidateNested,
 } from 'class-validator'
 import { CaseStatus, CaseTag } from './case-constants'
-import { CaseInstitution } from './case-institution.dto'
 import { Type } from 'class-transformer'
 import { CaseComment } from './case-comment.dto'
-import { JournalAdvert } from '@dmr.is/shared/dto/journal'
+import { JournalAdvert } from '../../journal'
 
 export class Case {
   @ApiProperty({
@@ -48,13 +47,13 @@ export class Case {
   year!: number
 
   @ApiProperty({
-    type: String,
-    example: '01905',
+    type: Number,
+    example: 190,
     description:
       'Case number (numeric string) gets generated automatically when a case is created.',
   })
-  @Type(() => String)
-  readonly caseNumber!: string
+  @Type(() => Number)
+  readonly caseNumber!: number
 
   @ApiProperty({
     enum: CaseStatus,
@@ -100,18 +99,6 @@ export class Case {
   @IsString()
   @ValidateIf((o) => o.assignedTo !== null)
   assignedTo!: string | null
-
-  @ApiProperty({
-    type: CaseInstitution,
-    description: 'The institution that owns the case.',
-    example: {
-      ssn: '0102030000',
-      name: 'Forsætisráðuneytið',
-    },
-  })
-  @ValidateNested()
-  @Type(() => CaseInstitution)
-  readonly insititution!: CaseInstitution
 
   @ApiProperty({
     type: JournalAdvert,

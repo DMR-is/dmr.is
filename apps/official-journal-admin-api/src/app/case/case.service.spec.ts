@@ -50,13 +50,13 @@ describe('CaseService', () => {
       expect(results.cases.length).toEqual(ALL_MOCK_CASES.length)
     })
 
-    it('Should return case with caseNumber 12345', async () => {
-      const results = await service.getCases({ caseNumber: '12345' })
+    it('Should return case with caseNumber 1234', async () => {
+      const results = await service.getCases({ caseNumber: 1234 })
       expect(results.cases.length).toEqual(1)
     })
 
     it('Should return no results', async () => {
-      const results = await service.getCases({ caseNumber: '00000' })
+      const results = await service.getCases({ caseNumber: 9999 })
       expect(results.cases.length).toEqual(0)
     })
   })

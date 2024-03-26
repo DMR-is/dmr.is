@@ -2,8 +2,10 @@ import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
-import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
+import {
+  StatisticsDepartmentResponse,
+  StatisticsOverviewResponse,
+} from '@dmr.is/shared/dto/cases'
 
 @Controller({
   version: '1',
