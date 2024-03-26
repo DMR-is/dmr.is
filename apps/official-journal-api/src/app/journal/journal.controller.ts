@@ -14,28 +14,28 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
+import { IJournalService } from './journal.service.interface'
 import {
+  JournalAdvert,
   AdvertNotFound,
   JournalAdvertsResponse,
   JournalAdvertsValidationResponse,
-} from '../../dto/adverts/journal-advert-responses.dto'
-import { JournalAdvert } from '../../dto/adverts/journal-advert.dto'
-import { IJournalService } from './journal.service.interface'
-import { JournalGetAdvertsQueryParams } from '../../dto/adverts/journal-getadverts-query.dto'
-import { JournalGetDepartmentsQueryParams } from '../../dto/departments/journal-getdepartments-query.dto'
-import { JournalGetTypesQueryParams } from '../../dto/types/journal-gettypes-query.dto'
-import { JournalAdvertTypesResponse } from '../../dto/types/journal-gettypes-response.dto'
-import { JournalAdvertDepartmentsResponse } from '../../dto/departments/journal-getdepartments-response.dto'
-import { JournalGetCategoriesQueryParams } from '../../dto/categories/journal-getcategories-query.dto'
-import { JournalAdvertCategoriesResponse } from '../../dto/categories/journal-getcategories-responses.dto'
-import { JournalPostApplicationResponse } from '../../dto/application/journal-postapplication-response.dto'
-import { JournalPostApplicationBody } from '../../dto/application/journal-postapplication-body.dto'
-import { JournalSignatureGetResponse } from '../../dto/signatures/journal-signature-get-response.dto'
-import { JournalSignatureQuery } from '../../dto/signatures/journal-signature-query.dto'
-import { JournalGetMainCategoriesQueryParams } from '../../dto/main-categories/journal-getmaincategories-query.dto'
-import { JournalAdvertMainCategoriesResponse } from '../../dto/main-categories/journal-getmaincategories-response.dto'
-import { JournalGetInvolvedPartiesQueryParams } from '../../dto/involved-parties/journal-getinvolvedparties-query.dto'
-import { JournalAdvertInvolvedPartiesResponse } from '../../dto/involved-parties/journal-getinvolvedparties-response.dto'
+  JournalGetAdvertsQueryParams,
+  JournalAdvertDepartmentsResponse,
+  JournalGetDepartmentsQueryParams,
+  JournalAdvertTypesResponse,
+  JournalGetTypesQueryParams,
+  JournalAdvertMainCategoriesResponse,
+  JournalGetMainCategoriesQueryParams,
+  JournalAdvertCategoriesResponse,
+  JournalGetCategoriesQueryParams,
+  JournalAdvertInvolvedPartiesResponse,
+  JournalGetInvolvedPartiesQueryParams,
+  JournalPostApplicationResponse,
+  JournalPostApplicationBody,
+  JournalSignatureGetResponse,
+  JournalSignatureQuery,
+} from '@dmr.is/shared/dto/journal'
 
 const LOGGING_CATEGORY = 'JournalController'
 
