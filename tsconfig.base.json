@@ -6,8 +6,15 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
-      "@dmr.is/apm": ["libs/apm/src/index.ts"],
-      "@dmr.is/logging": ["libs/logging/src/index.ts"],
+      "@dmr.is/apm": [
+        "libs/apm/src/index.ts"
+      ],
+      "@dmr.is/logging": [
+        "libs/logging/src/index.ts"
+      ],
+      "@dmr.is/nx-open-next": [
+        "libs/nx-open-next/src/index.ts"
+      ],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],
@@ -38,5 +45,8 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
