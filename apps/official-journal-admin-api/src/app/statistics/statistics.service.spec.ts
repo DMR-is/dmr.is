@@ -28,19 +28,19 @@ describe('StatisticsService', () => {
     const idWithNoAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[0].id
     const idWithAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[1].id
     it('Should return total count equal to 0', async () => {
-      const results = await service.getStatisticsDepartment(idWithNoAdverts)
+      const results = await service.getDepartment(idWithNoAdverts)
       expect(results.totalAdverts).toEqual(0)
     })
 
     it('Should return total count larger than 0', async () => {
-      const results = await service.getStatisticsDepartment(idWithAdverts)
+      const results = await service.getDepartment(idWithAdverts)
       expect(results.totalAdverts).toBeGreaterThan(0)
     })
   })
 
   describe('getOverview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await service.getStatisticsOverview(
+      const results = await service.getOverview(
         StatisticsOverviewQueryType.General,
       )
       expect(results.totalAdverts).toEqual(0)
@@ -48,9 +48,7 @@ describe('StatisticsService', () => {
 
     it('Should throw not implemented error', async () => {
       try {
-        await service.getStatisticsOverview(
-          StatisticsOverviewQueryType.Personal,
-        )
+        await service.getOverview(StatisticsOverviewQueryType.Personal)
       } catch (error) {
         if (error instanceof NotImplementedException) {
           expect(error.message).toEqual('Not Implemented')
