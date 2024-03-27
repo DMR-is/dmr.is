@@ -1,15 +1,15 @@
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { Case, GetCasesQuery, GetCasesReponse } from '@dmr.is/shared/dto'
+import { generatePaging } from '@dmr.is/utils'
+
 import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 
-import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 import { ICaseService } from './case.service.interface'
-
-import { generatePaging } from '@dmr.is/utils'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {

@@ -1,7 +1,9 @@
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { Case, GetCasesQuery, GetCasesReponse } from '@dmr.is/shared/dto'
+
 import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
+
 import { ICaseService } from './case.service.interface'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 
 @Injectable()
 export class CaseService implements ICaseService {

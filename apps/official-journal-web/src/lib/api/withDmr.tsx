@@ -1,5 +1,6 @@
 import { AppProps } from 'next/app'
-import { ScreenContext, Screen } from '../types'
+
+import { Screen, ScreenContext } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const withDmr = (Component: Screen<any>) => {

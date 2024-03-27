@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+
 import { Advert } from '../adverts/advert.dto'
 
 export class PostApplicationResponse {

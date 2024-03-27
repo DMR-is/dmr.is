@@ -1,28 +1,29 @@
 import { v4 as uuid } from 'uuid'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { IJournalService } from './journal.service.interface'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  ADVERT_B_1278_2023,
   ADVERT_B_866_2006,
-  ALL_MOCK_JOURNAL_DEPARTMENTS,
-  MOCK_PAGING_SINGLE_PAGE,
-  ALL_MOCK_JOURNAL_TYPES,
-  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
+  ADVERT_B_1278_2023,
   ALL_MOCK_JOURNAL_CATEGORIES,
+  ALL_MOCK_JOURNAL_DEPARTMENTS,
   ALL_MOCK_JOURNAL_INVOLVED_PARTIES,
+  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
+  ALL_MOCK_JOURNAL_TYPES,
   ALL_MOCK_SIGNATURES,
+  MOCK_PAGING_SINGLE_PAGE,
 } from '@dmr.is/mocks'
 import {
   Advert,
   AdvertDocument,
   AdvertPublicationNumber,
+  AdvertSignature,
   AdvertStatus,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentsQueryParams,
@@ -31,15 +32,17 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
   PostApplicationBody,
   PostApplicationResponse,
-  AdvertSignature,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
+
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
+
+import { IJournalService } from './journal.service.interface'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 

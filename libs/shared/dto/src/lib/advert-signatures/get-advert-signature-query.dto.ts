@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetAdvertSignatureQuery {
   @ApiProperty({

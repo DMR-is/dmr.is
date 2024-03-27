@@ -1,3 +1,5 @@
+import cn from 'classnames'
+
 import {
   Box,
   Column,
@@ -9,12 +11,11 @@ import {
   Hidden,
   Logo,
 } from '@island.is/island-ui/core'
-import cn from 'classnames'
 
-import * as styles from './Header.css'
 import { useMockUser } from '../../hooks/useMockUser'
-import { ControlPanel } from './ControlPanel'
 import { messages } from '../../lib/messages'
+import { ControlPanel } from './ControlPanel'
+import * as styles from './Header.css'
 
 type HeaderType = {
   headerWhite?: boolean

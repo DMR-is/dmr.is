@@ -4,8 +4,9 @@ import {
   useTooltipState,
 } from 'reakit'
 
-import * as styles from './Tooltip.css'
 import { Text } from '@island.is/island-ui/core'
+
+import * as styles from './Tooltip.css'
 
 type Props = {
   text: string

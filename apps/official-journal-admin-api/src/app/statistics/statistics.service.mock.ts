@@ -1,21 +1,22 @@
 /* eslint-disable no-case-declarations */
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
+import { AdvertStatus } from '@dmr.is/shared/dto'
+import {
+  GetStatisticsDepartmentResponse,
+  GetStatisticsOverviewResponse,
+  StatisticsOverviewCategory,
+  StatisticsOverviewQueryType,
+} from '@dmr.is/shared/dto'
+
 import {
   BadRequestException,
   Inject,
   Injectable,
   NotImplementedException,
 } from '@nestjs/common'
-import { IStatisticsService } from './statistics.service.interface'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 
-import { AdvertStatus } from '@dmr.is/shared/dto'
-import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import {
-  GetStatisticsDepartmentResponse,
-  StatisticsOverviewCategory,
-  StatisticsOverviewQueryType,
-  GetStatisticsOverviewResponse,
-} from '@dmr.is/shared/dto'
+import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
 export class MockStatisticsService implements IStatisticsService {

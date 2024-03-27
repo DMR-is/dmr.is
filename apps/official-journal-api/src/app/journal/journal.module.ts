@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common'
-
 import { LoggingModule } from '@dmr.is/logging'
+
+import { Module } from '@nestjs/common'
 
 import { JournalController } from './journal.controller'
 import { JournalService } from './journal.service'

@@ -1,21 +1,22 @@
+import { useState } from 'react'
+
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
-import { withMainLayout } from '../layout/Layout'
+
+import { Section } from '../components/section/Section'
+import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
+import { Tabs } from '../components/tabs/Tabs'
+import { useQueryParams } from '../hooks/useQueryParams'
+import { withMainLayout } from '../layout/Layout'
+import { CaseOverviewTabIds } from '../lib/constants'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
-import { Section } from '../components/section/Section'
-import { Tabs } from '../components/tabs/Tabs'
-import { useState } from 'react'
-import {
-  mockSubmittedCasesResponse,
-  mockInProgressCasesResponse,
-  MockCasesType,
-} from './mock'
-import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
-
 import { mapQueryParamToCaseOverviewTab } from '../lib/utils'
-import { useQueryParams } from '../hooks/useQueryParams'
-import { CaseOverviewTabIds } from '../lib/constants'
+import {
+  MockCasesType,
+  mockInProgressCasesResponse,
+  mockSubmittedCasesResponse,
+} from './mock'
 
 type QueryParams = {
   category?: string

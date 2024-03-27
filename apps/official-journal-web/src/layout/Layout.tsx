@@ -1,15 +1,15 @@
-import { Footer, Page } from '@island.is/island-ui/core'
-
-import { Header } from '../components/header/Header'
-import { Main } from '../components/main/Main'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import Head from 'next/head'
-
-import type { Screen } from '../lib/types'
-import { Banner } from '../components/banner/Banner'
 import { ComponentProps } from 'react'
-import { FilterContextProvider } from '../context/filterContext'
 import { Provider } from 'reakit'
+
+import { Footer, Page } from '@island.is/island-ui/core'
+
+import { Banner } from '../components/banner/Banner'
+import { Header } from '../components/header/Header'
+import { Main } from '../components/main/Main'
+import { FilterContextProvider } from '../context/filterContext'
+import type { Screen } from '../lib/types'
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }

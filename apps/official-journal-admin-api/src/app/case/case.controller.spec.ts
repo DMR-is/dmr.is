@@ -1,9 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { CaseController } from './case.controller'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+
+import { Test, TestingModule } from '@nestjs/testing'
+
+import { CaseController } from './case.controller'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 
 describe('CaseController', () => {
   let theCase: TestingModule

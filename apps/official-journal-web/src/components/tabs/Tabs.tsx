@@ -1,7 +1,9 @@
-import { Box, FocusableBox, Text } from '@island.is/island-ui/core'
-import { Tab, TabList, TabPanel, useTabState } from 'reakit'
-import * as styles from './Tabs.css'
 import { useEffect, useState } from 'react'
+import { Tab, TabList, TabPanel, useTabState } from 'reakit'
+
+import { Box, FocusableBox, Text } from '@island.is/island-ui/core'
+
+import * as styles from './Tabs.css'
 
 type Tab = {
   label: string

@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetAdvertsQueryParams {
   @ApiProperty({

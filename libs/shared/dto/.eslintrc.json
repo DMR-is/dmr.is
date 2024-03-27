@@ -14,5 +14,31 @@
       "files": ["*.js", "*.jsx"],
       "rules": {}
     }
-  ]
+  ],
+  "rules": {
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          // External imports come first.
+          ["^\\w", "@(?!nestjs|island\\.is)"],
+          // Then nestjs packages.
+          ["^@nestjs"],
+          // Then island.is packages.
+          ["^@island\\.is/(?!financial-aid)"],
+          // Then financial-aid packages.
+          ["^@island\\.is/financial-aid"],
+          // Then all other imports in this order: "../", "./", "./strings", "./css"
+          [
+            "^\\.\\.(?!/?$)",
+            "^\\.\\./?$",
+            "^\\./(?=.*/)(?!/?$)",
+            "^\\.(?!/?$)",
+            "^\\./?$"
+          ]
+        ]
+      }
+    ]
+  },
+  "plugins": ["simple-import-sort"]
 }

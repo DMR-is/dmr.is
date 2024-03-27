@@ -1,6 +1,7 @@
 import nodeFetch from 'node-fetch'
-import { EnhancedFetchAPI } from './types'
+
 import { buildFetch } from './buildFetch'
+import { EnhancedFetchAPI } from './types'
 
 export const createEnhancedFetch = (): EnhancedFetchAPI => {
   const builder = buildFetch(nodeFetch)

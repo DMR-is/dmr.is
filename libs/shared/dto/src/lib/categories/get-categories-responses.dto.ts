@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Category } from './category.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { Category } from './category.dto'
 
 export class GetCategoriesResponse {
   @ApiProperty({

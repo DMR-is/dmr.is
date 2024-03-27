@@ -10448,6 +10448,7 @@ __metadata:
     eslint-plugin-local-rules: "npm:^2.0.1"
     eslint-plugin-react: "npm:7.32.2"
     eslint-plugin-react-hooks: "npm:4.6.0"
+    eslint-plugin-simple-import-sort: "npm:^12.0.0"
     eslint-plugin-storybook: "npm:^0.6.15"
     hypher: "npm:0.2.5"
     jest: "npm:^29.4.1"
@@ -11658,6 +11659,15 @@ __metadata:
   peerDependencies:
     eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
   checksum: 9bf0b959373ace66e799adbbfb493a7ceae54751e8f90fcce1da1a2a67b277ee23ba845571eaa4d4f05d96dba4e4977bf938b350f18bad26201fa616ee6aa4b8
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-simple-import-sort@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "eslint-plugin-simple-import-sort@npm:12.0.0"
+  peerDependencies:
+    eslint: ">=5.0.0"
+  checksum: 5405f01e4ca5b3c9a2a1b019e39fa858bb081872eb9602fb85d2e4913356fec0a9b3f997e957b1df0c370908ec124114148491e442d57e911b8249728d474398
   languageName: node
   linkType: hard
 

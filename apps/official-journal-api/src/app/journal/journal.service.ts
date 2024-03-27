@@ -1,8 +1,8 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Inject, Injectable } from '@nestjs/common'
-import { IJournalService } from './journal.service.interface'
 import {
   Advert,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
   GetAdvertTypesQueryParams,
@@ -15,11 +15,13 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
   PostApplicationBody,
   PostApplicationResponse,
 } from '@dmr.is/shared/dto'
+
+import { Inject, Injectable } from '@nestjs/common'
+
+import { IJournalService } from './journal.service.interface'
 
 const LOGGING_CATEGORY = 'JournalService'
 
