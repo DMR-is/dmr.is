@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Institution } from './institution.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { Institution } from './institution.dto'
 
 export class GetInstitutionsResponse {
   @ApiProperty({

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+
 import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
 
 export class PostApplicationBody {

@@ -1,5 +1,7 @@
-import { theme } from '@island.is/island-ui/theme'
 import { style } from '@vanilla-extract/css'
+
+import { theme } from '@island.is/island-ui/theme'
+
 import { HEADER_HEIGHT, MOBILE_HEADER_HEIGHT } from '../../lib/constants'
 
 export const header = style({

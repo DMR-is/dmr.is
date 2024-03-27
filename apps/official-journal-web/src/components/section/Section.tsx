@@ -1,5 +1,6 @@
-import * as styles from './Section.css'
 import cn from 'classnames'
+
+import * as styles from './Section.css'
 
 type Props = {
   children?: React.ReactNode

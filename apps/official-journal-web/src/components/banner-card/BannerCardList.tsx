@@ -1,4 +1,5 @@
 import { GridColumn, GridRow } from '@island.is/island-ui/core'
+
 import { BannerCard } from './BannerCard'
 import * as styles from './BannerCardList.css'
 export type BannerCard = {

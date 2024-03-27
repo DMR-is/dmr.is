@@ -1,8 +1,8 @@
 import {
-  Request as NodeFetchRequest,
-  RequestInfo as NodeRequestInfo,
   Headers,
   HeadersInit,
+  Request as NodeFetchRequest,
+  RequestInfo as NodeRequestInfo,
   RequestInit as NodeFetchRequestInit,
   Response,
 } from 'node-fetch'

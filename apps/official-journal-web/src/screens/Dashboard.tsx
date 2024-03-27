@@ -6,15 +6,16 @@ import {
   Tabs,
   Text,
 } from '@island.is/island-ui/core'
+
 import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
-import { StatisticsNotPublished } from '../components/statistics/NotPublished'
 import { Section } from '../components/section/Section'
-import { messages } from '../lib/messages'
-import { Screen } from '../lib/types'
+import { StatisticsNotPublished } from '../components/statistics/NotPublished'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
+import { messages } from '../lib/messages'
+import { Screen } from '../lib/types'
 
 type StatisticsData = {
   totalAdverts: number
@@ -195,16 +196,16 @@ Dashboard.getProps = async () => {
 
   const [general, personal, inactive, publishing] = await Promise.all(
     [
-      dmrClient.statisticsControllerOverview({
+      dmrClient.statisticsControllerGetOverview({
         type: 'general',
       }),
-      dmrClient.statisticsControllerOverview({
+      dmrClient.statisticsControllerGetOverview({
         type: 'personal',
       }),
-      dmrClient.statisticsControllerOverview({
+      dmrClient.statisticsControllerGetOverview({
         type: 'inactive',
       }),
-      dmrClient.statisticsControllerOverview({
+      dmrClient.statisticsControllerGetOverview({
         type: 'publishing',
       }),
     ].map((promise) => promise.catch(() => null)),

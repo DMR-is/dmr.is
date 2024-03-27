@@ -1,6 +1,7 @@
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { JournalController } from './journal.controller'
 import { IJournalService } from './journal.service.interface'
 import { MockJournalService } from './journal.service.mock'

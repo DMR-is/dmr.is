@@ -1,6 +1,7 @@
 import { Box, Icon, Text } from '@island.is/island-ui/core'
-import * as styles from './ControlPanel.css'
+
 import { messages } from '../../lib/messages'
+import * as styles from './ControlPanel.css'
 export const ControlPanel = () => {
   return (
     <Box className={styles.controlPanel}>

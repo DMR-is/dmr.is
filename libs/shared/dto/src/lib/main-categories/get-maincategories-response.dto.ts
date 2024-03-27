@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { MainCategory } from './maincategory.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { MainCategory } from './maincategory.dto'
 
 export class GetMainCategoriesResponse {
   @ApiProperty({

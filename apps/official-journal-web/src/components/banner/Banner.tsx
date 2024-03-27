@@ -7,10 +7,10 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import * as styles from './Banner.css'
-import { Section } from '../section/Section'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 import { CaseFilters } from '../case-filters/CaseFilters'
+import { Section } from '../section/Section'
+import * as styles from './Banner.css'
 
 type Props = {
   title?: string

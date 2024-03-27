@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
 import {
   IsInt,
   IsOptional,
@@ -6,7 +6,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator'
-import { Transform } from 'class-transformer'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetDepartmentsQueryParams {
   @ApiProperty({

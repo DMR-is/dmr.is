@@ -1,8 +1,10 @@
-import { Test } from '@nestjs/testing'
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
-import * as fs from 'fs'
-import { NestApplication } from '@nestjs/core'
 import { exec } from 'child_process'
+import * as fs from 'fs'
+
+import { NestApplication } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { Test } from '@nestjs/testing'
+
 import { AppModule } from './app.module'
 
 const TMP_DIR = 'tmp/swagger'

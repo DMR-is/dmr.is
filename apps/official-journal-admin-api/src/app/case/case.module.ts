@@ -1,9 +1,10 @@
+import { LoggingModule } from '@dmr.is/logging'
+
 import { Module } from '@nestjs/common'
 
-import { LoggingModule } from '@dmr.is/logging'
 import { CaseController } from './case.controller'
-import { ICaseService } from './case.service.interface'
 import { CaseService } from './case.service'
+import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 
 const MOCK_DATA = true

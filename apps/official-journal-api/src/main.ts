@@ -3,16 +3,16 @@
  * This is only a minimal backend to get started.
  */
 
+import { WinstonModule } from 'nest-winston'
+import { apmInit } from '@dmr.is/apm'
+import { logger } from '@dmr.is/logging'
+
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-
 import { SwaggerModule } from '@nestjs/swagger'
 
-import { openApi } from './openApi'
-import { logger } from '@dmr.is/logging'
-import { apmInit } from '@dmr.is/apm'
-import { WinstonModule } from 'nest-winston'
 import { AppModule } from './app/app.module'
+import { openApi } from './openApi'
 
 async function bootstrap() {
   const globalPrefix = 'api'

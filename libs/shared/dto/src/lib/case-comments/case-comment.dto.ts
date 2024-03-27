@@ -1,9 +1,10 @@
+import { Type } from 'class-transformer'
+import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
-import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator'
-import { CaseCommentTask } from './case-comment-task.dto'
-import { Type } from 'class-transformer'
 import { CaseCommentType } from './case-comment-constants'
+import { CaseCommentTask } from './case-comment-task.dto'
 
 export class CaseComment {
   @ApiProperty({

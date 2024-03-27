@@ -1,9 +1,11 @@
-import { Box, Text, Checkbox, Icon, Button } from '@island.is/island-ui/core'
-import * as styles from './FilterPopover.css'
 import { useId, useState } from 'react'
+
+import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
+
 import { FilterOption } from '../../context/filterContext'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { messages } from '../../lib/messages'
+import * as styles from './FilterPopover.css'
 
 type FilterPopoverProps = {
   title: string

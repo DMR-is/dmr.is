@@ -1,7 +1,8 @@
 import { Box, Text } from '@island.is/island-ui/core'
+
 import type { AdvertCategory } from '../../hooks/useMockAdvertOverview'
-import * as styles from './AdvertsOverviewList.css'
 import { messages } from '../../lib/messages'
+import * as styles from './AdvertsOverviewList.css'
 
 type Category = {
   text: string

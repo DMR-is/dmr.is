@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { AdvertPublicationNumber } from './advert-publication-number.dto'
-import { Category } from '../categories/category.dto'
 
-import { AdvertDocument } from './advert-document'
-import { Department } from '../departments/department.dto'
-import { AdvertType } from '../advert-types/advert-type.dto'
 import { AdvertSignature } from '../advert-signatures/advert-signature.dto'
 import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
+import { AdvertType } from '../advert-types/advert-type.dto'
+import { Category } from '../categories/category.dto'
+import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions/institution.dto'
 import { AdvertStatus } from './advert-constants.dto'
+import { AdvertDocument } from './advert-document'
+import { AdvertPublicationNumber } from './advert-publication-number.dto'
 
 export class Advert {
   @ApiProperty({

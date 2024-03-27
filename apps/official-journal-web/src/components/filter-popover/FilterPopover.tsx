@@ -1,8 +1,9 @@
 import { Box, Icon, Text } from '@island.is/island-ui/core'
+
 import { useFilterContext } from '../../hooks/useFilterContext'
-import * as styles from './FilterPopover.css'
-import { FilterGroups } from './FilterGroups'
 import { messages } from '../../lib/messages'
+import { FilterGroups } from './FilterGroups'
+import * as styles from './FilterPopover.css'
 
 export const FilterPopover = () => {
   const {

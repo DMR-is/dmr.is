@@ -1,6 +1,7 @@
 import type { GetServerSideProps } from 'next'
-import { ScreenContext } from './types'
+
 import { CustomNextError } from '../units/error'
+import { ScreenContext } from './types'
 
 // Taken from here: https://github.com/vercel/next.js/discussions/11209#discussioncomment-38480
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

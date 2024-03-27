@@ -1,4 +1,5 @@
-import { Table as T, Text, Icon } from '@island.is/island-ui/core'
+import { Icon, Table as T, Text } from '@island.is/island-ui/core'
+
 import * as styles from './CaseTable.css'
 type Props = {
   children?: React.ReactNode | string
