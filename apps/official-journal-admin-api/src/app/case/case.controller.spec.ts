@@ -63,12 +63,12 @@ describe('CaseController', () => {
     })
   })
 
-  describe('/overview/:status', () => {
-    it('should return cases overview', async () => {
-      const result = await caseController.caseOverview({
+  describe('getEditorialOverview', () => {
+    it('Should return editorial overview', async () => {
+      const results = await caseController.getEditorialOverview({
         status: CaseStatus.Submitted,
       })
-      expect(result.paging.totalItems).toEqual(
+      expect(results.totalItems).toEqual(
         ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
       )
     })

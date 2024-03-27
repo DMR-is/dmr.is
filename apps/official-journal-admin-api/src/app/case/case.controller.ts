@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { Case } from '../../dto/case/case.dto'
 import { ICaseService } from './case.service.interface'
 import { CasesReponse } from '../../dto/case/cases-response'
@@ -48,17 +48,17 @@ export class CaseController {
 
   @Get('/overview/editorial')
   @ApiOperation({
-    operationId: 'getCasesOverview',
-    summary: 'Get cases overview for editorial cases.',
+    operationId: 'getEditorialOverview',
+    summary: 'Get overview for cases in progress.',
   })
   @ApiResponse({
     status: 200,
     type: CaseOverviewResponse,
     description: 'Cases overview.',
   })
-  async caseOverview(
+  async getEditorialOverview(
     @Query() params?: CasesQuery,
   ): Promise<CaseOverviewResponse> {
-    return this.caseService.getCasesOverview(params)
+    return this.caseService.getEditorialOverview(params)
   }
 }
