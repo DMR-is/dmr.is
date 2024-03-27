@@ -1,6 +1,7 @@
 import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
 import is from 'date-fns/locale/is'
 import format from 'date-fns/format'
+import { GetCasesOverviewStatusEnum } from '../gen/fetch'
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
   try {
     return format(new Date(date), df, { locale: is })
@@ -32,7 +33,7 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   return pathname
 }
 
-export const mapQueryParamToCaseOverviewTab = (param?: string) => {
+export const mapQueryParamToCaseOverviewTab = (param?: unknown) => {
   switch (param) {
     case CaseOverviewTabIds.Submitted:
       return CaseOverviewTabIds.Submitted
@@ -44,5 +45,20 @@ export const mapQueryParamToCaseOverviewTab = (param?: string) => {
       return CaseOverviewTabIds.Ready
     default:
       return CaseOverviewTabIds.Submitted
+  }
+}
+
+export const mapTabIdToCaseStatus = (param?: unknown) => {
+  switch (param) {
+    case CaseOverviewTabIds.Submitted:
+      return GetCasesOverviewStatusEnum.Innsent
+    case CaseOverviewTabIds.InProgress:
+      return GetCasesOverviewStatusEnum.Grunnvinnsla
+    case CaseOverviewTabIds.InReview:
+      return GetCasesOverviewStatusEnum.Yfirlestur
+    case CaseOverviewTabIds.Ready:
+      return GetCasesOverviewStatusEnum.Tilbi
+    default:
+      return GetCasesOverviewStatusEnum.Innsent
   }
 }

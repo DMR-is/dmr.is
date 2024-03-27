@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "generatePackageJson": true,
@@ -47,24 +45,20 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/official-journal-web/jest.config.ts"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     },
     "update-openapi-schema": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "curl http://localhost:3000/swagger-json > clientConfig.json",
+          "curl http://localhost:3333/swagger-json > clientConfig.json",
           "prettier --write clientConfig.json"
         ],
         "parallel": true,
@@ -76,24 +70,17 @@
       "options": {
         "command": "yarn openapi-generator -o apps/official-journal-web/src/gen/fetch -i apps/official-journal-web/clientConfig.json"
       },
-      "outputs": [
-        "{projectRoot}/gen/fetch"
-      ]
+      "outputs": ["{projectRoot}/gen/fetch"]
     },
     "open-next-build": {
       "executor": "@dmr.is/nx-open-next:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "buildTarget": "official-journal-web:build",
         "sourceRoot": "apps/official-journal-web"
       },
-      "dependsOn": [
-        "generate",
-        "build"
-      ]
+      "dependsOn": ["generate", "build"]
     }
   },
   "tags": []

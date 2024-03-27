@@ -7,6 +7,9 @@ import { messages } from '../../lib/messages'
 import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { useQueryParams } from '../../hooks/useQueryParams'
+import React from 'react'
+
+React.useLayoutEffect = React.useEffect
 
 export const CaseFilters = () => {
   const { add, get } = useQueryParams()

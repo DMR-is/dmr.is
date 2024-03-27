@@ -4,7 +4,8 @@ import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import { Text } from '@island.is/island-ui/core'
 import * as styles from './CaseTable.css'
-export type InProgressCaseData = {
+import { CaseTag } from '../case-tag/CaseTag'
+export type InReviewCaseData = {
   id: string
   labels: string[]
   publicationDate: string
@@ -12,13 +13,14 @@ export type InProgressCaseData = {
   department: string
   name: string
   employee: string
+  tag?: string
 }
 
 type Props = {
-  data: InProgressCaseData[]
+  data: InReviewCaseData[]
 }
 
-export const CaseTableInProgress = ({ data }: Props) => {
+export const CaseTableInReview = ({ data }: Props) => {
   const columns = [
     {
       name: 'caseLabels',
@@ -56,6 +58,12 @@ export const CaseTableInProgress = ({ data }: Props) => {
       sortable: true,
       small: true,
       children: messages.components.tables.caseOverview.headCells.employee,
+    },
+    {
+      name: 'caseTag',
+      sortable: true,
+      small: true,
+      children: messages.components.tables.caseOverview.headCells.tags,
     },
   ]
 
@@ -113,6 +121,11 @@ export const CaseTableInProgress = ({ data }: Props) => {
             {row.employee}
           </Text>
         ),
+      },
+      {
+        sortingKey: 'caseTag',
+        sortingValue: row.tag,
+        children: <CaseTag tag={row.tag} />,
       },
     ],
   }))

@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { CaseStatus } from '../../dto/case/case-constants'
 
 describe('CaseService', () => {
   let service: ICaseService
@@ -58,6 +59,17 @@ describe('CaseService', () => {
     it('Should return no results', async () => {
       const results = await service.getCases({ caseNumber: '00000' })
       expect(results.cases.length).toEqual(0)
+    })
+  })
+
+  describe('getCasesOverview', () => {
+    it('Should return cases overview', async () => {
+      const results = await service.getCasesOverview({
+        status: CaseStatus.Submitted,
+      })
+      expect(results.paging.totalItems).toEqual(
+        ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
+      )
     })
   })
 })

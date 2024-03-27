@@ -6,7 +6,7 @@ export const CASE_SUBMITTED = {
   year: 2024,
   caseNumber: '12345',
   status: 'Innsent',
-  tag: null,
+  tag: 'Ekki hafið',
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
@@ -18,7 +18,7 @@ export const CASE_SUBMITTED = {
     name: 'Dómsmálaráðuneytið',
     ssn: '5804170510',
   },
-  assignedTo: null,
+  assignedTo: 'Ármann',
   advert: ADVERT_B_1278_2023,
   comments: [
     {
@@ -64,7 +64,7 @@ export const CASE_IN_PROGRESS = {
   year: 2024,
   caseNumber: '85264',
   status: 'Grunnvinnsla',
-  tag: null,
+  tag: 'Samlesin',
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
@@ -76,7 +76,7 @@ export const CASE_IN_PROGRESS = {
     name: 'Dómsmálaráðuneytið',
     ssn: '5804170510',
   },
-  assignedTo: null,
+  assignedTo: 'Pálína',
   advert: ADVERT_B_1278_2023,
   comments: [
     {
@@ -122,19 +122,19 @@ export const CASE_IN_REVIEW = {
   year: 2024,
   caseNumber: '58242',
   status: 'Yfirlestur',
-  tag: null,
+  tag: 'Ekki hafið',
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
   publishedAt: null,
   paid: false,
   price: null,
-  fastTrack: false,
+  fastTrack: true,
   insititution: {
     name: 'Dómsmálaráðuneytið',
     ssn: '5804170510',
   },
-  assignedTo: null,
+  assignedTo: 'Ármann',
   advert: ADVERT_B_866_2006,
   comments: [
     {
@@ -180,7 +180,8 @@ export const CASE_READY = {
   year: 2024,
   caseNumber: '32112',
   status: 'Yfirlestur',
-  tag: null,
+  // status: 'Tilbúið',
+  tag: 'Þarf skoðun',
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
@@ -192,7 +193,7 @@ export const CASE_READY = {
     name: 'Dómsmálaráðuneytið',
     ssn: '5804170510',
   },
-  assignedTo: null,
+  assignedTo: 'Birkir',
   advert: ADVERT_B_866_2006,
   comments: [
     {

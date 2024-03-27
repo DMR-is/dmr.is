@@ -4,6 +4,7 @@ import { Case } from '../../dto/case/case.dto'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { CasesReponse } from '../../dto/case/cases-response'
 import { CasesQuery } from '../../dto/case/cases-query.dto'
+import { CaseOverviewResponse } from '../../dto/case/case-overview.dto'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -16,6 +17,11 @@ export class CaseService implements ICaseService {
   }
 
   getCases(params?: CasesQuery): Promise<CasesReponse> {
+    this.logger.info(params)
+    throw new NotImplementedException()
+  }
+
+  getCasesOverview(params: CasesQuery): Promise<CaseOverviewResponse> {
     this.logger.info(params)
     throw new NotImplementedException()
   }

@@ -92,12 +92,16 @@ export const messages = {
           department: 'Deild',
           title: 'Heiti',
           employee: 'Starfs.',
+          tags: 'Merking',
         },
         labels: {
           fasttrack: 'Hraðbirting',
           warning: 'Viðbrögð hafa borist frá auglýsanda',
           info: 'Beðið svara',
         },
+      },
+      empty: {
+        message: 'Engin mál finnast, líklega þarf að breyta síun.',
       },
     },
     adverts_overview_list: {

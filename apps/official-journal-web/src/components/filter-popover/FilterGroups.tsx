@@ -49,6 +49,7 @@ export const FilterGroup = ({
       >
         {filters.map((filter, i) => (
           <Checkbox
+            name={filter.label}
             key={i}
             label={filter.label}
             onChange={(e) =>

@@ -79,3 +79,23 @@ export const seeMoreTableCellLink = recipe({
     },
   },
 })
+
+export const emptyRow = style({
+  position: 'relative',
+  blockSize: 80,
+  borderBottom: `1px solid ${theme.color.blue200}`,
+})
+
+export const emptyRowMessageWrapper = style({
+  paddingInline: theme.spacing[5],
+  background: theme.color.white,
+  position: 'absolute',
+  top: '100%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+})
+
+export const emptyRowMessage = style({
+  fontStyle: 'italic',
+  opacity: 0.5,
+})

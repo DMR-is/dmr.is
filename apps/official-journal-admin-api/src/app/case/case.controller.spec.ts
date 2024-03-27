@@ -4,6 +4,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { CaseStatus } from '../../dto/case/case-constants'
 
 describe('CaseController', () => {
   let theCase: TestingModule
@@ -59,6 +60,17 @@ describe('CaseController', () => {
     it('should return no results', async () => {
       const result = await caseController.cases({ caseNumber: 'not-found' })
       expect(result.cases.length).toEqual(0)
+    })
+  })
+
+  describe('/overview/:status', () => {
+    it('should return cases overview', async () => {
+      const result = await caseController.caseOverview({
+        status: CaseStatus.Submitted,
+      })
+      expect(result.paging.totalItems).toEqual(
+        ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
+      )
     })
   })
 })

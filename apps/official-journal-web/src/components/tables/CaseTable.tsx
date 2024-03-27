@@ -16,8 +16,8 @@ import * as styles from './CaseTable.css'
 
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import useBreakpoints from '../../hooks/useBreakpoints'
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { TableCell } from './CaseTableCell'
+import { CaseTableEmpty } from './CaseTableEmpty'
 
 export type CaseTableHeadCellProps = {
   children?: React.ReactNode
@@ -74,20 +74,8 @@ export const CaseTable = ({
     ...defaultSort,
   })
 
-  const { searchFilter } = useFilterContext()
-
-  const filteredData = useMemo(() => {
-    const filtered = rows.filter((row) => {
-      const searchValue = searchFilter.toLowerCase()
-      return row.cells.some((cell) => {
-        return (
-          cell.sortingValue?.toLowerCase().includes(searchValue) ||
-          cell.children?.toString().toLowerCase().includes(searchValue)
-        )
-      })
-    })
-
-    const sorted = [...filtered].sort((a, b) => {
+  const sortedData = useMemo(() => {
+    const sorted = [...rows].sort((a, b) => {
       const nameA = a.cells.find((cell) => cell.sortingKey === sorting.key)
       const nameB = b.cells.find((cell) => cell.sortingKey === sorting.key)
 
@@ -103,7 +91,7 @@ export const CaseTable = ({
     })
 
     return sorting.direction === 'asc' ? sorted : reverse(sorted)
-  }, [searchFilter, sorting])
+  }, [sorting, rows])
 
   const onSortClick = (key: string) => {
     setSorting({
@@ -144,36 +132,41 @@ export const CaseTable = ({
             ))}
           </T.Row>
         </T.Head>
-        <T.Body>
-          {filteredData.map((row, index) => (
-            <tr
-              className={styles.tableRow}
-              onMouseOver={() => setHoveredRow(row.caseId)}
-              key={index}
-            >
-              {row.cells.map((cell, cellIndex) => (
-                <TableCell key={cellIndex}>{cell.children}</TableCell>
-              ))}
-              <td align="center" className={styles.linkTableCell}>
-                <Box
-                  className={styles.seeMoreTableCellLink({
-                    visible: hoveredRow === row.caseId,
-                  })}
-                >
-                  {!breakpoints.xl ? (
-                    <LinkV2 href={`/ritstjorn/${row.caseId}`}>
-                      <Icon icon="arrowForward" color="blue400" />
-                    </LinkV2>
-                  ) : (
-                    <ArrowLink href={`/ritstjorn/${row.caseId}`}>
-                      {messages.general.see_more}
-                    </ArrowLink>
-                  )}
-                </Box>
-              </td>
-            </tr>
-          ))}
-        </T.Body>
+        {sortedData.length === 0 ? (
+          <CaseTableEmpty />
+        ) : (
+          <T.Body>
+            {sortedData.map((row, index) => (
+              <tr
+                className={styles.tableRow}
+                onMouseOver={() => setHoveredRow(row.caseId)}
+                onMouseLeave={() => setHoveredRow(null)}
+                key={index}
+              >
+                {row.cells.map((cell, cellIndex) => (
+                  <TableCell key={cellIndex}>{cell.children}</TableCell>
+                ))}
+                <td align="center" className={styles.linkTableCell}>
+                  <Box
+                    className={styles.seeMoreTableCellLink({
+                      visible: hoveredRow === row.caseId,
+                    })}
+                  >
+                    {!breakpoints.xl ? (
+                      <LinkV2 href={`/ritstjorn/${row.caseId}`}>
+                        <Icon icon="arrowForward" color="blue400" />
+                      </LinkV2>
+                    ) : (
+                      <ArrowLink href={`/ritstjorn/${row.caseId}`}>
+                        {messages.general.see_more}
+                      </ArrowLink>
+                    )}
+                  </Box>
+                </td>
+              </tr>
+            ))}
+          </T.Body>
+        )}
       </T.Table>
       {paging && (
         <Box marginTop={3}>
