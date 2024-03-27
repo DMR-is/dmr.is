@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef } from 'react'
+import { useRef } from 'react'
 
 import { Box, BoxProps } from '@island.is/island-ui/core'
 

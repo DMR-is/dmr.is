@@ -13,7 +13,7 @@ import { CaseStatus } from './case-constants'
 export class GetCasesQuery {
   @ApiProperty({
     name: 'search',
-    type: Number,
+    type: String,
     description: 'String to search for in cases.',
     required: false,
   })

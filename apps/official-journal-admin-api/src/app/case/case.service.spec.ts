@@ -1,5 +1,6 @@
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { CaseStatus } from '@dmr.is/shared/dto'
 
 import { Test } from '@nestjs/testing'
 
@@ -60,6 +61,17 @@ describe('CaseService', () => {
     it('Should return no results', async () => {
       const results = await service.getCases({ caseNumber: 9999 })
       expect(results.cases.length).toEqual(0)
+    })
+  })
+
+  describe('getEditorialOverview', () => {
+    it('Should return editorial overview', async () => {
+      const results = await service.getEditorialOverview({
+        status: CaseStatus.Submitted,
+      })
+      expect(results.data.length).toEqual(
+        ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
+      )
     })
   })
 })

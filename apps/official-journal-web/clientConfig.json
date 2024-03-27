@@ -3,7 +3,8 @@
   "paths": {
     "/api/v1/cases/{id}": {
       "get": {
-        "operationId": "CaseController_case",
+        "operationId": "getCase",
+        "summary": "Get case by ID.",
         "parameters": [
           {
             "name": "id",
@@ -27,14 +28,15 @@
     },
     "/api/v1/cases": {
       "get": {
-        "operationId": "CaseController_cases",
+        "operationId": "getCases",
+        "summary": "Get cases.",
         "parameters": [
           {
             "name": "search",
             "required": false,
             "in": "query",
             "description": "String to search for in cases.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "page",
@@ -116,6 +118,106 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cases/overview/editorial": {
+      "get": {
+        "operationId": "getEditorialOverview",
+        "summary": "Get overview for cases in progress.",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for in cases.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "caseNumber",
+            "required": false,
+            "in": "query",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Status to filter cases on, takes into account `status` on `Case`.",
+            "schema": {
+              "enum": [
+                "Innsent",
+                "Grunnvinnsla",
+                "Yfirlestur",
+                "Tilbúið",
+                "Beðið svara",
+                "Birtingu hafnað"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeId",
+            "required": false,
+            "in": "query",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fastTrack",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "institution",
+            "required": false,
+            "in": "query",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
+            "schema": { "format": "date-time", "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cases overview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseEditorialOverview"
+                }
               }
             }
           }
@@ -797,6 +899,51 @@
           }
         },
         "required": ["cases", "paging"]
+      },
+      "CaseOverviewTotalItems": {
+        "type": "object",
+        "properties": {
+          "submitted": {
+            "type": "number",
+            "description": "Total submitted cases",
+            "example": 7
+          },
+          "inProgress": {
+            "type": "number",
+            "description": "Total in progress cases",
+            "example": 3
+          },
+          "inReview": {
+            "type": "number",
+            "description": "Total in review cases",
+            "example": 2
+          },
+          "ready": {
+            "type": "number",
+            "description": "Total ready cases",
+            "example": 1
+          }
+        },
+        "required": ["submitted", "inProgress", "inReview", "ready"]
+      },
+      "CaseEditorialOverview": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Cases for selected tab",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Case" }
+          },
+          "totalItems": {
+            "description": "Total cases for each status",
+            "allOf": [{ "$ref": "#/components/schemas/CaseOverviewTotalItems" }]
+          },
+          "paging": {
+            "description": "Paging information",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["data", "totalItems", "paging"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

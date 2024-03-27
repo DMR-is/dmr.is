@@ -4,71 +4,127 @@ import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { Section } from '../components/section/Section'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
+import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
+import { Case, Paging } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
+import { createDmrClient } from '../lib/api/createClient'
 import { CaseOverviewTabIds } from '../lib/constants'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
-import { mapQueryParamToCaseOverviewTab } from '../lib/utils'
 import {
-  MockCasesType,
-  mockInProgressCasesResponse,
-  mockSubmittedCasesResponse,
-} from './mock'
-
-type QueryParams = {
-  category?: string
-}
+  mapQueryParamToCaseOverviewTab,
+  mapTabIdToCaseStatus,
+} from '../lib/utils'
 
 type Props = {
-  query: QueryParams
-  submittedCases: MockCasesType['items']
-  inProgressCases: MockCasesType['items']
+  data: Case[]
+  paging: Paging
+  totalItems: {
+    submitted: number
+    inProgress: number
+    inReview: number
+    ready: number
+  }
 }
 
-const CaseOverviewPage: Screen<Props> = ({
-  query,
-  submittedCases,
-  inProgressCases,
-}) => {
-  const { add } = useQueryParams()
+const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
+  const { add, get } = useQueryParams()
 
   const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseOverviewTab(query.category),
+    mapQueryParamToCaseOverviewTab(get('tab')),
   )
 
   const onTabChange = (id: string) => {
     setSelectedTab(mapQueryParamToCaseOverviewTab(id))
-    add({ category: id })
+    add({
+      tab: mapQueryParamToCaseOverviewTab(id),
+    })
   }
 
   const tabs = [
     {
       id: CaseOverviewTabIds.Submitted,
-      label: messages.components.tabs.submitted.title,
-      content: <CaseTableSubmitted data={submittedCases} />,
+      label: `${messages.components.tabs.submitted.title} (${totalItems.submitted})`,
+      content: (
+        <CaseTableSubmitted
+          data={data.map((item) => {
+            return {
+              id: item.id,
+              department: item.advert.department.title,
+              labels: item.fastTrack ? ['fasttrack'] : [],
+              title: item.advert.title,
+              publicationDate: item.publishedAt,
+              registrationDate: item.createdAt,
+            }
+          })}
+        />
+      ),
     },
     {
       id: CaseOverviewTabIds.InProgress,
-      label: messages.components.tabs.inProgress.title,
-      content: <CaseTableInProgress data={inProgressCases} />,
+      label: `${messages.components.tabs.inProgress.title} (${totalItems.inProgress})`,
+      content: (
+        <CaseTableInProgress
+          data={data.map((item) => {
+            return {
+              id: item.id,
+              department: item.advert.department.title,
+              labels: item.fastTrack ? ['fasttrack'] : [],
+              title: item.advert.title,
+              publicationDate: item.publishedAt,
+              registrationDate: item.createdAt,
+              employee: item.assignedTo,
+            }
+          })}
+        />
+      ),
     },
     {
       id: CaseOverviewTabIds.InReview,
-      label: messages.components.tabs.inReview.title,
-      content: <CaseTableSubmitted data={submittedCases} />,
+      label: `${messages.components.tabs.inReview.title} (${totalItems.inReview})`,
+      content: (
+        <CaseTableInReview
+          data={data.map((item) => {
+            return {
+              id: item.id,
+              department: item.advert.department.title,
+              labels: item.fastTrack ? ['fasttrack'] : [],
+              name: item.advert.title,
+              publicationDate: item.publishedAt,
+              registrationDate: item.createdAt,
+              employee: item.assignedTo,
+              tag: item.tag,
+            }
+          })}
+        />
+      ),
     },
     {
       id: CaseOverviewTabIds.Ready,
-      label: messages.components.tabs.ready.title,
-      content: <CaseTableSubmitted data={submittedCases} />,
+      label: `${messages.components.tabs.ready.title} (${totalItems.ready})`,
+      content: (
+        <CaseTableInProgress
+          data={data.map((item) => {
+            return {
+              id: item.id,
+              department: item.advert.department.title,
+              labels: item.fastTrack ? ['fasttrack'] : [],
+              title: item.advert.title,
+              publicationDate: item.publishedAt,
+              registrationDate: item.createdAt,
+              employee: item.assignedTo,
+            }
+          })}
+        />
+      ),
     },
   ]
 
   return (
-    <Section bleed paddingTop="off">
+    <Section paddingTop="off">
       <GridContainer>
         <GridRow rowGap={['p2', 3]}>
           <GridColumn
@@ -77,6 +133,7 @@ const CaseOverviewPage: Screen<Props> = ({
             span={['12/12', '12/12', '12/12', '10/12']}
           >
             <Tabs
+              onlyRenderSelectedTab={true}
               onTabChange={onTabChange}
               selectedTab={selectedTab}
               tabs={tabs}
@@ -89,17 +146,21 @@ const CaseOverviewPage: Screen<Props> = ({
 }
 
 CaseOverviewPage.getProps = async ({ query }) => {
-  const { category, search } = query
+  const { tab, search } = query
+  const client = createDmrClient()
 
-  const submittedCaseData = mockSubmittedCasesResponse
-  const inProgressCaseData = mockInProgressCasesResponse
+  const tabId = mapQueryParamToCaseOverviewTab(tab)
+  const selectedStatus = mapTabIdToCaseStatus(tabId)
+
+  const response = await client.getEditorialOverview({
+    status: selectedStatus,
+    search: search as string,
+  })
 
   return {
-    submittedCases: submittedCaseData.items,
-    inProgressCases: inProgressCaseData.items,
-    query: {
-      category: category,
-    },
+    data: response.data,
+    paging: response.paging,
+    totalItems: response.totalItems,
   }
 }
 

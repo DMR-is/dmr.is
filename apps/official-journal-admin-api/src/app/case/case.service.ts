@@ -1,5 +1,10 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Case, GetCasesQuery, GetCasesReponse } from '@dmr.is/shared/dto'
+import {
+  Case,
+  CaseEditorialOverview,
+  GetCasesQuery,
+  GetCasesReponse,
+} from '@dmr.is/shared/dto'
 
 import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
 
@@ -16,6 +21,11 @@ export class CaseService implements ICaseService {
   }
 
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+    this.logger.info(params)
+    throw new NotImplementedException()
+  }
+
+  getEditorialOverview(params: GetCasesQuery): Promise<CaseEditorialOverview> {
     this.logger.info(params)
     throw new NotImplementedException()
   }

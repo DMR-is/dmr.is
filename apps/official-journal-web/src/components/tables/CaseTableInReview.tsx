@@ -2,16 +2,26 @@ import { Text } from '@island.is/island-ui/core'
 
 import { messages } from '../../lib/messages'
 import { formatDate } from '../../lib/utils'
-import { MockCasesType } from '../../screens/mock'
+import { CaseTag } from '../case-tag/CaseTag'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
-
-type Props = {
-  data: MockCasesType['items']
+export type InReviewCaseData = {
+  id: string
+  labels: string[]
+  publicationDate: string
+  registrationDate: string
+  department: string
+  name: string
+  employee: string
+  tag?: string
 }
 
-export const CaseTableInProgress = ({ data }: Props) => {
+type Props = {
+  data: InReviewCaseData[]
+}
+
+export const CaseTableInReview = ({ data }: Props) => {
   const columns = [
     {
       name: 'caseLabels',
@@ -49,6 +59,12 @@ export const CaseTableInProgress = ({ data }: Props) => {
       sortable: true,
       small: true,
       children: messages.components.tables.caseOverview.headCells.employee,
+    },
+    {
+      name: 'caseTag',
+      sortable: true,
+      small: true,
+      children: messages.components.tables.caseOverview.headCells.tags,
     },
   ]
 
@@ -89,11 +105,11 @@ export const CaseTableInProgress = ({ data }: Props) => {
       },
       {
         sortingKey: 'caseName',
-        sortingValue: row.title,
+        sortingValue: row.name,
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.title}
+              {row.name}
             </Text>
           </div>
         ),
@@ -106,6 +122,11 @@ export const CaseTableInProgress = ({ data }: Props) => {
             {row.employee}
           </Text>
         ),
+      },
+      {
+        sortingKey: 'caseTag',
+        sortingValue: row.tag,
+        children: <CaseTag tag={row.tag} />,
       },
     ],
   }))

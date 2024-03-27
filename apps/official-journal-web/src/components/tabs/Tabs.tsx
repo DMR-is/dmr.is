@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 
-import { Box, FocusableBox, Text } from '@island.is/island-ui/core'
+import { Box, Text } from '@island.is/island-ui/core'
+import { isDefined } from '@island.is/shared/utils'
 
 import * as styles from './Tabs.css'
 
@@ -15,9 +16,21 @@ type Props = {
   tabs: Tab[]
   selectedTab: string
   onTabChange: (id: string) => void
+  onlyRenderSelectedTab?: boolean
 }
 
-export const Tabs = ({ tabs, selectedTab, onTabChange }: Props) => {
+export const Tabs = ({
+  tabs,
+  selectedTab,
+  onTabChange,
+  onlyRenderSelectedTab,
+}: Props) => {
+  if (onlyRenderSelectedTab && !tabs.every(({ id }) => isDefined(id))) {
+    throw new Error(
+      'Every tab must have a unique id when onlyRenderSelectedTab is enabled',
+    )
+  }
+
   const { loop, wrap, ...tab } = useTabState({
     selectedId: selectedTab,
   })
@@ -28,7 +41,7 @@ export const Tabs = ({ tabs, selectedTab, onTabChange }: Props) => {
   }, [tab.currentId])
 
   return (
-    <Box position="relative">
+    <Box dataTestId="hello-empty" position="relative">
       <TabList {...tab} className={styles.tabsTablist}>
         {tabs.map(({ label, id }, index) => {
           const isActive = tab.currentId === id
@@ -44,9 +57,13 @@ export const Tabs = ({ tabs, selectedTab, onTabChange }: Props) => {
           )
         })}
       </TabList>
-      {tabs.map(({ content }, index) => (
+      {tabs.map(({ content, id }, index) => (
         <TabPanel {...tab} key={index} className={styles.tabsTabPanel}>
-          <Box>{content}</Box>
+          {onlyRenderSelectedTab && id ? (
+            tab.selectedId === id && <Box>{content}</Box>
+          ) : (
+            <Box>{content}</Box>
+          )}
         </TabPanel>
       ))}
     </Box>

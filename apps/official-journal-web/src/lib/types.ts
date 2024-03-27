@@ -8,5 +8,5 @@ export type ScreenContext = {
 
 export type Screen<Props = {}> = React.ComponentType<Props> & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getProps?: (ctx: ScreenContext) => Promise<any>
+  getProps?: (ctx: ScreenContext) => Promise<Props>
 }

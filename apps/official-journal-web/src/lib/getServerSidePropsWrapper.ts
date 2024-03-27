@@ -29,8 +29,6 @@ export const getServerSidePropsWrapper: (
   try {
     const props = screen.getProps ? await screen.getProps(ctx) : ctx
 
-    console.log(ctx.query)
-
     deleteUndefined(props)
     return {
       props,

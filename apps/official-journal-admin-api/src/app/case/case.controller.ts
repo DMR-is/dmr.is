@@ -1,7 +1,12 @@
-import { Case, GetCasesQuery, GetCasesReponse } from '@dmr.is/shared/dto'
+import {
+  Case,
+  CaseEditorialOverview,
+  GetCasesQuery,
+  GetCasesReponse,
+} from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { ICaseService } from './case.service.interface'
 
@@ -14,6 +19,10 @@ export class CaseController {
   ) {}
 
   @Get('/:id')
+  @ApiOperation({
+    operationId: 'getCase',
+    summary: 'Get case by ID.',
+  })
   @ApiResponse({
     status: 200,
     type: Case,
@@ -28,6 +37,10 @@ export class CaseController {
   }
 
   @Get('/')
+  @ApiOperation({
+    operationId: 'getCases',
+    summary: 'Get cases.',
+  })
   @ApiResponse({
     status: 200,
     type: GetCasesReponse,
@@ -35,5 +48,21 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return this.caseService.getCases(params)
+  }
+
+  @Get('/overview/editorial')
+  @ApiOperation({
+    operationId: 'getEditorialOverview',
+    summary: 'Get overview for cases in progress.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CaseEditorialOverview,
+    description: 'Cases overview.',
+  })
+  async getEditorialOverview(
+    @Query() params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
+    return this.caseService.getEditorialOverview(params)
   }
 }

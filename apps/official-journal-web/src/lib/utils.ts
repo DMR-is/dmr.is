@@ -1,6 +1,7 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
+import { GetEditorialOverviewStatusEnum } from '../gen/fetch'
 import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
   try {
@@ -33,7 +34,7 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   return pathname
 }
 
-export const mapQueryParamToCaseOverviewTab = (param?: string) => {
+export const mapQueryParamToCaseOverviewTab = (param?: unknown) => {
   switch (param) {
     case CaseOverviewTabIds.Submitted:
       return CaseOverviewTabIds.Submitted
@@ -45,5 +46,20 @@ export const mapQueryParamToCaseOverviewTab = (param?: string) => {
       return CaseOverviewTabIds.Ready
     default:
       return CaseOverviewTabIds.Submitted
+  }
+}
+
+export const mapTabIdToCaseStatus = (param?: unknown) => {
+  switch (param) {
+    case CaseOverviewTabIds.Submitted:
+      return GetEditorialOverviewStatusEnum.Innsent
+    case CaseOverviewTabIds.InProgress:
+      return GetEditorialOverviewStatusEnum.Grunnvinnsla
+    case CaseOverviewTabIds.InReview:
+      return GetEditorialOverviewStatusEnum.Yfirlestur
+    case CaseOverviewTabIds.Ready:
+      return GetEditorialOverviewStatusEnum.Tilbi
+    default:
+      return GetEditorialOverviewStatusEnum.Innsent
   }
 }

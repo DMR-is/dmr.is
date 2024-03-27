@@ -28,10 +28,15 @@ export const useQueryParams = () => {
     })
   }
 
+  const refresh = () => {
+    router.replace(router.asPath)
+  }
+
   return {
     query,
     add,
     remove,
     get,
+    refresh,
   }
 }

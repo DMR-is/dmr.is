@@ -1,9 +1,16 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
-import { Case, GetCasesQuery, GetCasesReponse } from '@dmr.is/shared/dto'
+import {
+  Case,
+  CaseEditorialOverview,
+  CaseStatus,
+  GetCasesQuery,
+  GetCasesReponse,
+} from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
+  BadRequestException,
   Inject,
   InternalServerErrorException,
   NotFoundException,
@@ -79,5 +86,47 @@ export class CaseServiceMock implements ICaseService {
     } catch (error) {
       throw new InternalServerErrorException('Internal server error.')
     }
+  }
+
+  async getEditorialOverview(
+    params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
+    const submitted: Case[] = []
+    const inProgress: Case[] = []
+    const inReview: Case[] = []
+    const ready: Case[] = []
+
+    console.log(params?.status)
+
+    if (!params?.status) {
+      throw new BadRequestException('Missing status')
+    }
+
+    ALL_MOCK_CASES.forEach((c) => {
+      if (c.status === CaseStatus.Submitted) {
+        submitted.push(c)
+      } else if (c.status === CaseStatus.InProgress) {
+        inProgress.push(c)
+      } else if (c.status === CaseStatus.InReview) {
+        inReview.push(c)
+      } else if (c.status === CaseStatus.ReadyForPublishing) {
+        ready.push(c)
+      }
+    })
+
+    const { cases, paging } = await this.getCases(params)
+
+    console.log(cases)
+
+    return Promise.resolve({
+      data: cases,
+      totalItems: {
+        submitted: submitted.length,
+        inProgress: inProgress.length,
+        inReview: inReview.length,
+        ready: ready.length,
+      },
+      paging,
+    })
   }
 }
