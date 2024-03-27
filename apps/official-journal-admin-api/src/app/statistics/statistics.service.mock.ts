@@ -7,32 +7,31 @@ import {
 } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import {
-  StatisticsOverviewResponse,
-  StatisticsOverviewCategory,
-} from '../../dto/statistics/statistics-overview-dto'
-import { StatisticsOverviewQueryType } from '../../dto/statistics/statistics-overview-query.dto'
-import { JournalAdvert, JournalAdvertStatus } from '@dmr.is/shared/dto/journal'
-import { ALL_MOCK_ADVERTS as MockAdverts } from '@dmr.is/mocks'
 
-const ALL_MOCK_ADVERTS = MockAdverts as JournalAdvert[]
+import { AdvertStatus } from '@dmr.is/shared/dto'
+import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
+import {
+  GetStatisticsDepartmentResponse,
+  StatisticsOverviewCategory,
+  StatisticsOverviewQueryType,
+  GetStatisticsOverviewResponse,
+} from '@dmr.is/shared/dto'
 
 @Injectable()
 export class MockStatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using StatisticsServiceMock')
   }
-  getDepartment(id: string): Promise<StatisticsDepartmentResponse> {
+  getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
     if (!id) {
       throw new BadRequestException('Missing parameters')
     }
 
     const statuses = [
-      JournalAdvertStatus.Submitted,
-      JournalAdvertStatus.InProgress,
-      JournalAdvertStatus.Active,
-      JournalAdvertStatus.ReadyForPublication,
+      AdvertStatus.Submitted,
+      AdvertStatus.InProgress,
+      AdvertStatus.Active,
+      AdvertStatus.ReadyForPublication,
     ]
 
     const adverts = ALL_MOCK_ADVERTS.filter(
@@ -47,16 +46,16 @@ export class MockStatisticsService implements IStatisticsService {
 
     adverts.forEach((advert) => {
       switch (advert.status) {
-        case JournalAdvertStatus.Submitted:
+        case AdvertStatus.Submitted:
           submitted++
           break
-        case JournalAdvertStatus.InProgress:
+        case AdvertStatus.InProgress:
           inProgress++
           break
-        case JournalAdvertStatus.Active:
+        case AdvertStatus.Active:
           inReview++
           break
-        case JournalAdvertStatus.ReadyForPublication:
+        case AdvertStatus.ReadyForPublication:
           ready++
           break
       }
@@ -94,7 +93,7 @@ export class MockStatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(type: string): Promise<StatisticsOverviewResponse> {
+  getOverview(type: string): Promise<GetStatisticsOverviewResponse> {
     if (!type) {
       throw new BadRequestException('Missing parameters')
     }
@@ -116,11 +115,11 @@ export class MockStatisticsService implements IStatisticsService {
       // fast track functionality is not implemented yet
 
       const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === JournalAdvertStatus.Submitted) {
+        if (advert.status === AdvertStatus.Submitted) {
           submitted++
         }
 
-        if (advert.status === JournalAdvertStatus.InProgress) {
+        if (advert.status === AdvertStatus.InProgress) {
           inProgress++
         }
 
@@ -153,14 +152,14 @@ export class MockStatisticsService implements IStatisticsService {
       let pastDue = 0
 
       const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === JournalAdvertStatus.ReadyForPublication) {
+        if (advert.status === AdvertStatus.ReadyForPublication) {
           today++
         }
 
         if (
           advert.publicationDate &&
           new Date(advert.publicationDate) < new Date() &&
-          advert.status === JournalAdvertStatus.ReadyForPublication
+          advert.status === AdvertStatus.ReadyForPublication
         ) {
           pastDue++
         }

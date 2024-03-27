@@ -28,15 +28,14 @@
     },
     "/api/v1/cases": {
       "get": {
-        "operationId": "getCases",
-        "summary": "Get cases.",
+        "operationId": "CaseController_cases",
         "parameters": [
           {
             "name": "search",
             "required": false,
             "in": "query",
             "description": "String to search for in cases.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "page",
@@ -50,7 +49,7 @@
             "required": false,
             "in": "query",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "status",
@@ -58,7 +57,14 @@
             "in": "query",
             "description": "Status to filter cases on, takes into account `status` on `Case`.",
             "schema": {
-              "enum": ["Innsent", "Grunnvinnsla", "Yfirlestur", "Tilbúið"],
+              "enum": [
+                "Innsent",
+                "Grunnvinnsla",
+                "Yfirlestur",
+                "Tilbúið",
+                "Beðið svara",
+                "Birtingu hafnað"
+              ],
               "type": "string"
             }
           },
@@ -110,99 +116,63 @@
             "description": "All cases.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CasesReponse" }
+                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
               }
             }
           }
         }
       }
     },
-    "/api/v1/cases/overview/editorial": {
+    "/api/v1/health": {
       "get": {
-        "operationId": "getEditorialOverview",
-        "summary": "Get overview for cases in progress.",
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": { "200": { "description": "Health check endpoint." } }
+      }
+    },
+    "/api/v1/statistics/department": {
+      "get": {
+        "operationId": "StatisticsController_getDepartment",
         "parameters": [
           {
-            "name": "search",
-            "required": false,
+            "name": "id",
+            "required": true,
             "in": "query",
-            "description": "String to search for in cases.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "caseNumber",
-            "required": false,
-            "in": "query",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Status to filter cases on, takes into account `status` on `Case`.",
-            "schema": {
-              "enum": ["Innsent", "Grunnvinnsla", "Yfirlestur", "Tilbúið"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "employeeId",
-            "required": false,
-            "in": "query",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "required": false,
-            "in": "query",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "schema": { "format": "date-time", "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "Cases overview.",
+            "description": "Gets statistics for individual department (a, b or c)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseOverviewResponse"
+                  "$ref": "#/components/schemas/GetStatisticsDepartmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statistics/overview": {
+      "get": {
+        "operationId": "StatisticsController_getOverview",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gets overview of statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStatisticsOverviewResponse"
                 }
               }
             }
@@ -221,15 +191,7 @@
   "servers": [],
   "components": {
     "schemas": {
-      "CaseInstitution": {
-        "type": "object",
-        "properties": {
-          "ssn": { "type": "string", "description": "SSN of the institution" },
-          "name": { "type": "string", "description": "Name of the institution" }
-        },
-        "required": ["ssn", "name"]
-      },
-      "JournalAdvertDepartment": {
+      "Department": {
         "type": "object",
         "properties": {
           "id": {
@@ -251,7 +213,7 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "JournalAdvertType": {
+      "AdvertType": {
         "type": "object",
         "properties": {
           "id": {
@@ -273,14 +235,12 @@
           "department": {
             "description": "Department the advert type belongs to.",
             "nullable": false,
-            "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertDepartment" }
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
           }
         },
         "required": ["id", "title", "slug", "department"]
       },
-      "JournalAdvertPublicationNumber": {
+      "AdvertPublicationNumber": {
         "type": "object",
         "properties": {
           "number": {
@@ -301,7 +261,7 @@
         },
         "required": ["number", "year", "full"]
       },
-      "JournalAdvertMainCategory": {
+      "MainCategory": {
         "type": "object",
         "properties": {
           "id": {
@@ -328,7 +288,7 @@
         },
         "required": ["id", "title", "slug", "description"]
       },
-      "JournalAdvertCategory": {
+      "Category": {
         "type": "object",
         "properties": {
           "id": {
@@ -351,44 +311,40 @@
             "description": "The department the category belongs to.",
             "nullable": true,
             "example": "A deild",
-            "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertDepartment" }
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
           },
           "mainCategory": {
             "description": "The main category this category belongs to.",
             "nullable": true,
             "example": "Dómstólar og réttarfar",
-            "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertMainCategory" }
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
           }
         },
         "required": ["id", "title", "slug"]
       },
-      "JournalAdvertInvolvedParty": {
+      "Institution": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique ID for the involved party, GUID format.",
+            "description": "Unique ID for the institution, GUID format.",
             "example": "00000000-0000-0000-0000-000000000000",
             "nullable": false
           },
           "title": {
             "type": "string",
-            "description": "Title of the involved party.",
-            "example": "Dómstólar og réttarfar"
+            "description": "Title of the institution",
+            "example": "Dómsmálaráðuneytið"
           },
           "slug": {
             "type": "string",
-            "description": "Slug of the involved party, used in URLs and API requests.",
-            "example": "domstolar-og-rettarfar"
+            "description": "Slug of the institution, used in URLs and API requests.",
+            "example": "domsmalaraduneytid"
           }
         },
         "required": ["id", "title", "slug"]
       },
-      "JournalDocument": {
+      "AdvertDocument": {
         "type": "object",
         "properties": {
           "isLegacy": {
@@ -411,7 +367,7 @@
         },
         "required": ["isLegacy", "html"]
       },
-      "JournalSignatureMember": {
+      "AdvertSignatureMember": {
         "type": "object",
         "properties": {
           "isChairman": {
@@ -446,7 +402,7 @@
         },
         "required": ["isChairman", "name"]
       },
-      "JournalSignatureData": {
+      "AdvertSignatureData": {
         "type": "object",
         "properties": {
           "institution": {
@@ -465,12 +421,12 @@
             "example": true,
             "nullable": false,
             "type": "array",
-            "items": { "$ref": "#/components/schemas/JournalSignatureMember" }
+            "items": { "$ref": "#/components/schemas/AdvertSignatureMember" }
           }
         },
         "required": ["institution", "date", "members"]
       },
-      "JournalSignature": {
+      "AdvertSignature": {
         "type": "object",
         "properties": {
           "id": {
@@ -500,12 +456,12 @@
             "example": true,
             "nullable": false,
             "type": "array",
-            "items": { "$ref": "#/components/schemas/JournalSignatureData" }
+            "items": { "$ref": "#/components/schemas/AdvertSignatureData" }
           }
         },
         "required": ["id", "advertId", "type", "data"]
       },
-      "JournalAdvert": {
+      "Advert": {
         "type": "object",
         "properties": {
           "id": {
@@ -518,14 +474,12 @@
             "description": "The department the advert is for.",
             "nullable": false,
             "example": "A deild",
-            "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertDepartment" }
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
           },
           "type": {
             "description": "Type of the advert.",
             "example": "GJALDSKRÁ",
-            "allOf": [{ "$ref": "#/components/schemas/JournalAdvertType" }]
+            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
           },
           "subject": {
             "type": "string",
@@ -559,7 +513,7 @@
             "description": "Publication number of the advert",
             "nullable": true,
             "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertPublicationNumber" }
+              { "$ref": "#/components/schemas/AdvertPublicationNumber" }
             ]
           },
           "createdDate": {
@@ -590,23 +544,21 @@
             "description": "List of advert categories.",
             "nullable": false,
             "type": "array",
-            "items": { "$ref": "#/components/schemas/JournalAdvertCategory" }
+            "items": { "$ref": "#/components/schemas/Category" }
           },
           "involvedParty": {
             "description": "Involved party for the advert.",
             "nullable": false,
-            "allOf": [
-              { "$ref": "#/components/schemas/JournalAdvertInvolvedParty" }
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
           "document": {
             "description": "Advert document in different formats.",
             "nullable": false,
-            "allOf": [{ "$ref": "#/components/schemas/JournalDocument" }]
+            "allOf": [{ "$ref": "#/components/schemas/AdvertDocument" }]
           },
           "signature": {
             "description": "Signatures for the advert.",
-            "allOf": [{ "$ref": "#/components/schemas/JournalSignature" }]
+            "allOf": [{ "$ref": "#/components/schemas/AdvertSignature" }]
           }
         },
         "required": [
@@ -697,18 +649,25 @@
             "description": "Id of the submitted application, default to null on older cases."
           },
           "year": {
-            "type": "string",
+            "type": "number",
             "example": 2024,
             "description": "Year the case was created."
           },
           "caseNumber": {
-            "type": "string",
-            "example": "01905",
+            "type": "number",
+            "example": 190,
             "description": "Case number (numeric string) gets generated automatically when a case is created."
           },
           "status": {
             "type": "string",
-            "enum": ["Innsent", "Grunnvinnsla", "Yfirlestur", "Tilbúið"],
+            "enum": [
+              "Innsent",
+              "Grunnvinnsla",
+              "Yfirlestur",
+              "Tilbúið",
+              "Beðið svara",
+              "Birtingu hafnað"
+            ],
             "example": "Innsent",
             "description": "Status of the case, default to \"Innsent\""
           },
@@ -733,14 +692,9 @@
             "example": "0102030000",
             "description": "Someway of identifying the employee (employeeId?), defaults to null."
           },
-          "insititution": {
-            "description": "The institution that owns the case.",
-            "example": { "ssn": "0102030000", "name": "Forsætisráðuneytið" },
-            "allOf": [{ "$ref": "#/components/schemas/CaseInstitution" }]
-          },
           "advert": {
             "description": "The advert that is associated with the case.",
-            "allOf": [{ "$ref": "#/components/schemas/JournalAdvert" }]
+            "allOf": [{ "$ref": "#/components/schemas/Advert" }]
           },
           "fastTrack": {
             "type": "boolean",
@@ -794,7 +748,6 @@
           "createdAt",
           "modifiedAt",
           "assignedTo",
-          "insititution",
           "advert",
           "fastTrack",
           "published",
@@ -832,7 +785,7 @@
           "hasPreviousPage"
         ]
       },
-      "CasesReponse": {
+      "GetCasesReponse": {
         "type": "object",
         "properties": {
           "cases": {
@@ -846,50 +799,80 @@
         },
         "required": ["cases", "paging"]
       },
-      "CaseOverviewTotalItems": {
+      "StatisticsDepartmentItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Department name",
+            "example": "Department of Justice"
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of adverts",
+            "example": 10
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage of total",
+            "example": 10
+          }
+        },
+        "required": ["name", "count", "percentage"]
+      },
+      "GetStatisticsDepartmentResponse": {
         "type": "object",
         "properties": {
           "submitted": {
-            "type": "number",
-            "description": "Total submitted cases",
-            "example": 7
+            "$ref": "#/components/schemas/StatisticsDepartmentItem"
           },
           "inProgress": {
-            "type": "number",
-            "description": "Total in progress cases",
-            "example": 3
+            "$ref": "#/components/schemas/StatisticsDepartmentItem"
           },
           "inReview": {
-            "type": "number",
-            "description": "Total in review cases",
-            "example": 2
+            "$ref": "#/components/schemas/StatisticsDepartmentItem"
           },
-          "ready": {
+          "ready": { "$ref": "#/components/schemas/StatisticsDepartmentItem" },
+          "totalAdverts": {
             "type": "number",
-            "description": "Total ready cases",
-            "example": 1
+            "description": "Total number of adverts",
+            "example": 100
+          },
+          "totalPercentage": {
+            "type": "number",
+            "description": "Total number of departments",
+            "example": 10
           }
         },
-        "required": ["submitted", "inProgress", "inReview", "ready"]
+        "required": [
+          "submitted",
+          "inProgress",
+          "inReview",
+          "ready",
+          "totalAdverts",
+          "totalPercentage"
+        ]
       },
-      "CaseOverviewResponse": {
+      "StatisticsOverviewCategory": {
         "type": "object",
         "properties": {
-          "data": {
-            "description": "Cases for selected tab",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Case" }
-          },
-          "totalItems": {
-            "description": "Total cases for each status",
-            "allOf": [{ "$ref": "#/components/schemas/CaseOverviewTotalItems" }]
-          },
-          "paging": {
-            "description": "Paging information",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
-          }
+          "totalAdverts": { "type": "number" },
+          "text": { "type": "string" }
         },
-        "required": ["data", "totalItems", "paging"]
+        "required": ["totalAdverts", "text"]
+      },
+      "GetStatisticsOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatisticsOverviewCategory"
+            }
+          },
+          "totalAdverts": { "type": "number" }
+        },
+        "required": ["categories", "totalAdverts"]
       }
     }
   }

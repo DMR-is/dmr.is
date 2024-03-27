@@ -16,26 +16,26 @@ import {
 } from '@nestjs/swagger'
 import { IJournalService } from './journal.service.interface'
 import {
-  JournalAdvert,
+  Advert,
   AdvertNotFound,
-  JournalAdvertsResponse,
-  JournalAdvertsValidationResponse,
-  JournalGetAdvertsQueryParams,
-  JournalAdvertDepartmentsResponse,
-  JournalGetDepartmentsQueryParams,
-  JournalAdvertTypesResponse,
-  JournalGetTypesQueryParams,
-  JournalAdvertMainCategoriesResponse,
-  JournalGetMainCategoriesQueryParams,
-  JournalAdvertCategoriesResponse,
-  JournalGetCategoriesQueryParams,
-  JournalAdvertInvolvedPartiesResponse,
-  JournalGetInvolvedPartiesQueryParams,
-  JournalPostApplicationResponse,
-  JournalPostApplicationBody,
-  JournalSignatureGetResponse,
-  JournalSignatureQuery,
-} from '@dmr.is/shared/dto/journal'
+  ValidationResponse,
+  GetAdvertsQueryParams,
+  GetAdvertsResponse,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+  GetMainCategoriesQueryParams,
+  GetMainCategoriesResponse,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
+  PostApplicationBody,
+  PostApplicationResponse,
+} from '@dmr.is/shared/dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -52,14 +52,14 @@ export class JournalController {
   @ApiQuery({ name: 'id', type: String, required: true })
   @ApiResponse({
     status: 200,
-    type: JournalAdvert,
-    description: 'Journal advert by ID.',
+    type: Advert,
+    description: 'Advert by ID.',
   })
   @ApiNotFoundResponse({
     description: 'Advert not found.',
     type: AdvertNotFound,
   })
-  async advert(@Query('id') id: string): Promise<JournalAdvert | null> {
+  async advert(@Query('id') id: string): Promise<Advert | null> {
     const advert = await this.journalService.getAdvert(id)
     if (!advert) {
       this.logger.info('advert not found', {
@@ -77,135 +77,135 @@ export class JournalController {
   @Get('adverts')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertsResponse,
-    description: 'List of journal adverts, optional query parameters.',
+    type: GetAdvertsResponse,
+    description: 'List of adverts, optional query parameters.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
   adverts(
     @Query()
-    params?: JournalGetAdvertsQueryParams,
-  ): Promise<JournalAdvertsResponse> {
+    params?: GetAdvertsQueryParams,
+  ): Promise<GetAdvertsResponse> {
     return this.journalService.getAdverts(params)
   }
 
   @Get('departments')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertDepartmentsResponse,
-    description: 'List of journal advert departments.',
+    type: GetDepartmentsResponse,
+    description: 'List of departments.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
   departments(
     @Query()
-    params?: JournalGetDepartmentsQueryParams,
-  ): Promise<JournalAdvertDepartmentsResponse> {
+    params?: GetDepartmentsQueryParams,
+  ): Promise<GetDepartmentsResponse> {
     return this.journalService.getDepartments(params)
   }
 
   @Get('types')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertTypesResponse,
-    description: 'List of journal advert types.',
+    type: GetAdvertTypesResponse,
+    description: 'List of advert types.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
   types(
     @Query()
-    params?: JournalGetTypesQueryParams,
-  ): Promise<JournalAdvertTypesResponse> {
+    params?: GetAdvertTypesQueryParams,
+  ): Promise<GetAdvertTypesResponse> {
     return this.journalService.getTypes(params)
   }
 
   @Get('maincategories')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertMainCategoriesResponse,
-    description: 'List of journal advert main categories.',
+    type: GetMainCategoriesResponse,
+    description: 'List of main categories.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
   mainCategories(
     @Query()
-    params?: JournalGetMainCategoriesQueryParams,
-  ): Promise<JournalAdvertMainCategoriesResponse> {
+    params?: GetMainCategoriesQueryParams,
+  ): Promise<GetMainCategoriesResponse> {
     return this.journalService.getMainCategories(params)
   }
 
   @Get('categories')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertCategoriesResponse,
-    description: 'List of journal advert categories.',
+    type: GetCategoriesResponse,
+    description: 'List of advert categories.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
   categories(
     @Query()
-    params?: JournalGetCategoriesQueryParams,
-  ): Promise<JournalAdvertCategoriesResponse> {
+    params?: GetCategoriesQueryParams,
+  ): Promise<GetCategoriesResponse> {
     return this.journalService.getCategories(params)
   }
 
-  @Get('involvedparties')
+  @Get('Institutions')
   @ApiResponse({
     status: 200,
-    type: JournalAdvertInvolvedPartiesResponse,
-    description: 'List of journal advert involved parties.',
+    type: GetInstitutionsResponse,
+    description: 'List of institutions.',
   })
   @ApiResponse({
     status: 400,
-    type: JournalAdvertsValidationResponse,
+    type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  involvedParties(
+  institutions(
     @Query()
-    params?: JournalGetInvolvedPartiesQueryParams,
-  ): Promise<JournalAdvertInvolvedPartiesResponse> {
-    return this.journalService.getInvolvedParties(params)
+    params?: GetInstitutionsQueryParams,
+  ): Promise<GetInstitutionsResponse> {
+    return this.journalService.getInstitutions(params)
   }
 
   @Post('application')
   @ApiResponse({
     status: 200,
-    type: JournalPostApplicationResponse,
-    description: 'Submit a journal advert application',
+    type: PostApplicationResponse,
+    description: 'Submit an advert application',
   })
   @ApiBadRequestResponse({
     description: 'Validation failed.',
   })
   application(
-    @Body() application: JournalPostApplicationBody,
-  ): Promise<JournalPostApplicationResponse> {
+    @Body() application: PostApplicationBody,
+  ): Promise<PostApplicationResponse> {
     return this.journalService.submitApplication(application)
   }
 
   @Get('signatures')
   @ApiResponse({
     status: 200,
-    type: JournalSignatureGetResponse,
+    type: GetAdvertSignatureResponse,
     description: 'List of signatures',
   })
   signatures(
-    @Query() params?: JournalSignatureQuery,
-  ): Promise<JournalSignatureGetResponse> {
+    @Query() params?: GetAdvertSignatureQuery,
+  ): Promise<GetAdvertSignatureResponse> {
     return this.journalService.getSignatures(params)
   }
 

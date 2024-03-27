@@ -18,13 +18,6 @@ import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 
-type CaseOverviewTotalData = {
-  submitted: Case[]
-  inProgress: Case[]
-  inReview: Case[]
-  ready: Case[]
-}
-
 type Props = {
   data: Case[]
   paging: Paging
@@ -61,7 +54,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               id: item.id,
               department: item.advert.department.title,
               labels: item.fastTrack ? ['fasttrack'] : [],
-              name: item.advert.title,
+              title: item.advert.title,
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
             }
@@ -79,7 +72,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               id: item.id,
               department: item.advert.department.title,
               labels: item.fastTrack ? ['fasttrack'] : [],
-              name: item.advert.title,
+              title: item.advert.title,
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
               employee: item.assignedTo,
@@ -118,7 +111,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               id: item.id,
               department: item.advert.department.title,
               labels: item.fastTrack ? ['fasttrack'] : [],
-              name: item.advert.title,
+              title: item.advert.title,
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
               employee: item.assignedTo,

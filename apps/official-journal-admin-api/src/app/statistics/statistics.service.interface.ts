@@ -1,10 +1,12 @@
-import { StatisticsDepartmentResponse } from '../../dto/statistics/statistics-department.dto'
-import { StatisticsOverviewResponse } from '../../dto/statistics/statistics-overview-dto'
+import {
+  GetStatisticsDepartmentResponse,
+  GetStatisticsOverviewResponse,
+} from '@dmr.is/shared/dto'
 
 export interface IStatisticsService {
-  getDepartment(type: string): Promise<StatisticsDepartmentResponse>
+  getDepartment(type: string): Promise<GetStatisticsDepartmentResponse>
 
-  getOverview(id: string): Promise<StatisticsOverviewResponse>
+  getOverview(id: string): Promise<GetStatisticsOverviewResponse>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

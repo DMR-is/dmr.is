@@ -31,4 +31,10 @@ CaseSingle.getProps = async ({ query }) => {
 
 export default withMainLayout(CaseSingle, {
   showFooter: false,
+  headerWhite: true,
+  bannerProps: {
+    showBanner: false,
+    showFilters: false,
+    title: messages.components.ritstjornBanner.title,
+  },
 })

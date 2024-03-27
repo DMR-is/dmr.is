@@ -2,7 +2,6 @@ import {
   Box,
   Column,
   Columns,
-  DropdownMenu,
   FocusableBox,
   GridColumn,
   GridContainer,
@@ -10,17 +9,22 @@ import {
   Hidden,
   Logo,
 } from '@island.is/island-ui/core'
+import cn from 'classnames'
 
 import * as styles from './Header.css'
 import { useMockUser } from '../../hooks/useMockUser'
 import { ControlPanel } from './ControlPanel'
 import { messages } from '../../lib/messages'
 
-export const Header = () => {
+type HeaderType = {
+  headerWhite?: boolean
+}
+
+export const Header = ({ headerWhite }: HeaderType) => {
   const { mockUser } = useMockUser()
 
   return (
-    <header className={styles.header}>
+    <header className={cn(styles.header, { white: headerWhite })}>
       <Hidden print={true}>
         <GridContainer>
           <GridRow>

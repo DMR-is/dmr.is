@@ -1,18 +1,28 @@
 import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 
-const JOURNAL_DEPARTMENT_A = {
+import {
+  Advert,
+  Department,
+  AdvertType,
+  MainCategory,
+  Category,
+  Institution,
+  AdvertStatus,
+} from '@dmr.is/shared/dto'
+
+const JOURNAL_DEPARTMENT_A: Department = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
   title: 'A deild',
   slug: 'a-deild',
 }
 
-const JOURNAL_DEPARTMENT_B = {
+const JOURNAL_DEPARTMENT_B: Department = {
   id: '8ad799e0-93ac-4c69-9e5b-83d4b230da8a',
   title: 'B deild',
   slug: 'b-deild',
 }
 
-const JOURNAL_DEPARTMENT_C = {
+const JOURNAL_DEPARTMENT_C: Department = {
   id: 'a9bb9a6a-61aa-42a4-8638-e9e5f5f2b676',
   title: 'C deild',
   slug: 'c-deild',
@@ -24,49 +34,49 @@ export const ALL_MOCK_JOURNAL_DEPARTMENTS = [
   JOURNAL_DEPARTMENT_C,
 ]
 
-const DEPT_A_AUGLYSING = {
+const DEPT_A_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be0',
   title: 'AUGLÝSING',
   slug: 'auglysing',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FJARAUKALOG = {
+const DEPT_A_FJARAUKALOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be1',
   title: 'FJÁRAUKALÖG',
   slug: 'fjaraukalog',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FJARLOG = {
+const DEPT_A_FJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be2',
   title: 'FJÁRLOG',
   slug: 'fjarlog',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FORSETABREF = {
+const DEPT_A_FORSETABREF: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be3',
   title: 'FORSETABRÉF',
   slug: 'forsetabref',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FORSETAURSKURDUR = {
+const DEPT_A_FORSETAURSKURDUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be4',
   title: 'FORSETAÚRSKURÐUR',
   slug: 'forsetaurskurdur',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_LOG = {
+const DEPT_A_LOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be5',
   title: 'LÖG',
   slug: 'log',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_LOKAFJARLOG = {
+const DEPT_A_LOKAFJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be6',
   title: 'LOKAFJÁRLÖG',
   slug: 'lokafjarlog',
@@ -83,49 +93,49 @@ export const DEPT_A_TYPES = [
   DEPT_A_LOKAFJARLOG,
 ]
 
-export const DEPT_B_AUGLYSING = {
+export const DEPT_B_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be7',
   title: 'AUGLÝSING',
   slug: 'auglysing',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_GJALDSKRA = {
+const DEPT_B_GJALDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'GJALDSKRÁ',
   slug: 'gjaldskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_ARDSKRA = {
+const DEPT_B_ARDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be9',
   title: 'ARÐSKRÁ',
   slug: 'ardskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_REGLUGERD = {
+const DEPT_B_REGLUGERD: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bea',
   title: 'REGULUGERÐ',
   slug: 'reglugerd',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_SKIPULAGSSKRA = {
+const DEPT_B_SKIPULAGSSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402beb',
   title: 'SKIPULAGSSKRÁ',
   slug: 'skipulagsskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_SAMTHYKKT = {
+const DEPT_B_SAMTHYKKT: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bec',
   title: 'SAMÞYKKT',
   slug: 'samthykkt',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_REGLUR = {
+const DEPT_B_REGLUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bed',
   title: 'REGLUR',
   slug: 'reglur',
@@ -154,7 +164,7 @@ export const DEPT_B_TYPES = [
   DEPT_B_SKIPULAGSSKRA,
 ]
 
-export const DEPT_C_AUGLYSING = {
+export const DEPT_C_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'AUGLÝSING',
   slug: 'auglysing',
@@ -169,7 +179,7 @@ export const ALL_MOCK_JOURNAL_TYPES = [
   ...DEPT_C_TYPES,
 ]
 
-const MOCK_MAIN_CATEGORY_DOMSTOLAR = {
+const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d281',
   title: 'Dómstólar og réttarfar',
   slug: 'domstolar',
@@ -177,14 +187,14 @@ const MOCK_MAIN_CATEGORY_DOMSTOLAR = {
     'Hæstiréttur, lögmenn, lögreglumál, lögfræði, kjaradómur, refsilög, hegningarög, dómsmál og landsdómur.',
 }
 
-const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR = {
+const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d282',
   title: 'Sjávarútvegur, fiskveiðar og fiskirækt',
   slug: 'sjavarutvegur',
   description: 'Sjávarútvegur, Veiði - friðun, fiskeldi og hafnarmál.',
 }
 
-const MOCK_MAIN_CATEGORY_LANDBUNADUR = {
+const MOCK_MAIN_CATEGORY_LANDBUNADUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d283',
   title: 'Landbúnaður',
   slug: 'landbunadur',
@@ -197,7 +207,7 @@ export const ALL_MOCK_JOURNAL_MAIN_CATEGORIES = [
   MOCK_MAIN_CATEGORY_LANDBUNADUR,
 ]
 
-const MOCK_CATEGORY_GAELUDYR = {
+const MOCK_CATEGORY_GAELUDYR: Category = {
   id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
   title: 'Gæludýr',
   slug: 'gaeludyr',
@@ -205,7 +215,7 @@ const MOCK_CATEGORY_GAELUDYR = {
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const MOCK_CATEGORY_SKIPULAGSMAL = {
+const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
   id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
   title: 'Skipulagsmál',
   slug: 'skipulagsmal',
@@ -213,7 +223,7 @@ const MOCK_CATEGORY_SKIPULAGSMAL = {
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const MOCK_CATEGORY_REYKJAVIK = {
+const MOCK_CATEGORY_REYKJAVIK: Category = {
   id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
   title: 'Reykjavík',
   slug: 'reykjavik',
@@ -227,13 +237,13 @@ export const ALL_MOCK_JOURNAL_CATEGORIES = [
   MOCK_CATEGORY_REYKJAVIK,
 ]
 
-const MOCK_INVOLVEDPARTY_USR = {
+const MOCK_INVOLVEDPARTY_USR: Institution = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',
 }
 
-const MOCK_INVOLVEDPARTY_SBR = {
+const MOCK_INVOLVEDPARTY_SBR: Institution = {
   id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
   title: 'Skipulags- og byggingarsvið Reykjavíkur',
   slug: 'skipulags-og-byggingarsvid-reykjavikur',
@@ -244,7 +254,7 @@ export const ALL_MOCK_JOURNAL_INVOLVED_PARTIES = [
   MOCK_INVOLVEDPARTY_SBR,
 ]
 
-export const emptyAdvert = {
+export const emptyAdvert: Advert = {
   id: '',
   department: JOURNAL_DEPARTMENT_B,
   type: {
@@ -259,7 +269,7 @@ export const emptyAdvert = {
   },
   subject: '',
   title: '',
-  status: '',
+  status: AdvertStatus.Submitted,
   publicationNumber: {
     number: 0,
     year: 0,
@@ -283,13 +293,38 @@ export const emptyAdvert = {
   signature: null,
 }
 
-export const ADVERT_B_866_2006 = {
+export const ADVERT_NEW: Advert = {
+  id: 'bcbefaf4-c021-4b63-877b-001dde880032',
+  department: JOURNAL_DEPARTMENT_B,
+  type: DEPT_B_AUGLYSING,
+  subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
+  title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
+  status: AdvertStatus.Submitted,
+  publicationNumber: null,
+  createdDate: '2024-03-12T12:45:48.21Z',
+  updatedDate: '2024-03-12T12:45:48.21Z',
+  signatureDate: '2024-03-11T12:45:48.21Z',
+  publicationDate: null,
+  categories: [MOCK_CATEGORY_SKIPULAGSMAL, MOCK_CATEGORY_REYKJAVIK],
+  involvedParty: MOCK_INVOLVEDPARTY_SBR,
+  document: {
+    isLegacy: true,
+    html: `<link rel="stylesheet" type="text/css" href="print.css" media="screen" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:dt="urn:schemas-microsoft-com:datatypes"> <link rel="stylesheet" type="text/css" href="../Styles/Printing.css" media="screen" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:dt="urn:schemas-microsoft-com:datatypes"> <TABLE width="100%" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:dt="urn:schemas-microsoft-com:datatypes">   <TR class="advertText">     <TD colspan="2">           Sé munur á uppsetningu texta hér að neðan og í PDF skjali gildir PDF skjalið.<br><a href="PdfVersions.aspx?recordId=bcbefaf4-c021-4b63-877b-001dde880052"><img src="Images/pdf.gif" border="0"> 866/2006</a><br><br></TD>   </TR>   <TR class="advertSubSerial">     <TD align="left" style="width:260">           Nr. 866/2006</TD>     <TD align="right" style="width:260">17. október 2006</TD>   </TR> </TABLE> <TABLE xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:dt="urn:schemas-microsoft-com:datatypes">   <TR class="advertType" align="center">     <TD><b>AUGLÝSING</b></TD>   </TR>   <TR class="advertType" align="center">     <TD><b>um breytingar á deiliskipulagsáætlunum í Reykjavík.</b></TD>   </TR>   <TR class="advertText">     <TD><html><meta name="Generator" content="GoPro.net"><body><META content=GoPro.net name=Generator><META content=GoPro.net name=Generator><META content=GoPro.net name=Generator><I><P align=justify>Austurberg 5.<BR></I>Í samræmi við skipulags- og byggingarlög, samþykkti borgarráð Reykjavíkurborgar þann 27. júlí 2006 breytingu á deiliskipulagi fyrir Breiðholt III, vegna lóðarinnar að Austurbergi 5.<BR>Uppdrættir hafa hlotið þá meðferð sem skipulags- og byggingarlög mæla fyrir um.<BR>Breytingin öðlast þegar gildi.</P><I><P align=justify>Katrínarlind 1-7.<BR></I>Í samræmi við skipulags- og byggingarlög, samþykkti skipulagsráð Reykjavíkurborgar þann 20. september 2006 breytingu á deiliskipulagi fyrir Grafarholt vegna lóðanna að Katrínarlind 1-7.<BR>Uppdrættir hafa hlotið þá meðferð sem skipulags- og byggingarlög mæla fyrir um.<BR>Breytingin öðlast þegar gildi.</P><I><P align=justify>Klettagarðar 13.<BR></I>Í samræmi við skipulags- og byggingarlög, samþykkti skipulagsráð Reykjavíkurborgar þann 23. ágúst 2006 breytingu á deiliskipulagi fyrir Klettasvæði vegna Klettagarða 13.<BR>Uppdrættir hafa hlotið þá meðferð sem skipulags- og byggingarlög mæla fyrir um.<BR>Breytingin öðlast þegar gildi.</P><I><P align=justify>Álfsnes, Kjalarnesi.<BR></I>Í samræmi við skipulags- og byggingarlög, samþykkti skipulagsráð Reykjavíkurborgar þann 9. mars 2006 breytingu á deiliskipulagi fyrir Kjalarnes vegna urðunarstaðar Sorpu í Álfsnesi.<BR>Uppdrættir hafa hlotið þá meðferð sem skipulags- og byggingarlög mæla fyrir um.<BR>Breytingin öðlast þegar gildi.</P><I><P align=center>Skipulagsfulltrúi Reykjavíkurborgar, 17. október 2006.</P></I><B><P align=center>Helga Bragadóttir.</P></B></body></html></TD>   </TR> </TABLE> <TABLE width="100%" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:dt="urn:schemas-microsoft-com:datatypes">   <TR class="advertSubSerial">     <TD align="center" nowrap colspan="2" style="width:520"><b>B deild - Útgáfud.: 19. október 2006</b></TD>   </TR>   <TR class="advertText">     <TD>                                                  </TD>   </TR> </TABLE>`,
+    pdfUrl: null,
+  },
+  signature:
+    ALL_MOCK_SIGNATURES.find(
+      (s) => s.advertId === 'bcbefaf4-c021-4b63-877b-001dde880052',
+    ) || null,
+}
+
+export const ADVERT_B_866_2006: Advert = {
   id: 'bcbefaf4-c021-4b63-877b-001dde880052',
   department: JOURNAL_DEPARTMENT_B,
   type: DEPT_B_AUGLYSING,
   subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
   title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
-  status: 'Virk',
+  status: AdvertStatus.Active,
   publicationNumber: {
     number: 866,
     year: 2006,
@@ -312,13 +347,13 @@ export const ADVERT_B_866_2006 = {
     ) || null,
 }
 
-export const ADVERT_B_1278_2023 = {
+export const ADVERT_B_1278_2023: Advert = {
   id: '749f1eff-236d-4c67-a4cc-eb7a7bbd373f',
   department: JOURNAL_DEPARTMENT_B,
   type: DEPT_B_GJALDSKRA,
   subject: 'fyrir hundahald í Reykjavíkurborg.',
   title: 'GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.',
-  status: 'Virk',
+  status: AdvertStatus.Active,
   publicationNumber: {
     number: 1278,
     year: 2023,

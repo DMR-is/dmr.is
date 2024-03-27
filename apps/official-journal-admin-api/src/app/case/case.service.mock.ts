@@ -5,25 +5,22 @@ import {
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common'
-import { Case } from '../../dto/case/case.dto'
 
+import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 import { ICaseService } from './case.service.interface'
-import { CasesReponse } from '../../dto/case/cases-response'
-import { CasesQuery } from '../../dto/case/cases-query.dto'
+
 import { generatePaging } from '@dmr.is/utils'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import { CaseOverviewResponse } from '../../dto/case/case-overview.dto'
 import { CaseStatus } from '../../dto/case/case-constants'
 
-const MOCK_CASES = ALL_MOCK_CASES as Case[]
-
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
   getCase(id: string): Promise<Case | null> {
-    const found = MOCK_CASES.find((c) => c.id === id)
+    const found = ALL_MOCK_CASES.find((c) => c.id === id)
 
     if (!found) {
       throw new NotFoundException('Case not found')
@@ -32,18 +29,18 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve(found)
   }
 
-  getCases(params?: CasesQuery): Promise<CasesReponse> {
+  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     if (!params) {
       return Promise.resolve({
-        cases: MOCK_CASES,
-        paging: generatePaging(MOCK_CASES),
+        cases: ALL_MOCK_CASES,
+        paging: generatePaging(ALL_MOCK_CASES),
       })
     }
 
     try {
       const { page } = params
 
-      const filteredCases = MOCK_CASES.filter((c) => {
+      const filteredCases = ALL_MOCK_CASES.filter((c) => {
         // todo: search, which fields to search on?
 
         if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
@@ -69,14 +66,6 @@ export class CaseServiceMock implements ICaseService {
         }
 
         if (params?.fastTrack && c.fastTrack !== params?.fastTrack) {
-          return false
-        }
-
-        if (
-          params?.institution &&
-          (c.insititution.name !== params?.institution ||
-            c.insititution.ssn !== params?.institution)
-        ) {
           return false
         }
 

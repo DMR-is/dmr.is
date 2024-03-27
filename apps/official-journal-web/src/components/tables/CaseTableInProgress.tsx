@@ -4,18 +4,10 @@ import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import { Text } from '@island.is/island-ui/core'
 import * as styles from './CaseTable.css'
-export type InProgressCaseData = {
-  id: string
-  labels: string[]
-  publicationDate: string
-  registrationDate: string
-  department: string
-  name: string
-  employee: string
-}
+import { MockCasesType } from '../../screens/mock'
 
 type Props = {
-  data: InProgressCaseData[]
+  data: MockCasesType['items']
 }
 
 export const CaseTableInProgress = ({ data }: Props) => {
@@ -96,11 +88,11 @@ export const CaseTableInProgress = ({ data }: Props) => {
       },
       {
         sortingKey: 'caseName',
-        sortingValue: row.name,
+        sortingValue: row.title,
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.name}
+              {row.title}
             </Text>
           </div>
         ),

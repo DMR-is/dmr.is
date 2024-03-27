@@ -10,6 +10,12 @@ export const header = style({
   flexDirection: 'column',
   justifyContent: 'center',
 
+  selectors: {
+    '&.white': {
+      backgroundColor: '#fff',
+    },
+  },
+
   '@media': {
     [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
       blockSize: MOBILE_HEADER_HEIGHT,

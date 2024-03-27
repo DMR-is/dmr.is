@@ -15,28 +15,28 @@ import {
   ALL_MOCK_SIGNATURES,
 } from '@dmr.is/mocks'
 import {
-  JournalAdvert,
-  JournalGetAdvertsQueryParams,
-  JournalAdvertsResponse,
-  JournalGetDepartmentsQueryParams,
-  JournalAdvertDepartmentsResponse,
-  JournalGetTypesQueryParams,
-  JournalAdvertTypesResponse,
-  JournalGetMainCategoriesQueryParams,
-  JournalAdvertMainCategoriesResponse,
-  JournalGetCategoriesQueryParams,
-  JournalAdvertCategoriesResponse,
-  JournalGetInvolvedPartiesQueryParams,
-  JournalAdvertInvolvedPartiesResponse,
-  JournalPostApplicationBody,
-  JournalPostApplicationResponse,
-  JournalDocument,
-  JournalAdvertPublicationNumber,
-  JournalSignature,
-  JournalAdvertStatus,
-  JournalSignatureQuery,
-  JournalSignatureGetResponse,
-} from '@dmr.is/shared/dto/journal'
+  Advert,
+  AdvertDocument,
+  AdvertPublicationNumber,
+  AdvertStatus,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
+  GetAdvertsQueryParams,
+  GetAdvertsResponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+  GetMainCategoriesQueryParams,
+  GetMainCategoriesResponse,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
+  PostApplicationBody,
+  PostApplicationResponse,
+  AdvertSignature,
+} from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
@@ -59,12 +59,12 @@ export class MockJournalService implements IJournalService {
     this.logger.info('Using MockJournalService')
   }
 
-  getAdvert(id: string): Promise<JournalAdvert | null> {
+  getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
-    const advert = (allMockAdverts as JournalAdvert[]).find(
+    const advert = (allMockAdverts as Advert[]).find(
       (advert) => advert.id === id,
     )
 
@@ -84,14 +84,12 @@ export class MockJournalService implements IJournalService {
     }
   }
 
-  getAdverts(
-    params?: JournalGetAdvertsQueryParams,
-  ): Promise<JournalAdvertsResponse> {
+  getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse> {
     this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
-    const filteredMockAdverts = (allMockAdverts as JournalAdvert[]).filter(
+    const filteredMockAdverts = (allMockAdverts as Advert[]).filter(
       (advert) => {
         if (!params?.search) {
           return true
@@ -101,7 +99,7 @@ export class MockJournalService implements IJournalService {
       },
     )
 
-    const result: JournalAdvertsResponse = {
+    const result: GetAdvertsResponse = {
       adverts: filteredMockAdverts,
       paging: {
         page: 1,
@@ -119,8 +117,8 @@ export class MockJournalService implements IJournalService {
   }
 
   getDepartments(
-    params?: JournalGetDepartmentsQueryParams,
-  ): Promise<JournalAdvertDepartmentsResponse> {
+    params?: GetDepartmentsQueryParams,
+  ): Promise<GetDepartmentsResponse> {
     const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
 
     const filtered = mockDepartments.filter((department) => {
@@ -138,8 +136,8 @@ export class MockJournalService implements IJournalService {
   }
 
   getTypes(
-    params?: JournalGetTypesQueryParams,
-  ): Promise<JournalAdvertTypesResponse> {
+    params?: GetAdvertTypesQueryParams,
+  ): Promise<GetAdvertTypesResponse> {
     const mockTypes = ALL_MOCK_JOURNAL_TYPES
 
     const filtered = mockTypes.filter((type) => {
@@ -167,8 +165,8 @@ export class MockJournalService implements IJournalService {
   }
 
   getMainCategories(
-    params?: JournalGetMainCategoriesQueryParams | undefined,
-  ): Promise<JournalAdvertMainCategoriesResponse> {
+    params?: GetMainCategoriesQueryParams | undefined,
+  ): Promise<GetMainCategoriesResponse> {
     const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -180,7 +178,7 @@ export class MockJournalService implements IJournalService {
 
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
-    const data: JournalAdvertMainCategoriesResponse = {
+    const data: GetMainCategoriesResponse = {
       mainCategories: paged,
       paging: generatePaging(filtered, page),
     }
@@ -189,8 +187,8 @@ export class MockJournalService implements IJournalService {
   }
 
   getCategories(
-    params?: JournalGetCategoriesQueryParams | undefined,
-  ): Promise<JournalAdvertCategoriesResponse> {
+    params?: GetCategoriesQueryParams | undefined,
+  ): Promise<GetCategoriesResponse> {
     const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -202,7 +200,7 @@ export class MockJournalService implements IJournalService {
 
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
-    const data: JournalAdvertCategoriesResponse = {
+    const data: GetCategoriesResponse = {
       categories: paged,
       paging: generatePaging(filtered, page),
     }
@@ -210,9 +208,9 @@ export class MockJournalService implements IJournalService {
     return Promise.resolve(data)
   }
 
-  getInvolvedParties(
-    params?: JournalGetInvolvedPartiesQueryParams | undefined,
-  ): Promise<JournalAdvertInvolvedPartiesResponse> {
+  getInstitutions(
+    params?: GetInstitutionsQueryParams | undefined,
+  ): Promise<GetInstitutionsResponse> {
     const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -224,8 +222,8 @@ export class MockJournalService implements IJournalService {
 
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
-    const data: JournalAdvertInvolvedPartiesResponse = {
-      involvedParties: paged,
+    const data: GetInstitutionsResponse = {
+      institutions: paged,
       paging: generatePaging(filtered, page),
     }
 
@@ -233,8 +231,8 @@ export class MockJournalService implements IJournalService {
   }
 
   submitApplication(
-    body: JournalPostApplicationBody,
-  ): Promise<JournalPostApplicationResponse> {
+    body: PostApplicationBody,
+  ): Promise<PostApplicationResponse> {
     const department = ALL_MOCK_JOURNAL_DEPARTMENTS.find(
       (d) => d.id === body.department,
     )
@@ -264,7 +262,7 @@ export class MockJournalService implements IJournalService {
 
     const advertTitle = `${type.title} ${body.subject}` // this results in AUGLÝSING AUGLÝSING um hundahald í ..., because the user needs to type in subject himself with the type included ()
 
-    const advertDocument: JournalDocument = {
+    const advertDocument: AdvertDocument = {
       isLegacy: false, // always false since it's coming from the application system
       html: body.document, // validate?
       pdfUrl: null, // generate this earlier in the process? (preview step)
@@ -273,7 +271,7 @@ export class MockJournalService implements IJournalService {
     // needs to be created at same time as the advert
     const year = new Date().getFullYear()
     const publicationNumber = 1 // leaving this as 1 for now until we get the real number
-    const advertPublicationNumber: JournalAdvertPublicationNumber = {
+    const advertPublicationNumber: AdvertPublicationNumber = {
       number: publicationNumber,
       year: year,
       full: `${publicationNumber}/${year}`,
@@ -281,7 +279,7 @@ export class MockJournalService implements IJournalService {
 
     const advertId = uuid()
 
-    const signature: JournalSignature = {
+    const signature: AdvertSignature = {
       id: uuid(),
       advertId: advertId,
       additional: body.signature.additional,
@@ -289,7 +287,7 @@ export class MockJournalService implements IJournalService {
       data: body.signature.data,
     }
 
-    const advert: JournalAdvert = {
+    const advert: Advert = {
       id: advertId,
       title: advertTitle,
       department: department,
@@ -303,7 +301,7 @@ export class MockJournalService implements IJournalService {
       publicationNumber: advertPublicationNumber,
       document: advertDocument,
       involvedParty: null, // not implemented
-      status: JournalAdvertStatus.Submitted, // always submitted when coming from the application system
+      status: AdvertStatus.Submitted, // always submitted when coming from the application system
       signature: signature,
     }
 
@@ -311,8 +309,8 @@ export class MockJournalService implements IJournalService {
   }
 
   getSignatures(
-    params?: JournalSignatureQuery,
-  ): Promise<JournalSignatureGetResponse> {
+    params?: GetAdvertSignatureQuery,
+  ): Promise<GetAdvertSignatureResponse> {
     const filtered = ALL_MOCK_SIGNATURES.filter((signature) => {
       if (params?.id && params.id !== signature.id) {
         return false
