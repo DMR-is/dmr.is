@@ -5,7 +5,7 @@ import { MockStatisticsService } from './statistics.service.mock'
 
 import { NotImplementedException } from '@nestjs/common'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto/cases'
+import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
 
 describe('StatisticsService', () => {
   let service: IStatisticsService
@@ -28,19 +28,19 @@ describe('StatisticsService', () => {
     const idWithNoAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[0].id
     const idWithAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[1].id
     it('Should return total count equal to 0', async () => {
-      const results = await service.getDepartment(idWithNoAdverts)
+      const results = await service.getStatisticsDepartment(idWithNoAdverts)
       expect(results.totalAdverts).toEqual(0)
     })
 
     it('Should return total count larger than 0', async () => {
-      const results = await service.getDepartment(idWithAdverts)
+      const results = await service.getStatisticsDepartment(idWithAdverts)
       expect(results.totalAdverts).toBeGreaterThan(0)
     })
   })
 
   describe('getOverview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await service.getOverview(
+      const results = await service.getStatisticsOverview(
         StatisticsOverviewQueryType.General,
       )
       expect(results.totalAdverts).toEqual(0)
@@ -48,7 +48,9 @@ describe('StatisticsService', () => {
 
     it('Should throw not implemented error', async () => {
       try {
-        await service.getOverview(StatisticsOverviewQueryType.Personal)
+        await service.getStatisticsOverview(
+          StatisticsOverviewQueryType.Personal,
+        )
       } catch (error) {
         if (error instanceof NotImplementedException) {
           expect(error.message).toEqual('Not Implemented')

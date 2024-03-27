@@ -1,12 +1,12 @@
 import {
-  StatisticsDepartmentResponse,
-  StatisticsOverviewResponse,
-} from '@dmr.is/shared/dto/cases'
+  GetStatisticsDepartmentResponse,
+  GetStatisticsOverviewResponse,
+} from '@dmr.is/shared/dto'
 
 export interface IStatisticsService {
-  getDepartment(type: string): Promise<StatisticsDepartmentResponse>
+  getDepartment(type: string): Promise<GetStatisticsDepartmentResponse>
 
-  getOverview(id: string): Promise<StatisticsOverviewResponse>
+  getOverview(id: string): Promise<GetStatisticsOverviewResponse>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

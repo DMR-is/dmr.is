@@ -1,9 +1,4 @@
-import {
-  Case,
-  CaseStatus,
-  CaseCommentType,
-  CaseTag,
-} from '@dmr.is/shared/dto/cases'
+import { Case, CaseStatus, CaseCommentType, CaseTag } from '@dmr.is/shared/dto'
 import {
   ADVERT_B_1278_2023,
   ADVERT_B_866_2006,

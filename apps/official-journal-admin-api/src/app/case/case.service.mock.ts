@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
+import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 import { ICaseService } from './case.service.interface'
 
 import { generatePaging } from '@dmr.is/utils'
@@ -25,7 +25,7 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve(found)
   }
 
-  getCases(params?: CasesQuery): Promise<CasesReponse> {
+  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     if (!params) {
       return Promise.resolve({
         cases: ALL_MOCK_CASES,

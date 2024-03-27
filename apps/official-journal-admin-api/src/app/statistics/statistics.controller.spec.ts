@@ -6,7 +6,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { NotImplementedException } from '@nestjs/common'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto/cases'
+import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
 
 describe('StatisticsController', () => {
   let statistics: TestingModule
@@ -39,19 +39,19 @@ describe('StatisticsController', () => {
     const idWithStatistics = ALL_MOCK_JOURNAL_DEPARTMENTS[1].id
 
     it('Should return total adverts equal to 0', async () => {
-      const results = await controller.department(idWithNoStatistics)
+      const results = await controller.getDepartment(idWithNoStatistics)
       expect(results.totalAdverts).toEqual(0)
     })
 
     it('Should return total adverts larger than 0', async () => {
-      const results = await controller.department(idWithStatistics)
+      const results = await controller.getDepartment(idWithStatistics)
       expect(results.totalAdverts).toBeGreaterThan(0)
     })
   })
 
   describe('overview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await controller.overview(
+      const results = await controller.getOverview(
         StatisticsOverviewQueryType.General,
       )
       expect(results.totalAdverts).toEqual(0)
@@ -59,7 +59,7 @@ describe('StatisticsController', () => {
 
     it('Should throw not implemented error', async () => {
       try {
-        await controller.overview(StatisticsOverviewQueryType.General)
+        await controller.getOverview(StatisticsOverviewQueryType.General)
       } catch (error) {
         if (error instanceof NotImplementedException) {
           expect(error.message).toEqual('Not Implemented')
