@@ -17,9 +17,9 @@ import * as styles from './Popover.css'
 export const Popover = ({
   disclosure,
   children,
-  placement = 'bottom-start',
+  placement = 'auto-start',
 }: Props) => {
-  const popover = usePopoverState({ placement: 'auto-start' })
+  const popover = usePopoverState({ placement: placement })
   return (
     <>
       <PopoverDisclosure {...popover} {...disclosure.props}>

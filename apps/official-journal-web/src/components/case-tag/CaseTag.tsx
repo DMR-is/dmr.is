@@ -1,4 +1,5 @@
 import { Tag } from '@island.is/island-ui/core'
+
 import { CaseTagEnum } from '../../gen/fetch'
 
 type Props = {

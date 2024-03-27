@@ -14,7 +14,6 @@ import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 
 import { ICaseService } from './case.service.interface'

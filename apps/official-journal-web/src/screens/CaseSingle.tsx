@@ -4,11 +4,13 @@ import {
   GridRow,
   Text,
 } from '@island.is/island-ui/core'
+
 import { withMainLayout } from '../layout/Layout'
+import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 
 type Props = {
-  caseId: string
+  caseId?: string
 }
 
 const CaseSingle: Screen<Props> = ({ caseId }) => {
@@ -25,7 +27,7 @@ const CaseSingle: Screen<Props> = ({ caseId }) => {
 
 CaseSingle.getProps = async ({ query }) => {
   return {
-    caseId: query.uid,
+    caseId: query.uid as string,
   }
 }
 

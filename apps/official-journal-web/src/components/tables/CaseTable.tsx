@@ -12,12 +12,11 @@ import {
 } from '@island.is/island-ui/core'
 
 import useBreakpoints from '../../hooks/useBreakpoints'
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { messages } from '../../lib/messages'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
-import { TableHeadCell } from './CaseTableHeadCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
+import { TableHeadCell } from './CaseTableHeadCell'
 
 export type CaseTableHeadCellProps = {
   children?: React.ReactNode

@@ -1,8 +1,8 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
 import { GetEditorialOverviewStatusEnum } from '../gen/fetch'
+import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
   try {
     return format(new Date(date), df, { locale: is })

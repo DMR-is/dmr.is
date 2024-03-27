@@ -1,10 +1,11 @@
+import { Text } from '@island.is/island-ui/core'
+
 import { messages } from '../../lib/messages'
 import { formatDate } from '../../lib/utils'
+import { CaseTag } from '../case-tag/CaseTag'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
-import { Text } from '@island.is/island-ui/core'
 import * as styles from './CaseTable.css'
-import { CaseTag } from '../case-tag/CaseTag'
 export type InReviewCaseData = {
   id: string
   labels: string[]

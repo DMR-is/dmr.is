@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 
 import { Box, Text } from '@island.is/island-ui/core'
+import { isDefined } from '@island.is/shared/utils'
 
 import * as styles from './Tabs.css'
-import { isDefined } from '@island.is/shared/utils'
 
 type Tab = {
   label: string

@@ -12,8 +12,6 @@ import {
   Logo,
 } from '@island.is/island-ui/core'
 
-import { useMockUser } from '../../hooks/useMockUser'
-import { messages } from '../../lib/messages'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 
@@ -22,8 +20,6 @@ type HeaderType = {
 }
 
 export const Header = ({ headerWhite }: HeaderType) => {
-  const { mockUser } = useMockUser()
-
   return (
     <header className={cn(styles.header, { white: headerWhite })}>
       <Hidden print={true}>

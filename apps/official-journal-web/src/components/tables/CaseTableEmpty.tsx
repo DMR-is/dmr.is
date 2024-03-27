@@ -1,7 +1,7 @@
 import { Table as T, Text } from '@island.is/island-ui/core'
 
-import * as styles from './CaseTable.css'
 import { messages } from '../../lib/messages'
+import * as styles from './CaseTable.css'
 
 type Props = {
   message?: string

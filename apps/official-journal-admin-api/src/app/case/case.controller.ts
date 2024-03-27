@@ -6,7 +6,7 @@ import {
 } from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiResponse, ApiOperation } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { ICaseService } from './case.service.interface'
 

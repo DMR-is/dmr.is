@@ -4,10 +4,13 @@ import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { Section } from '../components/section/Section'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
+import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
+import { Case, Paging } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
+import { createDmrClient } from '../lib/api/createClient'
 import { CaseOverviewTabIds } from '../lib/constants'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
@@ -15,18 +18,6 @@ import {
   mapQueryParamToCaseOverviewTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
-import {
-  MockCasesType,
-  mockInProgressCasesResponse,
-  mockSubmittedCasesResponse,
-} from './mock'
-import { Case, Paging } from '../gen/fetch'
-import { CaseTableInReview } from '../components/tables/CaseTableInReview'
-import { createDmrClient } from '../lib/api/createClient'
-
-type QueryParams = {
-  category?: string
-}
 
 type Props = {
   data: Case[]
@@ -40,7 +31,7 @@ type Props = {
 }
 
 const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
-  const { add, get, refresh } = useQueryParams()
+  const { add, get } = useQueryParams()
 
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseOverviewTab(get('tab')),
