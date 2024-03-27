@@ -331,6 +331,7 @@ export class MockJournalService implements IJournalService {
             if (!m.name.toLocaleLowerCase().includes(search)) {
               return false
             }
+            return true
           }),
         )
       }

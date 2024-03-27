@@ -13,8 +13,8 @@ let logFormat = format.combine(
 )
 
 // Production overrides
-if (process.env.NODE_ENV === 'production') {
-  logLevel = process.env.LOG_LEVEL || 'info'
+if (process.env['NODE_ENV'] === 'production') {
+  logLevel = process.env['LOG_LEVEL'] || 'info'
   logFormat = format.combine(
     format.errors({ stack: true }),
     format.timestamp(),
