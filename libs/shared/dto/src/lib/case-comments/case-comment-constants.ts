@@ -4,3 +4,11 @@ export enum CaseCommentType {
   Update = 'update',
   Comment = 'comment',
 }
+
+export enum CaseCommentTitle {
+  Submit = 'Innsent af:',
+  AssignSelf = 'merkir sér málið.',
+  Assign = 'færir mál á',
+  UpdateStatus = 'færir mál í stöðuna:',
+  Comment = 'gerir athugasemd.',
+}

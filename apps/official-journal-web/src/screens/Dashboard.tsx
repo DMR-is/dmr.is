@@ -196,16 +196,16 @@ Dashboard.getProps = async () => {
 
   const [general, personal, inactive, publishing] = await Promise.all(
     [
-      dmrClient.statisticsControllerGetOverview({
+      dmrClient.statisticsControllerOverview({
         type: 'general',
       }),
-      dmrClient.statisticsControllerGetOverview({
+      dmrClient.statisticsControllerOverview({
         type: 'personal',
       }),
-      dmrClient.statisticsControllerGetOverview({
+      dmrClient.statisticsControllerOverview({
         type: 'inactive',
       }),
-      dmrClient.statisticsControllerGetOverview({
+      dmrClient.statisticsControllerOverview({
         type: 'publishing',
       }),
     ].map((promise) => promise.catch(() => null)),

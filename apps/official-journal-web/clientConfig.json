@@ -233,7 +233,7 @@
     },
     "/api/v1/statistics/department": {
       "get": {
-        "operationId": "StatisticsController_getDepartment",
+        "operationId": "StatisticsController_department",
         "parameters": [
           {
             "name": "id",
@@ -258,7 +258,7 @@
     },
     "/api/v1/statistics/overview": {
       "get": {
-        "operationId": "StatisticsController_getOverview",
+        "operationId": "StatisticsController_overview",
         "parameters": [
           {
             "name": "type",
@@ -694,8 +694,15 @@
           },
           "title": {
             "type": "string",
-            "example": "gerir athugasemd",
-            "description": "The task title"
+            "enum": [
+              "Innsent af:",
+              "merkir sér málið.",
+              "færir mál á",
+              "færir mál í stöðuna:",
+              "gerir athugasemd."
+            ],
+            "example": "Innsent af:",
+            "description": "Title for the task action"
           },
           "comment": {
             "type": "string",
@@ -724,6 +731,19 @@
             "example": "comment",
             "description": "Type of the case task."
           },
+          "caseStatus": {
+            "type": "string",
+            "enum": [
+              "Innsent",
+              "Grunnvinnsla",
+              "Yfirlestur",
+              "Tilbúið",
+              "Beðið svara",
+              "Birtingu hafnað"
+            ],
+            "example": "Innsent",
+            "description": "Status of case when comment was added."
+          },
           "task": {
             "example": {
               "from": "Ármann",
@@ -735,7 +755,7 @@
             "allOf": [{ "$ref": "#/components/schemas/CaseCommentTask" }]
           }
         },
-        "required": ["id", "createdAt", "type", "task"]
+        "required": ["id", "createdAt", "type", "caseStatus", "task"]
       },
       "Case": {
         "type": "object",

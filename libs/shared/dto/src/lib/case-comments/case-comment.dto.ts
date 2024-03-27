@@ -3,6 +3,7 @@ import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { CaseStatus } from '../cases/case-constants'
 import { CaseCommentType } from './case-comment-constants'
 import { CaseCommentTask } from './case-comment-task.dto'
 
@@ -31,6 +32,14 @@ export class CaseComment {
   })
   @IsEnum(CaseCommentType)
   type!: CaseCommentType
+
+  @ApiProperty({
+    enum: CaseStatus,
+    example: CaseStatus.Submitted,
+    description: 'Status of case when comment was added.',
+  })
+  @IsEnum(CaseStatus)
+  caseStatus!: CaseStatus
 
   @ApiProperty({
     type: CaseCommentTask,

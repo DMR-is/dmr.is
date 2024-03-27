@@ -67,7 +67,7 @@ describe('CaseController', () => {
 
   describe('getEditorialOverview', () => {
     it('Should return editorial overview', async () => {
-      const results = await caseController.getEditorialOverview({
+      const results = await caseController.editorialOverview({
         status: CaseStatus.Submitted,
       })
       expect(results.data.length).toEqual(

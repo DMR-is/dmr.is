@@ -1,3 +1,4 @@
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Case,
   CaseEditorialOverview,
@@ -15,7 +16,9 @@ import { ICaseService } from './case.service.interface'
 })
 export class CaseController {
   constructor(
-    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ICaseService)
+    private readonly caseService: ICaseService,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('/:id')
@@ -60,7 +63,7 @@ export class CaseController {
     type: CaseEditorialOverview,
     description: 'Cases overview.',
   })
-  async getEditorialOverview(
+  async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
     return this.caseService.getEditorialOverview(params)
