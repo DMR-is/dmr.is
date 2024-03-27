@@ -1,19 +1,17 @@
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 import { withMainLayout } from '../layout/Layout'
-import {
-  CaseTableSubmitted,
-  SubmittedCaseData,
-} from '../components/tables/CaseTableSubmitted'
+import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 import { Section } from '../components/section/Section'
 import { Tabs } from '../components/tabs/Tabs'
 import { useState } from 'react'
-import { mockSubmittedCasesResponse, mockInProgressCasesResponse } from './mock'
 import {
-  CaseTableInProgress,
-  InProgressCaseData,
-} from '../components/tables/CaseTableInProgress'
+  mockSubmittedCasesResponse,
+  mockInProgressCasesResponse,
+  MockCasesType,
+} from './mock'
+import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 
 import { mapQueryParamToCaseOverviewTab } from '../lib/utils'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -25,8 +23,8 @@ type QueryParams = {
 
 type Props = {
   query: QueryParams
-  submittedCases: SubmittedCaseData[]
-  inProgressCases: InProgressCaseData[]
+  submittedCases: MockCasesType['items']
+  inProgressCases: MockCasesType['items']
 }
 
 const CaseOverviewPage: Screen<Props> = ({

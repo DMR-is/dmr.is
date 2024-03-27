@@ -8,6 +8,7 @@ import { StatisticsModule } from './statistics/statistics.module'
   imports: [
     CaseModule,
     HealthModule,
+    StatisticsModule,
     RouterModule.register([
       {
         path: 'cases',
