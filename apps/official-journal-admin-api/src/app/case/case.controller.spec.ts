@@ -1,12 +1,12 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { CaseStatus } from '@dmr.is/shared/dto'
 
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import { CaseStatus } from '@dmr.is/shared/dto'
 
 describe('CaseController', () => {
   let theCase: TestingModule
@@ -70,7 +70,7 @@ describe('CaseController', () => {
       const results = await caseController.getEditorialOverview({
         status: CaseStatus.Submitted,
       })
-      expect(results.totalItems).toEqual(
+      expect(results.data.length).toEqual(
         ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
       )
     })

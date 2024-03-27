@@ -69,7 +69,7 @@ describe('CaseService', () => {
       const results = await service.getEditorialOverview({
         status: CaseStatus.Submitted,
       })
-      expect(results.totalItems).toEqual(
+      expect(results.data.length).toEqual(
         ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
       )
     })
