@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Case } from './case.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { Case } from './case.dto'
 
 class CaseOverviewTotalItems {
   @ApiProperty({
