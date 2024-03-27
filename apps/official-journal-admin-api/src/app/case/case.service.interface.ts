@@ -8,7 +8,7 @@ export interface ICaseService {
 
   getCases(params?: CasesQuery): Promise<CasesReponse>
 
-  getCasesOverview(params?: CasesQuery): Promise<CaseOverviewResponse>
+  getEditorialOverview(params?: CasesQuery): Promise<CaseOverviewResponse>
 }
 
 export const ICaseService = Symbol('ICaseService')

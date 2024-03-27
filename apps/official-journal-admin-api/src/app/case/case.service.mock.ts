@@ -3,6 +3,7 @@ import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common'
 import { Case } from '../../dto/case/case.dto'
 
@@ -95,7 +96,9 @@ export class CaseServiceMock implements ICaseService {
     }
   }
 
-  async getCasesOverview(params?: CasesQuery): Promise<CaseOverviewResponse> {
+  async getEditorialOverview(
+    params?: CasesQuery,
+  ): Promise<CaseOverviewResponse> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []

@@ -1,15 +1,10 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-} from '@island.is/island-ui/core'
+import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 import { withMainLayout } from '../layout/Layout'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
 import { Section } from '../components/section/Section'
 import { Tabs } from '../components/tabs/Tabs'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import {
   mapQueryParamToCaseOverviewTab,
@@ -18,11 +13,8 @@ import {
 import { useQueryParams } from '../hooks/useQueryParams'
 import { CaseOverviewTabIds } from '../lib/constants'
 import { createDmrClient } from '../lib/api/createClient'
-import { Case, GetCasesStatusEnum, Paging } from '../gen/fetch'
-import {
-  CaseTableSubmitted,
-  SubmittedCaseData,
-} from '../components/tables/CaseTableSubmitted'
+import { Case, Paging } from '../gen/fetch'
+import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 
@@ -166,7 +158,7 @@ CaseOverviewPage.getProps = async ({ query }) => {
   const tabId = mapQueryParamToCaseOverviewTab(tab)
   const selectedStatus = mapTabIdToCaseStatus(tabId)
 
-  const response = await client.getCasesOverview({
+  const response = await client.getEditorialOverview({
     status: selectedStatus,
     search: search as string,
   })

@@ -119,8 +119,8 @@
     },
     "/api/v1/cases/overview/editorial": {
       "get": {
-        "operationId": "getCasesOverview",
-        "summary": "Get cases overview for editorial cases.",
+        "operationId": "getEditorialOverview",
+        "summary": "Get overview for cases in progress.",
         "parameters": [
           {
             "name": "search",

@@ -21,7 +21,7 @@ export class CaseService implements ICaseService {
     throw new NotImplementedException()
   }
 
-  getCasesOverview(params: CasesQuery): Promise<CaseOverviewResponse> {
+  getEditorialOverview(params: CasesQuery): Promise<CaseOverviewResponse> {
     this.logger.info(params)
     throw new NotImplementedException()
   }
