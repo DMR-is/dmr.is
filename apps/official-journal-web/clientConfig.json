@@ -125,14 +125,8 @@
     },
     "/api/v1/health": {
       "get": {
-        "operationId": "HealthController_health",
-        "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } }
-      }
-    },
-    "/api/v1/statistics/department": {
-      "get": {
-        "operationId": "StatisticsController_getDepartment",
+        "operationId": "getEditorialOverview",
+        "summary": "Get overview for cases in progress.",
         "parameters": [
           {
             "name": "id",
