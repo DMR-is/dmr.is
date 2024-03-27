@@ -6,6 +6,7 @@ import { StatisticsModule } from './statistics/statistics.module'
 @Module({
   imports: [
     CaseModule,
+    StatisticsModule,
     RouterModule.register([
       {
         path: 'cases',
