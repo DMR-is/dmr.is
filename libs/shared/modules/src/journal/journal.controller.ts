@@ -166,7 +166,7 @@ export class JournalController {
     return this.journalService.getCategories(params)
   }
 
-  @Get('Institutions')
+  @Get('institutions')
   @ApiResponse({
     status: 200,
     type: GetInstitutionsResponse,

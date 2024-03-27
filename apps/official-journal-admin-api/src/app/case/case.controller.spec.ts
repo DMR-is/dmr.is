@@ -33,7 +33,7 @@ describe('CaseController', () => {
     }).compile()
     caseController = theCase.get<CaseController>(CaseController)
   })
-  describe('/:id', () => {
+  describe('case', () => {
     it('should return correct case', async () => {
       const result = await caseController.case(
         'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -48,7 +48,7 @@ describe('CaseController', () => {
     })
   })
 
-  describe('/', () => {
+  describe('cases', () => {
     it('should return correct cases', async () => {
       const result = await caseController.cases()
       expect(result.cases.length).toEqual(ALL_MOCK_CASES.length)

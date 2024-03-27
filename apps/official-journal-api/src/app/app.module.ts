@@ -1,7 +1,7 @@
+import { JournalModule } from '@dmr.is/modules'
+
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
-
-import { JournalModule } from './journal/journal.module'
 
 @Module({
   imports: [

@@ -1,3 +1,5 @@
+import { JournalModule } from '@dmr.is/modules'
+
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
 
@@ -10,6 +12,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     CaseModule,
     HealthModule,
     StatisticsModule,
+    JournalModule,
     RouterModule.register([
       {
         path: 'cases',
@@ -22,6 +25,10 @@ import { StatisticsModule } from './statistics/statistics.module'
       {
         path: 'health',
         module: HealthModule,
+      },
+      {
+        path: 'journal',
+        module: JournalModule,
       },
     ]),
   ],

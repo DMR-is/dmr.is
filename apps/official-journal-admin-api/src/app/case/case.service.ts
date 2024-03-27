@@ -4,6 +4,8 @@ import {
   CaseEditorialOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetUsersQueryParams,
+  GetUsersResponse,
 } from '@dmr.is/shared/dto'
 
 import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
@@ -23,6 +25,13 @@ export class CaseService implements ICaseService {
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     this.logger.info(params)
     throw new NotImplementedException()
+  }
+
+  getUsers(
+    params?: GetUsersQueryParams | undefined,
+  ): Promise<GetUsersResponse> {
+    this.logger.info('getUsers', { params })
+    throw new Error('Method not implemented.')
   }
 
   getEditorialOverview(params: GetCasesQuery): Promise<CaseEditorialOverview> {
