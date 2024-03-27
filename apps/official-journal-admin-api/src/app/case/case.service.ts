@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
 import { ICaseService } from './case.service.interface'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
+import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -13,7 +13,7 @@ export class CaseService implements ICaseService {
     throw new NotImplementedException()
   }
 
-  getCases(params?: CasesQuery): Promise<CasesReponse> {
+  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     this.logger.info(params)
     throw new NotImplementedException()
   }

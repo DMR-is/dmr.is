@@ -5,7 +5,7 @@ import { MockStatisticsService } from './statistics.service.mock'
 
 import { NotImplementedException } from '@nestjs/common'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto/cases'
+import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
 
 describe('StatisticsService', () => {
   let service: IStatisticsService

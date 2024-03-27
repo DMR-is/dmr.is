@@ -1,9 +1,9 @@
-import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
+import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 
 export interface ICaseService {
   getCase(id: string): Promise<Case | null>
 
-  getCases(params?: CasesQuery): Promise<CasesReponse>
+  getCases(params?: GetCasesQuery): Promise<GetCasesReponse>
 }
 
 export const ICaseService = Symbol('ICaseService')

@@ -16,12 +16,14 @@ type BannerProps = ComponentProps<typeof Banner> & {
 
 type LayoutProps = {
   children?: React.ReactNode
+  headerWhite?: boolean
   showFooter?: boolean
   bannerProps?: BannerProps
 }
 
 const Layout: Screen<LayoutProps> = ({
   children,
+  headerWhite,
   showFooter = false,
   bannerProps = { showBanner: true },
 }) => {
@@ -51,7 +53,7 @@ const Layout: Screen<LayoutProps> = ({
               )
             })}
           </Head>
-          <Header />
+          <Header headerWhite={headerWhite} />
           <Main>
             {bannerProps.showBanner && (
               <Banner

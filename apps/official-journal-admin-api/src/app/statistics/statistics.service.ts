@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common'
 import { IStatisticsService } from './statistics.service.interface'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import {
-  StatisticsDepartmentResponse,
-  StatisticsOverviewResponse,
-} from '@dmr.is/shared/dto/cases'
+  GetStatisticsDepartmentResponse,
+  GetStatisticsOverviewResponse,
+} from '@dmr.is/shared/dto'
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {
@@ -13,12 +13,14 @@ export class StatisticsService implements IStatisticsService {
   }
   getDepartment(
     id?: string | undefined,
-  ): Promise<StatisticsDepartmentResponse> {
+  ): Promise<GetStatisticsDepartmentResponse> {
     this.logger.info('getDepartment', id)
     throw new Error('Method not implemented.')
   }
 
-  getOverview(type?: string | undefined): Promise<StatisticsOverviewResponse> {
+  getOverview(
+    type?: string | undefined,
+  ): Promise<GetStatisticsOverviewResponse> {
     this.logger.info('getOverview', type)
     throw new Error('Method not implemented.')
   }

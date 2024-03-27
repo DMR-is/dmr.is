@@ -2,7 +2,7 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { ICaseService } from './case.service.interface'
 
-import { Case, CasesReponse, CasesQuery } from '@dmr.is/shared/dto/cases'
+import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
 
 @Controller({
   version: '1',
@@ -29,10 +29,10 @@ export class CaseController {
   @Get('/')
   @ApiResponse({
     status: 200,
-    type: CasesReponse,
+    type: GetCasesReponse,
     description: 'All cases.',
   })
-  async cases(@Query() params?: CasesQuery): Promise<CasesReponse> {
+  async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return this.caseService.getCases(params)
   }
 }

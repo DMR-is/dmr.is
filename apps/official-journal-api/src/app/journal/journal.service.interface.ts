@@ -1,57 +1,51 @@
 import {
-  JournalAdvert,
-  JournalAdvertCategoriesResponse,
-  JournalAdvertDepartmentsResponse,
-  JournalAdvertInvolvedPartiesResponse,
-  JournalAdvertMainCategoriesResponse,
-  JournalAdvertTypesResponse,
-  JournalAdvertsResponse,
-  JournalGetAdvertsQueryParams,
-  JournalGetCategoriesQueryParams,
-  JournalGetDepartmentsQueryParams,
-  JournalGetInvolvedPartiesQueryParams,
-  JournalGetMainCategoriesQueryParams,
-  JournalGetTypesQueryParams,
-  JournalPostApplicationBody,
-  JournalPostApplicationResponse,
-  JournalSignatureGetResponse,
-  JournalSignatureQuery,
-} from '@dmr.is/shared/dto/journal'
+  Advert,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
+  GetAdvertsQueryParams,
+  GetAdvertsResponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+  GetMainCategoriesQueryParams,
+  GetMainCategoriesResponse,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
+  PostApplicationBody,
+  PostApplicationResponse,
+} from '@dmr.is/shared/dto'
 
 export interface IJournalService {
-  getAdverts(
-    params?: JournalGetAdvertsQueryParams,
-  ): Promise<JournalAdvertsResponse>
+  getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse>
 
-  getAdvert(id: string): Promise<JournalAdvert | null>
+  getAdvert(id: string): Promise<Advert | null>
 
   getDepartments(
-    params?: JournalGetDepartmentsQueryParams,
-  ): Promise<JournalAdvertDepartmentsResponse>
+    params?: GetDepartmentsQueryParams,
+  ): Promise<GetDepartmentsResponse>
 
-  getTypes(
-    params?: JournalGetTypesQueryParams,
-  ): Promise<JournalAdvertTypesResponse>
+  getTypes(params?: GetAdvertTypesQueryParams): Promise<GetAdvertTypesResponse>
 
   getMainCategories(
-    params?: JournalGetMainCategoriesQueryParams,
-  ): Promise<JournalAdvertMainCategoriesResponse>
+    params?: GetMainCategoriesQueryParams,
+  ): Promise<GetMainCategoriesResponse>
 
   getCategories(
-    params?: JournalGetCategoriesQueryParams,
-  ): Promise<JournalAdvertCategoriesResponse>
+    params?: GetCategoriesQueryParams,
+  ): Promise<GetCategoriesResponse>
 
-  getInvolvedParties(
-    params?: JournalGetInvolvedPartiesQueryParams,
-  ): Promise<JournalAdvertInvolvedPartiesResponse>
+  getInstitutions(
+    params?: GetInstitutionsQueryParams,
+  ): Promise<GetInstitutionsResponse>
 
-  submitApplication(
-    body: JournalPostApplicationBody,
-  ): Promise<JournalPostApplicationResponse>
+  submitApplication(body: PostApplicationBody): Promise<PostApplicationResponse>
 
   getSignatures(
-    params?: JournalSignatureQuery,
-  ): Promise<JournalSignatureGetResponse>
+    params?: GetAdvertSignatureQuery,
+  ): Promise<GetAdvertSignatureResponse>
 
   // TODO Testing logging process only, remove later
   error(): void

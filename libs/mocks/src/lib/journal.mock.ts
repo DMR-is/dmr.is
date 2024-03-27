@@ -1,28 +1,28 @@
 import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 
 import {
-  JournalAdvert,
-  JournalAdvertDepartment,
-  JournalAdvertType,
-  JournalAdvertMainCategory,
-  JournalAdvertCategory,
-  JournalAdvertInvolvedParty,
-  JournalAdvertStatus,
-} from '@dmr.is/shared/dto/journal'
+  Advert,
+  Department,
+  AdvertType,
+  MainCategory,
+  Category,
+  Institution,
+  AdvertStatus,
+} from '@dmr.is/shared/dto'
 
-const JOURNAL_DEPARTMENT_A: JournalAdvertDepartment = {
+const JOURNAL_DEPARTMENT_A: Department = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
   title: 'A deild',
   slug: 'a-deild',
 }
 
-const JOURNAL_DEPARTMENT_B: JournalAdvertDepartment = {
+const JOURNAL_DEPARTMENT_B: Department = {
   id: '8ad799e0-93ac-4c69-9e5b-83d4b230da8a',
   title: 'B deild',
   slug: 'b-deild',
 }
 
-const JOURNAL_DEPARTMENT_C: JournalAdvertDepartment = {
+const JOURNAL_DEPARTMENT_C: Department = {
   id: 'a9bb9a6a-61aa-42a4-8638-e9e5f5f2b676',
   title: 'C deild',
   slug: 'c-deild',
@@ -34,49 +34,49 @@ export const ALL_MOCK_JOURNAL_DEPARTMENTS = [
   JOURNAL_DEPARTMENT_C,
 ]
 
-const DEPT_A_AUGLYSING: JournalAdvertType = {
+const DEPT_A_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be0',
   title: 'AUGLÝSING',
   slug: 'auglysing',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FJARAUKALOG: JournalAdvertType = {
+const DEPT_A_FJARAUKALOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be1',
   title: 'FJÁRAUKALÖG',
   slug: 'fjaraukalog',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FJARLOG: JournalAdvertType = {
+const DEPT_A_FJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be2',
   title: 'FJÁRLOG',
   slug: 'fjarlog',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FORSETABREF: JournalAdvertType = {
+const DEPT_A_FORSETABREF: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be3',
   title: 'FORSETABRÉF',
   slug: 'forsetabref',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_FORSETAURSKURDUR: JournalAdvertType = {
+const DEPT_A_FORSETAURSKURDUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be4',
   title: 'FORSETAÚRSKURÐUR',
   slug: 'forsetaurskurdur',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_LOG: JournalAdvertType = {
+const DEPT_A_LOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be5',
   title: 'LÖG',
   slug: 'log',
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const DEPT_A_LOKAFJARLOG: JournalAdvertType = {
+const DEPT_A_LOKAFJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be6',
   title: 'LOKAFJÁRLÖG',
   slug: 'lokafjarlog',
@@ -93,49 +93,49 @@ export const DEPT_A_TYPES = [
   DEPT_A_LOKAFJARLOG,
 ]
 
-export const DEPT_B_AUGLYSING: JournalAdvertType = {
+export const DEPT_B_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be7',
   title: 'AUGLÝSING',
   slug: 'auglysing',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_GJALDSKRA: JournalAdvertType = {
+const DEPT_B_GJALDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'GJALDSKRÁ',
   slug: 'gjaldskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_ARDSKRA: JournalAdvertType = {
+const DEPT_B_ARDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be9',
   title: 'ARÐSKRÁ',
   slug: 'ardskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_REGLUGERD: JournalAdvertType = {
+const DEPT_B_REGLUGERD: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bea',
   title: 'REGULUGERÐ',
   slug: 'reglugerd',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_SKIPULAGSSKRA: JournalAdvertType = {
+const DEPT_B_SKIPULAGSSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402beb',
   title: 'SKIPULAGSSKRÁ',
   slug: 'skipulagsskra',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_SAMTHYKKT: JournalAdvertType = {
+const DEPT_B_SAMTHYKKT: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bec',
   title: 'SAMÞYKKT',
   slug: 'samthykkt',
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const DEPT_B_REGLUR: JournalAdvertType = {
+const DEPT_B_REGLUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bed',
   title: 'REGLUR',
   slug: 'reglur',
@@ -164,7 +164,7 @@ export const DEPT_B_TYPES = [
   DEPT_B_SKIPULAGSSKRA,
 ]
 
-export const DEPT_C_AUGLYSING: JournalAdvertType = {
+export const DEPT_C_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'AUGLÝSING',
   slug: 'auglysing',
@@ -179,7 +179,7 @@ export const ALL_MOCK_JOURNAL_TYPES = [
   ...DEPT_C_TYPES,
 ]
 
-const MOCK_MAIN_CATEGORY_DOMSTOLAR: JournalAdvertMainCategory = {
+const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d281',
   title: 'Dómstólar og réttarfar',
   slug: 'domstolar',
@@ -187,14 +187,14 @@ const MOCK_MAIN_CATEGORY_DOMSTOLAR: JournalAdvertMainCategory = {
     'Hæstiréttur, lögmenn, lögreglumál, lögfræði, kjaradómur, refsilög, hegningarög, dómsmál og landsdómur.',
 }
 
-const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: JournalAdvertMainCategory = {
+const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d282',
   title: 'Sjávarútvegur, fiskveiðar og fiskirækt',
   slug: 'sjavarutvegur',
   description: 'Sjávarútvegur, Veiði - friðun, fiskeldi og hafnarmál.',
 }
 
-const MOCK_MAIN_CATEGORY_LANDBUNADUR: JournalAdvertMainCategory = {
+const MOCK_MAIN_CATEGORY_LANDBUNADUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d283',
   title: 'Landbúnaður',
   slug: 'landbunadur',
@@ -207,7 +207,7 @@ export const ALL_MOCK_JOURNAL_MAIN_CATEGORIES = [
   MOCK_MAIN_CATEGORY_LANDBUNADUR,
 ]
 
-const MOCK_CATEGORY_GAELUDYR: JournalAdvertCategory = {
+const MOCK_CATEGORY_GAELUDYR: Category = {
   id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
   title: 'Gæludýr',
   slug: 'gaeludyr',
@@ -215,7 +215,7 @@ const MOCK_CATEGORY_GAELUDYR: JournalAdvertCategory = {
   department: JOURNAL_DEPARTMENT_B,
 }
 
-const MOCK_CATEGORY_SKIPULAGSMAL: JournalAdvertCategory = {
+const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
   id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
   title: 'Skipulagsmál',
   slug: 'skipulagsmal',
@@ -223,7 +223,7 @@ const MOCK_CATEGORY_SKIPULAGSMAL: JournalAdvertCategory = {
   department: JOURNAL_DEPARTMENT_A,
 }
 
-const MOCK_CATEGORY_REYKJAVIK: JournalAdvertCategory = {
+const MOCK_CATEGORY_REYKJAVIK: Category = {
   id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
   title: 'Reykjavík',
   slug: 'reykjavik',
@@ -237,13 +237,13 @@ export const ALL_MOCK_JOURNAL_CATEGORIES = [
   MOCK_CATEGORY_REYKJAVIK,
 ]
 
-const MOCK_INVOLVEDPARTY_USR: JournalAdvertInvolvedParty = {
+const MOCK_INVOLVEDPARTY_USR: Institution = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',
 }
 
-const MOCK_INVOLVEDPARTY_SBR: JournalAdvertInvolvedParty = {
+const MOCK_INVOLVEDPARTY_SBR: Institution = {
   id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
   title: 'Skipulags- og byggingarsvið Reykjavíkur',
   slug: 'skipulags-og-byggingarsvid-reykjavikur',
@@ -254,7 +254,7 @@ export const ALL_MOCK_JOURNAL_INVOLVED_PARTIES = [
   MOCK_INVOLVEDPARTY_SBR,
 ]
 
-export const emptyAdvert: JournalAdvert = {
+export const emptyAdvert: Advert = {
   id: '',
   department: JOURNAL_DEPARTMENT_B,
   type: {
@@ -269,7 +269,7 @@ export const emptyAdvert: JournalAdvert = {
   },
   subject: '',
   title: '',
-  status: JournalAdvertStatus.Submitted,
+  status: AdvertStatus.Submitted,
   publicationNumber: {
     number: 0,
     year: 0,
@@ -293,13 +293,13 @@ export const emptyAdvert: JournalAdvert = {
   signature: null,
 }
 
-export const ADVERT_NEW: JournalAdvert = {
+export const ADVERT_NEW: Advert = {
   id: 'bcbefaf4-c021-4b63-877b-001dde880032',
   department: JOURNAL_DEPARTMENT_B,
   type: DEPT_B_AUGLYSING,
   subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
   title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
-  status: JournalAdvertStatus.Submitted,
+  status: AdvertStatus.Submitted,
   publicationNumber: null,
   createdDate: '2024-03-12T12:45:48.21Z',
   updatedDate: '2024-03-12T12:45:48.21Z',
@@ -318,13 +318,13 @@ export const ADVERT_NEW: JournalAdvert = {
     ) || null,
 }
 
-export const ADVERT_B_866_2006: JournalAdvert = {
+export const ADVERT_B_866_2006: Advert = {
   id: 'bcbefaf4-c021-4b63-877b-001dde880052',
   department: JOURNAL_DEPARTMENT_B,
   type: DEPT_B_AUGLYSING,
   subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
   title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
-  status: JournalAdvertStatus.Active,
+  status: AdvertStatus.Active,
   publicationNumber: {
     number: 866,
     year: 2006,
@@ -347,13 +347,13 @@ export const ADVERT_B_866_2006: JournalAdvert = {
     ) || null,
 }
 
-export const ADVERT_B_1278_2023: JournalAdvert = {
+export const ADVERT_B_1278_2023: Advert = {
   id: '749f1eff-236d-4c67-a4cc-eb7a7bbd373f',
   department: JOURNAL_DEPARTMENT_B,
   type: DEPT_B_GJALDSKRA,
   subject: 'fyrir hundahald í Reykjavíkurborg.',
   title: 'GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.',
-  status: JournalAdvertStatus.Active,
+  status: AdvertStatus.Active,
   publicationNumber: {
     number: 1278,
     year: 2023,

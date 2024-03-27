@@ -1,4 +1,4 @@
-import { Paging } from '@dmr.is/shared/dto/common'
+import { Paging } from '@dmr.is/shared/dto'
 
 export type MockCasesType = {
   paging: Paging
