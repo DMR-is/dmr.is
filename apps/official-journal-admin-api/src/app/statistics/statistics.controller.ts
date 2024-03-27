@@ -26,7 +26,7 @@ export class StatisticsController {
     type: GetStatisticsDepartmentResponse,
     description: 'Gets statistics for individual department (a, b or c)',
   })
-  async getDepartment(
+  async department(
     @Query('id') id: string,
   ): Promise<GetStatisticsDepartmentResponse> {
     return this.statisticsService.getDepartment(id)
@@ -39,7 +39,7 @@ export class StatisticsController {
     type: GetStatisticsOverviewResponse,
     description: 'Gets overview of statistics',
   })
-  async getOverview(
+  async overview(
     @Query('type') type: string,
   ): Promise<GetStatisticsOverviewResponse> {
     return this.statisticsService.getOverview(type)

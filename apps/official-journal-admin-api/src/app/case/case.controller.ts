@@ -1,12 +1,17 @@
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Case,
   CaseEditorialOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetUsersQueryParams,
+  GetUsersResponse,
 } from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { ICaseService } from './case.service.interface'
 
@@ -15,10 +20,13 @@ import { ICaseService } from './case.service.interface'
 })
 export class CaseController {
   constructor(
-    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ICaseService)
+    private readonly caseService: ICaseService,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Get('/:id')
+  @Get('case')
+  @ApiQuery({ name: 'id', type: String, required: true })
   @ApiOperation({
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -32,11 +40,11 @@ export class CaseController {
     status: 404,
     description: 'Case not found.',
   })
-  async case(@Param('id') id: string): Promise<Case | null> {
+  async case(@Query('id') id: string): Promise<Case | null> {
     return this.caseService.getCase(id)
   }
 
-  @Get('/')
+  @Get('cases')
   @ApiOperation({
     operationId: 'getCases',
     summary: 'Get cases.',
@@ -50,7 +58,23 @@ export class CaseController {
     return this.caseService.getCases(params)
   }
 
-  @Get('/overview/editorial')
+  @Get('users')
+  @ApiOperation({
+    operationId: 'getUsers',
+    summary: 'Get users.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetUsersResponse,
+    description: 'All active users.',
+  })
+  async users(
+    @Query() params?: GetUsersQueryParams,
+  ): Promise<GetUsersResponse> {
+    return this.caseService.getUsers(params)
+  }
+
+  @Get('editorialOverview')
   @ApiOperation({
     operationId: 'getEditorialOverview',
     summary: 'Get overview for cases in progress.',
@@ -60,7 +84,7 @@ export class CaseController {
     type: CaseEditorialOverview,
     description: 'Cases overview.',
   })
-  async getEditorialOverview(
+  async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
     return this.caseService.getEditorialOverview(params)

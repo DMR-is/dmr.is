@@ -40,19 +40,19 @@ describe('StatisticsController', () => {
     const idWithStatistics = ALL_MOCK_JOURNAL_DEPARTMENTS[1].id
 
     it('Should return total adverts equal to 0', async () => {
-      const results = await controller.getDepartment(idWithNoStatistics)
+      const results = await controller.department(idWithNoStatistics)
       expect(results.totalAdverts).toEqual(0)
     })
 
     it('Should return total adverts larger than 0', async () => {
-      const results = await controller.getDepartment(idWithStatistics)
+      const results = await controller.department(idWithStatistics)
       expect(results.totalAdverts).toBeGreaterThan(0)
     })
   })
 
   describe('overview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await controller.getOverview(
+      const results = await controller.overview(
         StatisticsOverviewQueryType.General,
       )
       expect(results.totalAdverts).toEqual(0)
@@ -60,7 +60,7 @@ describe('StatisticsController', () => {
 
     it('Should throw not implemented error', async () => {
       try {
-        await controller.getOverview(StatisticsOverviewQueryType.General)
+        await controller.overview(StatisticsOverviewQueryType.General)
       } catch (error) {
         if (error instanceof NotImplementedException) {
           expect(error.message).toEqual('Not Implemented')

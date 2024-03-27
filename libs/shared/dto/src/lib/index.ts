@@ -53,3 +53,7 @@ export * from './cases/case-editorial-overview.dto'
 export * from './statistics/statistics-department.dto'
 export * from './statistics/statistics-overview-dto'
 export * from './statistics/statistics-overview-constants.dto'
+
+export * from './users/user.dto'
+export * from './users/get-users-response.dto'
+export * from './users/get-users-query.dto'

@@ -6,7 +6,7 @@ export type ScreenContext = {
   res: GetServerSidePropsContext['res']
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type Screen<Props = {}> = React.ComponentType<Props> & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getProps?: (ctx: ScreenContext) => Promise<Props>
 }

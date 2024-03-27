@@ -10,6 +10,7 @@
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
+      "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],

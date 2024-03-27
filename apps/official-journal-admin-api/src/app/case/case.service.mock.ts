@@ -1,11 +1,20 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import {
+  ALL_MOCK_CASES,
+  ALL_MOCK_JOURNAL_DEPARTMENTS,
+  ALL_MOCK_USERS,
+  MOCK_PAGING_SINGLE_PAGE,
+} from '@dmr.is/mocks'
 import {
   Case,
   CaseEditorialOverview,
   CaseStatus,
   GetCasesQuery,
   GetCasesReponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetUsersQueryParams,
+  GetUsersResponse,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -86,6 +95,24 @@ export class CaseServiceMock implements ICaseService {
     } catch (error) {
       throw new InternalServerErrorException('Internal server error.')
     }
+  }
+
+  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
+    const filtered = ALL_MOCK_USERS.filter((user) => {
+      if (params?.search && user.id !== params.search) {
+        return false
+      }
+
+      if (!user.active) {
+        return false
+      }
+
+      return true
+    })
+
+    return Promise.resolve({
+      users: filtered,
+    })
   }
 
   async getEditorialOverview(
