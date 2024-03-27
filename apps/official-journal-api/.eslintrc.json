@@ -15,6 +15,7 @@
       "rules": {}
     }
   ],
+  "reportUnusedDisableDirectives": true,
   "rules": {
     "simple-import-sort/imports": [
       "error",
