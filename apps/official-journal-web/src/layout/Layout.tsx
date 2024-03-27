@@ -125,6 +125,7 @@ const Layout: Screen<LayoutProps> = ({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 Layout.getProps = async ({ req, res, query }) => {}
 
 type LayoutWrapper<T> = Screen<{ layoutProps: LayoutProps; componentProps: T }>

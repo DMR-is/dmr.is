@@ -1,8 +1,10 @@
 import { LoggingModule } from '@dmr.is/logging'
+
 import { Module } from '@nestjs/common'
+
 import { StatisticsController } from './statistics.controller'
-import { IStatisticsService } from './statistics.service.interface'
 import { StatisticsService } from './statistics.service'
+import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
 
 const MOCK_DATA = true
