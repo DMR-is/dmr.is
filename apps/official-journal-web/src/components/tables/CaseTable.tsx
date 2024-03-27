@@ -1,3 +1,6 @@
+import reverse from 'lodash/reverse'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
+
 import {
   ArrowLink,
   Box,
@@ -7,16 +10,13 @@ import {
   SkeletonLoader,
   Table as T,
 } from '@island.is/island-ui/core'
-import reverse from 'lodash/reverse'
 
-import { messages } from '../../lib/messages'
-import { TableHeadCell } from './CaseTableHeadCell'
-
-import * as styles from './CaseTable.css'
-
-import { ReactNode, useEffect, useMemo, useState } from 'react'
 import useBreakpoints from '../../hooks/useBreakpoints'
+import { useFilterContext } from '../../hooks/useFilterContext'
+import { messages } from '../../lib/messages'
+import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
+import { TableHeadCell } from './CaseTableHeadCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
 
 export type CaseTableHeadCellProps = {

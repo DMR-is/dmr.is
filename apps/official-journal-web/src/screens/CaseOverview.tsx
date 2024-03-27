@@ -1,22 +1,32 @@
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
-import { withMainLayout } from '../layout/Layout'
-import { messages } from '../lib/messages'
-import { Screen } from '../lib/types'
-import { Section } from '../components/section/Section'
-import { Tabs } from '../components/tabs/Tabs'
 import { useState } from 'react'
 
+import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+
+import { Section } from '../components/section/Section'
+import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
+import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
+import { Tabs } from '../components/tabs/Tabs'
+import { useQueryParams } from '../hooks/useQueryParams'
+import { withMainLayout } from '../layout/Layout'
+import { CaseOverviewTabIds } from '../lib/constants'
+import { messages } from '../lib/messages'
+import { Screen } from '../lib/types'
 import {
   mapQueryParamToCaseOverviewTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
-import { useQueryParams } from '../hooks/useQueryParams'
-import { CaseOverviewTabIds } from '../lib/constants'
-import { createDmrClient } from '../lib/api/createClient'
+import {
+  MockCasesType,
+  mockInProgressCasesResponse,
+  mockSubmittedCasesResponse,
+} from './mock'
 import { Case, Paging } from '../gen/fetch'
-import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
-import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
+import { createDmrClient } from '../lib/api/createClient'
+
+type QueryParams = {
+  category?: string
+}
 
 type Props = {
   data: Case[]
@@ -123,7 +133,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   ]
 
   return (
-    <Section bleed paddingTop="off">
+    <Section paddingTop="off">
       <GridContainer>
         <GridRow rowGap={['p2', 3]}>
           <GridColumn

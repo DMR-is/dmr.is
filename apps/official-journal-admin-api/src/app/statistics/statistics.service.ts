@@ -1,10 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { IStatisticsService } from './statistics.service.interface'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
 } from '@dmr.is/shared/dto'
+
+import { Inject, Injectable } from '@nestjs/common'
+
+import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {

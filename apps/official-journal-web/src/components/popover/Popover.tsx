@@ -1,9 +1,9 @@
 import { cloneElement } from 'react'
 import {
-  usePopoverState,
   Popover as ReaPopover,
   PopoverDisclosure,
   PopoverState,
+  usePopoverState,
 } from 'reakit/Popover'
 
 type Props = {

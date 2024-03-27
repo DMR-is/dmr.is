@@ -1,15 +1,14 @@
-import { Box, Button, Input } from '@island.is/island-ui/core'
-import * as styles from './CaseFilters.css'
-import { useFilterContext } from '../../hooks/useFilterContext'
-import { Popover } from '../popover/Popover'
-import { FilterPopover } from '../filter-popover/FilterPopover'
-import { messages } from '../../lib/messages'
 import { useState } from 'react'
 import { useDebounce } from 'react-use'
-import { useQueryParams } from '../../hooks/useQueryParams'
-import React from 'react'
 
-React.useLayoutEffect = React.useEffect
+import { Box, Button, Input } from '@island.is/island-ui/core'
+
+import { useFilterContext } from '../../hooks/useFilterContext'
+import { useQueryParams } from '../../hooks/useQueryParams'
+import { messages } from '../../lib/messages'
+import { FilterPopover } from '../filter-popover/FilterPopover'
+import { Popover } from '../popover/Popover'
+import * as styles from './CaseFilters.css'
 
 export const CaseFilters = () => {
   const { add, get } = useQueryParams()

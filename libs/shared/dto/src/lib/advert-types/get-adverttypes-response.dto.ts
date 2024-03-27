@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { AdvertType } from './advert-type.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { AdvertType } from './advert-type.dto'
 
 export class GetAdvertTypesResponse {
   @ApiProperty({

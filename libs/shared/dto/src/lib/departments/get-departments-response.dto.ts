@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Department } from './department.dto'
+
 import { Paging } from '../paging/paging.dto'
+import { Department } from './department.dto'
 
 export class GetDepartmentsResponse {
   @ApiProperty({

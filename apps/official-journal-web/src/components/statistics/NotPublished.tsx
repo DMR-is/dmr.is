@@ -1,11 +1,13 @@
-import { Box, Text, Table as T } from '@island.is/island-ui/core'
+import dynamic from 'next/dynamic'
+import { Pie } from 'recharts'
+
+import { Box, Table as T, Text } from '@island.is/island-ui/core'
+import { theme } from '@island.is/island-ui/theme'
+
+import { useMockStatisticsNotPublished } from '../../hooks/useMockStatisticsNotPublished'
+import { PIE_CHART_DIMENSION } from '../../lib/constants'
 import { messages } from '../../lib/messages'
 import * as styles from './Statistics.css'
-import { useMockStatisticsNotPublished } from '../../hooks/useMockStatisticsNotPublished'
-import { Pie } from 'recharts'
-import { PIE_CHART_DIMENSION } from '../../lib/constants'
-import { theme } from '@island.is/island-ui/theme'
-import dynamic from 'next/dynamic'
 
 type Props = {
   department: 'a' | 'b' | 'c'

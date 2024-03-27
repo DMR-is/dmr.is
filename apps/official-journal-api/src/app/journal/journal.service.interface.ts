@@ -1,9 +1,11 @@
 import {
   Advert,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentsQueryParams,
@@ -12,8 +14,6 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
   PostApplicationBody,
   PostApplicationResponse,
 } from '@dmr.is/shared/dto'

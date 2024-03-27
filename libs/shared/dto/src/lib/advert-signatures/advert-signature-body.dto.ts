@@ -1,6 +1,7 @@
+import { ArrayMinSize, IsArray } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ArrayMinSize, IsArray } from 'class-validator'
 import { AdvertSignatureData } from './advert-signature.dto'
 import { AdvertSignatureType } from './advert-signature-constants.dto'
 

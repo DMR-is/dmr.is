@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
-import { JournalModule } from './journal/journal.module'
 import { RouterModule } from '@nestjs/core'
+
+import { JournalModule } from './journal/journal.module'
 
 @Module({
   imports: [

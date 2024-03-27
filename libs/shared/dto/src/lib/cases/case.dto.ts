@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
@@ -12,10 +12,12 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
-import { CaseStatus, CaseTag } from './case-constants'
-import { Type } from 'class-transformer'
-import { CaseComment } from '../case-comments/case-comment.dto'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { Advert } from '../adverts/advert.dto'
+import { CaseComment } from '../case-comments/case-comment.dto'
+import { CaseStatus, CaseTag } from './case-constants'
 
 export class Case {
   @ApiProperty({

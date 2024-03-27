@@ -3,9 +3,9 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Icon,
   LinkV2,
   Text,
-  Icon,
 } from '@island.is/island-ui/core'
 
 import * as styles from './ImageWithText.css'

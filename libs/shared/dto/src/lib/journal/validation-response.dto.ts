@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { HttpStatus } from '@nestjs/common'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class ValidationResponse {
   @ApiProperty({

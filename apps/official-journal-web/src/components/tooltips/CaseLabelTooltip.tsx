@@ -1,4 +1,5 @@
 import { Box, Icon } from '@island.is/island-ui/core'
+
 import { messages } from '../../lib/messages'
 import { Tooltip } from './Tooltip'
 import * as styles from './Tooltip.css'

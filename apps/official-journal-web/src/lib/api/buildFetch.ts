@@ -1,9 +1,9 @@
 import {
   FetchAPI as NodeFetchAPI,
+  MiddlewareAPI,
   Request,
   RequestInfo,
   RequestInit,
-  MiddlewareAPI,
 } from './nodeFetch'
 import { EnhancedFetchAPI } from './types'
 

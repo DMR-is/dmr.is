@@ -1,12 +1,14 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
-import { ICaseService } from './case.service.interface'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Case,
-  GetCasesReponse,
-  GetCasesQuery,
   CaseEditorialOverview,
+  GetCasesQuery,
+  GetCasesReponse,
 } from '@dmr.is/shared/dto'
+
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
+
+import { ICaseService } from './case.service.interface'
 
 @Injectable()
 export class CaseService implements ICaseService {

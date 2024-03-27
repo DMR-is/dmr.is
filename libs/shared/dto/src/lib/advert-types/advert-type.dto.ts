@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+
 import { Department } from '../departments/department.dto'
 
 export class AdvertType {

@@ -1,8 +1,8 @@
 import {
   Case,
-  GetCasesReponse,
-  GetCasesQuery,
   CaseEditorialOverview,
+  GetCasesQuery,
+  GetCasesReponse,
 } from '@dmr.is/shared/dto'
 
 export interface ICaseService {

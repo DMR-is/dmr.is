@@ -1,4 +1,5 @@
 import { PAGING_MAXIMUM_PAGE_SIZE } from '@dmr.is/constants'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 export class Paging {

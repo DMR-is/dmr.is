@@ -1,5 +1,6 @@
-import { theme } from '@island.is/island-ui/theme'
 import { style } from '@vanilla-extract/css'
+
+import { theme } from '@island.is/island-ui/theme'
 
 const spacing = theme.spacing[3]
 

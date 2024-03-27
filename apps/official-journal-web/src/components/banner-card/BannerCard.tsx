@@ -1,4 +1,5 @@
-import { Box, Text, LinkV2 } from '@island.is/island-ui/core'
+import { Box, LinkV2, Text } from '@island.is/island-ui/core'
+
 import * as styles from './BannerCard.css'
 
 type Props = {

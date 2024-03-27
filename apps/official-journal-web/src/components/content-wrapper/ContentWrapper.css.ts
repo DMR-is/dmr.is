@@ -1,5 +1,6 @@
-import { theme } from '@island.is/island-ui/theme'
 import { recipe } from '@vanilla-extract/recipes'
+
+import { theme } from '@island.is/island-ui/theme'
 
 export const contentWrapper = recipe({
   base: {

@@ -1,5 +1,4 @@
 import { GetServerSidePropsContext } from 'next'
-import React from 'react'
 
 export type ScreenContext = {
   query: GetServerSidePropsContext['query']

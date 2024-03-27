@@ -1,5 +1,27 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  Advert,
+  AdvertNotFound,
+  GetAdvertSignatureQuery,
+  GetAdvertSignatureResponse,
+  GetAdvertsQueryParams,
+  GetAdvertsResponse,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
+  GetDepartmentsQueryParams,
+  GetDepartmentsResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+  GetMainCategoriesQueryParams,
+  GetMainCategoriesResponse,
+  PostApplicationBody,
+  PostApplicationResponse,
+  ValidationResponse,
+} from '@dmr.is/shared/dto'
+
+import {
   Body,
   Controller,
   Get,
@@ -14,28 +36,8 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
+
 import { IJournalService } from './journal.service.interface'
-import {
-  Advert,
-  AdvertNotFound,
-  ValidationResponse,
-  GetAdvertsQueryParams,
-  GetAdvertsResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
-  GetCategoriesResponse,
-  GetDepartmentsQueryParams,
-  GetDepartmentsResponse,
-  GetInstitutionsQueryParams,
-  GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
-  GetMainCategoriesResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
-} from '@dmr.is/shared/dto'
 
 const LOGGING_CATEGORY = 'JournalController'
 

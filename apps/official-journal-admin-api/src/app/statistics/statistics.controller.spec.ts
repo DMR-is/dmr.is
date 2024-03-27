@@ -1,12 +1,13 @@
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
+import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
+
+import { NotImplementedException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+
 import { StatisticsController } from './statistics.controller'
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { NotImplementedException } from '@nestjs/common'
-import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
 
 describe('StatisticsController', () => {
   let statistics: TestingModule

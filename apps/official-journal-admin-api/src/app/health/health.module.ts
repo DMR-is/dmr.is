@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common'
 import { HealthController } from './health.controller'
 
 @Module({
-    controllers: [HealthController],
-    providers: [],
+  controllers: [HealthController],
+  providers: [],
 })
-export class HealthModule { }
+export class HealthModule {}

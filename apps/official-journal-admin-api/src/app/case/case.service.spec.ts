@@ -1,9 +1,11 @@
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+
 import { Test } from '@nestjs/testing'
+
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
-import { CaseStatus } from '../../dto/case/case-constants'
+import { CaseStatus } from '@dmr.is/shared/dto'
 
 describe('CaseService', () => {
   let service: ICaseService

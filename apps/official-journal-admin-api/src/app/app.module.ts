@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
+
 import { CaseModule } from './case/case.module'
 import { HealthModule } from './health/health.module'
 import { StatisticsModule } from './statistics/statistics.module'
@@ -21,8 +22,8 @@ import { StatisticsModule } from './statistics/statistics.module'
       {
         path: 'health',
         module: HealthModule,
-      }
+      },
     ]),
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger'
 import {
   IsBoolean,
   IsDateString,
@@ -6,6 +5,9 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { CaseStatus } from './case-constants'
 
 export class GetCasesQuery {

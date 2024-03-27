@@ -1,10 +1,11 @@
+import { Text } from '@island.is/island-ui/core'
+
 import { messages } from '../../lib/messages'
 import { formatDate } from '../../lib/utils'
+import { MockCasesType } from '../../screens/mock'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
-import { Text } from '@island.is/island-ui/core'
 import * as styles from './CaseTable.css'
-import { MockCasesType } from '../../screens/mock'
 
 type Props = {
   data: MockCasesType['items']

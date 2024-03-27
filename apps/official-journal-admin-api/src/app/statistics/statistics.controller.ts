@@ -1,11 +1,13 @@
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
-import { Controller, Get, Inject, Query } from '@nestjs/common'
-import { IStatisticsService } from './statistics.service.interface'
-import { ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
 } from '@dmr.is/shared/dto'
+
+import { Controller, Get, Inject, Query } from '@nestjs/common'
+import { ApiQuery, ApiResponse } from '@nestjs/swagger'
+
+import { IStatisticsService } from './statistics.service.interface'
 
 @Controller({
   version: '1',
