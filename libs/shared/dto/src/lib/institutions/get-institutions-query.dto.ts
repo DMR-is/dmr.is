@@ -8,10 +8,10 @@ import {
 } from 'class-validator'
 import { Transform } from 'class-transformer'
 
-export class GetInvolvedPartiesQueryParams {
+export class GetInstitutionsQueryParams {
   @ApiProperty({
     name: 'search',
-    description: 'String to search for in involved parties.',
+    description: 'String to search for in institutions.',
     type: String,
     required: false,
   })

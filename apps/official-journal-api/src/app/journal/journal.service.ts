@@ -11,8 +11,8 @@ import {
   GetCategoriesResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
-  GetInvolvedPartiesQueryParams,
-  GetInvolvedPartiesResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetAdvertSignatureQuery,
@@ -64,10 +64,10 @@ export class JournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
 
-  getInvolvedParties(
-    params?: GetInvolvedPartiesQueryParams | undefined,
-  ): Promise<GetInvolvedPartiesResponse> {
-    this.logger.info('getInvolvedParties', { params })
+  getInstitutions(
+    params?: GetInstitutionsQueryParams | undefined,
+  ): Promise<GetInstitutionsResponse> {
+    this.logger.info('getInstitutions', { params })
     throw new Error('Method not implemented.')
   }
 

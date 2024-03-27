@@ -321,24 +321,24 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "InvolvedParty": {
+      "Institution": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique ID for the involved party, GUID format.",
+            "description": "Unique ID for the institution, GUID format.",
             "example": "00000000-0000-0000-0000-000000000000",
             "nullable": false
           },
           "title": {
             "type": "string",
-            "description": "Title of the involved party.",
-            "example": "Dómstólar og réttarfar"
+            "description": "Title of the institution",
+            "example": "Dómsmálaráðuneytið"
           },
           "slug": {
             "type": "string",
-            "description": "Slug of the involved party, used in URLs and API requests.",
-            "example": "domstolar-og-rettarfar"
+            "description": "Slug of the institution, used in URLs and API requests.",
+            "example": "domsmalaraduneytid"
           }
         },
         "required": ["id", "title", "slug"]
@@ -548,7 +548,7 @@
           "involvedParty": {
             "description": "Involved party for the advert.",
             "nullable": false,
-            "allOf": [{ "$ref": "#/components/schemas/InvolvedParty" }]
+            "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
           "document": {
             "description": "Advert document in different formats.",

@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class InvolvedParty {
+export class Institution {
   @ApiProperty({
-    description: 'Unique ID for the involved party, GUID format.',
+    description: 'Unique ID for the institution, GUID format.',
     example: '00000000-0000-0000-0000-000000000000',
     required: true,
     nullable: false,
@@ -11,16 +11,16 @@ export class InvolvedParty {
   readonly id!: string
 
   @ApiProperty({
-    description: 'Title of the involved party.',
-    example: 'Dómstólar og réttarfar',
+    description: 'Title of the institution',
+    example: 'Dómsmálaráðuneytið',
     required: true,
     type: String,
   })
   readonly title!: string
 
   @ApiProperty({
-    description: 'Slug of the involved party, used in URLs and API requests.',
-    example: 'domstolar-og-rettarfar',
+    description: 'Slug of the institution, used in URLs and API requests.',
+    example: 'domsmalaraduneytid',
     required: true,
     type: String,
   })

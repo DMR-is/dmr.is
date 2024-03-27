@@ -27,8 +27,8 @@ import {
   GetCategoriesResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
-  GetInvolvedPartiesQueryParams,
-  GetInvolvedPartiesResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetAdvertSignatureQuery,
@@ -208,9 +208,9 @@ export class MockJournalService implements IJournalService {
     return Promise.resolve(data)
   }
 
-  getInvolvedParties(
-    params?: GetInvolvedPartiesQueryParams | undefined,
-  ): Promise<GetInvolvedPartiesResponse> {
+  getInstitutions(
+    params?: GetInstitutionsQueryParams | undefined,
+  ): Promise<GetInstitutionsResponse> {
     const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -222,8 +222,8 @@ export class MockJournalService implements IJournalService {
 
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
-    const data: GetInvolvedPartiesResponse = {
-      involvedParties: paged,
+    const data: GetInstitutionsResponse = {
+      institutions: paged,
       paging: generatePaging(filtered, page),
     }
 

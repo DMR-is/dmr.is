@@ -17,9 +17,9 @@ export * from './departments/department.dto'
 export * from './departments/get-departments-query.dto'
 export * from './departments/get-departments-response.dto'
 
-export * from './involved-parties/get-involvedparties-query.dto'
-export * from './involved-parties/get-involvedparties-response.dto'
-export * from './involved-parties/involvedparty.dto'
+export * from './institutions/get-institutions-query.dto'
+export * from './institutions/get-institutions-response.dto'
+export * from './institutions/institution.dto'
 
 export * from './main-categories/get-maincategories-query.dto'
 export * from './main-categories/get-maincategories-response.dto'

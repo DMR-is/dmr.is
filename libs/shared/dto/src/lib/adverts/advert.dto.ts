@@ -7,7 +7,7 @@ import { Department } from '../departments/department.dto'
 import { AdvertType } from '../advert-types/advert-type.dto'
 import { AdvertSignature } from '../advert-signatures/advert-signature.dto'
 import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
-import { InvolvedParty } from '../involved-parties/involvedparty.dto'
+import { Institution } from '../institutions/institution.dto'
 import { AdvertStatus } from './advert-constants.dto'
 
 export class Advert {
@@ -123,9 +123,9 @@ export class Advert {
     description: 'Involved party for the advert.',
     required: true,
     nullable: false,
-    type: InvolvedParty,
+    type: Institution,
   })
-  readonly involvedParty!: InvolvedParty | null
+  readonly involvedParty!: Institution | null
 
   @ApiProperty({
     description: 'Advert document in different formats.',

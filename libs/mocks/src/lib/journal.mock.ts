@@ -6,7 +6,7 @@ import {
   AdvertType,
   MainCategory,
   Category,
-  InvolvedParty,
+  Institution,
   AdvertStatus,
 } from '@dmr.is/shared/dto'
 
@@ -237,13 +237,13 @@ export const ALL_MOCK_JOURNAL_CATEGORIES = [
   MOCK_CATEGORY_REYKJAVIK,
 ]
 
-const MOCK_INVOLVEDPARTY_USR: InvolvedParty = {
+const MOCK_INVOLVEDPARTY_USR: Institution = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',
 }
 
-const MOCK_INVOLVEDPARTY_SBR: InvolvedParty = {
+const MOCK_INVOLVEDPARTY_SBR: Institution = {
   id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
   title: 'Skipulags- og byggingarsvið Reykjavíkur',
   slug: 'skipulags-og-byggingarsvid-reykjavikur',

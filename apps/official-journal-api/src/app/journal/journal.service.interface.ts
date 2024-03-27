@@ -8,8 +8,8 @@ import {
   GetCategoriesResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
-  GetInvolvedPartiesQueryParams,
-  GetInvolvedPartiesResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetAdvertSignatureQuery,
@@ -37,9 +37,9 @@ export interface IJournalService {
     params?: GetCategoriesQueryParams,
   ): Promise<GetCategoriesResponse>
 
-  getInvolvedParties(
-    params?: GetInvolvedPartiesQueryParams,
-  ): Promise<GetInvolvedPartiesResponse>
+  getInstitutions(
+    params?: GetInstitutionsQueryParams,
+  ): Promise<GetInstitutionsResponse>
 
   submitApplication(body: PostApplicationBody): Promise<PostApplicationResponse>
 

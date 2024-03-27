@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { InvolvedParty } from './involvedparty.dto'
+import { Institution } from './institution.dto'
 import { Paging } from '../paging/paging.dto'
 
-export class GetInvolvedPartiesResponse {
+export class GetInstitutionsResponse {
   @ApiProperty({
     description: 'List of involved parties',
     required: true,
-    type: [InvolvedParty],
+    type: [Institution],
   })
-  readonly involvedParties!: Array<InvolvedParty>
+  readonly institutions!: Array<Institution>
 
   @ApiProperty({
     description: 'Paging info',
