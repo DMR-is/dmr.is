@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Case } from './case.dto'
-import { Paging } from '@dmr.is/shared/dto/common'
+import { Paging } from '../paging/paging.dto'
 
 class CaseOverviewTotalItems {
   @ApiProperty({
@@ -36,7 +36,7 @@ class CaseOverviewTotalItems {
   ready!: number
 }
 
-export class CaseOverviewResponse {
+export class CaseEditorialOverview {
   @ApiProperty({
     type: [Case],
     description: 'Cases for selected tab',

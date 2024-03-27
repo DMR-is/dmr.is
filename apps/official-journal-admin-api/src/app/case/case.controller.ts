@@ -1,8 +1,13 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiResponse, ApiOperation } from '@nestjs/swagger'
 import { ICaseService } from './case.service.interface'
 
-import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
+import {
+  Case,
+  GetCasesReponse,
+  GetCasesQuery,
+  CaseEditorialOverview,
+} from '@dmr.is/shared/dto'
 
 @Controller({
   version: '1',
@@ -51,12 +56,12 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: CaseOverviewResponse,
+    type: CaseEditorialOverview,
     description: 'Cases overview.',
   })
   async getEditorialOverview(
-    @Query() params?: CasesQuery,
-  ): Promise<CaseOverviewResponse> {
+    @Query() params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
     return this.caseService.getEditorialOverview(params)
   }
 }

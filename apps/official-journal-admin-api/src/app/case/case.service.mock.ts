@@ -3,17 +3,20 @@ import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 
-import { Case, GetCasesReponse, GetCasesQuery } from '@dmr.is/shared/dto'
+import {
+  Case,
+  GetCasesReponse,
+  GetCasesQuery,
+  CaseStatus,
+  CaseEditorialOverview,
+} from '@dmr.is/shared/dto'
 import { ICaseService } from './case.service.interface'
 
 import { generatePaging } from '@dmr.is/utils'
 import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
-import { CaseOverviewResponse } from '../../dto/case/case-overview.dto'
-import { CaseStatus } from '../../dto/case/case-constants'
 
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
@@ -86,8 +89,8 @@ export class CaseServiceMock implements ICaseService {
   }
 
   async getEditorialOverview(
-    params?: CasesQuery,
-  ): Promise<CaseOverviewResponse> {
+    params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -99,7 +102,7 @@ export class CaseServiceMock implements ICaseService {
       throw new BadRequestException('Missing status')
     }
 
-    MOCK_CASES.forEach((c) => {
+    ALL_MOCK_CASES.forEach((c) => {
       if (c.status === CaseStatus.Submitted) {
         submitted.push(c)
       } else if (c.status === CaseStatus.InProgress) {
