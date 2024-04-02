@@ -1,9 +1,11 @@
 import {
   Box,
   Breadcrumbs,
+  Divider,
   GridColumn,
   GridContainer,
   GridRow,
+  Stack,
   Text,
 } from '@island.is/island-ui/core'
 
@@ -17,10 +19,16 @@ type FormShellType = {
     breadcrumbs?: React.ComponentProps<typeof Breadcrumbs>['items']
   }
   children?: React.ReactNode
+  actions?: React.ReactNode
   steps: Array<React.ReactElement>
 }
 
-export const FormShell = ({ header, steps, children }: FormShellType) => {
+export const FormShell = ({
+  header,
+  steps,
+  actions,
+  children,
+}: FormShellType) => {
   return (
     <Box className={styles.root}>
       <Box
@@ -78,7 +86,11 @@ export const FormShell = ({ header, steps, children }: FormShellType) => {
                 paddingLeft={[0, 0, 0, 4]}
                 className={styles.sidebarInner}
               >
-                <FormStepperV2 sections={steps} />
+                <Stack space={2}>
+                  {actions}
+                  <Divider weight="purple200" />
+                  <FormStepperV2 sections={steps} />
+                </Stack>
               </Box>
             </GridColumn>
           </GridRow>
