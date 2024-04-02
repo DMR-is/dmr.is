@@ -1,32 +1,24 @@
 import { Box, Icon, Text } from '@island.is/island-ui/core'
 
+import { FilterGroup } from '../../context/filterContext'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { messages } from '../../lib/messages'
-import { FilterGroups } from './FilterGroups'
 import * as styles from './FilterPopover.css'
 
-export const FilterPopover = () => {
-  const {
-    setCategoriesFilterOptions,
-    setDepartmentFilterOptions,
-    setPublishingFilterOptions,
-    setSearchFilter,
-    setTypeFilterOptions,
-  } = useFilterContext()
+type Props = {
+  children?: React.ReactElement<FilterGroup>[]
+}
+
+export const FilterPopover = ({ children }: Props) => {
+  const { setSearchFilter } = useFilterContext()
 
   const resetAllFilters = () => {
     setSearchFilter('')
-    setTypeFilterOptions([])
-    setCategoriesFilterOptions([])
-    setDepartmentFilterOptions([])
-    setPublishingFilterOptions([])
   }
 
   return (
     <Box className={styles.filterPopover}>
-      <Box className={styles.filterPopoverFilters}>
-        <FilterGroups />
-      </Box>
+      <Box className={styles.filterPopoverFilters}>{children}</Box>
       <Box className={styles.resetAllButtonWrapper}>
         <button onClick={resetAllFilters} className={styles.resetAllButton}>
           <Box className={styles.resetAllButtonContent}>

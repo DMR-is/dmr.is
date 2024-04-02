@@ -8,7 +8,11 @@ import { Footer, Page } from '@island.is/island-ui/core'
 import { Banner } from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
-import { FilterContextProvider } from '../context/filterContext'
+import {
+  FilterContextProvider,
+  FilterGroup,
+  FilterOption,
+} from '../context/filterContext'
 import type { Screen } from '../lib/types'
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
@@ -19,6 +23,7 @@ type LayoutProps = {
   headerWhite?: boolean
   showFooter?: boolean
   bannerProps?: BannerProps
+  filterGroups?: FilterGroup[]
 }
 
 const Layout: Screen<LayoutProps> = ({
@@ -26,6 +31,7 @@ const Layout: Screen<LayoutProps> = ({
   headerWhite,
   showFooter = false,
   bannerProps = { showBanner: true },
+  filterGroups = [],
 }) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
@@ -37,7 +43,7 @@ const Layout: Screen<LayoutProps> = ({
 
   return (
     <Provider>
-      <FilterContextProvider>
+      <FilterContextProvider filterGroups={filterGroups}>
         <Page component="div">
           <Head>
             {preloadedFonts.map((href, index) => {

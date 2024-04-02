@@ -147,6 +147,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
 
 CaseOverviewPage.getProps = async ({ query }) => {
   const { tab, search } = query
+
   const client = createDmrClient()
 
   const tabId = mapQueryParamToCaseOverviewTab(tab)
@@ -165,6 +166,16 @@ CaseOverviewPage.getProps = async ({ query }) => {
 }
 
 export default withMainLayout(CaseOverviewPage, {
+  filterGroups: [
+    {
+      label: 'Birting',
+      options: [
+        { label: 'Mín mál', value: 'my-cases' },
+        { label: 'Mál í hraðbirtingu', value: 'fasttrack' },
+        { label: 'Mál sem bíða svara', value: 'waiting' },
+      ],
+    },
+  ],
   bannerProps: {
     showBanner: true,
     showFilters: true,

@@ -15,6 +15,7 @@ export const tabsTabPanel = style({
 
 export const tabsTab = recipe({
   base: {
+    flex: 1,
     paddingBlock: theme.spacing[1],
     paddingInline: theme.spacing[5],
   },

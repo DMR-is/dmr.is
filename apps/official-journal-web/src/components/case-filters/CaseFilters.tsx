@@ -6,13 +6,14 @@ import { Box, Button, Input } from '@island.is/island-ui/core'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useQueryParams } from '../../hooks/useQueryParams'
 import { messages } from '../../lib/messages'
+import { FilterGroup } from '../filter-group/FilterGroup'
 import { FilterPopover } from '../filter-popover/FilterPopover'
 import { Popover } from '../popover/Popover'
 import * as styles from './CaseFilters.css'
 
 export const CaseFilters = () => {
   const { add, get } = useQueryParams()
-  const { setSearchFilter } = useFilterContext()
+  const { setSearchFilter, filterGroups } = useFilterContext()
 
   const qs = get('search') ?? ''
 
@@ -20,12 +21,12 @@ export const CaseFilters = () => {
 
   const onStateUpdate = (value: string) => {
     setLocalSearch(value)
-    add({ search: value })
   }
 
   useDebounce(
     () => {
       setSearchFilter(localSearch)
+      add({ search: localSearch })
     },
     500,
     [localSearch],
@@ -42,15 +43,26 @@ export const CaseFilters = () => {
         value={localSearch}
         onChange={(e) => onStateUpdate(e.target.value)}
       />
-      <Popover
-        disclosure={
-          <Button variant="utility" icon="filter">
-            {messages.general.open_filter}
-          </Button>
-        }
-      >
-        <FilterPopover />
-      </Popover>
+      {filterGroups?.length && (
+        <Popover
+          disclosure={
+            <Button variant="utility" icon="filter">
+              {messages.general.open_filter}
+            </Button>
+          }
+        >
+          <FilterPopover>
+            {filterGroups.map((filter, i) => (
+              <FilterGroup
+                key={i}
+                expanded={i === 0}
+                label={filter.label}
+                filters={filter.options}
+              />
+            ))}
+          </FilterPopover>
+        </Popover>
+      )}
     </Box>
   )
 }

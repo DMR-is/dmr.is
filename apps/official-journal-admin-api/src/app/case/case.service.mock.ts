@@ -1,18 +1,12 @@
+import { isString, isUUID } from 'class-validator'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  ALL_MOCK_CASES,
-  ALL_MOCK_JOURNAL_DEPARTMENTS,
-  ALL_MOCK_USERS,
-  MOCK_PAGING_SINGLE_PAGE,
-} from '@dmr.is/mocks'
+import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseEditorialOverview,
   CaseStatus,
   GetCasesQuery,
   GetCasesReponse,
-  GetDepartmentsQueryParams,
-  GetDepartmentsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
 } from '@dmr.is/shared/dto'
@@ -53,7 +47,18 @@ export class CaseServiceMock implements ICaseService {
       const { page } = params
 
       const filteredCases = ALL_MOCK_CASES.filter((c) => {
-        // todo: search, which fields to search on?
+        if (params?.search) {
+          // for now search for department and name
+
+          if (
+            !c.advert.department.title
+              .toLowerCase()
+              .includes(params.search.toLowerCase()) &&
+            !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
+          ) {
+            return false
+          }
+        }
 
         if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
           return false
@@ -82,6 +87,13 @@ export class CaseServiceMock implements ICaseService {
         }
 
         if (params?.employeeId && c.assignedTo !== params?.employeeId) {
+          return false
+        }
+
+        if (
+          params?.department &&
+          c.advert.department.slug !== params.department.toLowerCase()
+        ) {
           return false
         }
 
@@ -123,8 +135,6 @@ export class CaseServiceMock implements ICaseService {
     const inReview: Case[] = []
     const ready: Case[] = []
 
-    console.log(params?.status)
-
     if (!params?.status) {
       throw new BadRequestException('Missing status')
     }
@@ -143,7 +153,7 @@ export class CaseServiceMock implements ICaseService {
 
     const { cases, paging } = await this.getCases(params)
 
-    console.log(cases)
+    console.log(cases, params)
 
     return Promise.resolve({
       data: cases,

@@ -33,6 +33,9 @@ export const messages = {
     case: {
       name: 'Vinnslusvæði',
     },
+    casePublishing: {
+      name: 'Útgáfa',
+    },
   },
   components: {
     controlPanel: {
@@ -60,6 +63,11 @@ export const messages = {
     },
     ritstjornBanner: {
       title: 'Vinnslusvæði Stjórnartíðinda',
+      description:
+        'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+    },
+    utgafaBanner: {
+      title: 'Útgáfa mála',
       description:
         'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
     },

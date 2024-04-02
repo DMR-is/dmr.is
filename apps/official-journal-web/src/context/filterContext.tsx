@@ -1,4 +1,3 @@
-import uniqBy from 'lodash/uniqBy'
 import { createContext, useState } from 'react'
 
 export type FilterOption = {
@@ -6,46 +5,29 @@ export type FilterOption = {
   value: string
 }
 
+export type FilterGroup = {
+  label: string
+  options: FilterOption[]
+}
+
 type FilterContextProps = {
   searchFilter: string
-  allActiveFilters: FilterOption[]
-  publishingFilterOptions: FilterOption[]
-  typeFilterOptions: FilterOption[]
-  departmentFilterOptions: FilterOption[]
-  categoriesFilterOptions: FilterOption[]
+  filterGroups?: FilterGroup[]
   setSearchFilter: (search: string) => void
-  setPublishingFilterOptions: (options: FilterOption[]) => void
-  setTypeFilterOptions: (options: FilterOption[]) => void
-  setDepartmentFilterOptions: (options: FilterOption[]) => void
-  setCategoriesFilterOptions: (options: FilterOption[]) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
   searchFilter: '',
-  allActiveFilters: [],
-  publishingFilterOptions: [],
-  typeFilterOptions: [],
-  departmentFilterOptions: [],
-  categoriesFilterOptions: [],
-  setSearchFilter: () => null,
-  setPublishingFilterOptions: () => null,
-  setTypeFilterOptions: () => null,
-  setDepartmentFilterOptions: () => null,
-  setCategoriesFilterOptions: () => null,
+  setSearchFilter: () => {},
 })
 
 export const FilterContextProvider = ({
+  filterGroups = [],
   children,
 }: {
   children: React.ReactNode
+  filterGroups?: FilterGroup[]
 }) => {
-  const getAllActiveFilters = (
-    current: FilterOption[],
-    incoming: FilterOption[],
-  ) => {
-    return uniqBy([...current, ...incoming], 'value')
-  }
-
   const setSearchFilter = (search: string) => {
     setState((prev) => ({
       ...prev,
@@ -53,50 +35,10 @@ export const FilterContextProvider = ({
     }))
   }
 
-  const setPublishingFilterOptions = (options: FilterOption[]) => {
-    setState((prev) => ({
-      ...prev,
-      publishingFilterOptions: options,
-      allActiveFilters: getAllActiveFilters(prev.allActiveFilters, options),
-    }))
-  }
-
-  const setTypeFilterOptions = (options: FilterOption[]) => {
-    setState((prev) => ({
-      ...prev,
-      typeFilterOptions: options,
-      allActiveFilters: getAllActiveFilters(prev.allActiveFilters, options),
-    }))
-  }
-
-  const setDepartmentFilterOptions = (options: FilterOption[]) => {
-    setState((prev) => ({
-      ...prev,
-      departmentFilterOptions: options,
-      allActiveFilters: getAllActiveFilters(prev.allActiveFilters, options),
-    }))
-  }
-
-  const setCategoriesFilterOptions = (options: FilterOption[]) => {
-    setState((prev) => ({
-      ...prev,
-      categoriesFilterOptions: options,
-      allActiveFilters: getAllActiveFilters(prev.allActiveFilters, options),
-    }))
-  }
-
   const initalState: FilterContextProps = {
+    filterGroups: filterGroups,
     searchFilter: '',
-    allActiveFilters: [],
-    publishingFilterOptions: [],
-    typeFilterOptions: [],
-    departmentFilterOptions: [],
-    categoriesFilterOptions: [],
     setSearchFilter,
-    setPublishingFilterOptions,
-    setTypeFilterOptions,
-    setDepartmentFilterOptions,
-    setCategoriesFilterOptions,
   }
 
   const [state, setState] = useState(initalState)
