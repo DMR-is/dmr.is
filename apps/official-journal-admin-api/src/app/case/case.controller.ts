@@ -4,13 +4,11 @@ import {
   CaseEditorialOverview,
   GetCasesQuery,
   GetCasesReponse,
-  GetDepartmentsQueryParams,
-  GetDepartmentsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
 } from '@dmr.is/shared/dto'
 
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { ICaseService } from './case.service.interface'
