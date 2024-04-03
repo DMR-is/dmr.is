@@ -86,7 +86,7 @@ export const CASE_IN_PROGRESS: Case = {
     },
     {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
-      type: CaseCommentType.Comment,
+      type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       task: {
@@ -155,9 +155,9 @@ export const CASE_IN_REVIEW: Case = {
     },
     {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
-      type: CaseCommentType.Comment,
+      type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatus.Submitted,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -176,6 +176,30 @@ export const CASE_IN_REVIEW: Case = {
         title: CaseCommentTitle.Comment,
         comment:
           'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Assign,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: 'Pálína J',
+        title: CaseCommentTitle.Assign,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Pálína J',
+        to: 'Yfirlestur',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
       },
     },
   ],
@@ -224,7 +248,7 @@ export const CASE_READY: Case = {
     },
     {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
-      type: CaseCommentType.Comment,
+      type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       task: {
