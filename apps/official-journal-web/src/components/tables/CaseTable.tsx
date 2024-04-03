@@ -22,6 +22,7 @@ export type CaseTableHeadCellProps = {
   children?: React.ReactNode
   name: string
   sortable?: boolean
+  fixed?: boolean
   small?: boolean
 }
 
@@ -40,6 +41,7 @@ export type Props = {
   defaultSort?: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
+  renderLink?: boolean
   paging?: {
     page: number
     totalPages: number
@@ -55,6 +57,7 @@ export type CaseTableColumnSort = {
 export const CaseTable = ({
   columns,
   rows,
+  renderLink = true,
   defaultSort = {
     direction: 'asc',
     key: columns.find((column) => column.sortable)?.name || '',
@@ -122,6 +125,7 @@ export const CaseTable = ({
                 key={index}
                 small={column.small}
                 sortable={column.sortable}
+                fixed={column.fixed}
                 onClick={
                   column.sortable ? () => onSortClick(column.name) : undefined
                 }
@@ -143,25 +147,32 @@ export const CaseTable = ({
                 key={index}
               >
                 {row.cells.map((cell, cellIndex) => (
-                  <TableCell key={cellIndex}>{cell.children}</TableCell>
-                ))}
-                <td align="center" className={styles.linkTableCell}>
-                  <Box
-                    className={styles.seeMoreTableCellLink({
-                      visible: hoveredRow === row.caseId,
-                    })}
+                  <TableCell
+                    fixed={columns.at(cellIndex)?.fixed}
+                    key={cellIndex}
                   >
-                    {!breakpoints.xl ? (
-                      <LinkV2 href={`/ritstjorn/${row.caseId}`}>
-                        <Icon icon="arrowForward" color="blue400" />
-                      </LinkV2>
-                    ) : (
-                      <ArrowLink href={`/ritstjorn/${row.caseId}`}>
-                        {messages.general.see_more}
-                      </ArrowLink>
-                    )}
-                  </Box>
-                </td>
+                    {cell.children}
+                  </TableCell>
+                ))}
+                {renderLink && (
+                  <td align="center" className={styles.linkTableCell}>
+                    <Box
+                      className={styles.seeMoreTableCellLink({
+                        visible: hoveredRow === row.caseId,
+                      })}
+                    >
+                      {!breakpoints.xl ? (
+                        <LinkV2 href={`/ritstjorn/${row.caseId}`}>
+                          <Icon icon="arrowForward" color="blue400" />
+                        </LinkV2>
+                      ) : (
+                        <ArrowLink href={`/ritstjorn/${row.caseId}`}>
+                          {messages.general.see_more}
+                        </ArrowLink>
+                      )}
+                    </Box>
+                  </td>
+                )}
               </tr>
             ))}
           </T.Body>

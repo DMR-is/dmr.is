@@ -14,11 +14,15 @@ type FilterContextProps = {
   searchFilter: string
   filterGroups?: FilterGroup[]
   setSearchFilter: (search: string) => void
+  renderFilters?: boolean
+  setRenderFilters?: (render: boolean) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
   searchFilter: '',
+  renderFilters: true,
   setSearchFilter: () => {},
+  setRenderFilters: () => {},
 })
 
 export const FilterContextProvider = ({
@@ -35,10 +39,19 @@ export const FilterContextProvider = ({
     }))
   }
 
+  const setRenderFilters = (render: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      renderFilters: render,
+    }))
+  }
+
   const initalState: FilterContextProps = {
     filterGroups: filterGroups,
     searchFilter: '',
+    renderFilters: true,
     setSearchFilter,
+    setRenderFilters,
   }
 
   const [state, setState] = useState(initalState)

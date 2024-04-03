@@ -2,13 +2,19 @@ import { useState } from 'react'
 
 import {
   Box,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { Section } from '../components/section/Section'
-import { CaseTablePublishing } from '../components/tables/CaseTablePublishing'
+import {
+  CaseReadyForPublishing,
+  CaseTablePublishing,
+} from '../components/tables/CaseTablePublishing'
+import { CaseTableSelectedCases } from '../components/tables/CaseTableSelectedCases'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -29,6 +35,14 @@ type Props = {
 const CasePublishingPage: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
+  const [selectedCases, setSelectedCases] = useState<CaseReadyForPublishing[]>(
+    [],
+  )
+
+  const [casesReadyForPublication, setCasesReadyForPublication] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseDepartment(get('tab')),
   )
@@ -45,6 +59,7 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
       id: item.id,
       labels: item.fastTrack ? ['fasttrack'] : [],
       title: item.advert.title,
+      caseNumber: `${item.caseNumber}/${item.year}`,
       publicationDate: item.advert.publicationDate,
       institution: item.advert.involvedParty.title,
     }
@@ -54,17 +69,23 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     {
       id: CaseDepartmentTabs.A,
       label: CaseDepartmentTabs.A,
-      content: <CaseTablePublishing data={data} />,
+      content: (
+        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+      ),
     },
     {
       id: CaseDepartmentTabs.B,
       label: CaseDepartmentTabs.B,
-      content: <CaseTablePublishing data={data} />,
+      content: (
+        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+      ),
     },
     {
       id: CaseDepartmentTabs.C,
       label: CaseDepartmentTabs.C,
-      content: <CaseTablePublishing data={data} />,
+      content: (
+        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+      ),
     },
   ]
 
@@ -83,6 +104,28 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
               selectedTab={selectedTab}
               tabs={tabs}
             />
+            <Box display="flex" justifyContent="flexEnd">
+              <Button
+                variant="ghost"
+                disabled={
+                  !selectedCases.length && casesReadyForPublication.length === 0
+                }
+                icon="arrowDown"
+                onClick={() => setCasesReadyForPublication(selectedCases)}
+              >
+                Undirbúa útgáfu
+              </Button>
+            </Box>
+          </GridColumn>
+          <GridColumn
+            paddingTop={2}
+            offset={['0', '0', '0', '1/12']}
+            span={['12/12', '12/12', '12/12', '10/12']}
+          >
+            <Text as="h3" fontWeight="semiBold" marginBottom={2}>
+              Valin mál til útgáfu:
+            </Text>
+            <CaseTableSelectedCases data={casesReadyForPublication} />
           </GridColumn>
         </GridRow>
       </GridContainer>

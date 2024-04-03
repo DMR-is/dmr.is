@@ -6,17 +6,23 @@ import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
 
-type Props = {
-  data: {
-    id: string
-    labels: string[]
-    title: string
-    publicationDate: string | null
-    institution: string
-  }[]
+export type CaseReadyForPublishing = {
+  id: string
+  labels: string[]
+  caseNumber: string
+  title: string
+  publicationDate: string | null
+  institution: string
 }
 
-export const CaseTablePublishing = ({ data }: Props) => {
+type Props = {
+  data: CaseReadyForPublishing[]
+  setSelectedCases: React.Dispatch<
+    React.SetStateAction<CaseReadyForPublishing[]>
+  >
+}
+
+export const CaseTablePublishing = ({ data, setSelectedCases }: Props) => {
   const columns = [
     {
       name: 'select',
@@ -54,7 +60,17 @@ export const CaseTablePublishing = ({ data }: Props) => {
     caseId: row.id,
     cells: [
       {
-        children: <Checkbox />,
+        children: (
+          <Checkbox
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedCases((prev) => prev.concat(row))
+              } else {
+                setSelectedCases((prev) => prev.filter((c) => c.id !== row.id))
+              }
+            }}
+          />
+        ),
       },
       {
         children: row.labels.length > 0 && (

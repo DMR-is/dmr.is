@@ -12,11 +12,13 @@ export const CaseTableEmpty = ({ message }: Props) => {
   return (
     <T.Body>
       <tr className={styles.emptyRow}>
-        <div className={styles.emptyRowMessageWrapper}>
-          <Text color="dark400">
-            <span className={styles.emptyRowMessage}>{msg}</span>
-          </Text>
-        </div>
+        <td>
+          <div className={styles.emptyRowMessageWrapper}>
+            <Text color="dark400">
+              <span className={styles.emptyRowMessage}>{msg}</span>
+            </Text>
+          </div>
+        </td>
       </tr>
       <tr className={styles.emptyRow}></tr>
     </T.Body>
