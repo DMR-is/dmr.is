@@ -1,4 +1,5 @@
 import React from 'react'
+import { MessageDescriptor, useIntl } from 'react-intl'
 
 import {
   AlertMessage,
@@ -18,14 +19,20 @@ import { CaseFilters } from '../case-filters/CaseFilters'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
 
+type BreadcrumbsProps = Array<
+  Omit<React.ComponentProps<typeof Breadcrumbs>['items'][number], 'title'> & {
+    title: string | MessageDescriptor
+  }
+>
+
 type Props = {
-  title?: string
-  description?: string
+  title?: string | MessageDescriptor
+  description?: string | MessageDescriptor
   cards?: BannerCard[]
   imgSrc?: string
   variant?: 'small' | 'large'
   showFilters?: boolean
-  breadcrumbs?: React.ComponentProps<typeof Breadcrumbs>['items']
+  breadcrumbs?: BreadcrumbsProps
   imageColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
   contentColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
 }
@@ -44,6 +51,8 @@ export const Banner = ({
   const { notifications } = useNotificationContext()
   const { renderFilters } = useFilterContext()
 
+  const { formatMessage } = useIntl()
+
   return (
     <Section className={styles.bannerSection}>
       <GridContainer>
@@ -55,15 +64,27 @@ export const Banner = ({
                 span={contentColumnSpan}
                 className={styles.bannerContentColumn}
               >
-                <Breadcrumbs items={breadcrumbs} />
+                <Breadcrumbs
+                  items={breadcrumbs.map((b) => ({
+                    title:
+                      typeof b.title === 'object'
+                        ? formatMessage(b.title)
+                        : b.title,
+                    href: b.href,
+                  }))}
+                />
                 <Text
                   marginTop={breadcrumbs.length ? 1 : 0}
                   marginBottom={1}
                   variant={variant === 'large' ? 'h1' : 'h2'}
                 >
-                  {title}
+                  {typeof title === 'object' ? formatMessage(title) : title}
                 </Text>
-                <Text marginBottom={showFilters ? 4 : 0}>{description}</Text>
+                <Text marginBottom={showFilters ? 4 : 0}>
+                  {typeof description === 'object'
+                    ? formatMessage(description)
+                    : description}
+                </Text>
                 {notifications.length > 0 && (
                   <Box marginBottom={renderFilters ? 3 : 1}>
                     <Stack space={3}>
