@@ -110,6 +110,13 @@
             "in": "query",
             "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -232,6 +239,13 @@
             "required": false,
             "in": "query",
             "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],

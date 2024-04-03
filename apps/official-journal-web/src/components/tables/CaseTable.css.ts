@@ -3,18 +3,29 @@ import { recipe } from '@vanilla-extract/recipes'
 
 import { theme } from '@island.is/island-ui/theme'
 
-export const tableHeadCell = style({
+export const fixedCellWrapper = style({
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  blockSize: '100%',
+  inlineSize: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  zIndex: 1,
+  boxShadow: '4px 0px 4px 0px #0161FD1A',
+})
+
+export const tableHeadCell = {
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing[1],
-})
+}
 
 export const iconWrapper = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
 })
-
 export const nameTableCell = style({
   overflow: 'hidden',
   maxWidth: '66ch',
@@ -28,6 +39,7 @@ export const nameTableCell = style({
 
 export const tableRow = style({
   position: 'relative',
+  backgroundColor: theme.color.white,
   selectors: {
     '&:hover': {
       backgroundColor: theme.color.blue100,

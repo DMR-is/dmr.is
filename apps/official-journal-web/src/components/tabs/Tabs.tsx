@@ -1,7 +1,13 @@
 import { useEffect } from 'react'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 
-import { Box, Text } from '@island.is/island-ui/core'
+import {
+  Box,
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Text,
+} from '@island.is/island-ui/core'
 import { isDefined } from '@island.is/shared/utils'
 
 import * as styles from './Tabs.css'
@@ -41,31 +47,39 @@ export const Tabs = ({
   }, [tab.currentId])
 
   return (
-    <Box dataTestId="hello-empty" position="relative">
-      <TabList {...tab} className={styles.tabsTablist}>
-        {tabs.map(({ label, id }, index) => {
-          const isActive = tab.currentId === id
-          return (
-            <Tab
-              {...tab}
-              key={index}
-              id={`${id ?? index}`}
-              className={styles.tabsTab({ active: isActive })}
-            >
-              <Text fontWeight={isActive ? 'medium' : 'regular'}>{label}</Text>
-            </Tab>
-          )
-        })}
-      </TabList>
-      {tabs.map(({ content, id }, index) => (
-        <TabPanel {...tab} key={index} className={styles.tabsTabPanel}>
-          {onlyRenderSelectedTab && id ? (
-            tab.selectedId === id && <Box>{content}</Box>
-          ) : (
-            <Box>{content}</Box>
-          )}
-        </TabPanel>
-      ))}
-    </Box>
+    <GridContainer position="relative">
+      <GridRow>
+        <GridColumn span={['12/12', '12/12', '12/12', '8/12']}>
+          <TabList {...tab} className={styles.tabsTablist}>
+            {tabs.map(({ label, id }, index) => {
+              const isActive = tab.currentId === id
+              return (
+                <Tab
+                  {...tab}
+                  key={index}
+                  id={`${id ?? index}`}
+                  className={styles.tabsTab({ active: isActive })}
+                >
+                  <Text fontWeight={isActive ? 'medium' : 'regular'}>
+                    {label}
+                  </Text>
+                </Tab>
+              )
+            })}
+          </TabList>
+        </GridColumn>
+      </GridRow>
+      <GridColumn>
+        {tabs.map(({ content, id }, index) => (
+          <TabPanel {...tab} key={index} className={styles.tabsTabPanel}>
+            {onlyRenderSelectedTab && id ? (
+              tab.selectedId === id && <Box>{content}</Box>
+            ) : (
+              <Box>{content}</Box>
+            )}
+          </TabPanel>
+        ))}
+      </GridColumn>
+    </GridContainer>
   )
 }

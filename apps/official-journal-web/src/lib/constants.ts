@@ -8,6 +8,12 @@ export const FALLBACK_DOMAIN = 'https://admin.stjornartidindi.is' // THIS IS A M
 
 export const JSON_ENDING = '.json'
 
+export enum CaseDepartmentTabs {
+  A = 'A-deild',
+  B = 'B-deild',
+  C = 'C-deild',
+}
+
 export enum CaseOverviewTabIds {
   Submitted = 'innsent',
   InProgress = 'grunnvinnsla',

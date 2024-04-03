@@ -1,4 +1,4 @@
-import { Icon, Table as T, Text } from '@island.is/island-ui/core'
+import { Box, Icon, Table as T, Text } from '@island.is/island-ui/core'
 
 import * as styles from './CaseTable.css'
 type Props = {
@@ -6,17 +6,11 @@ type Props = {
   sortable?: boolean
   onClick?: () => void
   className?: string
+  fixed?: boolean
   small?: boolean
 }
 
 import cn from 'classnames'
-
-const smallTableCellStyles = {
-  minWidth: 0,
-  maxWidth: 'none',
-  whiteSpace: 'nowrap',
-  width: 0,
-}
 
 export const TableHeadCell = ({
   children,
@@ -24,15 +18,40 @@ export const TableHeadCell = ({
   className,
   onClick,
   small = false,
+  fixed = false,
 }: Props) => {
   const Wrapper = onClick ? 'button' : 'div'
 
+  const fixedStyles: React.CSSProperties = {
+    position: 'sticky',
+    left: 0,
+  }
+
+  const smallTableCellStyles: React.CSSProperties = {
+    minWidth: 0,
+    maxWidth: 'none',
+    whiteSpace: 'nowrap',
+    width: 0,
+  }
+
+  const tableStyles = {
+    ...(fixed && fixedStyles),
+    ...(small && smallTableCellStyles),
+  }
+
   return (
-    <T.HeadData style={small ? smallTableCellStyles : undefined}>
+    <T.HeadData style={tableStyles}>
       <Wrapper
         onClick={onClick}
-        className={cn(styles.tableHeadCell, className)}
+        className={cn(styles.tableHeadCell, className, {})}
       >
+        {fixed && (
+          <Box
+            paddingX={[2, 3]}
+            paddingY={[1, 2]}
+            className={styles.fixedCellWrapper}
+          />
+        )}
         {typeof children === 'string' ? (
           <Text variant="medium" fontWeight="semiBold">
             {children}

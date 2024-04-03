@@ -9,7 +9,12 @@ import {
   CaseStatusEnum,
   GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
-import { CaseOverviewTabIds, FALLBACK_DOMAIN, JSON_ENDING } from './constants'
+import {
+  CaseDepartmentTabs,
+  CaseOverviewTabIds,
+  FALLBACK_DOMAIN,
+  JSON_ENDING,
+} from './constants'
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
   try {
     return format(new Date(date), df, { locale: is })
@@ -68,6 +73,32 @@ export const mapTabIdToCaseStatus = (param?: unknown) => {
       return GetEditorialOverviewStatusEnum.Tilbi
     default:
       return GetEditorialOverviewStatusEnum.Innsent
+  }
+}
+
+export const mapTabIdToCaseDepartment = (param?: unknown) => {
+  switch (param) {
+    case CaseDepartmentTabs.A:
+      return CaseDepartmentTabs.A
+    case CaseDepartmentTabs.B:
+      return CaseDepartmentTabs.B
+    case CaseDepartmentTabs.C:
+      return CaseDepartmentTabs.C
+    default:
+      return 'A'
+  }
+}
+
+export const mapQueryParamToCaseDepartment = (param?: unknown) => {
+  switch (param) {
+    case CaseDepartmentTabs.A:
+      return 'A-deild'
+    case CaseDepartmentTabs.B:
+      return 'B-deild'
+    case CaseDepartmentTabs.C:
+      return 'C-deild'
+    default:
+      return 'A-deild'
   }
 }
 

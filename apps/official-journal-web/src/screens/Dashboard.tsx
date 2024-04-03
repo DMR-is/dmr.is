@@ -233,7 +233,7 @@ const mockBannerCards = [
   {
     title: messages.components.frontpageBanner.cards.publishing.title,
     text: messages.components.frontpageBanner.cards.publishing.description,
-    link: '/ritstjorn',
+    link: '/utgafa',
     image: '/assets/utgafa-image.svg',
   },
   {

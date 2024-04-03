@@ -117,7 +117,7 @@ export const CASE_IN_REVIEW: Case = {
   applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134z53',
   year: 2024,
   caseNumber: 5824,
-  status: CaseStatus.InReview,
+  status: CaseStatus.ReadyForPublishing,
   tag: CaseTag.InReview,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',

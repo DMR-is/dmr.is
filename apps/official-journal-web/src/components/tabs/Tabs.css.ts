@@ -10,13 +10,16 @@ export const tabsTablist = style({
 })
 
 export const tabsTabPanel = style({
-  paddingBlock: theme.spacing[5],
+  paddingBlockStart: theme.spacing[5],
+  paddingBlockEnd: theme.spacing[3],
 })
 
 export const tabsTab = recipe({
   base: {
+    flex: 1,
     paddingBlock: theme.spacing[1],
     paddingInline: theme.spacing[5],
+    textWrap: 'nowrap',
   },
   variants: {
     active: {

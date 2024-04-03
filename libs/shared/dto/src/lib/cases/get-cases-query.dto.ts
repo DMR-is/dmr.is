@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsDateString,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -8,6 +9,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Department } from '../departments/department.dto'
 import { CaseStatus } from './case-constants'
 
 export class GetCasesQuery {
@@ -118,4 +120,15 @@ export class GetCasesQuery {
   @IsOptional()
   @IsDateString()
   dateTo?: string
+
+  @ApiProperty({
+    name: 'department',
+    description:
+      'Department to filter cases on, takes into account `department` on `Advert`.',
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  department?: string
 }
