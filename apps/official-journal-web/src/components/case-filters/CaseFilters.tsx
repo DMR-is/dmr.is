@@ -13,7 +13,7 @@ import * as styles from './CaseFilters.css'
 
 export const CaseFilters = () => {
   const { add, get } = useQueryParams()
-  const { setSearchFilter, filterGroups } = useFilterContext()
+  const { setSearchFilter, filterGroups, renderFilters } = useFilterContext()
 
   const qs = get('search') ?? ''
 
@@ -23,6 +23,8 @@ export const CaseFilters = () => {
     setLocalSearch(value)
   }
 
+  console.log(renderFilters)
+
   useDebounce(
     () => {
       setSearchFilter(localSearch)
@@ -31,6 +33,10 @@ export const CaseFilters = () => {
     500,
     [localSearch],
   )
+
+  if (!renderFilters) {
+    return null
+  }
 
   return (
     <Box className={styles.caseFilters}>

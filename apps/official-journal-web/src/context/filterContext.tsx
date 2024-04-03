@@ -14,8 +14,8 @@ type FilterContextProps = {
   searchFilter: string
   filterGroups?: FilterGroup[]
   setSearchFilter: (search: string) => void
-  renderFilters?: boolean
-  setRenderFilters?: (render: boolean) => void
+  renderFilters: boolean
+  setRenderFilters: (render: boolean) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({

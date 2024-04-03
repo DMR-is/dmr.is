@@ -6,17 +6,16 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Text,
 } from '@island.is/island-ui/core'
 
+import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
+import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
-import {
-  CaseReadyForPublishing,
-  CaseTablePublishing,
-} from '../components/tables/CaseTablePublishing'
-import { CaseTableSelectedCases } from '../components/tables/CaseTableSelectedCases'
+import { CaseReadyForPublishing } from '../components/tables/CaseTablePublishing'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
+import { useFilterContext } from '../hooks/useFilterContext'
+import { useNotificationContext } from '../hooks/useNotificationContext'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -35,14 +34,8 @@ type Props = {
 const CasePublishingPage: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
-  const [selectedCases, setSelectedCases] = useState<CaseReadyForPublishing[]>(
-    [],
-  )
-
-  const [casesReadyForPublication, setCasesReadyForPublication] = useState<
-    CaseReadyForPublishing[]
-  >([])
-
+  const { setRenderFilters } = useFilterContext()
+  const { setNotifications, clearNotifications } = useNotificationContext()
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseDepartment(get('tab')),
   )
@@ -54,37 +47,52 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     })
   }
 
-  const data = cases.map((item) => {
-    return {
-      id: item.id,
-      labels: item.fastTrack ? ['fasttrack'] : [],
-      title: item.advert.title,
-      caseNumber: `${item.caseNumber}/${item.year}`,
-      publicationDate: item.advert.publicationDate,
-      institution: item.advert.involvedParty.title,
-    }
-  })
+  const [casesToPublish, setCasesToPublish] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
+  const proceedToPublishing = (selectedCases: CaseReadyForPublishing[]) => {
+    setCasesToPublish(selectedCases)
+    setRenderFilters(false)
+    setNotifications({
+      title: 'Mál til útgáfu',
+      message:
+        'Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar.',
+      type: 'warning',
+    })
+  }
+
+  const publishCases = () => {
+    clearNotifications()
+    setNotifications({
+      title: 'Útgáfa mála heppnaðist',
+      message: 'Málin eru nú orðin sýnileg á ytri vef.',
+      type: 'success',
+    })
+    setRenderFilters(true)
+    setCasesToPublish([])
+  }
 
   const tabs = [
     {
       id: CaseDepartmentTabs.A,
       label: CaseDepartmentTabs.A,
       content: (
-        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
       ),
     },
     {
       id: CaseDepartmentTabs.B,
       label: CaseDepartmentTabs.B,
       content: (
-        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
       ),
     },
     {
       id: CaseDepartmentTabs.C,
       label: CaseDepartmentTabs.C,
       content: (
-        <CaseTablePublishing setSelectedCases={setSelectedCases} data={data} />
+        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
       ),
     },
   ]
@@ -96,36 +104,44 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
           <GridColumn
             paddingTop={2}
             offset={['0', '0', '0', '1/12']}
-            span={['12/12', '12/12', '12/12', '10/12']}
+            span={[
+              '12/12',
+              '12/12',
+              '12/12',
+              casesToPublish.length ? '7/12' : '10/12',
+            ]}
           >
-            <Tabs
-              onlyRenderSelectedTab={true}
-              onTabChange={onTabChange}
-              selectedTab={selectedTab}
-              tabs={tabs}
-            />
-            <Box display="flex" justifyContent="flexEnd">
-              <Button
-                variant="ghost"
-                disabled={
-                  !selectedCases.length && casesReadyForPublication.length === 0
-                }
-                icon="arrowDown"
-                onClick={() => setCasesReadyForPublication(selectedCases)}
-              >
-                Undirbúa útgáfu
-              </Button>
-            </Box>
-          </GridColumn>
-          <GridColumn
-            paddingTop={2}
-            offset={['0', '0', '0', '1/12']}
-            span={['12/12', '12/12', '12/12', '10/12']}
-          >
-            <Text as="h3" fontWeight="semiBold" marginBottom={2}>
-              Valin mál til útgáfu:
-            </Text>
-            <CaseTableSelectedCases data={casesReadyForPublication} />
+            {casesToPublish.length > 0 ? (
+              <>
+                <CasePublishingList
+                  cases={cases.filter((cs) =>
+                    casesToPublish.find((c) => c.id === cs.id),
+                  )}
+                  onContinue={() => {}}
+                />
+                <Box marginTop={3} display="flex" justifyContent="spaceBetween">
+                  <Button
+                    onClick={() => {
+                      setCasesToPublish([])
+                      clearNotifications()
+                      setRenderFilters(true)
+                    }}
+                    variant="ghost"
+                  >
+                    Til baka í útgáfu mála
+                  </Button>
+                  <Button onClick={publishCases} icon="arrowForward">
+                    Gefa út öll mál
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <Tabs
+                onTabChange={onTabChange}
+                selectedTab={selectedTab}
+                tabs={tabs}
+              />
+            )}
           </GridColumn>
         </GridRow>
       </GridContainer>
@@ -139,6 +155,7 @@ CasePublishingPage.getProps = async ({ query }) => {
   const client = createDmrClient()
 
   const { cases, paging } = await client.getCases({
+    search: search as string,
     status: GetCasesStatusEnum.Tilbi,
     department: mapTabIdToCaseDepartment(tab),
   })

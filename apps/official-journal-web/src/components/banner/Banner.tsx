@@ -1,12 +1,16 @@
 import {
+  AlertMessage,
   Box,
   Breadcrumbs,
   GridColumn,
   GridContainer,
   GridRow,
+  Stack,
   Text,
 } from '@island.is/island-ui/core'
 
+import { useFilterContext } from '../../hooks/useFilterContext'
+import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 import { CaseFilters } from '../case-filters/CaseFilters'
 import { Section } from '../section/Section'
@@ -31,6 +35,9 @@ export const Banner = ({
   showFilters = false,
   breadcrumbs = [],
 }: Props) => {
+  const { notifications } = useNotificationContext()
+  const { renderFilters } = useFilterContext()
+
   return (
     <Section className={styles.bannerSection}>
       <GridContainer>
@@ -51,6 +58,20 @@ export const Banner = ({
                   {title}
                 </Text>
                 <Text marginBottom={showFilters ? 4 : 0}>{description}</Text>
+                {notifications.length > 0 && (
+                  <Box marginBottom={renderFilters ? 3 : 1}>
+                    <Stack space={3}>
+                      {notifications.map((notification, index) => (
+                        <AlertMessage
+                          key={index}
+                          type={notification.type ?? 'info'}
+                          title={notification.title}
+                          message={notification.message}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
                 {showFilters && <CaseFilters />}
               </GridColumn>
             </>

@@ -17,18 +17,29 @@ export type CaseReadyForPublishing = {
 
 type Props = {
   data: CaseReadyForPublishing[]
+  selectedCases: CaseReadyForPublishing[]
   setSelectedCases: React.Dispatch<
     React.SetStateAction<CaseReadyForPublishing[]>
   >
 }
 
-export const CaseTablePublishing = ({ data, setSelectedCases }: Props) => {
+export const CaseTablePublishing = ({
+  data,
+  setSelectedCases,
+  selectedCases,
+}: Props) => {
   const columns = [
     {
       name: 'select',
       sortable: false,
       small: true,
-      children: <Checkbox />,
+      children: (
+        <Checkbox
+          onChange={(e) => {
+            setSelectedCases(e.target.checked ? data : [])
+          }}
+        />
+      ),
     },
     {
       name: 'caseLabels',
@@ -62,6 +73,7 @@ export const CaseTablePublishing = ({ data, setSelectedCases }: Props) => {
       {
         children: (
           <Checkbox
+            checked={selectedCases.some((c) => c.id === row.id)}
             onChange={(e) => {
               if (e.target.checked) {
                 setSelectedCases((prev) => prev.concat(row))
