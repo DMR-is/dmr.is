@@ -1,3 +1,5 @@
+import React from 'react'
+
 import {
   AlertMessage,
   Box,
@@ -24,6 +26,8 @@ type Props = {
   variant?: 'small' | 'large'
   showFilters?: boolean
   breadcrumbs?: React.ComponentProps<typeof Breadcrumbs>['items']
+  imageColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
+  contentColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
 }
 
 export const Banner = ({
@@ -34,6 +38,8 @@ export const Banner = ({
   variant,
   showFilters = false,
   breadcrumbs = [],
+  imageColumnSpan = ['12/12', '12/12', '5/12'],
+  contentColumnSpan = ['12/12', '12/12', '5/12'],
 }: Props) => {
   const { notifications } = useNotificationContext()
   const { renderFilters } = useFilterContext()
@@ -46,7 +52,7 @@ export const Banner = ({
             <>
               <GridColumn span={['12/12', '12/12', '1/12']}></GridColumn>
               <GridColumn
-                span={['12/12', '12/12', '5/12']}
+                span={contentColumnSpan}
                 className={styles.bannerContentColumn}
               >
                 <Breadcrumbs items={breadcrumbs} />
@@ -79,7 +85,7 @@ export const Banner = ({
           {imgSrc && (
             <GridColumn
               className={styles.bannerImageColumn}
-              span={['12/12', '12/12', '5/12']}
+              span={imageColumnSpan}
             >
               <Box justifyContent="center" display="flex">
                 <Box component="img" src={imgSrc} />

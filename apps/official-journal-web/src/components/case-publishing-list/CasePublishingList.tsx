@@ -1,14 +1,15 @@
+import { Stack } from '@island.is/island-ui/core'
+
 import { Case } from '../../gen/fetch'
 import { CaseCard } from '../cards/CaseCard'
 
 type Props = {
   cases: Case[]
-  onContinue: (selectedCases: Case[]) => void
 }
 
-export const CasePublishingList = ({ cases, onContinue }: Props) => {
+export const CasePublishingList = ({ cases }: Props) => {
   return (
-    <ul>
+    <Stack space={3} component="ul">
       {cases.map((c, i) => (
         <CaseCard
           key={i}
@@ -21,6 +22,6 @@ export const CasePublishingList = ({ cases, onContinue }: Props) => {
           categories={c.advert.categories.map((cat) => cat.title)}
         />
       ))}
-    </ul>
+    </Stack>
   )
 }

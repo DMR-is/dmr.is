@@ -31,14 +31,53 @@ type Props = {
   cases: Case[]
 }
 
+enum CasePublishScreens {
+  Overview = 'overview',
+  Confirm = 'confirm',
+}
+
 const CasePublishingPage: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
   const { setRenderFilters } = useFilterContext()
   const { setNotifications, clearNotifications } = useNotificationContext()
+
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseDepartment(get('tab')),
   )
+
+  const [screen, setScreen] = useState(CasePublishScreens.Overview)
+
+  const [casesToPublish, setCasesToPublish] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
+  const [departmentACases, setDepartmentACases] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
+  const [departmentBCases, setDepartmentBCases] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
+  const [departmentCCases, setDepartmentCCases] = useState<
+    CaseReadyForPublishing[]
+  >([])
+
+  const [
+    departmentACasesReadyForPublication,
+    setDepartmentACasesReadyForPublication,
+  ] = useState<CaseReadyForPublishing[]>([])
+
+  const [
+    departmentBCasesReadyForPublication,
+    setDepartmentBCasesReadyForPublication,
+  ] = useState<CaseReadyForPublishing[]>([])
+
+  const [
+    departmentCCasesReadyForPublication,
+    setDepartmentCCasesReadyForPublication,
+  ] = useState<CaseReadyForPublishing[]>([])
 
   const onTabChange = (id: string) => {
     setSelectedTab(mapQueryParamToCaseDepartment(id))
@@ -47,13 +86,15 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     })
   }
 
-  const [casesToPublish, setCasesToPublish] = useState<
-    CaseReadyForPublishing[]
-  >([])
+  const backToOverview = () => {
+    setScreen(CasePublishScreens.Overview)
+  }
 
   const proceedToPublishing = (selectedCases: CaseReadyForPublishing[]) => {
     setCasesToPublish(selectedCases)
     setRenderFilters(false)
+    setScreen(CasePublishScreens.Confirm)
+    clearNotifications()
     setNotifications({
       title: 'Mál til útgáfu',
       message:
@@ -78,21 +119,42 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
       id: CaseDepartmentTabs.A,
       label: CaseDepartmentTabs.A,
       content: (
-        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
+        <CasePublishingTab
+          casesReadyForPublication={departmentACasesReadyForPublication}
+          setCasesReadyForPublication={setDepartmentACasesReadyForPublication}
+          selectedCases={departmentACases}
+          setSelectedCases={setDepartmentACases}
+          onContinue={proceedToPublishing}
+          cases={cases}
+        />
       ),
     },
     {
       id: CaseDepartmentTabs.B,
       label: CaseDepartmentTabs.B,
       content: (
-        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
+        <CasePublishingTab
+          casesReadyForPublication={departmentBCasesReadyForPublication}
+          setCasesReadyForPublication={setDepartmentBCasesReadyForPublication}
+          selectedCases={departmentBCases}
+          setSelectedCases={setDepartmentBCases}
+          onContinue={proceedToPublishing}
+          cases={cases}
+        />
       ),
     },
     {
       id: CaseDepartmentTabs.C,
       label: CaseDepartmentTabs.C,
       content: (
-        <CasePublishingTab onContinue={proceedToPublishing} cases={cases} />
+        <CasePublishingTab
+          casesReadyForPublication={departmentCCasesReadyForPublication}
+          setCasesReadyForPublication={setDepartmentCCasesReadyForPublication}
+          selectedCases={departmentCCases}
+          setSelectedCases={setDepartmentCCases}
+          onContinue={proceedToPublishing}
+          cases={cases}
+        />
       ),
     },
   ]
@@ -108,26 +170,18 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
               '12/12',
               '12/12',
               '12/12',
-              casesToPublish.length ? '7/12' : '10/12',
+              screen === CasePublishScreens.Confirm ? '7/12' : '10/12',
             ]}
           >
-            {casesToPublish.length > 0 ? (
+            {screen === CasePublishScreens.Confirm ? (
               <>
                 <CasePublishingList
                   cases={cases.filter((cs) =>
                     casesToPublish.find((c) => c.id === cs.id),
                   )}
-                  onContinue={() => {}}
                 />
                 <Box marginTop={3} display="flex" justifyContent="spaceBetween">
-                  <Button
-                    onClick={() => {
-                      setCasesToPublish([])
-                      clearNotifications()
-                      setRenderFilters(true)
-                    }}
-                    variant="ghost"
-                  >
+                  <Button onClick={backToOverview} variant="ghost">
                     Til baka í útgáfu mála
                   </Button>
                   <Button onClick={publishCases} icon="arrowForward">
@@ -179,10 +233,12 @@ export default withMainLayout(CasePublishingPage, {
   bannerProps: {
     showBanner: true,
     showFilters: true,
-    imgSrc: '/assets/banner-small-image.svg',
+    imgSrc: '/assets/banner-publish-image.svg',
     title: messages.components.utgafaBanner.title,
     description: messages.components.utgafaBanner.description,
     variant: 'small',
+    contentColumnSpan: ['12/12', '12/12', '7/12'],
+    imageColumnSpan: ['12/12', '12/12', '3/12'],
     breadcrumbs: [
       {
         title: messages.pages.frontpage.name,

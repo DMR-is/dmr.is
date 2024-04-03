@@ -11,18 +11,25 @@ import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 
 type Props = {
   cases: Case[]
+  selectedCases: CaseReadyForPublishing[]
+  setSelectedCases: React.Dispatch<
+    React.SetStateAction<CaseReadyForPublishing[]>
+  >
   onContinue: (selectedCases: CaseReadyForPublishing[]) => void
+  casesReadyForPublication: CaseReadyForPublishing[]
+  setCasesReadyForPublication: React.Dispatch<
+    React.SetStateAction<CaseReadyForPublishing[]>
+  >
 }
 
-export const CasePublishingTab = ({ cases, onContinue }: Props) => {
-  const [selectedCases, setSelectedCases] = useState<CaseReadyForPublishing[]>(
-    [],
-  )
-
-  const [casesReadyForPublication, setCasesReadyForPublication] = useState<
-    CaseReadyForPublishing[]
-  >([])
-
+export const CasePublishingTab = ({
+  cases,
+  onContinue,
+  selectedCases,
+  setSelectedCases,
+  casesReadyForPublication,
+  setCasesReadyForPublication,
+}: Props) => {
   const data = cases.map((item) => {
     return {
       id: item.id,

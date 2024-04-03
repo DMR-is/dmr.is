@@ -68,6 +68,8 @@ const Layout: Screen<LayoutProps> = ({
                   cards={bannerProps.cards}
                   showFilters={bannerProps.showFilters}
                   breadcrumbs={bannerProps.breadcrumbs}
+                  contentColumnSpan={bannerProps.contentColumnSpan}
+                  imageColumnSpan={bannerProps.imageColumnSpan}
                 />
               )}
               {children}
