@@ -318,8 +318,9 @@ export const ADVERT_NEW: Advert = {
       (s) => s.advertId === 'bcbefaf4-c021-4b63-877b-001dde880052',
     ) || null,
   attachments: [
-    { name: 'Viðauki A.pdf', url: '/vidauki-a.pdf' },
-    { name: 'Undirritun.pdf', url: '/undirritun.pdf' },
+    { name: 'Viðauki A.pdf', type: 'addendum', url: '/vidauki-a.pdf' },
+    { name: 'Undirritun.pdf', type: 'signature', url: '/undirritun.pdf' },
+    { name: 'Fylgiskjal.pdf', type: 'attachment', url: '/fylgiskjal.pdf' },
   ],
 }
 
@@ -351,8 +352,9 @@ export const ADVERT_B_866_2006: Advert = {
       (s) => s.advertId === 'bcbefaf4-c021-4b63-877b-001dde880052',
     ) || null,
   attachments: [
-    { name: 'Viðauki A.pdf', url: '/vidauki-a.pdf' },
-    { name: 'Undirritun.pdf', url: '/undirritun.pdf' },
+    { name: 'Viðauki A.pdf', type: 'addendum', url: '/vidauki-a.pdf' },
+    { name: 'Undirritun.pdf', type: 'signature', url: '/undirritun.pdf' },
+    { name: 'Fylgiskjal.pdf', type: 'attachment', url: '/fylgiskjal.pdf' },
   ],
 }
 
@@ -384,8 +386,9 @@ export const ADVERT_B_1278_2023: Advert = {
       (s) => s.advertId === '749f1eff-236d-4c67-a4cc-eb7a7bbd373f',
     ) || null,
   attachments: [
-    { name: 'Viðauki A.pdf', url: '/vidauki-a.pdf' },
-    { name: 'Undirritun.pdf', url: '/undirritun.pdf' },
+    { name: 'Viðauki A.pdf', type: 'addendum', url: '/vidauki-a.pdf' },
+    { name: 'Undirritun.pdf', type: 'signature', url: '/undirritun.pdf' },
+    { name: 'Fylgiskjal.pdf', type: 'attachment', url: '/fylgiskjal.pdf' },
   ],
 }
 

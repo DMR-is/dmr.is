@@ -1027,13 +1027,18 @@
             "description": "File name for Attachment.",
             "example": "Viðauki.pdf"
           },
+          "type": {
+            "type": "string",
+            "description": "Type Attachment.",
+            "example": "addendum"
+          },
           "url": {
             "type": "string",
             "description": "URL for Attachment.",
             "example": "<url>"
           }
         },
-        "required": ["name", "url"]
+        "required": ["name", "type", "url"]
       },
       "Advert": {
         "type": "object",

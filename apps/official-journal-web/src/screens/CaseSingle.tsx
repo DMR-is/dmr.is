@@ -125,11 +125,11 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-        <Comments activeCase={activeCase} />
-
         {activeCase.advert.attachments.length ? (
           <Attachments activeCase={activeCase} />
         ) : null}
+
+        <Comments activeCase={activeCase} />
 
         <Box
           display="flex"
