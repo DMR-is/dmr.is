@@ -4,22 +4,22 @@ export const messages = {
   tabs: defineMessages({
     submitted: {
       id: 'web.page.caseOverview:tabs.submitted',
-      defaultMessage: 'Innsendingar {count}',
+      defaultMessage: 'Innsendingar ({count})',
       description: 'Tab label for submitted cases',
     },
     inProgress: {
       id: 'web.page.caseOverview:tabs.inProgress',
-      defaultMessage: 'Grunnvinnsla {count}',
+      defaultMessage: 'Grunnvinnsla ({count})',
       description: 'Tab label for cases in progress',
     },
     inReview: {
       id: 'web.page.caseOverview:tabs.inReview',
-      defaultMessage: 'Yfirlestur {count}',
+      defaultMessage: 'Yfirlestur ({count})',
       description: 'Tab label for cases in review',
     },
     ready: {
       id: 'web.page.caseOverview:tabs.ready',
-      defaultMessage: 'Tilbúið {count}',
+      defaultMessage: 'Tilbúið ({count})',
       description: 'Tab label for cases ready',
     },
   }),

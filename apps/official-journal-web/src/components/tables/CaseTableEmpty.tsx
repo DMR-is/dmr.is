@@ -1,14 +1,16 @@
 import { Table as T, Text } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './CaseTable.css'
+import { messages } from './messages'
 
 type Props = {
   message?: string
 }
 
 export const CaseTableEmpty = ({ message }: Props) => {
-  const msg = message ? message : messages.components.tables.empty.message
+  const { formatMessage } = useFormatMessage()
+  const msg = message ? message : formatMessage(messages.general.emptyTable)
   return (
     <T.Body>
       <tr className={styles.emptyRow}>

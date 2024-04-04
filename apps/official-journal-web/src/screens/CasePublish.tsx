@@ -11,7 +11,7 @@ import {
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
-import { CaseReadyForPublishing } from '../components/tables/CaseTablePublishing'
+import { CaseReadyForPublishing } from '../components/tables/CaseTableReady'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
