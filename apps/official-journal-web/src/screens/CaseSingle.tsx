@@ -12,9 +12,10 @@ import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
 import { FormStepperThemes } from '../components/form-stepper/types'
 import { Case, CaseStatusEnum } from '../gen/fetch'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { messages } from '../lib/messages'
+import { messages } from '../lib/messages/caseSingle'
 import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
@@ -24,6 +25,8 @@ type Props = {
 }
 
 const CaseSingle: Screen<Props> = ({ activeCase }) => {
+  const { formatMessage } = useFormatMessage()
+
   if (!activeCase) {
     return null
   }
@@ -42,19 +45,19 @@ const CaseSingle: Screen<Props> = ({ activeCase }) => {
   return (
     <FormShell
       header={{
-        title: messages.components.caseBanner.title,
-        description: messages.components.caseBanner.description,
+        title: formatMessage(messages.banner.title),
+        description: formatMessage(messages.banner.description),
         breadcrumbs: [
           {
-            title: messages.pages.frontpage.name,
+            title: formatMessage(messages.breadcrumbs.dashboard),
             href: '/',
           },
           {
-            title: messages.pages.caseOverview.name,
+            title: formatMessage(messages.breadcrumbs.caseOverview),
             href: '/ritstjorn',
           },
           {
-            title: messages.pages.case.name,
+            title: formatMessage(messages.breadcrumbs.case),
           },
         ],
       }}
@@ -156,6 +159,6 @@ export default withMainLayout(CaseSingle, {
   bannerProps: {
     showBanner: false,
     showFilters: false,
-    title: messages.components.ritstjornBanner.title,
+    title: messages.banner.title,
   },
 })
