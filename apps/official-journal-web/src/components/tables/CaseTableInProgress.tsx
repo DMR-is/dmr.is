@@ -1,15 +1,18 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
+import { messages } from './messages'
 
 type Props = {
   data: Array<CaseTableItem>
 }
 export const CaseTableInProgress = ({ data }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const columns = [
     {
       name: 'caseLabels',
@@ -20,33 +23,25 @@ export const CaseTableInProgress = ({ data }: Props) => {
       name: 'casePublishDate',
       sortable: true,
       small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.publicationDate,
-    },
-    {
-      name: 'caseRegistrationDate',
-      sortable: true,
-      small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.registrationDate,
+      children: formatMessage(messages.tables.inProgress.columns.publishDate),
     },
     {
       name: 'caseDepartment',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.department,
+      children: formatMessage(messages.tables.inProgress.columns.department),
     },
     {
       name: 'caseName',
       sortable: true,
       small: false,
-      children: messages.components.tables.caseOverview.headCells.title,
+      children: formatMessage(messages.tables.inProgress.columns.title),
     },
     {
       name: 'caseEmployee',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.employee,
+      children: formatMessage(messages.tables.inProgress.columns.employee),
     },
   ]
 
@@ -68,13 +63,6 @@ export const CaseTableInProgress = ({ data }: Props) => {
         sortingValue: row.publicationDate,
         children: (
           <Text variant="medium">{formatDate(row.publicationDate)}</Text>
-        ),
-      },
-      {
-        sortingKey: 'caseRegistrationDate',
-        sortingValue: row.registrationDate,
-        children: (
-          <Text variant="medium">{formatDate(row.registrationDate)}</Text>
         ),
       },
       {

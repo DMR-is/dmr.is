@@ -1,10 +1,11 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
+import { messages } from './messages'
 
 type Props = {
   data: CaseTableItem[]
@@ -12,11 +13,13 @@ type Props = {
   setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
 }
 
-export const CaseTablePublishing = ({
+export const CaseTableReady = ({
   data,
   setSelectedCases,
   selectedCases,
 }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const columns = [
     {
       name: 'select',
@@ -39,20 +42,19 @@ export const CaseTablePublishing = ({
       name: 'casePublicationDate',
       sortable: false,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.title,
+      children: formatMessage(messages.tables.ready.columns.title),
     },
     {
       name: 'caseName',
       sortable: false,
       small: false,
-      children:
-        messages.components.tables.caseOverview.headCells.publicationDate,
+      children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
       name: 'caseInstitution',
       sortable: false,
       small: true,
-      children: 'Stofnun',
+      children: formatMessage(messages.tables.ready.columns.institution),
     },
   ]
 

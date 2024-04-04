@@ -3,11 +3,13 @@ import { useState } from 'react'
 import { Box, Button, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import {
   CaseReadyForPublishing,
-  CaseTablePublishing,
-} from '../tables/CaseTablePublishing'
+  CaseTableReady,
+} from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
+import { messages } from './messages'
 
 type Props = {
   cases: Case[]
@@ -30,6 +32,8 @@ export const CasePublishingTab = ({
   casesReadyForPublication,
   setCasesReadyForPublication,
 }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const data = cases.map((item) => {
     return {
       id: item.id,
@@ -43,7 +47,7 @@ export const CasePublishingTab = ({
 
   return (
     <Box>
-      <CaseTablePublishing
+      <CaseTableReady
         selectedCases={selectedCases}
         setSelectedCases={setSelectedCases}
         data={data}
@@ -57,18 +61,18 @@ export const CasePublishingTab = ({
           icon="arrowDown"
           onClick={() => setCasesReadyForPublication(selectedCases)}
         >
-          Undirbúa útgáfu
+          {formatMessage(messages.general.preparePublishing)}
         </Button>
       </Box>
 
       <Text as="h3" fontWeight="semiBold" marginBottom={2}>
-        Valin mál til útgáfu:
+        {formatMessage(messages.general.selectedCasesForPublishing)}
       </Text>
       <CaseTableSelectedCases data={casesReadyForPublication} />
       {casesReadyForPublication.length > 0 && (
         <Box marginTop={3} display="flex" justifyContent="flexEnd">
           <Button onClick={() => onContinue(casesReadyForPublication)}>
-            Gefa út valin mál
+            {formatMessage(messages.general.publishCases)}
           </Button>
         </Box>
       )}

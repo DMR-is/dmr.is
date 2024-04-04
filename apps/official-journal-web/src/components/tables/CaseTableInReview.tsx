@@ -1,17 +1,20 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
+import { messages } from './messages'
 
 type Props = {
   data: CaseTableItem[]
 }
 
 export const CaseTableInReview = ({ data }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const columns = [
     {
       name: 'caseLabels',
@@ -22,39 +25,39 @@ export const CaseTableInReview = ({ data }: Props) => {
       name: 'casePublishDate',
       sortable: true,
       small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.publicationDate,
+      children: formatMessage(messages.tables.inReview.columns.publishDate),
     },
     {
       name: 'caseRegistrationDate',
       sortable: true,
       small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.registrationDate,
+      children: formatMessage(
+        messages.tables.inReview.columns.registrationDate,
+      ),
     },
     {
       name: 'caseDepartment',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.department,
+      children: formatMessage(messages.tables.inReview.columns.department),
     },
     {
       name: 'caseName',
       sortable: true,
       small: false,
-      children: messages.components.tables.caseOverview.headCells.title,
+      children: formatMessage(messages.tables.inReview.columns.title),
     },
     {
       name: 'caseEmployee',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.employee,
+      children: formatMessage(messages.tables.inReview.columns.employee),
     },
     {
       name: 'caseTag',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.tags,
+      children: formatMessage(messages.tables.inReview.columns.tags),
     },
   ]
 

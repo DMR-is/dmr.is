@@ -13,12 +13,13 @@ import {
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { caseStatusMap } from '../../lib/utils'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
 import { TableHeadCell } from './CaseTableHeadCell'
+import { messages } from './messages'
 
 export type CaseTableHeadCellProps = {
   children?: React.ReactNode
@@ -67,6 +68,8 @@ export const CaseTable = ({
   },
   paging,
 }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
@@ -178,7 +181,7 @@ export const CaseTable = ({
                             caseStatusMap[row.status]
                           }`}
                         >
-                          {messages.general.see_more}
+                          {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>
                       )}
                     </Box>

@@ -1,8 +1,9 @@
 import { Box, Text } from '@island.is/island-ui/core'
 
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import type { AdvertCategory } from '../../hooks/useMockAdvertOverview'
-import { messages } from '../../lib/messages'
 import * as styles from './AdvertsOverviewList.css'
+import { messages } from './messages'
 
 type Category = {
   text: string
@@ -27,21 +28,21 @@ const AdvertsOverviewListItem = ({ children }: ItemProps) => {
 }
 
 export const AdvertsOverviewList = ({ variant = 'default', data }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   if (!data || data?.totalAdverts === 0) {
     return (
       <Box className={styles.advertsOverviewListEmpty}>
         <div>
-          <Text variant="h3">
-            {messages.components.adverts_overview_list.empty.title}
-          </Text>
+          <Text variant="h3">{formatMessage(messages.empty.title)}</Text>
           <Text>
             {variant === 'default'
-              ? messages.components.adverts_overview_list.empty.editorial
+              ? formatMessage(messages.empty.editorial)
               : variant === 'readyForPublishing'
-              ? messages.components.adverts_overview_list.empty.published
+              ? formatMessage(messages.empty.published)
               : variant === 'assigned'
-              ? messages.components.adverts_overview_list.empty.assigned
-              : messages.components.adverts_overview_list.empty.inactive}
+              ? formatMessage(messages.empty.assigned)
+              : formatMessage(messages.empty.inactive)}
           </Text>
         </div>
         <Box component="img" src="/assets/empty-image.svg" />

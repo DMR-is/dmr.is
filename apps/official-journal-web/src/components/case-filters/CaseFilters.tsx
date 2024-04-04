@@ -4,16 +4,17 @@ import { useDebounce } from 'react-use'
 import { Box, Button, Input } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../hooks/useFilterContext'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
-import { messages } from '../../lib/messages'
 import { FilterGroup } from '../filter-group/FilterGroup'
 import { FilterPopover } from '../filter-popover/FilterPopover'
 import { Popover } from '../popover/Popover'
 import * as styles from './CaseFilters.css'
-
+import { messages } from './messages'
 export const CaseFilters = () => {
   const { add, get } = useQueryParams()
   const { setSearchFilter, filterGroups, renderFilters } = useFilterContext()
+  const { formatMessage } = useFormatMessage()
 
   const qs = get('search') ?? ''
 
@@ -22,8 +23,6 @@ export const CaseFilters = () => {
   const onStateUpdate = (value: string) => {
     setLocalSearch(value)
   }
-
-  console.log(renderFilters)
 
   useDebounce(
     () => {
@@ -45,7 +44,7 @@ export const CaseFilters = () => {
         icon={{ name: 'search', type: 'outline' }}
         backgroundColor="blue"
         name="filter"
-        placeholder="Leita eftir málsnafni"
+        placeholder={formatMessage(messages.general.searchPlaceholder)}
         value={localSearch}
         onChange={(e) => onStateUpdate(e.target.value)}
       />
@@ -53,7 +52,7 @@ export const CaseFilters = () => {
         <Popover
           disclosure={
             <Button variant="utility" icon="filter">
-              {messages.general.open_filter}
+              {formatMessage(messages.general.openFilter)}
             </Button>
           }
         >

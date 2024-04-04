@@ -1,16 +1,19 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
+import { messages } from './messages'
 
 type Props = {
   data: Array<CaseTableItem>
 }
 
 export const CaseTableSubmitted = ({ data }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const columns = [
     {
       name: 'caseLabels',
@@ -21,27 +24,29 @@ export const CaseTableSubmitted = ({ data }: Props) => {
       name: 'casePublishDate',
       sortable: true,
       small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.publicationDate,
+      children: formatMessage(
+        messages.tables.submitted.columns.publicationDate,
+      ),
     },
     {
       name: 'caseRegistrationDate',
       sortable: true,
       small: true,
-      children:
-        messages.components.tables.caseOverview.headCells.registrationDate,
+      children: formatMessage(
+        messages.tables.submitted.columns.registrationDate,
+      ),
     },
     {
       name: 'caseDepartment',
       sortable: true,
       small: true,
-      children: messages.components.tables.caseOverview.headCells.department,
+      children: formatMessage(messages.tables.submitted.columns.department),
     },
     {
       name: 'caseName',
       sortable: true,
       small: false,
-      children: messages.components.tables.caseOverview.headCells.title,
+      children: formatMessage(messages.tables.submitted.columns.title),
     },
   ]
 
