@@ -1,10 +1,12 @@
 import {
   Box,
   Checkbox,
-  Divider,
+  DatePicker,
   Inline,
   Input,
+  Select,
   Stack,
+  StringOption,
   Tag,
   Text,
 } from '@island.is/island-ui/core'
@@ -15,6 +17,18 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 type Props = {
   activeCase: Case
 }
+
+const departmentOptions: StringOption[] = [
+  { label: 'A deild', value: 'A deild' },
+  { label: 'B deild', value: 'B deild' },
+  { label: 'C deild', value: 'C deild' },
+]
+
+const typeOptions: StringOption[] = [
+  { label: 'AUGLÝSING', value: 'AUGLÝSING' },
+  { label: 'GJALDSKRÁ', value: 'GJALDSKRÁ' },
+  { label: 'REGLUGERÐ', value: 'REGLUGERÐ' },
+]
 
 export const StepGrunnvinnsla = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
@@ -34,7 +48,6 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
           />
 
           <Input
-            readOnly
             name="title"
             value={activeCase?.advert.title}
             label="Heiti auglýsingar"
@@ -42,31 +55,25 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
           />
 
           <Inline space={2} alignY="center">
-            <Input
-              readOnly
-              name="title"
-              value={activeCase?.advert.department.title}
+            <Select
+              name="department"
+              value={departmentOptions.find(
+                (o) => o.value === activeCase?.advert.department.title,
+              )}
+              options={departmentOptions}
               label="Deild"
               size="sm"
             />
           </Inline>
 
           <Inline space={2} alignY="center">
-            <Input
-              readOnly
-              name="title"
-              value={activeCase?.advert.type.title}
+            <Select
+              name="type"
+              value={typeOptions.find(
+                (o) => o.value === activeCase?.advert.type.title,
+              )}
+              options={typeOptions}
               label="Tegund"
-              size="sm"
-            />
-          </Inline>
-
-          <Inline space={2} alignY="center">
-            <Input
-              readOnly
-              name="date"
-              value={activeCase?.advert.publicationDate ?? undefined}
-              label="Dagsetning birtingar"
               size="sm"
             />
           </Inline>
@@ -86,25 +93,37 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
           <Text variant="h5">Birting</Text>
 
           <Inline space={1}>
-            <Input
+            <DatePicker
               readOnly
-              name="title"
-              value={activeCase?.advert.createdDate}
+              name="createdDate"
+              selected={
+                activeCase?.advert.createdDate
+                  ? new Date(activeCase?.advert.createdDate)
+                  : undefined
+              }
               label="Dagsetning innsendingar"
               size="sm"
+              placeholderText=""
+              locale="is"
             />
           </Inline>
 
           <Inline space={2} alignY="center">
-            <Input
-              readOnly
-              name="title"
-              value={activeCase?.advert.publicationDate ?? undefined}
+            <DatePicker
+              name="publicationDate"
+              selected={
+                activeCase?.advert.publicationDate
+                  ? new Date(activeCase?.advert.publicationDate)
+                  : undefined
+              }
               label="Dagsetning birtingar"
               size="sm"
+              placeholderText=""
+              locale="is"
             />
 
             <Checkbox
+              name="fastTrack"
               checked={activeCase.fastTrack}
               label="Óskað er eftir hraðbirtingu"
             />
@@ -112,8 +131,7 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
 
           <Inline space={2} alignY="center">
             <Input
-              readOnly
-              name="title"
+              name="price"
               value={activeCase?.price}
               label="Áætlað verð"
               size="sm"

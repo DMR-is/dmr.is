@@ -1,10 +1,11 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import { Input, Stack, Text } from '@island.is/island-ui/core'
+import { Inline, Select, Stack, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { Case, CaseTagEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { enumToOptions } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
 
 export const StepYfirlestur = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const tagOptions = enumToOptions(CaseTagEnum)
 
   return (
     <Stack space={2}>
@@ -37,13 +40,15 @@ export const StepYfirlestur = ({ activeCase }: Props) => {
         isLegacy={activeCase.advert.document.isLegacy ?? false}
       />
 
-      <Input
-        readOnly
-        name="title"
-        value={activeCase?.tag}
-        label="Merking"
-        size="sm"
-      />
+      <Inline>
+        <Select
+          name="title"
+          value={tagOptions.find((o) => o.value === activeCase?.tag)}
+          options={tagOptions}
+          label="Merking"
+          size="sm"
+        />
+      </Inline>
     </Stack>
   )
 }
