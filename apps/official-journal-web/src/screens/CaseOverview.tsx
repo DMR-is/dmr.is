@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useIntl } from 'react-intl'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
@@ -9,6 +8,7 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, Paging } from '../gen/fetch'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -33,7 +33,7 @@ type Props = {
 const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   const { add, get } = useQueryParams()
 
-  const { formatMessage } = useIntl()
+  const { formatMessage } = useFormatMessage()
 
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseOverviewTab(get('tab')),

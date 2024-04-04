@@ -1,5 +1,5 @@
 import React from 'react'
-import { MessageDescriptor, useIntl } from 'react-intl'
+import { MessageDescriptor } from 'react-intl'
 
 import {
   AlertMessage,
@@ -13,6 +13,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../hooks/useFilterContext'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 import { CaseFilters } from '../case-filters/CaseFilters'
@@ -51,7 +52,7 @@ export const Banner = ({
   const { notifications } = useNotificationContext()
   const { renderFilters } = useFilterContext()
 
-  const { formatMessage } = useIntl()
+  const { formatMessage } = useFormatMessage()
 
   return (
     <Section className={styles.bannerSection}>

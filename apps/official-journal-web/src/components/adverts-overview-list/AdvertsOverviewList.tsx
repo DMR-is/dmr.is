@@ -1,7 +1,6 @@
-import { useIntl } from 'react-intl'
-
 import { Box, Text } from '@island.is/island-ui/core'
 
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import type { AdvertCategory } from '../../hooks/useMockAdvertOverview'
 import * as styles from './AdvertsOverviewList.css'
 import { messages } from './messages'
@@ -29,7 +28,7 @@ const AdvertsOverviewListItem = ({ children }: ItemProps) => {
 }
 
 export const AdvertsOverviewList = ({ variant = 'default', data }: Props) => {
-  const { formatMessage } = useIntl()
+  const { formatMessage } = useFormatMessage()
 
   if (!data || data?.totalAdverts === 0) {
     return (

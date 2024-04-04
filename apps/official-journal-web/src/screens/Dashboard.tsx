@@ -12,9 +12,10 @@ import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { Section } from '../components/section/Section'
 import { StatisticsNotPublished } from '../components/statistics/NotPublished'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { messages } from '../lib/messages'
+import { messages } from '../lib/messages/dashboard'
 import { Screen } from '../lib/types'
 
 type StatisticsData = {
@@ -35,10 +36,12 @@ type Props = {
 }
 
 const Dashboard: Screen<Props> = ({ statistics }) => {
+  const { formatMessage } = useFormatMessage()
+
   const ritstjornTabs = [
     {
       id: 'ritstjorn-almennt',
-      label: messages.components.tabs.editorial.title,
+      label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
           <AdvertsOverviewList data={statistics.general} variant="default" />
@@ -47,7 +50,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
     },
     {
       id: 'ritstjorn-min-mal',
-      label: messages.components.tabs.assigned.title,
+      label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
           <AdvertsOverviewList data={statistics.personal} variant="assigned" />
@@ -56,7 +59,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
     },
     {
       id: 'ritstjorn-ohreyfd-mal',
-      label: messages.components.tabs.inactive.title,
+      label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
           <AdvertsOverviewList data={statistics.inactive} variant="inactive" />
@@ -68,7 +71,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
   const statisticsTabs = [
     {
       id: 'statistics-not-published-a',
-      label: messages.general.advert_departments.a,
+      label: formatMessage(messages.tabs.statistics.a),
       content: (
         <Box background="white" paddingTop={3}>
           <StatisticsNotPublished department="a" />
@@ -77,7 +80,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
     },
     {
       id: 'statistics-not-published-b',
-      label: messages.general.advert_departments.b,
+      label: formatMessage(messages.tabs.statistics.b),
       content: (
         <Box background="white" paddingTop={3}>
           <StatisticsNotPublished department="b" />
@@ -86,7 +89,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
     },
     {
       id: 'statistics-not-published-c',
-      label: messages.general.advert_departments.c,
+      label: formatMessage(messages.tabs.statistics.c),
       content: (
         <Box background="white" paddingTop={3}>
           <StatisticsNotPublished department="c" />
@@ -102,7 +105,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
           <GridRow>
             <GridColumn span="1/1">
               <Text variant="h3" marginBottom={3}>
-                {messages.general.advert_statuses}
+                {formatMessage(messages.general.caseStatuses)}
               </Text>
             </GridColumn>
           </GridRow>
@@ -115,26 +118,21 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                 flexWrap="wrap"
               >
                 <ContentWrapper
-                  title={messages.general.editorial}
+                  title={messages.general.admin}
                   link="#"
-                  linkText={
-                    messages.components.adverts_overview_list.editorial.linkText
-                  }
+                  linkText={messages.general.openAdmin}
                 >
                   <Tabs
+                    label=""
                     selected={ritstjornTabs[0].id}
                     size="sm"
-                    label={messages.components.tabs.label}
                     tabs={ritstjornTabs}
                   />
                 </ContentWrapper>
                 <ContentWrapper
                   title={messages.general.publishing}
                   link="#"
-                  linkText={
-                    messages.components.adverts_overview_list.publishing
-                      .linkText
-                  }
+                  linkText={messages.general.openPublishing}
                 >
                   <AdvertsOverviewList
                     data={statistics.publishing}
@@ -147,12 +145,12 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
               <ContentWrapper
                 title={messages.general.statistics}
                 link="#"
-                linkText={messages.components.statistics.linkText}
+                linkText={messages.general.openStatistics}
               >
                 <Tabs
                   selected={statisticsTabs[0].id}
                   size="sm"
-                  label={messages.components.tabs.label}
+                  label=""
                   tabs={statisticsTabs}
                 />
               </ContentWrapper>
@@ -162,28 +160,28 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       </Section>
       <Section>
         <ImageWithText
-          title={messages.components.image_with_text.new_adverts.title}
+          title={formatMessage(messages.imageWithText.new.title)}
           image="/assets/image-with-text-1.svg"
-          linkText={messages.components.image_with_text.new_adverts.linkText}
+          linkText={formatMessage(messages.imageWithText.new.linkText)}
           link="#"
           linkIcon="open"
           linkIconType="outline"
         >
           <Text variant="intro">
-            {messages.components.image_with_text.print_version.description}
+            {formatMessage(messages.imageWithText.new.description)}
           </Text>
         </ImageWithText>
         <ImageWithText
-          title={messages.components.image_with_text.print_version.title}
+          title={formatMessage(messages.imageWithText.print.title)}
           image="/assets/image-with-text-2.svg"
-          linkText={messages.components.image_with_text.print_version.linkText}
+          linkText={formatMessage(messages.imageWithText.print.linkText)}
           link="#"
           linkIcon="arrowForward"
           linkIconType="outline"
           align="rtl"
         >
           <Text variant="intro">
-            {messages.components.image_with_text.print_version.description}
+            {formatMessage(messages.imageWithText.print.description)}
           </Text>
         </ImageWithText>
       </Section>
@@ -225,20 +223,20 @@ Dashboard.getProps = async () => {
 
 const mockBannerCards = [
   {
-    title: messages.components.frontpageBanner.cards.editorial.title,
-    text: messages.components.frontpageBanner.cards.editorial.description,
+    title: messages.banner.cards.editorial.title,
+    text: messages.banner.cards.editorial.description,
     link: '/ritstjorn',
     image: '/assets/ritstjorn-image.svg',
   },
   {
-    title: messages.components.frontpageBanner.cards.publishing.title,
-    text: messages.components.frontpageBanner.cards.publishing.description,
+    title: messages.banner.cards.publishing.title,
+    text: messages.banner.cards.publishing.description,
     link: '/utgafa',
     image: '/assets/utgafa-image.svg',
   },
   {
-    title: messages.components.frontpageBanner.cards.all.title,
-    text: messages.components.frontpageBanner.cards.all.description,
+    title: messages.banner.cards.all.title,
+    text: messages.banner.cards.all.description,
     link: '/ritstjorn',
     image: '/assets/heildar-image.svg',
   },
@@ -249,8 +247,8 @@ export default withMainLayout(Dashboard, {
   bannerProps: {
     showBanner: true,
     cards: mockBannerCards,
-    description: messages.components.frontpageBanner.description,
-    title: messages.components.frontpageBanner.title,
+    description: messages.banner.content.description,
+    title: messages.banner.content.title,
     imgSrc: '/assets/banner-image.svg',
   },
 })
