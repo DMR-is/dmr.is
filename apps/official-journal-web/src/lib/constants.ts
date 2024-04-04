@@ -14,7 +14,7 @@ export enum CaseDepartmentTabs {
   C = 'C-deild',
 }
 
-export enum CaseOverviewTabIds {
+export enum CaseProcessingTabIds {
   Submitted = 'innsent',
   InProgress = 'grunnvinnsla',
   InReview = 'yfirlestur',

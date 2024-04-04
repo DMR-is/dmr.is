@@ -37,7 +37,7 @@ enum CasePublishScreens {
   Confirm = 'confirm',
 }
 
-const CasePublishingPage: Screen<Props> = ({ cases }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
@@ -205,7 +205,7 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
   )
 }
 
-CasePublishingPage.getProps = async ({ query }) => {
+CasePublishingOverview.getProps = async ({ query }) => {
   const { tab, search } = query
 
   const client = createDmrClient()
@@ -221,7 +221,7 @@ CasePublishingPage.getProps = async ({ query }) => {
   }
 }
 
-export default withMainLayout(CasePublishingPage, {
+export default withMainLayout(CasePublishingOverview, {
   // fetch from api?
   filterGroups: [
     {

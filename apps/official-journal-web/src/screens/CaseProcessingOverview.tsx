@@ -12,11 +12,11 @@ import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseOverviewTabIds } from '../lib/constants'
-import { messages } from '../lib/messages/caseOverview'
+import { CaseProcessingTabIds } from '../lib/constants'
+import { messages } from '../lib/messages/caseProcessing'
 import { Screen } from '../lib/types'
 import {
-  mapQueryParamToCaseOverviewTab,
+  mapQueryParamToCaseProcessingTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
 type Props = {
@@ -30,25 +30,25 @@ type Props = {
   }
 }
 
-const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
+const CaseProcessingScreen: Screen<Props> = ({ data, paging, totalItems }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
 
   const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseOverviewTab(get('tab')),
+    mapQueryParamToCaseProcessingTab(get('tab')),
   )
 
   const onTabChange = (id: string) => {
-    setSelectedTab(mapQueryParamToCaseOverviewTab(id))
+    setSelectedTab(mapQueryParamToCaseProcessingTab(id))
     add({
-      tab: mapQueryParamToCaseOverviewTab(id),
+      tab: mapQueryParamToCaseProcessingTab(id),
     })
   }
 
   const tabs = [
     {
-      id: CaseOverviewTabIds.Submitted,
+      id: CaseProcessingTabIds.Submitted,
       label: formatMessage(messages.tabs.submitted, {
         count: totalItems.submitted,
       }),
@@ -68,7 +68,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
       ),
     },
     {
-      id: CaseOverviewTabIds.InProgress,
+      id: CaseProcessingTabIds.InProgress,
       label: formatMessage(messages.tabs.inProgress, {
         count: totalItems.inProgress,
       }),
@@ -89,7 +89,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
       ),
     },
     {
-      id: CaseOverviewTabIds.InReview,
+      id: CaseProcessingTabIds.InReview,
       label: formatMessage(messages.tabs.inReview, {
         count: totalItems.inReview,
       }),
@@ -111,7 +111,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
       ),
     },
     {
-      id: CaseOverviewTabIds.Ready,
+      id: CaseProcessingTabIds.Ready,
       label: formatMessage(messages.tabs.ready, {
         count: totalItems.ready,
       }),
@@ -155,12 +155,12 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   )
 }
 
-CaseOverviewPage.getProps = async ({ query }) => {
+CaseProcessingScreen.getProps = async ({ query }) => {
   const { tab, search } = query
 
   const client = createDmrClient()
 
-  const tabId = mapQueryParamToCaseOverviewTab(tab)
+  const tabId = mapQueryParamToCaseProcessingTab(tab)
   const selectedStatus = mapTabIdToCaseStatus(tabId)
 
   const response = await client.getEditorialOverview({
@@ -175,7 +175,7 @@ CaseOverviewPage.getProps = async ({ query }) => {
   }
 }
 
-export default withMainLayout(CaseOverviewPage, {
+export default withMainLayout(CaseProcessingScreen, {
   filterGroups: [
     {
       label: 'Birting',

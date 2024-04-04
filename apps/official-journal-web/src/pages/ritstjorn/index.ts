@@ -1,9 +1,9 @@
 import withDmr from '../../lib/api/withDmr'
 import { getServerSidePropsWrapper } from '../../lib/getServerSidePropsWrapper'
 // eslint-disable-next-line @typescript-eslint/naming-convention
-import CaseOverviewScreen from '../../screens/CaseOverview'
+import CaseProcessingOverview from '../../screens/CaseProcessingOverview'
 
-const Screen = withDmr(CaseOverviewScreen)
+const Screen = withDmr(CaseProcessingOverview)
 
 export default Screen
 
