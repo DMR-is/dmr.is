@@ -15,12 +15,13 @@ import { CaseReadyForPublishing } from '../components/tables/CaseTablePublishing
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useNotificationContext } from '../hooks/useNotificationContext'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartmentTabs } from '../lib/constants'
-import { messages } from '../lib/messages'
+import { messages } from '../lib/messages/casePublish'
 import { Screen } from '../lib/types'
 import {
   mapQueryParamToCaseDepartment,
@@ -38,6 +39,8 @@ enum CasePublishScreens {
 
 const CasePublishingPage: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
+
+  const { formatMessage } = useFormatMessage()
 
   const { setRenderFilters } = useFilterContext()
   const { setNotifications, clearNotifications } = useNotificationContext()
@@ -96,9 +99,8 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     setScreen(CasePublishScreens.Confirm)
     clearNotifications()
     setNotifications({
-      title: 'Mál til útgáfu',
-      message:
-        'Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar.',
+      title: formatMessage(messages.notifications.warning.title),
+      message: formatMessage(messages.notifications.warning.message),
       type: 'warning',
     })
   }
@@ -106,8 +108,8 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
   const publishCases = () => {
     clearNotifications()
     setNotifications({
-      title: 'Útgáfa mála heppnaðist',
-      message: 'Málin eru nú orðin sýnileg á ytri vef.',
+      title: formatMessage(messages.notifications.success.title),
+      message: formatMessage(messages.notifications.success.message),
       type: 'success',
     })
     setRenderFilters(true)
@@ -182,10 +184,10 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
                 />
                 <Box marginTop={3} display="flex" justifyContent="spaceBetween">
                   <Button onClick={backToOverview} variant="ghost">
-                    Til baka í útgáfu mála
+                    {formatMessage(messages.general.backToPublishing)}
                   </Button>
                   <Button onClick={publishCases} icon="arrowForward">
-                    Gefa út öll mál
+                    {formatMessage(messages.general.publishAllCases)}
                   </Button>
                 </Box>
               </>
@@ -220,6 +222,7 @@ CasePublishingPage.getProps = async ({ query }) => {
 }
 
 export default withMainLayout(CasePublishingPage, {
+  // fetch from api?
   filterGroups: [
     {
       label: 'Birting',
@@ -234,18 +237,18 @@ export default withMainLayout(CasePublishingPage, {
     showBanner: true,
     showFilters: true,
     imgSrc: '/assets/banner-publish-image.svg',
-    title: messages.components.utgafaBanner.title,
-    description: messages.components.utgafaBanner.description,
+    title: messages.banner.title,
+    description: messages.banner.description,
     variant: 'small',
     contentColumnSpan: ['12/12', '12/12', '7/12'],
     imageColumnSpan: ['12/12', '12/12', '3/12'],
     breadcrumbs: [
       {
-        title: messages.pages.frontpage.name,
+        title: messages.breadcrumbs.dashboard,
         href: '/',
       },
       {
-        title: messages.pages.casePublishing.name,
+        title: messages.breadcrumbs.casePublishing,
       },
     ],
   },
