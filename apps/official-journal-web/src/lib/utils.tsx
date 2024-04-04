@@ -114,6 +114,9 @@ export type CaseTableItem = {
   tag?: string
   institution?: string
   status: CaseStatusEnum
+  published?: boolean
+  number?: number
+  year?: number
 }
 
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {

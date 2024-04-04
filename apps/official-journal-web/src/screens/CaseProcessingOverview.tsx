@@ -13,7 +13,7 @@ import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseProcessingTabIds, Routes } from '../lib/constants'
-import { messages } from '../lib/messages/caseProcessing'
+import { messages } from '../lib/messages/caseProcessingOverview'
 import { Screen } from '../lib/types'
 import {
   mapQueryParamToCaseProcessingTab,

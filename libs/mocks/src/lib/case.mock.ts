@@ -210,7 +210,7 @@ export const CASE_READY: Case = {
   applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
   year: 2024,
   caseNumber: 3211,
-  status: CaseStatus.ReadyForPublishing,
+  status: CaseStatus.Submitted,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
@@ -274,9 +274,79 @@ export const CASE_READY: Case = {
   ],
 }
 
+export const CASE_PUBLISHED: Case = {
+  id: 'e637c050-a462-4483-972a-5c375x6e34ad',
+  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  year: 2024,
+  caseNumber: 3211,
+  status: CaseStatus.Submitted,
+  tag: CaseTag.MultipleReviewers,
+  createdAt: '2024-03-12T12:45:48.21Z',
+  modifiedAt: '2024-03-12T12:45:48.21Z',
+  published: true,
+  publishedAt: '2024-03-04T12:45:48.21Z',
+  paid: true,
+  price: 23000,
+  fastTrack: false,
+  assignedTo: 'Ármann',
+  advert: ADVERT_B_866_2006,
+  comments: [
+    {
+      id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
+      type: CaseCommentType.Submit,
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: null,
+        to: 'Stofnun x',
+        title: CaseCommentTitle.Submit,
+        comment: null,
+      },
+    },
+    {
+      id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
+      createdAt: '2024-03-13T12:45:48.21Z',
+      type: CaseCommentType.Assign,
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.AssignSelf,
+        comment: null,
+      },
+    },
+    {
+      id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: 'Grunnvinnsla',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment:
+          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+      },
+    },
+  ],
+}
+
 export const ALL_MOCK_CASES = [
   CASE_SUBMITTED,
   CASE_IN_PROGRESS,
   CASE_IN_REVIEW,
   CASE_READY,
+  CASE_PUBLISHED,
 ]

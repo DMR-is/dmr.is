@@ -20,7 +20,7 @@ import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../lib/constants'
-import { messages } from '../lib/messages/casePublish'
+import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
 import {
   CaseTableItem,

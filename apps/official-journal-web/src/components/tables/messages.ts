@@ -146,5 +146,29 @@ export const messages = {
         },
       }),
     },
+    overview: {
+      columns: defineMessages({
+        publishDate: {
+          id: 'web.components.tables:overview.columns.publishDate',
+          defaultMessage: 'Útgáfudagur',
+          description: 'Publish date column',
+        },
+        status: {
+          id: 'web.components.tables:overview.columns.status',
+          defaultMessage: 'Staða/Nr.',
+          description: 'Status column',
+        },
+        title: {
+          id: 'web.components.tables:overview.columns.title',
+          defaultMessage: 'Heiti',
+          description: 'Title column',
+        },
+        institution: {
+          id: 'web.components.tables:overview.columns.institution',
+          defaultMessage: 'Stofnun',
+          description: 'Institution column',
+        },
+      }),
+    },
   },
 }
