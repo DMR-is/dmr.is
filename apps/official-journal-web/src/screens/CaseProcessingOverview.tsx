@@ -12,7 +12,7 @@ import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseProcessingTabIds } from '../lib/constants'
+import { CaseProcessingTabIds, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseProcessing'
 import { Screen } from '../lib/types'
 import {
@@ -200,11 +200,10 @@ export default withMainLayout(CaseProcessingScreen, {
     breadcrumbs: [
       {
         title: messages.breadcrumbs.home,
-        href: '/',
+        href: Routes.Dashboard,
       },
       {
         title: messages.breadcrumbs.cases,
-        href: '/ritstjorn',
       },
     ],
   },

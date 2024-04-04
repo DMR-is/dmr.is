@@ -121,6 +121,13 @@ export const messages = {
       }),
     },
     selectedCases: {
+      empty: defineMessages({
+        message: {
+          id: 'web.components.tables:selectedCases.empty.message',
+          defaultMessage: 'Engin mál valin.',
+          description: 'No cases selected message',
+        },
+      }),
       columns: defineMessages({
         title: {
           id: 'web.components.tables:selectedCases.columns.title',
