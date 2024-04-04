@@ -5,12 +5,12 @@ import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tabs } from '../components/tabs/Tabs'
-import { Case, GetCasesStatusEnum } from '../gen/fetch'
+import { Case } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../lib/constants'
-import { messages } from '../lib/messages/casePublishOverview'
+import { messages } from '../lib/messages/caseOverview'
 import { Screen } from '../lib/types'
 import {
   mapQueryParamToCaseDepartment,
@@ -122,8 +122,8 @@ export default withMainLayout(CaseOverview, {
     title: messages.banner.title,
     description: messages.banner.description,
     variant: 'small',
-    contentColumnSpan: ['12/12', '12/12', '7/12'],
-    imageColumnSpan: ['12/12', '12/12', '3/12'],
+    contentColumnSpan: ['12/12', '12/12', '5/12'],
+    imageColumnSpan: ['12/12', '12/12', '5/12'],
     breadcrumbs: [
       {
         title: messages.breadcrumbs.dashboard,
