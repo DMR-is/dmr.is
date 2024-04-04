@@ -3,8 +3,9 @@ import { useId, useState } from 'react'
 import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
 
 import { FilterOption } from '../../context/filterContext'
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from '../filter-popover/FilterPopover.css'
+import { messages } from './messages'
 
 type Props = {
   label: string
@@ -13,6 +14,8 @@ type Props = {
 }
 
 export const FilterGroup = ({ label, expanded, filters }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const [localToggle, setLocalToggle] = useState(expanded)
 
   const localId = useId()
@@ -45,7 +48,7 @@ export const FilterGroup = ({ label, expanded, filters }: Props) => {
         ))}
         <Box display="flex" justifyContent="flexEnd">
           <Button size="small" variant="text" icon="reload" iconType="outline">
-            {messages.general.clear_filter}
+            {formatMessage(messages.general.clearFilter)}
           </Button>
         </Box>
       </Box>

@@ -8,17 +8,17 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, Paging } from '../gen/fetch'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseOverviewTabIds } from '../lib/constants'
-import { messages } from '../lib/messages'
+import { messages } from '../lib/messages/caseOverview'
 import { Screen } from '../lib/types'
 import {
   mapQueryParamToCaseOverviewTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
-
 type Props = {
   data: Case[]
   paging: Paging
@@ -32,6 +32,8 @@ type Props = {
 
 const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   const { add, get } = useQueryParams()
+
+  const { formatMessage } = useFormatMessage()
 
   const [selectedTab, setSelectedTab] = useState(
     mapQueryParamToCaseOverviewTab(get('tab')),
@@ -47,7 +49,9 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   const tabs = [
     {
       id: CaseOverviewTabIds.Submitted,
-      label: `${messages.components.tabs.submitted.title} (${totalItems.submitted})`,
+      label: formatMessage(messages.tabs.submitted, {
+        count: totalItems.submitted,
+      }),
       content: (
         <CaseTableSubmitted
           data={data.map((item) => {
@@ -65,7 +69,9 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
     },
     {
       id: CaseOverviewTabIds.InProgress,
-      label: `${messages.components.tabs.inProgress.title} (${totalItems.inProgress})`,
+      label: formatMessage(messages.tabs.inProgress, {
+        count: totalItems.inProgress,
+      }),
       content: (
         <CaseTableInProgress
           data={data.map((item) => {
@@ -84,7 +90,9 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
     },
     {
       id: CaseOverviewTabIds.InReview,
-      label: `${messages.components.tabs.inReview.title} (${totalItems.inReview})`,
+      label: formatMessage(messages.tabs.inReview, {
+        count: totalItems.inReview,
+      }),
       content: (
         <CaseTableInReview
           data={data.map((item) => {
@@ -104,7 +112,9 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
     },
     {
       id: CaseOverviewTabIds.Ready,
-      label: `${messages.components.tabs.ready.title} (${totalItems.ready})`,
+      label: formatMessage(messages.tabs.ready, {
+        count: totalItems.ready,
+      }),
       content: (
         <CaseTableInProgress
           data={data.map((item) => {
@@ -180,16 +190,16 @@ export default withMainLayout(CaseOverviewPage, {
     showBanner: true,
     showFilters: true,
     imgSrc: '/assets/banner-small-image.svg',
-    title: messages.components.ritstjornBanner.title,
-    description: messages.components.ritstjornBanner.description,
+    title: messages.banner.title,
+    description: messages.banner.description,
     variant: 'small',
     breadcrumbs: [
       {
-        title: messages.pages.frontpage.name,
+        title: messages.breadcrumbs.home,
         href: '/',
       },
       {
-        title: messages.pages.caseOverview.name,
+        title: messages.breadcrumbs.cases,
         href: '/ritstjorn',
       },
     ],

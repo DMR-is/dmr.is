@@ -1,14 +1,18 @@
 import { Icon, Text } from '@island.is/island-ui/core'
 
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTable } from './CaseTable'
-import { CaseReadyForPublishing } from './CaseTablePublishing'
+import { CaseReadyForPublishing } from './CaseTableReady'
 import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
+import { messages } from './messages'
 
 type Props = {
   data: CaseReadyForPublishing[]
 }
 
 export const CaseTableSelectedCases = ({ data }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   if (!data.length) return <CaseTableSelectedCasesEmpty />
 
   return (
@@ -19,19 +23,21 @@ export const CaseTableSelectedCases = ({ data }: Props) => {
           name: 'caseNumber',
           fixed: true,
           small: true,
-          children: 'Númer',
+          children: formatMessage(messages.tables.selectedCases.columns.number),
         },
         {
           name: 'caseTitle',
           fixed: false,
           small: false,
-          children: 'Heiti',
+          children: formatMessage(messages.tables.selectedCases.columns.title),
         },
         {
           name: 'caseInstitution',
           fixed: false,
           small: true,
-          children: 'Stofnun',
+          children: formatMessage(
+            messages.tables.selectedCases.columns.institution,
+          ),
         },
         {
           name: '',

@@ -1,6 +1,7 @@
 import { Box, Icon } from '@island.is/island-ui/core'
 
-import { messages } from '../../lib/messages'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { messages } from './messages'
 import { Tooltip } from './Tooltip'
 import * as styles from './Tooltip.css'
 
@@ -9,12 +10,11 @@ type Props = {
 }
 
 export const CaseLabelTooltip = ({ label }: Props) => {
+  const { formatMessage } = useFormatMessage()
   switch (label) {
     case 'fasttrack':
       return (
-        <Tooltip
-          text={messages.components.tables.caseOverview.labels.fasttrack}
-        >
+        <Tooltip text={formatMessage(messages.general.fasttrack)}>
           <Box className={styles.caseLabelTooltipIcon}>
             <Icon color="blue400" type="outline" icon="timer" />
           </Box>
@@ -22,7 +22,7 @@ export const CaseLabelTooltip = ({ label }: Props) => {
       )
     case 'warning':
       return (
-        <Tooltip text={messages.components.tables.caseOverview.labels.warning}>
+        <Tooltip text={formatMessage(messages.general.feedback)}>
           <Box className={styles.caseLabelTooltipIcon}>
             <Icon color="blue400" icon="warning" />
           </Box>
@@ -30,7 +30,7 @@ export const CaseLabelTooltip = ({ label }: Props) => {
       )
     case 'info':
       return (
-        <Tooltip text={messages.components.tables.caseOverview.labels.info}>
+        <Tooltip text={formatMessage(messages.general.waiting)}>
           <Box className={styles.caseLabelTooltipIcon}>
             <Icon color="blue400" icon="informationCircle" />
           </Box>
