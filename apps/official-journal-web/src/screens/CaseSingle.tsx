@@ -16,10 +16,11 @@ import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { messages } from '../lib/messages'
 import { Screen } from '../lib/types'
-import { generateSteps } from '../lib/utils'
+import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: Case | null
+  step: CaseStep | null
 }
 
 const CaseSingle: Screen<Props> = ({ activeCase }) => {
@@ -123,11 +124,17 @@ const CaseSingle: Screen<Props> = ({ activeCase }) => {
 
 CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const dmrClient = createDmrClient()
+  const caseId = query.uid?.[0]
+  const step = query.uid?.[1] as CaseStep | undefined
+
+  if (!caseId || !step || !caseSteps.includes(step)) {
+    return { activeCase: null, step: null }
+  }
 
   const [activeCase] = await Promise.all(
     [
       dmrClient.getCase({
-        id: query.uid as string,
+        id: caseId,
       }),
     ].map((promise) =>
       promise.catch((err) => {
@@ -139,6 +146,7 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
 
   return {
     activeCase,
+    step,
   }
 }
 

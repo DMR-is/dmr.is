@@ -1,26 +1,15 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
 import { messages } from '../../lib/messages'
-import { formatDate } from '../../lib/utils'
+import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
 
-export type CaseReadyForPublishing = {
-  id: string
-  labels: string[]
-  caseNumber: string
-  title: string
-  publicationDate: string | null
-  institution: string
-}
-
 type Props = {
-  data: CaseReadyForPublishing[]
-  selectedCases: CaseReadyForPublishing[]
-  setSelectedCases: React.Dispatch<
-    React.SetStateAction<CaseReadyForPublishing[]>
-  >
+  data: CaseTableItem[]
+  selectedCases: CaseTableItem[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
 }
 
 export const CaseTablePublishing = ({
@@ -69,6 +58,7 @@ export const CaseTablePublishing = ({
 
   const rows = data.map((row) => ({
     caseId: row.id,
+    status: row.status,
     cells: [
       {
         children: (

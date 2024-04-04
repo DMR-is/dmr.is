@@ -102,6 +102,19 @@ export const mapQueryParamToCaseDepartment = (param?: unknown) => {
   }
 }
 
+export type CaseTableItem = {
+  id: string
+  labels: string[]
+  publicationDate: string
+  registrationDate: string
+  department: string
+  title: string
+  employee?: string
+  tag?: string
+  institution?: string
+  status: CaseStatusEnum
+}
+
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {
   [CaseStatusEnum.Innsent]: 0,
   [CaseStatusEnum.Grunnvinnsla]: 1,
@@ -110,7 +123,26 @@ const caseStatusToIndex: Record<CaseStatusEnum, number> = {
   [CaseStatusEnum.BeiSvara]: 4,
   [CaseStatusEnum.BirtinguHafna]: 5,
 }
+
+export type CaseStep = 'innsending' | 'grunnvinnsla' | 'yfirlestur' | 'tilbuid'
+export const caseSteps: Array<CaseStep> = [
+  'innsending',
+  'grunnvinnsla',
+  'yfirlestur',
+  'tilbuid',
+]
+
+export const caseStatusMap: Record<CaseStatusEnum, CaseStep> = {
+  [CaseStatusEnum.Innsent]: 'innsending',
+  [CaseStatusEnum.Grunnvinnsla]: 'grunnvinnsla',
+  [CaseStatusEnum.Yfirlestur]: 'yfirlestur',
+  [CaseStatusEnum.Tilbi]: 'tilbuid',
+  [CaseStatusEnum.BeiSvara]: 'tilbuid',
+  [CaseStatusEnum.BirtinguHafna]: 'tilbuid',
+}
+
 type StepsType = {
+  step: CaseStep
   title: string
   notes?: React.ReactNode[]
   isActive: boolean
@@ -132,6 +164,7 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
   const displayTypes = [CaseCommentTypeEnum.Submit, CaseCommentTypeEnum.Assign]
   return [
     {
+      step: 'innsending',
       title: 'Innsending',
       isActive: statusIndex === 0,
       isComplete: statusIndex > 0,
@@ -144,6 +177,7 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         ?.map(({ task }) => commentTaskToNode(task)),
     },
     {
+      step: 'grunnvinnsla',
       title: 'Grunnvinnsla',
       isActive: statusIndex === 1,
       isComplete: statusIndex > 1,
@@ -156,6 +190,7 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         ?.map(({ task }) => commentTaskToNode(task)),
     },
     {
+      step: 'yfirlestur',
       title: 'Yfirlestur',
       isActive: statusIndex === 2,
       isComplete: statusIndex > 2,
@@ -168,6 +203,7 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         ?.map(({ task }) => commentTaskToNode(task)),
     },
     {
+      step: 'tilbuid',
       title: 'Tilbúið til útgáfu',
       isActive: statusIndex === 3,
       isComplete: statusIndex > 3,
