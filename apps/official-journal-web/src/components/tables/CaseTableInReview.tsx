@@ -1,25 +1,15 @@
 import { Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { formatDate } from '../../lib/utils'
+import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
-export type InReviewCaseData = {
-  id: string
-  labels: string[]
-  publicationDate: string
-  registrationDate: string
-  department: string
-  name: string
-  employee: string
-  tag?: string
-}
 
 type Props = {
-  data: InReviewCaseData[]
+  data: CaseTableItem[]
 }
 
 export const CaseTableInReview = ({ data }: Props) => {
@@ -73,6 +63,7 @@ export const CaseTableInReview = ({ data }: Props) => {
 
   const rows = data.map((row) => ({
     caseId: row.id,
+    status: row.status,
     cells: [
       {
         children: row.labels.length > 0 && (
@@ -108,11 +99,11 @@ export const CaseTableInReview = ({ data }: Props) => {
       },
       {
         sortingKey: 'caseName',
-        sortingValue: row.name,
+        sortingValue: row.title,
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.name}
+              {row.title}
             </Text>
           </div>
         ),

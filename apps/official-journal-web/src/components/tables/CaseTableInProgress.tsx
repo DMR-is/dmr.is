@@ -1,17 +1,15 @@
 import { Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { formatDate } from '../../lib/utils'
-import { MockCasesType } from '../../screens/mock'
+import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: MockCasesType['items']
+  data: Array<CaseTableItem>
 }
-
 export const CaseTableInProgress = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -49,6 +47,7 @@ export const CaseTableInProgress = ({ data }: Props) => {
 
   const rows = data.map((row) => ({
     caseId: row.id,
+    status: row.status,
     cells: [
       {
         children: row.labels.length > 0 && (
