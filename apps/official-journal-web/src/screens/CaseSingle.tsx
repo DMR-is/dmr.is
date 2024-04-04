@@ -12,17 +12,21 @@ import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
 import { FormStepperThemes } from '../components/form-stepper/types'
 import { Case, CaseStatusEnum } from '../gen/fetch'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { messages } from '../lib/messages'
+import { messages } from '../lib/messages/caseSingle'
 import { Screen } from '../lib/types'
-import { generateSteps } from '../lib/utils'
+import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: Case | null
+  step: CaseStep | null
 }
 
 const CaseSingle: Screen<Props> = ({ activeCase }) => {
+  const { formatMessage } = useFormatMessage()
+
   if (!activeCase) {
     return null
   }
@@ -41,19 +45,19 @@ const CaseSingle: Screen<Props> = ({ activeCase }) => {
   return (
     <FormShell
       header={{
-        title: messages.components.caseBanner.title,
-        description: messages.components.caseBanner.description,
+        title: formatMessage(messages.banner.title),
+        description: formatMessage(messages.banner.description),
         breadcrumbs: [
           {
-            title: messages.pages.frontpage.name,
+            title: formatMessage(messages.breadcrumbs.dashboard),
             href: '/',
           },
           {
-            title: messages.pages.caseOverview.name,
+            title: formatMessage(messages.breadcrumbs.caseOverview),
             href: '/ritstjorn',
           },
           {
-            title: messages.pages.case.name,
+            title: formatMessage(messages.breadcrumbs.case),
           },
         ],
       }}
@@ -123,11 +127,17 @@ const CaseSingle: Screen<Props> = ({ activeCase }) => {
 
 CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const dmrClient = createDmrClient()
+  const caseId = query.uid?.[0]
+  const step = query.uid?.[1] as CaseStep | undefined
+
+  if (!caseId || !step || !caseSteps.includes(step)) {
+    return { activeCase: null, step: null }
+  }
 
   const [activeCase] = await Promise.all(
     [
       dmrClient.getCase({
-        id: query.uid as string,
+        id: caseId,
       }),
     ].map((promise) =>
       promise.catch((err) => {
@@ -139,6 +149,7 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
 
   return {
     activeCase,
+    step,
   }
 }
 
@@ -148,6 +159,6 @@ export default withMainLayout(CaseSingle, {
   bannerProps: {
     showBanner: false,
     showFilters: false,
-    title: messages.components.ritstjornBanner.title,
+    title: messages.banner.title,
   },
 })

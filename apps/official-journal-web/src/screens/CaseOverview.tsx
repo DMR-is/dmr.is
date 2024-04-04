@@ -7,7 +7,7 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
-import { Case, Paging } from '../gen/fetch'
+import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
@@ -62,6 +62,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               title: item.advert.title,
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
+              status: CaseStatusEnum.Innsent,
             }
           })}
         />
@@ -83,6 +84,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
               employee: item.assignedTo,
+              status: CaseStatusEnum.Grunnvinnsla,
             }
           })}
         />
@@ -100,11 +102,12 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               id: item.id,
               department: item.advert.department.title,
               labels: item.fastTrack ? ['fasttrack'] : [],
-              name: item.advert.title,
+              title: item.advert.title,
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
               employee: item.assignedTo,
               tag: item.tag,
+              status: CaseStatusEnum.Yfirlestur,
             }
           })}
         />
@@ -126,6 +129,7 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
               publicationDate: item.publishedAt,
               registrationDate: item.createdAt,
               employee: item.assignedTo,
+              status: CaseStatusEnum.Tilbi,
             }
           })}
         />

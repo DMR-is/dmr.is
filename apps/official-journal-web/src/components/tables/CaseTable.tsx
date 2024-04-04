@@ -11,8 +11,10 @@ import {
   Table as T,
 } from '@island.is/island-ui/core'
 
+import { CaseStatusEnum } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { caseStatusMap } from '../../lib/utils'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
@@ -35,6 +37,7 @@ export type CaseTableCellProps = {
 
 export type CaseTableRowProps = {
   caseId: string
+  status: CaseStatusEnum
   cells: CaseTableCellProps[]
 }
 
@@ -165,11 +168,19 @@ export const CaseTable = ({
                       })}
                     >
                       {!breakpoints.xl ? (
-                        <LinkV2 href={`/ritstjorn/${row.caseId}`}>
+                        <LinkV2
+                          href={`/ritstjorn/${row.caseId}/${
+                            caseStatusMap[row.status]
+                          }`}
+                        >
                           <Icon icon="arrowForward" color="blue400" />
                         </LinkV2>
                       ) : (
-                        <ArrowLink href={`/ritstjorn/${row.caseId}`}>
+                        <ArrowLink
+                          href={`/ritstjorn/${row.caseId}/${
+                            caseStatusMap[row.status]
+                          }`}
+                        >
                           {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>
                       )}

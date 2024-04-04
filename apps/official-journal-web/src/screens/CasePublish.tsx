@@ -11,7 +11,6 @@ import {
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
-import { CaseReadyForPublishing } from '../components/tables/CaseTableReady'
 import { Tabs } from '../components/tabs/Tabs'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
@@ -24,6 +23,7 @@ import { CaseDepartmentTabs } from '../lib/constants'
 import { messages } from '../lib/messages/casePublish'
 import { Screen } from '../lib/types'
 import {
+  CaseTableItem,
   mapQueryParamToCaseDepartment,
   mapTabIdToCaseDepartment,
 } from '../lib/utils'
@@ -51,36 +51,28 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
 
   const [screen, setScreen] = useState(CasePublishScreens.Overview)
 
-  const [casesToPublish, setCasesToPublish] = useState<
-    CaseReadyForPublishing[]
-  >([])
+  const [casesToPublish, setCasesToPublish] = useState<CaseTableItem[]>([])
 
-  const [departmentACases, setDepartmentACases] = useState<
-    CaseReadyForPublishing[]
-  >([])
+  const [departmentACases, setDepartmentACases] = useState<CaseTableItem[]>([])
 
-  const [departmentBCases, setDepartmentBCases] = useState<
-    CaseReadyForPublishing[]
-  >([])
+  const [departmentBCases, setDepartmentBCases] = useState<CaseTableItem[]>([])
 
-  const [departmentCCases, setDepartmentCCases] = useState<
-    CaseReadyForPublishing[]
-  >([])
+  const [departmentCCases, setDepartmentCCases] = useState<CaseTableItem[]>([])
 
   const [
     departmentACasesReadyForPublication,
     setDepartmentACasesReadyForPublication,
-  ] = useState<CaseReadyForPublishing[]>([])
+  ] = useState<CaseTableItem[]>([])
 
   const [
     departmentBCasesReadyForPublication,
     setDepartmentBCasesReadyForPublication,
-  ] = useState<CaseReadyForPublishing[]>([])
+  ] = useState<CaseTableItem[]>([])
 
   const [
     departmentCCasesReadyForPublication,
     setDepartmentCCasesReadyForPublication,
-  ] = useState<CaseReadyForPublishing[]>([])
+  ] = useState<CaseTableItem[]>([])
 
   const onTabChange = (id: string) => {
     setSelectedTab(mapQueryParamToCaseDepartment(id))
@@ -93,7 +85,7 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     setScreen(CasePublishScreens.Overview)
   }
 
-  const proceedToPublishing = (selectedCases: CaseReadyForPublishing[]) => {
+  const proceedToPublishing = (selectedCases: CaseTableItem[]) => {
     setCasesToPublish(selectedCases)
     setRenderFilters(false)
     setScreen(CasePublishScreens.Confirm)
@@ -213,7 +205,7 @@ CasePublishingPage.getProps = async ({ query }) => {
   const { cases, paging } = await client.getCases({
     search: search as string,
     status: GetCasesStatusEnum.Tilbi,
-    department: mapTabIdToCaseDepartment(tab),
+    // department: mapTabIdToCaseDepartment(tab),
   })
 
   return {
