@@ -6,6 +6,7 @@ import { AdvertType } from '../advert-types/advert-type.dto'
 import { Category } from '../categories/category.dto'
 import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions/institution.dto'
+import { AdvertAttachment } from './advert-attachment'
 import { AdvertStatus } from './advert-constants.dto'
 import { AdvertDocument } from './advert-document'
 import { AdvertPublicationNumber } from './advert-publication-number.dto'
@@ -141,4 +142,11 @@ export class Advert {
     required: true,
   })
   readonly signature!: AdvertSignatureBody | null
+
+  @ApiProperty({
+    type: [AdvertAttachment],
+    description: 'Attachments for the advert.',
+    required: true,
+  })
+  readonly attachments!: AdvertAttachment[]
 }
