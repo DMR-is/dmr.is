@@ -1,7 +1,6 @@
 import {
-  IsBoolean,
+  IsBooleanString,
   IsDateString,
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -9,7 +8,6 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Department } from '../departments/department.dto'
 import { CaseStatus } from './case-constants'
 
 export class GetCasesQuery {
@@ -74,8 +72,8 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  @IsBoolean()
-  published?: boolean
+  @IsBooleanString()
+  published?: string
 
   @ApiProperty({
     name: 'fastTrack',
@@ -85,14 +83,14 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  @IsBoolean()
-  fastTrack?: boolean
+  @IsBooleanString()
+  fastTrack?: string
 
   @ApiProperty({
     name: 'institution',
     description:
       'Institution to filter cases on, takes into account `institution` on `Case`.',
-    type: Date,
+    type: String,
     required: false,
   })
   @IsOptional()

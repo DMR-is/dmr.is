@@ -1,4 +1,4 @@
-import { isString, isUUID } from 'class-validator'
+import { isBooleanString, isString, isUUID } from 'class-validator'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
@@ -82,8 +82,10 @@ export class CaseServiceMock implements ICaseService {
           return false
         }
 
-        if (params?.fastTrack && c.fastTrack !== params?.fastTrack) {
-          return false
+        if (params?.fastTrack && isBooleanString(params.fastTrack)) {
+          if (c.fastTrack !== Boolean(params.fastTrack)) {
+            return false
+          }
         }
 
         if (params?.employeeId && c.assignedTo !== params?.employeeId) {
@@ -152,8 +154,6 @@ export class CaseServiceMock implements ICaseService {
     })
 
     const { cases, paging } = await this.getCases(params)
-
-    console.log(cases, params)
 
     return Promise.resolve({
       data: cases,

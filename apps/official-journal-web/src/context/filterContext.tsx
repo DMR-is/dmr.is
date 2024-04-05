@@ -2,6 +2,7 @@ import { createContext, useState } from 'react'
 
 export type FilterOption = {
   label: string
+  key: string
   value: string
 }
 
@@ -13,9 +14,10 @@ export type FilterGroup = {
 type FilterContextProps = {
   searchFilter: string
   filterGroups?: FilterGroup[]
-  setSearchFilter: (search: string) => void
   renderFilters: boolean
+  setSearchFilter: (search: string) => void
   setRenderFilters: (render: boolean) => void
+  setFilterGroups: (filterGroups: FilterGroup[]) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
@@ -23,6 +25,7 @@ export const FilterContext = createContext<FilterContextProps>({
   renderFilters: true,
   setSearchFilter: () => {},
   setRenderFilters: () => {},
+  setFilterGroups: () => {},
 })
 
 export const FilterContextProvider = ({
@@ -46,12 +49,20 @@ export const FilterContextProvider = ({
     }))
   }
 
+  const setFilterGroups = (filterGroups: FilterGroup[]) => {
+    setState((prev) => ({
+      ...prev,
+      filterGroups: filterGroups,
+    }))
+  }
+
   const initalState: FilterContextProps = {
     filterGroups: filterGroups,
     searchFilter: '',
     renderFilters: true,
     setSearchFilter,
     setRenderFilters,
+    setFilterGroups,
   }
 
   const [state, setState] = useState(initalState)

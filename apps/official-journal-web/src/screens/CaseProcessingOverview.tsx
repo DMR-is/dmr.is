@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
@@ -7,7 +7,9 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
+import { FilterGroup } from '../context/filterContext'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
@@ -16,12 +18,14 @@ import { CaseProcessingTabIds, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseProcessingOverview'
 import { Screen } from '../lib/types'
 import {
+  extractCaseProcessingFilters,
   mapQueryParamToCaseProcessingTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
 type Props = {
   data: Case[]
   paging: Paging
+  filters?: FilterGroup[]
   totalItems: {
     submitted: number
     inProgress: number
@@ -30,8 +34,14 @@ type Props = {
   }
 }
 
-const CaseProcessingScreen: Screen<Props> = ({ data, paging, totalItems }) => {
+const CaseProcessingScreen: Screen<Props> = ({
+  data,
+  paging,
+  totalItems,
+  filters,
+}) => {
   const { add, get } = useQueryParams()
+  const { setFilterGroups } = useFilterContext()
 
   const { formatMessage } = useFormatMessage()
 
@@ -45,6 +55,12 @@ const CaseProcessingScreen: Screen<Props> = ({ data, paging, totalItems }) => {
       tab: mapQueryParamToCaseProcessingTab(id),
     })
   }
+
+  useEffect(() => {
+    if (filters) {
+      setFilterGroups(filters)
+    }
+  }, [])
 
   const tabs = [
     {
@@ -160,36 +176,48 @@ const CaseProcessingScreen: Screen<Props> = ({ data, paging, totalItems }) => {
 }
 
 CaseProcessingScreen.getProps = async ({ query }) => {
-  const { tab, search } = query
+  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
 
   const client = createDmrClient()
 
   const tabId = mapQueryParamToCaseProcessingTab(tab)
   const selectedStatus = mapTabIdToCaseStatus(tabId)
 
-  const response = await client.getEditorialOverview({
+  const params = {
+    ...extractedFilters,
     status: selectedStatus,
-    search: search as string,
-  })
+  }
+
+  const response = await client.getEditorialOverview(params)
+
+  const filters = [
+    {
+      label: 'Birting',
+      options: [
+        { label: 'Mín mál', key: 'employeeId', value: '5804170510' },
+        { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
+        { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
+      ],
+    },
+    {
+      label: 'Deildir',
+      options: [
+        { label: 'A-deild', key: 'department', value: 'A-deild' },
+        { label: 'B-deild', key: 'department', value: 'B-deild' },
+        { label: 'C-deild', key: 'department', value: 'C-deild' },
+      ],
+    },
+  ]
 
   return {
     data: response.data,
     paging: response.paging,
     totalItems: response.totalItems,
+    filters,
   }
 }
 
 export default withMainLayout(CaseProcessingScreen, {
-  filterGroups: [
-    {
-      label: 'Birting',
-      options: [
-        { label: 'Mín mál', value: 'my-cases' },
-        { label: 'Mál í hraðbirtingu', value: 'fasttrack' },
-        { label: 'Mál sem bíða svara', value: 'waiting' },
-      ],
-    },
-  ],
   bannerProps: {
     showBanner: true,
     showFilters: true,
