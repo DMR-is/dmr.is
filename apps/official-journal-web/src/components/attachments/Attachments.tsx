@@ -1,16 +1,18 @@
 import { Box, Icon, LinkV2, Stack, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './Attachments.css'
-
+import { messages } from './messages'
 type Props = {
   activeCase: Case
 }
 
 export const Attachments = ({ activeCase }: Props) => {
+  const { formatMessage } = useFormatMessage()
   return (
     <Box>
-      <Text variant="h5">Fylgiskjöl</Text>
+      <Text variant="h5">{formatMessage(messages.attachments.title)}</Text>
 
       <Box
         marginTop={2}
@@ -49,7 +51,7 @@ export const Attachments = ({ activeCase }: Props) => {
                   color="blue400"
                   underlineVisibility="always"
                 >
-                  Sækja skjal{' '}
+                  {formatMessage(messages.attachments.fetchFile)}{' '}
                   <Icon icon="download" color="blue400" type="outline" />
                 </LinkV2>
               </Box>

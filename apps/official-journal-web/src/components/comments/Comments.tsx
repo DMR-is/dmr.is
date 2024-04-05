@@ -16,17 +16,20 @@ import {
   CaseCommentTaskTitleEnum,
   CaseCommentTypeEnum,
 } from '../../gen/fetch'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
+import { messages } from './messages'
 
 type Props = {
   activeCase: Case
 }
 
 export const Comments = ({ activeCase }: Props) => {
+  const { formatMessage } = useFormatMessage()
   const [expanded, setExpanded] = useState(activeCase.comments.length < 5)
-  const now = new Date()
   const [commentValue, setCommentValue] = useState('')
+  const now = new Date()
 
   const addComment = () => {
     activeCase.comments.push({
@@ -44,15 +47,16 @@ export const Comments = ({ activeCase }: Props) => {
     setCommentValue('')
   }
 
-  console.log({ expanded })
-
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
-      <Text variant="h5">Athugasemdir</Text>
+      <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
 
       {activeCase.comments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
-        const suffix = String(daysAgo).slice(-1) === '1' ? 'degi' : 'dögum'
+        const suffix =
+          String(daysAgo).slice(-1) === '1'
+            ? formatMessage(messages.comments.day)
+            : formatMessage(messages.comments.days)
 
         if (!expanded && i !== 0 && i < activeCase.comments.length - 4) {
           return null
@@ -85,9 +89,9 @@ export const Comments = ({ activeCase }: Props) => {
 
               <Text whiteSpace="nowrap">
                 {daysAgo === 0
-                  ? 'Í dag'
+                  ? formatMessage(messages.comments.today)
                   : daysAgo === 1
-                  ? 'Í gær'
+                  ? formatMessage(messages.comments.yesterday)
                   : 'f. ' + daysAgo + ' ' + suffix}
               </Text>
             </Box>
@@ -106,7 +110,8 @@ export const Comments = ({ activeCase }: Props) => {
                   size="small"
                   onClick={() => setExpanded(true)}
                 >
-                  Sjá allar athugasemdir ({activeCase.comments.length - 5})
+                  {formatMessage(messages.comments.seeAll)} (
+                  {activeCase.comments.length - 5})
                 </Button>
               </Box>
             ) : null}
@@ -120,14 +125,14 @@ export const Comments = ({ activeCase }: Props) => {
             <Input
               type="text"
               name="comment"
-              label="Athugasemd"
-              placeholder="Bættu við athugasemd"
+              label={formatMessage(messages.comments.label)}
+              placeholder={formatMessage(messages.comments.placeholder)}
               value={commentValue}
               onChange={(e) => setCommentValue(e.target.value)}
               textarea
             />
             <Button disabled={!commentValue} onClick={addComment}>
-              Vista athugasemd
+              {formatMessage(messages.comments.save)}
             </Button>
           </Stack>
         </Box>
