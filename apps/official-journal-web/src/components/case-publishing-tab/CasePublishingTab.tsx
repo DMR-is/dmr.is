@@ -2,25 +2,20 @@ import { useState } from 'react'
 
 import { Box, Button, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import {
-  CaseReadyForPublishing,
-  CaseTableReady,
-} from '../tables/CaseTableReady'
+import { CaseTableItem } from '../../lib/utils'
+import { CaseTableReady } from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
 
 type Props = {
-  cases: Case[]
-  selectedCases: CaseReadyForPublishing[]
-  setSelectedCases: React.Dispatch<
-    React.SetStateAction<CaseReadyForPublishing[]>
-  >
-  onContinue: (selectedCases: CaseReadyForPublishing[]) => void
-  casesReadyForPublication: CaseReadyForPublishing[]
+  cases: CaseTableItem[]
+  selectedCases: CaseTableItem[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
+  onContinue: (selectedCases: CaseTableItem[]) => void
+  casesReadyForPublication: CaseTableItem[]
   setCasesReadyForPublication: React.Dispatch<
-    React.SetStateAction<CaseReadyForPublishing[]>
+    React.SetStateAction<CaseTableItem[]>
   >
 }
 
@@ -34,23 +29,12 @@ export const CasePublishingTab = ({
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const data = cases.map((item) => {
-    return {
-      id: item.id,
-      labels: item.fastTrack ? ['fasttrack'] : [],
-      title: item.advert.title,
-      caseNumber: `${item.caseNumber}/${item.year}`,
-      publicationDate: item.advert.publicationDate,
-      institution: item.advert.involvedParty.title,
-    }
-  })
-
   return (
     <Box>
       <CaseTableReady
         selectedCases={selectedCases}
         setSelectedCases={setSelectedCases}
-        data={data}
+        data={cases}
       />
       <Box marginTop={3} display="flex" justifyContent="flexEnd">
         <Button

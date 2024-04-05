@@ -9,7 +9,7 @@ const skipCache = process.argv && process.argv[2] === '--skip-cache'
 /**
  * See https://docs.devland.is/repository/codegen about setting up your project with auto-generated API schema and client files
  */
-const TARGETS = ['codegen/client']
+const TARGETS = ['codegen']
 
 const main = async () => {
   for (const target of TARGETS) {

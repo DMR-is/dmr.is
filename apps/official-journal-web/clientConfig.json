@@ -95,7 +95,7 @@
             "required": false,
             "in": "query",
             "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "schema": { "format": "date-time", "type": "string" }
+            "schema": { "type": "string" }
           },
           {
             "name": "dateFrom",
@@ -225,7 +225,7 @@
             "required": false,
             "in": "query",
             "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "schema": { "format": "date-time", "type": "string" }
+            "schema": { "type": "string" }
           },
           {
             "name": "dateFrom",

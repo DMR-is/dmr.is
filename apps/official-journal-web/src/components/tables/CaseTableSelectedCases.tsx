@@ -1,13 +1,13 @@
 import { Icon, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { CaseTableItem } from '../../lib/utils'
 import { CaseTable } from './CaseTable'
-import { CaseReadyForPublishing } from './CaseTableReady'
 import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseReadyForPublishing[]
+  data: CaseTableItem[]
 }
 
 export const CaseTableSelectedCases = ({ data }: Props) => {
@@ -48,11 +48,12 @@ export const CaseTableSelectedCases = ({ data }: Props) => {
       ]}
       rows={data.map((row) => ({
         caseId: row.id,
+        status: row.status,
         cells: [
           {
             children: (
               <Text variant="medium" truncate>
-                {row.caseNumber}
+                {`${row.number}/${row.year}`}
               </Text>
             ),
           },
