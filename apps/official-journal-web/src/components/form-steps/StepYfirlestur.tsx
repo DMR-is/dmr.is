@@ -1,12 +1,19 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import { Inline, Select, Stack, Text } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Select,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { Case, CaseTagEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { enumToOptions } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
+import { messages } from './messages'
 
 type Props = {
   activeCase: Case
@@ -18,37 +25,50 @@ export const StepYfirlestur = ({ activeCase }: Props) => {
   const tagOptions = enumToOptions(CaseTagEnum)
 
   return (
-    <Stack space={2}>
-      <Text variant="h5">Meginmál</Text>
+    <GridContainer>
+      <GridRow marginBottom={2} rowGap={2} alignItems="center">
+        <GridColumn span={['12/12']}>
+          <Text variant="h5">
+            {formatMessage(messages.yfirlestur.group1title)}
+          </Text>
+        </GridColumn>
+      </GridRow>
 
-      <AdvertDisplay
-        advertNumber={activeCase.advert.publicationNumber?.full}
-        signatureDate={
-          activeCase.advert.signatureDate
-            ? format(
-                new Date(activeCase.advert.signatureDate),
-                'dd. MMMM yyyy',
-                {
-                  locale: is,
-                },
-              )
-            : undefined
-        }
-        advertType={activeCase.advert.type.title}
-        advertSubject={activeCase.advert.subject ?? ''}
-        advertText={activeCase.advert.document.html ?? ''}
-        isLegacy={activeCase.advert.document.isLegacy ?? false}
-      />
+      <GridRow marginBottom={2} rowGap={2} alignItems="center">
+        <GridColumn span={['12/12']}>
+          <AdvertDisplay
+            advertNumber={activeCase.advert.publicationNumber?.full}
+            signatureDate={
+              activeCase.advert.signatureDate
+                ? format(
+                    new Date(activeCase.advert.signatureDate),
+                    'dd. MMMM yyyy',
+                    {
+                      locale: is,
+                    },
+                  )
+                : undefined
+            }
+            advertType={activeCase.advert.type.title}
+            advertSubject={activeCase.advert.subject ?? ''}
+            advertText={activeCase.advert.document.html ?? ''}
+            isLegacy={activeCase.advert.document.isLegacy ?? false}
+          />
+        </GridColumn>
+      </GridRow>
 
-      <Inline>
-        <Select
-          name="title"
-          value={tagOptions.find((o) => o.value === activeCase?.tag)}
-          options={tagOptions}
-          label="Merking"
-          size="sm"
-        />
-      </Inline>
-    </Stack>
+      <GridRow marginBottom={2} rowGap={2} alignItems="center">
+        <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+          <Select
+            name="tag"
+            value={tagOptions.find((o) => o.value === activeCase?.tag)}
+            options={tagOptions}
+            label={formatMessage(messages.yfirlestur.tag)}
+            size="sm"
+            isSearchable={false}
+          />
+        </GridColumn>
+      </GridRow>
+    </GridContainer>
   )
 }

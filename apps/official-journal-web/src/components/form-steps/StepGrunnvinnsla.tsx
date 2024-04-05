@@ -2,10 +2,12 @@ import {
   Box,
   Checkbox,
   DatePicker,
+  GridColumn,
+  GridContainer,
+  GridRow,
   Inline,
   Input,
   Select,
-  Stack,
   StringOption,
   Tag,
   Text,
@@ -13,6 +15,7 @@ import {
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { messages } from './messages'
 
 type Props = {
   activeCase: Case
@@ -36,109 +39,160 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
   return (
     <>
       <Box marginBottom={4}>
-        <Stack space={2}>
-          <Text variant="h5">Almennt um málið</Text>
+        <GridContainer>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12']}>
+              <Text variant="h5">
+                {formatMessage(messages.grunnvinnsla.group1title)}
+              </Text>
+            </GridColumn>
+          </GridRow>
 
-          <Input
-            readOnly
-            name="institution"
-            value={activeCase?.advert.involvedParty.title}
-            label="Sendandi"
-            size="sm"
-          />
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12']}>
+              <Input
+                readOnly
+                disabled
+                name="institution"
+                value={activeCase?.advert.involvedParty.title}
+                label={formatMessage(messages.grunnvinnsla.institution)}
+                size="sm"
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Input
-            name="title"
-            value={activeCase?.advert.title}
-            label="Heiti auglýsingar"
-            size="sm"
-          />
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Select
+                name="department"
+                value={departmentOptions.find(
+                  (o) => o.value === activeCase?.advert.department.title,
+                )}
+                options={departmentOptions}
+                label={formatMessage(messages.grunnvinnsla.department)}
+                size="sm"
+                isSearchable={false}
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={2} alignY="center">
-            <Select
-              name="department"
-              value={departmentOptions.find(
-                (o) => o.value === activeCase?.advert.department.title,
-              )}
-              options={departmentOptions}
-              label="Deild"
-              size="sm"
-            />
-          </Inline>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Select
+                name="type"
+                value={typeOptions.find(
+                  (o) => o.value === activeCase?.advert.type.title,
+                )}
+                options={typeOptions}
+                label={formatMessage(messages.grunnvinnsla.type)}
+                size="sm"
+                isSearchable={false}
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={2} alignY="center">
-            <Select
-              name="type"
-              value={typeOptions.find(
-                (o) => o.value === activeCase?.advert.type.title,
-              )}
-              options={typeOptions}
-              label="Tegund"
-              size="sm"
-            />
-          </Inline>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12']}>
+              <Input
+                readOnly
+                name="subject"
+                value={activeCase?.advert.subject}
+                label={formatMessage(messages.grunnvinnsla.subject)}
+                size="sm"
+                textarea
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={1}>
-            {activeCase.advert.categories.map((cat, i) => (
-              <Tag key={i} variant="white" outlined disabled>
-                {cat.title}
-              </Tag>
-            ))}
-          </Inline>
-        </Stack>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12']}>
+              <Inline space={1}>
+                {activeCase.advert.categories.map((cat, i) => (
+                  <Tag key={i} variant="white" outlined disabled>
+                    {cat.title}
+                  </Tag>
+                ))}
+              </Inline>
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
       </Box>
 
       <Box>
-        <Stack space={2}>
-          <Text variant="h5">Birting</Text>
+        <GridContainer>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Text variant="h5">
+                {formatMessage(messages.grunnvinnsla.group2title)}
+              </Text>
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={1}>
-            <DatePicker
-              readOnly
-              name="createdDate"
-              selected={
-                activeCase?.advert.createdDate
-                  ? new Date(activeCase?.advert.createdDate)
-                  : undefined
-              }
-              label="Dagsetning innsendingar"
-              size="sm"
-              placeholderText=""
-              locale="is"
-            />
-          </Inline>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <DatePicker
+                readOnly
+                disabled
+                name="createdDate"
+                selected={
+                  activeCase?.advert.createdDate
+                    ? new Date(activeCase?.advert.createdDate)
+                    : undefined
+                }
+                label={formatMessage(messages.grunnvinnsla.createdDate)}
+                size="sm"
+                placeholderText=""
+                locale="is"
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={2} alignY="center">
-            <DatePicker
-              name="publicationDate"
-              selected={
-                activeCase?.advert.publicationDate
-                  ? new Date(activeCase?.advert.publicationDate)
-                  : undefined
-              }
-              label="Dagsetning birtingar"
-              size="sm"
-              placeholderText=""
-              locale="is"
-            />
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <DatePicker
+                name="publicationDate"
+                selected={
+                  activeCase?.advert.publicationDate
+                    ? new Date(activeCase?.advert.publicationDate)
+                    : undefined
+                }
+                label={formatMessage(messages.grunnvinnsla.publicationDate)}
+                size="sm"
+                placeholderText=""
+                locale="is"
+              />
+            </GridColumn>
 
-            <Checkbox
-              name="fastTrack"
-              checked={activeCase.fastTrack}
-              label="Óskað er eftir hraðbirtingu"
-            />
-          </Inline>
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Checkbox
+                name="fastTrack"
+                checked={activeCase.fastTrack}
+                label={formatMessage(messages.grunnvinnsla.fastTrack)}
+              />
+            </GridColumn>
+          </GridRow>
 
-          <Inline space={2} alignY="center">
-            <Input
-              name="price"
-              value={activeCase?.price}
-              label="Áætlað verð"
-              size="sm"
-            />
-            <Checkbox checked={activeCase.paid} label="Búið er að greiða" />
-          </Inline>
-        </Stack>
+          <GridRow marginBottom={2} rowGap={2} alignItems="center">
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Input
+                name="price"
+                value={activeCase?.price}
+                label={formatMessage(messages.grunnvinnsla.price)}
+                size="sm"
+                type="tel"
+                inputMode="numeric"
+              />
+            </GridColumn>
+
+            <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+              <Checkbox
+                name="paid"
+                checked={activeCase.paid}
+                label={formatMessage(messages.grunnvinnsla.paid)}
+              />
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
       </Box>
     </>
   )
