@@ -202,6 +202,54 @@ export const CASE_IN_REVIEW: Case = {
         comment: null,
       },
     },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InReview,
+      task: {
+        from: 'Pálína J',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment: 'Þetta lítur vel út',
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Assign,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InReview,
+      task: {
+        from: 'Pálína J',
+        to: 'Ármann',
+        title: CaseCommentTitle.Assign,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InReview,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment: 'Samþykkt',
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InReview,
+      task: {
+        from: 'Ármann',
+        to: 'Tilbúið',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
+      },
+    },
   ],
 }
 
