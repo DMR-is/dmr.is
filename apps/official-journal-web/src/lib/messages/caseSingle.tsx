@@ -43,4 +43,55 @@ export const messages = {
       description: 'Banner description for the caseSingle',
     },
   }),
+
+  actions: defineMessages({
+    title: {
+      id: 'web.page.caseSingle:actions.title',
+      defaultMessage: 'Upplýsingar',
+      description: '',
+    },
+    assignedTo: {
+      id: 'web.page.caseSingle:actions.assignedTo',
+      defaultMessage: 'Starfsmaður',
+      description: '',
+    },
+    assignedToPlaceholder: {
+      id: 'web.page.caseSingle:actions.assignedToPlaceholder',
+      defaultMessage: 'Úthluta máli á starfsmann',
+      description: '',
+    },
+    status: {
+      id: 'web.page.caseSingle:actions.status',
+      defaultMessage: 'Staða',
+      description: '',
+    },
+  }),
+
+  paging: defineMessages({
+    goBack: {
+      id: 'web.page.caseSingle:paging.goBack',
+      defaultMessage: 'Til baka',
+      description: '',
+    },
+    goBackOverview: {
+      id: 'web.page.caseSingle:paging.goBackOverview',
+      defaultMessage: 'Til baka í yfirlit',
+      description: '',
+    },
+    nextStep: {
+      id: 'web.page.caseSingle:actions.nextStep',
+      defaultMessage: 'Næsta skrep',
+      description: '',
+    },
+    assignedToPlaceholder: {
+      id: 'web.page.caseSingle:actions.assignedToPlaceholder',
+      defaultMessage: 'Úthluta máli á starfsmann',
+      description: '',
+    },
+    status: {
+      id: 'web.page.caseSingle:actions.status',
+      defaultMessage: 'Staða',
+      description: '',
+    },
+  }),
 }

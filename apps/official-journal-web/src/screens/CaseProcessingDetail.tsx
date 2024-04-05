@@ -56,8 +56,6 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
     value: c,
   }))
 
-  console.log({ a: activeCase.advert.attachments })
-
   return (
     <FormShell
       header={{
@@ -94,15 +92,15 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
       ))}
       actions={
         <Stack space={[2]}>
-          <Text variant="h5">Upplýsingar</Text>
+          <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
           <Select
             name="assignedTo"
             options={employeesMock}
             defaultValue={employeesMock.find(
               (e) => e.value === activeCase.assignedTo,
             )}
-            label="Starfsmaður"
-            placeholder="Úthluta máli á starfsmann"
+            label={formatMessage(messages.actions.assignedTo)}
+            placeholder={formatMessage(messages.actions.assignedToPlaceholder)}
             size="sm"
           ></Select>
           <Select
@@ -111,7 +109,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
             defaultValue={caseStatusOptions.find(
               (c) => c.value === activeCase.status,
             )}
-            label="Staða"
+            label={formatMessage(messages.actions.status)}
             size="sm"
           ></Select>
         </Stack>
@@ -140,21 +138,27 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
         >
           {prevStep ? (
             <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
-              <Button as="span" unfocusable>
-                Til baka
+              <Button as="span" variant="ghost" unfocusable>
+                {formatMessage(messages.paging.goBack)}
               </Button>
             </LinkV2>
           ) : (
-            <Button disabled={!prevStep}>Til baka</Button>
+            <LinkV2 href={`/ritstjorn`}>
+              <Button as="span" variant="ghost" unfocusable>
+                {formatMessage(messages.paging.goBackOverview)}
+              </Button>
+            </LinkV2>
           )}
           {nextStep ? (
             <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
-                Næsta skref
+                {formatMessage(messages.paging.nextStep)}
               </Button>
             </LinkV2>
           ) : (
-            <Button disabled={!nextStep}>Næsta skref</Button>
+            <Button disabled={!nextStep}>
+              {formatMessage(messages.paging.nextStep)}
+            </Button>
           )}
         </Box>
       </Stack>
