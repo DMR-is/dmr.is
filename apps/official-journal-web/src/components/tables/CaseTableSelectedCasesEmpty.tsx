@@ -19,7 +19,9 @@ export const CaseTableSelectedCasesEmpty = () => {
           </TableHeadCell>
         </T.Row>
       </T.Head>
-      <CaseTableEmpty />
+      <CaseTableEmpty
+        message={formatMessage(messages.tables.selectedCases.empty.message)}
+      />
     </T.Table>
   )
 }

@@ -15,6 +15,7 @@ import { StatisticsNotPublished } from '../components/statistics/NotPublished'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
+import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 import { Screen } from '../lib/types'
 
@@ -225,19 +226,19 @@ const mockBannerCards = [
   {
     title: messages.banner.cards.editorial.title,
     text: messages.banner.cards.editorial.description,
-    link: '/ritstjorn',
+    link: Routes.ProcessingOverview,
     image: '/assets/ritstjorn-image.svg',
   },
   {
     title: messages.banner.cards.publishing.title,
     text: messages.banner.cards.publishing.description,
-    link: '/utgafa',
+    link: Routes.PublishingOverview,
     image: '/assets/utgafa-image.svg',
   },
   {
     title: messages.banner.cards.all.title,
     text: messages.banner.cards.all.description,
-    link: '/ritstjorn',
+    link: Routes.Overview,
     image: '/assets/heildar-image.svg',
   },
 ]

@@ -278,7 +278,7 @@ export const emptyAdvert: Advert = {
   createdDate: '',
   updatedDate: '',
   signatureDate: null,
-  publicationDate: null,
+  publicationDate: '2006-10-19 00:00:00.000',
   categories: [],
   involvedParty: {
     id: '',
@@ -305,7 +305,7 @@ export const ADVERT_NEW: Advert = {
   createdDate: '2024-03-12T12:45:48.21Z',
   updatedDate: '2024-03-12T12:45:48.21Z',
   signatureDate: '2024-03-11T12:45:48.21Z',
-  publicationDate: null,
+  publicationDate: '2006-10-19 00:00:00.000',
   categories: [MOCK_CATEGORY_SKIPULAGSMAL, MOCK_CATEGORY_REYKJAVIK],
   involvedParty: MOCK_INVOLVEDPARTY_SBR,
   document: {

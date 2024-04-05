@@ -3,137 +3,67 @@ import { useState } from 'react'
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { Section } from '../components/section/Section'
-import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
-import { CaseTableInReview } from '../components/tables/CaseTableInReview'
-import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
+import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tabs } from '../components/tabs/Tabs'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
-import { useFormatMessage } from '../hooks/useFormatMessage'
+import { Case } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseOverviewTabIds } from '../lib/constants'
+import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseOverview'
 import { Screen } from '../lib/types'
 import {
-  mapQueryParamToCaseOverviewTab,
-  mapTabIdToCaseStatus,
+  mapQueryParamToCaseDepartment,
+  mapTabIdToCaseDepartment,
 } from '../lib/utils'
+
 type Props = {
-  data: Case[]
-  paging: Paging
-  totalItems: {
-    submitted: number
-    inProgress: number
-    inReview: number
-    ready: number
-  }
+  cases: Case[]
 }
 
-const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
+const CaseOverview: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
-  const { formatMessage } = useFormatMessage()
-
   const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseOverviewTab(get('tab')),
+    mapQueryParamToCaseDepartment(get('tab')),
   )
 
   const onTabChange = (id: string) => {
-    setSelectedTab(mapQueryParamToCaseOverviewTab(id))
+    setSelectedTab(mapQueryParamToCaseDepartment(id))
     add({
-      tab: mapQueryParamToCaseOverviewTab(id),
+      tab: mapQueryParamToCaseDepartment(id),
     })
   }
 
+  const data = cases.map((item) => ({
+    id: item.id,
+    publicationDate: item.advert.publicationDate ?? '',
+    registrationDate: item.createdAt,
+    department: item.advert.department.title,
+    labels: [],
+    status: item.status,
+    published: item.published,
+    number: item.caseNumber,
+    year: item.year,
+    title: item.advert.title,
+    institution: item.advert.involvedParty.title,
+  }))
+
   const tabs = [
     {
-      id: CaseOverviewTabIds.Submitted,
-      label: formatMessage(messages.tabs.submitted, {
-        count: totalItems.submitted,
-      }),
-      content: (
-        <CaseTableSubmitted
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              status: CaseStatusEnum.Innsent,
-            }
-          })}
-        />
-      ),
+      id: CaseDepartmentTabs.A,
+      label: CaseDepartmentTabs.A,
+      content: <CaseTableOverview data={data} />,
     },
     {
-      id: CaseOverviewTabIds.InProgress,
-      label: formatMessage(messages.tabs.inProgress, {
-        count: totalItems.inProgress,
-      }),
-      content: (
-        <CaseTableInProgress
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              status: CaseStatusEnum.Grunnvinnsla,
-            }
-          })}
-        />
-      ),
+      id: CaseDepartmentTabs.B,
+      label: CaseDepartmentTabs.B,
+      content: <CaseTableOverview data={data} />,
     },
     {
-      id: CaseOverviewTabIds.InReview,
-      label: formatMessage(messages.tabs.inReview, {
-        count: totalItems.inReview,
-      }),
-      content: (
-        <CaseTableInReview
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              tag: item.tag,
-              status: CaseStatusEnum.Yfirlestur,
-            }
-          })}
-        />
-      ),
-    },
-    {
-      id: CaseOverviewTabIds.Ready,
-      label: formatMessage(messages.tabs.ready, {
-        count: totalItems.ready,
-      }),
-      content: (
-        <CaseTableInProgress
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              status: CaseStatusEnum.Tilbi,
-            }
-          })}
-        />
-      ),
+      id: CaseDepartmentTabs.C,
+      label: CaseDepartmentTabs.C,
+      content: <CaseTableOverview data={data} />,
     },
   ]
 
@@ -147,7 +77,6 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
             span={['12/12', '12/12', '12/12', '10/12']}
           >
             <Tabs
-              onlyRenderSelectedTab={true}
               onTabChange={onTabChange}
               selectedTab={selectedTab}
               tabs={tabs}
@@ -159,27 +88,23 @@ const CaseOverviewPage: Screen<Props> = ({ data, paging, totalItems }) => {
   )
 }
 
-CaseOverviewPage.getProps = async ({ query }) => {
+CaseOverview.getProps = async ({ query }) => {
   const { tab, search } = query
 
   const client = createDmrClient()
 
-  const tabId = mapQueryParamToCaseOverviewTab(tab)
-  const selectedStatus = mapTabIdToCaseStatus(tabId)
-
-  const response = await client.getEditorialOverview({
-    status: selectedStatus,
+  const { cases, paging } = await client.getCases({
     search: search as string,
+    department: mapTabIdToCaseDepartment(tab),
   })
 
   return {
-    data: response.data,
-    paging: response.paging,
-    totalItems: response.totalItems,
+    cases,
   }
 }
 
-export default withMainLayout(CaseOverviewPage, {
+export default withMainLayout(CaseOverview, {
+  // fetch from api?
   filterGroups: [
     {
       label: 'Birting',
@@ -193,18 +118,19 @@ export default withMainLayout(CaseOverviewPage, {
   bannerProps: {
     showBanner: true,
     showFilters: true,
-    imgSrc: '/assets/banner-small-image.svg',
+    imgSrc: '/assets/banner-publish-image.svg',
     title: messages.banner.title,
     description: messages.banner.description,
     variant: 'small',
+    contentColumnSpan: ['12/12', '12/12', '5/12'],
+    imageColumnSpan: ['12/12', '12/12', '5/12'],
     breadcrumbs: [
       {
-        title: messages.breadcrumbs.home,
-        href: '/',
+        title: messages.breadcrumbs.dashboard,
+        href: Routes.Dashboard,
       },
       {
-        title: messages.breadcrumbs.cases,
-        href: '/ritstjorn',
+        title: messages.breadcrumbs.casePublishing,
       },
     ],
   },
