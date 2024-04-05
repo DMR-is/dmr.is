@@ -25,7 +25,7 @@ export const messages = {
     type: {
       id: 'web.components.steps.grunnvinnsla:type',
       defaultMessage: 'Tegund',
-      description: 'Some description',
+      description: '',
     },
 
     group2title: {

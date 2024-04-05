@@ -1,0 +1,904 @@
+{
+  "application.application-ui-shell:progress-tag.approved": [
+    {
+      "type": 0,
+      "value": "Staða: Samþykkt"
+    }
+  ],
+  "application.application-ui-shell:progress-tag.completed": [
+    {
+      "type": 0,
+      "value": "Staða: Lokið"
+    }
+  ],
+  "application.application-ui-shell:progress-tag.draft": [
+    {
+      "type": 0,
+      "value": "Staða: Í vinnslu hjá þér"
+    }
+  ],
+  "application.application-ui-shell:progress-tag.inProgress": [
+    {
+      "type": 0,
+      "value": "Staða: Í vinnslu"
+    }
+  ],
+  "application.application-ui-shell:progress-tag.rejected": [
+    {
+      "type": 0,
+      "value": "Staða: Hafnað"
+    }
+  ],
+  "web.components.adverts-overview-list.empty.assigned": [
+    {
+      "type": 0,
+      "value": "Sem stendur eru engin mál sem teljast þín mál"
+    }
+  ],
+  "web.components.adverts-overview-list.empty.editorial": [
+    {
+      "type": 0,
+      "value": "Sem stendur eru engin mál sem teljast almenn"
+    }
+  ],
+  "web.components.adverts-overview-list.empty.inactive": [
+    {
+      "type": 0,
+      "value": "Sem stendur eru engin mál sem teljast óhreyfð"
+    }
+  ],
+  "web.components.adverts-overview-list.empty.published": [
+    {
+      "type": 0,
+      "value": "Sem stendur eru engin mál sem bíða útgáfu"
+    }
+  ],
+  "web.components.adverts-overview-list.empty.title": [
+    {
+      "type": 0,
+      "value": "Engin mál fundust"
+    }
+  ],
+  "web.components.attachments:title": [
+    {
+      "type": 0,
+      "value": "Fylgiskjöl"
+    }
+  ],
+  "web.components.caseFilters:openFilter": [
+    {
+      "type": 0,
+      "value": "Opna síun"
+    }
+  ],
+  "web.components.caseFilters:searchPlaceholder": [
+    {
+      "type": 0,
+      "value": "Leita eftir málsnafni"
+    }
+  ],
+  "web.components.comments:cancel": [
+    {
+      "type": 0,
+      "value": "Hætta við"
+    }
+  ],
+  "web.components.comments:day": [
+    {
+      "type": 0,
+      "value": "degi"
+    }
+  ],
+  "web.components.comments:days": [
+    {
+      "type": 0,
+      "value": "dögum"
+    }
+  ],
+  "web.components.comments:fetchFile": [
+    {
+      "type": 0,
+      "value": "Sækja skjal"
+    }
+  ],
+  "web.components.comments:label": [
+    {
+      "type": 0,
+      "value": "Athugasemd"
+    }
+  ],
+  "web.components.comments:overwrite": [
+    {
+      "type": 0,
+      "value": "Yfirskrifa"
+    }
+  ],
+  "web.components.comments:overwriteFile": [
+    {
+      "type": 0,
+      "value": "Yfirskrifa skjal"
+    }
+  ],
+  "web.components.comments:placeholder": [
+    {
+      "type": 0,
+      "value": "Bættu við athugasemd"
+    }
+  ],
+  "web.components.comments:save": [
+    {
+      "type": 0,
+      "value": "Vista athugasemd"
+    }
+  ],
+  "web.components.comments:seeAll": [
+    {
+      "type": 0,
+      "value": "Sjá allar athugasemdir"
+    }
+  ],
+  "web.components.comments:title": [
+    {
+      "type": 0,
+      "value": "Athugasemdir"
+    }
+  ],
+  "web.components.comments:today": [
+    {
+      "type": 0,
+      "value": "Í dag"
+    }
+  ],
+  "web.components.comments:uploadButton": [
+    {
+      "type": 0,
+      "value": "Velja skjöl til að hlaða upp"
+    }
+  ],
+  "web.components.comments:uploadSubtitle": [
+    {
+      "type": 0,
+      "value": "Tekið er við skjölum með endingu: .pdf"
+    }
+  ],
+  "web.components.comments:uploadTitle": [
+    {
+      "type": 0,
+      "value": "Dragðu skjalið hingað til að hlaða upp"
+    }
+  ],
+  "web.components.comments:yesterday": [
+    {
+      "type": 0,
+      "value": "Í gær"
+    }
+  ],
+  "web.components.filterGroup:clearFilter": [
+    {
+      "type": 0,
+      "value": "Hreinsa val"
+    }
+  ],
+  "web.components.filterPopover:clearAllFilters": [
+    {
+      "type": 0,
+      "value": "Hreinsa allar síur"
+    }
+  ],
+  "web.components.header:controlPanelProject": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.components.header:controlPanelTitle": [
+    {
+      "type": 0,
+      "value": "Stjórnborð"
+    }
+  ],
+  "web.components.statistics:notPublished.emptyIntro": [
+    {
+      "type": 0,
+      "value": "Í þessari deild eru engin óútgefin mál."
+    }
+  ],
+  "web.components.statistics:notPublished.emptyTitle": [
+    {
+      "type": 0,
+      "value": "Engin mál í vinnslu"
+    }
+  ],
+  "web.components.statistics:notPublished.intro": [
+    {
+      "type": 0,
+      "value": "Staða óútgefinna mála eftir deildum."
+    }
+  ],
+  "web.components.statistics:notPublished.total": [
+    {
+      "type": 0,
+      "value": "Alls"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:createdDate": [
+    {
+      "type": 0,
+      "value": "Dagsetning innsendingar"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:department": [
+    {
+      "type": 0,
+      "value": "Deild"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:fastTrack": [
+    {
+      "type": 0,
+      "value": "Óskað er eftir hraðbirtingu"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:group1title": [
+    {
+      "type": 0,
+      "value": "Almennt um málið"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:group2title": [
+    {
+      "type": 0,
+      "value": "Birting"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:institution": [
+    {
+      "type": 0,
+      "value": "Sendandi"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:paid": [
+    {
+      "type": 0,
+      "value": "Búið er að greiða"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:price": [
+    {
+      "type": 0,
+      "value": "Áætlað verð"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:publicationDate": [
+    {
+      "type": 0,
+      "value": "Dagsetning birtingar"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:title": [
+    {
+      "type": 0,
+      "value": "Heiti auglýsingar"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:type": [
+    {
+      "type": 0,
+      "value": "Tegund"
+    }
+  ],
+  "web.components.steps.tilbuid:group1title": [
+    {
+      "type": 0,
+      "value": "Meginmál"
+    }
+  ],
+  "web.components.steps.yfirlestur:group1title": [
+    {
+      "type": 0,
+      "value": "Meginmál"
+    }
+  ],
+  "web.components.steps.yfirlestur:tag": [
+    {
+      "type": 0,
+      "value": "Merking"
+    }
+  ],
+  "web.components.tables:emptyTable": [
+    {
+      "type": 0,
+      "value": "Engin mál finnast, líklega þarf að breyta síun."
+    }
+  ],
+  "web.components.tables:inProgress.columns.department": [
+    {
+      "type": 0,
+      "value": "Deild"
+    }
+  ],
+  "web.components.tables:inProgress.columns.employee": [
+    {
+      "type": 0,
+      "value": "Starfs."
+    }
+  ],
+  "web.components.tables:inProgress.columns.publishDate": [
+    {
+      "type": 0,
+      "value": "Birting"
+    }
+  ],
+  "web.components.tables:inProgress.columns.registrationDate": [
+    {
+      "type": 0,
+      "value": "Skráning"
+    }
+  ],
+  "web.components.tables:inProgress.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tables:inReview.columns.department": [
+    {
+      "type": 0,
+      "value": "Deild"
+    }
+  ],
+  "web.components.tables:inReview.columns.employee": [
+    {
+      "type": 0,
+      "value": "Starfs."
+    }
+  ],
+  "web.components.tables:inReview.columns.publishDate": [
+    {
+      "type": 0,
+      "value": "Birting"
+    }
+  ],
+  "web.components.tables:inReview.columns.registrationDate": [
+    {
+      "type": 0,
+      "value": "Skráning"
+    }
+  ],
+  "web.components.tables:inReview.columns.tag": [
+    {
+      "type": 0,
+      "value": "Merking"
+    }
+  ],
+  "web.components.tables:inReview.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tables:openCaseLinkText": [
+    {
+      "type": 0,
+      "value": "Sjá nánar"
+    }
+  ],
+  "web.components.tables:overview.columns.institution": [
+    {
+      "type": 0,
+      "value": "Stofnun"
+    }
+  ],
+  "web.components.tables:overview.columns.publishDate": [
+    {
+      "type": 0,
+      "value": "Útgáfudagur"
+    }
+  ],
+  "web.components.tables:overview.columns.status": [
+    {
+      "type": 0,
+      "value": "Staða/Nr."
+    }
+  ],
+  "web.components.tables:overview.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tables:ready.columns.institution": [
+    {
+      "type": 0,
+      "value": "Stofnun"
+    }
+  ],
+  "web.components.tables:ready.columns.publicationDate": [
+    {
+      "type": 0,
+      "value": "Birtingardagur"
+    }
+  ],
+  "web.components.tables:ready.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tables:selectedCases.columns.institution": [
+    {
+      "type": 0,
+      "value": "Stofnun"
+    }
+  ],
+  "web.components.tables:selectedCases.columns.number": [
+    {
+      "type": 0,
+      "value": "Númer"
+    }
+  ],
+  "web.components.tables:selectedCases.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tables:selectedCases.empty.message": [
+    {
+      "type": 0,
+      "value": "Engin mál valin."
+    }
+  ],
+  "web.components.tables:submitted.columns.department": [
+    {
+      "type": 0,
+      "value": "Deild"
+    }
+  ],
+  "web.components.tables:submitted.columns.publicationDate": [
+    {
+      "type": 0,
+      "value": "Birting"
+    }
+  ],
+  "web.components.tables:submitted.columns.registrationDate": [
+    {
+      "type": 0,
+      "value": "Skráning"
+    }
+  ],
+  "web.components.tables:submitted.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
+    }
+  ],
+  "web.components.tooltips:caseLabelTooltip.fasttrack": [
+    {
+      "type": 0,
+      "value": "Harðbirting"
+    }
+  ],
+  "web.components.tooltips:caseLabelTooltip.feedback": [
+    {
+      "type": 0,
+      "value": "Viðbrögð hafa borist frá auglýsanda"
+    }
+  ],
+  "web.components.tooltips:caseLabelTooltip.waiting": [
+    {
+      "type": 0,
+      "value": "Beðið svara"
+    }
+  ],
+  "web.page.caseOverview:banner.description": [
+    {
+      "type": 0,
+      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+    }
+  ],
+  "web.page.caseOverview:banner.title": [
+    {
+      "type": 0,
+      "value": "Heildaryfirlit"
+    }
+  ],
+  "web.page.caseOverview:breadcrumbs.casePublishing": [
+    {
+      "type": 0,
+      "value": "Heildaryfirlit"
+    }
+  ],
+  "web.page.caseOverview:breadcrumbs.dashboard": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.page.caseProcessingOverview:banner.description": [
+    {
+      "type": 0,
+      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis"
+    }
+  ],
+  "web.page.caseProcessingOverview:banner.title": [
+    {
+      "type": 0,
+      "value": "Vinnslusvæði Stjórnartíðinda"
+    }
+  ],
+  "web.page.caseProcessingOverview:breadcrumbs.cases": [
+    {
+      "type": 0,
+      "value": "Ritstjórn"
+    }
+  ],
+  "web.page.caseProcessingOverview:breadcrumbs.home": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.inProgress": [
+    {
+      "type": 0,
+      "value": "Grunnvinnsla ("
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.inReview": [
+    {
+      "type": 0,
+      "value": "Yfirlestur ("
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.ready": [
+    {
+      "type": 0,
+      "value": "Tilbúið ("
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.submitted": [
+    {
+      "type": 0,
+      "value": "Innsendingar ("
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "web.page.casePublishingOverview:banner.description": [
+    {
+      "type": 0,
+      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+    }
+  ],
+  "web.page.casePublishingOverview:banner.title": [
+    {
+      "type": 0,
+      "value": "Útgáfa mála"
+    }
+  ],
+  "web.page.casePublishingOverview:breadcrumbs.casePublishing": [
+    {
+      "type": 0,
+      "value": "Útgáfa mála"
+    }
+  ],
+  "web.page.casePublishingOverview:breadcrumbs.dashboard": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.page.casePublishingOverview:general.backToPublishing": [
+    {
+      "type": 0,
+      "value": "Til baka í útgáfu mála"
+    }
+  ],
+  "web.page.casePublishingOverview:general.publishCases": [
+    {
+      "type": 0,
+      "value": "Gefa út öll mál"
+    }
+  ],
+  "web.page.casePublishingOverview:notifications.success.message": [
+    {
+      "type": 0,
+      "value": "Málin eru nú orðin sýnileg á ytri vef."
+    }
+  ],
+  "web.page.casePublishingOverview:notifications.success.title": [
+    {
+      "type": 0,
+      "value": "Útgáfa mála heppnaðist"
+    }
+  ],
+  "web.page.casePublishingOverview:notifications.warning.message": [
+    {
+      "type": 0,
+      "value": "Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar."
+    }
+  ],
+  "web.page.casePublishingOverview:notifications.warning.title": [
+    {
+      "type": 0,
+      "value": "Mál til útgáfu"
+    }
+  ],
+  "web.page.caseSingle:actions.assignedTo": [
+    {
+      "type": 0,
+      "value": "Starfsmaður"
+    }
+  ],
+  "web.page.caseSingle:actions.assignedToPlaceholder": [
+    {
+      "type": 0,
+      "value": "Úthluta máli á starfsmann"
+    }
+  ],
+  "web.page.caseSingle:actions.nextStep": [
+    {
+      "type": 0,
+      "value": "Næsta skref"
+    }
+  ],
+  "web.page.caseSingle:actions.status": [
+    {
+      "type": 0,
+      "value": "Staða"
+    }
+  ],
+  "web.page.caseSingle:actions.title": [
+    {
+      "type": 0,
+      "value": "Upplýsingar"
+    }
+  ],
+  "web.page.caseSingle:banner.description": [
+    {
+      "type": 0,
+      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+    }
+  ],
+  "web.page.caseSingle:banner.title": [
+    {
+      "type": 0,
+      "value": "Vinnslusvæði Stjórnartíðinda"
+    }
+  ],
+  "web.page.caseSingle:breadcrumbs.case": [
+    {
+      "type": 0,
+      "value": "Vinnslusvæði"
+    }
+  ],
+  "web.page.caseSingle:breadcrumbs.casePublishing": [
+    {
+      "type": 0,
+      "value": "Ritstjórn"
+    }
+  ],
+  "web.page.caseSingle:breadcrumbs.dashboard": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.page.caseSingle:general.backToPublishing": [
+    {
+      "type": 0,
+      "value": "Til baka í útgáfu mála"
+    }
+  ],
+  "web.page.caseSingle:general.publishCases": [
+    {
+      "type": 0,
+      "value": "Gefa út öll mál"
+    }
+  ],
+  "web.page.caseSingle:paging.goBack": [
+    {
+      "type": 0,
+      "value": "Til baka"
+    }
+  ],
+  "web.page.caseSingle:paging.goBackOverview": [
+    {
+      "type": 0,
+      "value": "Til baka í yfirlit"
+    }
+  ],
+  "web.page.dashboard:banner.cards.all.description": [
+    {
+      "type": 0,
+      "value": "Öll mál, bæði í vinnslu og útgefin."
+    }
+  ],
+  "web.page.dashboard:banner.cards.all.title": [
+    {
+      "type": 0,
+      "value": "Heildarlisti"
+    }
+  ],
+  "web.page.dashboard:banner.cards.editorial.description": [
+    {
+      "type": 0,
+      "value": "Umsýsla frá innsendingu til útgáfu."
+    }
+  ],
+  "web.page.dashboard:banner.cards.editorial.title": [
+    {
+      "type": 0,
+      "value": "Ritstjórn"
+    }
+  ],
+  "web.page.dashboard:banner.cards.publishing.description": [
+    {
+      "type": 0,
+      "value": "Úthlutun númera og birting mála."
+    }
+  ],
+  "web.page.dashboard:banner.cards.publishing.title": [
+    {
+      "type": 0,
+      "value": "Útgáfa"
+    }
+  ],
+  "web.page.dashboard:banner.description": [
+    {
+      "type": 0,
+      "value": "Umsýslukerfi Stjórnartíðinda, morem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  ],
+  "web.page.dashboard:banner.title": [
+    {
+      "type": 0,
+      "value": "Stjórnartíðindi"
+    }
+  ],
+  "web.page.dashboard:general.admin": [
+    {
+      "type": 0,
+      "value": "Ritstjórn"
+    }
+  ],
+  "web.page.dashboard:general.caseStatuses": [
+    {
+      "type": 0,
+      "value": "Staða mála"
+    }
+  ],
+  "web.page.dashboard:general.openAdmin": [
+    {
+      "type": 0,
+      "value": "Opna ritstjórn"
+    }
+  ],
+  "web.page.dashboard:general.openPublishing": [
+    {
+      "type": 0,
+      "value": "Opna útgáfuferli"
+    }
+  ],
+  "web.page.dashboard:general.openStatistics": [
+    {
+      "type": 0,
+      "value": "Sjá alla tölfræði"
+    }
+  ],
+  "web.page.dashboard:general.publishing": [
+    {
+      "type": 0,
+      "value": "Útgáfa"
+    }
+  ],
+  "web.page.dashboard:general.statistics": [
+    {
+      "type": 0,
+      "value": "Tölfræði"
+    }
+  ],
+  "web.page.dashboard:imageWithText.new.description": [
+    {
+      "type": 0,
+      "value": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+    }
+  ],
+  "web.page.dashboard:imageWithText.new.linkText": [
+    {
+      "type": 0,
+      "value": "Nýskrá auglýsingu"
+    }
+  ],
+  "web.page.dashboard:imageWithText.new.title": [
+    {
+      "type": 0,
+      "value": "Nýskrá auglýsingu"
+    }
+  ],
+  "web.page.dashboard:imageWithText.print.description": [
+    {
+      "type": 0,
+      "value": "Porem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+    }
+  ],
+  "web.page.dashboard:imageWithText.print.linkText": [
+    {
+      "type": 0,
+      "value": "Sækja prentútgáfu"
+    }
+  ],
+  "web.page.dashboard:imageWithText.print.title": [
+    {
+      "type": 0,
+      "value": "Prentvæn útgáfa"
+    }
+  ],
+  "web.page.dashboard:tabs.admin.general": [
+    {
+      "type": 0,
+      "value": "Almennt"
+    }
+  ],
+  "web.page.dashboard:tabs.admin.inactive": [
+    {
+      "type": 0,
+      "value": "Óhreyfð mál"
+    }
+  ],
+  "web.page.dashboard:tabs.admin.personal": [
+    {
+      "type": 0,
+      "value": "Mín mál"
+    }
+  ],
+  "web.page.dashboard:tabs.statistics.a": [
+    {
+      "type": 0,
+      "value": "A-deild"
+    }
+  ],
+  "web.page.dashboard:tabs.statistics.b": [
+    {
+      "type": 0,
+      "value": "B-deild"
+    }
+  ],
+  "web.page.dashboard:tabs.statistics.c": [
+    {
+      "type": 0,
+      "value": "C-deild"
+    }
+  ]
+}

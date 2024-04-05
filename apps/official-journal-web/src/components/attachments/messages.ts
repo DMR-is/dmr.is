@@ -38,7 +38,7 @@ export const messages = {
       description: '',
     },
     cancel: {
-      id: 'web.components.comments:overwrite',
+      id: 'web.components.comments:cancel',
       defaultMessage: 'Hætta við',
       description: '',
     },
