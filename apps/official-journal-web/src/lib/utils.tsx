@@ -1,5 +1,8 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+import { ParsedUrlQuery } from 'querystring'
+
+import { isDefined } from '@island.is/shared/utils'
 
 import {
   Case,
@@ -7,6 +10,7 @@ import {
   CaseCommentCaseStatusEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
+  GetCasesRequest,
   GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
 import {
@@ -72,6 +76,8 @@ export const mapTabIdToCaseStatus = (param?: unknown) => {
       return GetEditorialOverviewStatusEnum.Yfirlestur
     case CaseProcessingTabIds.Ready:
       return GetEditorialOverviewStatusEnum.Tilbi
+    case GetEditorialOverviewStatusEnum.BeiSvara:
+      return GetEditorialOverviewStatusEnum.BeiSvara
     default:
       return GetEditorialOverviewStatusEnum.Innsent
   }
@@ -220,4 +226,22 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         ?.map(({ task }) => commentTaskToNode(task)),
     },
   ]
+}
+
+export const extractCaseProcessingFilters = (
+  query: ParsedUrlQuery,
+): { filters: GetCasesRequest; tab: string } => {
+  const values = Object.entries({
+    ...query,
+  })
+    .filter((ent) => ent[0] !== 'tab')
+    .filter(isDefined)
+
+  return {
+    filters: values.reduce(
+      (acc, [key, value]) => ({ ...acc, [key]: value }),
+      {},
+    ),
+    tab: query.tab as string,
+  }
 }

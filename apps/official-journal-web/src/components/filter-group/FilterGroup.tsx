@@ -1,9 +1,10 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
 
 import { FilterOption } from '../../context/filterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useQueryParams } from '../../hooks/useQueryParams'
 import * as styles from '../filter-popover/FilterPopover.css'
 import { messages } from './messages'
 
@@ -19,6 +20,29 @@ export const FilterGroup = ({ label, expanded, filters }: Props) => {
   const [localToggle, setLocalToggle] = useState(expanded)
 
   const localId = useId()
+
+  const { add, remove, get } = useQueryParams()
+
+  const handleToggle = (toggle: boolean, key: string, value: string) => {
+    const existingValue = get(key)
+    if (existingValue && toggle) {
+      add({ [key]: `${existingValue},${value}` })
+    } else if (existingValue && !toggle) {
+      const newValue = existingValue
+        .split(',')
+        .filter((v) => v !== value)
+        .join(',')
+      if (newValue) {
+        add({ [key]: newValue })
+      } else {
+        remove([key])
+      }
+    } else if (toggle) {
+      add({ [key]: value })
+    } else {
+      remove([key])
+    }
+  }
 
   return (
     <Box className={styles.filterExpandButtonWrapper}>
@@ -43,9 +67,21 @@ export const FilterGroup = ({ label, expanded, filters }: Props) => {
         id={localId}
         className={styles.filterGroup({ expanded: localToggle })}
       >
-        {filters.map((filter, i) => (
-          <Checkbox name={filter.label} key={i} label={filter.label} />
-        ))}
+        {filters.map((filter, i) => {
+          return (
+            <Checkbox
+              defaultChecked={get(filter.key)
+                ?.split(',')
+                .includes(filter.value)}
+              onChange={(e) =>
+                handleToggle(e.target.checked, filter.key, filter.value)
+              }
+              name={filter.label}
+              key={i}
+              label={filter.label}
+            />
+          )
+        })}
         <Box display="flex" justifyContent="flexEnd">
           <Button size="small" variant="text" icon="reload" iconType="outline">
             {formatMessage(messages.general.clearFilter)}

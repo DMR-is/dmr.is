@@ -85,6 +85,7 @@ export class CaseController {
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
+    console.log(params)
     return this.caseService.getEditorialOverview(params)
   }
 }

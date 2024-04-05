@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Box,
@@ -12,6 +12,7 @@ import { CasePublishingList } from '../components/case-publishing-list/CasePubli
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
 import { Tabs } from '../components/tabs/Tabs'
+import { FilterGroup } from '../context/filterContext'
 import { Case, GetCasesStatusEnum } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
@@ -24,12 +25,14 @@ import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
 import {
   CaseTableItem,
+  extractCaseProcessingFilters,
   mapQueryParamToCaseDepartment,
   mapTabIdToCaseDepartment,
 } from '../lib/utils'
 
 type Props = {
   cases: Case[]
+  filters?: FilterGroup[]
 }
 
 enum CasePublishViews {
@@ -37,12 +40,12 @@ enum CasePublishViews {
   Confirm = 'confirm',
 }
 
-const CasePublishingOverview: Screen<Props> = ({ cases }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
 
-  const { setRenderFilters } = useFilterContext()
+  const { setRenderFilters, setFilterGroups } = useFilterContext()
   const { setNotifications, clearNotifications } = useNotificationContext()
 
   const [selectedTab, setSelectedTab] = useState(
@@ -107,6 +110,12 @@ const CasePublishingOverview: Screen<Props> = ({ cases }) => {
     setRenderFilters(true)
     setCasesToPublish([])
   }
+
+  useEffect(() => {
+    if (filters) {
+      setFilterGroups(filters)
+    }
+  }, [])
 
   const tabs = [
     {
@@ -198,33 +207,42 @@ const CasePublishingOverview: Screen<Props> = ({ cases }) => {
 }
 
 CasePublishingOverview.getProps = async ({ query }) => {
-  const { tab, search } = query
+  const { tab } = query
+  const { filters: extractedFilters } = extractCaseProcessingFilters(query)
 
   const client = createDmrClient()
 
+  const filters = [
+    {
+      label: 'Birting',
+      options: [
+        { label: 'Mín mál', key: 'employeeId', value: '5804170510' },
+        { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
+        { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
+      ],
+    },
+    {
+      label: 'Deildir',
+      options: [
+        { label: 'A-deild', key: 'department', value: 'A-deild' },
+        { label: 'B-deild', key: 'department', value: 'B-deild' },
+        { label: 'C-deild', key: 'department', value: 'C-deild' },
+      ],
+    },
+  ]
+
   const { cases, paging } = await client.getCases({
-    search: search as string,
+    ...extractedFilters,
     status: GetCasesStatusEnum.Tilbi,
-    // department: mapTabIdToCaseDepartment(tab),
   })
 
   return {
     cases,
+    filters,
   }
 }
 
 export default withMainLayout(CasePublishingOverview, {
-  // fetch from api?
-  filterGroups: [
-    {
-      label: 'Birting',
-      options: [
-        { label: 'Mín mál', value: 'my-cases' },
-        { label: 'Mál í hraðbirtingu', value: 'fasttrack' },
-        { label: 'Mál sem bíða svara', value: 'waiting' },
-      ],
-    },
-  ],
   bannerProps: {
     showBanner: true,
     showFilters: true,
