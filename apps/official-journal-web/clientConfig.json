@@ -1019,6 +1019,27 @@
         },
         "required": ["id", "advertId", "type", "data"]
       },
+      "AdvertAttachment": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "File name for Attachment.",
+            "example": "Viðauki.pdf"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type Attachment.",
+            "example": "addendum"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL for Attachment.",
+            "example": "<url>"
+          }
+        },
+        "required": ["name", "type", "url"]
+      },
       "Advert": {
         "type": "object",
         "properties": {
@@ -1117,6 +1138,11 @@
           "signature": {
             "description": "Signatures for the advert.",
             "allOf": [{ "$ref": "#/components/schemas/AdvertSignature" }]
+          },
+          "attachments": {
+            "description": "Attachments for the advert.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertAttachment" }
           }
         },
         "required": [
@@ -1133,7 +1159,8 @@
           "categories",
           "involvedParty",
           "document",
-          "signature"
+          "signature",
+          "attachments"
         ]
       },
       "CaseCommentTask": {
@@ -1142,12 +1169,14 @@
           "from": {
             "type": "string",
             "description": "From who or what initied the task, used by client to show who inited the task.",
-            "example": "Ármann"
+            "example": "Ármann",
+            "nullable": true
           },
           "to": {
             "type": "string",
             "description": "To whom or what the task is assigned to.",
-            "example": "Pálina J"
+            "example": "Pálina J",
+            "nullable": true
           },
           "title": {
             "type": "string",
@@ -1164,7 +1193,8 @@
           "comment": {
             "type": "string",
             "description": "The comment itself",
-            "example": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?"
+            "example": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?",
+            "nullable": true
           }
         },
         "required": ["from", "to", "title", "comment"]

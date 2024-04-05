@@ -1,12 +1,15 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
+import { StringOption } from '@island.is/island-ui/core'
+
 import {
   Case,
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
+  CaseTagEnum,
   GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
 import {
@@ -117,6 +120,15 @@ export type CaseTableItem = {
   published?: boolean
   number?: number
   year?: number
+}
+
+export const enumToOptions = (
+  obj: typeof CaseStatusEnum | typeof CaseTagEnum,
+): StringOption[] => {
+  return Object.entries(obj).map(([_, value]) => ({
+    label: value,
+    value: value,
+  }))
 }
 
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {

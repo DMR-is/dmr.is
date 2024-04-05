@@ -306,6 +306,7 @@ export class MockJournalService implements IJournalService {
       involvedParty: null, // not implemented
       status: AdvertStatus.Submitted, // always submitted when coming from the application system
       signature: signature,
+      attachments: [],
     }
 
     return Promise.resolve({ advert })

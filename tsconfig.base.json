@@ -26,6 +26,9 @@
       "@island.is/island-ui/vanilla-extract-utils": [
         "submodules/island.is/libs/island-ui/vanilla-extract-utils/src/index.ts"
       ],
+      "@island.is/regulations/styling": [
+        "submodules/island.is/libs/regulations/src/lib/styling.ts"
+      ],
       "@island.is/shared/constants": [
         "submodules/island.is/libs/shared/constants/src/index.ts"
       ],
