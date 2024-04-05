@@ -65,7 +65,7 @@
         "cwd": "apps/official-journal-web"
       }
     },
-    "codegen": {
+    "generate": {
       "executor": "nx:run-commands",
       "options": {
         "command": "yarn openapi-generator -o apps/official-journal-web/src/gen/fetch -i apps/official-journal-web/clientConfig.json"
