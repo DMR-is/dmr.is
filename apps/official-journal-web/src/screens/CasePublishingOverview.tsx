@@ -117,6 +117,21 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
     }
   }, [])
 
+  const data: CaseTableItem[] = cases.map((c) => ({
+    labels: c.fastTrack ? ['fasttrack'] : [],
+    id: c.id,
+    department: c.advert.department.title,
+    title: c.advert.title,
+    created: c.createdAt,
+    publicationDate: '',
+    type: c.advert.type,
+    registrationDate: c.createdAt,
+    status: c.status,
+    institution: c.advert.involvedParty.title,
+    number: c.caseNumber,
+    year: c.year,
+  }))
+
   const tabs = [
     {
       id: CaseDepartmentTabs.A,
@@ -128,7 +143,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           selectedCases={departmentACases}
           setSelectedCases={setDepartmentACases}
           onContinue={proceedToPublishing}
-          cases={cases}
+          cases={data}
         />
       ),
     },
@@ -142,7 +157,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           selectedCases={departmentBCases}
           setSelectedCases={setDepartmentBCases}
           onContinue={proceedToPublishing}
-          cases={cases}
+          cases={data}
         />
       ),
     },
@@ -156,7 +171,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           selectedCases={departmentCCases}
           setSelectedCases={setDepartmentCCases}
           onContinue={proceedToPublishing}
-          cases={cases}
+          cases={data}
         />
       ),
     },
