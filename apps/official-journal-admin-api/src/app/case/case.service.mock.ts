@@ -43,8 +43,6 @@ export class CaseServiceMock implements ICaseService {
       })
     }
 
-    console.log(params)
-
     try {
       const { page } = params
 
