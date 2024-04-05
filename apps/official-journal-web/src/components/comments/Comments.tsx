@@ -10,22 +10,44 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseComment, CaseCommentTypeEnum } from '../../gen/fetch'
+import {
+  Case,
+  CaseCommentCaseStatusEnum,
+  CaseCommentTaskTitleEnum,
+  CaseCommentTypeEnum,
+} from '../../gen/fetch'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
 
 type Props = {
-  comments: CaseComment[]
+  activeCase: Case
 }
 
-export const Comments = ({ comments }: Props) => {
+export const Comments = ({ activeCase }: Props) => {
   const now = new Date()
   const [commentValue, setCommentValue] = useState('')
+
+  const addComment = () => {
+    activeCase.comments.push({
+      id: '1234',
+      createdAt: new Date().toISOString(),
+      type: CaseCommentTypeEnum.Comment,
+      caseStatus: activeCase.status as unknown as CaseCommentCaseStatusEnum,
+      task: {
+        from: activeCase.assignedTo,
+        to: null,
+        title: CaseCommentTaskTitleEnum.GerirAthugasemd,
+        comment: commentValue,
+      },
+    })
+    setCommentValue('')
+  }
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">Athugasemdir</Text>
-      {comments.map((c, i) => {
+
+      {activeCase.comments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
         const suffix = String(daysAgo).slice(-1) === '1' ? 'degi' : 'dögum'
         return (
@@ -64,20 +86,25 @@ export const Comments = ({ comments }: Props) => {
           </Box>
         )
       })}
-      <Box marginTop={2}>
-        <Stack space={2}>
-          <Input
-            type="text"
-            name="comment"
-            label="Athugasemd"
-            placeholder="Bættu við athugasemd"
-            value={commentValue}
-            onChange={(e) => setCommentValue(e.target.value)}
-            textarea
-          />
-          <Button disabled={!commentValue}>Vista athugasemd</Button>
-        </Stack>
-      </Box>
+
+      {activeCase.assignedTo && (
+        <Box marginTop={2}>
+          <Stack space={2}>
+            <Input
+              type="text"
+              name="comment"
+              label="Athugasemd"
+              placeholder="Bættu við athugasemd"
+              value={commentValue}
+              onChange={(e) => setCommentValue(e.target.value)}
+              textarea
+            />
+            <Button disabled={!commentValue} onClick={addComment}>
+              Vista athugasemd
+            </Button>
+          </Stack>
+        </Box>
+      )}
     </Box>
   )
 }

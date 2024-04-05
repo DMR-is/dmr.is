@@ -17,7 +17,7 @@ export const CASE_SUBMITTED: Case = {
   year: 2024,
   caseNumber: 1234,
   status: CaseStatus.Submitted,
-  tag: null,
+  tag: CaseTag.NotStarted,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
@@ -49,7 +49,7 @@ export const CASE_IN_PROGRESS: Case = {
   year: 2024,
   caseNumber: 8526,
   status: CaseStatus.InProgress,
-  tag: null,
+  tag: CaseTag.NotStarted,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   published: false,
@@ -57,7 +57,7 @@ export const CASE_IN_PROGRESS: Case = {
   paid: false,
   price: null,
   fastTrack: false,
-  assignedTo: null,
+  assignedTo: 'Ármann',
   advert: ADVERT_B_1278_2023,
   comments: [
     {
@@ -125,7 +125,7 @@ export const CASE_IN_REVIEW: Case = {
   publishedAt: null,
   paid: true,
   price: 23900,
-  fastTrack: false,
+  fastTrack: true,
   assignedTo: 'Pálína J',
   advert: ADVERT_B_866_2006,
   comments: [

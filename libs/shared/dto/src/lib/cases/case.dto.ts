@@ -71,8 +71,7 @@ export class Case {
     description: 'Internal tag for the case, default to null',
   })
   @IsEnum(CaseTag)
-  @ValidateIf((o) => o.tag !== null)
-  tag!: CaseTag | null
+  tag!: CaseTag
 
   @ApiProperty({
     type: String,

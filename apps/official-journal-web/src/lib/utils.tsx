@@ -2,6 +2,7 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 
+import { StringOption } from '@island.is/island-ui/core'
 import { isDefined } from '@island.is/shared/utils'
 
 import {
@@ -10,6 +11,7 @@ import {
   CaseCommentCaseStatusEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
+  CaseTagEnum,
   GetCasesRequest,
   GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
@@ -123,6 +125,15 @@ export type CaseTableItem = {
   published?: boolean
   number?: number
   year?: number
+}
+
+export const enumToOptions = (
+  obj: typeof CaseStatusEnum | typeof CaseTagEnum,
+): StringOption[] => {
+  return Object.entries(obj).map(([_, value]) => ({
+    label: value,
+    value: value,
+  }))
 }
 
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {

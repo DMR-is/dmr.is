@@ -10,6 +10,7 @@ export class CaseCommentTask {
     description:
       'From who or what initied the task, used by client to show who inited the task.',
     example: 'Ármann',
+    nullable: true,
   })
   @ValidateIf((o) => o.from !== null)
   @IsString()
@@ -19,6 +20,7 @@ export class CaseCommentTask {
     type: String,
     description: 'To whom or what the task is assigned to.',
     example: 'Pálina J',
+    nullable: true,
   })
   @ValidateIf((o) => o.to !== null)
   @IsString()
@@ -37,6 +39,7 @@ export class CaseCommentTask {
     description: 'The comment itself',
     example:
       'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+    nullable: true,
   })
   @ValidateIf((o) => o.comment !== null)
   @IsString()
