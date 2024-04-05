@@ -121,6 +121,13 @@ export const messages = {
       }),
     },
     selectedCases: {
+      empty: defineMessages({
+        message: {
+          id: 'web.components.tables:selectedCases.empty.message',
+          defaultMessage: 'Engin mál valin.',
+          description: 'No cases selected message',
+        },
+      }),
       columns: defineMessages({
         title: {
           id: 'web.components.tables:selectedCases.columns.title',
@@ -134,6 +141,30 @@ export const messages = {
         },
         institution: {
           id: 'web.components.tables:selectedCases.columns.institution',
+          defaultMessage: 'Stofnun',
+          description: 'Institution column',
+        },
+      }),
+    },
+    overview: {
+      columns: defineMessages({
+        publishDate: {
+          id: 'web.components.tables:overview.columns.publishDate',
+          defaultMessage: 'Útgáfudagur',
+          description: 'Publish date column',
+        },
+        status: {
+          id: 'web.components.tables:overview.columns.status',
+          defaultMessage: 'Staða/Nr.',
+          description: 'Status column',
+        },
+        title: {
+          id: 'web.components.tables:overview.columns.title',
+          defaultMessage: 'Heiti',
+          description: 'Title column',
+        },
+        institution: {
+          id: 'web.components.tables:overview.columns.institution',
           defaultMessage: 'Stofnun',
           description: 'Institution column',
         },

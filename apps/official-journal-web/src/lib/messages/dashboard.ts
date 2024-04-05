@@ -52,7 +52,7 @@ export const messages = {
       },
       inactive: {
         id: 'web.page.dashboard:tabs.admin.inactive',
-        defaultMessage: 'Óhreyfd mál',
+        defaultMessage: 'Óhreyfð mál',
         description: 'Inactive tab for the dashboard',
       },
     }),

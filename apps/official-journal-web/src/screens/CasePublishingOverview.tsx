@@ -19,8 +19,8 @@ import { useNotificationContext } from '../hooks/useNotificationContext'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseDepartmentTabs } from '../lib/constants'
-import { messages } from '../lib/messages/casePublish'
+import { CaseDepartmentTabs, Routes } from '../lib/constants'
+import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
 import {
   CaseTableItem,
@@ -32,12 +32,12 @@ type Props = {
   cases: Case[]
 }
 
-enum CasePublishScreens {
+enum CasePublishViews {
   Overview = 'overview',
   Confirm = 'confirm',
 }
 
-const CasePublishingPage: Screen<Props> = ({ cases }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
@@ -49,7 +49,7 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
     mapQueryParamToCaseDepartment(get('tab')),
   )
 
-  const [screen, setScreen] = useState(CasePublishScreens.Overview)
+  const [screen, setScreen] = useState(CasePublishViews.Overview)
 
   const [casesToPublish, setCasesToPublish] = useState<CaseTableItem[]>([])
 
@@ -82,13 +82,13 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
   }
 
   const backToOverview = () => {
-    setScreen(CasePublishScreens.Overview)
+    setScreen(CasePublishViews.Overview)
   }
 
   const proceedToPublishing = (selectedCases: CaseTableItem[]) => {
     setCasesToPublish(selectedCases)
     setRenderFilters(false)
-    setScreen(CasePublishScreens.Confirm)
+    setScreen(CasePublishViews.Confirm)
     clearNotifications()
     setNotifications({
       title: formatMessage(messages.notifications.warning.title),
@@ -164,10 +164,10 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
               '12/12',
               '12/12',
               '12/12',
-              screen === CasePublishScreens.Confirm ? '7/12' : '10/12',
+              screen === CasePublishViews.Confirm ? '7/12' : '10/12',
             ]}
           >
-            {screen === CasePublishScreens.Confirm ? (
+            {screen === CasePublishViews.Confirm ? (
               <>
                 <CasePublishingList
                   cases={cases.filter((cs) =>
@@ -197,7 +197,7 @@ const CasePublishingPage: Screen<Props> = ({ cases }) => {
   )
 }
 
-CasePublishingPage.getProps = async ({ query }) => {
+CasePublishingOverview.getProps = async ({ query }) => {
   const { tab, search } = query
 
   const client = createDmrClient()
@@ -213,7 +213,7 @@ CasePublishingPage.getProps = async ({ query }) => {
   }
 }
 
-export default withMainLayout(CasePublishingPage, {
+export default withMainLayout(CasePublishingOverview, {
   // fetch from api?
   filterGroups: [
     {
@@ -237,7 +237,7 @@ export default withMainLayout(CasePublishingPage, {
     breadcrumbs: [
       {
         title: messages.breadcrumbs.dashboard,
-        href: '/',
+        href: Routes.Dashboard,
       },
       {
         title: messages.breadcrumbs.casePublishing,

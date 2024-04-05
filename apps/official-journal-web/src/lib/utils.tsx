@@ -11,7 +11,7 @@ import {
 } from '../gen/fetch'
 import {
   CaseDepartmentTabs,
-  CaseOverviewTabIds,
+  CaseProcessingTabIds,
   FALLBACK_DOMAIN,
   JSON_ENDING,
 } from './constants'
@@ -47,30 +47,30 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   return pathname
 }
 
-export const mapQueryParamToCaseOverviewTab = (param?: unknown) => {
+export const mapQueryParamToCaseProcessingTab = (param?: unknown) => {
   switch (param) {
-    case CaseOverviewTabIds.Submitted:
-      return CaseOverviewTabIds.Submitted
-    case CaseOverviewTabIds.InProgress:
-      return CaseOverviewTabIds.InProgress
-    case CaseOverviewTabIds.InReview:
-      return CaseOverviewTabIds.InReview
-    case CaseOverviewTabIds.Ready:
-      return CaseOverviewTabIds.Ready
+    case CaseProcessingTabIds.Submitted:
+      return CaseProcessingTabIds.Submitted
+    case CaseProcessingTabIds.InProgress:
+      return CaseProcessingTabIds.InProgress
+    case CaseProcessingTabIds.InReview:
+      return CaseProcessingTabIds.InReview
+    case CaseProcessingTabIds.Ready:
+      return CaseProcessingTabIds.Ready
     default:
-      return CaseOverviewTabIds.Submitted
+      return CaseProcessingTabIds.Submitted
   }
 }
 
 export const mapTabIdToCaseStatus = (param?: unknown) => {
   switch (param) {
-    case CaseOverviewTabIds.Submitted:
+    case CaseProcessingTabIds.Submitted:
       return GetEditorialOverviewStatusEnum.Innsent
-    case CaseOverviewTabIds.InProgress:
+    case CaseProcessingTabIds.InProgress:
       return GetEditorialOverviewStatusEnum.Grunnvinnsla
-    case CaseOverviewTabIds.InReview:
+    case CaseProcessingTabIds.InReview:
       return GetEditorialOverviewStatusEnum.Yfirlestur
-    case CaseOverviewTabIds.Ready:
+    case CaseProcessingTabIds.Ready:
       return GetEditorialOverviewStatusEnum.Tilbi
     default:
       return GetEditorialOverviewStatusEnum.Innsent
@@ -114,6 +114,9 @@ export type CaseTableItem = {
   tag?: string
   institution?: string
   status: CaseStatusEnum
+  published?: boolean
+  number?: number
+  year?: number
 }
 
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {

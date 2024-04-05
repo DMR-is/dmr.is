@@ -4,9 +4,10 @@ import { Pie } from 'recharts'
 import { Box, Table as T, Text } from '@island.is/island-ui/core'
 import { theme } from '@island.is/island-ui/theme'
 
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useMockStatisticsNotPublished } from '../../hooks/useMockStatisticsNotPublished'
 import { PIE_CHART_DIMENSION } from '../../lib/constants'
-import { messages } from '../../lib/messages'
+import { messages } from './messages'
 import * as styles from './Statistics.css'
 
 type Props = {
@@ -19,6 +20,7 @@ const PieChart = dynamic(
 )
 
 export const StatisticsNotPublished = ({ department }: Props) => {
+  const { formatMessage } = useFormatMessage()
   const { data, total } = useMockStatisticsNotPublished(department)
 
   const mapTitleToColor = (title: string) => {
@@ -45,9 +47,9 @@ export const StatisticsNotPublished = ({ department }: Props) => {
           marginBottom={3}
         />
         <Text marginBottom={1} variant="h3">
-          {messages.components.statistics.emptyTitle}
+          {formatMessage(messages.general.emptyTitle)}
         </Text>
-        <Text>{messages.components.statistics.emptyIntro}</Text>
+        <Text>{formatMessage(messages.general.emptyIntro)}</Text>
       </Box>
     )
 
@@ -60,7 +62,7 @@ export const StatisticsNotPublished = ({ department }: Props) => {
 
   return (
     <Box>
-      <Text>{messages.components.statistics.intro}</Text>
+      <Text>{formatMessage(messages.general.intro)}</Text>
       <Box className={styles.statisticsWrapper}>
         <PieChart width={PIE_CHART_DIMENSION} height={PIE_CHART_DIMENSION}>
           <Pie
@@ -112,7 +114,7 @@ export const StatisticsNotPublished = ({ department }: Props) => {
                   style={{ backgroundColor: 'transparent' }}
                 />
                 <Text fontWeight="medium" variant="medium">
-                  {messages.components.statistics.total}
+                  {formatMessage(messages.general.total)}
                 </Text>
               </Box>
             </T.Data>
