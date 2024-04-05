@@ -1,5 +1,5 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import {
   Box,
@@ -24,6 +24,7 @@ type Props = {
 }
 
 export const Comments = ({ activeCase }: Props) => {
+  const [expanded, setExpanded] = useState(activeCase.comments.length < 5)
   const now = new Date()
   const [commentValue, setCommentValue] = useState('')
 
@@ -43,6 +44,8 @@ export const Comments = ({ activeCase }: Props) => {
     setCommentValue('')
   }
 
+  console.log({ expanded })
+
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">Athugasemdir</Text>
@@ -50,40 +53,64 @@ export const Comments = ({ activeCase }: Props) => {
       {activeCase.comments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
         const suffix = String(daysAgo).slice(-1) === '1' ? 'degi' : 'dögum'
+
+        if (!expanded && i !== 0 && i < activeCase.comments.length - 4) {
+          return null
+        }
         return (
-          <Box
-            key={i}
-            display="flex"
-            justifyContent="spaceBetween"
-            alignItems="center"
-            padding={[1, 2, 3]}
-            borderBottomWidth="standard"
-            borderColor="purple200"
-          >
-            <Icon
-              icon={
-                c.type === CaseCommentTypeEnum.Comment
-                  ? 'pencil'
-                  : 'arrowForward'
-              }
-              color="purple400"
-              size="medium"
-              className={styles.icon}
-            />
+          <Fragment key={i}>
+            <Box
+              display="flex"
+              justifyContent="spaceBetween"
+              alignItems="center"
+              padding={[1, 2, 3]}
+              borderBottomWidth="standard"
+              borderColor="purple200"
+            >
+              <Icon
+                icon={
+                  c.type === CaseCommentTypeEnum.Comment
+                    ? 'pencil'
+                    : 'arrowForward'
+                }
+                color="purple400"
+                size="medium"
+                className={styles.icon}
+              />
 
-            <div className={styles.text}>
-              <Text>{commentTaskToNode(c.task)}</Text>
-              {c.task.comment ? <Text>{c.task.comment}</Text> : null}
-            </div>
+              <div className={styles.text}>
+                <Text>{commentTaskToNode(c.task)}</Text>
+                {c.task.comment ? <Text>{c.task.comment}</Text> : null}
+              </div>
 
-            <Text whiteSpace="nowrap">
-              {daysAgo === 0
-                ? 'Í dag'
-                : daysAgo === 1
-                ? 'Í gær'
-                : 'f. ' + daysAgo + ' ' + suffix}
-            </Text>
-          </Box>
+              <Text whiteSpace="nowrap">
+                {daysAgo === 0
+                  ? 'Í dag'
+                  : daysAgo === 1
+                  ? 'Í gær'
+                  : 'f. ' + daysAgo + ' ' + suffix}
+              </Text>
+            </Box>
+
+            {!expanded && i === 0 ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                padding={[1, 2]}
+                borderBottomWidth="standard"
+                borderColor="purple200"
+              >
+                <Button
+                  variant="text"
+                  as="button"
+                  size="small"
+                  onClick={() => setExpanded(true)}
+                >
+                  Sjá allar athugasemdir ({activeCase.comments.length - 5})
+                </Button>
+              </Box>
+            ) : null}
+          </Fragment>
         )
       })}
 
