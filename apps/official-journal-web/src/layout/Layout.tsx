@@ -11,6 +11,7 @@ import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
 import { FilterContextProvider, FilterGroup } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
+import icelandic from '../i18n/strings/is-compiled.json'
 import type { Screen } from '../lib/types'
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
@@ -40,7 +41,7 @@ const Layout: Screen<LayoutProps> = ({
   ]
 
   return (
-    <IntlProvider locale="is">
+    <IntlProvider locale="is" messages={icelandic}>
       <Provider>
         <NotificationContextProvider>
           <FilterContextProvider filterGroups={filterGroups}>
