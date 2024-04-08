@@ -67,7 +67,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run codegen
-        run: yarn nx run ${{ matrix.next-app }}:generate
+        run: yarn nx run ${{ matrix.next-app }}:codegen
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

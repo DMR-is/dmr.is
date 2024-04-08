@@ -80,7 +80,7 @@ export const messages = {
     },
     nextStep: {
       id: 'web.page.caseSingle:actions.nextStep',
-      defaultMessage: 'Næsta skrep',
+      defaultMessage: 'Næsta skref',
       description: '',
     },
     assignedToPlaceholder: {
