@@ -49,6 +49,7 @@ export * from './cases/case.dto'
 export * from './cases/get-cases-query.dto'
 export * from './cases/get-cases-response'
 export * from './cases/case-editorial-overview.dto'
+export * from './cases/post-publish-body.dto'
 
 export * from './statistics/statistics-department.dto'
 export * from './statistics/statistics-overview-dto'

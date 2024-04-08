@@ -5,7 +5,7 @@ const config: Configuration = new Configuration({
   fetchApi: createEnhancedFetch(),
   basePath:
     process.env.NODE_ENV === 'production'
-      ? process.env.DMR_BASE_PATH
+      ? process.env.DMR_ADMIN_API_BASE_PATH
       : 'http://localhost:4000',
 })
 

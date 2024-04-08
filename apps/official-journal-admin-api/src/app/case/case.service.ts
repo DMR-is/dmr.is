@@ -6,6 +6,7 @@ import {
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
 import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
@@ -36,6 +37,11 @@ export class CaseService implements ICaseService {
 
   getEditorialOverview(params: GetCasesQuery): Promise<CaseEditorialOverview> {
     this.logger.info(params)
+    throw new NotImplementedException()
+  }
+
+  postCasesPublish(body: PostCasePublishBody): Promise<void> {
+    this.logger.info(body)
     throw new NotImplementedException()
   }
 }

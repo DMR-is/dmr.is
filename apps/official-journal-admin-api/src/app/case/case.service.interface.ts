@@ -5,6 +5,7 @@ import {
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
 export interface ICaseService {
@@ -15,6 +16,8 @@ export interface ICaseService {
   getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse>
 
   getEditorialOverview(params?: GetCasesQuery): Promise<CaseEditorialOverview>
+
+  postCasesPublish(body: PostCasePublishBody): Promise<void>
 }
 
 export const ICaseService = Symbol('ICaseService')
