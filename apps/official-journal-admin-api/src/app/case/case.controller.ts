@@ -6,9 +6,21 @@ import {
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
-import { Controller, Get, Inject, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Inject,
+  InternalServerErrorException,
+  Post,
+  Query,
+} from '@nestjs/common'
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { ICaseService } from './case.service.interface'
@@ -86,5 +98,37 @@ export class CaseController {
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
     return this.caseService.getEditorialOverview(params)
+  }
+
+  @Post('publish')
+  @ApiOperation({
+    operationId: 'postPublish',
+    summary: 'Publish cases',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cases published',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async publish(@Body() body: PostCasePublishBody): Promise<void> {
+    try {
+      await this.caseService.postCasesPublish(body)
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      }
+
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
   }
 }

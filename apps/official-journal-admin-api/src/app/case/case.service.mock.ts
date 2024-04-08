@@ -2,6 +2,7 @@ import { isBooleanString, isString, isUUID } from 'class-validator'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
+  AdvertStatus,
   Case,
   CaseEditorialOverview,
   CaseStatus,
@@ -9,6 +10,7 @@ import {
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -165,5 +167,36 @@ export class CaseServiceMock implements ICaseService {
       },
       paging,
     })
+  }
+
+  postCasesPublish(body: PostCasePublishBody): Promise<void> {
+    const { caseIds } = body
+
+    if (!caseIds || !caseIds.length) {
+      throw new BadRequestException('Missing ids')
+    }
+
+    try {
+      const cases = caseIds.map((id) => {
+        const found = ALL_MOCK_CASES.find((c) => c.id === id)
+
+        if (!found) {
+          throw new NotFoundException('Case not found')
+        }
+
+        return found
+      })
+
+      const now = new Date().toISOString()
+      cases.forEach((c) => {
+        c.modifiedAt = now
+        c.publishedAt = now
+        c.published = true
+      })
+
+      return Promise.resolve()
+    } catch (error) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
   }
 }
