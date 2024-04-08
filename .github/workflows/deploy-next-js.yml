@@ -2,15 +2,14 @@ name: Deploy APIs to AWS Dev
 
 on:
   workflow_run:
-    workflows: ["Monorepo pipeline - quality"]
-    branches: ["main"]
+    workflows: ['Monorepo pipeline - quality']
+    branches: ['main']
     types:
       - completed
 
 env:
   AWS_REGION: eu-west-1
   AWS_DEV_ACCOUNT_ID: 555454216281
-
 
 permissions:
   id-token: write # Required f. IAM Token
@@ -21,11 +20,10 @@ jobs:
     strategy:
       matrix:
         next-app: [official-journal-web]
-    name: "Build and push next-app: ${{ matrix.next-app }} to S3"
+    name: 'Build and push next-app: ${{ matrix.next-app }} to S3'
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -43,7 +41,6 @@ jobs:
         run: |
           sudo npm i -g corepack
           corepack prepare yarn@4.0.2 --activate
-    
 
       - name: Calculate cache key for node_modules
         id: calculate_node_modules_hash
@@ -69,21 +66,24 @@ jobs:
         if: steps.node-modules.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
+      - name: Run codegen
+        run: yarn nx run ${{ matrix.next-app }}:codegen
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
           role-session-name: GitHub-Action-Role
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Build and push to S3
         run: |
           yarn nx run ${{ matrix.next-app }}:open-next-build
           pushd "dist/apps/${{ matrix.next-app }}/.open-next"
-          zip -r -q "../../../../${{ github.sha }}.zip" "." 
+          zip -r -q "../../../../${{ github.sha }}.zip" "."
           popd
-          aws s3 cp "${{ github.sha }}.zip" "s3://official-journal-web-dev-next-builds/${{ matrix.next-app }}/${{ github.sha }}.zip" 
-      
+          aws s3 cp "${{ github.sha }}.zip" "s3://official-journal-web-dev-next-builds/${{ matrix.next-app }}/${{ github.sha }}.zip"
+
       - uses: actions/checkout@v4
         with:
           repository: DMR-is/infrastructure
@@ -92,7 +92,7 @@ jobs:
       - uses: Homebrew/actions/setup-homebrew@master
         name: Set up Homebrew
         id: set-up-homebrew
-        
+
       - name: Cache Homebrew Bundler RubyGems
         id: cache
         uses: actions/cache@v3
@@ -100,7 +100,7 @@ jobs:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ubuntu-latest-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
           restore-keys: ubuntu-latest-rubygems-
-      
+
       - name: Install Terragrunt
         run: brew install terragrunt
 
@@ -117,4 +117,3 @@ jobs:
           commit_message: ${{ steps.deploy.outputs.COMMIT_MSG }}
           branch: main
           skip_fetch: true
-        
