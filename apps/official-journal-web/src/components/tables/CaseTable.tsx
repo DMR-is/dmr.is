@@ -11,9 +11,10 @@ import {
   Table as T,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum } from '../../gen/fetch'
+import { CaseStatusEnum, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useQueryParams } from '../../hooks/useQueryParams'
 import { caseStatusMap } from '../../lib/utils'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -46,11 +47,7 @@ export type Props = {
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
   renderLink?: boolean
-  paging?: {
-    page: number
-    totalPages: number
-    totalItems: number
-  }
+  paging?: Paging
 }
 
 export type CaseTableColumnSort = {
@@ -69,6 +66,8 @@ export const CaseTable = ({
   paging,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const { add } = useQueryParams()
 
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
@@ -192,17 +191,18 @@ export const CaseTable = ({
           </T.Body>
         )}
       </T.Table>
-      {paging && (
+      {paging && paging.totalPages > 1 && (
         <Box marginTop={3}>
           <Pagination
-            page={0}
-            renderLink={function (
-              page: number,
-              className: string,
-              children: ReactNode,
-            ): ReactNode {
-              throw new Error('Function not implemented.')
-            }}
+            page={paging.page}
+            itemsPerPage={paging.pageSize}
+            totalItems={paging.totalItems}
+            totalPages={paging.totalPages}
+            renderLink={(page, className, children) => (
+              <button className={className} onClick={() => add({ page })}>
+                {children}
+              </button>
+            )}
           />
         </Box>
       )}

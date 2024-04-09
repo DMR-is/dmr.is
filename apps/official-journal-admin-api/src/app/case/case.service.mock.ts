@@ -1,8 +1,8 @@
-import { isBooleanString, isString, isUUID } from 'class-validator'
+import { isBooleanString } from 'class-validator'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
-  AdvertStatus,
   Case,
   CaseEditorialOverview,
   CaseStatus,
@@ -46,7 +46,7 @@ export class CaseServiceMock implements ICaseService {
     }
 
     try {
-      const { page } = params
+      const { page, pageSize } = params
 
       const filteredCases = ALL_MOCK_CASES.filter((c) => {
         if (params?.search) {
@@ -104,9 +104,15 @@ export class CaseServiceMock implements ICaseService {
         return true
       })
 
+      const withPaging = generatePaging(filteredCases, page, pageSize)
+      const pagedCases = filteredCases.slice(
+        withPaging.pageSize * (withPaging.page - 1),
+        withPaging.pageSize * withPaging.page,
+      )
+
       return Promise.resolve({
-        cases: filteredCases,
-        paging: generatePaging(filteredCases, page),
+        cases: pagedCases,
+        paging: withPaging,
       })
     } catch (error) {
       throw new InternalServerErrorException('Internal server error.')
@@ -156,6 +162,8 @@ export class CaseServiceMock implements ICaseService {
     })
 
     const { cases, paging } = await this.getCases(params)
+
+    console.log(paging)
 
     return Promise.resolve({
       data: cases,

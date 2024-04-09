@@ -2,8 +2,8 @@ import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 
 export function generatePaging(
   data: unknown[],
-  page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
+  page: number | undefined = 1,
+  pageSize: number | undefined = DEFAULT_PAGE_SIZE,
 ) {
   const totalPages = Math.ceil(data.length / pageSize)
   const totalItems = data.length
@@ -11,8 +11,8 @@ export function generatePaging(
   const previousPage = page - 1
 
   return {
-    page,
-    pageSize,
+    page: Number(page),
+    pageSize: Number(pageSize),
     totalPages,
     totalItems,
     nextPage: nextPage <= totalPages ? nextPage : null,
