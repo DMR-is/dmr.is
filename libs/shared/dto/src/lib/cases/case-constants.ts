@@ -3,6 +3,7 @@ export enum CaseStatus {
   InProgress = 'Grunnvinnsla',
   InReview = 'Yfirlestur',
   ReadyForPublishing = 'Tilbúið',
+  Published = 'Útgefið',
   Waiting = 'Beðið svara',
   Rejected = 'Birtingu hafnað',
 }

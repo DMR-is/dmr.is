@@ -70,6 +70,7 @@
                 "Grunnvinnsla",
                 "Yfirlestur",
                 "Tilbúið",
+                "Útgefið",
                 "Beðið svara",
                 "Birtingu hafnað"
               ],
@@ -207,6 +208,7 @@
                 "Grunnvinnsla",
                 "Yfirlestur",
                 "Tilbúið",
+                "Útgefið",
                 "Beðið svara",
                 "Birtingu hafnað"
               ],
@@ -1259,6 +1261,7 @@
               "Grunnvinnsla",
               "Yfirlestur",
               "Tilbúið",
+              "Útgefið",
               "Beðið svara",
               "Birtingu hafnað"
             ],
@@ -1307,6 +1310,7 @@
               "Grunnvinnsla",
               "Yfirlestur",
               "Tilbúið",
+              "Útgefið",
               "Beðið svara",
               "Birtingu hafnað"
             ],
