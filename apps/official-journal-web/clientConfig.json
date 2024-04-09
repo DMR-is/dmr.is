@@ -70,7 +70,8 @@
                 "Grunnvinnsla",
                 "Yfirlestur",
                 "Tilbúið",
-                "Beðið svara",
+                "Útgefið",
+                "Tekið úr birtingu",
                 "Birtingu hafnað"
               ],
               "type": "string"
@@ -207,7 +208,8 @@
                 "Grunnvinnsla",
                 "Yfirlestur",
                 "Tilbúið",
-                "Beðið svara",
+                "Útgefið",
+                "Tekið úr birtingu",
                 "Birtingu hafnað"
               ],
               "type": "string"
@@ -1259,7 +1261,8 @@
               "Grunnvinnsla",
               "Yfirlestur",
               "Tilbúið",
-              "Beðið svara",
+              "Útgefið",
+              "Tekið úr birtingu",
               "Birtingu hafnað"
             ],
             "example": "Innsent",
@@ -1307,7 +1310,8 @@
               "Grunnvinnsla",
               "Yfirlestur",
               "Tilbúið",
-              "Beðið svara",
+              "Útgefið",
+              "Tekið úr birtingu",
               "Birtingu hafnað"
             ],
             "example": "Innsent",

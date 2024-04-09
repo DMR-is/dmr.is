@@ -114,7 +114,5 @@ export const CaseTableReady = ({
     ],
   }))
 
-  return (
-    <CaseTable columns={columns} rows={rows} link={Routes.ProcessingDetail} />
-  )
+  return <CaseTable columns={columns} rows={rows} />
 }

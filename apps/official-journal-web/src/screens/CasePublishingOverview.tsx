@@ -13,7 +13,7 @@ import { CasePublishingTab } from '../components/case-publishing-tab/CasePublish
 import { Section } from '../components/section/Section'
 import { Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, GetCasesStatusEnum } from '../gen/fetch'
+import { Case, GetCasesStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useNotificationContext } from '../hooks/useNotificationContext'
@@ -27,11 +27,11 @@ import {
   CaseTableItem,
   extractCaseProcessingFilters,
   mapQueryParamToCaseDepartment,
-  mapTabIdToCaseDepartment,
 } from '../lib/utils'
 
 type Props = {
   cases: Case[]
+  paging: Paging
   filters?: FilterGroup[]
 }
 
@@ -40,7 +40,7 @@ enum CasePublishViews {
   Confirm = 'confirm',
 }
 
-const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
@@ -122,8 +122,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
     id: c.id,
     department: c.advert.department.title,
     title: c.advert.title,
-    created: c.createdAt,
-    publicationDate: '',
+    created: c.advert.createdDate,
+    publicationDate: c.advert.publicationDate ?? '',
     type: c.advert.type,
     registrationDate: c.createdAt,
     status: c.status,
@@ -144,6 +144,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           setSelectedCases={setDepartmentACases}
           onContinue={proceedToPublishing}
           cases={data}
+          paging={paging}
         />
       ),
     },
@@ -158,6 +159,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           setSelectedCases={setDepartmentBCases}
           onContinue={proceedToPublishing}
           cases={data}
+          paging={paging}
         />
       ),
     },
@@ -172,6 +174,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters }) => {
           setSelectedCases={setDepartmentCCases}
           onContinue={proceedToPublishing}
           cases={data}
+          paging={paging}
         />
       ),
     },
@@ -253,6 +256,7 @@ CasePublishingOverview.getProps = async ({ query }) => {
 
   return {
     cases,
+    paging,
     filters,
   }
 }

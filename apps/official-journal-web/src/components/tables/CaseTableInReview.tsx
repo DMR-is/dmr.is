@@ -128,12 +128,5 @@ export const CaseTableInReview = ({ data, paging }: Props) => {
     ],
   }))
 
-  return (
-    <CaseTable
-      columns={columns}
-      rows={rows}
-      paging={paging}
-      link={Routes.ProcessingDetail}
-    />
-  )
+  return <CaseTable columns={columns} rows={rows} paging={paging} />
 }

@@ -35,6 +35,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
   if (!activeCase || !step) {
     return null
   }
+
   const stepper = generateSteps(activeCase)
   const prevStep =
     caseSteps.indexOf(step) > 0

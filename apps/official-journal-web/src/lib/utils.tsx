@@ -20,6 +20,7 @@ import {
   CaseProcessingTabIds,
   FALLBACK_DOMAIN,
   JSON_ENDING,
+  Routes,
 } from './constants'
 
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
@@ -78,10 +79,8 @@ export const mapTabIdToCaseStatus = (param?: unknown) => {
       return GetEditorialOverviewStatusEnum.Yfirlestur
     case CaseProcessingTabIds.Ready:
       return GetEditorialOverviewStatusEnum.Tilbi
-    case GetEditorialOverviewStatusEnum.BeiSvara:
-      return GetEditorialOverviewStatusEnum.BeiSvara
     default:
-      return GetEditorialOverviewStatusEnum.Innsent
+      return GetEditorialOverviewStatusEnum.Tilbi
   }
 }
 
@@ -141,26 +140,46 @@ const caseStatusToIndex: Record<CaseStatusEnum, number> = {
   [CaseStatusEnum.Grunnvinnsla]: 1,
   [CaseStatusEnum.Yfirlestur]: 2,
   [CaseStatusEnum.Tilbi]: 3,
-  [CaseStatusEnum.BeiSvara]: 4,
-  [CaseStatusEnum.BirtinguHafna]: 5,
+  [CaseStatusEnum.Tgefi]: 4,
+  [CaseStatusEnum.TekiRBirtingu]: 5,
+  [CaseStatusEnum.BirtinguHafna]: 6,
+}
+
+export const generateCaseLink = (status: CaseStatusEnum, caseId: string) => {
+  let route = Routes.OverviewDetail
+
+  if (
+    status === CaseStatusEnum.Tgefi ||
+    status === CaseStatusEnum.BirtinguHafna ||
+    status === CaseStatusEnum.TekiRBirtingu
+  ) {
+    route = Routes.OverviewDetail
+  }
+
+  if (status === CaseStatusEnum.Innsent) {
+    route = Routes.ProcessingDetailSubmitted
+  }
+  if (status === CaseStatusEnum.Grunnvinnsla) {
+    route = Routes.ProcessingDetailInProgress
+  }
+  if (status === CaseStatusEnum.Yfirlestur) {
+    route = Routes.ProcessingDetailInReview
+  }
+  if (status === CaseStatusEnum.Tilbi) {
+    route = Routes.ProcessingDetailReady
+  }
+
+  return route.replace(':caseId', caseId)
 }
 
 export type CaseStep = 'innsending' | 'grunnvinnsla' | 'yfirlestur' | 'tilbuid'
+
 export const caseSteps: Array<CaseStep> = [
   'innsending',
   'grunnvinnsla',
   'yfirlestur',
   'tilbuid',
 ]
-
-export const caseStatusMap: Record<CaseStatusEnum, CaseStep> = {
-  [CaseStatusEnum.Innsent]: 'innsending',
-  [CaseStatusEnum.Grunnvinnsla]: 'grunnvinnsla',
-  [CaseStatusEnum.Yfirlestur]: 'yfirlestur',
-  [CaseStatusEnum.Tilbi]: 'tilbuid',
-  [CaseStatusEnum.BeiSvara]: 'tilbuid',
-  [CaseStatusEnum.BirtinguHafna]: 'tilbuid',
-}
 
 type StepsType = {
   step: CaseStep
