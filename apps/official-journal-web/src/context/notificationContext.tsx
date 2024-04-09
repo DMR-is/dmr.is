@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import { createContext } from 'react'
 
 type Notification = {
@@ -44,7 +44,7 @@ export const NotificationContextProvider = ({
     clearNotifications,
   }
 
-  const [state, setState] = React.useState(initalState)
+  const [state, setState] = useState(initalState)
 
   return (
     <NotificationContext.Provider value={state}>

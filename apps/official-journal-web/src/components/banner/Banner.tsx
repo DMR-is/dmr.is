@@ -1,4 +1,3 @@
-import React from 'react'
 import { MessageDescriptor } from 'react-intl'
 
 import {

@@ -41,20 +41,6 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
     })
   }
 
-  const data = cases.map((item) => ({
-    id: item.id,
-    publicationDate: item.advert.publicationDate ?? '',
-    registrationDate: item.createdAt,
-    department: item.advert.department.title,
-    labels: [],
-    status: item.status,
-    published: item.published,
-    number: item.caseNumber,
-    year: item.year,
-    title: item.advert.title,
-    institution: item.advert.involvedParty.title,
-  }))
-
   useEffect(() => {
     if (filters) {
       setFilterGroups(filters)
@@ -65,17 +51,17 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
     {
       id: CaseDepartmentTabs.A,
       label: CaseDepartmentTabs.A,
-      content: <CaseTableOverview data={data} paging={paging} />,
+      content: <CaseTableOverview data={cases} paging={paging} />,
     },
     {
       id: CaseDepartmentTabs.B,
       label: CaseDepartmentTabs.B,
-      content: <CaseTableOverview data={data} paging={paging} />,
+      content: <CaseTableOverview data={cases} paging={paging} />,
     },
     {
       id: CaseDepartmentTabs.C,
       label: CaseDepartmentTabs.C,
-      content: <CaseTableOverview data={data} paging={paging} />,
+      content: <CaseTableOverview data={cases} paging={paging} />,
     },
   ]
 
