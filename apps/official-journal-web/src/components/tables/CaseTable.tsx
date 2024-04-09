@@ -1,5 +1,5 @@
 import reverse from 'lodash/reverse'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   ArrowLink,
@@ -11,9 +11,10 @@ import {
   Table as T,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum } from '../../gen/fetch'
+import { CaseStatusEnum, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useQueryParams } from '../../hooks/useQueryParams'
 import { caseStatusMap } from '../../lib/utils'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -45,12 +46,8 @@ export type Props = {
   defaultSort?: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
-  renderLink?: boolean
-  paging?: {
-    page: number
-    totalPages: number
-    totalItems: number
-  }
+  link?: string
+  paging?: Paging
 }
 
 export type CaseTableColumnSort = {
@@ -61,7 +58,7 @@ export type CaseTableColumnSort = {
 export const CaseTable = ({
   columns,
   rows,
-  renderLink = true,
+  link,
   defaultSort = {
     direction: 'asc',
     key: columns.find((column) => column.sortable)?.name || '',
@@ -69,6 +66,8 @@ export const CaseTable = ({
   paging,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const { add } = useQueryParams()
 
   const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
@@ -160,7 +159,7 @@ export const CaseTable = ({
                     {cell.children}
                   </TableCell>
                 ))}
-                {renderLink && (
+                {link && (
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
@@ -168,19 +167,11 @@ export const CaseTable = ({
                       })}
                     >
                       {!breakpoints.xl ? (
-                        <LinkV2
-                          href={`/ritstjorn/${row.caseId}/${
-                            caseStatusMap[row.status]
-                          }`}
-                        >
+                        <LinkV2 href={link.replace(':caseId', row.caseId)}>
                           <Icon icon="arrowForward" color="blue400" />
                         </LinkV2>
                       ) : (
-                        <ArrowLink
-                          href={`/ritstjorn/${row.caseId}/${
-                            caseStatusMap[row.status]
-                          }`}
-                        >
+                        <ArrowLink href={link.replace(':caseId', row.caseId)}>
                           {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>
                       )}
@@ -192,17 +183,18 @@ export const CaseTable = ({
           </T.Body>
         )}
       </T.Table>
-      {paging && (
+      {paging && paging.totalPages > 1 && (
         <Box marginTop={3}>
           <Pagination
-            page={0}
-            renderLink={function (
-              page: number,
-              className: string,
-              children: ReactNode,
-            ): ReactNode {
-              throw new Error('Function not implemented.')
-            }}
+            page={paging.page}
+            itemsPerPage={paging.pageSize}
+            totalItems={paging.totalItems}
+            totalPages={paging.totalPages}
+            renderLink={(page, className, children) => (
+              <button className={className} onClick={() => add({ page })}>
+                {children}
+              </button>
+            )}
           />
         </Box>
       )}

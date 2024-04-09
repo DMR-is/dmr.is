@@ -6,7 +6,7 @@ import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case } from '../gen/fetch'
+import { Case, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
@@ -22,10 +22,11 @@ import {
 
 type Props = {
   cases: Case[]
+  paging: Paging
   filters?: FilterGroup[]
 }
 
-const CaseOverview: Screen<Props> = ({ cases, filters }) => {
+const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
   const { add, get } = useQueryParams()
   const { setFilterGroups } = useFilterContext()
 
@@ -58,23 +59,23 @@ const CaseOverview: Screen<Props> = ({ cases, filters }) => {
     if (filters) {
       setFilterGroups(filters)
     }
-  })
+  }, [])
 
   const tabs = [
     {
       id: CaseDepartmentTabs.A,
       label: CaseDepartmentTabs.A,
-      content: <CaseTableOverview data={data} />,
+      content: <CaseTableOverview data={data} paging={paging} />,
     },
     {
       id: CaseDepartmentTabs.B,
       label: CaseDepartmentTabs.B,
-      content: <CaseTableOverview data={data} />,
+      content: <CaseTableOverview data={data} paging={paging} />,
     },
     {
       id: CaseDepartmentTabs.C,
       label: CaseDepartmentTabs.C,
-      content: <CaseTableOverview data={data} />,
+      content: <CaseTableOverview data={data} paging={paging} />,
     },
   ]
 
@@ -131,6 +132,7 @@ CaseOverview.getProps = async ({ query }) => {
   ]
   return {
     cases,
+    paging,
     filters,
   }
 }

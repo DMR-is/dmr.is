@@ -2,6 +2,7 @@ import {
   IsBooleanString,
   IsDateString,
   IsNumber,
+  IsNumberString,
   IsOptional,
   IsString,
 } from 'class-validator'
@@ -28,8 +29,18 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  @IsNumber()
+  @IsNumberString()
   page?: number
+
+  @ApiProperty({
+    name: 'pageSize',
+    type: Number,
+    description: 'Page size',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumberString()
+  pageSize?: number
 
   @ApiProperty({
     name: 'caseNumber',

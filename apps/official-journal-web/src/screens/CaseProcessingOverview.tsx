@@ -53,6 +53,7 @@ const CaseProcessingScreen: Screen<Props> = ({
     setSelectedTab(mapQueryParamToCaseProcessingTab(id))
     add({
       tab: mapQueryParamToCaseProcessingTab(id),
+      page: 1,
     })
   }
 
@@ -70,6 +71,7 @@ const CaseProcessingScreen: Screen<Props> = ({
       }),
       content: (
         <CaseTableSubmitted
+          paging={paging}
           data={data.map((item) => {
             return {
               id: item.id,
@@ -91,6 +93,7 @@ const CaseProcessingScreen: Screen<Props> = ({
       }),
       content: (
         <CaseTableInProgress
+          paging={paging}
           data={data.map((item) => {
             return {
               id: item.id,
@@ -113,6 +116,7 @@ const CaseProcessingScreen: Screen<Props> = ({
       }),
       content: (
         <CaseTableInReview
+          paging={paging}
           data={data.map((item) => {
             return {
               id: item.id,
@@ -136,6 +140,7 @@ const CaseProcessingScreen: Screen<Props> = ({
       }),
       content: (
         <CaseTableInProgress
+          paging={paging}
           data={data.map((item) => {
             return {
               id: item.id,
@@ -188,7 +193,7 @@ CaseProcessingScreen.getProps = async ({ query }) => {
     status: selectedStatus,
   }
 
-  const response = await client.getEditorialOverview(params)
+  const response = await client.getEditorialOverview({ ...params, pageSize: 1 })
 
   const filters = [
     {

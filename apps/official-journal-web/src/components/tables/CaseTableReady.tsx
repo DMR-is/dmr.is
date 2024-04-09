@@ -1,6 +1,8 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
+import { Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
@@ -9,6 +11,7 @@ import { messages } from './messages'
 
 type Props = {
   data: CaseTableItem[]
+  paging: Paging
   selectedCases: CaseTableItem[]
   setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
 }
@@ -111,5 +114,7 @@ export const CaseTableReady = ({
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} />
+  return (
+    <CaseTable columns={columns} rows={rows} link={Routes.ProcessingDetail} />
+  )
 }

@@ -8,7 +8,7 @@ export const useQueryParams = () => {
     return query[key] as string
   }
 
-  const add = (params: Record<string, string>) => {
+  const add = (params: Record<string, string | number>) => {
     router.push({
       query: {
         ...query,
