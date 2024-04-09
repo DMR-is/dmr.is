@@ -49,7 +49,7 @@ export const Tabs = ({
   return (
     <GridContainer position="relative">
       <GridRow>
-        <GridColumn span={['12/12', '12/12', '12/12', '8/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '12/12', '9/12']}>
           <TabList {...tab} className={styles.tabsTablist}>
             {tabs.map(({ label, id }, index) => {
               const isActive = tab.currentId === id

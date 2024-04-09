@@ -1,7 +1,6 @@
-import { useState } from 'react'
-
 import { Box, Button, Text } from '@island.is/island-ui/core'
 
+import { Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableItem } from '../../lib/utils'
 import { CaseTableReady } from '../tables/CaseTableReady'
@@ -10,6 +9,7 @@ import { messages } from './messages'
 
 type Props = {
   cases: CaseTableItem[]
+  paging: Paging
   selectedCases: CaseTableItem[]
   setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
   onContinue: (selectedCases: CaseTableItem[]) => void
@@ -21,6 +21,7 @@ type Props = {
 
 export const CasePublishingTab = ({
   cases,
+  paging,
   onContinue,
   selectedCases,
   setSelectedCases,
@@ -35,6 +36,7 @@ export const CasePublishingTab = ({
         selectedCases={selectedCases}
         setSelectedCases={setSelectedCases}
         data={cases}
+        paging={paging}
       />
       <Box marginTop={3} display="flex" justifyContent="flexEnd">
         <Button

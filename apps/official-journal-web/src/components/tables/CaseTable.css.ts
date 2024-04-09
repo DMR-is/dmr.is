@@ -59,6 +59,10 @@ export const linkTableCell = style({
   },
 })
 
+export const linkTableHeaderCell = style({
+  display: 'none',
+})
+
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',

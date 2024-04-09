@@ -138,6 +138,11 @@ export const CaseTable = ({
                 {column.children}
               </TableHeadCell>
             ))}
+            {link && (
+              <TableHeadCell
+                className={styles.linkTableHeaderCell}
+              ></TableHeadCell>
+            )}
           </T.Row>
         </T.Head>
         {sortedData.length === 0 ? (
