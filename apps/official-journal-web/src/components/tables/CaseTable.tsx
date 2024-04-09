@@ -1,5 +1,5 @@
 import reverse from 'lodash/reverse'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   ArrowLink,
@@ -46,7 +46,7 @@ export type Props = {
   defaultSort?: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
-  renderLink?: boolean
+  link?: string
   paging?: Paging
 }
 
@@ -58,7 +58,7 @@ export type CaseTableColumnSort = {
 export const CaseTable = ({
   columns,
   rows,
-  renderLink = true,
+  link,
   defaultSort = {
     direction: 'asc',
     key: columns.find((column) => column.sortable)?.name || '',
@@ -159,7 +159,7 @@ export const CaseTable = ({
                     {cell.children}
                   </TableCell>
                 ))}
-                {renderLink && (
+                {link && (
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
@@ -167,19 +167,11 @@ export const CaseTable = ({
                       })}
                     >
                       {!breakpoints.xl ? (
-                        <LinkV2
-                          href={`/ritstjorn/${row.caseId}/${
-                            caseStatusMap[row.status]
-                          }`}
-                        >
+                        <LinkV2 href={link.replace(':caseId', row.caseId)}>
                           <Icon icon="arrowForward" color="blue400" />
                         </LinkV2>
                       ) : (
-                        <ArrowLink
-                          href={`/ritstjorn/${row.caseId}/${
-                            caseStatusMap[row.status]
-                          }`}
-                        >
+                        <ArrowLink href={link.replace(':caseId', row.caseId)}>
                           {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>
                       )}
