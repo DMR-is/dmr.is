@@ -15,13 +15,7 @@ import {
   GetCasesRequest,
   GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
-import {
-  CaseDepartmentTabs,
-  CaseProcessingTabIds,
-  FALLBACK_DOMAIN,
-  JSON_ENDING,
-  Routes,
-} from './constants'
+import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
   try {
@@ -54,59 +48,18 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   return pathname
 }
 
-export const mapQueryParamToCaseProcessingTab = (param?: unknown) => {
+export const mapTabIdToCaseStatus = (param?: string) => {
   switch (param) {
-    case CaseProcessingTabIds.Submitted:
-      return CaseProcessingTabIds.Submitted
-    case CaseProcessingTabIds.InProgress:
-      return CaseProcessingTabIds.InProgress
-    case CaseProcessingTabIds.InReview:
-      return CaseProcessingTabIds.InReview
-    case CaseProcessingTabIds.Ready:
-      return CaseProcessingTabIds.Ready
-    default:
-      return CaseProcessingTabIds.Submitted
-  }
-}
-
-export const mapTabIdToCaseStatus = (param?: unknown) => {
-  switch (param) {
-    case CaseProcessingTabIds.Submitted:
+    case CaseStatusEnum.Innsent:
       return GetEditorialOverviewStatusEnum.Innsent
-    case CaseProcessingTabIds.InProgress:
+    case CaseStatusEnum.Grunnvinnsla:
       return GetEditorialOverviewStatusEnum.Grunnvinnsla
-    case CaseProcessingTabIds.InReview:
+    case CaseStatusEnum.Yfirlestur:
       return GetEditorialOverviewStatusEnum.Yfirlestur
-    case CaseProcessingTabIds.Ready:
+    case CaseStatusEnum.Tilbi:
       return GetEditorialOverviewStatusEnum.Tilbi
     default:
       return GetEditorialOverviewStatusEnum.Tilbi
-  }
-}
-
-export const mapTabIdToCaseDepartment = (param?: unknown) => {
-  switch (param) {
-    case CaseDepartmentTabs.A:
-      return CaseDepartmentTabs.A
-    case CaseDepartmentTabs.B:
-      return CaseDepartmentTabs.B
-    case CaseDepartmentTabs.C:
-      return CaseDepartmentTabs.C
-    default:
-      return 'A'
-  }
-}
-
-export const mapQueryParamToCaseDepartment = (param?: unknown) => {
-  switch (param) {
-    case CaseDepartmentTabs.A:
-      return 'A-deild'
-    case CaseDepartmentTabs.B:
-      return 'B-deild'
-    case CaseDepartmentTabs.C:
-      return 'C-deild'
-    default:
-      return 'A-deild'
   }
 }
 

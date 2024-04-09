@@ -12,7 +12,7 @@ import { isDefined } from '@island.is/shared/utils'
 
 import * as styles from './Tabs.css'
 
-type Tab = {
+export type Tab = {
   label: string
   id?: string
   content: React.ReactNode

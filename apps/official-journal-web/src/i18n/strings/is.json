@@ -568,15 +568,15 @@
     "description": "Personal tab for the dashboard"
   },
   "web.page.dashboard:tabs.statistics.a": {
-    "defaultMessage": "A-deild",
+    "defaultMessage": "A deild",
     "description": "Department a tab for the dashboard statistics"
   },
   "web.page.dashboard:tabs.statistics.b": {
-    "defaultMessage": "B-deild",
+    "defaultMessage": "B deild",
     "description": "Department b tab for the dashboard statistics"
   },
   "web.page.dashboard:tabs.statistics.c": {
-    "defaultMessage": "C-deild",
+    "defaultMessage": "C deild",
     "description": "Department c tab for the dashboard statistics"
   }
 }

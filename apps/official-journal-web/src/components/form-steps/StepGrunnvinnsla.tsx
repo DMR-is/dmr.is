@@ -15,17 +15,14 @@ import {
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { CaseDepartmentTabs } from '../../lib/constants'
 import { messages } from './messages'
 
 type Props = {
   activeCase: Case
 }
 
-const departmentOptions: StringOption[] = [
-  { label: 'A deild', value: 'A deild' },
-  { label: 'B deild', value: 'B deild' },
-  { label: 'C deild', value: 'C deild' },
-]
+const departmentOptions = Object.values(CaseDepartmentTabs)
 
 const typeOptions: StringOption[] = [
   { label: 'AUGLÝSING', value: 'AUGLÝSING' },
@@ -66,7 +63,7 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
               <Select
                 name="department"
                 value={departmentOptions.find(
-                  (o) => o.value === activeCase?.advert.department.title,
+                  (o) => o.value === activeCase?.advert.department.slug,
                 )}
                 options={departmentOptions}
                 label={formatMessage(messages.grunnvinnsla.department)}

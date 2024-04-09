@@ -8,18 +8,17 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, Paging } from '../gen/fetch'
+import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseProcessingTabIds, Routes } from '../lib/constants'
+import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseProcessingOverview'
 import { Screen } from '../lib/types'
 import {
   extractCaseProcessingFilters,
-  mapQueryParamToCaseProcessingTab,
   mapTabIdToCaseStatus,
 } from '../lib/utils'
 type Props = {
@@ -45,14 +44,12 @@ const CaseProcessingScreen: Screen<Props> = ({
 
   const { formatMessage } = useFormatMessage()
 
-  const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseProcessingTab(get('tab')),
-  )
+  const [selectedTab, setSelectedTab] = useState(get('tab'))
 
   const onTabChange = (id: string) => {
-    setSelectedTab(mapQueryParamToCaseProcessingTab(id))
+    setSelectedTab(id)
     add({
-      tab: mapQueryParamToCaseProcessingTab(id),
+      tab: id,
       page: 1,
     })
   }
@@ -65,28 +62,28 @@ const CaseProcessingScreen: Screen<Props> = ({
 
   const tabs = [
     {
-      id: CaseProcessingTabIds.Submitted,
+      id: CaseStatusEnum.Innsent,
       label: formatMessage(messages.tabs.submitted, {
         count: totalItems.submitted,
       }),
       content: <CaseTableSubmitted paging={paging} data={data} />,
     },
     {
-      id: CaseProcessingTabIds.InProgress,
+      id: CaseStatusEnum.Grunnvinnsla,
       label: formatMessage(messages.tabs.inProgress, {
         count: totalItems.inProgress,
       }),
       content: <CaseTableInProgress paging={paging} data={data} />,
     },
     {
-      id: CaseProcessingTabIds.InReview,
+      id: CaseStatusEnum.Yfirlestur,
       label: formatMessage(messages.tabs.inReview, {
         count: totalItems.inReview,
       }),
       content: <CaseTableInReview paging={paging} data={data} />,
     },
     {
-      id: CaseProcessingTabIds.Ready,
+      id: CaseStatusEnum.Tilbi,
       label: formatMessage(messages.tabs.ready, {
         count: totalItems.ready,
       }),
@@ -119,34 +116,32 @@ const CaseProcessingScreen: Screen<Props> = ({
 CaseProcessingScreen.getProps = async ({ query }) => {
   const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
 
-  const client = createDmrClient()
+  const dmrClient = createDmrClient()
 
-  const tabId = mapQueryParamToCaseProcessingTab(tab)
-  const selectedStatus = mapTabIdToCaseStatus(tabId)
+  const selectedStatus = mapTabIdToCaseStatus(tab)
 
   const params = {
     ...extractedFilters,
     status: selectedStatus,
   }
 
-  const response = await client.getEditorialOverview({ ...params, pageSize: 1 })
+  const response = await dmrClient.getEditorialOverview({
+    ...params,
+    pageSize: 1,
+  })
 
-  const filters = [
+  const filters: FilterGroup[] = [
     {
       label: 'Birting',
       options: [
-        { label: 'Mín mál', key: 'employeeId', value: '5804170510' },
+        { label: 'Mín mál', key: 'employeeId', value: 'Ármann' },
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
     {
       label: 'Deildir',
-      options: [
-        { label: 'A-deild', key: 'department', value: 'A-deild' },
-        { label: 'B-deild', key: 'department', value: 'B-deild' },
-        { label: 'C-deild', key: 'department', value: 'C-deild' },
-      ],
+      options: Object.values(CaseDepartmentTabs),
     },
   ]
 

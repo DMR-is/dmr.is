@@ -11,7 +11,7 @@ import {
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
-import { Tabs } from '../components/tabs/Tabs'
+import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
 import { Case, GetCasesStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
@@ -23,15 +23,12 @@ import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
-import {
-  extractCaseProcessingFilters,
-  mapQueryParamToCaseDepartment,
-} from '../lib/utils'
+import { extractCaseProcessingFilters } from '../lib/utils'
 
 type Props = {
   cases: Case[]
   paging: Paging
-  filters?: FilterGroup[]
+  filters: FilterGroup[]
 }
 
 enum CasePublishViews {
@@ -39,7 +36,7 @@ enum CasePublishViews {
   Confirm = 'confirm',
 }
 
-const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
@@ -47,9 +44,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
   const { setRenderFilters, setFilterGroups } = useFilterContext()
   const { setNotifications, clearNotifications } = useNotificationContext()
 
-  const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseDepartment(get('tab')),
-  )
+  const [selectedTab, setSelectedTab] = useState(get('tab'))
 
   const [screen, setScreen] = useState(CasePublishViews.Overview)
 
@@ -77,9 +72,9 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
   ] = useState<Case[]>([])
 
   const onTabChange = (id: string) => {
-    setSelectedTab(mapQueryParamToCaseDepartment(id))
+    setSelectedTab(id)
     add({
-      tab: mapQueryParamToCaseDepartment(id),
+      tab: id,
     })
   }
 
@@ -116,10 +111,10 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
     }
   }, [])
 
-  const tabs = [
+  const tabs: Tab[] = [
     {
-      id: CaseDepartmentTabs.A,
-      label: CaseDepartmentTabs.A,
+      id: CaseDepartmentTabs.A.value,
+      label: CaseDepartmentTabs.A.label,
       content: (
         <CasePublishingTab
           casesReadyForPublication={departmentACasesReadyForPublication}
@@ -127,14 +122,14 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentACases}
           setSelectedCases={setDepartmentACases}
           onContinue={proceedToPublishing}
-          cases={cases.filter((d) => d.advert.department.slug === 'a-deild')}
+          cases={cases}
           paging={paging}
         />
       ),
     },
     {
-      id: CaseDepartmentTabs.B,
-      label: CaseDepartmentTabs.B,
+      id: CaseDepartmentTabs.B.value,
+      label: CaseDepartmentTabs.B.label,
       content: (
         <CasePublishingTab
           casesReadyForPublication={departmentBCasesReadyForPublication}
@@ -142,14 +137,14 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentBCases}
           setSelectedCases={setDepartmentBCases}
           onContinue={proceedToPublishing}
-          cases={cases.filter((d) => d.advert.department.slug === 'b-deild')}
+          cases={cases}
           paging={paging}
         />
       ),
     },
     {
-      id: CaseDepartmentTabs.C,
-      label: CaseDepartmentTabs.C,
+      id: CaseDepartmentTabs.C.value,
+      label: CaseDepartmentTabs.C.label,
       content: (
         <CasePublishingTab
           casesReadyForPublication={departmentCCasesReadyForPublication}
@@ -157,7 +152,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentCCases}
           setSelectedCases={setDepartmentCCases}
           onContinue={proceedToPublishing}
-          cases={cases.filter((d) => d.advert.department.slug === 'c-deild')}
+          cases={cases}
           paging={paging}
         />
       ),
@@ -209,32 +204,28 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
 }
 
 CasePublishingOverview.getProps = async ({ query }) => {
-  const { tab } = query
-  const { filters: extractedFilters } = extractCaseProcessingFilters(query)
+  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
 
-  const client = createDmrClient()
+  const dmrClient = createDmrClient()
 
-  const filters = [
+  const filters: FilterGroup[] = [
     {
       label: 'Birting',
       options: [
-        { label: 'Mín mál', key: 'employeeId', value: '5804170510' },
+        { label: 'Mín mál', key: 'employeeId', value: 'Ármann' },
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
     {
       label: 'Deildir',
-      options: [
-        { label: 'A-deild', key: 'department', value: 'A-deild' },
-        { label: 'B-deild', key: 'department', value: 'B-deild' },
-        { label: 'C-deild', key: 'department', value: 'C-deild' },
-      ],
+      options: Object.values(CaseDepartmentTabs),
     },
   ]
 
-  const { cases, paging } = await client.getCases({
+  const { cases, paging } = await dmrClient.getCases({
     ...extractedFilters,
+    department: tab,
     status: GetCasesStatusEnum.Tilbi,
   })
 

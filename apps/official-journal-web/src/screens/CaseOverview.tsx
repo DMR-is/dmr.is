@@ -4,7 +4,7 @@ import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
-import { Tabs } from '../components/tabs/Tabs'
+import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
 import { Case, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
@@ -14,11 +14,7 @@ import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseOverview'
 import { Screen } from '../lib/types'
-import {
-  extractCaseProcessingFilters,
-  mapQueryParamToCaseDepartment,
-  mapTabIdToCaseDepartment,
-} from '../lib/utils'
+import { extractCaseProcessingFilters } from '../lib/utils'
 
 type Props = {
   cases: Case[]
@@ -30,14 +26,12 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
   const { add, get } = useQueryParams()
   const { setFilterGroups } = useFilterContext()
 
-  const [selectedTab, setSelectedTab] = useState(
-    mapQueryParamToCaseDepartment(get('tab')),
-  )
+  const [selectedTab, setSelectedTab] = useState(get('tab'))
 
   const onTabChange = (id: string) => {
-    setSelectedTab(mapQueryParamToCaseDepartment(id))
+    setSelectedTab(id)
     add({
-      tab: mapQueryParamToCaseDepartment(id),
+      tab: id,
     })
   }
 
@@ -47,20 +41,20 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
     }
   }, [])
 
-  const tabs = [
+  const tabs: Tab[] = [
     {
-      id: CaseDepartmentTabs.A,
-      label: CaseDepartmentTabs.A,
+      id: CaseDepartmentTabs.A.value,
+      label: CaseDepartmentTabs.A.label,
       content: <CaseTableOverview data={cases} paging={paging} />,
     },
     {
-      id: CaseDepartmentTabs.B,
-      label: CaseDepartmentTabs.B,
+      id: CaseDepartmentTabs.B.value,
+      label: CaseDepartmentTabs.B.label,
       content: <CaseTableOverview data={cases} paging={paging} />,
     },
     {
-      id: CaseDepartmentTabs.C,
-      label: CaseDepartmentTabs.C,
+      id: CaseDepartmentTabs.C.value,
+      label: CaseDepartmentTabs.C.label,
       content: <CaseTableOverview data={cases} paging={paging} />,
     },
   ]
@@ -87,33 +81,26 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
 }
 
 CaseOverview.getProps = async ({ query }) => {
-  const { tab } = query
-  const { filters: extractedFilters } = extractCaseProcessingFilters(query)
-  const client = createDmrClient()
+  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
+  const dmrClient = createDmrClient()
 
-  const selectedTab = mapQueryParamToCaseDepartment(tab)
-
-  const { cases, paging } = await client.getCases({
+  const { cases, paging } = await dmrClient.getCases({
     ...extractedFilters,
-    department: mapTabIdToCaseDepartment(selectedTab),
+    department: tab,
   })
 
-  const filters = [
+  const filters: FilterGroup[] = [
     {
       label: 'Birting',
       options: [
-        { label: 'Mín mál', key: 'employeeId', value: '5804170510' },
+        { label: 'Mín mál', key: 'employeeId', value: 'Ármann' },
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
     {
       label: 'Deildir',
-      options: [
-        { label: 'A-deild', key: 'department', value: 'A-deild' },
-        { label: 'B-deild', key: 'department', value: 'B-deild' },
-        { label: 'C-deild', key: 'department', value: 'C-deild' },
-      ],
+      options: Object.values(CaseDepartmentTabs),
     },
   ]
   return {

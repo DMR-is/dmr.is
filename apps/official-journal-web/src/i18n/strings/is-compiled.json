@@ -886,19 +886,19 @@
   "web.page.dashboard:tabs.statistics.a": [
     {
       "type": 0,
-      "value": "A-deild"
+      "value": "A deild"
     }
   ],
   "web.page.dashboard:tabs.statistics.b": [
     {
       "type": 0,
-      "value": "B-deild"
+      "value": "B deild"
     }
   ],
   "web.page.dashboard:tabs.statistics.c": [
     {
       "type": 0,
-      "value": "C-deild"
+      "value": "C deild"
     }
   ]
 }
