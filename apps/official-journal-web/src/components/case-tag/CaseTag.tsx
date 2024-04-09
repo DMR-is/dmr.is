@@ -18,18 +18,42 @@ export const CaseTag = ({ tag }: Props) => {
   switch (tag) {
     case CaseStatusEnum.Innsent:
     case CaseTagEnum.EkkiHafi:
-      return <Tag variant="blue">{tag}</Tag>
+      return (
+        <Tag disabled variant="blue">
+          {tag}
+        </Tag>
+      )
     case CaseStatusEnum.Grunnvinnsla:
     case CaseStatusEnum.Yfirlestur:
     case CaseTagEnum.Yfirlestri:
-      return <Tag variant="darkerBlue">{tag}</Tag>
+      return (
+        <Tag disabled variant="darkerBlue">
+          {tag}
+        </Tag>
+      )
     case CaseStatusEnum.Tilbi:
-      return <Tag variant="mint">{tag}</Tag>
+      return (
+        <Tag disabled variant="mint">
+          {tag}
+        </Tag>
+      )
     case CaseTagEnum.ArfSkoun:
-      return <Tag variant="rose">{tag}</Tag>
+      return (
+        <Tag disabled variant="rose">
+          {tag}
+        </Tag>
+      )
     case CaseTagEnum.Samlesin:
-      return <Tag variant="purple">{tag}</Tag>
+      return (
+        <Tag disabled variant="purple">
+          {tag}
+        </Tag>
+      )
     default:
-      return <Tag variant="blue">{tag}</Tag>
+      return (
+        <Tag disabled variant="blue">
+          {tag}
+        </Tag>
+      )
   }
 }

@@ -71,7 +71,7 @@
                 "Yfirlestur",
                 "Tilbúið",
                 "Útgefið",
-                "Beðið svara",
+                "Tekið úr birtingu",
                 "Birtingu hafnað"
               ],
               "type": "string"
@@ -209,7 +209,7 @@
                 "Yfirlestur",
                 "Tilbúið",
                 "Útgefið",
-                "Beðið svara",
+                "Tekið úr birtingu",
                 "Birtingu hafnað"
               ],
               "type": "string"
@@ -1262,7 +1262,7 @@
               "Yfirlestur",
               "Tilbúið",
               "Útgefið",
-              "Beðið svara",
+              "Tekið úr birtingu",
               "Birtingu hafnað"
             ],
             "example": "Innsent",
@@ -1311,7 +1311,7 @@
               "Yfirlestur",
               "Tilbúið",
               "Útgefið",
-              "Beðið svara",
+              "Tekið úr birtingu",
               "Birtingu hafnað"
             ],
             "example": "Innsent",

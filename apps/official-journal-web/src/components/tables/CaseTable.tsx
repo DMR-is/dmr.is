@@ -15,7 +15,7 @@ import { CaseStatusEnum, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
-import { caseStatusMap } from '../../lib/utils'
+import { generateCaseLink } from '../../lib/utils'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
@@ -46,8 +46,8 @@ export type Props = {
   defaultSort?: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
-  link?: string
   paging?: Paging
+  renderLink?: boolean
 }
 
 export type CaseTableColumnSort = {
@@ -56,9 +56,9 @@ export type CaseTableColumnSort = {
 }
 
 export const CaseTable = ({
+  renderLink = true,
   columns,
   rows,
-  link,
   defaultSort = {
     direction: 'asc',
     key: columns.find((column) => column.sortable)?.name || '',
@@ -138,7 +138,8 @@ export const CaseTable = ({
                 {column.children}
               </TableHeadCell>
             ))}
-            {link && (
+
+            {renderLink && (
               <TableHeadCell
                 className={styles.linkTableHeaderCell}
               ></TableHeadCell>
@@ -164,7 +165,7 @@ export const CaseTable = ({
                     {cell.children}
                   </TableCell>
                 ))}
-                {link && (
+                {renderLink && (
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
@@ -172,11 +173,13 @@ export const CaseTable = ({
                       })}
                     >
                       {!breakpoints.xl ? (
-                        <LinkV2 href={link.replace(':caseId', row.caseId)}>
+                        <LinkV2 href={generateCaseLink(row.status, row.caseId)}>
                           <Icon icon="arrowForward" color="blue400" />
                         </LinkV2>
                       ) : (
-                        <ArrowLink href={link.replace(':caseId', row.caseId)}>
+                        <ArrowLink
+                          href={generateCaseLink(row.status, row.caseId)}
+                        >
                           {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>
                       )}

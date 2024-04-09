@@ -11,10 +11,14 @@ export const JSON_ENDING = '.json'
 export enum Routes {
   Dashboard = '/',
   ProcessingOverview = '/ritstjorn',
-  ProcessingDetail = '/ritstjorn/:caseId',
+  ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsending',
+  ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
+  ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
+  ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
   PublishingOverview = '/utgafa',
   PublishingDetail = '/utgafa/:caseId',
   Overview = '/heildaryfirlit',
+  OverviewDetail = '/heildaryfirlit/:caseId',
 }
 
 export enum CaseDepartmentTabs {

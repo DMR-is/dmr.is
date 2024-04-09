@@ -2,7 +2,6 @@ import { Text } from '@island.is/island-ui/core'
 
 import { Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { Routes } from '../../lib/constants'
 import { CaseTableItem, formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import { CaseTable } from './CaseTable'
@@ -103,12 +102,5 @@ export const CaseTableSubmitted = ({ data, paging }: Props) => {
     ],
   }))
 
-  return (
-    <CaseTable
-      paging={paging}
-      columns={columns}
-      rows={rows}
-      link={Routes.ProcessingDetail}
-    />
-  )
+  return <CaseTable paging={paging} columns={columns} rows={rows} />
 }
