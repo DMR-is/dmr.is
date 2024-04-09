@@ -11,7 +11,7 @@ import {
   Table as T,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
@@ -37,8 +37,7 @@ export type CaseTableCellProps = {
 }
 
 export type CaseTableRowProps = {
-  caseId: string
-  status: CaseStatusEnum
+  case: Case
   cells: CaseTableCellProps[]
 }
 
@@ -48,6 +47,7 @@ export type Props = {
   rows: CaseTableRowProps[]
   paging?: Paging
   renderLink?: boolean
+  modalLink?: boolean
 }
 
 export type CaseTableColumnSort = {
@@ -57,6 +57,7 @@ export type CaseTableColumnSort = {
 
 export const CaseTable = ({
   renderLink = true,
+  modalLink,
   columns,
   rows,
   defaultSort = {
@@ -112,6 +113,10 @@ export const CaseTable = ({
     })
   }
 
+  const openModal = (activeCase: Case) => {
+    console.log({ activeCase })
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -153,7 +158,7 @@ export const CaseTable = ({
             {sortedData.map((row, index) => (
               <tr
                 className={styles.tableRow}
-                onMouseOver={() => setHoveredRow(row.caseId)}
+                onMouseOver={() => setHoveredRow(row.case.id)}
                 onMouseLeave={() => setHoveredRow(null)}
                 key={index}
               >
@@ -165,20 +170,25 @@ export const CaseTable = ({
                     {cell.children}
                   </TableCell>
                 ))}
-                {renderLink && (
+                {renderLink && !modalLink && (
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
-                        visible: hoveredRow === row.caseId,
+                        visible: hoveredRow === row.case.id,
                       })}
                     >
                       {!breakpoints.xl ? (
-                        <LinkV2 href={generateCaseLink(row.status, row.caseId)}>
+                        <LinkV2
+                          href={generateCaseLink(row.case.status, row.case.id)}
+                          onClick={
+                            modalLink ? () => openModal(row.case) : undefined
+                          }
+                        >
                           <Icon icon="arrowForward" color="blue400" />
                         </LinkV2>
                       ) : (
                         <ArrowLink
-                          href={generateCaseLink(row.status, row.caseId)}
+                          href={generateCaseLink(row.case.status, row.case.id)}
                         >
                           {formatMessage(messages.general.openCaseLinkText)}
                         </ArrowLink>

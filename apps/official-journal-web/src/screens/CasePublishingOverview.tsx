@@ -24,7 +24,6 @@ import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
 import {
-  CaseTableItem,
   extractCaseProcessingFilters,
   mapQueryParamToCaseDepartment,
 } from '../lib/utils'
@@ -54,28 +53,28 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
 
   const [screen, setScreen] = useState(CasePublishViews.Overview)
 
-  const [casesToPublish, setCasesToPublish] = useState<CaseTableItem[]>([])
+  const [casesToPublish, setCasesToPublish] = useState<Case[]>([])
 
-  const [departmentACases, setDepartmentACases] = useState<CaseTableItem[]>([])
+  const [departmentACases, setDepartmentACases] = useState<Case[]>([])
 
-  const [departmentBCases, setDepartmentBCases] = useState<CaseTableItem[]>([])
+  const [departmentBCases, setDepartmentBCases] = useState<Case[]>([])
 
-  const [departmentCCases, setDepartmentCCases] = useState<CaseTableItem[]>([])
+  const [departmentCCases, setDepartmentCCases] = useState<Case[]>([])
 
   const [
     departmentACasesReadyForPublication,
     setDepartmentACasesReadyForPublication,
-  ] = useState<CaseTableItem[]>([])
+  ] = useState<Case[]>([])
 
   const [
     departmentBCasesReadyForPublication,
     setDepartmentBCasesReadyForPublication,
-  ] = useState<CaseTableItem[]>([])
+  ] = useState<Case[]>([])
 
   const [
     departmentCCasesReadyForPublication,
     setDepartmentCCasesReadyForPublication,
-  ] = useState<CaseTableItem[]>([])
+  ] = useState<Case[]>([])
 
   const onTabChange = (id: string) => {
     setSelectedTab(mapQueryParamToCaseDepartment(id))
@@ -88,7 +87,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
     setScreen(CasePublishViews.Overview)
   }
 
-  const proceedToPublishing = (selectedCases: CaseTableItem[]) => {
+  const proceedToPublishing = (selectedCases: Case[]) => {
     setCasesToPublish(selectedCases)
     setRenderFilters(false)
     setScreen(CasePublishViews.Confirm)
@@ -117,21 +116,6 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
     }
   }, [])
 
-  const data: CaseTableItem[] = cases.map((c) => ({
-    labels: c.fastTrack ? ['fasttrack'] : [],
-    id: c.id,
-    department: c.advert.department.title,
-    title: c.advert.title,
-    created: c.advert.createdDate,
-    publicationDate: c.advert.publicationDate ?? '',
-    type: c.advert.type,
-    registrationDate: c.createdAt,
-    status: c.status,
-    institution: c.advert.involvedParty.title,
-    number: c.caseNumber,
-    year: c.year,
-  }))
-
   const tabs = [
     {
       id: CaseDepartmentTabs.A,
@@ -143,7 +127,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentACases}
           setSelectedCases={setDepartmentACases}
           onContinue={proceedToPublishing}
-          cases={data}
+          cases={cases.filter((d) => d.advert.department.slug === 'a-deild')}
           paging={paging}
         />
       ),
@@ -158,7 +142,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentBCases}
           setSelectedCases={setDepartmentBCases}
           onContinue={proceedToPublishing}
-          cases={data}
+          cases={cases.filter((d) => d.advert.department.slug === 'b-deild')}
           paging={paging}
         />
       ),
@@ -173,7 +157,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging, filters }) => {
           selectedCases={departmentCCases}
           setSelectedCases={setDepartmentCCases}
           onContinue={proceedToPublishing}
-          cases={data}
+          cases={cases.filter((d) => d.advert.department.slug === 'c-deild')}
           paging={paging}
         />
       ),

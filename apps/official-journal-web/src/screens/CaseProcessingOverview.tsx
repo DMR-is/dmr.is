@@ -8,7 +8,7 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { Case, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -69,92 +69,28 @@ const CaseProcessingScreen: Screen<Props> = ({
       label: formatMessage(messages.tabs.submitted, {
         count: totalItems.submitted,
       }),
-      content: (
-        <CaseTableSubmitted
-          paging={paging}
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              status: CaseStatusEnum.Innsent,
-            }
-          })}
-        />
-      ),
+      content: <CaseTableSubmitted paging={paging} data={data} />,
     },
     {
       id: CaseProcessingTabIds.InProgress,
       label: formatMessage(messages.tabs.inProgress, {
         count: totalItems.inProgress,
       }),
-      content: (
-        <CaseTableInProgress
-          paging={paging}
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              status: CaseStatusEnum.Grunnvinnsla,
-            }
-          })}
-        />
-      ),
+      content: <CaseTableInProgress paging={paging} data={data} />,
     },
     {
       id: CaseProcessingTabIds.InReview,
       label: formatMessage(messages.tabs.inReview, {
         count: totalItems.inReview,
       }),
-      content: (
-        <CaseTableInReview
-          paging={paging}
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              tag: item.tag,
-              status: CaseStatusEnum.Yfirlestur,
-            }
-          })}
-        />
-      ),
+      content: <CaseTableInReview paging={paging} data={data} />,
     },
     {
       id: CaseProcessingTabIds.Ready,
       label: formatMessage(messages.tabs.ready, {
         count: totalItems.ready,
       }),
-      content: (
-        <CaseTableInProgress
-          paging={paging}
-          data={data.map((item) => {
-            return {
-              id: item.id,
-              department: item.advert.department.title,
-              labels: item.fastTrack ? ['fasttrack'] : [],
-              title: item.advert.title,
-              publicationDate: item.publishedAt,
-              registrationDate: item.createdAt,
-              employee: item.assignedTo,
-              status: CaseStatusEnum.Tilbi,
-            }
-          })}
-        />
-      ),
+      content: <CaseTableInProgress paging={paging} data={data} />,
     },
   ]
 

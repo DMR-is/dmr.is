@@ -1,19 +1,18 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { Routes } from '../../lib/constants'
-import { CaseTableItem, formatDate } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
-import { CaseTable } from './CaseTable'
+import { CaseTable, CaseTableRowProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseTableItem[]
+  data: Case[]
   paging: Paging
-  selectedCases: CaseTableItem[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<CaseTableItem[]>>
+  selectedCases: Case[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
 }
 
 export const CaseTableReady = ({
@@ -61,9 +60,8 @@ export const CaseTableReady = ({
     },
   ]
 
-  const rows = data.map((row) => ({
-    caseId: row.id,
-    status: row.status,
+  const rows: CaseTableRowProps[] = data.map((row) => ({
+    case: row,
     cells: [
       {
         children: (
@@ -80,11 +78,9 @@ export const CaseTableReady = ({
         ),
       },
       {
-        children: row.labels.length > 0 && (
+        children: row.fastTrack && (
           <div className={styles.iconWrapper}>
-            {row.labels.map((label, index) => (
-              <CaseLabelTooltip label={label} key={index} />
-            ))}
+            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
           </div>
         ),
       },
@@ -92,7 +88,7 @@ export const CaseTableReady = ({
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.title}
+              {row.advert.title}
             </Text>
           </div>
         ),
@@ -100,19 +96,21 @@ export const CaseTableReady = ({
       {
         children: (
           <Text variant="medium">
-            {row.publicationDate ? formatDate(row.publicationDate) : null}
+            {row.advert.publicationDate
+              ? formatDate(row.advert.publicationDate)
+              : null}
           </Text>
         ),
       },
       {
         children: (
           <Text whiteSpace="nowrap" variant="medium">
-            {row.institution}
+            {row.advert.involvedParty.title}
           </Text>
         ),
       },
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} />
+  return <CaseTable columns={columns} rows={rows} modalLink />
 }

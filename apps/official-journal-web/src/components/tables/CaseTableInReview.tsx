@@ -1,17 +1,16 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { Routes } from '../../lib/constants'
-import { CaseTableItem, formatDate } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
-import { CaseTable } from './CaseTable'
+import { CaseTable, CaseTableRowProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseTableItem[]
+  data: Case[]
   paging: Paging
 }
 
@@ -64,59 +63,58 @@ export const CaseTableInReview = ({ data, paging }: Props) => {
     },
   ]
 
-  const rows = data.map((row) => ({
-    caseId: row.id,
-    status: row.status,
+  const rows: CaseTableRowProps[] = data.map((row) => ({
+    case: row,
     cells: [
       {
-        children: row.labels.length > 0 && (
+        children: row.fastTrack && (
           <div className={styles.iconWrapper}>
-            {row.labels.map((label, index) => (
-              <CaseLabelTooltip label={label} key={index} />
-            ))}
+            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
           </div>
         ),
       },
       {
         sortingKey: 'casePublishDate',
-        sortingValue: row.publicationDate,
+        sortingValue: row.advert.publicationDate ?? '',
         children: (
-          <Text variant="medium">{formatDate(row.publicationDate)}</Text>
+          <Text variant="medium">
+            {formatDate(row.advert.publicationDate ?? '')}
+          </Text>
         ),
       },
       {
         sortingKey: 'caseRegistrationDate',
-        sortingValue: row.registrationDate,
+        sortingValue: row.advert.createdDate,
         children: (
-          <Text variant="medium">{formatDate(row.registrationDate)}</Text>
+          <Text variant="medium">{formatDate(row.advert.createdDate)}</Text>
         ),
       },
       {
         sortingKey: 'caseDepartment',
-        sortingValue: row.department,
+        sortingValue: row.advert.department.title,
         children: (
           <Text truncate variant="medium">
-            {row.department}
+            {row.advert.department.title}
           </Text>
         ),
       },
       {
         sortingKey: 'caseName',
-        sortingValue: row.title,
+        sortingValue: row.advert.title,
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.title}
+              {row.advert.title}
             </Text>
           </div>
         ),
       },
       {
         sortingKey: 'caseEmployee',
-        sortingValue: row.employee,
+        sortingValue: row.assignedTo,
         children: (
           <Text truncate variant="medium">
-            {row.employee}
+            {row.assignedTo}
           </Text>
         ),
       },

@@ -1,13 +1,13 @@
 import { Icon, Text } from '@island.is/island-ui/core'
 
+import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { CaseTableItem } from '../../lib/utils'
 import { CaseTable } from './CaseTable'
 import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseTableItem[]
+  data: Case[]
 }
 
 export const CaseTableSelectedCases = ({ data }: Props) => {
@@ -47,27 +47,26 @@ export const CaseTableSelectedCases = ({ data }: Props) => {
         },
       ]}
       rows={data.map((row) => ({
-        caseId: row.id,
-        status: row.status,
+        case: row,
         cells: [
           {
             children: (
               <Text variant="medium" truncate>
-                {`${row.number}/${row.year}`}
+                {`${row.caseNumber}/${row.year}`}
               </Text>
             ),
           },
           {
             children: (
               <Text variant="medium" truncate>
-                {row.title}
+                {row.advert.title}
               </Text>
             ),
           },
           {
             children: (
               <Text variant="medium" truncate>
-                {row.institution}
+                {row.advert.involvedParty.title}
               </Text>
             ),
           },

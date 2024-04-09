@@ -110,22 +110,6 @@ export const mapQueryParamToCaseDepartment = (param?: unknown) => {
   }
 }
 
-export type CaseTableItem = {
-  id: string
-  labels: string[]
-  publicationDate: string
-  registrationDate: string
-  department: string
-  title: string
-  employee?: string
-  tag?: string
-  institution?: string
-  status: CaseStatusEnum
-  published?: boolean
-  number?: number
-  year?: number
-}
-
 export const enumToOptions = (
   obj: typeof CaseStatusEnum | typeof CaseTagEnum,
 ): StringOption[] => {

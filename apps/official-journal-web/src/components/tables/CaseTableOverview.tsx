@@ -1,15 +1,15 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { CaseTableItem, formatDate } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
-import { CaseTable } from './CaseTable'
+import { CaseTable, CaseTableRowProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseTableItem[]
+  data: Case[]
   paging: Paging
 }
 
@@ -44,18 +44,19 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
     },
   ]
 
-  const rows = data.map((row) => ({
-    caseId: row.id,
-    status: row.status,
+  const rows: CaseTableRowProps[] = data.map((row) => ({
+    case: row,
     cells: [
       {
         children: (
-          <Text variant="medium">{formatDate(row.publicationDate)}</Text>
+          <Text variant="medium">
+            {formatDate(row.advert.publicationDate ?? '')}
+          </Text>
         ),
       },
       {
         children: row.published ? (
-          <Text variant="medium">{`${row.number}/${row.year}`}</Text>
+          <Text variant="medium">{`${row.caseNumber}/${row.year}`}</Text>
         ) : (
           <CaseTag tag={row.status} />
         ),
@@ -64,7 +65,7 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.title}
+              {row.advert.title}
             </Text>
           </div>
         ),
@@ -72,7 +73,7 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
       {
         children: (
           <Text truncate variant="medium">
-            {row.institution}
+            {row.advert.involvedParty.title}
           </Text>
         ),
       },
