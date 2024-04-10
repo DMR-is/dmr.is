@@ -108,7 +108,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12']}>
               <Inline space={1}>
                 {activeCase.advert.categories.map((cat, i) => (
-                  <Tag key={i} variant="white" outlined disabled>
+                  <Tag key={cat.id} variant="white" outlined disabled>
                     {cat.title}
                   </Tag>
                 ))}

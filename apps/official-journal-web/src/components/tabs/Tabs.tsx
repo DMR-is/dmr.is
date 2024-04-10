@@ -56,7 +56,7 @@ export const Tabs = ({
               return (
                 <Tab
                   {...tab}
-                  key={index}
+                  key={id ?? index}
                   id={`${id ?? index}`}
                   className={styles.tabsTab({ active: isActive })}
                 >

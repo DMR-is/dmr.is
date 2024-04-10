@@ -166,12 +166,12 @@ export const CaseTable = ({
           <CaseTableEmpty columns={columns.length} />
         ) : (
           <T.Body>
-            {sortedData.map((row, index) => (
+            {sortedData.map((row) => (
               <tr
                 className={styles.tableRow}
                 onMouseOver={() => setHoveredRow(row.case.id)}
                 onMouseLeave={() => setHoveredRow(null)}
-                key={index}
+                key={row.case.id}
               >
                 {row.cells.map((cell, cellIndex) => (
                   <TableCell

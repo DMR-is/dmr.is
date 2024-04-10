@@ -62,7 +62,7 @@ export const Comments = ({ activeCase }: Props) => {
           return null
         }
         return (
-          <Fragment key={i}>
+          <Fragment key={c.id}>
             <Box
               display="flex"
               justifyContent="spaceBetween"

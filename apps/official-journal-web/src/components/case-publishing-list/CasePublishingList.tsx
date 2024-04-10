@@ -10,9 +10,9 @@ type Props = {
 export const CasePublishingList = ({ cases }: Props) => {
   return (
     <Stack space={3} component="ul">
-      {cases.map((c, i) => (
+      {cases.map((c) => (
         <CaseCard
-          key={i}
+          key={c.id}
           department={c.advert.department.title}
           // publicationDate={c.advert.publicationDate}
           publicationDate={c.advert.publicationDate}
