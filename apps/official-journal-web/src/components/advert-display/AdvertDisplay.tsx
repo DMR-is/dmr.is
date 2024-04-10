@@ -1,4 +1,4 @@
-import { Box, Text } from '@island.is/island-ui/core'
+import { Box, ResponsiveSpace, Text } from '@island.is/island-ui/core'
 
 import * as s from './AdvertDisplay.css'
 
@@ -9,6 +9,7 @@ export type AdvertDisplayProps = {
   advertSubject: string
   advertText: string
   isLegacy: boolean
+  paddingTop?: ResponsiveSpace
 }
 
 export const AdvertDisplay = ({
@@ -18,6 +19,7 @@ export const AdvertDisplay = ({
   advertSubject,
   advertText,
   isLegacy,
+  paddingTop,
 }: AdvertDisplayProps) => {
   if (!advertText) {
     return null
@@ -29,6 +31,7 @@ export const AdvertDisplay = ({
       borderColor="purple200"
       borderRadius="large"
       padding={[2, 3, 4]}
+      paddingTop={paddingTop}
       className={s.wrapper}
     >
       {(advertNumber || signatureDate) && (

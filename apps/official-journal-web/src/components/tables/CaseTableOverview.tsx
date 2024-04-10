@@ -59,7 +59,7 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
       },
       {
         children: row.published ? (
-          <Text variant="medium">{`${row.caseNumber}/${row.year}`}</Text>
+          <Text variant="medium">{row.advert.publicationNumber?.full}</Text>
         ) : (
           <CaseTag tag={row.status} />
         ),
