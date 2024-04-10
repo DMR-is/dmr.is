@@ -4,7 +4,11 @@ import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
-import { CaseTable, CaseTableRowProps } from './CaseTable'
+import {
+  CaseTable,
+  CaseTableHeadCellProps,
+  CaseTableRowProps,
+} from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -15,34 +19,33 @@ type Props = {
 export const CaseTableInProgress = ({ data, paging }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const columns = [
+  const columns: CaseTableHeadCellProps[] = [
     {
       name: 'caseLabels',
       sortable: false,
-      small: true,
+      size: 'tiny',
     },
     {
       name: 'casePublishDate',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.publishDate),
     },
     {
       name: 'caseDepartment',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.department),
     },
     {
       name: 'caseName',
       sortable: true,
-      small: false,
       children: formatMessage(messages.tables.inProgress.columns.title),
     },
     {
       name: 'caseEmployee',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.employee),
     },
   ]
@@ -88,10 +91,10 @@ export const CaseTableInProgress = ({ data, paging }: Props) => {
       },
       {
         sortingKey: 'caseEmployee',
-        sortingValue: row.assignedTo,
+        sortingValue: row.assignedTo.name,
         children: (
           <Text truncate variant="medium">
-            {row.assignedTo}
+            {row.assignedTo.name}
           </Text>
         ),
       },

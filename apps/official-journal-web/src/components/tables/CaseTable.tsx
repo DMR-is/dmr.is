@@ -9,6 +9,7 @@ import {
   Pagination,
   SkeletonLoader,
   Table as T,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { Case, Paging } from '../../gen/fetch'
@@ -27,7 +28,7 @@ export type CaseTableHeadCellProps = {
   name: string
   sortable?: boolean
   fixed?: boolean
-  small?: boolean
+  size?: 'tiny' | 'small' | 'default'
 }
 
 export type CaseTableCellProps = {
@@ -113,7 +114,9 @@ export const CaseTable = ({
     })
   }
 
-  const openModal = (activeCase: Case) => {
+  const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
+    e.preventDefault()
+    // TODO: add Modal...
     console.log({ activeCase })
   }
 
@@ -133,7 +136,7 @@ export const CaseTable = ({
             {columns.map((column, index) => (
               <TableHeadCell
                 key={index}
-                small={column.small}
+                size={column.size}
                 sortable={column.sortable}
                 fixed={column.fixed}
                 onClick={
@@ -152,7 +155,7 @@ export const CaseTable = ({
           </T.Row>
         </T.Head>
         {sortedData.length === 0 ? (
-          <CaseTableEmpty />
+          <CaseTableEmpty columns={columns.length} />
         ) : (
           <T.Body>
             {sortedData.map((row, index) => (
@@ -170,29 +173,31 @@ export const CaseTable = ({
                     {cell.children}
                   </TableCell>
                 ))}
-                {renderLink && !modalLink && (
+                {renderLink && (
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
                         visible: hoveredRow === row.case.id,
                       })}
+                      component={!modalLink ? LinkV2 : 'button'}
+                      onClick={
+                        modalLink ? (e) => openModal(e, row.case) : undefined
+                      }
+                      href={
+                        !modalLink
+                          ? generateCaseLink(row.case.status, row.case.id)
+                          : undefined
+                      }
                     >
-                      {!breakpoints.xl ? (
-                        <LinkV2
-                          href={generateCaseLink(row.case.status, row.case.id)}
-                          onClick={
-                            modalLink ? () => openModal(row.case) : undefined
-                          }
-                        >
-                          <Icon icon="arrowForward" color="blue400" />
-                        </LinkV2>
-                      ) : (
-                        <ArrowLink
-                          href={generateCaseLink(row.case.status, row.case.id)}
-                        >
-                          {formatMessage(messages.general.openCaseLinkText)}
-                        </ArrowLink>
-                      )}
+                      <Text variant="eyebrow" color={'blue400'}>
+                        {breakpoints.xl &&
+                          formatMessage(messages.general.openCaseLinkText)}{' '}
+                        <Icon
+                          icon="arrowForward"
+                          color="blue400"
+                          className={styles.seeMoreTableCellLinkIcon}
+                        />
+                      </Text>
                     </Box>
                   </td>
                 )}

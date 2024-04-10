@@ -12,8 +12,8 @@ export type AdvertDisplayProps = {
 }
 
 export const AdvertDisplay = ({
-  // advertNumber,
-  // signatureDate,
+  advertNumber,
+  signatureDate,
   advertType,
   advertSubject,
   advertText,
@@ -31,24 +31,20 @@ export const AdvertDisplay = ({
       padding={[2, 3, 4]}
       className={s.wrapper}
     >
-      {/*(advertNumber || signatureDate) && (
+      {(advertNumber || signatureDate) && (
         <Box
           display="flex"
           justifyContent="spaceBetween"
           marginBottom={[2, 3, 4]}
         >
-          {advertNumber && (
-            <Text variant="eyebrow" color="purple400">
-              Nr. {advertNumber}
-            </Text>
-          )}
-          {signatureDate && (
-            <Text variant="eyebrow" color="purple400">
-              Undirritað: {signatureDate}
-            </Text>
-          )}
+          <Text variant="eyebrow" color="purple400">
+            {advertNumber && `Nr. ${advertNumber}`}
+          </Text>
+          <Text variant="eyebrow" color="purple400">
+            {signatureDate && `Undirritað: ${signatureDate}`}
+          </Text>
         </Box>
-          )*/}
+      )}
       <Box textAlign="center" marginBottom={[2, 3, 4]}>
         <Text variant="h3">{advertType}</Text>
         <Text variant="h4">{advertSubject}</Text>

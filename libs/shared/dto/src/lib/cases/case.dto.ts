@@ -17,6 +17,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { Advert } from '../adverts/advert.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
+import { User } from '../users/user.dto'
 import { CaseStatus, CaseTag } from './case-constants'
 
 export class Case {
@@ -92,14 +93,12 @@ export class Case {
   modifiedAt!: string
 
   @ApiProperty({
-    type: String,
-    example: '0102030000',
-    description:
-      'Someway of identifying the employee (employeeId?), defaults to null.',
+    type: User,
+    description: 'User the case is assigned to.',
   })
-  @IsString()
   @ValidateIf((o) => o.assignedTo !== null)
-  assignedTo!: string | null
+  @Type(() => User)
+  assignedTo!: User | null
 
   @ApiProperty({
     type: Advert,

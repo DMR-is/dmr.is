@@ -90,7 +90,7 @@ export class CaseServiceMock implements ICaseService {
           }
         }
 
-        if (params?.employeeId && c.assignedTo !== params?.employeeId) {
+        if (params?.employeeId && c.assignedTo?.id !== params?.employeeId) {
           return false
         }
 

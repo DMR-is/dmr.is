@@ -2,7 +2,7 @@ import { Icon, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { CaseTable } from './CaseTable'
+import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
 import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
 import { messages } from './messages'
 
@@ -13,45 +13,45 @@ type Props = {
 export const CaseTableSelectedCases = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  if (!data.length) return <CaseTableSelectedCasesEmpty />
+  const columns: CaseTableHeadCellProps[] = [
+    {
+      name: 'caseNumber',
+      fixed: true,
+      size: 'small',
+      children: formatMessage(messages.tables.selectedCases.columns.number),
+    },
+    {
+      name: 'caseTitle',
+      fixed: false,
+      children: formatMessage(messages.tables.selectedCases.columns.title),
+    },
+    {
+      name: 'caseInstitution',
+      fixed: false,
+      children: formatMessage(
+        messages.tables.selectedCases.columns.institution,
+      ),
+    },
+    {
+      name: '',
+      fixed: false,
+      size: 'tiny',
+      children: '',
+    },
+  ]
+
+  if (!data.length) return <CaseTableSelectedCasesEmpty columns={columns} />
 
   return (
     <CaseTable
       renderLink={false}
-      columns={[
-        {
-          name: 'caseNumber',
-          fixed: true,
-          small: true,
-          children: formatMessage(messages.tables.selectedCases.columns.number),
-        },
-        {
-          name: 'caseTitle',
-          fixed: false,
-          small: false,
-          children: formatMessage(messages.tables.selectedCases.columns.title),
-        },
-        {
-          name: 'caseInstitution',
-          fixed: false,
-          small: true,
-          children: formatMessage(
-            messages.tables.selectedCases.columns.institution,
-          ),
-        },
-        {
-          name: '',
-          fixed: false,
-          small: true,
-          children: '',
-        },
-      ]}
+      columns={columns}
       rows={data.map((row) => ({
         case: row,
         cells: [
           {
             children: (
-              <Text variant="medium" truncate>
+              <Text variant="medium" whiteSpace="nowrap">
                 {`${row.caseNumber}/${row.year}`}
               </Text>
             ),

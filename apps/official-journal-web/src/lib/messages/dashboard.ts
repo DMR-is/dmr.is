@@ -59,17 +59,17 @@ export const messages = {
     statistics: defineMessages({
       a: {
         id: 'web.page.dashboard:tabs.statistics.a',
-        defaultMessage: 'A-deild',
+        defaultMessage: 'A deild',
         description: 'Department a tab for the dashboard statistics',
       },
       b: {
         id: 'web.page.dashboard:tabs.statistics.b',
-        defaultMessage: 'B-deild',
+        defaultMessage: 'B deild',
         description: 'Department b tab for the dashboard statistics',
       },
       c: {
         id: 'web.page.dashboard:tabs.statistics.c',
-        defaultMessage: 'C-deild',
+        defaultMessage: 'C deild',
         description: 'Department c tab for the dashboard statistics',
       },
     }),

@@ -4,7 +4,11 @@ import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
-import { CaseTable, CaseTableRowProps } from './CaseTable'
+import {
+  CaseTable,
+  CaseTableHeadCellProps,
+  CaseTableRowProps,
+} from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -16,16 +20,16 @@ type Props = {
 export const CaseTableSubmitted = ({ data, paging }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const columns = [
+  const columns: CaseTableHeadCellProps[] = [
     {
       name: 'caseLabels',
       sortable: false,
-      small: true,
+      size: 'tiny',
     },
     {
       name: 'casePublishDate',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(
         messages.tables.submitted.columns.publicationDate,
       ),
@@ -33,7 +37,7 @@ export const CaseTableSubmitted = ({ data, paging }: Props) => {
     {
       name: 'caseRegistrationDate',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(
         messages.tables.submitted.columns.registrationDate,
       ),
@@ -41,13 +45,12 @@ export const CaseTableSubmitted = ({ data, paging }: Props) => {
     {
       name: 'caseDepartment',
       sortable: true,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.submitted.columns.department),
     },
     {
       name: 'caseName',
       sortable: true,
-      small: false,
       children: formatMessage(messages.tables.submitted.columns.title),
     },
   ]

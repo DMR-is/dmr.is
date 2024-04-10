@@ -8,13 +8,13 @@ import { SectionNumberColumn } from '../SectionNumberColumn/SectionNumberColumn'
 import * as types from '../types'
 import * as styles from './SectionNumber.css'
 
-const bulletColors = {
+const bulletColors: Record<string, Colors> = {
   [types.FormStepperThemes.PURPLE]: 'purple200',
   [types.FormStepperThemes.BLUE]: 'blue200',
   [types.FormStepperThemes.GREEN]: 'mint300',
   [types.FormStepperThemes.RED]: 'red200',
 }
-const lineColors = {
+const lineColors: Record<string, { active: Colors; inActive: Colors }> = {
   [types.FormStepperThemes.PURPLE]: {
     active: 'purple400',
     inActive: 'purple200',
@@ -24,7 +24,7 @@ const lineColors = {
   [types.FormStepperThemes.RED]: { active: 'red600', inActive: 'red200' },
 }
 
-interface SectionNumberProps {
+type SectionNumberProps = {
   theme?: types.FormStepperThemes
   currentState: 'active' | 'previous' | 'next'
   number: number
@@ -39,17 +39,17 @@ export const SectionNumber: FC<React.PropsWithChildren<SectionNumberProps>> = ({
   lineHeight,
   isHistory = false,
 }) => {
-  const currentBulletColor = bulletColors[theme] as Colors
+  const currentBulletColor = bulletColors[theme]
   const currentLineColor =
     currentState === 'previous'
-      ? (lineColors[theme].active as Colors)
-      : (lineColors[theme].inActive as Colors)
+      ? lineColors[theme].active
+      : lineColors[theme].inActive
   const currentNumberColor =
     currentState === 'active'
-      ? (lineColors[theme].active as Colors)
+      ? lineColors[theme].active
       : currentState === 'previous'
-      ? (lineColors[theme].active as Colors)
-      : (lineColors[theme].inActive as Colors)
+      ? lineColors[theme].active
+      : lineColors[theme].inActive
 
   return (
     <SectionNumberColumn>

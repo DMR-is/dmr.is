@@ -1,3 +1,5 @@
+import { StringOption } from '@island.is/island-ui/core'
+
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
 export const BLEED_HEIGHT = 56
@@ -21,15 +23,8 @@ export enum Routes {
   OverviewDetail = '/heildaryfirlit/:caseId',
 }
 
-export enum CaseDepartmentTabs {
-  A = 'A-deild',
-  B = 'B-deild',
-  C = 'C-deild',
-}
-
-export enum CaseProcessingTabIds {
-  Submitted = 'innsent',
-  InProgress = 'grunnvinnsla',
-  InReview = 'yfirlestur',
-  Ready = 'tilbúið',
-}
+export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
+  { label: 'A deild', value: 'a-deild', key: 'department' },
+  { label: 'B deild', value: 'b-deild', key: 'department' },
+  { label: 'C deild', value: 'c-deild', key: 'department' },
+]

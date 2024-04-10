@@ -7,7 +7,7 @@ type Props = {
   onClick?: () => void
   className?: string
   fixed?: boolean
-  small?: boolean
+  size?: 'tiny' | 'small' | 'default'
 }
 
 import cn from 'classnames'
@@ -17,7 +17,7 @@ export const TableHeadCell = ({
   sortable,
   className,
   onClick,
-  small = false,
+  size,
   fixed = false,
 }: Props) => {
   const Wrapper = onClick ? 'button' : 'div'
@@ -27,16 +27,24 @@ export const TableHeadCell = ({
     left: 0,
   }
 
-  const smallTableCellStyles: React.CSSProperties = {
+  const tinyTableCellStyles: React.CSSProperties = {
     minWidth: 0,
     maxWidth: 'none',
     whiteSpace: 'nowrap',
     width: 0,
   }
 
+  const smallTableCellStyles: React.CSSProperties = {
+    minWidth: 0,
+    maxWidth: 'none',
+    whiteSpace: 'nowrap',
+    width: '130px',
+  }
+
   const tableStyles = {
     ...(fixed && fixedStyles),
-    ...(small && smallTableCellStyles),
+    ...(size === 'tiny' && tinyTableCellStyles),
+    ...(size === 'small' && smallTableCellStyles),
   }
 
   return (

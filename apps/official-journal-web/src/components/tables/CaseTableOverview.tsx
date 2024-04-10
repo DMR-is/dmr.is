@@ -4,7 +4,11 @@ import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
-import { CaseTable, CaseTableRowProps } from './CaseTable'
+import {
+  CaseTable,
+  CaseTableHeadCellProps,
+  CaseTableRowProps,
+} from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -16,30 +20,29 @@ type Props = {
 export const CaseTableOverview = ({ data, paging }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const columns = [
+  const columns: CaseTableHeadCellProps[] = [
     {
       name: 'casePublishDate',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.publishDate),
     },
 
     {
       name: 'caseStatus',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.status),
     },
     {
       name: 'caseTitle',
       sortable: false,
-      small: false,
       children: formatMessage(messages.tables.overview.columns.title),
     },
     {
       name: 'caseInstitution',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.institution),
     },
   ]

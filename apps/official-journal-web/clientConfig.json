@@ -785,6 +785,33 @@
   "servers": [],
   "components": {
     "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the user, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "name": {
+            "type": "string",
+            "description": "First name of the user.",
+            "example": "Jón Gunnar"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name of the user.",
+            "example": "Jónsson"
+          },
+          "active": {
+            "type": "string",
+            "description": "Status of the user",
+            "example": true
+          }
+        },
+        "required": ["id", "name", "lastName", "active"]
+      },
       "Department": {
         "type": "object",
         "properties": {
@@ -1334,9 +1361,8 @@
             "description": "Date when the case was last updated. ISO 8601 date and time format in UTC."
           },
           "assignedTo": {
-            "type": "string",
-            "example": "0102030000",
-            "description": "Someway of identifying the employee (employeeId?), defaults to null."
+            "description": "User the case is assigned to.",
+            "allOf": [{ "$ref": "#/components/schemas/User" }]
           },
           "advert": {
             "description": "The advert that is associated with the case.",
@@ -1444,33 +1470,6 @@
           }
         },
         "required": ["cases", "paging"]
-      },
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the user, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "name": {
-            "type": "string",
-            "description": "First name of the user.",
-            "example": "Jón Gunnar"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Last name of the user.",
-            "example": "Jónsson"
-          },
-          "active": {
-            "type": "string",
-            "description": "Status of the user",
-            "example": true
-          }
-        },
-        "required": ["id", "name", "lastName", "active"]
       },
       "GetUsersResponse": {
         "type": "object",

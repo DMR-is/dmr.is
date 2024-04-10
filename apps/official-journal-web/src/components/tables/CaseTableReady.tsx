@@ -4,7 +4,11 @@ import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
-import { CaseTable, CaseTableRowProps } from './CaseTable'
+import {
+  CaseTable,
+  CaseTableHeadCellProps,
+  CaseTableRowProps,
+} from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -13,24 +17,28 @@ type Props = {
   paging: Paging
   selectedCases: Case[]
   setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
+  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
 }
 
 export const CaseTableReady = ({
   data,
   setSelectedCases,
   selectedCases,
+  setCasesReadyForPublication,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const columns = [
+  const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: (
         <Checkbox
           onChange={(e) => {
             setSelectedCases(e.target.checked ? data : [])
+
+            setCasesReadyForPublication(e.target.checked ? data : [])
           }}
         />
       ),
@@ -38,24 +46,23 @@ export const CaseTableReady = ({
     {
       name: 'caseLabels',
       sortable: false,
-      small: true,
+      size: 'tiny',
     },
     {
       name: 'casePublicationDate',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
     },
     {
       name: 'caseName',
       sortable: false,
-      small: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
       name: 'caseInstitution',
       sortable: false,
-      small: true,
+      size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.institution),
     },
   ]
@@ -69,9 +76,17 @@ export const CaseTableReady = ({
             checked={selectedCases.some((c) => c.id === row.id)}
             onChange={(e) => {
               if (e.target.checked) {
-                setSelectedCases((prev) => prev.concat(row))
+                setSelectedCases((prev) => {
+                  const cases = prev.concat(row)
+                  setCasesReadyForPublication(cases)
+                  return cases
+                })
               } else {
-                setSelectedCases((prev) => prev.filter((c) => c.id !== row.id))
+                setSelectedCases((prev) => {
+                  const cases = prev.filter((c) => c.id !== row.id)
+                  setCasesReadyForPublication(cases)
+                  return cases
+                })
               }
             }}
           />

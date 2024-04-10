@@ -38,7 +38,7 @@ export const Comments = ({ activeCase }: Props) => {
       type: CaseCommentTypeEnum.Comment,
       caseStatus: activeCase.status as unknown as CaseCommentCaseStatusEnum,
       task: {
-        from: activeCase.assignedTo,
+        from: activeCase.assignedTo.name,
         to: null,
         title: CaseCommentTaskTitleEnum.GerirAthugasemd,
         comment: commentValue,
