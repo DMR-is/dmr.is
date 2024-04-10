@@ -16,7 +16,7 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import { Case, CaseStatusEnum } from '../gen/fetch'
+import { AdvertType, Case, CaseStatusEnum } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -26,10 +26,11 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: Case | null
+  advertTypes: Array<AdvertType> | null
   step: CaseStep | null
 }
 
-const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
+const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
   const { formatMessage } = useFormatMessage()
 
   if (!activeCase || !step) {
@@ -119,7 +120,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
       <Stack space={[2, 3, 4]}>
         {step === 'innsending' && <StepInnsending activeCase={activeCase} />}
         {step === 'grunnvinnsla' && (
-          <StepGrunnvinnsla activeCase={activeCase} />
+          <StepGrunnvinnsla activeCase={activeCase} advertTypes={advertTypes} />
         )}
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
@@ -173,24 +174,22 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const step = query.uid?.[1] as CaseStep | undefined
 
   if (!caseId || !step || !caseSteps.includes(step)) {
-    return { activeCase: null, step: null }
+    return { activeCase: null, advertTypes: null, step: null }
   }
 
-  const [activeCase] = await Promise.all(
-    [
-      dmrClient.getCase({
-        id: caseId,
-      }),
-    ].map((promise) =>
-      promise.catch((err) => {
-        console.log('Error fetcing case', { err })
-        return null
-      }),
-    ),
-  )
+  const [activeCase, advertTypes] = await Promise.all([
+    dmrClient.getCase({
+      id: caseId,
+    }),
+    dmrClient.journalControllerTypes({}),
+  ]).catch((err) => {
+    console.log('Error fetcing case', { err })
+    throw new Error('Error fetcing case')
+  })
 
   return {
     activeCase,
+    advertTypes: advertTypes.types,
     step,
   }
 }

@@ -13,23 +13,28 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { AdvertType, Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseDepartmentTabs } from '../../lib/constants'
 import { messages } from './messages'
 
 type Props = {
   activeCase: Case
+  advertTypes: Array<AdvertType> | null
 }
 
-const typeOptions: StringOption[] = [
-  { label: 'AUGLÝSING', value: 'AUGLÝSING' },
-  { label: 'GJALDSKRÁ', value: 'GJALDSKRÁ' },
-  { label: 'REGLUGERÐ', value: 'REGLUGERÐ' },
-]
-
-export const StepGrunnvinnsla = ({ activeCase }: Props) => {
+export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const activeTypes =
+    advertTypes?.filter(
+      (t) => t.department.slug === activeCase.advert.department.slug,
+    ) ?? []
+
+  const typeOptions: StringOption[] = activeTypes.map((t) => ({
+    label: t.title,
+    value: t.slug,
+  }))
 
   return (
     <>
@@ -76,7 +81,7 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
               <Select
                 name="type"
                 value={typeOptions.find(
-                  (o) => o.value === activeCase?.advert.type.title,
+                  (o) => o.value === activeCase?.advert.type.slug,
                 )}
                 options={typeOptions}
                 label={formatMessage(messages.grunnvinnsla.type)}

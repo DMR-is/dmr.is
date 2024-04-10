@@ -26,7 +26,7 @@ describe('StatisticsService', () => {
   })
 
   describe('getStatistics', () => {
-    const idWithNoAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[0].id
+    const idWithNoAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS.slice(-1)[0].id
     const idWithAdverts = ALL_MOCK_JOURNAL_DEPARTMENTS[1].id
     it('Should return total count equal to 0', async () => {
       const results = await service.getDepartment(idWithNoAdverts)
