@@ -207,10 +207,6 @@ CasePublishingOverview.getProps = async ({ query }) => {
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
-    {
-      label: 'Deildir',
-      options: CaseDepartmentTabs,
-    },
   ]
 
   const { cases, paging } = await dmrClient.getCases({

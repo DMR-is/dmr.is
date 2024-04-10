@@ -6,7 +6,7 @@ import { Section } from '../components/section/Section'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
-import { Tabs } from '../components/tabs/Tabs'
+import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
@@ -60,7 +60,7 @@ const CaseProcessingScreen: Screen<Props> = ({
     }
   }, [])
 
-  const tabs = [
+  const tabs: Tab[] = [
     {
       id: CaseStatusEnum.Innsent,
       label: formatMessage(messages.tabs.submitted, {

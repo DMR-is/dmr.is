@@ -5,6 +5,8 @@ import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
 import { FilterOption } from '../../context/filterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
+import { handleFilterToggle } from '../../lib/utils'
+import { ActiveFilters } from '../case-filters/CaseFilters'
 import * as styles from '../filter-popover/FilterPopover.css'
 import { messages } from './messages'
 
@@ -12,37 +14,22 @@ type Props = {
   label: string
   expanded?: boolean
   filters: FilterOption[]
+  activeFilters: ActiveFilters
 }
 
-export const FilterGroup = ({ label, expanded, filters }: Props) => {
+export const FilterGroup = ({
+  label,
+  expanded,
+  filters,
+  activeFilters,
+}: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const [localToggle, setLocalToggle] = useState(expanded)
 
   const localId = useId()
 
-  const { add, remove, get } = useQueryParams()
-
-  const handleToggle = (toggle: boolean, key: string, value: string) => {
-    const existingValue = get(key)
-    if (existingValue && toggle) {
-      add({ [key]: `${existingValue},${value}` })
-    } else if (existingValue && !toggle) {
-      const newValue = existingValue
-        .split(',')
-        .filter((v) => v !== value)
-        .join(',')
-      if (newValue) {
-        add({ [key]: newValue })
-      } else {
-        remove([key])
-      }
-    } else if (toggle) {
-      add({ [key]: value })
-    } else {
-      remove([key])
-    }
-  }
+  const qp = useQueryParams()
 
   return (
     <Box className={styles.filterExpandButtonWrapper}>
@@ -67,17 +54,20 @@ export const FilterGroup = ({ label, expanded, filters }: Props) => {
         id={localId}
         className={styles.filterGroup({ expanded: localToggle })}
       >
-        {filters.map((filter, i) => {
+        {filters.map((filter) => {
           return (
             <Checkbox
-              defaultChecked={get(filter.key)
-                ?.split(',')
-                .includes(filter.value)}
+              checked={!!activeFilters.find((a) => a.value === filter.value)}
               onChange={(e) =>
-                handleToggle(e.target.checked, filter.key, filter.value)
+                handleFilterToggle(
+                  qp,
+                  e.target.checked,
+                  filter.key,
+                  filter.value,
+                )
               }
               name={filter.label}
-              key={i}
+              key={filter.value}
               label={filter.label}
             />
           )
