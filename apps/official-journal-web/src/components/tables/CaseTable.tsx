@@ -1,5 +1,3 @@
-import format from 'date-fns/format'
-import is from 'date-fns/locale/is'
 import reverse from 'lodash/reverse'
 import { useEffect, useMemo, useRef, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -20,7 +18,7 @@ import { Advert, Case, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
-import { generateCaseLink } from '../../lib/utils'
+import { formatDate, generateCaseLink } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -255,13 +253,7 @@ export const CaseTable = ({
                 advertNumber={modalActive.publicationNumber?.full}
                 signatureDate={
                   modalActive.signatureDate
-                    ? format(
-                        new Date(modalActive.signatureDate),
-                        'dd. MMMM yyyy',
-                        {
-                          locale: is,
-                        },
-                      )
+                    ? formatDate(modalActive.signatureDate, 'dd. MMMM yyyy')
                     : undefined
                 }
                 advertType={modalActive.type.title}

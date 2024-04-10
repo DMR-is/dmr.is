@@ -1,6 +1,3 @@
-import format from 'date-fns/format'
-import is from 'date-fns/locale/is'
-
 import {
   GridColumn,
   GridContainer,
@@ -10,6 +7,7 @@ import {
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
@@ -36,13 +34,7 @@ export const StepTilbuid = ({ activeCase }: Props) => {
             advertNumber={activeCase.advert.publicationNumber?.full}
             signatureDate={
               activeCase.advert.signatureDate
-                ? format(
-                    new Date(activeCase.advert.signatureDate),
-                    'dd. MMMM yyyy',
-                    {
-                      locale: is,
-                    },
-                  )
+                ? formatDate(activeCase.advert.signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
             advertType={activeCase.advert.type.title}
