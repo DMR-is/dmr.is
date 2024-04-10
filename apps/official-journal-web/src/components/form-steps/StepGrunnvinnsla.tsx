@@ -22,8 +22,6 @@ type Props = {
   activeCase: Case
 }
 
-const departmentOptions = Object.values(CaseDepartmentTabs)
-
 const typeOptions: StringOption[] = [
   { label: 'AUGLÝSING', value: 'AUGLÝSING' },
   { label: 'GJALDSKRÁ', value: 'GJALDSKRÁ' },
@@ -62,10 +60,10 @@ export const StepGrunnvinnsla = ({ activeCase }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
                 name="department"
-                value={departmentOptions.find(
+                value={CaseDepartmentTabs.find(
                   (o) => o.value === activeCase?.advert.department.slug,
                 )}
-                options={departmentOptions}
+                options={CaseDepartmentTabs}
                 label={formatMessage(messages.grunnvinnsla.department)}
                 size="sm"
                 isSearchable={false}

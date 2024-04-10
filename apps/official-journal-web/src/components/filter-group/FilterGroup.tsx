@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 
 import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
 

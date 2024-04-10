@@ -28,37 +28,32 @@ export const CasePublishingTab = ({
   const { formatMessage } = useFormatMessage()
 
   return (
-    <Box>
-      <CaseTableReady
-        selectedCases={selectedCases}
-        setSelectedCases={setSelectedCases}
-        data={cases}
-        paging={paging}
-      />
-      <Box marginTop={3} display="flex" justifyContent="flexEnd">
-        <Button
-          variant="ghost"
-          disabled={
-            !selectedCases.length && casesReadyForPublication.length === 0
-          }
-          icon="arrowDown"
-          onClick={() => setCasesReadyForPublication(selectedCases)}
-        >
-          {formatMessage(messages.general.preparePublishing)}
-        </Button>
+    <>
+      <Box>
+        <CaseTableReady
+          selectedCases={selectedCases}
+          setSelectedCases={setSelectedCases}
+          setCasesReadyForPublication={setCasesReadyForPublication}
+          data={cases}
+          paging={paging}
+        />
       </Box>
 
-      <Text as="h3" fontWeight="semiBold" marginBottom={2}>
-        {formatMessage(messages.general.selectedCasesForPublishing)}
-      </Text>
-      <CaseTableSelectedCases data={casesReadyForPublication} />
-      {casesReadyForPublication.length > 0 && (
+      <Box marginTop={[3, 4]}>
+        <Text as="h3" fontWeight="semiBold" marginBottom={2}>
+          {formatMessage(messages.general.selectedCasesForPublishing)}
+        </Text>
+        <CaseTableSelectedCases data={casesReadyForPublication} />
+
         <Box marginTop={3} display="flex" justifyContent="flexEnd">
-          <Button onClick={() => onContinue(casesReadyForPublication)}>
+          <Button
+            onClick={() => onContinue(casesReadyForPublication)}
+            disabled={casesReadyForPublication.length === 0}
+          >
             {formatMessage(messages.general.publishCases)}
           </Button>
         </Box>
-      )}
-    </Box>
+      </Box>
+    </>
   )
 }

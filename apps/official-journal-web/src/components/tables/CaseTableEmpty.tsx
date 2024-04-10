@@ -6,15 +6,16 @@ import { messages } from './messages'
 
 type Props = {
   message?: string
+  columns: number
 }
 
-export const CaseTableEmpty = ({ message }: Props) => {
+export const CaseTableEmpty = ({ message, columns }: Props) => {
   const { formatMessage } = useFormatMessage()
   const msg = message ? message : formatMessage(messages.general.emptyTable)
   return (
     <T.Body>
       <tr className={styles.emptyRow}>
-        <td>
+        <td colSpan={columns}>
           <div className={styles.emptyRowMessageWrapper}>
             <Text color="dark400">
               <span className={styles.emptyRowMessage}>{msg}</span>

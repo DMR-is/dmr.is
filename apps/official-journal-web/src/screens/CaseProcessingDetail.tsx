@@ -98,7 +98,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
             name="assignedTo"
             options={employeesMock}
             defaultValue={employeesMock.find(
-              (e) => e.value === activeCase.assignedTo,
+              (e) => e.value === activeCase.assignedTo.name,
             )}
             label={formatMessage(messages.actions.assignedTo)}
             placeholder={formatMessage(messages.actions.assignedToPlaceholder)}

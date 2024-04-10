@@ -51,21 +51,18 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
   const [casesToPublish, setCasesToPublish] = useState<Case[]>([])
 
   const [departmentACases, setDepartmentACases] = useState<Case[]>([])
-
-  const [departmentBCases, setDepartmentBCases] = useState<Case[]>([])
-
-  const [departmentCCases, setDepartmentCCases] = useState<Case[]>([])
-
   const [
     departmentACasesReadyForPublication,
     setDepartmentACasesReadyForPublication,
   ] = useState<Case[]>([])
 
+  const [departmentBCases, setDepartmentBCases] = useState<Case[]>([])
   const [
     departmentBCasesReadyForPublication,
     setDepartmentBCasesReadyForPublication,
   ] = useState<Case[]>([])
 
+  const [departmentCCases, setDepartmentCCases] = useState<Case[]>([])
   const [
     departmentCCasesReadyForPublication,
     setDepartmentCCasesReadyForPublication,
@@ -111,11 +108,11 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
     }
   }, [])
 
-  const tabs: Tab[] = [
-    {
-      id: CaseDepartmentTabs.A.value,
-      label: CaseDepartmentTabs.A.label,
-      content: (
+  const tabs: Tab[] = CaseDepartmentTabs.map((tab) => ({
+    id: tab.value,
+    label: tab.label,
+    content:
+      tab.value === 'a-deild' ? (
         <CasePublishingTab
           casesReadyForPublication={departmentACasesReadyForPublication}
           setCasesReadyForPublication={setDepartmentACasesReadyForPublication}
@@ -125,12 +122,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
           cases={cases}
           paging={paging}
         />
-      ),
-    },
-    {
-      id: CaseDepartmentTabs.B.value,
-      label: CaseDepartmentTabs.B.label,
-      content: (
+      ) : tab.value === 'b-deild' ? (
         <CasePublishingTab
           casesReadyForPublication={departmentBCasesReadyForPublication}
           setCasesReadyForPublication={setDepartmentBCasesReadyForPublication}
@@ -140,12 +132,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
           cases={cases}
           paging={paging}
         />
-      ),
-    },
-    {
-      id: CaseDepartmentTabs.C.value,
-      label: CaseDepartmentTabs.C.label,
-      content: (
+      ) : tab.value === 'c-deild' ? (
         <CasePublishingTab
           casesReadyForPublication={departmentCCasesReadyForPublication}
           setCasesReadyForPublication={setDepartmentCCasesReadyForPublication}
@@ -155,9 +142,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
           cases={cases}
           paging={paging}
         />
-      ),
-    },
-  ]
+      ) : null,
+  }))
 
   return (
     <Section paddingTop="off">
@@ -212,14 +198,18 @@ CasePublishingOverview.getProps = async ({ query }) => {
     {
       label: 'Birting',
       options: [
-        { label: 'Mín mál', key: 'employeeId', value: 'Ármann' },
+        {
+          label: 'Mín mál',
+          key: 'employeeId',
+          value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+        },
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
     {
       label: 'Deildir',
-      options: Object.values(CaseDepartmentTabs),
+      options: CaseDepartmentTabs,
     },
   ]
 

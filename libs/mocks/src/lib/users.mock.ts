@@ -7,7 +7,7 @@ export const ARMANN: User = {
   active: true,
 }
 
-const PALINA: User = {
+export const PALINA: User = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cde',
   name: 'Pálína J',
   lastName: 'Pálínudóttir',

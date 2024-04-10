@@ -134,14 +134,18 @@ CaseProcessingScreen.getProps = async ({ query }) => {
     {
       label: 'Birting',
       options: [
-        { label: 'Mín mál', key: 'employeeId', value: 'Ármann' },
+        {
+          label: 'Mín mál',
+          key: 'employeeId',
+          value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+        },
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
     },
     {
       label: 'Deildir',
-      options: Object.values(CaseDepartmentTabs),
+      options: CaseDepartmentTabs,
     },
   ]
 

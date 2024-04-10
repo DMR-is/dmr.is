@@ -6,10 +6,15 @@ import {
   CaseCommentTitle,
 } from '@dmr.is/shared/dto'
 import {
+  ADVERT_A_32_2024,
   ADVERT_B_1278_2023,
   ADVERT_B_866_2006,
   ADVERT_NEW,
+  ADVERT_READY_A,
+  ADVERT_READY_B,
+  ADVERT_READY_B_2,
 } from './journal.mock'
+import { ARMANN, PALINA } from './users.mock'
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -25,7 +30,7 @@ export const CASE_SUBMITTED: Case = {
   paid: false,
   price: null,
   fastTrack: false,
-  assignedTo: null,
+  assignedTo: ARMANN,
   advert: ADVERT_NEW,
   comments: [
     {
@@ -57,8 +62,8 @@ export const CASE_IN_PROGRESS: Case = {
   paid: false,
   price: null,
   fastTrack: false,
-  assignedTo: 'Ármann',
-  advert: ADVERT_B_1278_2023,
+  assignedTo: ARMANN,
+  advert: ADVERT_READY_B,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
@@ -126,8 +131,8 @@ export const CASE_IN_REVIEW: Case = {
   paid: true,
   price: 23900,
   fastTrack: true,
-  assignedTo: 'Pálína J',
-  advert: ADVERT_B_866_2006,
+  assignedTo: PALINA,
+  advert: ADVERT_READY_B,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -254,7 +259,7 @@ export const CASE_IN_REVIEW: Case = {
 }
 
 export const CASE_READY: Case = {
-  id: 'e637c050-a462-4183-972a-5c375x6e34ad',
+  id: 'e637c050-a462-4183-972a-5re54he34ad',
   applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
   year: 2024,
   caseNumber: 3211,
@@ -267,8 +272,146 @@ export const CASE_READY: Case = {
   paid: true,
   price: 23000,
   fastTrack: false,
-  assignedTo: 'Ármann',
-  advert: ADVERT_B_866_2006,
+  assignedTo: ARMANN,
+  advert: ADVERT_READY_A,
+  comments: [
+    {
+      id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
+      type: CaseCommentType.Submit,
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: null,
+        to: 'Stofnun x',
+        title: CaseCommentTitle.Submit,
+        comment: null,
+      },
+    },
+    {
+      id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
+      createdAt: '2024-03-13T12:45:48.21Z',
+      type: CaseCommentType.Assign,
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.AssignSelf,
+        comment: null,
+      },
+    },
+    {
+      id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: 'Grunnvinnsla',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment:
+          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+      },
+    },
+  ],
+}
+
+export const CASE_READY_2: Case = {
+  id: 'e637c050-a462-4183-972a-5cfddae34ad',
+  applicationId: '749f1eff-236d-4c67-a4cc-eb7a7bbd5452',
+  year: 2024,
+  caseNumber: 2314,
+  status: CaseStatus.ReadyForPublishing,
+  tag: CaseTag.MultipleReviewers,
+  createdAt: '2024-04-01T12:45:48.21Z',
+  modifiedAt: '2024-04-01T12:45:48.21Z',
+  published: false,
+  publishedAt: null,
+  paid: true,
+  price: 23000,
+  fastTrack: false,
+  assignedTo: PALINA,
+  advert: ADVERT_READY_B,
+  comments: [
+    {
+      id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
+      type: CaseCommentType.Submit,
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: null,
+        to: 'Stofnun x',
+        title: CaseCommentTitle.Submit,
+        comment: null,
+      },
+    },
+    {
+      id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
+      createdAt: '2024-03-13T12:45:48.21Z',
+      type: CaseCommentType.Assign,
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.AssignSelf,
+        comment: null,
+      },
+    },
+    {
+      id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: 'Grunnvinnsla',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment:
+          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+      },
+    },
+  ],
+}
+
+export const CASE_READY_3: Case = {
+  id: 'e637c050-a462-4183-23fe-5cfddae34ad',
+  applicationId: '749f1eff-236d-4c67-a4cc-eb7a7bbd5452',
+  year: 2024,
+  caseNumber: 4321,
+  status: CaseStatus.ReadyForPublishing,
+  tag: CaseTag.MultipleReviewers,
+  createdAt: '2024-04-01T12:45:48.21Z',
+  modifiedAt: '2024-04-01T12:45:48.21Z',
+  published: false,
+  publishedAt: null,
+  paid: true,
+  price: 23000,
+  fastTrack: true,
+  assignedTo: ARMANN,
+  advert: ADVERT_READY_B_2,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -336,7 +479,7 @@ export const CASE_PUBLISHED: Case = {
   paid: true,
   price: 23000,
   fastTrack: false,
-  assignedTo: 'Ármann',
+  assignedTo: PALINA,
   advert: ADVERT_B_866_2006,
   comments: [
     {
@@ -391,10 +534,127 @@ export const CASE_PUBLISHED: Case = {
   ],
 }
 
+export const CASE_PUBLISHED_2: Case = {
+  id: 'e637c050-a462-4483-972a-5c375x6e34ad',
+  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  year: 2024,
+  caseNumber: 3211,
+  status: CaseStatus.Published,
+  tag: CaseTag.MultipleReviewers,
+  createdAt: '2024-03-12T12:45:48.21Z',
+  modifiedAt: '2024-03-12T12:45:48.21Z',
+  published: true,
+  publishedAt: '2024-03-04T12:45:48.21Z',
+  paid: true,
+  price: 23000,
+  fastTrack: false,
+  assignedTo: ARMANN,
+  advert: ADVERT_A_32_2024,
+  comments: [
+    {
+      id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
+      type: CaseCommentType.Submit,
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: null,
+        to: 'Stofnun x',
+        title: CaseCommentTitle.Submit,
+        comment: null,
+      },
+    },
+    {
+      id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
+      createdAt: '2024-03-13T12:45:48.21Z',
+      type: CaseCommentType.Assign,
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.AssignSelf,
+        comment: null,
+      },
+    },
+    {
+      id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
+      type: CaseCommentType.Update,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: 'Grunnvinnsla',
+        title: CaseCommentTitle.UpdateStatus,
+        comment: null,
+      },
+    },
+    {
+      id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
+      type: CaseCommentType.Comment,
+      createdAt: '2024-03-13T12:45:48.21Z',
+      caseStatus: CaseStatus.InProgress,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.Comment,
+        comment:
+          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
+      },
+    },
+  ],
+}
+
+export const CASE_PUBLISHED_3: Case = {
+  id: 'e637c050-a462-4483-972a-5c375x6e34ad',
+  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  year: 2024,
+  caseNumber: 4523,
+  status: CaseStatus.Published,
+  tag: CaseTag.MultipleReviewers,
+  createdAt: '2024-03-12T12:45:48.21Z',
+  modifiedAt: '2024-03-12T12:45:48.21Z',
+  published: true,
+  publishedAt: '2024-03-04T12:45:48.21Z',
+  paid: true,
+  price: 23000,
+  fastTrack: false,
+  assignedTo: ARMANN,
+  advert: ADVERT_B_1278_2023,
+  comments: [
+    {
+      id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
+      type: CaseCommentType.Submit,
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: null,
+        to: 'Stofnun x',
+        title: CaseCommentTitle.Submit,
+        comment: null,
+      },
+    },
+    {
+      id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
+      createdAt: '2024-03-13T12:45:48.21Z',
+      type: CaseCommentType.Assign,
+      caseStatus: CaseStatus.Submitted,
+      task: {
+        from: 'Ármann',
+        to: null,
+        title: CaseCommentTitle.AssignSelf,
+        comment: null,
+      },
+    },
+  ],
+}
+
 export const ALL_MOCK_CASES = [
   CASE_SUBMITTED,
   CASE_IN_PROGRESS,
   CASE_IN_REVIEW,
   CASE_READY,
+  CASE_READY_2,
+  CASE_READY_3,
   CASE_PUBLISHED,
+  CASE_PUBLISHED_2,
+  CASE_PUBLISHED_3,
 ]

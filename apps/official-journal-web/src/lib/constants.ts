@@ -23,11 +23,8 @@ export enum Routes {
   OverviewDetail = '/heildaryfirlit/:caseId',
 }
 
-export const CaseDepartmentTabs: Record<
-  string,
-  StringOption & { key: string }
-> = {
-  A: { label: 'A deild', value: 'a-deild', key: 'department' },
-  B: { label: 'B deild', value: 'b-deild', key: 'department' },
-  C: { label: 'C deild', value: 'c-deild', key: 'department' },
-}
+export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
+  { label: 'A deild', value: 'a-deild', key: 'department' },
+  { label: 'B deild', value: 'b-deild', key: 'department' },
+  { label: 'C deild', value: 'c-deild', key: 'department' },
+]
