@@ -10486,6 +10486,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:4.6.0"
     eslint-plugin-simple-import-sort: "npm:^12.0.0"
     eslint-plugin-storybook: "npm:^0.6.15"
+    framer-motion: "npm:^11.0.26"
     hypher: "npm:0.2.5"
     jest: "npm:^29.4.1"
     jest-environment-jsdom: "npm:^29.4.1"
@@ -12437,6 +12438,26 @@ __metadata:
   version: 4.3.7
   resolution: "fraction.js@npm:4.3.7"
   checksum: df291391beea9ab4c263487ffd9d17fed162dbb736982dee1379b2a8cc94e4e24e46ed508c6d278aded9080ba51872f1bc5f3a5fd8d7c74e5f105b508ac28711
+  languageName: node
+  linkType: hard
+
+"framer-motion@npm:^11.0.26":
+  version: 11.0.26
+  resolution: "framer-motion@npm:11.0.26"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: efbfd4833a40ea3ba9437480ae2c1f56236defa4efcef629106a023afe05237f4053d8448d049c30d8e432f4d8e5354eecc2b3598dea3e40ed3f4e78edddacaa
   languageName: node
   linkType: hard
 

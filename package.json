@@ -99,6 +99,7 @@
     "date-fns": "2.28.0",
     "dd-trace": "^5.2.0",
     "downshift": "5.4.3",
+    "framer-motion": "^11.0.26",
     "hypher": "0.2.5",
     "js-base64": "2.5.2",
     "kennitala": "^2.0.0-beta.3",

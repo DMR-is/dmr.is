@@ -210,15 +210,13 @@ Dashboard.getProps = async () => {
     ].map((promise) => promise.catch(() => null)),
   )
 
-  const statistics = {
-    general,
-    personal,
-    inactive,
-    publishing,
-  }
-
   return {
-    statistics,
+    statistics: {
+      general,
+      personal,
+      inactive,
+      publishing,
+    },
   }
 }
 

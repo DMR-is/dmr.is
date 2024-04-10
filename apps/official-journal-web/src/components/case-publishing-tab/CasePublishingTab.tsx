@@ -43,7 +43,10 @@ export const CasePublishingTab = ({
         <Text as="h3" fontWeight="semiBold" marginBottom={2}>
           {formatMessage(messages.general.selectedCasesForPublishing)}
         </Text>
-        <CaseTableSelectedCases data={casesReadyForPublication} />
+        <CaseTableSelectedCases
+          data={casesReadyForPublication}
+          setCasesReadyForPublication={setCasesReadyForPublication}
+        />
 
         <Box marginTop={3} display="flex" justifyContent="flexEnd">
           <Button
