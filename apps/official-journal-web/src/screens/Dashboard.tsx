@@ -125,7 +125,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                   linkText={messages.general.openAdmin}
                 >
                   <Tabs
-                    label=""
+                    label={formatMessage(messages.general.caseStatuses)}
                     selected={ritstjornTabs[0].id}
                     size="sm"
                     tabs={ritstjornTabs}
@@ -150,9 +150,9 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                 linkText={messages.general.openStatistics}
               >
                 <Tabs
+                  label={formatMessage(messages.general.statistics)}
                   selected={statisticsTabs[0].id}
                   size="sm"
-                  label=""
                   tabs={statisticsTabs}
                 />
               </ContentWrapper>

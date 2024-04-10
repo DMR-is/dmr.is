@@ -105,6 +105,7 @@ const CaseProcessingScreen: Screen<Props> = ({
               onTabChange={onTabChange}
               selectedTab={selectedTab}
               tabs={tabs}
+              label={formatMessage(messages.tabs.statuses)}
             />
           </GridColumn>
         </GridRow>

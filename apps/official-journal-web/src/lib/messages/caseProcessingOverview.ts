@@ -2,6 +2,11 @@ import { defineMessages } from 'react-intl'
 
 export const messages = {
   tabs: defineMessages({
+    statuses: {
+      id: 'web.page.caseProcessingOverview:tabs.statuses',
+      defaultMessage: 'Stöður',
+      description: '',
+    },
     submitted: {
       id: 'web.page.caseProcessingOverview:tabs.submitted',
       defaultMessage: 'Innsendingar ({count})',

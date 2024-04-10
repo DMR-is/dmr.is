@@ -75,6 +75,7 @@ export const CaseFilters = () => {
         />
         {filterGroups?.length && (
           <Popover
+            label={formatMessage(messages.general.filters)}
             disclosure={
               <Button variant="utility" icon="filter">
                 {formatMessage(messages.general.openFilter)}

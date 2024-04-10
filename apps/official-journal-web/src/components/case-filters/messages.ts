@@ -7,6 +7,11 @@ export const messages = {
       defaultMessage: 'Leita eftir málsnafni',
       description: 'Search placeholder for case filters',
     },
+    filters: {
+      id: 'web.components.caseFilters:filters',
+      defaultMessage: 'Síur',
+      description: '',
+    },
     openFilter: {
       id: 'web.components.caseFilters:openFilter',
       defaultMessage: 'Opna síun',

@@ -180,6 +180,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
                 onTabChange={onTabChange}
                 selectedTab={selectedTab}
                 tabs={tabs}
+                label={formatMessage(messages.general.departments)}
               />
             )}
           </GridColumn>
