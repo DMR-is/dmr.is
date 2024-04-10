@@ -21,6 +21,9 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
+import { HTMLText } from '@island.is/regulations-tools/types'
+
 import { ICaseService } from './case.service.interface'
 
 export class CaseServiceMock implements ICaseService {
@@ -32,6 +35,12 @@ export class CaseServiceMock implements ICaseService {
 
     if (!found) {
       throw new NotFoundException('Case not found')
+    }
+
+    if (found.advert.document.isLegacy) {
+      found.advert.document.html = dirtyClean(
+        found.advert.document.html as HTMLText,
+      )
     }
 
     return Promise.resolve(found)
@@ -109,6 +118,14 @@ export class CaseServiceMock implements ICaseService {
         withPaging.pageSize * (withPaging.page - 1),
         withPaging.pageSize * withPaging.page,
       )
+      pagedCases.forEach((c) => {
+        if (c.advert.document.isLegacy) {
+          c.advert.document.html = dirtyClean(
+            c.advert.document.html as HTMLText,
+          )
+        }
+        return c
+      })
 
       return Promise.resolve({
         cases: pagedCases,

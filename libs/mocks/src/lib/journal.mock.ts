@@ -331,7 +331,11 @@ export const ADVERT_READY_A: Advert = {
   subject: 'um eitthvað í A deild.',
   title: 'AUGLÝSING um eitthvað í A deild.',
   status: AdvertStatus.ReadyForPublication,
-  publicationNumber: null,
+  publicationNumber: {
+    number: 123,
+    year: 2024,
+    full: '123/2024',
+  },
   createdDate: '2024-04-01 13:45:44.617',
   updatedDate: '',
   signatureDate: '2024-04-02 00:00:00.000',

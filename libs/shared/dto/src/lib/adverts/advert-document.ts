@@ -17,7 +17,7 @@ export class AdvertDocument {
     nullable: true,
     type: String,
   })
-  readonly html!: string | null
+  html!: string | null
 
   @ApiProperty({
     description: 'URL for the generated PDF file.',
