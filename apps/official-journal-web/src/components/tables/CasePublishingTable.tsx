@@ -1,20 +1,7 @@
-import {
-  animate,
-  AnimatePresence,
-  motion,
-  MotionValue,
-  Reorder,
-  useDragControls,
-  useMotionValue,
-} from 'framer-motion'
+import { Reorder, useDragControls } from 'framer-motion'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
-import {
-  Icon,
-  SkeletonLoader,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import { Icon, Table as T, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { CaseTableHeadCellProps } from './CaseTable'
