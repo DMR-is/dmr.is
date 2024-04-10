@@ -1,22 +1,27 @@
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
 import reverse from 'lodash/reverse'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+// eslint-disable-next-line @typescript-eslint/naming-convention
+import ReactDOM from 'react-dom'
 
 import {
-  ArrowLink,
   Box,
   Icon,
   LinkV2,
+  ModalBase,
   Pagination,
   SkeletonLoader,
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
+import { Advert, Case, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
 import { generateCaseLink } from '../../lib/utils'
+import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
@@ -114,10 +119,15 @@ export const CaseTable = ({
     })
   }
 
+  const portalRef = useRef<Element>()
+  const [modalActive, setModalActive] = useState<Advert>()
+  useEffect(() => {
+    portalRef.current = document.querySelector('#__next') as Element
+  })
+
   const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
     e.preventDefault()
-    // TODO: add Modal...
-    console.log({ activeCase })
+    setModalActive(activeCase.advert)
   }
 
   useEffect(() => {
@@ -221,6 +231,49 @@ export const CaseTable = ({
           />
         </Box>
       )}
+      {modalActive &&
+        ReactDOM.createPortal(
+          <ModalBase
+            baseId="advert"
+            isVisible={true}
+            initialVisibility={true}
+            onVisibilityChange={(isVisible) =>
+              !isVisible && setModalActive(undefined)
+            }
+            hideOnEsc={true}
+          >
+            <div className={styles.advertModal}>
+              <div className={styles.advertModalHeader}>
+                <button
+                  className={styles.advertModalClose}
+                  onClick={() => setModalActive(undefined)}
+                >
+                  <Icon icon="close" />
+                </button>
+              </div>
+              <AdvertDisplay
+                advertNumber={modalActive.publicationNumber?.full}
+                signatureDate={
+                  modalActive.signatureDate
+                    ? format(
+                        new Date(modalActive.signatureDate),
+                        'dd. MMMM yyyy',
+                        {
+                          locale: is,
+                        },
+                      )
+                    : undefined
+                }
+                advertType={modalActive.type.title}
+                advertSubject={modalActive.subject ?? ''}
+                advertText={modalActive.document.html ?? ''}
+                isLegacy={modalActive.document.isLegacy ?? false}
+                paddingTop={[5, 6, 8]}
+              />
+            </div>
+          </ModalBase>,
+          portalRef.current as Element,
+        )}
     </>
   )
 }

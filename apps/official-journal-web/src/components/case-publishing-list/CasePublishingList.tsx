@@ -15,9 +15,9 @@ export const CasePublishingList = ({ cases }: Props) => {
           key={i}
           department={c.advert.department.title}
           // publicationDate={c.advert.publicationDate}
-          publicationDate="2024-10-19 00:00:00.000"
+          publicationDate={c.advert.publicationDate}
           insitiution={c.advert.involvedParty.title}
-          caseNumber={`${c.caseNumber}/${c.year}`}
+          publicationNumber={c.advert.publicationNumber?.full}
           title={c.advert.title}
           categories={c.advert.categories.map((cat) => cat.title)}
         />

@@ -136,3 +136,28 @@ export const emptyRowMessage = style({
   fontStyle: 'italic',
   opacity: 0.5,
 })
+
+export const advertModal = style({
+  position: 'relative',
+  maxWidth: 800,
+  margin: '0 auto',
+  background: '#fff',
+  marginTop: '10vh',
+})
+export const advertModalHeader = style({
+  position: 'absolute',
+  top: 0,
+  right: 15,
+  left: 0,
+  background: '#fff',
+  height: 46,
+  zIndex: 10,
+})
+
+export const advertModalClose = style({
+  position: 'absolute',
+  top: 0,
+  right: 15,
+  padding: 10,
+  background: '#fff',
+})
