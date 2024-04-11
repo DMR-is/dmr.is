@@ -8,6 +8,7 @@ import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
 import { Case, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -23,6 +24,7 @@ type Props = {
 }
 
 const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
+  const { formatMessage } = useFormatMessage()
   const { add, get } = useQueryParams()
   const { setFilterGroups } = useFilterContext()
 
@@ -60,6 +62,7 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
               onTabChange={onTabChange}
               selectedTab={selectedTab}
               tabs={tabs}
+              label={formatMessage(messages.general.departments)}
             />
           </GridColumn>
         </GridRow>
@@ -89,10 +92,6 @@ CaseOverview.getProps = async ({ query }) => {
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
-    },
-    {
-      label: 'Deildir',
-      options: CaseDepartmentTabs,
     },
   ]
   return {

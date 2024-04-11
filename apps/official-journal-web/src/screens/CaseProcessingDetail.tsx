@@ -79,7 +79,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
       }}
       steps={stepper.map((item, i) => (
         <Section
-          key={i}
+          key={item.step}
           isActive={item.isActive}
           section={item.title}
           theme={FormStepperThemes.PURPLE}

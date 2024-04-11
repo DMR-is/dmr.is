@@ -12,6 +12,11 @@ export const messages = {
       defaultMessage: 'Gefa út öll mál',
       description: 'Publish cases button label for the dashboard',
     },
+    departments: {
+      id: 'web.page.casePublishingOverview:general.departments',
+      defaultMessage: 'Deildir',
+      description: '',
+    },
   }),
   breadcrumbs: defineMessages({
     dashboard: {

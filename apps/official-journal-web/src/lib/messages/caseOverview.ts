@@ -1,7 +1,13 @@
 import { defineMessages } from 'react-intl'
 
 export const messages = {
-  general: defineMessages({}),
+  general: defineMessages({
+    departments: {
+      id: 'web.page.caseOverview:general.departments',
+      defaultMessage: 'Deildir',
+      description: '',
+    },
+  }),
   breadcrumbs: defineMessages({
     dashboard: {
       id: 'web.page.caseOverview:breadcrumbs.dashboard',

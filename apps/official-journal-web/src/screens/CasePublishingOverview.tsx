@@ -180,6 +180,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
                 onTabChange={onTabChange}
                 selectedTab={selectedTab}
                 tabs={tabs}
+                label={formatMessage(messages.general.departments)}
               />
             )}
           </GridColumn>
@@ -206,10 +207,6 @@ CasePublishingOverview.getProps = async ({ query }) => {
         { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
         { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
       ],
-    },
-    {
-      label: 'Deildir',
-      options: CaseDepartmentTabs,
     },
   ]
 

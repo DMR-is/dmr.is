@@ -65,6 +65,12 @@
       "value": "Fylgiskjöl"
     }
   ],
+  "web.components.caseFilters:filters": [
+    {
+      "type": 0,
+      "value": "Síur"
+    }
+  ],
   "web.components.caseFilters:openFilter": [
     {
       "type": 0,
@@ -515,6 +521,12 @@
       "value": "Stjórnartíðindi"
     }
   ],
+  "web.page.caseOverview:general.departments": [
+    {
+      "type": 0,
+      "value": "Deildir"
+    }
+  ],
   "web.page.caseProcessingOverview:banner.description": [
     {
       "type": 0,
@@ -581,6 +593,12 @@
       "value": ")"
     }
   ],
+  "web.page.caseProcessingOverview:tabs.statuses": [
+    {
+      "type": 0,
+      "value": "Stöður"
+    }
+  ],
   "web.page.caseProcessingOverview:tabs.submitted": [
     {
       "type": 0,
@@ -623,6 +641,12 @@
     {
       "type": 0,
       "value": "Til baka í útgáfu mála"
+    }
+  ],
+  "web.page.casePublishingOverview:general.departments": [
+    {
+      "type": 0,
+      "value": "Deildir"
     }
   ],
   "web.page.casePublishingOverview:general.publishCases": [

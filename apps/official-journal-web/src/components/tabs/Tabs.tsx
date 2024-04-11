@@ -23,6 +23,7 @@ type Props = {
   selectedTab: string
   onTabChange: (id: string) => void
   onlyRenderSelectedTab?: boolean
+  label: string
 }
 
 export const Tabs = ({
@@ -30,6 +31,7 @@ export const Tabs = ({
   selectedTab,
   onTabChange,
   onlyRenderSelectedTab,
+  label,
 }: Props) => {
   if (onlyRenderSelectedTab && !tabs.every(({ id }) => isDefined(id))) {
     throw new Error(
@@ -50,13 +52,13 @@ export const Tabs = ({
     <GridContainer position="relative">
       <GridRow>
         <GridColumn span={['12/12', '12/12', '12/12', '12/12', '9/12']}>
-          <TabList {...tab} className={styles.tabsTablist}>
+          <TabList {...tab} className={styles.tabsTablist} aria-label={label}>
             {tabs.map(({ label, id }, index) => {
               const isActive = tab.currentId === id
               return (
                 <Tab
                   {...tab}
-                  key={index}
+                  key={id ?? index}
                   id={`${id ?? index}`}
                   className={styles.tabsTab({ active: isActive })}
                 >

@@ -55,9 +55,9 @@ export const CaseCard = ({
         )}
         {categories && categories.length && (
           <Box marginTop={2} display="flex" rowGap={1} columnGap={1}>
-            {categories.map((cat, index) => {
+            {categories.map((cat) => {
               return (
-                <Tag key={index} variant="blue" outlined>
+                <Tag key={cat} variant="blue" outlined>
                   {cat}
                 </Tag>
               )

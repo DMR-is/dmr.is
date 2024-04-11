@@ -4,6 +4,7 @@ import {
   GridContainer,
   GridRow,
   Tabs,
+  TabType,
   Text,
 } from '@island.is/island-ui/core'
 
@@ -39,7 +40,7 @@ type Props = {
 const Dashboard: Screen<Props> = ({ statistics }) => {
   const { formatMessage } = useFormatMessage()
 
-  const ritstjornTabs = [
+  const ritstjornTabs: TabType[] = [
     {
       id: 'ritstjorn-almennt',
       label: formatMessage(messages.tabs.admin.general),
@@ -69,7 +70,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
     },
   ]
 
-  const statisticsTabs = [
+  const statisticsTabs: TabType[] = [
     {
       id: 'statistics-not-published-a',
       label: formatMessage(messages.tabs.statistics.a),
@@ -124,7 +125,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                   linkText={messages.general.openAdmin}
                 >
                   <Tabs
-                    label=""
+                    label={formatMessage(messages.general.caseStatuses)}
                     selected={ritstjornTabs[0].id}
                     size="sm"
                     tabs={ritstjornTabs}
@@ -149,9 +150,9 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                 linkText={messages.general.openStatistics}
               >
                 <Tabs
+                  label={formatMessage(messages.general.statistics)}
                   selected={statisticsTabs[0].id}
                   size="sm"
-                  label=""
                   tabs={statisticsTabs}
                 />
               </ContentWrapper>
