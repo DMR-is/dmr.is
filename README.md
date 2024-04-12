@@ -51,3 +51,28 @@ To play around with the automation script you can modify the the config file and
 
 ./.gitscripts/checkout-submodules.sh
 ```
+
+## Connection to DEV XRoad Services locally
+
+### Pre-requisites
+
+- AWS CLI installed
+- AWS credentials
+- AWS credentials configured in a terminal session (e.g. login to AWS console and copy the programmatic access key and secret key credentials and export them in the terminal session)
+
+### Expose XRoad host on localhost
+
+XRoad should be exposed on port 8000 on the bastion, but you can expose it to any port on your localhost.
+
+```shell
+# Example using port 8000
+export INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
+aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8000"],"localPortNumber":["8000"]}'
+```
+
+### Set environment variables for island-is XRoad in application
+
+```shell
+export XROAD_ISLAND_IS_PATH="http://localhost:8000/r1/IS-DEV/GOV/10000/island-is/"
+export XROAD_DMR_CLIENT="IS-DEV/GOV/10014/DMR-Client"
+```
