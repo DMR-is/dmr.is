@@ -1,0 +1,10 @@
+INSERT INTO advert_status (id, title) VALUES ('CC4CEF04-C93E-425C-B786-24766F69B74F', 'Afturkölluð');
+INSERT INTO advert_status (id, title) VALUES ('312F62ED-B47A-4A1A-87A4-42B70E8BE4CA', 'Útgefin');
+INSERT INTO advert_status (id, title) VALUES ('7E828441-8999-4C8E-AD7D-51D8EEDC4B48', 'Hafnað');
+INSERT INTO advert_status (id, title) VALUES ('3873A4E9-E2BC-4DA7-AC68-52B7991A55AC', 'Í vinnslu');
+INSERT INTO advert_status (id, title) VALUES ('7B533443-B674-4351-9E32-5BB986FCD532', 'Í bið');
+INSERT INTO advert_status (id, title) VALUES ('F54FC48A-4345-40EC-A3CA-60DC907EF366', 'Eldri auglýsing');
+INSERT INTO advert_status (id, title) VALUES ('68B85DB5-DE36-4C0D-A136-73A6D4D54641', 'Active');
+INSERT INTO advert_status (id, title) VALUES ('9D5E66C9-8125-43C4-9F5D-7518633B901C', 'Drög');
+INSERT INTO advert_status (id, title) VALUES ('4183D1CC-8416-4715-A9B4-B8E5A2EFF443', 'Tilbúin til útgáfu');
+INSERT INTO advert_status (id, title) VALUES ('948C3954-9D5D-474A-B104-E7381AA3B51B', 'Innsend');

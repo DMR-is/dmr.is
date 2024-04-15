@@ -165,3 +165,13 @@ export function fixAdverts(
 
   return Promise.resolve(mapped)
 }
+
+export function mapAdvertsCategories(
+  adverts: Advert[],
+  categories: Category[],
+  advertsCategories: AdvertCategory[],
+): AdvertCategory[] {
+  // This should be 1:1 between migrations, placeholder if not
+
+  return advertsCategories
+}

@@ -63,8 +63,8 @@ export function generateInvolvedPartiesInserts(
 
 export function generateAdvertsInserts(adverts: Array<Advert>) {
   const inserts = adverts.map((advert) => {
-    return `INSERT INTO advert (id, department_id, type_id, category_id, subject, status_id, serial_number, publication_year, signature_date, publication_date, involved_party_id) VALUES ('
-    ${advert.id}', '${advert.departmentId}', '${advert.typeId}', '${advert.categoryId}', '${advert.subject}', '${advert.statusId}', '${advert.serialNumber}', '${advert.publicationYear}', '${advert.signatureDate}', '${advert.publicationDate}', '${advert.involvedPartyId}');`
+    return `INSERT INTO advert (id, department_id, type_id, subject, status_id, serial_number, publication_year, signature_date, publication_date, involved_party_id) VALUES ('
+    ${advert.id}', '${advert.departmentId}', '${advert.typeId}', '${advert.subject}', '${advert.statusId}', '${advert.serialNumber}', '${advert.publicationYear}', '${advert.signatureDate}', '${advert.publicationDate}', '${advert.involvedPartyId}');`
   })
   return inserts
 }

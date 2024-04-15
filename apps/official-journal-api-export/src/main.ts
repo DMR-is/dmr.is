@@ -95,7 +95,11 @@ async function main() {
   const adverts = await exec('fix adverts', () =>
     fixAdverts(fixedTypes.types, dbAdverts),
   )
-  const advertsCategories = mapAdvertsCategories(adverts, cats)
+  const advertsCategories = mapAdvertsCategories(
+    adverts,
+    cats,
+    dbAdvertsCategories,
+  )
 
   // Step 3: Generate the inserts
   const inserts: Record<string, string[]> = {}
