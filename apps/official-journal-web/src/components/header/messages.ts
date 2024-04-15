@@ -13,4 +13,11 @@ export const messages = {
       description: 'Control panel description for the dashboard',
     },
   }),
+  auth: defineMessages({
+    logout: {
+      id: 'web.components.auth:logout',
+      defaultMessage: 'Útskrá',
+      description: '',
+    },
+  }),
 }

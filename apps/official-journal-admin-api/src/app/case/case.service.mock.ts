@@ -180,8 +180,6 @@ export class CaseServiceMock implements ICaseService {
 
     const { cases, paging } = await this.getCases(params)
 
-    console.log(paging)
-
     return Promise.resolve({
       data: cases,
       totalItems: {
