@@ -17,5 +17,15 @@ export const messages = {
       defaultMessage: 'Opna síun',
       description: 'Open filter button label for case filters',
     },
+    filterLabel: {
+      id: 'web.components.caseFilters:filterLabel',
+      defaultMessage: 'Síun á lista:',
+      description: '',
+    },
+    clearAllFilters: {
+      id: 'web.components.caseFilters:clearAllFilters',
+      defaultMessage: 'Hreinsa allar síur',
+      description: 'Clear all filters button label',
+    },
   }),
 }
