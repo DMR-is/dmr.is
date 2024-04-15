@@ -1,0 +1,87 @@
+{
+  "name": "official-journal-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/official-journal-web",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "generatePackageJson": true,
+        "outputPath": "dist/apps/official-journal-web"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/official-journal-web"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "official-journal-web:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "official-journal-web:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "official-journal-web:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "official-journal-web:build:production"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/official-journal-web/jest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "curl http://localhost:4000/swagger-json > clientConfig.json",
+          "prettier --write clientConfig.json"
+        ],
+        "parallel": true,
+        "cwd": "apps/official-journal-web"
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn openapi-generator -o apps/official-journal-web/src/gen/fetch -i apps/official-journal-web/clientConfig.json"
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
+    },
+    "open-next-build": {
+      "executor": "@dmr.is/nx-open-next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "official-journal-web:build",
+        "sourceRoot": "apps/official-journal-web"
+      },
+      "dependsOn": ["generate", "build"]
+    }
+  },
+  "tags": []
+}

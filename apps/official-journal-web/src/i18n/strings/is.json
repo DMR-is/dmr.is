@@ -1,0 +1,598 @@
+{
+  "application.application-ui-shell:progress-tag.approved": {
+    "defaultMessage": "Staða: Samþykkt",
+    "description": ""
+  },
+  "application.application-ui-shell:progress-tag.completed": {
+    "defaultMessage": "Staða: Lokið",
+    "description": ""
+  },
+  "application.application-ui-shell:progress-tag.draft": {
+    "defaultMessage": "Staða: Í vinnslu hjá þér",
+    "description": "Progress tag for draft applications"
+  },
+  "application.application-ui-shell:progress-tag.inProgress": {
+    "defaultMessage": "Staða: Í vinnslu",
+    "description": ""
+  },
+  "application.application-ui-shell:progress-tag.rejected": {
+    "defaultMessage": "Staða: Hafnað",
+    "description": ""
+  },
+  "web.components.adverts-overview-list.empty.assigned": {
+    "defaultMessage": "Sem stendur eru engin mál sem teljast þín mál",
+    "description": "Assigned empty state"
+  },
+  "web.components.adverts-overview-list.empty.editorial": {
+    "defaultMessage": "Sem stendur eru engin mál sem teljast almenn",
+    "description": "Editorial empty state"
+  },
+  "web.components.adverts-overview-list.empty.inactive": {
+    "defaultMessage": "Sem stendur eru engin mál sem teljast óhreyfð",
+    "description": "Inactive empty state"
+  },
+  "web.components.adverts-overview-list.empty.published": {
+    "defaultMessage": "Sem stendur eru engin mál sem bíða útgáfu",
+    "description": "Published empty state"
+  },
+  "web.components.adverts-overview-list.empty.title": {
+    "defaultMessage": "Engin mál fundust",
+    "description": "Title for empty state"
+  },
+  "web.components.attachments:title": {
+    "defaultMessage": "Fylgiskjöl",
+    "description": ""
+  },
+  "web.components.caseFilters:filters": {
+    "defaultMessage": "Síur",
+    "description": ""
+  },
+  "web.components.caseFilters:openFilter": {
+    "defaultMessage": "Opna síun",
+    "description": "Open filter button label for case filters"
+  },
+  "web.components.caseFilters:searchPlaceholder": {
+    "defaultMessage": "Leita eftir málsnafni",
+    "description": "Search placeholder for case filters"
+  },
+  "web.components.comments:cancel": {
+    "defaultMessage": "Hætta við",
+    "description": ""
+  },
+  "web.components.comments:day": {
+    "defaultMessage": "degi",
+    "description": ""
+  },
+  "web.components.comments:days": {
+    "defaultMessage": "dögum",
+    "description": ""
+  },
+  "web.components.comments:fetchFile": {
+    "defaultMessage": "Sækja skjal",
+    "description": ""
+  },
+  "web.components.comments:label": {
+    "defaultMessage": "Athugasemd",
+    "description": ""
+  },
+  "web.components.comments:overwrite": {
+    "defaultMessage": "Yfirskrifa",
+    "description": ""
+  },
+  "web.components.comments:overwriteFile": {
+    "defaultMessage": "Yfirskrifa skjal",
+    "description": ""
+  },
+  "web.components.comments:placeholder": {
+    "defaultMessage": "Bættu við athugasemd",
+    "description": ""
+  },
+  "web.components.comments:save": {
+    "defaultMessage": "Vista athugasemd",
+    "description": ""
+  },
+  "web.components.comments:seeAll": {
+    "defaultMessage": "Sjá allar athugasemdir",
+    "description": ""
+  },
+  "web.components.comments:title": {
+    "defaultMessage": "Athugasemdir",
+    "description": ""
+  },
+  "web.components.comments:today": {
+    "defaultMessage": "Í dag",
+    "description": ""
+  },
+  "web.components.comments:uploadButton": {
+    "defaultMessage": "Velja skjöl til að hlaða upp",
+    "description": ""
+  },
+  "web.components.comments:uploadSubtitle": {
+    "defaultMessage": "Tekið er við skjölum með endingu: .pdf",
+    "description": ""
+  },
+  "web.components.comments:uploadTitle": {
+    "defaultMessage": "Dragðu skjalið hingað til að hlaða upp",
+    "description": ""
+  },
+  "web.components.comments:yesterday": {
+    "defaultMessage": "Í gær",
+    "description": ""
+  },
+  "web.components.filterGroup:clearFilter": {
+    "defaultMessage": "Hreinsa val",
+    "description": "Search placeholder for case filters"
+  },
+  "web.components.filterPopover:clearAllFilters": {
+    "defaultMessage": "Hreinsa allar síur",
+    "description": "Clear all filters button label"
+  },
+  "web.components.header:controlPanelProject": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Control panel description for the dashboard"
+  },
+  "web.components.header:controlPanelTitle": {
+    "defaultMessage": "Stjórnborð",
+    "description": "Control panel title heading for the dashboard"
+  },
+  "web.components.statistics:notPublished.emptyIntro": {
+    "defaultMessage": "Í þessari deild eru engin óútgefin mál.",
+    "description": "No data intro for the dashboard"
+  },
+  "web.components.statistics:notPublished.emptyTitle": {
+    "defaultMessage": "Engin mál í vinnslu",
+    "description": "No data title for the dashboard"
+  },
+  "web.components.statistics:notPublished.intro": {
+    "defaultMessage": "Staða óútgefinna mála eftir deildum.",
+    "description": "Intro for the dashboard"
+  },
+  "web.components.statistics:notPublished.total": {
+    "defaultMessage": "Alls",
+    "description": "Total label for the dashboard"
+  },
+  "web.components.steps.grunnvinnsla:createdDate": {
+    "defaultMessage": "Dagsetning innsendingar",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:department": {
+    "defaultMessage": "Deild",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:fastTrack": {
+    "defaultMessage": "Óskað er eftir hraðbirtingu",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:group1title": {
+    "defaultMessage": "Almennt um málið",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:group2title": {
+    "defaultMessage": "Birting",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:institution": {
+    "defaultMessage": "Sendandi",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:paid": {
+    "defaultMessage": "Búið er að greiða",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:price": {
+    "defaultMessage": "Áætlað verð",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:publicationDate": {
+    "defaultMessage": "Dagsetning birtingar",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:title": {
+    "defaultMessage": "Heiti auglýsingar",
+    "description": ""
+  },
+  "web.components.steps.grunnvinnsla:type": {
+    "defaultMessage": "Tegund",
+    "description": ""
+  },
+  "web.components.steps.tilbuid:group1title": {
+    "defaultMessage": "Meginmál",
+    "description": ""
+  },
+  "web.components.steps.yfirlestur:group1title": {
+    "defaultMessage": "Meginmál",
+    "description": ""
+  },
+  "web.components.steps.yfirlestur:tag": {
+    "defaultMessage": "Merking",
+    "description": ""
+  },
+  "web.components.tables:emptyTable": {
+    "defaultMessage": "Engin mál finnast, líklega þarf að breyta síun.",
+    "description": "Empty table message"
+  },
+  "web.components.tables:inProgress.columns.department": {
+    "defaultMessage": "Deild",
+    "description": "Department column"
+  },
+  "web.components.tables:inProgress.columns.employee": {
+    "defaultMessage": "Starfs.",
+    "description": "Employee column"
+  },
+  "web.components.tables:inProgress.columns.publishDate": {
+    "defaultMessage": "Birting",
+    "description": "Publish date column"
+  },
+  "web.components.tables:inProgress.columns.registrationDate": {
+    "defaultMessage": "Skráning",
+    "description": "Registration date column"
+  },
+  "web.components.tables:inProgress.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tables:inReview.columns.department": {
+    "defaultMessage": "Deild",
+    "description": "Department column"
+  },
+  "web.components.tables:inReview.columns.employee": {
+    "defaultMessage": "Starfs.",
+    "description": "Employee column"
+  },
+  "web.components.tables:inReview.columns.publishDate": {
+    "defaultMessage": "Birting",
+    "description": "Publish date column"
+  },
+  "web.components.tables:inReview.columns.registrationDate": {
+    "defaultMessage": "Skráning",
+    "description": "Registration date column"
+  },
+  "web.components.tables:inReview.columns.tag": {
+    "defaultMessage": "Merking",
+    "description": "Tag column"
+  },
+  "web.components.tables:inReview.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tables:openCaseLinkText": {
+    "defaultMessage": "Sjá nánar",
+    "description": "See more link"
+  },
+  "web.components.tables:overview.columns.institution": {
+    "defaultMessage": "Stofnun",
+    "description": "Institution column"
+  },
+  "web.components.tables:overview.columns.publishDate": {
+    "defaultMessage": "Útgáfudagur",
+    "description": "Publish date column"
+  },
+  "web.components.tables:overview.columns.status": {
+    "defaultMessage": "Staða/Nr.",
+    "description": "Status column"
+  },
+  "web.components.tables:overview.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tables:ready.columns.institution": {
+    "defaultMessage": "Stofnun",
+    "description": "Institution column"
+  },
+  "web.components.tables:ready.columns.publicationDate": {
+    "defaultMessage": "Birtingardagur",
+    "description": "Publication date column"
+  },
+  "web.components.tables:ready.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tables:selectedCases.columns.institution": {
+    "defaultMessage": "Stofnun",
+    "description": "Institution column"
+  },
+  "web.components.tables:selectedCases.columns.number": {
+    "defaultMessage": "Númer",
+    "description": "Number column"
+  },
+  "web.components.tables:selectedCases.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tables:selectedCases.empty.message": {
+    "defaultMessage": "Engin mál valin.",
+    "description": "No cases selected message"
+  },
+  "web.components.tables:submitted.columns.department": {
+    "defaultMessage": "Deild",
+    "description": "Department column"
+  },
+  "web.components.tables:submitted.columns.publicationDate": {
+    "defaultMessage": "Birting",
+    "description": "Publication date column"
+  },
+  "web.components.tables:submitted.columns.registrationDate": {
+    "defaultMessage": "Skráning",
+    "description": "Registration date column"
+  },
+  "web.components.tables:submitted.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
+  },
+  "web.components.tooltips:caseLabelTooltip.fasttrack": {
+    "defaultMessage": "Harðbirting",
+    "description": "Fast track label"
+  },
+  "web.components.tooltips:caseLabelTooltip.feedback": {
+    "defaultMessage": "Viðbrögð hafa borist frá auglýsanda",
+    "description": "feedback label"
+  },
+  "web.components.tooltips:caseLabelTooltip.waiting": {
+    "defaultMessage": "Beðið svara",
+    "description": "waiting label"
+  },
+  "web.page.caseOverview:banner.description": {
+    "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Description for the banner on the case overview page"
+  },
+  "web.page.caseOverview:banner.title": {
+    "defaultMessage": "Heildaryfirlit",
+    "description": "Title for the banner on the case overview page"
+  },
+  "web.page.caseOverview:breadcrumbs.casePublishing": {
+    "defaultMessage": "Heildaryfirlit",
+    "description": "Breadcrumb for the case publishing page"
+  },
+  "web.page.caseOverview:breadcrumbs.dashboard": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Breadcrumb for the dashboard"
+  },
+  "web.page.caseOverview:general.departments": {
+    "defaultMessage": "Deildir",
+    "description": ""
+  },
+  "web.page.caseProcessingOverview:banner.description": {
+    "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis",
+    "description": "Description for the banner on the case overview page"
+  },
+  "web.page.caseProcessingOverview:banner.title": {
+    "defaultMessage": "Vinnslusvæði Stjórnartíðinda",
+    "description": "Title for the banner on the case overview page"
+  },
+  "web.page.caseProcessingOverview:breadcrumbs.cases": {
+    "defaultMessage": "Ritstjórn",
+    "description": "Breadcrumb for the case overview page"
+  },
+  "web.page.caseProcessingOverview:breadcrumbs.home": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Breadcrumb for the home page"
+  },
+  "web.page.caseProcessingOverview:tabs.inProgress": {
+    "defaultMessage": "Grunnvinnsla ({count})",
+    "description": "Tab label for cases in progress"
+  },
+  "web.page.caseProcessingOverview:tabs.inReview": {
+    "defaultMessage": "Yfirlestur ({count})",
+    "description": "Tab label for cases in review"
+  },
+  "web.page.caseProcessingOverview:tabs.ready": {
+    "defaultMessage": "Tilbúið ({count})",
+    "description": "Tab label for cases ready"
+  },
+  "web.page.caseProcessingOverview:tabs.statuses": {
+    "defaultMessage": "Stöður",
+    "description": ""
+  },
+  "web.page.caseProcessingOverview:tabs.submitted": {
+    "defaultMessage": "Innsendingar ({count})",
+    "description": "Tab label for submitted cases"
+  },
+  "web.page.casePublishingOverview:banner.description": {
+    "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Dashboard banner description for the dashboard"
+  },
+  "web.page.casePublishingOverview:banner.title": {
+    "defaultMessage": "Útgáfa mála",
+    "description": "Dashboard banner title for the dashboard"
+  },
+  "web.page.casePublishingOverview:breadcrumbs.casePublishing": {
+    "defaultMessage": "Útgáfa mála",
+    "description": "Case publishing breadcrumb for the dashboard"
+  },
+  "web.page.casePublishingOverview:breadcrumbs.dashboard": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Dashboard breadcrumb for the dashboard"
+  },
+  "web.page.casePublishingOverview:general.backToPublishing": {
+    "defaultMessage": "Til baka í útgáfu mála",
+    "description": "Back to publishing button label for the dashboard"
+  },
+  "web.page.casePublishingOverview:general.departments": {
+    "defaultMessage": "Deildir",
+    "description": ""
+  },
+  "web.page.casePublishingOverview:general.publishCases": {
+    "defaultMessage": "Gefa út öll mál",
+    "description": "Publish cases button label for the dashboard"
+  },
+  "web.page.casePublishingOverview:notifications.success.message": {
+    "defaultMessage": "Málin eru nú orðin sýnileg á ytri vef.",
+    "description": "Success notification message"
+  },
+  "web.page.casePublishingOverview:notifications.success.title": {
+    "defaultMessage": "Útgáfa mála heppnaðist",
+    "description": "Success notification title"
+  },
+  "web.page.casePublishingOverview:notifications.warning.message": {
+    "defaultMessage": "Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar.",
+    "description": "Warning notification message"
+  },
+  "web.page.casePublishingOverview:notifications.warning.title": {
+    "defaultMessage": "Mál til útgáfu",
+    "description": "Warning notification title"
+  },
+  "web.page.caseSingle:actions.assignedTo": {
+    "defaultMessage": "Starfsmaður",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.assignedToPlaceholder": {
+    "defaultMessage": "Úthluta máli á starfsmann",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.nextStep": {
+    "defaultMessage": "Næsta skref",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.status": {
+    "defaultMessage": "Staða",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.title": {
+    "defaultMessage": "Upplýsingar",
+    "description": ""
+  },
+  "web.page.caseSingle:banner.description": {
+    "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Banner description for the caseSingle"
+  },
+  "web.page.caseSingle:banner.title": {
+    "defaultMessage": "Vinnslusvæði Stjórnartíðinda",
+    "description": "Banner title for the caseSingle"
+  },
+  "web.page.caseSingle:breadcrumbs.case": {
+    "defaultMessage": "Vinnslusvæði",
+    "description": "Editing breadcrumb for the dashboard"
+  },
+  "web.page.caseSingle:breadcrumbs.casePublishing": {
+    "defaultMessage": "Ritstjórn",
+    "description": "Editorial breadcrumb for the dashboard"
+  },
+  "web.page.caseSingle:breadcrumbs.dashboard": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Dashboard breadcrumb for the dashboard"
+  },
+  "web.page.caseSingle:general.backToPublishing": {
+    "defaultMessage": "Til baka í útgáfu mála",
+    "description": "Back to publishing button label for the dashboard"
+  },
+  "web.page.caseSingle:general.publishCases": {
+    "defaultMessage": "Gefa út öll mál",
+    "description": "Publish cases button label for the dashboard"
+  },
+  "web.page.caseSingle:paging.goBack": {
+    "defaultMessage": "Til baka",
+    "description": ""
+  },
+  "web.page.caseSingle:paging.goBackOverview": {
+    "defaultMessage": "Til baka í yfirlit",
+    "description": ""
+  },
+  "web.page.dashboard:banner.cards.all.description": {
+    "defaultMessage": "Öll mál, bæði í vinnslu og útgefin.",
+    "description": "Description for the all card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.cards.all.title": {
+    "defaultMessage": "Heildarlisti",
+    "description": "Title for the all card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.cards.editorial.description": {
+    "defaultMessage": "Umsýsla frá innsendingu til útgáfu.",
+    "description": "Description for the editorial card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.cards.editorial.title": {
+    "defaultMessage": "Ritstjórn",
+    "description": "Title for the editorial card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.cards.publishing.description": {
+    "defaultMessage": "Úthlutun númera og birting mála.",
+    "description": "Description for the publishing card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.cards.publishing.title": {
+    "defaultMessage": "Útgáfa",
+    "description": "Title for the publishing card on the dashboard banner"
+  },
+  "web.page.dashboard:banner.description": {
+    "defaultMessage": "Umsýslukerfi Stjórnartíðinda, morem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "description": "Description for the banner on the case overview page"
+  },
+  "web.page.dashboard:banner.title": {
+    "defaultMessage": "Stjórnartíðindi",
+    "description": "Title for the banner on the case overview page"
+  },
+  "web.page.dashboard:general.admin": {
+    "defaultMessage": "Ritstjórn",
+    "description": "Admin heading for the dashboard"
+  },
+  "web.page.dashboard:general.caseStatuses": {
+    "defaultMessage": "Staða mála",
+    "description": "Case statuses heading for the dashboard"
+  },
+  "web.page.dashboard:general.openAdmin": {
+    "defaultMessage": "Opna ritstjórn",
+    "description": "Open admin button label for the dashboard"
+  },
+  "web.page.dashboard:general.openPublishing": {
+    "defaultMessage": "Opna útgáfuferli",
+    "description": "Open publishing button label for the dashboard"
+  },
+  "web.page.dashboard:general.openStatistics": {
+    "defaultMessage": "Sjá alla tölfræði",
+    "description": "Open statistics button label for the dashboard"
+  },
+  "web.page.dashboard:general.publishing": {
+    "defaultMessage": "Útgáfa",
+    "description": "Publishing heading for the dashboard"
+  },
+  "web.page.dashboard:general.statistics": {
+    "defaultMessage": "Tölfræði",
+    "description": "Statistics heading for the dashboard"
+  },
+  "web.page.dashboard:imageWithText.new.description": {
+    "defaultMessage": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Description for the new image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.new.linkText": {
+    "defaultMessage": "Nýskrá auglýsingu",
+    "description": "Link text for the new image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.new.title": {
+    "defaultMessage": "Nýskrá auglýsingu",
+    "description": "Title for the new advert image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.print.description": {
+    "defaultMessage": "Porem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Description for the print image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.print.linkText": {
+    "defaultMessage": "Sækja prentútgáfu",
+    "description": "Link text for the print image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.print.title": {
+    "defaultMessage": "Prentvæn útgáfa",
+    "description": "Title for the print image with text on the dashboard"
+  },
+  "web.page.dashboard:tabs.admin.general": {
+    "defaultMessage": "Almennt",
+    "description": "General tab for the dashboard"
+  },
+  "web.page.dashboard:tabs.admin.inactive": {
+    "defaultMessage": "Óhreyfð mál",
+    "description": "Inactive tab for the dashboard"
+  },
+  "web.page.dashboard:tabs.admin.personal": {
+    "defaultMessage": "Mín mál",
+    "description": "Personal tab for the dashboard"
+  },
+  "web.page.dashboard:tabs.statistics.a": {
+    "defaultMessage": "A deild",
+    "description": "Department a tab for the dashboard statistics"
+  },
+  "web.page.dashboard:tabs.statistics.b": {
+    "defaultMessage": "B deild",
+    "description": "Department b tab for the dashboard statistics"
+  },
+  "web.page.dashboard:tabs.statistics.c": {
+    "defaultMessage": "C deild",
+    "description": "Department c tab for the dashboard statistics"
+  }
+}

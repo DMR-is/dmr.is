@@ -1,0 +1,74 @@
+{
+  "name": "official-journal-admin-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/official-journal-admin-api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "apps/official-journal-admin-api/dist",
+        "main": "apps/official-journal-admin-api/src/main.ts",
+        "tsConfig": "apps/official-journal-admin-api/tsconfig.app.json",
+        "assets": [
+          "apps/official-journal-admin-api/src/assets"
+        ],
+        "webpackConfig": "apps/official-journal-admin-api/webpack.config.js",
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "official-journal-admin-api:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "official-journal-admin-api:build:development"
+        },
+        "production": {
+          "buildTarget": "official-journal-admin-api:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "apps/official-journal-admin-api/jest.config.ts"
+      }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
+      }
+    }
+  },
+  "tags": []
+}

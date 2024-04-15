@@ -3,57 +3,29 @@
  * This is only a minimal backend to get started.
  */
 
-import {
-  BadRequestException,
-  Logger,
-  ValidationError,
-  ValidationPipe,
-  VersioningType,
-} from '@nestjs/common'
-import { NestFactory } from '@nestjs/core'
-
-import { SwaggerModule } from '@nestjs/swagger'
-import { openApi } from './openApi'
+import { WinstonModule } from 'nest-winston'
 import { apmInit } from '@dmr.is/apm'
-import { AppModule } from './app.module'
-import {
-  JournalAdvertErrorResponse,
-  JournalValidationError,
-} from './dto/journal-errors'
+import { logger } from '@dmr.is/logging'
 
-function exceptionFactory(validationErrors: ValidationError[] = []) {
-  const mappedValidationErrors: JournalValidationError[] = validationErrors.map(
-    (error) => ({
-      field: error.property,
-      errors: Object.values(error.constraints ?? {}),
-    }),
-  )
+import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { SwaggerModule } from '@nestjs/swagger'
 
-  const data: JournalAdvertErrorResponse = {
-    statusCode: 400,
-    error: 'Bad Request',
-    validationErrors: mappedValidationErrors,
-  }
-
-  const customBody = BadRequestException.createBody(
-    // Explicit cast from typed class to record
-    data as unknown as Record<string, unknown>,
-  )
-  return new BadRequestException(customBody)
-}
+import { AppModule } from './app/app.module'
+import { openApi } from './openApi'
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger({ instance: logger }),
+  })
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      exceptionFactory,
-    }),
-  )
+  // TODO make this behave with nest
+  // app.useLogger(logger)
+
+  app.useGlobalPipes(new ValidationPipe({ transform: true }))
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({
@@ -67,7 +39,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000
   await app.listen(port)
-  Logger.log(
+  logger.info(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   )
 }

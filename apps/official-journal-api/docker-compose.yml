@@ -1,12 +1,12 @@
 version: '3'
 
 services:
-  db_official_journal:
+  db_official_journal_api:
     image: public.ecr.aws/docker/library/postgres:16
-    container_name: db_official_journal
+    container_name: db_official_journal_api
     environment:
-      - POSTGRES_DB=dev_db_official_journal
+      - POSTGRES_DB=dev_db
       - POSTGRES_USER=dev_db
       - POSTGRES_PASSWORD=dev_db
     ports:
-      - 5432:5432
+      - "5432:5432"

@@ -1,0 +1,34 @@
+import { style } from '@vanilla-extract/css'
+import { recipe } from '@vanilla-extract/recipes'
+
+import { theme } from '@island.is/island-ui/theme'
+
+export const tabsTablist = style({
+  position: 'relative',
+  display: 'flex',
+  overflowX: 'auto',
+})
+
+export const tabsTabPanel = style({
+  paddingBlockStart: theme.spacing[5],
+  paddingBlockEnd: theme.spacing[3],
+})
+
+export const tabsTab = recipe({
+  base: {
+    flex: 1,
+    paddingBlock: theme.spacing[1],
+    paddingInline: theme.spacing[5],
+    textWrap: 'nowrap',
+  },
+  variants: {
+    active: {
+      true: {
+        borderBottom: `1px solid ${theme.color.blue400}`,
+      },
+      false: {
+        borderBottom: `1px solid ${theme.color.blue200}`,
+      },
+    },
+  },
+})

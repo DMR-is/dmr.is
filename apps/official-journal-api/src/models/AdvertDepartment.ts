@@ -1,4 +1,5 @@
 import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript'
+
 import { AdvertType } from './AdvertType'
 
 @Table({ tableName: 'advert_department', timestamps: false })

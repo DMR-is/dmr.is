@@ -1,0 +1,134 @@
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  Case,
+  CaseEditorialOverview,
+  GetCasesQuery,
+  GetCasesReponse,
+  GetUsersQueryParams,
+  GetUsersResponse,
+  PostCasePublishBody,
+} from '@dmr.is/shared/dto'
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Inject,
+  InternalServerErrorException,
+  Post,
+  Query,
+} from '@nestjs/common'
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
+
+import { ICaseService } from './case.service.interface'
+
+@Controller({
+  version: '1',
+})
+export class CaseController {
+  constructor(
+    @Inject(ICaseService)
+    private readonly caseService: ICaseService,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+  ) {}
+
+  @Get('case')
+  @ApiQuery({ name: 'id', type: String, required: true })
+  @ApiOperation({
+    operationId: 'getCase',
+    summary: 'Get case by ID.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: Case,
+    description: 'Case by ID.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Case not found.',
+  })
+  async case(@Query('id') id: string): Promise<Case | null> {
+    return this.caseService.getCase(id)
+  }
+
+  @Get('cases')
+  @ApiOperation({
+    operationId: 'getCases',
+    summary: 'Get cases.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetCasesReponse,
+    description: 'All cases.',
+  })
+  async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
+    return this.caseService.getCases(params)
+  }
+
+  @Get('users')
+  @ApiOperation({
+    operationId: 'getUsers',
+    summary: 'Get users.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetUsersResponse,
+    description: 'All active users.',
+  })
+  async users(
+    @Query() params?: GetUsersQueryParams,
+  ): Promise<GetUsersResponse> {
+    return this.caseService.getUsers(params)
+  }
+
+  @Get('editorialOverview')
+  @ApiOperation({
+    operationId: 'getEditorialOverview',
+    summary: 'Get overview for cases in progress.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CaseEditorialOverview,
+    description: 'Cases overview.',
+  })
+  async editorialOverview(
+    @Query() params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
+    return this.caseService.getEditorialOverview(params)
+  }
+
+  @Post('publish')
+  @ApiOperation({
+    operationId: 'postPublish',
+    summary: 'Publish cases',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cases published',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async publish(@Body() body: PostCasePublishBody): Promise<void> {
+    try {
+      await this.caseService.postCasesPublish(body)
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
+      }
+
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+}

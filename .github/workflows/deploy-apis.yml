@@ -20,7 +20,7 @@ jobs:
   build-and-push:
     strategy:
       matrix:
-        api: [official-journal-api]
+        api: [official-journal-api, official-journal-admin-api]
     name: "Build and push images: ${{ matrix.api }}"
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
@@ -120,3 +120,8 @@ jobs:
             --service ${{ matrix.api }} \
             --force-new-deployment
 
+      - name: Wait for service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster dev-dmr-utgafa \
+            --services ${{ matrix.api }}

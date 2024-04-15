@@ -8,6 +8,7 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
+
 import { AdvertDepartment } from './AdvertDepartment'
 
 @Table({ tableName: 'advert_type', timestamps: true })

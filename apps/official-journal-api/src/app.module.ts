@@ -1,6 +1,8 @@
+import { JournalModule } from '@dmr.is/modules'
+
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
-import { JournalModule } from './app/journal.module'
+
 import { SequelizeConfigService } from './sequelizeConfig.service'
 
 @Module({
