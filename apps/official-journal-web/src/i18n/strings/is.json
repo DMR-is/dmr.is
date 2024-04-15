@@ -43,6 +43,10 @@
     "defaultMessage": "Fylgiskjöl",
     "description": ""
   },
+  "web.components.auth:logout": {
+    "defaultMessage": "Útskrá",
+    "description": ""
+  },
   "web.components.caseFilters:filters": {
     "defaultMessage": "Síur",
     "description": ""
@@ -134,6 +138,10 @@
   "web.components.header:controlPanelTitle": {
     "defaultMessage": "Stjórnborð",
     "description": "Control panel title heading for the dashboard"
+  },
+  "web.components.modal:modalLabel": {
+    "defaultMessage": "Skoða auglýsingu",
+    "description": ""
   },
   "web.components.statistics:notPublished.emptyIntro": {
     "defaultMessage": "Í þessari deild eru engin óútgefin mál.",

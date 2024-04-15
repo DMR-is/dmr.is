@@ -13,6 +13,13 @@ export const messages = {
       description: 'Empty table message',
     },
   }),
+  modal: defineMessages({
+    modalLabel: {
+      id: 'web.components.modal:modalLabel',
+      defaultMessage: 'Skoða auglýsingu',
+      description: '',
+    },
+  }),
   tables: {
     submitted: {
       columns: defineMessages({
