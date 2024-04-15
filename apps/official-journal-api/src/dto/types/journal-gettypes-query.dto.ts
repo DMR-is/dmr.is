@@ -5,13 +5,21 @@ import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator'
 export class JournalGetTypesQueryParams {
   @ApiProperty({
     name: 'department',
-    description: 'Department slug to get categories for.',
+    description: 'Department id to get categories for.',
     type: String,
     required: false,
   })
   @IsOptional()
   @IsString()
-  department?: string
+  departmentId?: string
+
+  @ApiProperty({
+    name: 'includeDepartment',
+    description: 'Include department details in response.',
+    type: Boolean,
+    required: false,
+  })
+  includeDepartment?: boolean
 
   @ApiProperty({
     name: 'search',

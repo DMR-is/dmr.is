@@ -6,12 +6,8 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
-      "@dmr.is/logging": [
-        "libs/logging/src/index.ts"
-      ],
-      "@dmr.is/apm": [
-        "libs/apm/src/index.ts"
-      ]
+      "@dmr.is/apm": ["libs/apm/src/index.ts"],
+      "@dmr.is/logging": ["libs/logging/src/index.ts"]
     },
     "sourceMap": true,
     "importHelpers": true,
@@ -21,8 +17,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

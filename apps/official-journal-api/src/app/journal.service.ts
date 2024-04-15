@@ -1,7 +1,8 @@
 import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
-import { IJournalService } from './journal.service.interface'
+import { IJournalService, ServiceResult } from './journal.service.interface'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -12,44 +13,94 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
+import { AdvertDepartment } from '../models/AdvertDepartment'
+import { AdvertType } from '../models/AdvertType'
+import { generatePaging } from '../lib/paging'
+import { Op, WhereOptions } from 'sequelize'
+import { PAGING_DEFAULT_PAGE_SIZE } from '../dto/journal-constants.dto'
 
 const LOGGING_CATEGORY = 'JournalService'
 
 @Injectable()
 export class JournalService implements IJournalService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: CustomLogger) {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: CustomLogger,
+    @InjectModel(AdvertDepartment)
+    private advertDepartmentModel: typeof AdvertDepartment,
+    @InjectModel(AdvertType)
+    private advertTypeModel: typeof AdvertType,
+  ) {
     this.logger.log('JournalService')
   }
 
   getAdverts(
     params: JournalGetAdvertsQueryParams | undefined,
-  ): Promise<JournalAdvertsResponse> {
+  ): Promise<ServiceResult<JournalAdvertsResponse>> {
     console.log(params)
     throw new Error('Method not implemented.')
   }
 
-  getDepartments(
+  async getDepartments(
     params?: JournalGetDepartmentsQueryParams | undefined,
-  ): Promise<JournalAdvertDepartmentsResponse> {
-    this.logger.log('getDepartments', { params })
-    throw new Error('Method not implemented.')
+  ): Promise<ServiceResult<JournalAdvertDepartmentsResponse>> {
+    const departments = await this.advertDepartmentModel.findAll()
+    const totalItems = await this.advertDepartmentModel.count()
+
+    const result: JournalAdvertDepartmentsResponse = {
+      departments,
+      paging: generatePaging(totalItems, params?.page ?? 1),
+    }
+    return { type: 'ok', value: result }
   }
 
-  getTypes(
+  async getTypes(
     params?: JournalGetTypesQueryParams | undefined,
-  ): Promise<JournalAdvertTypesResponse> {
-    this.logger.log('getTypes', { params })
-    throw new Error('Method not implemented.')
+  ): Promise<ServiceResult<JournalAdvertTypesResponse>> {
+    const where: WhereOptions = {}
+    if (params?.departmentId) {
+      where.departmentId = params.departmentId
+    }
+    // TODO don't table scan, need an index on title
+    if (params?.search) {
+      where.title = {
+        [Op.iLike]: `%${params.search}%`,
+      }
+    }
+    const types = await this.advertTypeModel.findAll({
+      include: params?.includeDepartment ? [AdvertDepartment] : undefined,
+      where,
+      limit: PAGING_DEFAULT_PAGE_SIZE,
+      offset: ((params?.page ?? 1) - 1) * PAGING_DEFAULT_PAGE_SIZE,
+    })
+    const totalItems = await this.advertTypeModel.count({ where })
+
+    const paging = generatePaging(totalItems, params?.page ?? 1)
+
+    if (params?.page && params.page > paging.totalPages) {
+      return {
+        type: 'error',
+        error: {
+          message: 'page out of range',
+          code: 400,
+        },
+      }
+    }
+
+    const result: JournalAdvertTypesResponse = {
+      types,
+      paging,
+    }
+    return { type: 'ok', value: result }
   }
 
   getCategories(
     params?: JournalGetCategoriesQueryParams | undefined,
-  ): Promise<JournalAdvertCategoriesResponse> {
+  ): Promise<ServiceResult<JournalAdvertCategoriesResponse>> {
     this.logger.log('getCategories', { params })
     throw new Error('Method not implemented.')
   }
 
-  getAdvert(): Promise<JournalAdvert | null> {
+  getAdvert(): Promise<ServiceResult<JournalAdvert>> {
     throw new Error('Method not implemented.')
   }
 

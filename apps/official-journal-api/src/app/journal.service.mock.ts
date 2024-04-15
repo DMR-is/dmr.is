@@ -14,7 +14,7 @@ import {
   ALL_MOCK_JOURNAL_TYPES,
   MOCK_PAGING_SINGLE_PAGE,
 } from '../mock/journal.mock'
-import { IJournalService } from './journal.service.interface'
+import { IJournalService, ServiceResult } from './journal.service.interface'
 import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -23,48 +23,27 @@ import { JournalAdvertTypesResponse } from '../dto/types/journal-gettypes-respon
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getcategories-query.dto'
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
-import { JournalPaging } from '../dto/journal-paging.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 import { v4 as uuid } from 'uuid'
-import { JournalAdvertStatus } from '../dto/journal-constants.dto'
+import {
+  JournalAdvertStatus,
+  PAGING_DEFAULT_PAGE_SIZE,
+} from '../dto/journal-constants.dto'
 import { JournalAdvertPublicationNumber } from '../dto/adverts/journal-advert-publication-number.dto'
 import { JournalDocument } from '../dto/journal-document'
+import { generatePaging } from '../lib/paging'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
 const LOGGING_CATEGORY = 'MockJournalService'
 
-const DEFAULT_PAGE_SIZE = 2
-
 function slicePagedData<T>(
   data: T[],
   page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
+  pageSize = PAGING_DEFAULT_PAGE_SIZE,
 ): T[] {
   return data.slice((page - 1) * pageSize, page * pageSize)
-}
-
-function generatePaging(
-  data: unknown[],
-  page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
-): JournalPaging {
-  const totalPages = Math.ceil(data.length / pageSize)
-  const totalItems = data.length
-  const nextPage = page + 1
-  const previousPage = page - 1
-
-  return {
-    page,
-    pageSize,
-    totalPages,
-    totalItems,
-    nextPage: nextPage <= totalPages ? nextPage : null,
-    previousPage: previousPage > 0 ? previousPage : null,
-    hasNextPage: nextPage <= totalPages,
-    hasPreviousPage: previousPage > 0,
-  }
 }
 
 @Injectable()
@@ -73,19 +52,32 @@ export class MockJournalService implements IJournalService {
     this.logger.log('Using MockJournalService')
   }
 
-  getAdvert(id: string): Promise<JournalAdvert | null> {
+  getAdvert(id: string): Promise<ServiceResult<JournalAdvert>> {
     this.logger.log('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
     const advert = allMockAdverts.find((advert) => advert.id === id)
 
-    return Promise.resolve(advert ?? null)
+    const result: ServiceResult<JournalAdvert> = advert
+      ? {
+          type: 'ok',
+          value: advert,
+        }
+      : {
+          type: 'error',
+          error: {
+            message: 'advert not found',
+            code: 404,
+          },
+        }
+
+    return Promise.resolve(result)
   }
 
   getAdverts(
     params?: JournalGetAdvertsQueryParams,
-  ): Promise<JournalAdvertsResponse> {
+  ): Promise<ServiceResult<JournalAdvertsResponse>> {
     this.logger.log('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
@@ -112,12 +104,12 @@ export class MockJournalService implements IJournalService {
       },
     }
 
-    return Promise.resolve(result)
+    return Promise.resolve({ type: 'ok', value: result })
   }
 
   getDepartments(
     params?: JournalGetDepartmentsQueryParams,
-  ): Promise<JournalAdvertDepartmentsResponse> {
+  ): Promise<ServiceResult<JournalAdvertDepartmentsResponse>> {
     const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
 
     const filtered = mockDepartments.filter((department) => {
@@ -129,18 +121,21 @@ export class MockJournalService implements IJournalService {
     })
 
     return Promise.resolve({
-      departments: filtered,
-      paging: MOCK_PAGING_SINGLE_PAGE,
+      type: 'ok',
+      value: {
+        departments: filtered,
+        paging: MOCK_PAGING_SINGLE_PAGE,
+      },
     })
   }
 
   getTypes(
     params?: JournalGetTypesQueryParams,
-  ): Promise<JournalAdvertTypesResponse> {
+  ): Promise<ServiceResult<JournalAdvertTypesResponse>> {
     const mockTypes = ALL_MOCK_JOURNAL_TYPES
 
     const filtered = mockTypes.filter((type) => {
-      if (params?.department && params.department !== type.department.id) {
+      if (params?.departmentId && params.departmentId !== type.department.id) {
         return false
       }
 
@@ -158,14 +153,17 @@ export class MockJournalService implements IJournalService {
     const paged = slicePagedData(filtered, page)
 
     return Promise.resolve({
-      types: paged,
-      paging: generatePaging(filtered, page),
+      type: 'ok',
+      value: {
+        types: paged,
+        paging: generatePaging(filtered.length, page),
+      },
     })
   }
 
   getCategories(
     params?: JournalGetCategoriesQueryParams | undefined,
-  ): Promise<JournalAdvertCategoriesResponse> {
+  ): Promise<ServiceResult<JournalAdvertCategoriesResponse>> {
     const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -179,10 +177,10 @@ export class MockJournalService implements IJournalService {
     const paged = slicePagedData(filtered, page)
     const data: JournalAdvertCategoriesResponse = {
       categories: paged,
-      paging: generatePaging(filtered, page),
+      paging: generatePaging(filtered.length, page),
     }
 
-    return Promise.resolve(data)
+    return Promise.resolve({ type: 'ok', value: data })
   }
 
   submitApplication(

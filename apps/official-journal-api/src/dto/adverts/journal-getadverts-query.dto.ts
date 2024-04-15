@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator'
+import { Transform } from 'class-transformer'
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator'
 
 export class JournalGetAdvertsQueryParams {
   @ApiProperty({
@@ -18,8 +25,10 @@ export class JournalGetAdvertsQueryParams {
     type: Number,
     required: false,
   })
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  @IsInt()
+  @IsPositive()
   @IsOptional()
-  @IsNumber()
   page?: number
 
   @ApiProperty({

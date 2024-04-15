@@ -1,3 +1,4 @@
+export const PAGING_DEFAULT_PAGE_SIZE = 1
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
 export enum JournalAdvertStatus {

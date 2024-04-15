@@ -10,24 +10,39 @@ import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getca
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 
+export type ServiceError = {
+  message: string
+  code: 400 | 404 | 500
+}
+
+export type ServiceResult<OkType, ErrorType = ServiceError> =
+  | {
+      type: 'ok'
+      value: OkType
+    }
+  | {
+      type: 'error'
+      error: ErrorType
+    }
+
 export interface IJournalService {
   getAdverts(
     params?: JournalGetAdvertsQueryParams,
-  ): Promise<JournalAdvertsResponse>
+  ): Promise<ServiceResult<JournalAdvertsResponse>>
 
-  getAdvert(id: string): Promise<JournalAdvert | null>
+  getAdvert(id: string): Promise<ServiceResult<JournalAdvert>>
 
   getDepartments(
     params?: JournalGetDepartmentsQueryParams,
-  ): Promise<JournalAdvertDepartmentsResponse>
+  ): Promise<ServiceResult<JournalAdvertDepartmentsResponse>>
 
   getTypes(
     params?: JournalGetTypesQueryParams,
-  ): Promise<JournalAdvertTypesResponse>
+  ): Promise<ServiceResult<JournalAdvertTypesResponse>>
 
   getCategories(
     params?: JournalGetCategoriesQueryParams,
-  ): Promise<JournalAdvertCategoriesResponse>
+  ): Promise<ServiceResult<JournalAdvertCategoriesResponse>>
 
   submitApplication(
     body: JournalPostApplicationBody,

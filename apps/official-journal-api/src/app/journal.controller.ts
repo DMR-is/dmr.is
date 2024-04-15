@@ -1,26 +1,27 @@
 import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  HttpException,
   Inject,
+  InternalServerErrorException,
   NotFoundException,
   Post,
   Query,
 } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
+  ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
-import {
-  AdvertNotFound,
-  JournalAdvertsResponse,
-  JournalAdvertsValidationResponse,
-} from '../dto/adverts/journal-advert-responses.dto'
+import { JournalAdvertsResponse } from '../dto/adverts/journal-advert-responses.dto'
 import { JournalAdvert } from '../dto/adverts/journal-advert.dto'
-import { IJournalService } from './journal.service.interface'
+import { IJournalService, ServiceError } from './journal.service.interface'
 import { JournalGetAdvertsQueryParams } from '../dto/adverts/journal-getadverts-query.dto'
 import { JournalGetDepartmentsQueryParams } from '../dto/departments/journal-getdepartments-query.dto'
 import { JournalGetTypesQueryParams } from '../dto/types/journal-gettypes-query.dto'
@@ -30,8 +31,25 @@ import { JournalGetCategoriesQueryParams } from '../dto/categories/journal-getca
 import { JournalAdvertCategoriesResponse } from '../dto/categories/journal-getcategories-responses.dto'
 import { JournalPostApplicationResponse } from '../dto/application/journal-postapplication-response.dto'
 import { JournalPostApplicationBody } from '../dto/application/journal-postapplication-body.dto'
+import { JournalAdvertErrorResponse } from '../dto/journal-errors'
 
 const LOGGING_CATEGORY = 'JournalController'
+
+/**
+ * Map a service error to an HTTP exception.
+ * @param error Service error to map from.
+ * @returns Excpetion to throw.
+ */
+function mapServerErrorToHttpException(error: ServiceError): HttpException {
+  switch (error.code) {
+    case 400:
+      return new BadRequestException(error.message)
+    case 404:
+      return new NotFoundException(error.message)
+    default:
+      return new InternalServerErrorException(error.message)
+  }
+}
 
 @Controller({
   version: '1',
@@ -44,100 +62,151 @@ export class JournalController {
 
   @Get('advert')
   @ApiQuery({ name: 'id', type: String, required: true })
-  @ApiResponse({
-    status: 200,
-    type: JournalAdvert,
-    description: 'Journal advert by ID.',
-  })
+  @ApiOkResponse({ type: JournalAdvert, description: 'Journal advert by ID.' })
   @ApiNotFoundResponse({
     description: 'Advert not found.',
-    type: AdvertNotFound,
+    type: JournalAdvertErrorResponse,
   })
-  async advert(@Query('id') id: string): Promise<JournalAdvert | null> {
-    const advert = await this.journalService.getAdvert(id)
-    if (!advert) {
-      this.logger.log('advert not found', {
-        category: LOGGING_CATEGORY,
-        metadata: { id },
-      })
-      throw new NotFoundException('advert not found', {
-        cause: 'advert not found',
-      })
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
+    type: JournalAdvertErrorResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+    type: JournalAdvertErrorResponse,
+  })
+  // TODO - add validation for id
+  async advert(@Query('id') id: string): Promise<JournalAdvert> {
+    const result = await this.journalService.getAdvert(id)
+    if (result.type === 'error') {
+      throw mapServerErrorToHttpException(result.error)
     }
 
-    return advert
+    return result.value
   }
 
   @Get('adverts')
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
+    description: 'List of journal adverts.',
     type: JournalAdvertsResponse,
-    description: 'List of journal adverts, optional query parameters.',
   })
-  @ApiResponse({
-    status: 400,
-    type: JournalAdvertsValidationResponse,
-    description: 'Query string validation failed.',
+  @ApiNotFoundResponse({
+    description: 'Adverts not found.',
+    type: JournalAdvertErrorResponse,
   })
-  adverts(
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
+    type: JournalAdvertErrorResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+    type: JournalAdvertErrorResponse,
+  })
+  async adverts(
     @Query()
     params?: JournalGetAdvertsQueryParams,
   ): Promise<JournalAdvertsResponse> {
-    return this.journalService.getAdverts(params)
+    const result = await this.journalService.getAdverts(params)
+
+    if (result.type === 'error') {
+      throw mapServerErrorToHttpException(result.error)
+    }
+
+    return result.value
   }
 
   @Get('departments')
-  @ApiResponse({
-    status: 200,
-    type: JournalAdvertDepartmentsResponse,
+  @ApiOkResponse({
     description: 'List of journal advert departments.',
+    type: JournalAdvertDepartmentsResponse,
   })
-  @ApiResponse({
-    status: 400,
-    type: JournalAdvertsValidationResponse,
-    description: 'Query string validation failed.',
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
+    type: JournalAdvertErrorResponse,
   })
-  departments(
+  @ApiNotFoundResponse({
+    description: 'Departments not found.',
+    type: JournalAdvertErrorResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+    type: JournalAdvertErrorResponse,
+  })
+  async departments(
     @Query()
     params?: JournalGetDepartmentsQueryParams,
   ): Promise<JournalAdvertDepartmentsResponse> {
-    return this.journalService.getDepartments(params)
+    const result = await this.journalService.getDepartments(params)
+
+    if (result.type === 'error') {
+      throw mapServerErrorToHttpException(result.error)
+    }
+
+    return result.value
   }
 
   @Get('types')
-  @ApiResponse({
-    status: 200,
-    type: JournalAdvertTypesResponse,
+  @ApiOkResponse({
     description: 'List of journal advert types.',
+    type: JournalAdvertTypesResponse,
   })
-  @ApiResponse({
-    status: 400,
-    type: JournalAdvertsValidationResponse,
-    description: 'Query string validation failed.',
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
+    type: JournalAdvertErrorResponse,
   })
-  types(
+  @ApiNotFoundResponse({
+    description: 'Types not found.',
+    type: JournalAdvertErrorResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+    type: JournalAdvertErrorResponse,
+  })
+  async types(
     @Query()
     params?: JournalGetTypesQueryParams,
   ): Promise<JournalAdvertTypesResponse> {
-    return this.journalService.getTypes(params)
+    this.logger.debug('calling getTypes', {
+      params,
+      category: LOGGING_CATEGORY,
+    })
+    const result = await this.journalService.getTypes(params)
+
+    if (result.type === 'error') {
+      throw mapServerErrorToHttpException(result.error)
+    }
+
+    return result.value
   }
 
   @Get('categories')
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     type: JournalAdvertCategoriesResponse,
     description: 'List of journal advert types.',
   })
-  @ApiResponse({
-    status: 400,
-    type: JournalAdvertsValidationResponse,
-    description: 'Query string validation failed.',
+  @ApiNotFoundResponse({
+    description: 'Categories not found.',
+    type: JournalAdvertErrorResponse,
   })
-  categories(
+  @ApiBadRequestResponse({
+    description: 'Validation failed.',
+    type: JournalAdvertErrorResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error.',
+    type: JournalAdvertErrorResponse,
+  })
+  async categories(
     @Query()
     params?: JournalGetCategoriesQueryParams,
   ): Promise<JournalAdvertCategoriesResponse> {
-    return this.journalService.getCategories(params)
+    const result = await this.journalService.getCategories(params)
+
+    if (result.type === 'error') {
+      throw mapServerErrorToHttpException(result.error)
+    }
+
+    return result.value
   }
 
   @Post('application')

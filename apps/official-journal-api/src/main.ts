@@ -3,21 +3,57 @@
  * This is only a minimal backend to get started.
  */
 
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
+import {
+  BadRequestException,
+  Logger,
+  ValidationError,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { SwaggerModule } from '@nestjs/swagger'
-import { JournalModule } from './app/journal.module'
 import { openApi } from './openApi'
 import { apmInit } from '@dmr.is/apm'
+import { AppModule } from './app.module'
+import {
+  JournalAdvertErrorResponse,
+  JournalValidationError,
+} from './dto/journal-errors'
+
+function exceptionFactory(validationErrors: ValidationError[] = []) {
+  const mappedValidationErrors: JournalValidationError[] = validationErrors.map(
+    (error) => ({
+      field: error.property,
+      errors: Object.values(error.constraints ?? {}),
+    }),
+  )
+
+  const data: JournalAdvertErrorResponse = {
+    statusCode: 400,
+    error: 'Bad Request',
+    validationErrors: mappedValidationErrors,
+  }
+
+  const customBody = BadRequestException.createBody(
+    // Explicit cast from typed class to record
+    data as unknown as Record<string, unknown>,
+  )
+  return new BadRequestException(customBody)
+}
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const swaggerPath = 'swagger'
 
-  const app = await NestFactory.create(JournalModule)
+  const app = await NestFactory.create(AppModule)
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory,
+    }),
+  )
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({
