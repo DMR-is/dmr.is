@@ -47,6 +47,14 @@
     "defaultMessage": "Útskrá",
     "description": ""
   },
+  "web.components.caseFilters:clearAllFilters": {
+    "defaultMessage": "Hreinsa allar síur",
+    "description": "Clear all filters button label"
+  },
+  "web.components.caseFilters:filterLabel": {
+    "defaultMessage": "Síun á lista:",
+    "description": ""
+  },
   "web.components.caseFilters:filters": {
     "defaultMessage": "Síur",
     "description": ""

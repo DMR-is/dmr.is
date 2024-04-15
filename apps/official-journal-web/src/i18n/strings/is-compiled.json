@@ -71,6 +71,18 @@
       "value": "Útskrá"
     }
   ],
+  "web.components.caseFilters:clearAllFilters": [
+    {
+      "type": 0,
+      "value": "Hreinsa allar síur"
+    }
+  ],
+  "web.components.caseFilters:filterLabel": [
+    {
+      "type": 0,
+      "value": "Síun á lista:"
+    }
+  ],
   "web.components.caseFilters:filters": [
     {
       "type": 0,
