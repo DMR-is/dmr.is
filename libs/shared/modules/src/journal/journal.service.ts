@@ -19,11 +19,7 @@ import {
   PostApplicationResponse,
 } from '@dmr.is/shared/dto'
 
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
 import { IJournalService } from './journal.service.interface'
@@ -41,36 +37,7 @@ export class JournalService implements IJournalService {
 
   async getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', { id })
-
-    const idsToken = await this.authService.getAccessToken()
-    if (!idsToken) {
-      this.logger.error('Could not get access token from auth service')
-      return null
-    }
-
-    const xroadClient = process.env.XROAD_DMR_CLIENT
-    if (!xroadClient) {
-      this.logger.error('Missing required environment')
-      return null
-    }
-
-    const application = await fetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
-      {
-        method: 'GET',
-        headers: {
-          'X-Road-Client': xroadClient,
-          Authorization: `Bearer ${idsToken.access_token}`,
-        },
-      },
-    )
-      .then((res) => res.json())
-      .catch((err) => {
-        this.logger.error('error fetching application', { id, err })
-        throw new InternalServerErrorException()
-      })
-
-    return Promise.resolve(application as Advert)
+    throw new Error('Method not implemented.')
   }
 
   getAdverts(
