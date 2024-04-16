@@ -19,16 +19,58 @@ import {
   PostApplicationResponse,
 } from '@dmr.is/shared/dto'
 
-import { Inject, Injectable } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
+import { AuthService } from '../auth/auth.service'
 import { IJournalService } from './journal.service.interface'
 
 const LOGGING_CATEGORY = 'JournalService'
 
 @Injectable()
 export class JournalService implements IJournalService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
-    this.logger.info('JournalService')
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    private readonly authService: AuthService,
+  ) {
+    this.logger.info('Using journal service')
+  }
+
+  async getAdvert(id: string): Promise<Advert | null> {
+    this.logger.info('getAdvert', { id })
+
+    const idsToken = await this.authService.getAccessToken()
+    if (!idsToken) {
+      this.logger.error('Could not get access token from auth service')
+      return null
+    }
+
+    const xroadClient = process.env.XROAD_DMR_CLIENT
+    if (!xroadClient) {
+      this.logger.error('Missing required environment')
+      return null
+    }
+
+    const application = await fetch(
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      {
+        method: 'GET',
+        headers: {
+          'X-Road-Client': xroadClient,
+          Authorization: `Bearer ${idsToken.access_token}`,
+        },
+      },
+    )
+      .then((res) => res.json())
+      .catch((err) => {
+        this.logger.error('error fetching application', { id, err })
+        throw new InternalServerErrorException()
+      })
+
+    return Promise.resolve(application as Advert)
   }
 
   getAdverts(
@@ -70,10 +112,6 @@ export class JournalService implements IJournalService {
     params?: GetInstitutionsQueryParams | undefined,
   ): Promise<GetInstitutionsResponse> {
     this.logger.info('getInstitutions', { params })
-    throw new Error('Method not implemented.')
-  }
-
-  getAdvert(): Promise<Advert | null> {
     throw new Error('Method not implemented.')
   }
 
