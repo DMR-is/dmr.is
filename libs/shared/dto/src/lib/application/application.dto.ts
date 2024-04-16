@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApplicationAnswers } from './application-answers.dto'
+
 export class Application {
   @ApiProperty({
     type: String,
@@ -63,4 +65,36 @@ export class Application {
     description: 'Name of the application',
   })
   name!: string
+
+  @ApiProperty({
+    type: ApplicationAnswers,
+    description: 'Application answers',
+  })
+  answers!: ApplicationAnswers
+
+  @ApiProperty({
+    type: Object,
+  })
+  externalData?: Record<string, unknown>
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Is the application listed',
+  })
+  listed!: boolean
+
+  @ApiProperty({
+    type: String,
+    example: '2021-04-01T00:00:00.000Z',
+    description: 'Prune date of the application',
+  })
+  prunedAt!: string
+
+  @ApiProperty({
+    type: Boolean,
+    example: '2021-04-01T00:00:00.000Z',
+    description: 'Date of the application',
+  })
+  pruned!: boolean
 }
