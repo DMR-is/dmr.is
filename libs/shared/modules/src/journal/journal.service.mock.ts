@@ -37,7 +37,12 @@ import {
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
@@ -62,11 +67,12 @@ export class MockJournalService implements IJournalService {
     this.logger.info('Using MockJournalService')
   }
 
-  getAdvert(id: string): Promise<Advert | null> {
+  async getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
+
     const advert = (allMockAdverts as Advert[]).find(
       (advert) => advert.id === id,
     )
