@@ -25,18 +25,26 @@ export class AuthService implements IAuthService {
   }
 
   async getAccessToken() {
-    const isTokenExpired =
-      this.tokenExpiresAt && this.tokenExpiresAt < Date.now()
+    if (!this.accessToken) {
+      this.logger.debug('Access token is missing, fetching a new one')
+      await this.refresh()
+    }
 
-    if (!this.accessToken || isTokenExpired) {
+    if (this.isTokenExpired()) {
+      this.logger.debug('Access token is expired, refreshing')
       await this.refresh()
     }
 
     if (!this.accessToken) {
-      throw new Error('Failed to get access token')
+      this.logger.error('Could not get access token')
+      return null
     }
 
     return this.accessToken
+  }
+
+  private isTokenExpired() {
+    return this.tokenExpiresAt && this.tokenExpiresAt < Date.now()
   }
 
   private async refresh() {
@@ -46,12 +54,15 @@ export class AuthService implements IAuthService {
     const clientScopes = process.env.ISLAND_IS_DMR_CLIENT_SCOPES
 
     if (!idsUrl || !clientSecret || !clientId || !clientScopes) {
-      throw new Error('Missing required environment variables')
+      this.logger.error('Missing required environment variables')
+      throw new InternalServerErrorException(
+        'Missing required environment variables',
+      )
     }
 
     this.logger.info('Refreshing access token')
 
-    const tokenResponse = (await fetch(idsUrl, {
+    const tokenResponse = await fetch(idsUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -63,13 +74,18 @@ export class AuthService implements IAuthService {
         scope: clientScopes,
       }),
     })
-      .then((res) => res.json())
-      .catch((err) => {
-        this.logger.error('Failed to refresh access token', { err })
-        throw new InternalServerErrorException('Failed to refresh access token')
-      })) as IdsTokenResponse
 
-    this.accessToken = tokenResponse.access_token
-    this.tokenExpiresAt = Date.now() + tokenResponse.expires_in * 1000
+    if (tokenResponse.status === 200) {
+      const json = await tokenResponse.json()
+      if ('access_token' in json) {
+        this.accessToken = json.access_token
+      }
+
+      if ('expires_in' in json) {
+        this.tokenExpiresAt = Date.now() + json.expires_in * 1000
+      }
+    } else {
+      this.logger.error('Failed to fetch access token from ids')
+    }
   }
 }

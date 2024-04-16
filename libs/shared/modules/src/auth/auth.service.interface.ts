@@ -1,5 +1,5 @@
 export interface IAuthService {
-  getAccessToken(): Promise<string>
+  getAccessToken(): Promise<string | null>
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972

@@ -41,17 +41,25 @@ export class JournalService implements IJournalService {
 
   async getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', { id })
+
     const token = await this.authService.getAccessToken()
+    if (!token) {
+      this.logger.error('Could not get access token from auth service')
+      return null
+    }
 
-    this.logger.info('token', { token })
+    const xroadClient = process.env.XROAD_DMR_CLIENT
+    if (!xroadClient) {
+      this.logger.error('Missing required environment')
+      return null
+    }
 
-    this.logger.info('fetching application', { id })
     const application = await fetch(
-      `http://127.0.0.1:8000/r1/IS-DEV/GOV/10000/island-is/application-callback-v2/applications/${id}`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
         method: 'GET',
         headers: {
-          'X-Road-Client': 'IS-DEV/GOV/10014/DMR-Client',
+          'X-Road-Client': xroadClient,
           Authorization: `Bearer ${token}`,
         },
       },
