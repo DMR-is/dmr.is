@@ -1,29 +1,23 @@
 import { Box, Icon, Text } from '@island.is/island-ui/core'
 
 import { FilterGroup } from '../../context/filterContext'
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './FilterPopover.css'
 import { messages } from './messages'
 
 type Props = {
   children?: React.ReactElement<FilterGroup>[]
+  resetFilters?: () => void
 }
 
-export const FilterPopover = ({ children }: Props) => {
+export const FilterPopover = ({ children, resetFilters }: Props) => {
   const { formatMessage } = useFormatMessage()
-
-  const { setSearchFilter } = useFilterContext()
-
-  const resetAllFilters = () => {
-    setSearchFilter('')
-  }
 
   return (
     <Box className={styles.filterPopover}>
       <Box className={styles.filterPopoverFilters}>{children}</Box>
       <Box className={styles.resetAllButtonWrapper}>
-        <button onClick={resetAllFilters} className={styles.resetAllButton}>
+        <button onClick={resetFilters} className={styles.resetAllButton}>
           <Box className={styles.resetAllButtonContent}>
             <Text fontWeight="semiBold" variant="small" color="blue400">
               {formatMessage(messages.general.clearAllFilters)}

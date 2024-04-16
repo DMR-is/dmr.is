@@ -7,7 +7,7 @@ import { StatisticsService } from './statistics.service'
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
 
-const MOCK_DATA = true
+const MOCK_DATA = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [LoggingModule],

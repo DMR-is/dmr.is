@@ -10,7 +10,7 @@ TODO
 
 ```bash
 nx run official-journal-web:update-openapi-schema
-nx run official-journal-web:generate
+nx run official-journal-web:codegen
 ```
 
 ## Starting the web app

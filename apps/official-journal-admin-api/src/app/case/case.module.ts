@@ -7,7 +7,7 @@ import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 
-const MOCK_DATA = true
+const MOCK_DATA = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [LoggingModule],

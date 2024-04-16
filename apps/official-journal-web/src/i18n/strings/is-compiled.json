@@ -65,6 +65,24 @@
       "value": "Fylgiskjöl"
     }
   ],
+  "web.components.auth:logout": [
+    {
+      "type": 0,
+      "value": "Útskrá"
+    }
+  ],
+  "web.components.caseFilters:clearAllFilters": [
+    {
+      "type": 0,
+      "value": "Hreinsa allar síur"
+    }
+  ],
+  "web.components.caseFilters:filterLabel": [
+    {
+      "type": 0,
+      "value": "Síun á lista:"
+    }
+  ],
   "web.components.caseFilters:filters": [
     {
       "type": 0,
@@ -201,6 +219,12 @@
     {
       "type": 0,
       "value": "Stjórnborð"
+    }
+  ],
+  "web.components.modal:modalLabel": [
+    {
+      "type": 0,
+      "value": "Skoða auglýsingu"
     }
   ],
   "web.components.statistics:notPublished.emptyIntro": [
