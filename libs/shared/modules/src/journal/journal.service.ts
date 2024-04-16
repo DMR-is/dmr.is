@@ -42,8 +42,8 @@ export class JournalService implements IJournalService {
   async getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', { id })
 
-    const token = await this.authService.getAccessToken()
-    if (!token) {
+    const idsToken = await this.authService.getAccessToken()
+    if (!idsToken) {
       this.logger.error('Could not get access token from auth service')
       return null
     }
@@ -60,7 +60,7 @@ export class JournalService implements IJournalService {
         method: 'GET',
         headers: {
           'X-Road-Client': xroadClient,
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${idsToken.access_token}`,
         },
       },
     )

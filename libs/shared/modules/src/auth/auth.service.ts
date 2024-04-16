@@ -6,18 +6,11 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { IAuthService } from './auth.service.interface'
-
-type IdsTokenResponse = {
-  access_token: string
-  token_type: string
-  expires_in: number
-  scope: string
-}
+import { IAuthService, IdsToken } from './auth.service.interface'
 
 @Injectable()
 export class AuthService implements IAuthService {
-  private accessToken: string | null = null
+  private idsToken: IdsToken | null = null
   private tokenExpiresAt: number | null = null
 
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
@@ -25,7 +18,7 @@ export class AuthService implements IAuthService {
   }
 
   async getAccessToken() {
-    if (!this.accessToken) {
+    if (!this.idsToken) {
       this.logger.debug('Access token is missing, fetching a new one')
       await this.refresh()
     }
@@ -35,12 +28,12 @@ export class AuthService implements IAuthService {
       await this.refresh()
     }
 
-    if (!this.accessToken) {
+    if (!this.idsToken) {
       this.logger.error('Could not get access token')
       return null
     }
 
-    return this.accessToken
+    return this.idsToken
   }
 
   private isTokenExpired() {
@@ -77,13 +70,11 @@ export class AuthService implements IAuthService {
 
     if (tokenResponse.status === 200) {
       const json = await tokenResponse.json()
-      if ('access_token' in json) {
-        this.accessToken = json.access_token
-      }
 
-      if ('expires_in' in json) {
-        this.tokenExpiresAt = Date.now() + json.expires_in * 1000
-      }
+      const token: IdsToken = JSON.parse(json)
+
+      this.idsToken = token
+      this.tokenExpiresAt = Date.now() + token.expires_in * 1000
     } else {
       this.logger.error('Failed to fetch access token from ids')
     }
