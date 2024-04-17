@@ -21,17 +21,13 @@ import {
 
 import { Inject, Injectable } from '@nestjs/common'
 
-import { AuthService } from '../auth/auth.service'
 import { IJournalService } from './journal.service.interface'
 
 const LOGGING_CATEGORY = 'JournalService'
 
 @Injectable()
 export class JournalService implements IJournalService {
-  constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    private readonly authService: AuthService,
-  ) {
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using journal service')
   }
 
