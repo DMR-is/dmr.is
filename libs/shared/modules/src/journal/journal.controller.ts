@@ -16,26 +16,17 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
   ValidationResponse,
 } from '@dmr.is/shared/dto'
 
 import {
-  Body,
   Controller,
   Get,
   Inject,
   NotFoundException,
-  Post,
   Query,
 } from '@nestjs/common'
-import {
-  ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiQuery,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { IJournalService } from './journal.service.interface'
 
@@ -182,21 +173,6 @@ export class JournalController {
     params?: GetInstitutionsQueryParams,
   ): Promise<GetInstitutionsResponse> {
     return this.journalService.getInstitutions(params)
-  }
-
-  @Post('application')
-  @ApiResponse({
-    status: 200,
-    type: PostApplicationResponse,
-    description: 'Submit an advert application',
-  })
-  @ApiBadRequestResponse({
-    description: 'Validation failed.',
-  })
-  application(
-    @Body() application: PostApplicationBody,
-  ): Promise<PostApplicationResponse> {
-    return this.journalService.submitApplication(application)
   }
 
   @Get('signatures')

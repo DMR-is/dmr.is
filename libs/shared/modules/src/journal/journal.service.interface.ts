@@ -14,8 +14,6 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
 } from '@dmr.is/shared/dto'
 
 export interface IJournalService {
@@ -40,8 +38,6 @@ export interface IJournalService {
   getInstitutions(
     params?: GetInstitutionsQueryParams,
   ): Promise<GetInstitutionsResponse>
-
-  submitApplication(body: PostApplicationBody): Promise<PostApplicationResponse>
 
   getSignatures(
     params?: GetAdvertSignatureQuery,
