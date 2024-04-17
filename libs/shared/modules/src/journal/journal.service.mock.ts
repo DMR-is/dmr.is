@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -14,10 +13,6 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
-  AdvertDocument,
-  AdvertPublicationNumber,
-  AdvertSignature,
-  AdvertStatus,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -32,17 +27,10 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
@@ -237,85 +225,6 @@ export class MockJournalService implements IJournalService {
     }
 
     return Promise.resolve(data)
-  }
-
-  submitApplication(
-    body: PostApplicationBody,
-  ): Promise<PostApplicationResponse> {
-    const department = ALL_MOCK_JOURNAL_DEPARTMENTS.find(
-      (d) => d.id === body.department,
-    )
-
-    if (!department) {
-      throw new BadRequestException('Department not found') // We need to return the field and reason
-    }
-
-    const categories = ALL_MOCK_JOURNAL_CATEGORIES.filter((c) =>
-      body.categories.includes(c.id),
-    )
-
-    if (!categories.length) {
-      throw new BadRequestException('Invalid category') // We need to return the field and reason
-    }
-
-    const type = ALL_MOCK_JOURNAL_TYPES.find((t) => t.id === body.type)
-
-    if (!type) {
-      throw new BadRequestException('Type not found') // We need to return the field and reason
-    }
-
-    this.logger.info('submitApplication', {
-      category: LOGGING_CATEGORY,
-      metadata: { body },
-    })
-
-    const advertTitle = `${type.title} ${body.subject}` // this results in AUGLÝSING AUGLÝSING um hundahald í ..., because the user needs to type in subject himself with the type included ()
-
-    const advertDocument: AdvertDocument = {
-      isLegacy: false, // always false since it's coming from the application system
-      html: body.document, // validate?
-      pdfUrl: null, // generate this earlier in the process? (preview step)
-    }
-
-    // needs to be created at same time as the advert
-    const year = new Date().getFullYear()
-    const publicationNumber = 1 // leaving this as 1 for now until we get the real number
-    const advertPublicationNumber: AdvertPublicationNumber = {
-      number: publicationNumber,
-      year: year,
-      full: `${publicationNumber}/${year}`,
-    }
-
-    const advertId = uuid()
-
-    const signature: AdvertSignature = {
-      id: uuid(),
-      advertId: advertId,
-      additional: body.signature.additional,
-      type: body.signature.type,
-      data: body.signature.data,
-    }
-
-    const advert: Advert = {
-      id: advertId,
-      title: advertTitle,
-      department: department,
-      type: type,
-      categories: categories,
-      subject: body.subject,
-      signatureDate: null, // this will be located with the signature object when that has been implemented
-      createdDate: new Date().toISOString(),
-      updatedDate: new Date().toISOString(),
-      publicationDate: null, // always null when coming from the application system
-      publicationNumber: advertPublicationNumber,
-      document: advertDocument,
-      involvedParty: null, // not implemented
-      status: AdvertStatus.Submitted, // always submitted when coming from the application system
-      signature: signature,
-      attachments: [],
-    }
-
-    return Promise.resolve({ advert })
   }
 
   getSignatures(

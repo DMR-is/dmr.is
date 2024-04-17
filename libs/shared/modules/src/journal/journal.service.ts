@@ -78,13 +78,6 @@ export class JournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
 
-  submitApplication(
-    body: PostApplicationBody,
-  ): Promise<PostApplicationResponse> {
-    this.logger.info('submitApplication', { body })
-    throw new Error('Method not implemented.')
-  }
-
   getSignatures(
     params?: GetAdvertSignatureQuery | undefined,
   ): Promise<GetAdvertSignatureResponse> {
