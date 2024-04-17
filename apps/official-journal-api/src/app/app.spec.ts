@@ -42,6 +42,11 @@ describe('Swagger documentation', () => {
   })
 
   it('should generate swagger spec', async () => {
+    if (!process.env.TEST_CODEGEN) {
+      console.log('Skipping codegen tests')
+      return
+    }
+
     const config = new DocumentBuilder()
       .setTitle('Official Journal API')
       .setVersion('1.0')
