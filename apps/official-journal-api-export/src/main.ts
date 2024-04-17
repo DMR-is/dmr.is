@@ -128,7 +128,7 @@ async function main() {
     () => {
       write('00_departments.sql', inserts.departments.join('\n'))
       write('01_types.sql', inserts.types.join('\n'))
-      write('02_super_categories.sql', inserts.superCategories.join('\n'))
+      write('02_main_categories.sql', inserts.superCategories.join('\n'))
       write('03_categories.sql', inserts.categories.join('\n'))
       write('04_advert_statuses.sql', inserts.advertStatuses.join('\n'))
       write('05_involved_parties.sql', inserts.advertStatuses.join('\n'))

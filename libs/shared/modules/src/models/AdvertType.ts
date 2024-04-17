@@ -14,17 +14,17 @@ import { AdvertDepartment } from './AdvertDepartment'
 @Table({ tableName: 'advert_type', timestamps: true })
 @DefaultScope(() => ({
   attributes: {
-    exclude: ['department_id', 'created', 'updated'],
+    exclude: ['created', 'updated'],
   },
 }))
 export class AdvertType extends Model {
   @Column({
-    type: DataType.UUID,
+    type: DataType.UUIDV4,
     primaryKey: true,
     allowNull: false,
     defaultValue: DataType.UUIDV4,
   })
-  id!: string
+  override id!: string
 
   @Column
   title!: string
@@ -43,4 +43,7 @@ export class AdvertType extends Model {
 
   @UpdatedAt
   updated!: Date
+
+  @Column({ type: DataType.UUIDV4 })
+  legacy_id!: string
 }

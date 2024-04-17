@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Department } from '../departments/department.dto'
 import { MainCategory } from '../main-categories/maincategory.dto'
 
 export class Category {
@@ -28,15 +27,6 @@ export class Category {
     type: String,
   })
   readonly slug!: string
-
-  @ApiProperty({
-    description: 'The department the category belongs to.',
-    required: false,
-    nullable: true,
-    type: Department,
-    example: 'A deild',
-  })
-  readonly department?: Department
 
   @ApiProperty({
     description: 'The main category this category belongs to.',

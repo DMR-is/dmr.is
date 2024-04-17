@@ -5,12 +5,12 @@ import { AdvertType } from './AdvertType'
 @Table({ tableName: 'advert_department', timestamps: false })
 export class AdvertDepartment extends Model {
   @Column({
-    type: DataType.UUID,
+    type: DataType.UUIDV4,
     primaryKey: true,
     allowNull: false,
     defaultValue: DataType.UUIDV4,
   })
-  id!: string
+  override id!: string
 
   @Column
   title!: string

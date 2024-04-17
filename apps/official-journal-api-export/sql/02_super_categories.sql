@@ -1,1 +1,0 @@
-INSERT INTO advert_super_category (id, title, slug) VALUES ('', 'Fjármál', 'fjarmal');

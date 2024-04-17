@@ -37,7 +37,7 @@ export function generateSuperCategoryInserts(
   superCategories: Array<SuperCategory>,
 ) {
   const inserts = superCategories.map((superCategory) => {
-    return `INSERT INTO advert_super_category (id, title, slug) VALUES ('${superCategory.id}', '${superCategory.title}', '${superCategory.slug}');`
+    return `INSERT INTO advert_main_category (id, title, slug) VALUES ('${superCategory.id}', '${superCategory.title}', '${superCategory.slug}');`
   })
 
   return inserts

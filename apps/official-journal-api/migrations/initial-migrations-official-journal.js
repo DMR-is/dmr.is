@@ -30,10 +30,11 @@ module.exports = {
     );
 
     -- "Yfirflokkur"
-    CREATE TABLE advert_super_category (
+    CREATE TABLE advert_main_category (
         id UUID NOT NULL DEFAULT uuid_generate_v4(),
         title VARCHAR NOT NULL,
         slug VARCHAR NOT NULL,
+        description VARCHAR NOT NULL
         PRIMARY KEY (id)
     );
 
@@ -41,11 +42,11 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
-      super_category_id UUID NULL,
+      main_category_id UUID NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id),
-      CONSTRAINT fk_advert_category_super_category_id FOREIGN KEY (super_category_id) REFERENCES advert_super_category (id)
+      CONSTRAINT fk_advert_category_main_category_id FOREIGN KEY (main_category_id) REFERENCES advert_main_category (id)
     );
 
     CREATE TABLE advert_status (
@@ -67,7 +68,6 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       department_id UUID NOT NULL,
       type_id UUID NOT NULL,
-      category_id UUID NOT NULL,
       subject VARCHAR NOT NULL,
       status_id UUID NOT NULL,
       serial_number INTEGER NOT NULL CHECK (serial_number > 0),
@@ -83,7 +83,6 @@ module.exports = {
       PRIMARY KEY (id),
       CONSTRAINT fk_advert_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       CONSTRAINT fk_advert_type_id FOREIGN KEY (type_id) REFERENCES advert_type (id),
-      CONSTRAINT fk_advert_category_id FOREIGN KEY (category_id) REFERENCES advert_category (id),
       CONSTRAINT fk_advert_status_id FOREIGN KEY (status_id) REFERENCES advert_status (id),
       CONSTRAINT advert_serial_number_publication_year_department_unique UNIQUE (serial_number, publication_year, department_id)
     );
@@ -109,6 +108,16 @@ module.exports = {
       CONSTRAINT fk_advert_categories_category_id FOREIGN KEY (category_id) REFERENCES advert_category (id)
     );
 
+    CREATE TABLE advert_attachments (
+      id UUUID NOT NULL DEFAULT uuid_generate_v4(),
+      advert_id UUID NOT NULL
+      name VARCHAR NOT NULL
+      type VARCHAR NOT NULL
+      url VARCHAR NOT NULL
+      PRIMARY KEY(id),
+      CONSTRAINT fk_advert_attachments FOREIGN KEY(advert_id) REFERENCES advert(id)
+    )
+
   COMMIT;
     `)
   },
@@ -119,11 +128,12 @@ module.exports = {
     DROP TABLE advert_status_history;
     DROP TABLE advert;
     DROP TABLE advert_involved_party;
-      DROP TABLE advert_status;
-      DROP TABLE advert_category;
-      DROP TABLE advert_super_category;
-      DROP TABLE advert_type;
-      DROP TABLE advert_department;
+    DROP TABLE advert_status;
+    DROP TABLE advert_category;
+    DROP TABLE advert_main_category;
+    DROP TABLE advert_type;
+    DROP TABLE advert_department;
+    DROP TABLE advert_attachments;
 
 
     `)
