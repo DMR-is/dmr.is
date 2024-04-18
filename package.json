@@ -6,6 +6,7 @@
     "start": "nx serve",
     "test": "nx test",
     "lint": "nx lint",
+    "run-xroad-proxy": "./scripts/run-xroad-proxy.sh",
     "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary",
     "openapi-generator": "openapi-generator generate -g typescript-fetch --additional-properties=typescriptThreePlus=true",
     "codegen": "node scripts/codegen.js",
