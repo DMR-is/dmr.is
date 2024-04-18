@@ -68,7 +68,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_SHARED_ACCOUNT_ID }}:role/shared-github-ecr-role
+          role-to-assume: arn:aws:iam::${{ env.AWS_SHARED_ACCOUNT_ID }}:role/shared-github-ci-role
           role-session-name: GitHub-Action-Role
           aws-region: ${{ env.AWS_REGION }}
       
