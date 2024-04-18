@@ -19,6 +19,7 @@ export class ApplicationService implements IApplicationService {
 
   private xroadFetch = async (url: string, options: RequestInit) => {
     const idsToken = await this.authService.getAccessToken()
+
     if (!idsToken) {
       this.logger.error('Could not get access token from auth service', {
         category: LOGGING_CATEGORY,
@@ -36,13 +37,24 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
       url: url,
     })
-    return await fetch(url, {
+
+    const requestOption = {
       ...options,
       headers: {
         ...options.headers,
+        'X-Road-Client': xroadClient,
+      },
+    }
+
+    const response = await fetch(url, {
+      ...requestOption,
+      headers: {
+        ...requestOption.headers,
         Authorization: `Bearer ${idsToken.access_token}`,
       },
     })
+
+    return response
   }
 
   async getApplication(id: string) {
@@ -68,6 +80,10 @@ export class ApplicationService implements IApplicationService {
 
       return application
     } catch (error) {
+      this.logger.error('Exception occured, could not get application', {
+        error,
+        category: LOGGING_CATEGORY,
+      })
       return null
     }
   }

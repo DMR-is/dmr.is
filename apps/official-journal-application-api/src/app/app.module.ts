@@ -1,11 +1,9 @@
+import { ApplicationModule } from '@dmr.is/modules'
 import { Module } from '@nestjs/common'
 
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
-
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [ApplicationModule],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

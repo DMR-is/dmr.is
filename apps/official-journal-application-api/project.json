@@ -11,11 +11,12 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/official-journal-application-api",
+        "outputPath": "apps/official-journal-application-api/dist",
         "main": "apps/official-journal-application-api/src/main.ts",
         "tsConfig": "apps/official-journal-application-api/tsconfig.app.json",
         "assets": ["apps/official-journal-application-api/src/assets"],
-        "webpackConfig": "apps/official-journal-application-api/webpack.config.js"
+        "webpackConfig": "apps/official-journal-application-api/webpack.config.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "development": {},

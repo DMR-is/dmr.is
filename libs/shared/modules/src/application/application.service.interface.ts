@@ -10,3 +10,5 @@ export interface IApplicationService {
     answers?: ApplicationAnswers,
   ): void
 }
+
+export const IApplicationService = Symbol('IApplicationService')
