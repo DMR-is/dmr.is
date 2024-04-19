@@ -47,6 +47,10 @@
     "defaultMessage": "Útskrá",
     "description": ""
   },
+  "web.components.cards:moreLink": {
+    "defaultMessage": "Sjá nánar",
+    "description": ""
+  },
   "web.components.caseFilters:clearAllFilters": {
     "defaultMessage": "Hreinsa allar síur",
     "description": "Clear all filters button label"

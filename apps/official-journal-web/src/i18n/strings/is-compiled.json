@@ -71,6 +71,12 @@
       "value": "Útskrá"
     }
   ],
+  "web.components.cards:moreLink": [
+    {
+      "type": 0,
+      "value": "Sjá nánar"
+    }
+  ],
   "web.components.caseFilters:clearAllFilters": [
     {
       "type": 0,
