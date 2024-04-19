@@ -1,5 +1,10 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Application, ApplicationEvent } from '@dmr.is/shared/dto'
+import {
+  Application,
+  ApplicationEvent,
+  SubmitApplicationBody,
+  UpdateApplicationBody,
+} from '@dmr.is/shared/dto'
 
 import { Inject, Injectable } from '@nestjs/common'
 
@@ -19,6 +24,7 @@ export class ApplicationService implements IApplicationService {
 
   private xroadFetch = async (url: string, options: RequestInit) => {
     const idsToken = await this.authService.getAccessToken()
+
     if (!idsToken) {
       this.logger.error('Could not get access token from auth service', {
         category: LOGGING_CATEGORY,
@@ -36,10 +42,19 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
       url: url,
     })
-    return await fetch(url, {
+
+    const requestOption = {
       ...options,
       headers: {
         ...options.headers,
+        'X-Road-Client': xroadClient,
+      },
+    }
+
+    return await fetch(url, {
+      ...requestOption,
+      headers: {
+        ...requestOption.headers,
         Authorization: `Bearer ${idsToken.access_token}`,
       },
     })
@@ -68,17 +83,56 @@ export class ApplicationService implements IApplicationService {
 
       return application
     } catch (error) {
+      this.logger.error('Exception occured, could not get application', {
+        error,
+        category: LOGGING_CATEGORY,
+      })
       return null
     }
   }
-  async updateApplication(
-    id: string,
-    event: ApplicationEvent,
-    answers = {},
-  ): Promise<void> {
+
+  async submitApplication(id: string, body: SubmitApplicationBody) {
+    this.logger.info('submitApplication', {
+      id,
+      body,
+      category: LOGGING_CATEGORY,
+    })
+
+    try {
+      const res = await this.xroadFetch(
+        `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
+        {
+          method: 'PUT',
+          body: new URLSearchParams({
+            event: 'REJECT',
+          }),
+        },
+      )
+
+      if (res.status !== 200) {
+        this.logger.error('Could not submit application', {
+          status: res.status,
+          category: LOGGING_CATEGORY,
+        })
+        return null
+      }
+
+      const application: Application = await res.json()
+
+      return application
+    } catch (error) {
+      this.logger.error('Exception occured, could not submit application', {
+        error,
+        category: LOGGING_CATEGORY,
+      })
+      return null
+    }
+  }
+
+  async updateApplication(id: string, answers: UpdateApplicationBody) {
     this.logger.info('updateApplication', {
       id,
-      event,
+      answers: { ...answers },
       category: LOGGING_CATEGORY,
     })
 
@@ -87,10 +141,9 @@ export class ApplicationService implements IApplicationService {
         `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
         {
           method: 'POST',
-          body: JSON.stringify({
+          body: new URLSearchParams({
             id: id,
-            event: event,
-            answers: answers,
+            answers: JSON.stringify(answers),
           }),
         },
       )
@@ -100,18 +153,20 @@ export class ApplicationService implements IApplicationService {
           status: res.status,
           category: LOGGING_CATEGORY,
         })
+        return null
       } else {
         this.logger.info('Application updated', {
           id,
-          event,
           category: LOGGING_CATEGORY,
         })
+        return await res.json()
       }
     } catch (error) {
       this.logger.error('Exception occured, could not update application', {
         error,
         category: LOGGING_CATEGORY,
       })
+      return null
     }
   }
 }

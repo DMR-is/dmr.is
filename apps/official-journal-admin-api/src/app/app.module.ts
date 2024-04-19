@@ -1,4 +1,4 @@
-import { JournalModule } from '@dmr.is/modules'
+import { ApplicationModule, JournalModule } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
@@ -9,6 +9,7 @@ import { StatisticsModule } from './statistics/statistics.module'
 
 @Module({
   imports: [
+    ApplicationModule,
     CaseModule,
     HealthModule,
     StatisticsModule,

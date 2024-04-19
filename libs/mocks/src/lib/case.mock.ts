@@ -18,7 +18,7 @@ import { ARMANN, PALINA } from './users.mock'
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
-  applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134153',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640', // REAL APPLICATION ON DEV FOR GERVIMADUR UTLOND
   year: 2024,
   caseNumber: 1234,
   status: CaseStatus.Submitted,
@@ -49,7 +49,7 @@ export const CASE_SUBMITTED: Case = {
 }
 
 export const CASE_IN_PROGRESS: Case = {
-  id: 'e6d7c050-a462-4183-972a-5c375e6e358d',
+  id: 'j6d7c050-a462-4183-972a-5c375e6e358d',
   applicationId: '3ec5ef68-6dc8-42ee-9eha-1670ff134153',
   year: 2024,
   caseNumber: 8526,

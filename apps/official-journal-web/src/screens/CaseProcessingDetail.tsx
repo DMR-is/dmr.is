@@ -187,8 +187,18 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     throw new Error('Error fetcing case')
   })
 
+  const application = await dmrClient.getApplication({
+    id: activeCase.applicationId,
+  })
+
   return {
-    activeCase,
+    activeCase: {
+      ...activeCase,
+      advert: {
+        ...activeCase.advert,
+        // title: application.answers.advert.title,
+      },
+    },
     advertTypes: advertTypes.types,
     step,
   }
