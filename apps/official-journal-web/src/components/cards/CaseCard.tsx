@@ -76,7 +76,9 @@ export const CaseCard = ({
             underline="normal"
             underlineVisibility="always"
           >
-            {formatMessage(messages.general.moreLink)}{' '}
+            <Text as="span" fontWeight="medium" variant="small">
+              {formatMessage(messages.general.moreLink)}
+            </Text>
             <Icon icon="open" type="outline" size="small" />
           </LinkV2>
         )}
