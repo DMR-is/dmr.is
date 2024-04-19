@@ -72,7 +72,7 @@ export class ApplicationController {
 
   @Put(':id')
   @ApiOperation({
-    operationId: 'submitApplication',
+    operationId: 'updateApplication',
     summary: 'Update answers of an application.',
   })
   @ApiOkResponse({

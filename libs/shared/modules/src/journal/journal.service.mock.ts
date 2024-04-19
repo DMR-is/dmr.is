@@ -28,7 +28,7 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 
@@ -40,15 +40,6 @@ import { IJournalService } from './journal.service.interface'
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 
 const LOGGING_CATEGORY = 'MockJournalService'
-
-function slicePagedData<T>(
-  data: T[],
-  page = 1,
-  pageSize = DEFAULT_PAGE_SIZE,
-): T[] {
-  return data.slice((page - 1) * pageSize, page * pageSize)
-}
-
 @Injectable()
 export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {

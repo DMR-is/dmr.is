@@ -21,3 +21,11 @@ export function generatePaging(
     hasPreviousPage: previousPage > 0,
   }
 }
+
+export function slicePagedData<T>(
+  data: T[],
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+): T[] {
+  return data.slice((page - 1) * pageSize, page * pageSize)
+}

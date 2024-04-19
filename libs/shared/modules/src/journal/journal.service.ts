@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_JOURNAL_TYPES } from '@dmr.is/mocks'
 import {
   Advert,
   GetAdvertSignatureQuery,
@@ -15,9 +16,8 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
 } from '@dmr.is/shared/dto'
+import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 
@@ -51,10 +51,32 @@ export class JournalService implements IJournalService {
   }
 
   getTypes(
-    params?: GetAdvertTypesQueryParams | undefined,
+    params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    this.logger.info('getTypes', { params })
-    throw new Error('Method not implemented.')
+    const mockTypes = ALL_MOCK_JOURNAL_TYPES
+
+    const filtered = mockTypes.filter((type) => {
+      if (params?.department && params.department !== type.department.id) {
+        return false
+      }
+
+      if (
+        params?.search &&
+        !type.id.toLocaleLowerCase().includes(params.search.toLocaleLowerCase())
+      ) {
+        return false
+      }
+
+      return true
+    })
+
+    const page = params?.page ?? 1
+    const paged = slicePagedData(filtered, page)
+
+    return Promise.resolve({
+      types: paged,
+      paging: generatePaging(filtered, page),
+    })
   }
 
   getMainCategories(
