@@ -1,6 +1,7 @@
 import { isBooleanString } from 'class-validator'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
+import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseEditorialOverview,
@@ -16,10 +17,8 @@ import { generatePaging } from '@dmr.is/utils'
 import {
   BadRequestException,
   Inject,
-  Injectable,
   InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
@@ -27,10 +26,9 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { ICaseService } from './case.service.interface'
 
-@Injectable()
 export class CaseService implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
-    this.logger.info('CaseService')
+    this.logger.info('Using CaseService')
   }
   getCase(id: string): Promise<Case | null> {
     const found = ALL_MOCK_CASES.find((c) => c.id === id)
@@ -138,11 +136,22 @@ export class CaseService implements ICaseService {
     }
   }
 
-  getUsers(
-    params?: GetUsersQueryParams | undefined,
-  ): Promise<GetUsersResponse> {
-    this.logger.info('getUsers', { params })
-    throw new Error('Method not implemented.')
+  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
+    const filtered = ALL_MOCK_USERS.filter((user) => {
+      if (params?.search && user.id !== params.search) {
+        return false
+      }
+
+      if (!user.active) {
+        return false
+      }
+
+      return true
+    })
+
+    return Promise.resolve({
+      users: filtered,
+    })
   }
 
   async getEditorialOverview(
@@ -184,7 +193,33 @@ export class CaseService implements ICaseService {
   }
 
   postCasesPublish(body: PostCasePublishBody): Promise<void> {
-    this.logger.info(body)
-    throw new NotImplementedException()
+    const { caseIds } = body
+
+    if (!caseIds || !caseIds.length) {
+      throw new BadRequestException('Missing ids')
+    }
+
+    try {
+      const cases = caseIds.map((id) => {
+        const found = ALL_MOCK_CASES.find((c) => c.id === id)
+
+        if (!found) {
+          throw new NotFoundException('Case not found')
+        }
+
+        return found
+      })
+
+      const now = new Date().toISOString()
+      cases.forEach((c) => {
+        c.modifiedAt = now
+        c.publishedAt = now
+        c.published = true
+      })
+
+      return Promise.resolve()
+    } catch (error) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
   }
 }
