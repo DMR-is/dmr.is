@@ -1,6 +1,7 @@
 import { Stack } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
+import { generateCaseLink } from '../../lib/utils'
 import { CaseCard } from '../cards/CaseCard'
 
 type Props = {
@@ -20,6 +21,7 @@ export const CasePublishingList = ({ cases }: Props) => {
           publicationNumber={c.advert.publicationNumber?.full}
           title={c.advert.title}
           categories={c.advert.categories.map((cat) => cat.title)}
+          link={generateCaseLink(c.status, c.id)}
         />
       ))}
     </Stack>
