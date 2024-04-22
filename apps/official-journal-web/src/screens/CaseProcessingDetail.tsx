@@ -1,5 +1,3 @@
-import { ALL_MOCK_ADVERTS, ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-
 import {
   Box,
   Button,

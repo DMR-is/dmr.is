@@ -1,11 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
 import { logger } from '@dmr.is/logging'
 import { CaseStatus } from '@dmr.is/shared/dto'
 
 import {
-  CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
@@ -15,7 +13,8 @@ import { createDmrClient } from '../../lib/api/createClient'
 const commentBodySchema = z.object({
   caseId: z.string(),
   internal: z.boolean(),
-  commnet: z.string(),
+  comment: z.string(),
+  type: z.nativeEnum(CaseCommentTypeEnum),
   from: z.string().nullable(),
   to: z.string().nullable(),
 })
@@ -43,21 +42,6 @@ const mapCaseCommentStatus = (val?: string) => {
     case CaseStatusEnum.Yfirlestur:
     case CaseCommentCaseStatusEnum.Yfirlestur:
       return CaseCommentCaseStatusEnum.Yfirlestur
-    default:
-      return null
-  }
-}
-
-const mapCaseCommentType = (val?: string) => {
-  switch (val) {
-    case 'submit':
-      return CaseCommentTypeEnum.Submit
-    case 'assign':
-      return CaseCommentTypeEnum.Assign
-    case 'update':
-      return CaseCommentTypeEnum.Update
-    case 'comment':
-      return CaseCommentTypeEnum.Comment
     default:
       return null
   }
@@ -93,32 +77,25 @@ export default async function handler(
     return res.status(400).json({ error: 'Invalid case status' })
   }
 
-  const caseType = mapCaseCommentType(req.body.status)
-
-  if (!caseType) {
-    return res.status(400).json({ error: 'Invalid status' })
-  }
-
-  const newComment: CaseComment = {
-    id: uuid(),
-    createdAt: new Date().toISOString(),
-    caseStatus: caseCommentStatus,
-    type: caseType,
-    task: {
-      comment: req.body.comment,
-      from: req.body.from,
-      title: req.body.title,
-      to: req.body.to,
-    },
-  }
-
   try {
     logger.info('Adding comment to application', {
       applicationId: req.body.applicationId,
       category: LOGGING_CATEGORY,
     })
 
-    await dmrClient.case
+    const addCommentResponse = await dmrClient.addComment({
+      caseId: req.body.caseId,
+      postCaseComment: {
+        comment: req.body.comment,
+        from: req.body.from,
+        internal: req.body.internal,
+        title: req.body.title,
+        to: req.body.to,
+        type: req.body.type,
+      },
+    })
+
+    return res.status(200).json(addCommentResponse)
   } catch (error) {
     logger.error('Exception occured, could not add comment to application', {
       error,

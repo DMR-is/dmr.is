@@ -10,12 +10,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import {
-  Case,
-  CaseCommentCaseStatusEnum,
-  CaseCommentTaskTitleEnum,
-  CaseCommentTypeEnum,
-} from '../../gen/fetch'
+import { Case, CaseCommentTypeEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
@@ -29,22 +24,32 @@ export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
   const [expanded, setExpanded] = useState(activeCase.comments.length < 5)
   const [commentValue, setCommentValue] = useState('')
+  const [internalComment, setInternalComment] = useState(false)
   const now = new Date()
 
   const addComment = () => {
-    activeCase.comments.push({
-      id: '1234',
-      createdAt: new Date().toISOString(),
-      type: CaseCommentTypeEnum.Comment,
-      caseStatus: activeCase.status as unknown as CaseCommentCaseStatusEnum,
-      task: {
-        from: activeCase.assignedTo.name,
-        to: null,
-        title: CaseCommentTaskTitleEnum.GerirAthugasemd,
-        comment: commentValue,
-      },
-    })
-    setCommentValue('')
+    const post = async () => {
+      const data = await fetch('/api/addComment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caseId: activeCase.id,
+          comment: commentValue,
+          internal: internalComment,
+          type: CaseCommentTypeEnum.Comment,
+          from: 'Jón Bjarni',
+        }),
+      })
+
+      const json = await data.json()
+
+      console.log(json)
+    }
+
+    post()
+    // setCommentValue('')
   }
 
   return (

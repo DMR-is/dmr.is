@@ -4,12 +4,15 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
+  CaseComment,
   CaseEditorialOverview,
   CaseStatus,
+  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
@@ -29,6 +32,18 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getComments(
+    caseId: string,
+    params?: GetCaseCommentsQuery | undefined,
+  ): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
+  }
+  postComment(caseId: string, body: PostCaseComment): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
+  }
+  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
   }
   getCase(id: string): Promise<Case | null> {
     const found = ALL_MOCK_CASES.find((c) => c.id === id)

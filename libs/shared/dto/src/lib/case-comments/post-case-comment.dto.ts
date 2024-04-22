@@ -11,7 +11,7 @@ export class PostCaseComment {
   internal!: boolean
 
   @ApiProperty({
-    type: CaseCommentType,
+    enum: CaseCommentType,
     description: 'Type of the comment',
     required: true,
   })

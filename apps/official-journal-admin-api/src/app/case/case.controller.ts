@@ -143,7 +143,7 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: CaseComment,
+    type: [CaseComment],
     description: 'Comments for case',
   })
   async getComments(
@@ -159,6 +159,7 @@ export class CaseController {
     summary: 'Add comment to case',
   })
   @ApiResponse({
+    type: [CaseComment],
     status: 200,
     description: 'Comment added',
   })
@@ -175,6 +176,7 @@ export class CaseController {
     summary: 'Delete comment from case',
   })
   @ApiResponse({
+    type: [CaseComment],
     status: 200,
     description: 'Comment deleted',
   })
