@@ -1,15 +1,19 @@
 import { isBooleanString } from 'class-validator'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
+  CaseComment,
+  CaseCommentTitle,
+  CaseCommentType,
   CaseEditorialOverview,
   CaseStatus,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
@@ -25,6 +29,8 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { ICaseService } from './case.service.interface'
+
+const LOGGING_CATEGORY = 'CaseService'
 
 export class CaseService implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
@@ -221,5 +227,95 @@ export class CaseService implements ICaseService {
     } catch (error) {
       throw new InternalServerErrorException('Internal server error.')
     }
+  }
+
+  getComments(caseId: string): Promise<CaseComment[]> {
+    this.logger.info('Getting comments for case', {
+      id: caseId,
+      category: LOGGING_CATEGORY,
+    })
+    const found = ALL_MOCK_CASES.find((c) => c.id === caseId)
+
+    if (!found) {
+      this.logger.warn('Case not found', {
+        id: caseId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Case not found')
+    }
+
+    return Promise.resolve(found.comments)
+  }
+
+  async postComment(
+    caseId: string,
+    body: PostCaseComment,
+  ): Promise<CaseComment[]> {
+    this.logger.info('Adding comment to application', {
+      id: caseId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const theCase = await this.getCase(caseId)
+
+    if (!theCase) {
+      this.logger.warn('Case not found', {
+        id: caseId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Case not found')
+    }
+
+    const newComment: CaseComment = {
+      id: uuid(),
+      caseStatus: theCase.status,
+      createdAt: new Date().toISOString(),
+      type: body.type,
+      task: {
+        to: body.to,
+        from: body.from,
+        comment: body.comment,
+        title: body.title,
+      },
+    }
+
+    // TODO: plug into db when rdy
+
+    return Promise.resolve([...theCase.comments, newComment])
+  }
+
+  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
+    this.logger.info('Deleting comment from application', {
+      id: caseId,
+      commentId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const theCase = ALL_MOCK_CASES.find((c) => c.id === caseId)
+
+    if (!theCase) {
+      this.logger.warn('Case not found', {
+        id: caseId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Case not found')
+    }
+
+    const found = theCase.comments.find((c) => c.id === commentId)
+
+    if (!found) {
+      this.logger.warn('Comment not found', {
+        id: caseId,
+        commentId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Comment not found')
+    }
+
+    const newComments = theCase.comments.filter((c) => c.id !== commentId)
+
+    // TODO: plug into db when rdy
+
+    return Promise.resolve(newComments)
   }
 }

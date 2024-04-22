@@ -11,4 +11,5 @@ export enum CaseCommentTitle {
   Assign = 'færir mál á',
   UpdateStatus = 'færir mál í stöðuna:',
   Comment = 'gerir athugasemd.',
+  Message = 'skráir skilaboð',
 }
