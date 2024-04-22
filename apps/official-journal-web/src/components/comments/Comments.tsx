@@ -44,8 +44,6 @@ export const Comments = ({ activeCase }: Props) => {
       })
 
       const json = await data.json()
-
-      console.log(json)
     }
 
     post()
