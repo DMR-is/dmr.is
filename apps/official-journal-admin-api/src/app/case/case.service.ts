@@ -5,10 +5,10 @@ import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
-  CaseCommentTitle,
-  CaseCommentType,
+  CaseCommentPublicity,
   CaseEditorialOverview,
   CaseStatus,
+  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
@@ -229,11 +229,15 @@ export class CaseService implements ICaseService {
     }
   }
 
-  getComments(caseId: string): Promise<CaseComment[]> {
+  getComments(
+    caseId: string,
+    params?: GetCaseCommentsQuery,
+  ): Promise<CaseComment[]> {
     this.logger.info('Getting comments for case', {
       id: caseId,
       category: LOGGING_CATEGORY,
     })
+
     const found = ALL_MOCK_CASES.find((c) => c.id === caseId)
 
     if (!found) {
@@ -242,6 +246,14 @@ export class CaseService implements ICaseService {
         category: LOGGING_CATEGORY,
       })
       throw new NotFoundException('Case not found')
+    }
+
+    if (params?.type && params?.type !== CaseCommentPublicity.All) {
+      return Promise.resolve(
+        found.comments.filter(
+          (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
+        ),
+      )
     }
 
     return Promise.resolve(found.comments)
@@ -270,6 +282,7 @@ export class CaseService implements ICaseService {
       id: uuid(),
       caseStatus: theCase.status,
       createdAt: new Date().toISOString(),
+      internal: body.internal,
       type: body.type,
       task: {
         to: body.to,

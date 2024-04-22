@@ -1,15 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-enum CaseCommentType {
+export enum CaseCommentPublicity {
   Internal = 'internal',
   External = 'external',
   All = 'all',
 }
 export class GetCaseCommentsQuery {
   @ApiProperty({
-    enum: CaseCommentType,
+    enum: CaseCommentPublicity,
     description: 'Type of the comment',
     required: false,
   })
-  type?: CaseCommentType
+  type?: CaseCommentPublicity
 }
