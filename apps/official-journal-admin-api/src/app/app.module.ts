@@ -1,4 +1,8 @@
-import { ApplicationModule, JournalModule } from '@dmr.is/modules'
+import {
+  ApplicationModule,
+  HealthController,
+  JournalModule,
+} from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
@@ -27,5 +31,6 @@ import { StatisticsModule } from './statistics/statistics.module'
       },
     ]),
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
