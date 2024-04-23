@@ -78,11 +78,4 @@ describe('JournalController', () => {
       }).toThrow(/error from service/)
     })
   })
-
-  describe('health', () => {
-    it('should return health check', async () => {
-      const result = await journalController.health()
-      expect(result).toEqual('OK')
-    })
-  })
 })

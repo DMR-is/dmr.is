@@ -4,14 +4,12 @@ import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
 
 import { CaseModule } from './case/case.module'
-import { HealthModule } from './health/health.module'
 import { StatisticsModule } from './statistics/statistics.module'
 
 @Module({
   imports: [
     ApplicationModule,
     CaseModule,
-    HealthModule,
     StatisticsModule,
     JournalModule,
     RouterModule.register([
@@ -22,10 +20,6 @@ import { StatisticsModule } from './statistics/statistics.module'
       {
         path: 'statistics',
         module: StatisticsModule,
-      },
-      {
-        path: 'health',
-        module: HealthModule,
       },
       {
         path: 'journal',

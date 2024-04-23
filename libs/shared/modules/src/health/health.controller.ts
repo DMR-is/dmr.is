@@ -3,6 +3,7 @@ import { ApiResponse } from '@nestjs/swagger'
 
 @Controller({
   version: '1',
+  path: 'health',
 })
 export class HealthController {
   @Get('')
