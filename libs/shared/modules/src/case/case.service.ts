@@ -16,7 +16,10 @@ import {
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
+import {
+  generatePaging,
+  mapCaseCommentTypeToCaseCommentTitle,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -28,7 +31,6 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { mapCaseCommentTypeToCaseCommentTitle } from '../../lib/utils'
 import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'

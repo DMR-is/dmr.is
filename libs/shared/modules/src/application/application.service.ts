@@ -1,7 +1,9 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
   Application,
   ApplicationEvent,
+  CaseComment,
   SubmitApplicationBody,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -168,5 +170,24 @@ export class ApplicationService implements IApplicationService {
       })
       return null
     }
+  }
+
+  getComments(applicationId: string): Promise<CaseComment[]> {
+    this.logger.info('Getting comments for application', {
+      applicationId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const theCase = ALL_MOCK_CASES.find((c) => c.id === applicationId)
+
+    if (!theCase) {
+      this.logger.error('Could not find case', {
+        applicationId,
+        category: LOGGING_CATEGORY,
+      })
+      return Promise.resolve([])
+    }
+
+    return Promise.resolve(theCase.comments.filter((c) => c.internal === false))
   }
 }
