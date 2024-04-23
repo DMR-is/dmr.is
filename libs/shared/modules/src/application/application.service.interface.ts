@@ -1,6 +1,7 @@
 import {
   Application,
   CaseComment,
+  PostApplicationComment,
   SubmitApplicationBody,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -19,6 +20,11 @@ export interface IApplicationService {
   ): Promise<Application | null>
 
   getComments(applicationId: string): Promise<CaseComment[]>
+
+  postComment(
+    applicationId: string,
+    commentBody: PostApplicationComment,
+  ): Promise<CaseComment[]>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

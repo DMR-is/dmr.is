@@ -274,58 +274,6 @@ export class ApplicationPublishing {
   message?: string
 }
 
-class ApplicationComment {
-  @ApiProperty({
-    type: String,
-    example: 'Reykjavíkurborg',
-    description: 'Comment of the application',
-  })
-  from?: string
-
-  @ApiProperty({
-    type: String,
-    example: 'gerir athugasemd',
-    description: 'Describes which kind of comment is it',
-  })
-  task?: string
-
-  @ApiProperty({
-    type: String,
-    example: 'Ég hef samband við lögræðing',
-    description: 'The comment itself',
-  })
-  comment?: string
-
-  @ApiProperty({
-    type: String,
-    example: '2021-04-01T00:00:00.000Z',
-    description: 'Date of the comment',
-  })
-  date?: string
-
-  @ApiProperty({
-    type: String,
-    example: 'Jón Jónsson',
-    description: 'Name of the comment author',
-  })
-  name?: string
-}
-
-class ApplicationCommentSchema {
-  @ApiProperty({
-    type: String,
-    example: '12-12-2021',
-    description: 'Last updated date of the comment',
-  })
-  lastUpdated?: string
-
-  @ApiProperty({
-    type: [ApplicationComment],
-    description: 'List of comments',
-  })
-  comments?: ApplicationComment[]
-}
-
 export class ApplicationAnswers {
   @ApiProperty({
     type: ApplicationRequirements,
@@ -357,10 +305,4 @@ export class ApplicationAnswers {
     description: 'Application publishing',
   })
   publishing?: ApplicationPublishing
-
-  @ApiProperty({
-    type: ApplicationCommentSchema,
-    description: 'Application comments',
-  })
-  comments?: ApplicationCommentSchema
 }

@@ -256,11 +256,15 @@ export class CaseService implements ICaseService {
     }
 
     if (params?.type && params?.type !== CaseCommentPublicity.All) {
-      return Promise.resolve(
-        found.comments.filter(
-          (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
-        ),
+      const internal = params.type === CaseCommentPublicity.Internal
+
+      console.log(internal)
+
+      const filtered = found.comments.filter(
+        (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
       )
+
+      return Promise.resolve(filtered)
     }
 
     return Promise.resolve(found.comments)
