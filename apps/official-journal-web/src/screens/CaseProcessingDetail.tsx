@@ -191,12 +191,28 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     id: activeCase.applicationId,
   })
 
+  const { types } = await dmrClient.journalControllerTypes({
+    search: application.answers.advert.type,
+  })
+
+  const advertType = types.find((t) => t.id === application.answers.advert.type)
+
+  if (!advertType) {
+    throw new Error('Advert type not found')
+  }
+
   return {
     activeCase: {
       ...activeCase,
       advert: {
         ...activeCase.advert,
-        // title: application.answers.advert.title,
+        title: advertType.title,
+        subject: application.answers.advert.title,
+
+        document: {
+          isLegacy: false,
+          html: application.answers.advert.document,
+        },
       },
     },
     advertTypes: advertTypes.types,
