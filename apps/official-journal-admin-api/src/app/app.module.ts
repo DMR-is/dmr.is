@@ -1,17 +1,19 @@
-import { ApplicationModule, JournalModule } from '@dmr.is/modules'
+import {
+  ApplicationModule,
+  HealthController,
+  JournalModule,
+} from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
 
 import { CaseModule } from './case/case.module'
-import { HealthModule } from './health/health.module'
 import { StatisticsModule } from './statistics/statistics.module'
 
 @Module({
   imports: [
     ApplicationModule,
     CaseModule,
-    HealthModule,
     StatisticsModule,
     JournalModule,
     RouterModule.register([
@@ -24,14 +26,11 @@ import { StatisticsModule } from './statistics/statistics.module'
         module: StatisticsModule,
       },
       {
-        path: 'health',
-        module: HealthModule,
-      },
-      {
         path: 'journal',
         module: JournalModule,
       },
     ]),
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

@@ -13,7 +13,6 @@ const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [LoggingModule],
-  controllers: [],
   providers: [
     {
       provide: ICaseService,

@@ -1,9 +1,9 @@
-import { ApplicationModule } from '@dmr.is/modules'
+import { ApplicationModule, HealthController } from '@dmr.is/modules'
 import { Module } from '@nestjs/common'
 
 @Module({
   imports: [ApplicationModule],
-  controllers: [],
+  controllers: [HealthController],
   providers: [],
 })
 export class AppModule {}
