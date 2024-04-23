@@ -1942,7 +1942,7 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment"],
+            "enum": ["submit", "assign", "update", "comment", "message"],
             "example": "comment",
             "description": "Type of the case task."
           },
@@ -2220,7 +2220,7 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment"],
+            "enum": ["submit", "assign", "update", "comment", "message"],
             "description": "Type of the comment"
           },
           "comment": {
@@ -2231,21 +2231,9 @@
           "to": {
             "type": "string",
             "description": "To whom or what the task is assigned to."
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Innsent af:",
-              "merkir sér málið.",
-              "færir mál á",
-              "færir mál í stöðuna:",
-              "gerir athugasemd.",
-              "skráir skilaboð"
-            ],
-            "description": "Title of the comment"
           }
         },
-        "required": ["internal", "type", "comment", "from", "title"]
+        "required": ["internal", "type", "comment", "from"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

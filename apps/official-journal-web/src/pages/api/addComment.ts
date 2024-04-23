@@ -5,8 +5,8 @@ import { CaseStatus } from '@dmr.is/shared/dto'
 
 import {
   CaseCommentCaseStatusEnum,
-  CaseCommentTypeEnum,
   CaseStatusEnum,
+  PostCaseCommentTypeEnum,
 } from '../../gen/fetch'
 import { createDmrClient } from '../../lib/api/createClient'
 
@@ -14,9 +14,9 @@ const commentBodySchema = z.object({
   caseId: z.string(),
   internal: z.boolean(),
   comment: z.string(),
-  type: z.nativeEnum(CaseCommentTypeEnum),
-  from: z.string().nullable(),
-  to: z.string().nullable(),
+  from: z.string(),
+  type: z.nativeEnum(PostCaseCommentTypeEnum),
+  to: z.string().optional(),
 })
 
 const mapCaseCommentStatus = (val?: string) => {
@@ -65,7 +65,9 @@ export default async function handler(
 
   const dmrClient = createDmrClient()
 
-  const theCase = await dmrClient.getCase(req.body.caseId)
+  const theCase = await dmrClient.getCase({
+    id: req.body.caseId,
+  })
 
   if (!theCase) {
     return res.status(404).json({ error: 'Case not found' })
@@ -77,6 +79,8 @@ export default async function handler(
     return res.status(400).json({ error: 'Invalid case status' })
   }
 
+  const body: z.infer<typeof commentBodySchema> = req.body
+
   try {
     logger.info('Adding comment to application', {
       applicationId: req.body.applicationId,
@@ -84,14 +88,13 @@ export default async function handler(
     })
 
     const addCommentResponse = await dmrClient.addComment({
-      caseId: req.body.caseId,
+      caseId: body.caseId,
       postCaseComment: {
-        comment: req.body.comment,
-        from: req.body.from,
-        internal: req.body.internal,
-        title: req.body.title,
-        to: req.body.to,
-        type: req.body.type,
+        comment: body.comment,
+        internal: body.internal,
+        to: body.to,
+        from: body.from,
+        type: body.type,
       },
     })
 

@@ -3,6 +3,7 @@ export enum CaseCommentType {
   Assign = 'assign',
   Update = 'update',
   Comment = 'comment',
+  Message = 'message',
 }
 
 export enum CaseCommentTitle {

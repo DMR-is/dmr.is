@@ -37,11 +37,4 @@ export class PostCaseComment {
     required: false,
   })
   to!: string | null
-
-  @ApiProperty({
-    enum: CaseCommentTitle,
-    description: 'Title of the comment',
-    required: true,
-  })
-  title!: CaseCommentTitle
 }

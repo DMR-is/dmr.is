@@ -28,6 +28,7 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { mapCaseCommentTypeToCaseCommentTitle } from '../../lib/utils'
 import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
@@ -278,6 +279,15 @@ export class CaseService implements ICaseService {
       throw new NotFoundException('Case not found')
     }
 
+    const newCommentTitle = mapCaseCommentTypeToCaseCommentTitle(body.type)
+    if (!newCommentTitle) {
+      this.logger.warn('Invalid comment type', {
+        id: caseId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new BadRequestException('Invalid comment type')
+    }
+
     const newComment: CaseComment = {
       id: uuid(),
       caseStatus: theCase.status,
@@ -288,7 +298,7 @@ export class CaseService implements ICaseService {
         to: body.to,
         from: body.from,
         comment: body.comment,
-        title: body.title,
+        title: newCommentTitle,
       },
     }
 

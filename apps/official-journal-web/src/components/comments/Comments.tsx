@@ -24,7 +24,8 @@ export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
   const [expanded, setExpanded] = useState(activeCase.comments.length < 5)
   const [commentValue, setCommentValue] = useState('')
-  const [internalComment, setInternalComment] = useState(false)
+  const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
+  const [caseComments, setCaseComments] = useState(activeCase.comments)
   const now = new Date()
 
   const addComment = () => {
@@ -37,24 +38,30 @@ export const Comments = ({ activeCase }: Props) => {
         body: JSON.stringify({
           caseId: activeCase.id,
           comment: commentValue,
-          internal: internalComment,
-          type: CaseCommentTypeEnum.Comment,
-          from: 'Jón Bjarni',
+          internal: isInternalComment,
+          type: isInternalComment
+            ? CaseCommentTypeEnum.Comment
+            : CaseCommentTypeEnum.Message,
+          from: 'Jón Bjarni', // TODO: Replace with actual user
         }),
       })
 
       const json = await data.json()
+
+      if (Array.isArray(json)) {
+        setCaseComments([...json])
+      }
     }
 
     post()
-    // setCommentValue('')
+    setCommentValue('')
   }
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
 
-      {activeCase.comments.map((c, i) => {
+      {caseComments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
         const suffix =
           String(daysAgo).slice(-1) === '1'
