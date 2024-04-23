@@ -1,7 +1,11 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
   Application,
-  ApplicationEvent,
+  CaseComment,
+  CaseCommentPublicity,
+  CaseCommentType,
+  PostApplicationComment,
   SubmitApplicationBody,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -9,6 +13,7 @@ import {
 import { Inject, Injectable } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
+import { ICaseService } from '../case/case.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CATEGORY = 'application-service'
@@ -17,6 +22,7 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
     private readonly authService: AuthService,
   ) {
     this.logger.info('Using ApplicationService')
@@ -168,5 +174,66 @@ export class ApplicationService implements IApplicationService {
       })
       return null
     }
+  }
+
+  async getComments(applicationId: string): Promise<CaseComment[]> {
+    this.logger.info('Getting comments for application', {
+      applicationId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const casesResponse = await this.caseService.getCases({
+      applicationId: applicationId,
+    })
+
+    const theCase = casesResponse.cases.find(
+      (c) => c.applicationId === applicationId,
+    )
+
+    if (!theCase) {
+      this.logger.error('Could not find case', {
+        applicationId,
+        category: LOGGING_CATEGORY,
+      })
+      return Promise.resolve([])
+    }
+
+    return await this.caseService.getComments(theCase.id, {
+      type: CaseCommentPublicity.External,
+    })
+  }
+
+  async postComment(
+    applicationId: string,
+    commentBody: PostApplicationComment,
+  ): Promise<CaseComment[]> {
+    this.logger.info('Posting comment for application', {
+      applicationId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const casesResponse = await this.caseService.getCases({
+      applicationId: applicationId,
+    })
+
+    const theCase = casesResponse.cases.find(
+      (c) => c.applicationId === applicationId,
+    )
+
+    if (!theCase) {
+      this.logger.error('Could not find case', {
+        applicationId,
+        category: LOGGING_CATEGORY,
+      })
+      return Promise.resolve([])
+    }
+
+    return await this.caseService.postComment(theCase.id, {
+      comment: commentBody.comment,
+      from: commentBody.from,
+      to: commentBody.name ? commentBody.name : null,
+      internal: false,
+      type: CaseCommentType.Comment,
+    })
   }
 }

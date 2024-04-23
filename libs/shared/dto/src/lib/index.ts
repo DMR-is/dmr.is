@@ -12,6 +12,7 @@ export * from './application/application-events.dto'
 export * from './application/application-answers.dto'
 export * from './application/submitApplication-body.dto'
 export * from './application/updateApplication-body.dto'
+export * from './application/post-application-comment.dto'
 
 export * from './categories/category.dto'
 export * from './categories/get-categories-query.dto'

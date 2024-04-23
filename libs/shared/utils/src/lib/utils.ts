@@ -1,4 +1,5 @@
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
 export function generatePaging(
   data: unknown[],
@@ -28,4 +29,26 @@ export function slicePagedData<T>(
   pageSize = DEFAULT_PAGE_SIZE,
 ): T[] {
   return data.slice((page - 1) * pageSize, page * pageSize)
+}
+
+export const mapCaseCommentTypeToCaseCommentTitle = (val?: string) => {
+  if (!val) {
+    return null
+  }
+
+  // TODO: CaseCommentType.AssignSelf is missing from the switch statement
+  switch (val) {
+    case CaseCommentType.Comment:
+      return CaseCommentTitle.Comment
+    case CaseCommentType.Message:
+      return CaseCommentTitle.Message
+    case CaseCommentType.Assign:
+      return CaseCommentTitle.Assign
+    case CaseCommentType.Submit:
+      return CaseCommentTitle.Submit
+    case CaseCommentType.Update:
+      return CaseCommentTitle.UpdateStatus
+    default:
+      return null
+  }
 }

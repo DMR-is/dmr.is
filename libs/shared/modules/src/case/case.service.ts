@@ -16,7 +16,10 @@ import {
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
+import {
+  generatePaging,
+  mapCaseCommentTypeToCaseCommentTitle,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -28,7 +31,6 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { mapCaseCommentTypeToCaseCommentTitle } from '../../lib/utils'
 import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
@@ -254,11 +256,15 @@ export class CaseService implements ICaseService {
     }
 
     if (params?.type && params?.type !== CaseCommentPublicity.All) {
-      return Promise.resolve(
-        found.comments.filter(
-          (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
-        ),
+      const internal = params.type === CaseCommentPublicity.Internal
+
+      console.log(internal)
+
+      const filtered = found.comments.filter(
+        (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
       )
+
+      return Promise.resolve(filtered)
     }
 
     return Promise.resolve(found.comments)

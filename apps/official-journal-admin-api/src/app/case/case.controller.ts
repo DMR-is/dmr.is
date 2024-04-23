@@ -1,4 +1,4 @@
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ICaseService } from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
@@ -27,8 +27,6 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
-import { ICaseService } from './case.service.interface'
-
 @Controller({
   version: '1',
 })
@@ -36,7 +34,6 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('case')
