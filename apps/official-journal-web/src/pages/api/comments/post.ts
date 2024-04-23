@@ -7,8 +7,8 @@ import {
   CaseCommentCaseStatusEnum,
   CaseStatusEnum,
   PostCaseCommentTypeEnum,
-} from '../../gen/fetch'
-import { createDmrClient } from '../../lib/api/createClient'
+} from '../../../gen/fetch'
+import { createDmrClient } from '../../../lib/api/createClient'
 
 const commentBodySchema = z.object({
   caseId: z.string(),
@@ -47,7 +47,7 @@ const mapCaseCommentStatus = (val?: string) => {
   }
 }
 
-const LOGGING_CATEGORY = 'ApiAddComment'
+const LOGGING_CATEGORY = 'ApiCommentsPost'
 
 export default async function handler(
   req: NextApiRequest,
@@ -85,6 +85,7 @@ export default async function handler(
     logger.info('Adding comment to application', {
       applicationId: req.body.applicationId,
       category: LOGGING_CATEGORY,
+      route: '/api/comments/post',
     })
 
     const addCommentResponse = await dmrClient.addComment({

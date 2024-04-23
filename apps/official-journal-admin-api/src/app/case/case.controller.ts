@@ -180,6 +180,10 @@ export class CaseController {
     status: 200,
     description: 'Comment deleted',
   })
+  @ApiResponse({
+    status: 404,
+    description: 'Comment not found',
+  })
   async deleteComment(
     @Param('caseId') caseId: string,
     @Param('commentId') commentId: string,

@@ -505,7 +505,8 @@
                 }
               }
             }
-          }
+          },
+          "404": { "description": "Comment not found" }
         }
       }
     },

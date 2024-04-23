@@ -307,24 +307,23 @@ export class CaseService implements ICaseService {
     return Promise.resolve([...theCase.comments, newComment])
   }
 
-  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
+  async deleteComment(
+    caseId: string,
+    commentId: string,
+  ): Promise<CaseComment[]> {
     this.logger.info('Deleting comment from application', {
       id: caseId,
       commentId,
       category: LOGGING_CATEGORY,
     })
 
-    const theCase = ALL_MOCK_CASES.find((c) => c.id === caseId)
+    const caseComments = await this.getComments(caseId)
 
-    if (!theCase) {
-      this.logger.warn('Case not found', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-      })
+    if (!caseComments) {
       throw new NotFoundException('Case not found')
     }
 
-    const found = theCase.comments.find((c) => c.id === commentId)
+    const found = caseComments.find((c) => c.id === commentId)
 
     if (!found) {
       this.logger.warn('Comment not found', {
@@ -335,7 +334,7 @@ export class CaseService implements ICaseService {
       throw new NotFoundException('Comment not found')
     }
 
-    const newComments = theCase.comments.filter((c) => c.id !== commentId)
+    const newComments = caseComments.filter((c) => c.id !== commentId)
 
     // TODO: plug into db when rdy
 

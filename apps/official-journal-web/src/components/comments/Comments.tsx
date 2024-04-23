@@ -28,9 +28,33 @@ export const Comments = ({ activeCase }: Props) => {
   const [caseComments, setCaseComments] = useState(activeCase.comments)
   const now = new Date()
 
+  const deleteComment = (id: string) => {
+    const deleteComment = async () => {
+      await fetch(
+        `/api/comments/delete?caseId=${activeCase.id}&commentId=${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+        .then((res) => {
+          if (res.ok) {
+            return res.json()
+          }
+          throw new Error('Failed to delete comment')
+        })
+        .then((data) => setCaseComments(data))
+        .catch((err) => console.error(err))
+    }
+
+    deleteComment()
+  }
+
   const addComment = () => {
     const post = async () => {
-      const data = await fetch('/api/addComment', {
+      const data = await fetch('/api/comments/post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +66,7 @@ export const Comments = ({ activeCase }: Props) => {
           type: isInternalComment
             ? CaseCommentTypeEnum.Comment
             : CaseCommentTypeEnum.Message,
-          from: 'Jón Bjarni', // TODO: Replace with actual user
+          from: 'Ármann Árni', // TODO: Replace with actual user
         }),
       })
 
@@ -95,6 +119,24 @@ export const Comments = ({ activeCase }: Props) => {
               <div className={styles.text}>
                 <Text>{commentTaskToNode(c.task)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
+                {/* TODO: Replace with actual user */}
+                {c.task.from === 'Ármann Árni' && (
+                  <Button
+                    variant="text"
+                    as="button"
+                    size="small"
+                    onClick={() => deleteComment(c.id)}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      columnGap="smallGutter"
+                    >
+                      {formatMessage(messages.comments.deleteComment)}
+                      <Icon icon="trash" type="outline" size="small" />
+                    </Box>
+                  </Button>
+                )}
               </div>
 
               <Text whiteSpace="nowrap">
