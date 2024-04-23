@@ -78,6 +78,10 @@ export class CaseService implements ICaseService {
           }
         }
 
+        if (params.applicationId && c.applicationId !== params.applicationId) {
+          return false
+        }
+
         if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
           return false
         }
