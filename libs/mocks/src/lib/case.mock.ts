@@ -4,6 +4,7 @@ import {
   CaseCommentType,
   CaseTag,
   CaseCommentTitle,
+  CaseCommunicationStatus,
 } from '@dmr.is/shared/dto'
 import {
   ADVERT_A_32_2024,
@@ -32,6 +33,7 @@ export const CASE_SUBMITTED: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advert: ADVERT_NEW,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -65,6 +67,7 @@ export const CASE_IN_PROGRESS: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
@@ -138,6 +141,7 @@ export const CASE_IN_REVIEW: Case = {
   fastTrack: true,
   assignedTo: PALINA,
   advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -289,6 +293,7 @@ export const CASE_READY: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advert: ADVERT_READY_A,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -362,6 +367,7 @@ export const CASE_READY_2: Case = {
   fastTrack: false,
   assignedTo: PALINA,
   advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -435,6 +441,7 @@ export const CASE_READY_3: Case = {
   fastTrack: true,
   assignedTo: ARMANN,
   advert: ADVERT_READY_B_2,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -508,6 +515,7 @@ export const CASE_PUBLISHED: Case = {
   fastTrack: false,
   assignedTo: PALINA,
   advert: ADVERT_B_866_2006,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -581,6 +589,7 @@ export const CASE_PUBLISHED_2: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advert: ADVERT_A_32_2024,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -654,6 +663,7 @@ export const CASE_PUBLISHED_3: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advert: ADVERT_B_1278_2023,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',

@@ -14,3 +14,10 @@ export enum CaseTag {
   MultipleReviewers = 'Samlesin',
   RequiresReview = 'Þarf skoðun',
 }
+
+export enum CaseCommunicationStatus {
+  NotStarted,
+  WaitingForAnswers,
+  HasAnswers,
+  Done,
+}

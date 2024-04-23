@@ -18,7 +18,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Advert } from '../adverts/advert.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { User } from '../users/user.dto'
-import { CaseStatus, CaseTag } from './case-constants'
+import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
 
 export class Case {
   @ApiProperty({
@@ -99,6 +99,15 @@ export class Case {
   @ValidateIf((o) => o.assignedTo !== null)
   @Type(() => User)
   assignedTo!: User | null
+
+  @ApiProperty({
+    enum: CaseCommunicationStatus,
+    example: CaseCommunicationStatus.NotStarted,
+    description:
+      'Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`',
+  })
+  @IsEnum(CaseCommunicationStatus)
+  communicationStatus!: CaseCommunicationStatus
 
   @ApiProperty({
     type: Advert,
