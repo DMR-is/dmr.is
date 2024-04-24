@@ -83,6 +83,10 @@
     "defaultMessage": "dögum",
     "description": ""
   },
+  "web.components.comments:deleteComment": {
+    "defaultMessage": "Eyða",
+    "description": ""
+  },
   "web.components.comments:fetchFile": {
     "defaultMessage": "Sækja skjal",
     "description": ""
@@ -574,6 +578,10 @@
   "web.page.dashboard:imageWithText.new.linkText": {
     "defaultMessage": "Nýskrá auglýsingu",
     "description": "Link text for the new image with text on the dashboard"
+  },
+  "web.page.dashboard:imageWithText.new.text": {
+    "defaultMessage": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "description": "Text for the new image with text on the dashboard"
   },
   "web.page.dashboard:imageWithText.new.title": {
     "defaultMessage": "Nýskrá auglýsingu",

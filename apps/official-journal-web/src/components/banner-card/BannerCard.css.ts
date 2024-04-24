@@ -14,6 +14,7 @@ export const bannerCardWrapper = style({
   borderRadius: theme.border.radius.large,
   border: `1px solid ${theme.color.blue200}`,
   padding: spacing,
+  position: 'relative',
 })
 
 export const bannerCardTextWrapper = style({
@@ -22,4 +23,12 @@ export const bannerCardTextWrapper = style({
 
 export const bannerCardImageWrapper = style({
   flexShrink: 0,
+})
+
+export const bannerCardLink = style({
+  '::before': {
+    content: '',
+    position: 'absolute',
+    inset: 0,
+  },
 })
