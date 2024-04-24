@@ -14,7 +14,16 @@ export const BannerCard = ({ title, description, image, link }: Props) => {
     <div className={styles.bannerCardWrapper}>
       <div className={styles.bannerCardTextWrapper}>
         <Text color="blue400" marginBottom={1} variant="h3" as="h2">
-          <LinkV2 href={link}>{title}</LinkV2>
+          {/* <Text> breaks direct Link child component so we wrap it with span -.- */}
+          <span>
+            <LinkV2
+              href={link}
+              className={styles.bannerCardLink}
+              underline="normal"
+            >
+              {title}
+            </LinkV2>
+          </span>
         </Text>
         <Text>{description}</Text>
       </div>
