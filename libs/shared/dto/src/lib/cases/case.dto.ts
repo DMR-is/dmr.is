@@ -75,9 +75,8 @@ export class Case {
 
   @ApiProperty({
     type: [CaseHistory],
-    example: '2024-01-01T09:00:00Z',
     description:
-      'Date the case was submitted. ISO 8601 date and time format in UTC.',
+      'Snapshot of the submitted fields, used for tracking changes in the case.',
   })
   history!: CaseHistory[]
 
