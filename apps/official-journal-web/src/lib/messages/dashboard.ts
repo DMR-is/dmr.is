@@ -143,6 +143,12 @@ export const messages = {
           'Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
         description: 'Description for the new image with text on the dashboard',
       },
+      text: {
+        id: 'web.page.dashboard:imageWithText.new.text',
+        defaultMessage:
+          'Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+        description: 'Text for the new image with text on the dashboard',
+      },
       linkText: {
         id: 'web.page.dashboard:imageWithText.new.linkText',
         defaultMessage: 'Nýskrá auglýsingu',

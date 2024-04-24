@@ -29,7 +29,7 @@ export const ContentWrapper = ({
       })}
     >
       {title && (
-        <Text marginBottom={2} variant="h4">
+        <Text marginBottom={2} variant="h4" as="h3">
           {formatMessage(title)}
         </Text>
       )}

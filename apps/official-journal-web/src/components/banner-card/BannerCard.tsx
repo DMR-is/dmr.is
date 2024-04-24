@@ -13,11 +13,9 @@ export const BannerCard = ({ title, description, image, link }: Props) => {
   return (
     <div className={styles.bannerCardWrapper}>
       <div className={styles.bannerCardTextWrapper}>
-        <LinkV2 href={link}>
-          <Text color="blue400" marginBottom={1} variant="h3">
-            {title}
-          </Text>
-        </LinkV2>
+        <Text color="blue400" marginBottom={1} variant="h3" as="h2">
+          <LinkV2 href={link}>{title}</LinkV2>
+        </Text>
         <Text>{description}</Text>
       </div>
       <div className={styles.bannerCardImageWrapper}>
