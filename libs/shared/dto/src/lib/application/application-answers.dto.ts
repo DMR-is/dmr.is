@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-enum ApplicationAnswerOption {
+export enum ApplicationAnswerOption {
   YES = 'yes',
   NO = 'no',
 }

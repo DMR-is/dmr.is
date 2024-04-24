@@ -1,3 +1,4 @@
+import { IApplicationService } from '@dmr.is/modules'
 import {
   Application,
   CaseComment,
@@ -8,8 +9,6 @@ import {
 
 import { Body, Controller, Get, Inject, Param, Post, Put } from '@nestjs/common'
 import { ApiBody, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger'
-
-import { IApplicationService } from './application.service.interface'
 
 @Controller({
   path: 'applications',

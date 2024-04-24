@@ -2,17 +2,22 @@ import { isBooleanString } from 'class-validator'
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { CaseHistory } from '@dmr.is/shared/dto'
 import {
+  ApplicationAnswerOption,
   Case,
   CaseComment,
   CaseCommentPublicity,
+  CaseCommunicationStatus,
   CaseEditorialOverview,
   CaseStatus,
+  CaseTag,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
@@ -23,33 +28,153 @@ import {
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
-
+// import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
+// import { HTMLText } from '@island.is/regulations-tools/types'
+import { IApplicationService } from '../application/application.service.interface'
 import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
 
 export class CaseService implements ICaseService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => IApplicationService))
+    private readonly applicationService: IApplicationService,
+  ) {
     this.logger.info('Using CaseService')
   }
+  async createCase(body: PostApplicationBody): Promise<Case> {
+    try {
+      this.logger.info('Creating case', {
+        applicationId: body.applicationId,
+        category: LOGGING_CATEGORY,
+      })
+
+      const application = await this.applicationService.getApplication(
+        body.applicationId,
+      )
+
+      if (!application) {
+        throw new NotFoundException('Application not found')
+      }
+
+      if (
+        !application.answers.advert?.department ||
+        !application.answers.publishing?.date ||
+        !application.answers.advert?.title ||
+        !application.answers.advert?.type
+      ) {
+        // this should not happen
+        throw new BadRequestException('Missing required fields')
+      }
+
+      const now = new Date()
+
+      const history: CaseHistory = {
+        date: now.toISOString(),
+        department: application.answers.advert?.department,
+        requestedPublicationDate: application.answers.publishing?.date,
+        subject: application.answers.advert?.title,
+        type: application.answers.advert?.type,
+      }
+
+      const newCase: Case = {
+        id: uuid(),
+        caseNumber: 0,
+        applicationId: body.applicationId,
+        assignedTo: null,
+        communicationStatus: CaseCommunicationStatus.NotStarted,
+        createdAt: now.toISOString(),
+        modifiedAt: now.toISOString(),
+        history: [history],
+        paid: false,
+        price: 23000,
+        published: false,
+        publishedAt: null,
+        status: CaseStatus.Submitted,
+        year: now.getFullYear(),
+        fastTrack:
+          application.answers.publishing?.fastTrack ===
+            ApplicationAnswerOption.YES || false,
+        comments: [],
+        tag: CaseTag.NotStarted,
+      }
+
+      this.logger.info('Successfully created case', {
+        caseId: newCase.id,
+        category: LOGGING_CATEGORY,
+      })
+
+      return Promise.resolve(newCase)
+    } catch (error) {
+      this.logger.error('Error creating case', {
+        error,
+        category: LOGGING_CATEGORY,
+      })
+      throw new InternalServerErrorException('Internal server error.')
+    }
+  }
+
+  async updateCaseHistory(caseId: string): Promise<Case> {
+    this.logger.info('Updating case history', {
+      id: caseId,
+      category: LOGGING_CATEGORY,
+    })
+
+    const theCase = ALL_MOCK_CASES.find((c) => c.id === caseId)
+
+    if (!theCase) {
+      throw new NotFoundException('Case not found')
+    }
+
+    const application = await this.applicationService.getApplication(
+      theCase.applicationId,
+    )
+
+    if (!application) {
+      throw new NotFoundException('Application not found')
+    }
+
+    if (
+      !application.answers.advert?.department ||
+      !application.answers.publishing?.date ||
+      !application.answers.advert?.title ||
+      !application.answers.advert?.type
+    ) {
+      // this should not happen
+      throw new BadRequestException('Missing required fields')
+    }
+
+    const now = new Date()
+
+    const history: CaseHistory = {
+      date: now.toISOString(),
+      department: application.answers.advert?.department,
+      requestedPublicationDate: application.answers.publishing?.date,
+      subject: application.answers.advert?.title,
+      type: application.answers.advert?.type,
+    }
+
+    theCase.history.push(history)
+
+    return Promise.resolve(theCase)
+  }
+
   getCase(id: string): Promise<Case | null> {
+    this.logger.info('Getting case', {
+      id,
+      category: LOGGING_CATEGORY,
+    })
     const found = ALL_MOCK_CASES.find((c) => c.id === id)
 
     if (!found) {
       throw new NotFoundException('Case not found')
-    }
-
-    if (found.advert.document.isLegacy) {
-      found.advert.document.html = dirtyClean(
-        found.advert.document.html as HTMLText,
-      )
     }
 
     return Promise.resolve(found)
@@ -68,16 +193,14 @@ export class CaseService implements ICaseService {
 
       const filteredCases = ALL_MOCK_CASES.filter((c) => {
         if (params?.search) {
-          // for now search for department and name
-
-          if (
-            !c.advert.department.title
-              .toLowerCase()
-              .includes(params.search.toLowerCase()) &&
-            !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
-          ) {
-            return false
-          }
+          // if (
+          //   !c.advert.department.title
+          //     .toLowerCase()
+          //     .includes(params.search.toLowerCase()) &&
+          //   !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
+          // ) {
+          //   return false
+          // }
         }
 
         if (params.applicationId && c.applicationId !== params.applicationId) {
@@ -116,12 +239,12 @@ export class CaseService implements ICaseService {
           return false
         }
 
-        if (
-          params?.department &&
-          c.advert.department.slug !== params.department.toLowerCase()
-        ) {
-          return false
-        }
+        // if (
+        //   params?.department &&
+        //   c.advert.department.slug !== params.department.toLowerCase()
+        // ) {
+        //   return false
+        // }
 
         return true
       })
@@ -131,14 +254,14 @@ export class CaseService implements ICaseService {
         withPaging.pageSize * (withPaging.page - 1),
         withPaging.pageSize * withPaging.page,
       )
-      pagedCases.forEach((c) => {
-        if (c.advert.document.isLegacy) {
-          c.advert.document.html = dirtyClean(
-            c.advert.document.html as HTMLText,
-          )
-        }
-        return c
-      })
+      // pagedCases.forEach((c) => {
+      //   if (c.advert.document.isLegacy) {
+      //     c.advert.document.html = dirtyClean(
+      //       c.advert.document.html as HTMLText,
+      //     )
+      //   }
+      //   return c
+      // })
 
       return Promise.resolve({
         cases: pagedCases,
@@ -147,6 +270,22 @@ export class CaseService implements ICaseService {
     } catch (error) {
       throw new InternalServerErrorException('Internal server error.')
     }
+  }
+
+  getCaseByApplicationId(applicationId: string): Promise<Case | null> {
+    const found = ALL_MOCK_CASES.find((c) => c.applicationId === applicationId)
+
+    if (!found) {
+      throw new NotFoundException('Case not found')
+    }
+
+    // if (found.advert.document.isLegacy) {
+    //   found.advert.document.html = dirtyClean(
+    //     found.advert.document.html as HTMLText,
+    //   )
+    // }
+
+    return Promise.resolve(found)
   }
 
   getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {

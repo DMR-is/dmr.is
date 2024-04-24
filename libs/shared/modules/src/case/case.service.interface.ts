@@ -2,11 +2,13 @@ import {
   Case,
   CaseComment,
   CaseEditorialOverview,
+  CaseHistory,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
@@ -15,6 +17,12 @@ export interface ICaseService {
   getCase(id: string): Promise<Case | null>
 
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse>
+
+  getCaseByApplicationId(applicationId: string): Promise<Case | null>
+
+  createCase(body: PostApplicationBody): Promise<Case>
+
+  updateCaseHistory(caseId: string): Promise<Case>
 
   getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse>
 

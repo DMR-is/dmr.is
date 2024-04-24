@@ -1,6 +1,7 @@
 import {
   Application,
   CaseComment,
+  PostApplicationBody,
   PostApplicationComment,
   SubmitApplicationBody,
   UpdateApplicationBody,
@@ -8,6 +9,8 @@ import {
 
 export interface IApplicationService {
   getApplication(id: string): Promise<Application | null>
+
+  postApplication(id: string, body: PostApplicationBody): Promise<void>
 
   updateApplication(
     id: string,

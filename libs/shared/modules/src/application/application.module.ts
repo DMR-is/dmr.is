@@ -1,21 +1,23 @@
 import { LoggingModule } from '@dmr.is/logging'
 
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
-import { ApplicationController } from './application.controller'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
+export { IApplicationService } from './application.service.interface'
+
 @Module({
-  imports: [LoggingModule, AuthModule, SharedCaseModule],
-  controllers: [ApplicationController],
+  imports: [LoggingModule, AuthModule, forwardRef(() => SharedCaseModule)],
+  controllers: [],
   providers: [
     {
       provide: IApplicationService,
       useClass: ApplicationService,
     },
   ],
+  exports: [IApplicationService],
 })
 export class ApplicationModule {}
