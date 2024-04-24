@@ -500,7 +500,7 @@ export const CASE_READY_3: Case = {
 }
 
 export const CASE_PUBLISHED: Case = {
-  id: 'e637c050-a462-4483-972a-5c375x6e34ad',
+  id: 'e637c050-a462-4483-3432-5c375x6e34ad',
   applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
   year: 2024,
   caseNumber: 3211,
@@ -648,7 +648,7 @@ export const CASE_PUBLISHED_2: Case = {
 }
 
 export const CASE_PUBLISHED_3: Case = {
-  id: 'e637c050-a462-4483-972a-5c375x6e34ad',
+  id: 'e637c050-a462-4483-sf23-5c375x6e34ad',
   applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
   year: 2024,
   caseNumber: 4523,

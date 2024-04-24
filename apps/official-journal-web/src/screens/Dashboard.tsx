@@ -106,7 +106,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
         <GridContainer>
           <GridRow>
             <GridColumn span="1/1">
-              <Text variant="h3" marginBottom={3}>
+              <Text variant="h3" as="h2" marginBottom={3}>
                 {formatMessage(messages.general.caseStatuses)}
               </Text>
             </GridColumn>
@@ -162,18 +162,18 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       </Section>
       <Section>
         <ImageWithText
+          kicker="Stjórnartíðindi"
           title={formatMessage(messages.imageWithText.new.title)}
           image="/assets/image-with-text-1.svg"
           linkText={formatMessage(messages.imageWithText.new.linkText)}
           link="#"
           linkIcon="open"
           linkIconType="outline"
-        >
-          <Text variant="intro">
-            {formatMessage(messages.imageWithText.new.description)}
-          </Text>
-        </ImageWithText>
+          intro={formatMessage(messages.imageWithText.new.description)}
+          text={formatMessage(messages.imageWithText.new.text)}
+        />
         <ImageWithText
+          kicker="Stjórnartíðindi"
           title={formatMessage(messages.imageWithText.print.title)}
           image="/assets/image-with-text-2.svg"
           linkText={formatMessage(messages.imageWithText.print.linkText)}
@@ -181,11 +181,8 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
           linkIcon="arrowForward"
           linkIconType="outline"
           align="rtl"
-        >
-          <Text variant="intro">
-            {formatMessage(messages.imageWithText.print.description)}
-          </Text>
-        </ImageWithText>
+          intro={formatMessage(messages.imageWithText.print.description)}
+        />
       </Section>
     </>
   )

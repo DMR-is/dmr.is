@@ -77,6 +77,7 @@ export const Banner = ({
                   marginTop={breadcrumbs.length ? 1 : 0}
                   marginBottom={1}
                   variant={variant === 'large' ? 'h1' : 'h2'}
+                  as="h1"
                 >
                   {typeof title === 'object' ? formatMessage(title) : title}
                 </Text>
