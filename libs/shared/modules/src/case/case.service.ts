@@ -351,7 +351,28 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Missing ids')
     }
 
-    throw new InternalServerErrorException('Not implemented')
+    try {
+      const cases = caseIds.map((id) => {
+        const found = ALL_MOCK_CASES.find((c) => c.id === id)
+
+        if (!found) {
+          throw new NotFoundException('Case not found')
+        }
+
+        return found
+      })
+
+      const now = new Date().toISOString()
+      cases.forEach((c) => {
+        c.modifiedAt = now
+        c.publishedAt = now
+        c.published = true
+      })
+
+      return Promise.resolve()
+    } catch (error) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
   }
 
   getComments(
