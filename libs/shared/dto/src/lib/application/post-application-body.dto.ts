@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
-
 export class PostApplicationBody {
   @ApiProperty({
     description: 'Application id',
@@ -11,45 +9,6 @@ export class PostApplicationBody {
     nullable: false,
   })
   readonly applicationId!: string
-
-  @ApiProperty({
-    description: 'Application selected department id',
-    type: String,
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
-  })
-  readonly department!: string
-
-  @ApiProperty({
-    description: 'Application selected type id',
-    type: String,
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
-  })
-  readonly type!: string
-
-  @ApiProperty({
-    description: 'Application selected array of categories ids',
-    type: [String],
-    example: [
-      '00000000-0000-0000-0000-000000000000',
-      '11111111-1111-1111-1111-111111111111',
-    ],
-    required: true,
-    nullable: false,
-  })
-  readonly categories!: string[]
-
-  @ApiProperty({
-    description: 'Subject of the submitted application',
-    type: String,
-    example: 'um hundahald í Reykjavíkurborg',
-    required: true,
-    nullable: false,
-  })
-  readonly subject!: string
 
   @ApiProperty({
     description:
@@ -62,20 +21,29 @@ export class PostApplicationBody {
   readonly requestedPublicationDate!: string
 
   @ApiProperty({
-    description:
-      "Contents of the advert's document in the submitted application (HTML string)",
+    description: 'Application selected department id',
     type: String,
-    example:
-      '<p>GJALDSKRÁ um hundahald í Reykjavík</p><div><p>Dagur B. Eggertsson</p></div>',
+    example: '00000000-0000-0000-0000-000000000000',
     required: true,
     nullable: false,
   })
-  readonly document!: string
+  readonly department!: string
 
   @ApiProperty({
-    type: AdvertSignatureBody,
+    description: 'Title of the advert',
+    type: String,
+    example: 'GJALDSKRÁ fyrir ...',
     required: true,
     nullable: false,
   })
-  readonly signature!: AdvertSignatureBody
+  readonly title!: string
+
+  @ApiProperty({
+    description: 'Title of the advert',
+    type: String,
+    example: 'GJALDSKRÁ fyrir ...',
+    required: true,
+    nullable: false,
+  })
+  readonly institutionId!: string
 }
