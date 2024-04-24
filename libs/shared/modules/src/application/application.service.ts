@@ -1,16 +1,21 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
   Application,
   CaseComment,
   CaseCommentPublicity,
   CaseCommentType,
+  PostApplicationBody,
   PostApplicationComment,
   SubmitApplicationBody,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 
-import { Inject, Injectable } from '@nestjs/common'
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.service.interface'
@@ -22,7 +27,8 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(forwardRef(() => ICaseService))
+    private readonly caseService: ICaseService,
     private readonly authService: AuthService,
   ) {
     this.logger.info('Using ApplicationService')
@@ -66,7 +72,42 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  async getApplication(id: string) {
+  async postApplication(applicationId: string): Promise<void> {
+    // This method handles the submission from the application system
+
+    // check if the application is already submitted
+    const hasSubmittedBefore = await this.caseService.getCaseByApplicationId(
+      applicationId,
+    )
+
+    if (hasSubmittedBefore) {
+      // update history property on case
+      try {
+        await this.caseService.updateCaseHistory(hasSubmittedBefore.id)
+      } catch (error) {
+        this.logger.error('Could not update case history', {
+          error,
+          category: LOGGING_CATEGORY,
+        })
+      }
+      throw new InternalServerErrorException('Could not update case')
+    } else {
+      // we create a new case
+      try {
+        await this.caseService.createCase({
+          applicationId,
+        })
+      } catch (error) {
+        this.logger.error('Could not create case', {
+          error,
+          category: LOGGING_CATEGORY,
+        })
+        throw new InternalServerErrorException('Could not create case')
+      }
+    }
+  }
+
+  async getApplication(id: string): Promise<Application | null> {
     this.logger.info('getAdvert', { id, category: LOGGING_CATEGORY })
 
     try {

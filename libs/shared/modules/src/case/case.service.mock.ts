@@ -6,12 +6,14 @@ import {
   Case,
   CaseComment,
   CaseEditorialOverview,
+  CaseHistory,
   CaseStatus,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
@@ -33,6 +35,18 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  updateCaseHistory(caseId: string): Promise<Case> {
+    throw new Error('Method not implemented.')
+  }
+
+  createCase(body: PostApplicationBody): Promise<Case> {
+    throw new Error('Method not implemented.')
+  }
+
+  getCaseByApplicationId(applicationId: string): Promise<Case | null> {
+    throw new Error('Method not implemented.')
+  }
+
   getComments(
     caseId: string,
     params?: GetCaseCommentsQuery | undefined,
@@ -52,11 +66,11 @@ export class CaseServiceMock implements ICaseService {
       throw new NotFoundException('Case not found')
     }
 
-    if (found.advert.document.isLegacy) {
-      found.advert.document.html = dirtyClean(
-        found.advert.document.html as HTMLText,
-      )
-    }
+    // if (found.advert.document.isLegacy) {
+    //   found.advert.document.html = dirtyClean(
+    //     found.advert.document.html as HTMLText,
+    //   )
+    // }
 
     return Promise.resolve(found)
   }
@@ -75,15 +89,14 @@ export class CaseServiceMock implements ICaseService {
       const filteredCases = ALL_MOCK_CASES.filter((c) => {
         if (params?.search) {
           // for now search for department and name
-
-          if (
-            !c.advert.department.title
-              .toLowerCase()
-              .includes(params.search.toLowerCase()) &&
-            !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
-          ) {
-            return false
-          }
+          // if (
+          //   !c.advert.department.title
+          //     .toLowerCase()
+          //     .includes(params.search.toLowerCase()) &&
+          //   !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
+          // ) {
+          //   return false
+          // }
         }
 
         if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
@@ -118,12 +131,12 @@ export class CaseServiceMock implements ICaseService {
           return false
         }
 
-        if (
-          params?.department &&
-          c.advert.department.slug !== params.department.toLowerCase()
-        ) {
-          return false
-        }
+        // if (
+        //   params?.department &&
+        //   c.advert.department.slug !== params.department.toLowerCase()
+        // ) {
+        //   return false
+        // }
 
         return true
       })
@@ -133,14 +146,14 @@ export class CaseServiceMock implements ICaseService {
         withPaging.pageSize * (withPaging.page - 1),
         withPaging.pageSize * withPaging.page,
       )
-      pagedCases.forEach((c) => {
-        if (c.advert.document.isLegacy) {
-          c.advert.document.html = dirtyClean(
-            c.advert.document.html as HTMLText,
-          )
-        }
-        return c
-      })
+      // pagedCases.forEach((c) => {
+      // if (c.advert.document.isLegacy) {
+      //   c.advert.document.html = dirtyClean(
+      //     c.advert.document.html as HTMLText,
+      //   )
+      // }
+      //   return c
+      // })
 
       return Promise.resolve({
         cases: pagedCases,

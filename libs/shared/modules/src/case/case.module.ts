@@ -1,7 +1,8 @@
 import { LoggingModule } from '@dmr.is/logging'
 
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
+import { ApplicationModule } from '../application/application.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
@@ -12,7 +13,7 @@ export { CaseServiceMock } from './case.service.mock'
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
-  imports: [LoggingModule],
+  imports: [LoggingModule, forwardRef(() => ApplicationModule)],
   providers: [
     {
       provide: ICaseService,
