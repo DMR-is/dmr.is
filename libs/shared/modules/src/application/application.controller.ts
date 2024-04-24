@@ -21,18 +21,6 @@ export class ApplicationController {
     private readonly applicationService: IApplicationService,
   ) {}
 
-  @Get('health')
-  @ApiOperation({
-    operationId: 'health',
-    summary: 'Health check.',
-  })
-  @ApiOkResponse({
-    type: String,
-  })
-  async health(): Promise<string> {
-    return 'OK'
-  }
-
   @Get(':id')
   @ApiOperation({
     operationId: 'getApplication',

@@ -218,13 +218,4 @@ export class JournalController {
     })
     this.journalService.error()
   }
-
-  @Get('health')
-  @ApiResponse({
-    status: 200,
-    description: 'Health check endpoint.',
-  })
-  health(): Promise<string> {
-    return Promise.resolve('OK')
-  }
 }
