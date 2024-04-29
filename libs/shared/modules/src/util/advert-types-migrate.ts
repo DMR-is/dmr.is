@@ -1,9 +1,9 @@
-import { AdvertType as AdvertTypeDTO } from '@dmr.is/shared/dto'
+import { AdvertType } from '@dmr.is/shared/dto'
 
-import { AdvertType } from '../models/AdvertType'
+import { AdvertTypeDTO } from '../models'
 
-export function advertTypesMigrate(model: AdvertType): AdvertTypeDTO {
-  const result: AdvertTypeDTO = {
+export function advertTypesMigrate(model: AdvertTypeDTO): AdvertType {
+  const result: AdvertType = {
     id: model.id,
     slug: model.slug,
     title: model.title,

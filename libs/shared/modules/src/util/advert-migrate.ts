@@ -1,17 +1,13 @@
-import {
-  Advert as AdvertDTO,
-  AdvertAttachment,
-  AdvertStatus as AdvertStatusDTO,
-} from '@dmr.is/shared/dto'
+import { Advert, AdvertAttachment, AdvertStatus } from '@dmr.is/shared/dto'
 
-import { Advert } from '../models/Advert'
+import { AdvertDTO } from '../models'
 import { advertCategoryMigrate } from './advert-category-migrate'
 import { advertDepartmentMigrate } from './advert-department-migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty-migrate'
 import { advertTypesMigrate } from './advert-types-migrate'
 
-export function advertMigrate(model: Advert): AdvertDTO {
-  const status = model.status.title as keyof typeof AdvertStatusDTO
+export function advertMigrate(model: AdvertDTO): Advert {
+  const status = model.status.title as keyof typeof AdvertStatus
   const attachmentsDTO = model.attachments.map<AdvertAttachment>((item) => {
     const result: AdvertAttachment = {
       name: item.name,
@@ -21,13 +17,13 @@ export function advertMigrate(model: Advert): AdvertDTO {
     return result
   })
 
-  const advert: AdvertDTO = {
+  const advert: Advert = {
     id: model.id,
     title: `${model.type.title} fyrir ${model.subject}`,
     department: advertDepartmentMigrate(model.department),
     type: advertTypesMigrate(model.type),
     subject: model.subject,
-    status: AdvertStatusDTO[status],
+    status: AdvertStatus[status],
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
       number: model.serialNumber,

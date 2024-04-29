@@ -1,3 +1,5 @@
+import { generate } from 'rxjs'
+import { where } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
@@ -48,6 +50,14 @@ import {
   AdvertStatusHistoryDTO,
   AdvertTypeDTO,
 } from '../models'
+import {
+  advertCategoryMigrate,
+  advertDepartmentMigrate,
+  advertInvolvedPartyMigrate,
+  advertMainCategoryMigrate,
+  advertMigrate,
+  advertTypesMigrate,
+} from '../util'
 import { IJournalService } from './journal.service.interface'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
@@ -66,9 +76,6 @@ export class JournalService implements IJournalService {
 
     @InjectModel(AdvertDTO)
     private advertModel: typeof AdvertDTO,
-
-    @InjectModel(AdvertCategoriesDTO)
-    private advertCategoriesModel: typeof AdvertCategoriesDTO,
 
     @InjectModel(AdvertCategoryDTO)
     private advertCategoryModel: typeof AdvertCategoryDTO,
@@ -96,19 +103,19 @@ export class JournalService implements IJournalService {
       metadata: { id },
     })
 
-    const advert = (allMockAdverts as Advert[]).find(
-      (advert) => advert.id === id,
-    )
-
+    const advert = await this.advertModel.findOne({
+      where: { id: parseInt(id, 10) },
+    })
     if (advert) {
+      const ad = advertMigrate(advert)
       return Promise.resolve({
-        ...advert,
+        ...ad,
         document: {
-          isLegacy: advert.document.isLegacy,
-          html: advert.document.isLegacy
-            ? dirtyClean(advert.document.html as HTMLText)
-            : advert.document.html,
-          pdfUrl: advert.document.pdfUrl,
+          isLegacy: advert.isLegacy,
+          html: advert.isLegacy
+            ? dirtyClean(advert.documentHtml as HTMLText)
+            : advert.documentHtml,
+          pdfUrl: advert.documentPdfUrl,
         },
       })
     } else {
@@ -116,12 +123,17 @@ export class JournalService implements IJournalService {
     }
   }
 
-  getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse> {
+  async getAdverts(
+    params?: GetAdvertsQueryParams,
+  ): Promise<GetAdvertsResponse> {
     this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
-    const filteredMockAdverts = (allMockAdverts as Advert[]).filter(
+
+    const adverts = await this.advertModel.findAll()
+    //TODO FILTERING
+    /* const filteredMockAdverts = (allMockAdverts as Advert[]).filter(
       (advert) => {
         if (!params?.search) {
           return true
@@ -130,9 +142,9 @@ export class JournalService implements IJournalService {
         return advert.title.includes(params.search)
       },
     )
-
+*/
     const result: GetAdvertsResponse = {
-      adverts: filteredMockAdverts,
+      adverts: adverts.map((item) => advertMigrate(item)),
       paging: {
         page: 1,
         pageSize: 10,
@@ -148,38 +160,37 @@ export class JournalService implements IJournalService {
     return Promise.resolve(result)
   }
 
-  getDepartment(id: string): Promise<GetDepartmentResponse> {
-    const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
-    const department = mockDepartments.find((d) => d.id === id)
+  async getDepartment(id: string): Promise<GetDepartmentResponse> {
+    const department = await this.advertDepartmentModel.findOne({
+      where: { id },
+    })
 
     return Promise.resolve({
-      department: department ?? null,
+      department: department ? advertDepartmentMigrate(department) : null,
     })
   }
 
-  getDepartments(
+  async getDepartments(
     params?: GetDepartmentsQueryParams,
   ): Promise<GetDepartmentsResponse> {
-    const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
-
-    const filtered = mockDepartments.filter((department) => {
-      if (params?.search && department.id !== params.search) {
-        return false
-      }
-
-      return true
-    })
-
+    const departments = await this.advertDepartmentModel.findAll()
+    //TODO filtering and fix paging
     return Promise.resolve({
-      departments: filtered,
+      departments: departments.map((item) => advertDepartmentMigrate(item)),
       paging: MOCK_PAGING_SINGLE_PAGE,
     })
   }
 
-  getTypes(
+  async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    const mockTypes = ALL_MOCK_JOURNAL_TYPES
+    const types = await this.advertTypeModel.findAll()
+
+    return Promise.resolve({
+      types: types.map((item) => advertTypesMigrate(item)),
+      paging: generatePaging(types, 1),
+    })
+    /* const mockTypes = ALL_MOCK_JOURNAL_TYPES
 
     const filtered = mockTypes.filter((type) => {
       if (params?.department && params.department !== type.department.id) {
@@ -203,12 +214,21 @@ export class JournalService implements IJournalService {
       types: paged,
       paging: generatePaging(filtered, page),
     })
+    */
   }
 
-  getMainCategories(
+  async getMainCategories(
     params?: GetMainCategoriesQueryParams | undefined,
   ): Promise<GetMainCategoriesResponse> {
-    const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
+    const mainCategories = await this.advertMainCategoryModel.findAll()
+    return Promise.resolve({
+      mainCategories: mainCategories.map((item) =>
+        advertMainCategoryMigrate(item),
+      ),
+      paging: generatePaging(mainCategories, 1),
+    })
+
+    /* const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
         return false
@@ -224,13 +244,19 @@ export class JournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve(data)
+    return Promise.resolve(data)*/
   }
 
-  getCategories(
+  async getCategories(
     params?: GetCategoriesQueryParams | undefined,
   ): Promise<GetCategoriesResponse> {
-    const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
+    const categories = await this.advertCategoryModel.findAll()
+    return Promise.resolve({
+      categories: categories.map((item) => advertCategoryMigrate(item)),
+      paging: generatePaging(categories, 1),
+    })
+
+    /* const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
         return false
@@ -246,23 +272,33 @@ export class JournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve(data)
+    return Promise.resolve(data)*/
   }
 
-  getInstitution(id: string): Promise<GetInstitutionResponse> {
-    const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
+  async getInstitution(id: string): Promise<GetInstitutionResponse> {
+    const party = await this.advertInvolvedPartyModel.findOne({ where: { id } })
+
+    return Promise.resolve({
+      institution: party ? advertInvolvedPartyMigrate(party) : null,
+    })
+    /*const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
 
     const institution = mockCategories.find((category) => category.id === id)
 
     return Promise.resolve({
       institution: institution ?? null,
-    })
+    })*/
   }
 
-  getInstitutions(
+  async getInstitutions(
     params?: GetInstitutionsQueryParams | undefined,
   ): Promise<GetInstitutionsResponse> {
-    const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
+    const parties = await this.advertInvolvedPartyModel.findAll()
+    return Promise.resolve({
+      institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
+      paging: generatePaging(parties, 1),
+    })
+    /* const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
         return false
@@ -278,7 +314,7 @@ export class JournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve(data)
+    return Promise.resolve(data)*/
   }
 
   getSignatures(

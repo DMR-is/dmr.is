@@ -1,8 +1,10 @@
 import { Department } from '@dmr.is/shared/dto'
 
-import { AdvertDepartment } from '../models/AdvertDepartment'
+import { AdvertDepartmentDTO } from '../models/AdvertDepartment'
 
-export function advertDepartmentMigrate(model: AdvertDepartment): Department {
+export function advertDepartmentMigrate(
+  model: AdvertDepartmentDTO,
+): Department {
   const result: Department = {
     id: model.id,
     slug: model.slug,

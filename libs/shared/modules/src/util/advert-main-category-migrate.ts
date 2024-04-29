@@ -1,9 +1,9 @@
 import { MainCategory } from '@dmr.is/shared/dto'
 
-import { AdvertMainCategory } from '../models/AdvertMainCategory'
+import { AdvertMainCategoryDTO } from '../models'
 
 export function advertMainCategoryMigrate(
-  model: AdvertMainCategory,
+  model: AdvertMainCategoryDTO,
 ): MainCategory {
   const result: MainCategory = {
     description: model.description,

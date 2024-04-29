@@ -1,9 +1,9 @@
 import { Institution } from '@dmr.is/shared/dto'
 
-import { AdvertInvolvedParty } from '../models/AdvertInvolvedParty'
+import { AdvertInvolvedPartyDTO } from '../models/AdvertInvolvedParty'
 
 export function advertInvolvedPartyMigrate(
-  model: AdvertInvolvedParty,
+  model: AdvertInvolvedPartyDTO,
 ): Institution {
   const result: Institution = {
     id: model.id,
