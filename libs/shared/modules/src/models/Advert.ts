@@ -9,7 +9,6 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
-import { AdvertStatus } from '@dmr.is/shared/dto'
 
 import { AdvertAttachmentsDTO } from './AdvertAttachments'
 import { AdvertCategoryDTO } from './AdvertCategory'

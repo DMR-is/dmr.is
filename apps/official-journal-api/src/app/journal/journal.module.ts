@@ -1,5 +1,6 @@
 import { LoggingModule } from '@dmr.is/logging'
 import {
+  AdvertAttachmentsDTO,
   AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
@@ -9,9 +10,8 @@ import {
   AdvertStatusDTO,
   AdvertStatusHistoryDTO,
   AdvertTypeDTO,
-  IJournalService,
-  JournalService,
-  MockJournalService,
+  CategoryDepartmentsDTO,
+  SharedJournalModule,
 } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
@@ -19,29 +19,26 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { JournalController } from './journal.controller'
 
-const MOCK_DATA = process.env.API_MOCK === 'true'
 @Module({
   imports: [
     LoggingModule,
+    SharedJournalModule,
     SequelizeModule.forFeature([
       AdvertDTO,
+      AdvertAttachmentsDTO,
       AdvertCategoriesDTO,
       AdvertCategoryDTO,
-      AdvertMainCategoryDTO,
       AdvertDepartmentDTO,
+      AdvertInvolvedPartyDTO,
+      AdvertMainCategoryDTO,
       AdvertStatusDTO,
       AdvertStatusHistoryDTO,
       AdvertTypeDTO,
-      AdvertInvolvedPartyDTO,
+      CategoryDepartmentsDTO,
     ]),
   ],
   controllers: [JournalController],
-  providers: [
-    {
-      provide: IJournalService,
-      useClass: MOCK_DATA ? MockJournalService : JournalService,
-    },
-  ],
-  exports: [IJournalService],
+  providers: [],
+  exports: [],
 })
 export class JournalModule {}

@@ -1,11 +1,11 @@
-import { PAGING_DEFAULT_PAGE_SIZE } from '../dto/journal-constants.dto'
-import { JournalPaging } from '../dto/journal-paging.dto'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { Paging } from '@dmr.is/shared/dto'
 
 export function generatePaging(
   count: number,
   page = 1,
-  pageSize = PAGING_DEFAULT_PAGE_SIZE,
-): JournalPaging {
+  pageSize = DEFAULT_PAGE_SIZE,
+): Paging {
   const totalPages = Math.ceil(count / pageSize)
   const totalItems = count
   const nextPage = page + 1
