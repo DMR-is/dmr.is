@@ -14,14 +14,13 @@ import { AdvertCategoryDTO } from './AdvertCategory'
 @Table({ tableName: 'category_departments', timestamps: false })
 export class CategoryDepartmentsDTO extends Model {
   @PrimaryKey
-  @NotNull
   @Column({
     type: DataType.UUIDV4,
+    allowNull: false,
   })
   department_id!: string
 
   @PrimaryKey
-  @NotNull
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,

@@ -21,7 +21,7 @@ export class SequelizeConfigService implements SequelizeOptionsFactory {
     const config = (dbConfig as { [key: string]: object })[env]
     const options = {
       ...config,
-      //...getOptions(),
+      ...getOptions(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
     console.log('options :>> ', options)

@@ -10,7 +10,6 @@ export class AdvertStatusDTO extends Model {
   })
   override id!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   title!: string
 }

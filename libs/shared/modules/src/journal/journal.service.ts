@@ -40,7 +40,6 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import {
-  AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
   AdvertDTO,
@@ -89,10 +88,8 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertStatusHistoryDTO)
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,
 
-    @Inject(AdvertMainCategoryDTO)
+    @InjectModel(AdvertMainCategoryDTO)
     private advertMainCategoryModel: typeof AdvertMainCategoryDTO,
-
-    private PAGING_DEFAULT_PAGE_SIZE = 10,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }

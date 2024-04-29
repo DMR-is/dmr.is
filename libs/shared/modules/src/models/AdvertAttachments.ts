@@ -25,15 +25,12 @@ export class AdvertAttachmentsDTO extends Model {
   @Column({ type: DataType.UUIDV4, allowNull: false })
   advertId!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   name!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   type!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   url!: string
 }

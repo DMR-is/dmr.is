@@ -18,12 +18,10 @@ export class AdvertInvolvedPartyDTO extends Model {
   })
   override id!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   title!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   slug!: string
 
   @CreatedAt

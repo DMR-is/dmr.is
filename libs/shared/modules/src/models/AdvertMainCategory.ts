@@ -1,4 +1,4 @@
-import { Column, DataType, Model, NotNull, Table } from 'sequelize-typescript'
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'advert_main_category', timestamps: false })
 export class AdvertMainCategoryDTO extends Model {
@@ -10,12 +10,10 @@ export class AdvertMainCategoryDTO extends Model {
   })
   override id!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   title!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   slug!: string
 
   @Column

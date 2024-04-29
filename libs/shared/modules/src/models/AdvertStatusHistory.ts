@@ -21,15 +21,13 @@ export class AdvertStatusHistoryDTO extends Model {
   })
   override id!: string
 
-  @Column({ type: DataType.UUIDV4 })
-  @NotNull
+  @Column({ type: DataType.UUIDV4, allowNull: false })
   advert_id!: string
 
   @HasOne(() => AdvertDTO, 'advert_id')
   advert!: AdvertDTO
 
-  @Column({ type: DataType.UUIDV4 })
-  @NotNull
+  @Column({ type: DataType.UUIDV4, allowNull: false })
   status_id!: string
 
   @HasOne(() => AdvertStatusDTO, 'status_id')

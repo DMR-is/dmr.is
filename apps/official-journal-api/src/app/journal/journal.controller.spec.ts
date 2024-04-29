@@ -1,10 +1,9 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IJournalService, MockJournalService } from '@dmr.is/modules'
 
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { JournalController } from './journal.controller'
-import { IJournalService } from './journal.service.interface'
-import { MockJournalService } from './journal.service.mock'
 
 describe('JournalController', () => {
   let journal: TestingModule

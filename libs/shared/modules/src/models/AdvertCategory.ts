@@ -21,12 +21,10 @@ export class AdvertCategoryDTO extends Model {
   })
   override id!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   title!: string
 
-  @Column
-  @NotNull
+  @Column({ allowNull: false })
   slug!: string
 
   @Column({ type: DataType.UUIDV4, field: 'main_category_id' })
