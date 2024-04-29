@@ -31,6 +31,11 @@ export const FilterGroup = ({
 
   const qp = useQueryParams()
 
+  const clearGroup = () => {
+    const groupfilters = filters.map((f) => f.key)
+    qp.remove(groupfilters)
+  }
+
   return (
     <Box className={styles.filterExpandButtonWrapper}>
       <button
@@ -73,7 +78,14 @@ export const FilterGroup = ({
           )
         })}
         <Box display="flex" justifyContent="flexEnd">
-          <Button size="small" variant="text" icon="reload" iconType="outline">
+          <Button
+            size="small"
+            variant="text"
+            icon="reload"
+            as="button"
+            iconType="outline"
+            onClick={clearGroup}
+          >
             {formatMessage(messages.general.clearFilter)}
           </Button>
         </Box>

@@ -23,6 +23,16 @@ export class GetCasesQuery {
   search?: string
 
   @ApiProperty({
+    name: 'id',
+    type: String,
+    description: 'Application ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  applicationId?: string
+
+  @ApiProperty({
     name: 'page',
     type: Number,
     description: 'Page number',

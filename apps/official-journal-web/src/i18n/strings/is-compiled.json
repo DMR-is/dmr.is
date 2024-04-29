@@ -65,6 +65,30 @@
       "value": "Fylgiskjöl"
     }
   ],
+  "web.components.auth:logout": [
+    {
+      "type": 0,
+      "value": "Útskrá"
+    }
+  ],
+  "web.components.cards:moreLink": [
+    {
+      "type": 0,
+      "value": "Sjá nánar"
+    }
+  ],
+  "web.components.caseFilters:clearAllFilters": [
+    {
+      "type": 0,
+      "value": "Hreinsa allar síur"
+    }
+  ],
+  "web.components.caseFilters:filterLabel": [
+    {
+      "type": 0,
+      "value": "Síun á lista:"
+    }
+  ],
   "web.components.caseFilters:filters": [
     {
       "type": 0,
@@ -99,6 +123,12 @@
     {
       "type": 0,
       "value": "dögum"
+    }
+  ],
+  "web.components.comments:deleteComment": [
+    {
+      "type": 0,
+      "value": "Eyða"
     }
   ],
   "web.components.comments:fetchFile": [
@@ -201,6 +231,12 @@
     {
       "type": 0,
       "value": "Stjórnborð"
+    }
+  ],
+  "web.components.modal:modalLabel": [
+    {
+      "type": 0,
+      "value": "Skoða auglýsingu"
     }
   ],
   "web.components.statistics:notPublished.emptyIntro": [
@@ -863,6 +899,12 @@
     {
       "type": 0,
       "value": "Nýskrá auglýsingu"
+    }
+  ],
+  "web.page.dashboard:imageWithText.new.text": [
+    {
+      "type": 0,
+      "value": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
     }
   ],
   "web.page.dashboard:imageWithText.new.title": [

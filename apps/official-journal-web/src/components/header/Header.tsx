@@ -4,6 +4,7 @@ import {
   Box,
   Column,
   Columns,
+  DropdownMenu,
   FocusableBox,
   GridColumn,
   GridContainer,
@@ -12,14 +13,17 @@ import {
   Logo,
 } from '@island.is/island-ui/core'
 
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
-
+import { messages } from './messages'
 type HeaderType = {
   headerWhite?: boolean
 }
 
 export const Header = ({ headerWhite }: HeaderType) => {
+  const { formatMessage } = useFormatMessage()
+
   return (
     <header className={cn(styles.header, { white: headerWhite })}>
       <Hidden print={true}>
@@ -51,10 +55,21 @@ export const Header = ({ headerWhite }: HeaderType) => {
                     justifyContent="flexEnd"
                     width="full"
                   >
-                    {/* <DropdownMenu
-                      title={mockUser.fullName}
-                      items={[{ href: '#', title: messages.auth.logout }]}
-                    /> */}
+                    <DropdownMenu
+                      title={'Ármann Árni'}
+                      icon="chevronDown"
+                      items={[
+                        {
+                          // href: '#',
+                          title: formatMessage(messages.auth.logout),
+                          onClick: (e) => {
+                            e.preventDefault()
+                            // TODO: implement logout
+                            console.log('not implemented!')
+                          },
+                        },
+                      ]}
+                    />
                   </Box>
                 </Column>
               </Columns>

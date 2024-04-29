@@ -15,10 +15,10 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Advert } from '../adverts/advert.dto'
+import { Application } from '../application/application.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { User } from '../users/user.dto'
-import { CaseStatus, CaseTag } from './case-constants'
+import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
 
 export class Case {
   @ApiProperty({
@@ -35,9 +35,8 @@ export class Case {
     description:
       'Id of the submitted application, default to null on older cases.',
   })
-  @ValidateIf((o) => o.applicationId !== null)
   @IsUUID()
-  readonly applicationId!: string | null
+  readonly applicationId!: string
 
   @ApiProperty({
     type: Number,
@@ -75,6 +74,13 @@ export class Case {
   tag!: CaseTag
 
   @ApiProperty({
+    type: [Application],
+    description:
+      'Snapshot of the submitted fields, used for tracking changes in the case.',
+  })
+  history!: Application[]
+
+  @ApiProperty({
     type: String,
     example: '2024-01-01T09:00:00Z',
     description:
@@ -101,12 +107,13 @@ export class Case {
   assignedTo!: User | null
 
   @ApiProperty({
-    type: Advert,
-    description: 'The advert that is associated with the case.',
+    enum: CaseCommunicationStatus,
+    example: CaseCommunicationStatus.NotStarted,
+    description:
+      'Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`',
   })
-  @ValidateNested()
-  @Type(() => Advert)
-  readonly advert!: Advert
+  @IsEnum(CaseCommunicationStatus)
+  communicationStatus!: CaseCommunicationStatus
 
   @ApiProperty({
     type: Boolean,

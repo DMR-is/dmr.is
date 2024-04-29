@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IJournalService } from '@dmr.is/modules'
 import {
   Advert,
   AdvertNotFound,
@@ -16,28 +17,17 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
   ValidationResponse,
 } from '@dmr.is/shared/dto'
 
 import {
-  Body,
   Controller,
   Get,
   Inject,
   NotFoundException,
-  Post,
   Query,
 } from '@nestjs/common'
-import {
-  ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiQuery,
-  ApiResponse,
-} from '@nestjs/swagger'
-
-import { IJournalService } from './journal.service.interface'
+import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -184,21 +174,6 @@ export class JournalController {
     return this.journalService.getInstitutions(params)
   }
 
-  @Post('application')
-  @ApiResponse({
-    status: 200,
-    type: PostApplicationResponse,
-    description: 'Submit an advert application',
-  })
-  @ApiBadRequestResponse({
-    description: 'Validation failed.',
-  })
-  application(
-    @Body() application: PostApplicationBody,
-  ): Promise<PostApplicationResponse> {
-    return this.journalService.submitApplication(application)
-  }
-
   @Get('signatures')
   @ApiResponse({
     status: 200,
@@ -241,14 +216,5 @@ export class JournalController {
       category: LOGGING_CATEGORY,
     })
     this.journalService.error()
-  }
-
-  @Get('health')
-  @ApiResponse({
-    status: 200,
-    description: 'Health check endpoint.',
-  })
-  health(): Promise<string> {
-    return Promise.resolve('OK')
   }
 }

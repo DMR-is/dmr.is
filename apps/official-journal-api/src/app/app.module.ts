@@ -1,17 +1,11 @@
-import { JournalModule } from '@dmr.is/modules'
+import { HealthController, JournalModule } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
-import { RouterModule } from '@nestjs/core'
+
+import { JournalController } from './journal/journal.controller'
 
 @Module({
-  imports: [
-    JournalModule,
-    RouterModule.register([
-      {
-        path: 'journal',
-        module: JournalModule,
-      },
-    ]),
-  ],
+  imports: [JournalModule],
+  controllers: [HealthController, JournalController],
 })
 export class AppModule {}

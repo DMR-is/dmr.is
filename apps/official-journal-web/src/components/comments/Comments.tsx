@@ -10,12 +10,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import {
-  Case,
-  CaseCommentCaseStatusEnum,
-  CaseCommentTaskTitleEnum,
-  CaseCommentTypeEnum,
-} from '../../gen/fetch'
+import { Case, CaseCommentTypeEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
@@ -29,21 +24,60 @@ export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
   const [expanded, setExpanded] = useState(activeCase.comments.length < 5)
   const [commentValue, setCommentValue] = useState('')
+  const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
+  const [caseComments, setCaseComments] = useState(activeCase.comments)
   const now = new Date()
 
+  const deleteComment = (id: string) => {
+    const deleteComment = async () => {
+      await fetch(
+        `/api/comments/delete?caseId=${activeCase.id}&commentId=${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+        .then((res) => {
+          if (res.ok) {
+            return res.json()
+          }
+          throw new Error('Failed to delete comment')
+        })
+        .then((data) => setCaseComments(data))
+        .catch((err) => console.error(err))
+    }
+
+    deleteComment()
+  }
+
   const addComment = () => {
-    activeCase.comments.push({
-      id: '1234',
-      createdAt: new Date().toISOString(),
-      type: CaseCommentTypeEnum.Comment,
-      caseStatus: activeCase.status as unknown as CaseCommentCaseStatusEnum,
-      task: {
-        from: activeCase.assignedTo.name,
-        to: null,
-        title: CaseCommentTaskTitleEnum.GerirAthugasemd,
-        comment: commentValue,
-      },
-    })
+    const post = async () => {
+      const data = await fetch('/api/comments/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caseId: activeCase.id,
+          comment: commentValue,
+          internal: isInternalComment,
+          type: isInternalComment
+            ? CaseCommentTypeEnum.Comment
+            : CaseCommentTypeEnum.Message,
+          from: 'Ármann Árni', // TODO: Replace with actual user
+        }),
+      })
+
+      const json = await data.json()
+
+      if (Array.isArray(json)) {
+        setCaseComments([...json])
+      }
+    }
+
+    post()
     setCommentValue('')
   }
 
@@ -51,7 +85,7 @@ export const Comments = ({ activeCase }: Props) => {
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
 
-      {activeCase.comments.map((c, i) => {
+      {caseComments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
         const suffix =
           String(daysAgo).slice(-1) === '1'
@@ -85,6 +119,24 @@ export const Comments = ({ activeCase }: Props) => {
               <div className={styles.text}>
                 <Text>{commentTaskToNode(c.task)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
+                {/* TODO: Replace with actual user */}
+                {c.task.from === 'Ármann Árni' && (
+                  <Button
+                    variant="text"
+                    as="button"
+                    size="small"
+                    onClick={() => deleteComment(c.id)}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      columnGap="smallGutter"
+                    >
+                      {formatMessage(messages.comments.deleteComment)}
+                      <Icon icon="trash" type="outline" size="small" />
+                    </Box>
+                  </Button>
+                )}
               </div>
 
               <Text whiteSpace="nowrap">

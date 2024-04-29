@@ -1,1 +1,5 @@
 export * from './journal/journal.module'
+export * from './auth/auth.module'
+export * from './application/application.module'
+export * from './case/case.module'
+export * from './health/health.module'

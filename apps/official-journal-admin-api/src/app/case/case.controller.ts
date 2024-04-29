@@ -1,11 +1,14 @@
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ICaseService } from '@dmr.is/modules'
 import {
   Case,
+  CaseComment,
   CaseEditorialOverview,
+  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
@@ -13,17 +16,16 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Inject,
-  InternalServerErrorException,
+  Param,
   Post,
   Query,
 } from '@nestjs/common'
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
-
-import { ICaseService } from './case.service.interface'
 
 @Controller({
   version: '1',
@@ -32,7 +34,6 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('case')
@@ -130,5 +131,60 @@ export class CaseController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
+  }
+
+  @Get(':caseId/comments')
+  @ApiOperation({
+    operationId: 'getComments',
+    summary: 'Get case comments',
+  })
+  @ApiResponse({
+    status: 200,
+    type: [CaseComment],
+    description: 'Comments for case',
+  })
+  async getComments(
+    @Param('caseId') caseId: string,
+    @Query('params') params?: GetCaseCommentsQuery,
+  ): Promise<CaseComment[]> {
+    return this.caseService.getComments(caseId, params)
+  }
+
+  @Post(':caseId/comments')
+  @ApiOperation({
+    operationId: 'addComment',
+    summary: 'Add comment to case',
+  })
+  @ApiResponse({
+    type: [CaseComment],
+    status: 200,
+    description: 'Comment added',
+  })
+  async addComment(
+    @Param('caseId') id: string,
+    @Body() body: PostCaseComment,
+  ): Promise<CaseComment[]> {
+    return this.caseService.postComment(id, body)
+  }
+
+  @Delete(':caseId/comments/:commentId')
+  @ApiOperation({
+    operationId: 'deleteComment',
+    summary: 'Delete comment from case',
+  })
+  @ApiResponse({
+    type: [CaseComment],
+    status: 200,
+    description: 'Comment deleted',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Comment not found',
+  })
+  async deleteComment(
+    @Param('caseId') caseId: string,
+    @Param('commentId') commentId: string,
+  ): Promise<CaseComment[]> {
+    return this.caseService.deleteComment(caseId, commentId)
   }
 }

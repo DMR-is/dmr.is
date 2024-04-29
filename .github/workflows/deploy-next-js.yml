@@ -1,4 +1,4 @@
-name: Deploy APIs to AWS Dev
+name: Deploy Official Journal Web to AWS Dev
 
 on:
   workflow_run:
@@ -108,7 +108,7 @@ jobs:
         id: deploy
         run: |
           cd  utgafa
-          COMMIT_MSG=$(./scripts/update_next_app.sh --environment dev --sha ${{ github.sha }} --target official_journal_next_app --commit false)
+          COMMIT_MSG=$(./scripts/update_official_journal_web.sh --environment dev --sha ${{ github.sha }})
           echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
       - name: Commit

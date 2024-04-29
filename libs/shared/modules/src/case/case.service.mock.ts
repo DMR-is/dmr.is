@@ -1,15 +1,19 @@
 import { isBooleanString } from 'class-validator'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
+  CaseComment,
   CaseEditorialOverview,
   CaseStatus,
+  CaseWithApplication,
+  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationBody,
+  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
@@ -21,14 +25,35 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
-
 import { ICaseService } from './case.service.interface'
 
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updateCaseHistory(caseId: string): Promise<Case> {
+    throw new Error('Method not implemented.')
+  }
+
+  createCase(body: PostApplicationBody): Promise<Case> {
+    throw new Error('Method not implemented.')
+  }
+
+  getCaseByApplicationId(applicationId: string): Promise<Case | null> {
+    throw new Error('Method not implemented.')
+  }
+
+  getComments(
+    caseId: string,
+    params?: GetCaseCommentsQuery | undefined,
+  ): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
+  }
+  postComment(caseId: string, body: PostCaseComment): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
+  }
+  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
+    throw new Error('Method not implemented.')
   }
   getCase(id: string): Promise<Case | null> {
     const found = ALL_MOCK_CASES.find((c) => c.id === id)
@@ -37,11 +62,11 @@ export class CaseServiceMock implements ICaseService {
       throw new NotFoundException('Case not found')
     }
 
-    if (found.advert.document.isLegacy) {
-      found.advert.document.html = dirtyClean(
-        found.advert.document.html as HTMLText,
-      )
-    }
+    // if (found.advert.document.isLegacy) {
+    //   found.advert.document.html = dirtyClean(
+    //     found.advert.document.html as HTMLText,
+    //   )
+    // }
 
     return Promise.resolve(found)
   }
@@ -60,15 +85,14 @@ export class CaseServiceMock implements ICaseService {
       const filteredCases = ALL_MOCK_CASES.filter((c) => {
         if (params?.search) {
           // for now search for department and name
-
-          if (
-            !c.advert.department.title
-              .toLowerCase()
-              .includes(params.search.toLowerCase()) &&
-            !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
-          ) {
-            return false
-          }
+          // if (
+          //   !c.advert.department.title
+          //     .toLowerCase()
+          //     .includes(params.search.toLowerCase()) &&
+          //   !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
+          // ) {
+          //   return false
+          // }
         }
 
         if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
@@ -103,12 +127,12 @@ export class CaseServiceMock implements ICaseService {
           return false
         }
 
-        if (
-          params?.department &&
-          c.advert.department.slug !== params.department.toLowerCase()
-        ) {
-          return false
-        }
+        // if (
+        //   params?.department &&
+        //   c.advert.department.slug !== params.department.toLowerCase()
+        // ) {
+        //   return false
+        // }
 
         return true
       })
@@ -118,14 +142,14 @@ export class CaseServiceMock implements ICaseService {
         withPaging.pageSize * (withPaging.page - 1),
         withPaging.pageSize * withPaging.page,
       )
-      pagedCases.forEach((c) => {
-        if (c.advert.document.isLegacy) {
-          c.advert.document.html = dirtyClean(
-            c.advert.document.html as HTMLText,
-          )
-        }
-        return c
-      })
+      // pagedCases.forEach((c) => {
+      // if (c.advert.document.isLegacy) {
+      //   c.advert.document.html = dirtyClean(
+      //     c.advert.document.html as HTMLText,
+      //   )
+      // }
+      //   return c
+      // })
 
       return Promise.resolve({
         cases: pagedCases,
@@ -180,10 +204,8 @@ export class CaseServiceMock implements ICaseService {
 
     const { cases, paging } = await this.getCases(params)
 
-    console.log(paging)
-
     return Promise.resolve({
-      data: cases,
+      data: cases as unknown as CaseWithApplication[],
       totalItems: {
         submitted: submitted.length,
         inProgress: inProgress.length,
