@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDebounce } from 'react-use'
 
 import {
@@ -11,7 +11,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { FilterOption } from '../../context/filterContext'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
@@ -29,6 +28,7 @@ export const CaseFilters = () => {
   const { setSearchFilter, filterGroups, renderFilters } = useFilterContext()
   const { formatMessage } = useFormatMessage()
   const allFilters = filterGroups?.map((g) => g.options).flat()
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>([])
 
   const qs = qp.get('search') ?? ''
 
@@ -37,6 +37,19 @@ export const CaseFilters = () => {
   const onStateUpdate = (value: string) => {
     setLocalSearch(value)
   }
+
+  useEffect(() => {
+    const filters: ActiveFilters = []
+    Object.entries(qp.query).forEach(([key, values]) => {
+      if (allFilters?.find((f) => f.key === key)) {
+        const value = typeof values === 'string' ? values.split(',') : undefined
+        value?.forEach((v) => {
+          filters.push({ key, value: v })
+        })
+      }
+    })
+    setActiveFilters(filters)
+  }, [qp.query])
 
   useDebounce(
     () => {
@@ -51,15 +64,11 @@ export const CaseFilters = () => {
     return null
   }
 
-  const activeFilters: ActiveFilters = []
-  Object.entries(qp.query).forEach(([key, values]) => {
-    if (allFilters?.find((f) => f.key === key)) {
-      const value = typeof values === 'string' ? values.split(',') : undefined
-      value?.forEach((v) => {
-        activeFilters.push({ key, value: v })
-      })
-    }
-  })
+  const resetFilters = () => {
+    const keys = activeFilters.map((f) => f.key)
+    setLocalSearch('')
+    qp.remove(keys)
+  }
 
   return (
     <Box>
@@ -82,7 +91,7 @@ export const CaseFilters = () => {
               </Button>
             }
           >
-            <FilterPopover>
+            <FilterPopover resetFilters={resetFilters}>
               {filterGroups.map((filter, i) => (
                 <FilterGroup
                   key={i}
@@ -98,7 +107,9 @@ export const CaseFilters = () => {
       </Box>
       {activeFilters.length ? (
         <Box display="flex" marginTop={[2]} columnGap={1}>
-          <Text whiteSpace="nowrap">Síun á lista:</Text>
+          <Text whiteSpace="nowrap">
+            {formatMessage(messages.general.filterLabel)}
+          </Text>
           <Inline space={1}>
             {activeFilters.map((a) => {
               const target = allFilters?.find((f) => f.value === a.value)
@@ -121,12 +132,9 @@ export const CaseFilters = () => {
                 variant="text"
                 size="small"
                 icon="reload"
-                onClick={() => {
-                  const keys = activeFilters.map((f) => f.key)
-                  qp.remove(keys)
-                }}
+                onClick={resetFilters}
               >
-                Hreinsa allar síur
+                {formatMessage(messages.general.clearAllFilters)}
               </Button>
             </Text>
           ) : null}

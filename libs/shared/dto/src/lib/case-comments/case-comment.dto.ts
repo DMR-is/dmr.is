@@ -26,6 +26,13 @@ export class CaseComment {
   readonly createdAt!: string
 
   @ApiProperty({
+    type: Boolean,
+    description: 'Is the comment internal or external.',
+    example: false,
+  })
+  internal!: boolean
+
+  @ApiProperty({
     enum: CaseCommentType,
     example: CaseCommentType.Comment,
     description: 'Type of the case task.',

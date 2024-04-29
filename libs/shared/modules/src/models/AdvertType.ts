@@ -9,7 +9,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { AdvertDepartment } from './AdvertDepartment'
+import { AdvertDepartmentDTO } from './AdvertDepartment'
 
 @Table({ tableName: 'advert_type', timestamps: true })
 @DefaultScope(() => ({
@@ -17,7 +17,7 @@ import { AdvertDepartment } from './AdvertDepartment'
     exclude: ['created', 'updated'],
   },
 }))
-export class AdvertType extends Model {
+export class AdvertTypeDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
@@ -35,8 +35,8 @@ export class AdvertType extends Model {
   @Column({ field: 'department_id' })
   departmentId!: string
 
-  @BelongsTo(() => AdvertDepartment, 'department_id')
-  department!: AdvertDepartment
+  @BelongsTo(() => AdvertDepartmentDTO, 'department_id')
+  department!: AdvertDepartmentDTO
 
   @CreatedAt
   created!: Date

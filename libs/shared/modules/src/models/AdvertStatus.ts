@@ -1,7 +1,7 @@
 import { Column, DataType, Model, NotNull, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'advert_status', timestamps: false })
-export class AdvertStatus extends Model {
+export class AdvertStatusDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,

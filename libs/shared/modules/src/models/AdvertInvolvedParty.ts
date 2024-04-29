@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript'
 
 @Table({ tableName: 'advert_involved_party', timestamps: false })
-export class AdvertInvolvedParty extends Model {
+export class AdvertInvolvedPartyDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,

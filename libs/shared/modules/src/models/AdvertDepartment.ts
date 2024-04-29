@@ -1,9 +1,9 @@
 import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript'
 
-import { AdvertType } from './AdvertType'
+import { AdvertTypeDTO } from './AdvertType'
 
 @Table({ tableName: 'advert_department', timestamps: false })
-export class AdvertDepartment extends Model {
+export class AdvertDepartmentDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
@@ -18,6 +18,6 @@ export class AdvertDepartment extends Model {
   @Column
   slug!: string
 
-  @HasMany(() => AdvertType, 'department_id')
-  adTypes?: AdvertType[]
+  @HasMany(() => AdvertTypeDTO, 'department_id')
+  adTypes?: AdvertTypeDTO[]
 }

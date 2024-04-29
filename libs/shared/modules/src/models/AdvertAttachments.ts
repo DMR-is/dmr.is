@@ -13,7 +13,7 @@ import {
     exclude: ['created', 'updated'],
   },
 }))
-export class AdvertAttachments extends Model {
+export class AdvertAttachmentsDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,

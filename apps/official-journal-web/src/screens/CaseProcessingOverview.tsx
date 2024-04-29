@@ -33,7 +33,7 @@ type Props = {
   }
 }
 
-const CaseProcessingScreen: Screen<Props> = ({
+const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
   paging,
   totalItems,
@@ -114,7 +114,7 @@ const CaseProcessingScreen: Screen<Props> = ({
   )
 }
 
-CaseProcessingScreen.getProps = async ({ query }) => {
+CaseProccessingOverviewScreen.getProps = async ({ query }) => {
   const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
 
   const dmrClient = createDmrClient()
@@ -158,7 +158,7 @@ CaseProcessingScreen.getProps = async ({ query }) => {
   }
 }
 
-export default withMainLayout(CaseProcessingScreen, {
+export default withMainLayout(CaseProccessingOverviewScreen, {
   bannerProps: {
     showBanner: true,
     showFilters: true,

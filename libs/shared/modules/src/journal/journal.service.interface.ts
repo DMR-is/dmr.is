@@ -8,20 +8,22 @@ import {
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
+  GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  PostApplicationBody,
-  PostApplicationResponse,
 } from '@dmr.is/shared/dto'
 
 export interface IJournalService {
   getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse>
 
   getAdvert(id: string): Promise<Advert | null>
+
+  getDepartment(id: string): Promise<GetDepartmentResponse>
 
   getDepartments(
     params?: GetDepartmentsQueryParams,
@@ -37,11 +39,11 @@ export interface IJournalService {
     params?: GetCategoriesQueryParams,
   ): Promise<GetCategoriesResponse>
 
+  getInstitution(id: string): Promise<GetInstitutionResponse>
+
   getInstitutions(
     params?: GetInstitutionsQueryParams,
   ): Promise<GetInstitutionsResponse>
-
-  submitApplication(body: PostApplicationBody): Promise<PostApplicationResponse>
 
   getSignatures(
     params?: GetAdvertSignatureQuery,

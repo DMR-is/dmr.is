@@ -4,23 +4,16 @@ import {
   CaseCommentType,
   CaseTag,
   CaseCommentTitle,
+  CaseCommunicationStatus,
 } from '@dmr.is/shared/dto'
-import {
-  ADVERT_A_32_2024,
-  ADVERT_B_1278_2023,
-  ADVERT_B_866_2006,
-  ADVERT_NEW,
-  ADVERT_READY_A,
-  ADVERT_READY_B,
-  ADVERT_READY_B_2,
-} from './journal.mock'
 import { ARMANN, PALINA } from './users.mock'
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
-  applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134153',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 1234,
+  history: [],
   status: CaseStatus.Submitted,
   tag: CaseTag.NotStarted,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -31,13 +24,15 @@ export const CASE_SUBMITTED: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
-  advert: ADVERT_NEW,
+  // advert: ADVERT_NEW,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -49,10 +44,11 @@ export const CASE_SUBMITTED: Case = {
 }
 
 export const CASE_IN_PROGRESS: Case = {
-  id: 'e6d7c050-a462-4183-972a-5c375e6e358d',
-  applicationId: '3ec5ef68-6dc8-42ee-9eha-1670ff134153',
+  id: 'j6d7c050-a462-4183-972a-5c375e6e358d',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 8526,
+  history: [],
   status: CaseStatus.InProgress,
   tag: CaseTag.NotStarted,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -63,13 +59,15 @@ export const CASE_IN_PROGRESS: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
-  advert: ADVERT_READY_B,
+  // advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -82,6 +80,7 @@ export const CASE_IN_PROGRESS: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -94,6 +93,7 @@ export const CASE_IN_PROGRESS: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -106,6 +106,7 @@ export const CASE_IN_PROGRESS: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -119,9 +120,10 @@ export const CASE_IN_PROGRESS: Case = {
 
 export const CASE_IN_REVIEW: Case = {
   id: 'e637c050-a462-4183-972a-5c375e6e34ad',
-  applicationId: '3ec5ef68-6dc8-42ee-9eba-1670ff134z53',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 5824,
+  history: [],
   status: CaseStatus.InReview,
   tag: CaseTag.InReview,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -132,13 +134,15 @@ export const CASE_IN_REVIEW: Case = {
   price: 23900,
   fastTrack: true,
   assignedTo: PALINA,
-  advert: ADVERT_READY_B,
+  // advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -151,6 +155,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -163,6 +168,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -175,6 +181,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -188,6 +195,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Assign,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Pálína J',
@@ -200,6 +208,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Pálína J',
         to: 'Yfirlestur',
@@ -212,6 +221,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
+      internal: false,
       task: {
         from: 'Pálína J',
         to: null,
@@ -224,6 +234,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Assign,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
+      internal: false,
       task: {
         from: 'Pálína J',
         to: 'Ármann',
@@ -236,6 +247,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -248,6 +260,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Tilbúið',
@@ -260,9 +273,10 @@ export const CASE_IN_REVIEW: Case = {
 
 export const CASE_READY: Case = {
   id: 'e637c050-a462-4183-972a-5re54he34ad',
-  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 3211,
+  history: [],
   status: CaseStatus.ReadyForPublishing,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -273,13 +287,15 @@ export const CASE_READY: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
-  advert: ADVERT_READY_A,
+  // advert: ADVERT_READY_A,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -292,6 +308,7 @@ export const CASE_READY: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -304,6 +321,7 @@ export const CASE_READY: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -316,6 +334,7 @@ export const CASE_READY: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -329,9 +348,10 @@ export const CASE_READY: Case = {
 
 export const CASE_READY_2: Case = {
   id: 'e637c050-a462-4183-972a-5cfddae34ad',
-  applicationId: '749f1eff-236d-4c67-a4cc-eb7a7bbd5452',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 2314,
+  history: [],
   status: CaseStatus.ReadyForPublishing,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-04-01T12:45:48.21Z',
@@ -342,13 +362,15 @@ export const CASE_READY_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
-  advert: ADVERT_READY_B,
+  // advert: ADVERT_READY_B,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -361,6 +383,7 @@ export const CASE_READY_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -373,6 +396,7 @@ export const CASE_READY_2: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -385,6 +409,7 @@ export const CASE_READY_2: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -398,9 +423,10 @@ export const CASE_READY_2: Case = {
 
 export const CASE_READY_3: Case = {
   id: 'e637c050-a462-4183-23fe-5cfddae34ad',
-  applicationId: '749f1eff-236d-4c67-a4cc-eb7a7bbd5452',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 4321,
+  history: [],
   status: CaseStatus.ReadyForPublishing,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-04-01T12:45:48.21Z',
@@ -411,13 +437,15 @@ export const CASE_READY_3: Case = {
   price: 23000,
   fastTrack: true,
   assignedTo: ARMANN,
-  advert: ADVERT_READY_B_2,
+  // advert: ADVERT_READY_B_2,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -430,6 +458,7 @@ export const CASE_READY_3: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -442,6 +471,7 @@ export const CASE_READY_3: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -454,6 +484,7 @@ export const CASE_READY_3: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -467,9 +498,10 @@ export const CASE_READY_3: Case = {
 
 export const CASE_PUBLISHED: Case = {
   id: 'e637c050-a462-4483-972a-5c375x6e34ad',
-  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 3211,
+  history: [],
   status: CaseStatus.Published,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -480,13 +512,15 @@ export const CASE_PUBLISHED: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
-  advert: ADVERT_B_866_2006,
+  // advert: ADVERT_B_866_2006,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -499,6 +533,7 @@ export const CASE_PUBLISHED: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -511,6 +546,7 @@ export const CASE_PUBLISHED: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -523,6 +559,7 @@ export const CASE_PUBLISHED: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -536,9 +573,10 @@ export const CASE_PUBLISHED: Case = {
 
 export const CASE_PUBLISHED_2: Case = {
   id: 'e637c050-a462-4483-972a-5c375x6e34ad',
-  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 3211,
+  history: [],
   status: CaseStatus.Published,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -549,13 +587,15 @@ export const CASE_PUBLISHED_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
-  advert: ADVERT_A_32_2024,
+  // advert: ADVERT_A_32_2024,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -568,6 +608,7 @@ export const CASE_PUBLISHED_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -580,6 +621,7 @@ export const CASE_PUBLISHED_2: Case = {
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -592,6 +634,7 @@ export const CASE_PUBLISHED_2: Case = {
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,
@@ -605,9 +648,10 @@ export const CASE_PUBLISHED_2: Case = {
 
 export const CASE_PUBLISHED_3: Case = {
   id: 'e637c050-a462-4483-972a-5c375x6e34ad',
-  applicationId: '3ec5ef68-6dc8-42xe-9eba-1670ff134z53',
+  applicationId: '17f5d6aa-5a87-4c77-96e6-047ce722a640',
   year: 2024,
   caseNumber: 4523,
+  history: [],
   status: CaseStatus.Published,
   tag: CaseTag.MultipleReviewers,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -618,13 +662,15 @@ export const CASE_PUBLISHED_3: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
-  advert: ADVERT_B_1278_2023,
+  // advert: ADVERT_B_1278_2023,
+  communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -637,6 +683,7 @@ export const CASE_PUBLISHED_3: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
+      internal: false,
       task: {
         from: 'Ármann',
         to: null,

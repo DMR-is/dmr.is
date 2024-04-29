@@ -47,5 +47,10 @@ export const messages = {
       defaultMessage: 'Vista athugasemd',
       description: '',
     },
+    deleteComment: {
+      id: 'web.components.comments:deleteComment',
+      defaultMessage: 'Eyða',
+      description: '',
+    },
   }),
 }

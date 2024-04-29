@@ -239,6 +239,7 @@ export const CaseTable = ({
               !isVisible && setModalActive(undefined)
             }
             hideOnEsc={true}
+            modalLabel={formatMessage(messages.modal.modalLabel)}
           >
             <div className={styles.advertModal}>
               <div className={styles.advertModalHeader}>

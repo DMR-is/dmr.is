@@ -9,10 +9,10 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { AdvertMainCategory } from './AdvertMainCategory'
+import { AdvertMainCategoryDTO } from './AdvertMainCategory'
 
 @Table({ tableName: 'advert_category', timestamps: false })
-export class AdvertCategory extends Model {
+export class AdvertCategoryDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
@@ -38,6 +38,6 @@ export class AdvertCategory extends Model {
   @UpdatedAt
   updated!: Date
 
-  @BelongsTo(() => AdvertMainCategory, 'main_category_id')
-  mainCategory!: AdvertMainCategory
+  @BelongsTo(() => AdvertMainCategoryDTO, 'main_category_id')
+  mainCategory!: AdvertMainCategoryDTO
 }

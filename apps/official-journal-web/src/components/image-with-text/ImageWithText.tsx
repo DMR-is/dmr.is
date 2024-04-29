@@ -15,7 +15,8 @@ type Props = {
   align?: 'ltr' | 'rtl'
   kicker?: string
   title?: string
-  children?: React.ReactNode
+  intro?: string
+  text?: string
   link?: string
   linkText?: string
   linkIcon?: React.ComponentProps<typeof Icon>['icon']
@@ -25,9 +26,10 @@ type Props = {
 export const ImageWithText = ({
   image,
   align = 'ltr',
-  children,
+  text,
   kicker,
   title,
+  intro,
   link,
   linkText,
   linkIcon,
@@ -41,16 +43,23 @@ export const ImageWithText = ({
         </GridColumn>
         <GridColumn className={styles.contentColumn} span={['12/12', '5/12']}>
           {kicker && (
-            <Text variant="eyebrow" marginBottom={2}>
+            <Text variant="eyebrow" marginBottom={2} color="purple400">
               {kicker}
             </Text>
           )}
           {title && (
-            <Text marginBottom={1} variant="h2">
+            <Text variant="h2" as="h2">
               {title}
             </Text>
           )}
-          {children}
+          {intro && (
+            <Text variant="intro" marginTop={title ? 2 : undefined}>
+              {intro}
+            </Text>
+          )}
+          {text && (
+            <Text marginTop={title || intro ? 2 : undefined}>{text}</Text>
+          )}
           {link && linkText && (
             <Box className={styles.linkWrapper}>
               <LinkV2 href={link}>

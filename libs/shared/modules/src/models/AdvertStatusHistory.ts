@@ -8,11 +8,11 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Advert } from './Advert'
-import { AdvertStatus } from './AdvertStatus'
+import { AdvertDTO } from './Advert'
+import { AdvertStatusDTO } from './AdvertStatus'
 
 @Table({ tableName: 'advert_status_history', timestamps: false })
-export class AdvertStatusHistory extends Model {
+export class AdvertStatusHistoryDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
@@ -25,15 +25,15 @@ export class AdvertStatusHistory extends Model {
   @NotNull
   advert_id!: string
 
-  @HasOne(() => Advert, 'advert_id')
-  advert!: Advert
+  @HasOne(() => AdvertDTO, 'advert_id')
+  advert!: AdvertDTO
 
   @Column({ type: DataType.UUIDV4 })
   @NotNull
   status_id!: string
 
-  @HasOne(() => AdvertStatus, 'status_id')
-  status!: AdvertStatus
+  @HasOne(() => AdvertStatusDTO, 'status_id')
+  status!: AdvertStatusDTO
 
   @CreatedAt
   created!: Date

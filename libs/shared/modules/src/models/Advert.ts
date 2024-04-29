@@ -9,16 +9,17 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
+import { AdvertStatus } from '@dmr.is/shared/dto'
 
-import { AdvertAttachments } from './AdvertAttachments'
-import { AdvertCategory } from './AdvertCategory'
-import { AdvertDepartment } from './AdvertDepartment'
-import { AdvertInvolvedParty } from './AdvertInvolvedParty'
-import { AdvertStatus } from './AdvertStatus'
-import { AdvertType } from './AdvertType'
+import { AdvertAttachmentsDTO } from './AdvertAttachments'
+import { AdvertCategoryDTO } from './AdvertCategory'
+import { AdvertDepartmentDTO } from './AdvertDepartment'
+import { AdvertInvolvedPartyDTO } from './AdvertInvolvedParty'
+import { AdvertStatusDTO } from './AdvertStatus'
+import { AdvertTypeDTO } from './AdvertType'
 
 @Table({ tableName: 'advert', timestamps: false })
-export class Advert extends Model {
+export class AdvertDTO extends Model {
   @Column({
     type: DataType.UUID,
     primaryKey: true,
@@ -30,17 +31,17 @@ export class Advert extends Model {
   @Column({ type: DataType.UUID, field: 'department_id' })
   departmentId!: string
 
-  @BelongsTo(() => AdvertDepartment, 'department_id')
-  department!: AdvertDepartment
+  @BelongsTo(() => AdvertDepartmentDTO, 'department_id')
+  department!: AdvertDepartmentDTO
 
   @Column({ type: DataType.UUID, field: 'type_id' })
   typeId!: string
 
-  @BelongsTo(() => AdvertType, 'type_id')
-  type!: AdvertType
+  @BelongsTo(() => AdvertTypeDTO, 'type_id')
+  type!: AdvertTypeDTO
 
-  @BelongsToMany(() => AdvertCategory, { through: 'advert_categories' })
-  categories!: AdvertCategory[]
+  @BelongsToMany(() => AdvertCategoryDTO, { through: 'advert_categories' })
+  categories!: AdvertCategoryDTO[]
 
   @Column
   subject!: string
@@ -48,8 +49,8 @@ export class Advert extends Model {
   @Column({ field: 'status_id' })
   statusId!: string
 
-  @BelongsTo(() => AdvertStatus, 'status_id')
-  status!: AdvertStatus
+  @BelongsTo(() => AdvertStatusDTO, 'status_id')
+  status!: AdvertStatusDTO
 
   @Column({ field: 'serial_number' })
   serialNumber!: number
@@ -66,8 +67,8 @@ export class Advert extends Model {
   @Column({ field: 'involved_party_id' })
   involvedPartyId!: string
 
-  @BelongsTo(() => AdvertInvolvedParty, 'involved_party_id')
-  involvedParty!: AdvertInvolvedParty
+  @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
+  involvedParty!: AdvertInvolvedPartyDTO
 
   @Column({ field: 'is_legacy' })
   isLegacy!: boolean
@@ -78,8 +79,8 @@ export class Advert extends Model {
   @Column({ field: 'document_pdf_url' })
   documentPdfUrl!: string
 
-  @HasMany(() => AdvertAttachments, 'id')
-  attachments!: AdvertAttachments[]
+  @HasMany(() => AdvertAttachmentsDTO, 'id')
+  attachments!: AdvertAttachmentsDTO[]
 
   @CreatedAt
   created!: Date

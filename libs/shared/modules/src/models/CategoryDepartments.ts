@@ -7,13 +7,12 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
-import { Category } from '@dmr.is/shared/dto'
 
-import { Advert } from './Advert'
-import { AdvertCategory } from './AdvertCategory'
+import { AdvertDTO } from './Advert'
+import { AdvertCategoryDTO } from './AdvertCategory'
 
 @Table({ tableName: 'category_departments', timestamps: false })
-export class CategoryDepartments extends Model {
+export class CategoryDepartmentsDTO extends Model {
   @PrimaryKey
   @NotNull
   @Column({
@@ -29,9 +28,9 @@ export class CategoryDepartments extends Model {
   })
   category_id!: string
 
-  @HasOne(() => Advert, 'id')
-  advert?: Advert
+  @HasOne(() => AdvertDTO, 'id')
+  advert?: AdvertDTO
 
-  @HasOne(() => AdvertCategory, 'id')
-  category?: Category
+  @HasOne(() => AdvertCategoryDTO, 'id')
+  category?: AdvertCategoryDTO
 }

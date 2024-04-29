@@ -1,7 +1,7 @@
 import { Column, DataType, Model, NotNull, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'advert_main_category', timestamps: false })
-export class AdvertMainCategory extends Model {
+export class AdvertMainCategoryDTO extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
