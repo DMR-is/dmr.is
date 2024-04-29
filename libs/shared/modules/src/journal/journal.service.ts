@@ -159,16 +159,6 @@ export class JournalService implements IJournalService {
 
     const types = typesDTO.map((item) => advertTypesMigrate(item))
 
-    /*if (params?.page && params.page > paging.totalPages) {
-      return {
-        type: 'error',
-        error: {
-          message: 'page out of range',
-          code: 400,
-        },
-      }
-    }*/
-
     const result: GetAdvertTypesResponse = {
       types,
       paging,

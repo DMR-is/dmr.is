@@ -17,6 +17,7 @@ import {
   generateAdvertStatusesInserts,
   generateAdvertsCategoriesInserts,
   generateAdvertsInserts,
+  generateCategoryDepartmentInserts,
   generateCategoryInserts,
   generateDepartmentInserts,
   generateInvolvedPartiesInserts,
@@ -29,6 +30,7 @@ import {
   fixDeps,
   fixTypes,
   mapAdvertsCategories,
+  mapCategoryDepartments,
 } from './lib/fixers.js'
 import { getSuperCategories } from './lib/static.js'
 
@@ -100,7 +102,7 @@ async function main() {
     cats,
     dbAdvertsCategories,
   )
-
+  const categoryDepartments = mapCategoryDepartments(dbCategories, departments)
   // Step 3: Generate the inserts
   const inserts: Record<string, string[]> = {}
 
@@ -117,6 +119,8 @@ async function main() {
       inserts.adverts = generateAdvertsInserts(adverts)
       inserts.advertsCategories =
         generateAdvertsCategoriesInserts(advertsCategories)
+      inserts.categoryDepartments =
+        generateCategoryDepartmentInserts(categoryDepartments)
       return Promise.resolve()
     },
     '🔨',
@@ -134,6 +138,10 @@ async function main() {
       write('05_involved_parties.sql', inserts.advertStatuses.join('\n'))
       write('06_adverts.sql', inserts.adverts.join('\n'))
       write('07_adverts_categories.sql', inserts.adverts.join('\n'))
+      write(
+        '08_category_department.sql',
+        inserts.categoryDepartments.join('\n'),
+      )
       return Promise.resolve()
     },
     '📝',

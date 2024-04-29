@@ -7,6 +7,7 @@ import {
   InvolvedParty,
   Advert,
   AdvertCategory,
+  CategoryDepartment,
 } from '../types'
 
 export function generateDepartmentInserts(departments: Array<Department>) {
@@ -74,6 +75,15 @@ export function generateAdvertsCategoriesInserts(
 ) {
   const inserts = advertCategories.map((advertCategory) => {
     return `INSERT INTO advert_categories (advert_id, category_id) VALUES ('${advertCategory.advertId}', '${advertCategory.categoryId}');`
+  })
+  return inserts
+}
+
+export function generateCategoryDepartmentInserts(
+  categoryDepartment: Array<CategoryDepartment>,
+) {
+  const inserts = categoryDepartment.map((item) => {
+    return `INSERT INTO category_department(category_id,department_id) VALUES ('${item.category_id}','${item.department_id}');`
   })
   return inserts
 }

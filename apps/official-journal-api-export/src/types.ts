@@ -77,3 +77,8 @@ export type AdvertCategory = {
   advertId: string
   categoryId: string
 }
+
+export type CategoryDepartment = {
+  category_id: string
+  department_id: string
+}

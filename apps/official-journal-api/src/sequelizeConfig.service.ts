@@ -5,7 +5,6 @@ import {
 } from '@nestjs/sequelize'
 
 // import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import * as dbConfig from '../sequelize.config.js'

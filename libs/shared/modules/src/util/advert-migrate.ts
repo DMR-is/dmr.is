@@ -2,8 +2,6 @@ import {
   Advert as AdvertDTO,
   AdvertAttachment,
   AdvertStatus as AdvertStatusDTO,
-  Category,
-  Department,
 } from '@dmr.is/shared/dto'
 
 import { Advert } from '../models/Advert'

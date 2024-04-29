@@ -3,6 +3,7 @@ import {
   Advert,
   AdvertCategory,
   Category,
+  CategoryDepartment,
   DbAdverts,
   DbCategory,
   DbDepartment,

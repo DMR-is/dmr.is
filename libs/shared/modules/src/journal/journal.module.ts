@@ -8,9 +8,9 @@ import { AdvertCategories } from '../models/AdvertCategories'
 import { AdvertCategory } from '../models/AdvertCategory'
 import { AdvertDepartment } from '../models/AdvertDepartment'
 import { AdvertInvolvedParty } from '../models/AdvertInvolvedParty'
+import { AdvertMainCategory } from '../models/AdvertMainCategory'
 import { AdvertStatus } from '../models/AdvertStatus'
 import { AdvertStatusHistory } from '../models/AdvertStatusHistory'
-import { AdvertSuperCategory } from '../models/AdvertMainCategory'
 import { AdvertType } from '../models/AdvertType'
 import { JournalController } from './journal.controller'
 import { JournalService } from './journal.service'
@@ -26,7 +26,7 @@ const MOCK_DATA = false
       Advert,
       AdvertCategories,
       AdvertCategory,
-      AdvertSuperCategory,
+      AdvertMainCategory,
       AdvertDepartment,
       AdvertStatus,
       AdvertStatusHistory,
