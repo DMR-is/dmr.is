@@ -64,25 +64,25 @@ export class CaseService implements ICaseService {
         throw new NotFoundException('Application not found')
       }
 
-      if (
-        !application.answers.advert?.department ||
-        !application.answers.publishing?.date ||
-        !application.answers.advert?.title ||
-        !application.answers.advert?.type
-      ) {
-        // this should not happen
-        throw new BadRequestException('Missing required fields')
-      }
+      // if (
+      //   !application.answers.advert?.department ||
+      //   !application.answers.publishing?.date ||
+      //   !application.answers.advert?.title ||
+      //   !application.answers.advert?.type
+      // ) {
+      //   // this should not happen
+      //   throw new BadRequestException('Missing required fields')
+      // }
 
       const now = new Date()
 
-      const history: CaseHistory = {
-        date: now.toISOString(),
-        department: application.answers.advert?.department,
-        requestedPublicationDate: application.answers.publishing?.date,
-        subject: application.answers.advert?.title,
-        type: application.answers.advert?.type,
-      }
+      // const history: CaseHistory = {
+      //   date: now.toISOString(),
+      //   department: application.answers.advert?.department,
+      //   requestedPublicationDate: application.answers.publishing?.date,
+      //   subject: application.answers.advert?.title,
+      //   type: application.answers.advert?.type,
+      // }
 
       const newCase: Case = {
         id: uuid(),
@@ -92,7 +92,7 @@ export class CaseService implements ICaseService {
         communicationStatus: CaseCommunicationStatus.NotStarted,
         createdAt: now.toISOString(),
         modifiedAt: now.toISOString(),
-        history: [history],
+        history: [application],
         paid: false,
         price: 23000,
         published: false,
@@ -141,27 +141,17 @@ export class CaseService implements ICaseService {
       throw new NotFoundException('Application not found')
     }
 
-    if (
-      !application.answers.advert?.department ||
-      !application.answers.publishing?.date ||
-      !application.answers.advert?.title ||
-      !application.answers.advert?.type
-    ) {
-      // this should not happen
-      throw new BadRequestException('Missing required fields')
-    }
+    // if (
+    //   !application.answers.advert?.department ||
+    //   !application.answers.publishing?.date ||
+    //   !application.answers.advert?.title ||
+    //   !application.answers.advert?.type
+    // ) {
+    //   // this should not happen
+    //   throw new BadRequestException('Missing required fields')
+    // }
 
-    const now = new Date()
-
-    const history: CaseHistory = {
-      date: now.toISOString(),
-      department: application.answers.advert?.department,
-      requestedPublicationDate: application.answers.publishing?.date,
-      subject: application.answers.advert?.title,
-      type: application.answers.advert?.type,
-    }
-
-    theCase.history.push(history)
+    theCase.history.push(application)
 
     return Promise.resolve(theCase)
   }
