@@ -21,8 +21,10 @@ import {
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
+  GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
@@ -44,6 +46,13 @@ const LOGGING_CATEGORY = 'MockJournalService'
 export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
+  }
+  getInstitution(id: string): Promise<GetInstitutionResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  getDepartment(id: string): Promise<GetDepartmentResponse> {
+    throw new Error('Method not implemented.')
   }
 
   async getAdvert(id: string): Promise<Advert | null> {

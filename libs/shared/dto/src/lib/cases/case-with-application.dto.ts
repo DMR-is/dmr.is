@@ -75,5 +75,5 @@ export class CaseWithApplication {
     type: String,
     example: 'Reykjavíkurborg',
   })
-  institutionTitle!: string
+  institutionTitle!: string | null
 }

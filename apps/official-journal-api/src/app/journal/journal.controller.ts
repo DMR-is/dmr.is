@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IJournalService } from '@dmr.is/modules'
 import {
   Advert,
   AdvertNotFound,
@@ -27,8 +28,6 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
-
-import { IJournalService } from './journal.service.interface'
 
 const LOGGING_CATEGORY = 'JournalController'
 

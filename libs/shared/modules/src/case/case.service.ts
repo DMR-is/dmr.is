@@ -2,7 +2,6 @@ import { isBooleanString } from 'class-validator'
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { CaseHistory } from '@dmr.is/shared/dto'
 import {
   ApplicationAnswerOption,
   Case,
@@ -12,6 +11,7 @@ import {
   CaseEditorialOverview,
   CaseStatus,
   CaseTag,
+  CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
@@ -37,6 +37,7 @@ import {
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
+import { IJournalService } from '../journal/journal.service.interface'
 import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
@@ -46,9 +47,76 @@ export class CaseService implements ICaseService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(forwardRef(() => IApplicationService))
     private readonly applicationService: IApplicationService,
+
+    @Inject(forwardRef(() => IJournalService))
+    private readonly journalService: IJournalService,
   ) {
     this.logger.info('Using CaseService')
   }
+
+  private async getLatestApplication(theCase: Case) {
+    if (!theCase.history.length) {
+      throw new InternalServerErrorException('Case has no history')
+    }
+
+    return theCase.history[theCase.history.length - 1]
+  }
+
+  private async convertToCaseWithApplication(
+    theCase: Case,
+  ): Promise<CaseWithApplication> {
+    const application = await this.getLatestApplication(theCase)
+
+    if (!application.answers.advert?.department) {
+      throw new InternalServerErrorException(
+        'Case advert does not belong to any department',
+      )
+    }
+
+    const { department } = await this.journalService.getDepartment(
+      application.answers.advert.department,
+    )
+
+    if (!department) {
+      throw new InternalServerErrorException('Department not found')
+    }
+
+    const advertTitle = application.answers.advert.title
+
+    if (!advertTitle) {
+      throw new InternalServerErrorException('Advert title not found')
+    }
+
+    const requestedPublicationDate = application.answers.publishing?.date
+
+    if (!requestedPublicationDate) {
+      throw new InternalServerErrorException(
+        'Requested publication date not found',
+      )
+    }
+
+    if (!application.applicant) {
+      throw new NotFoundException('Application applicant not found')
+    }
+    const { institution } = await this.journalService.getInstitution(
+      application.applicant,
+    )
+
+    return {
+      caseId: theCase.id,
+      applicationId: theCase.applicationId,
+      advertDepartment: department.title,
+      advertTitle: advertTitle,
+      requestedPublicationDate: requestedPublicationDate,
+      communicationStatus: theCase.communicationStatus,
+      createdDate: theCase.createdAt,
+      tag: theCase.tag,
+      fastTrack: theCase.fastTrack,
+      assignee: theCase.assignedTo?.name || null,
+      institutionTitle: institution?.title || null,
+    }
+  }
+
   async createCase(body: PostApplicationBody): Promise<Case> {
     try {
       this.logger.info('Creating case', {
@@ -322,8 +390,14 @@ export class CaseService implements ICaseService {
 
     const { cases, paging } = await this.getCases(params)
 
+    const casesWithApplicatiom = await Promise.all(
+      cases.map(async (c) => {
+        return await this.convertToCaseWithApplication(c)
+      }),
+    )
+
     return Promise.resolve({
-      data: cases,
+      data: casesWithApplicatiom,
       totalItems: {
         submitted: submitted.length,
         inProgress: inProgress.length,

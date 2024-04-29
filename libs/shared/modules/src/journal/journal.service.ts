@@ -21,8 +21,10 @@ import {
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
+  GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
@@ -102,6 +104,15 @@ export class JournalService implements IJournalService {
     }
 
     return Promise.resolve(result)
+  }
+
+  getDepartment(id: string): Promise<GetDepartmentResponse> {
+    const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
+    const department = mockDepartments.find((d) => d.id === id)
+
+    return Promise.resolve({
+      department: department ?? null,
+    })
   }
 
   getDepartments(
@@ -194,6 +205,16 @@ export class JournalService implements IJournalService {
     }
 
     return Promise.resolve(data)
+  }
+
+  getInstitution(id: string): Promise<GetInstitutionResponse> {
+    const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
+
+    const institution = mockCategories.find((category) => category.id === id)
+
+    return Promise.resolve({
+      institution: institution ?? null,
+    })
   }
 
   getInstitutions(
