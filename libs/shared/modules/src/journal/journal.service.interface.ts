@@ -8,8 +8,10 @@ import {
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
+  GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
@@ -20,6 +22,8 @@ export interface IJournalService {
   getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse>
 
   getAdvert(id: string): Promise<Advert | null>
+
+  getDepartment(id: string): Promise<GetDepartmentResponse>
 
   getDepartments(
     params?: GetDepartmentsQueryParams,
@@ -34,6 +38,8 @@ export interface IJournalService {
   getCategories(
     params?: GetCategoriesQueryParams,
   ): Promise<GetCategoriesResponse>
+
+  getInstitution(id: string): Promise<GetInstitutionResponse>
 
   getInstitutions(
     params?: GetInstitutionsQueryParams,

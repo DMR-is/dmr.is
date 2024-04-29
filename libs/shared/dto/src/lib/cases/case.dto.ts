@@ -15,10 +15,10 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Application } from '../application/application.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { User } from '../users/user.dto'
 import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
-import { CaseHistory } from './case-history.dto'
 
 export class Case {
   @ApiProperty({
@@ -74,11 +74,11 @@ export class Case {
   tag!: CaseTag
 
   @ApiProperty({
-    type: [CaseHistory],
+    type: [Application],
     description:
       'Snapshot of the submitted fields, used for tracking changes in the case.',
   })
-  history!: CaseHistory[]
+  history!: Application[]
 
   @ApiProperty({
     type: String,

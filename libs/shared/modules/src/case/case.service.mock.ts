@@ -1,13 +1,12 @@
 import { isBooleanString } from 'class-validator'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
   CaseEditorialOverview,
-  CaseHistory,
   CaseStatus,
+  CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
@@ -25,9 +24,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
-
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { ICaseService } from './case.service.interface'
 
@@ -209,7 +205,7 @@ export class CaseServiceMock implements ICaseService {
     const { cases, paging } = await this.getCases(params)
 
     return Promise.resolve({
-      data: cases,
+      data: cases as unknown as CaseWithApplication[],
       totalItems: {
         submitted: submitted.length,
         inProgress: inProgress.length,
