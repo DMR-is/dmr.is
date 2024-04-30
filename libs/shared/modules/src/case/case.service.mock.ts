@@ -5,11 +5,13 @@ import {
   Case,
   CaseComment,
   CaseEditorialOverview,
+  CaseHistory,
   CaseStatus,
   CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -30,6 +32,17 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getCaseWithApplication(id: string): Promise<CaseWithApplication | null> {
+    throw new Error('Method not implemented.')
+  }
+  getCasesWithApplication(
+    params?: GetCasesQuery | undefined,
+  ): Promise<GetCasesWithApplicationReponse> {
+    throw new Error('Method not implemented.')
+  }
+  getCaseHistory(caseId: string): Promise<CaseHistory> {
+    throw new Error('Method not implemented.')
   }
   updateCaseHistory(caseId: string): Promise<Case> {
     throw new Error('Method not implemented.')

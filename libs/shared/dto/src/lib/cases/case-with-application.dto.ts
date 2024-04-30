@@ -20,6 +20,12 @@ export class CaseWithApplication {
   readonly applicationId!: string
 
   @ApiProperty({
+    type: String,
+    example: '244',
+  })
+  readonly publicationNumber!: string | null
+
+  @ApiProperty({
     type: Boolean,
     example: true,
   })

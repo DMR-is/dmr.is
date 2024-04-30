@@ -33,6 +33,31 @@
         }
       }
     },
+    "/api/v1/cases/case-with-application": {
+      "get": {
+        "operationId": "getCaseWithApplication",
+        "summary": "Get case with application by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Case with application by ID.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseWithApplication" }
+              }
+            }
+          },
+          "404": { "description": "Case with application not found." }
+        }
+      }
+    },
     "/api/v1/cases/cases": {
       "get": {
         "operationId": "getCases",
@@ -147,6 +172,128 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cases/cases-with-application": {
+      "get": {
+        "operationId": "getCasesWithApplication",
+        "summary": "Get cases with application.",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for in cases.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "Application ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "caseNumber",
+            "required": false,
+            "in": "query",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Status to filter cases on, takes into account `status` on `Case`.",
+            "schema": {
+              "enum": [
+                "Innsent",
+                "Grunnvinnsla",
+                "Yfirlestur",
+                "Tilbúið",
+                "Útgefið",
+                "Tekið úr birtingu",
+                "Birtingu hafnað"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeId",
+            "required": false,
+            "in": "query",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fastTrack",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "institution",
+            "required": false,
+            "in": "query",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All cases with application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCasesWithApplicationReponse"
+                }
               }
             }
           }
@@ -1130,6 +1277,60 @@
           "comments"
         ]
       },
+      "CaseWithApplication": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "applicationId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "publicationNumber": { "type": "string", "example": "244" },
+          "fastTrack": { "type": "boolean", "example": true },
+          "communicationStatus": {
+            "type": "number",
+            "enum": [0, 1, 2, 3],
+            "example": 3
+          },
+          "tag": {
+            "type": "string",
+            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
+            "example": "Í yfirlestri"
+          },
+          "requestedPublicationDate": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "createdDate": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "advertDepartment": { "type": "string", "example": "GJALDSKRÁ" },
+          "advertTitle": {
+            "type": "string",
+            "example": "GJALDSKRÁ fyrir hundahald í Reykjavíkurborg."
+          },
+          "assignee": { "type": "string", "example": "Ármann" },
+          "institutionTitle": { "type": "string", "example": "Reykjavíkurborg" }
+        },
+        "required": [
+          "caseId",
+          "applicationId",
+          "publicationNumber",
+          "fastTrack",
+          "communicationStatus",
+          "tag",
+          "requestedPublicationDate",
+          "createdDate",
+          "advertDepartment",
+          "advertTitle",
+          "assignee",
+          "institutionTitle"
+        ]
+      },
       "Paging": {
         "type": "object",
         "properties": {
@@ -1172,6 +1373,20 @@
         },
         "required": ["cases", "paging"]
       },
+      "GetCasesWithApplicationReponse": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseWithApplication" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["cases", "paging"]
+      },
       "GetUsersResponse": {
         "type": "object",
         "properties": {
@@ -1182,58 +1397,6 @@
           }
         },
         "required": ["users"]
-      },
-      "CaseWithApplication": {
-        "type": "object",
-        "properties": {
-          "caseId": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "applicationId": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "fastTrack": { "type": "boolean", "example": true },
-          "communicationStatus": {
-            "type": "number",
-            "enum": [0, 1, 2, 3],
-            "example": 3
-          },
-          "tag": {
-            "type": "string",
-            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
-            "example": "Í yfirlestri"
-          },
-          "requestedPublicationDate": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00.000Z"
-          },
-          "createdDate": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00.000Z"
-          },
-          "advertDepartment": { "type": "string", "example": "GJALDSKRÁ" },
-          "advertTitle": {
-            "type": "string",
-            "example": "GJALDSKRÁ fyrir hundahald í Reykjavíkurborg."
-          },
-          "assignee": { "type": "string", "example": "Ármann" },
-          "institutionTitle": { "type": "string", "example": "Reykjavíkurborg" }
-        },
-        "required": [
-          "caseId",
-          "applicationId",
-          "fastTrack",
-          "communicationStatus",
-          "tag",
-          "requestedPublicationDate",
-          "createdDate",
-          "advertDepartment",
-          "advertTitle",
-          "assignee",
-          "institutionTitle"
-        ]
       },
       "CaseOverviewTotalItems": {
         "type": "object",
