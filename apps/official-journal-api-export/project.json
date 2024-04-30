@@ -1,0 +1,67 @@
+{
+  "name": "official-journal-api-export",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/official-journal-api-export/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/official-journal-api-export",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/official-journal-api-export/src/main.ts",
+        "tsConfig": "apps/official-journal-api-export/tsconfig.app.json",
+        "assets": ["apps/official-journal-api-export/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "official-journal-api-export:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "official-journal-api-export:build:development"
+        },
+        "production": {
+          "buildTarget": "official-journal-api-export:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/official-journal-api-export/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
