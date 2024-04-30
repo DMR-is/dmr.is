@@ -1,20 +1,11 @@
-import { generate } from 'rxjs'
-import { where } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
   ADVERT_B_1278_2023,
-  ALL_MOCK_JOURNAL_CATEGORIES,
-  ALL_MOCK_JOURNAL_DEPARTMENTS,
-  ALL_MOCK_JOURNAL_INVOLVED_PARTIES,
-  ALL_MOCK_JOURNAL_MAIN_CATEGORIES,
-  ALL_MOCK_JOURNAL_TYPES,
-  ALL_MOCK_SIGNATURES,
   MOCK_PAGING_SINGLE_PAGE,
 } from '@dmr.is/mocks'
 import {
   Advert,
-  AdvertStatus,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -32,7 +23,7 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
 } from '@dmr.is/shared/dto'
-import { generatePaging, slicePagedData } from '@dmr.is/utils'
+import { generatePaging } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -42,14 +33,12 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import {
   AdvertAttachmentsDTO,
-  AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
   AdvertDTO,
   AdvertInvolvedPartyDTO,
   AdvertMainCategoryDTO,
   AdvertStatusDTO,
-  AdvertStatusHistoryDTO,
   AdvertTypeDTO,
 } from '../models'
 import {
