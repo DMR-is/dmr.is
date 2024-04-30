@@ -3,12 +3,15 @@ import {
   Column,
   CreatedAt,
   DataType,
+  ForeignKey,
   Model,
   NotNull,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import { AdvertDTO } from './Advert'
+import { AdvertCategoriesDTO } from './AdvertCategories'
 import { AdvertMainCategoryDTO } from './AdvertMainCategory'
 
 @Table({ tableName: 'advert_category', timestamps: false })
@@ -38,4 +41,12 @@ export class AdvertCategoryDTO extends Model {
 
   @BelongsTo(() => AdvertMainCategoryDTO, 'main_category_id')
   mainCategory!: AdvertMainCategoryDTO
+
+  @ForeignKey(() => AdvertDTO)
+  @Column({ type: DataType.UUID })
+  advertId!: string
+
+  @ForeignKey(() => AdvertCategoriesDTO)
+  @Column({ type: DataType.UUID })
+  advertCategoriesId!: string
 }

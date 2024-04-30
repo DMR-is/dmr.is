@@ -33,7 +33,7 @@ export function advertMigrate(model: AdvertDTO): Advert {
     updatedDate: model.updated.toISOString(),
     signatureDate: model.signatureDate.toISOString(),
     publicationDate: model.publicationDate.toISOString(),
-    categories: model.categories.map((item) => advertCategoryMigrate(item)),
+    categories: [], //model.categories.map((item) => advertCategoryMigrate(item)),
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     document: {
       //no migrate because this is not a database table.

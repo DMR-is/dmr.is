@@ -11,6 +11,7 @@ import {
 } from 'sequelize-typescript'
 
 import { AdvertAttachmentsDTO } from './AdvertAttachments'
+import { AdvertCategoriesDTO } from './AdvertCategories'
 import { AdvertCategoryDTO } from './AdvertCategory'
 import { AdvertDepartmentDTO } from './AdvertDepartment'
 import { AdvertInvolvedPartyDTO } from './AdvertInvolvedParty'
@@ -39,7 +40,9 @@ export class AdvertDTO extends Model {
   @BelongsTo(() => AdvertTypeDTO, 'type_id')
   type!: AdvertTypeDTO
 
-  @BelongsToMany(() => AdvertCategoryDTO, { through: 'advert_categories' })
+  @BelongsToMany(() => AdvertCategoriesDTO, {
+    through: () => AdvertCategoryDTO,
+  })
   categories!: AdvertCategoryDTO[]
 
   @Column
