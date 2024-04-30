@@ -10,7 +10,7 @@ import {
 @Table({ tableName: 'advert_attachments', timestamps: true })
 @DefaultScope(() => ({
   attributes: {
-    exclude: ['created', 'updated'],
+    exclude: ['created', 'updated', 'modified'],
   },
 }))
 export class AdvertAttachmentsDTO extends Model {

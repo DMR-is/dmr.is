@@ -24,13 +24,13 @@ export class AdvertStatusHistoryDTO extends Model {
   @Column({ type: DataType.UUIDV4, allowNull: false })
   advert_id!: string
 
-  @HasOne(() => AdvertDTO, 'advert_id')
+  @HasOne(() => AdvertDTO, 'id')
   advert!: AdvertDTO
 
   @Column({ type: DataType.UUIDV4, allowNull: false })
   status_id!: string
 
-  @HasOne(() => AdvertStatusDTO, 'status_id')
+  @HasOne(() => AdvertStatusDTO, 'id')
   status!: AdvertStatusDTO
 
   @CreatedAt

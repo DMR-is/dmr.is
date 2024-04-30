@@ -8,7 +8,9 @@ export function advertCategoryMigrate(model: AdvertCategoryDTO): Category {
     id: model.id,
     slug: model.slug,
     title: model.title,
-    mainCategory: advertMainCategoryMigrate(model.mainCategory),
+    mainCategory: model.mainCategory
+      ? advertMainCategoryMigrate(model.mainCategory)
+      : null,
   }
   return result
 }

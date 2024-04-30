@@ -14,6 +14,7 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
+  AdvertStatus,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -40,6 +41,8 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import {
+  AdvertAttachmentsDTO,
+  AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
   AdvertDTO,
@@ -133,8 +136,10 @@ export class JournalService implements IJournalService {
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    const types = await this.advertTypeModel.findAll()
-
+    const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
+      include: AdvertDepartmentDTO,
+    })
+    // TODO need filtering
     return Promise.resolve({
       types: types.map((item) => advertTypesMigrate(item)),
       paging: generatePaging(types, 1),
@@ -142,7 +147,9 @@ export class JournalService implements IJournalService {
   }
 
   async getInstitution(id: string): Promise<GetInstitutionResponse> {
-    const party = await this.advertInvolvedPartyModel.findOne({ where: { id } })
+    const party = await this.advertInvolvedPartyModel.findOne({
+      where: { id },
+    })
 
     return Promise.resolve({
       institution: party ? advertInvolvedPartyMigrate(party) : null,
@@ -169,7 +176,9 @@ export class JournalService implements IJournalService {
   async getCategories(
     params?: GetCategoriesQueryParams | undefined,
   ): Promise<GetCategoriesResponse> {
-    const categories = await this.advertCategoryModel.findAll()
+    const categories = await this.advertCategoryModel.findAll({
+      include: AdvertMainCategoryDTO,
+    })
     return Promise.resolve({
       categories: categories.map((item) => advertCategoryMigrate(item)),
       paging: generatePaging(categories, 1),
@@ -210,7 +219,16 @@ export class JournalService implements IJournalService {
       metadata: { params },
     })
 
-    const adverts = await this.advertModel.findAll()
+    const adverts = await this.advertModel.findAll({
+      include: [
+        AdvertTypeDTO,
+        AdvertDepartmentDTO,
+        AdvertStatusDTO,
+        AdvertInvolvedPartyDTO,
+        AdvertAttachmentsDTO,
+        AdvertCategoryDTO,
+      ],
+    })
     //TODO FILTERING
     /* const filteredMockAdverts = (allMockAdverts as Advert[]).filter(
       (advert) => {

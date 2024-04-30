@@ -138,7 +138,7 @@ export class MockJournalService implements IJournalService {
     const mockTypes = ALL_MOCK_JOURNAL_TYPES
 
     const filtered = mockTypes.filter((type) => {
-      if (params?.department && params.department !== type.department.id) {
+      if (params?.department && params.department !== type.department?.id) {
         return false
       }
 

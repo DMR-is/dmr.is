@@ -7,11 +7,14 @@ export function advertTypesMigrate(model: AdvertTypeDTO): AdvertType {
     id: model.id,
     slug: model.slug,
     title: model.title,
-    department: {
-      id: model.department.id,
-      slug: model.department.slug,
-      title: model.department.title,
-    },
+    department: model.department
+      ? {
+          id: model.department.id,
+          slug: model.department.slug,
+          title: model.department.title,
+        }
+      : null,
   }
+
   return result
 }

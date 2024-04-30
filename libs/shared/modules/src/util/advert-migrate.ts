@@ -20,8 +20,10 @@ export function advertMigrate(model: AdvertDTO): Advert {
   const advert: Advert = {
     id: model.id,
     title: `${model.type.title} fyrir ${model.subject}`,
-    department: advertDepartmentMigrate(model.department),
-    type: advertTypesMigrate(model.type),
+    department: model.department
+      ? advertDepartmentMigrate(model.department)
+      : null,
+    type: model.type ? advertTypesMigrate(model.type) : null,
     subject: model.subject,
     status: AdvertStatus[status],
     publicationNumber: {
@@ -33,8 +35,12 @@ export function advertMigrate(model: AdvertDTO): Advert {
     updatedDate: model.updated.toISOString(),
     signatureDate: model.signatureDate.toISOString(),
     publicationDate: model.publicationDate.toISOString(),
-    categories: [], //model.categories.map((item) => advertCategoryMigrate(item)),
-    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    categories: model.categories
+      ? model.categories.map((item) => advertCategoryMigrate(item))
+      : [],
+    involvedParty: model.involvedParty
+      ? advertInvolvedPartyMigrate(model.involvedParty)
+      : null,
     document: {
       //no migrate because this is not a database table.
       html: model.documentHtml,

@@ -1,9 +1,10 @@
 import {
+  BelongsTo,
   Column,
   DataType,
+  ForeignKey,
   HasOne,
   Model,
-  NotNull,
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
@@ -14,6 +15,7 @@ import { AdvertCategoryDTO } from './AdvertCategory'
 @Table({ tableName: 'advert_categories', timestamps: false })
 export class AdvertCategoriesDTO extends Model {
   @PrimaryKey
+  @ForeignKey(() => AdvertDTO)
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,
@@ -21,15 +23,16 @@ export class AdvertCategoriesDTO extends Model {
   advert_id!: string
 
   @PrimaryKey
+  @ForeignKey(() => AdvertCategoryDTO)
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,
   })
   category_id!: string
 
-  @HasOne(() => AdvertDTO, 'id')
+  @BelongsTo(() => AdvertDTO)
   advert?: AdvertDTO
 
-  @HasOne(() => AdvertCategoryDTO, 'id')
+  @BelongsTo(() => AdvertCategoryDTO)
   category?: AdvertCategoryDTO
 }

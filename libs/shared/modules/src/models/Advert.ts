@@ -5,6 +5,7 @@ import {
   CreatedAt,
   DataType,
   HasMany,
+  HasOne,
   Model,
   Table,
   UpdatedAt,
@@ -40,8 +41,8 @@ export class AdvertDTO extends Model {
   @BelongsTo(() => AdvertTypeDTO, 'type_id')
   type!: AdvertTypeDTO
 
-  @BelongsToMany(() => AdvertCategoriesDTO, {
-    through: () => AdvertCategoryDTO,
+  @BelongsToMany(() => AdvertCategoryDTO, {
+    through: { model: () => AdvertCategoriesDTO },
   })
   categories!: AdvertCategoryDTO[]
 
@@ -81,12 +82,12 @@ export class AdvertDTO extends Model {
   @Column({ field: 'document_pdf_url' })
   documentPdfUrl!: string
 
-  @HasMany(() => AdvertAttachmentsDTO, 'id')
-  attachments!: AdvertAttachmentsDTO[]
-
-  @CreatedAt
+  @Column
   created!: Date
 
-  @UpdatedAt
+  @Column
   updated!: Date
+
+  @HasMany(() => AdvertAttachmentsDTO, 'advert_id')
+  attachments!: AdvertAttachmentsDTO[]
 }

@@ -1,5 +1,6 @@
 import {
   BelongsTo,
+  BelongsToMany,
   Column,
   CreatedAt,
   DataType,
@@ -42,11 +43,8 @@ export class AdvertCategoryDTO extends Model {
   @BelongsTo(() => AdvertMainCategoryDTO, 'main_category_id')
   mainCategory!: AdvertMainCategoryDTO
 
-  @ForeignKey(() => AdvertDTO)
-  @Column({ type: DataType.UUID })
-  advertId!: string
-
-  @ForeignKey(() => AdvertCategoriesDTO)
-  @Column({ type: DataType.UUID })
-  advertCategoriesId!: string
+  @BelongsToMany(() => AdvertDTO, {
+    through: () => AdvertCategoriesDTO,
+  })
+  adverts!: AdvertDTO[]
 }

@@ -35,5 +35,5 @@ export class Category {
     type: MainCategory,
     example: 'Dómstólar og réttarfar',
   })
-  readonly mainCategory?: MainCategory
+  readonly mainCategory?: MainCategory | null
 }
