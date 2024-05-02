@@ -99,6 +99,14 @@ export class Case {
   modifiedAt!: string
 
   @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Is legacy case.',
+  })
+  @IsBoolean()
+  isLegacy!: boolean
+
+  @ApiProperty({
     type: User,
     description: 'User the case is assigned to.',
   })

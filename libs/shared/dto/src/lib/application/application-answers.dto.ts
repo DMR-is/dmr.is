@@ -274,6 +274,15 @@ export class ApplicationPublishing {
   message?: string
 }
 
+export class ApplicationPreview {
+  @ApiProperty({
+    type: String,
+    example: '<html><p>GJALDSKRÁ</p></html>',
+    description: 'HTML string of the advert with signature',
+  })
+  document!: string
+}
+
 export class ApplicationAnswers {
   @ApiProperty({
     type: ApplicationRequirements,
@@ -287,6 +296,12 @@ export class ApplicationAnswers {
     description: 'Application advert',
   })
   advert?: ApplicationAdvert
+
+  @ApiProperty({
+    type: ApplicationPreview,
+    description: 'Contents of the full document',
+  })
+  preview?: ApplicationPreview
 
   @ApiProperty({
     type: ApplicationSignature,
