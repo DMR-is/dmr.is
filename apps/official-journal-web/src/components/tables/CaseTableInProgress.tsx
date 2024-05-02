@@ -1,6 +1,5 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
@@ -11,12 +10,9 @@ import {
 } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
+import { TableProps } from './types'
 
-type Props = {
-  data: Array<Case>
-  paging: Paging
-}
-export const CaseTableInProgress = ({ data, paging }: Props) => {
+export const CaseTableInProgress = ({ data, paging }: TableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
@@ -62,39 +58,39 @@ export const CaseTableInProgress = ({ data, paging }: Props) => {
       },
       {
         sortingKey: 'casePublishDate',
-        sortingValue: row.advert.publicationDate ?? '',
+        sortingValue: row.requestedPublicationDate,
         children: (
           <Text variant="medium">
-            {formatDate(row.advert.publicationDate ?? '')}
+            {formatDate(row.requestedPublicationDate)}
           </Text>
         ),
       },
       {
         sortingKey: 'caseDepartment',
-        sortingValue: row.advert.department.title,
+        sortingValue: row.advertDepartment,
         children: (
           <Text truncate variant="medium">
-            {row.advert.department.title}
+            {row.advertDepartment}
           </Text>
         ),
       },
       {
         sortingKey: 'caseName',
-        sortingValue: row.advert.title,
+        sortingValue: row.advertTitle,
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.advert.title}
+              {row.advertTitle}
             </Text>
           </div>
         ),
       },
       {
         sortingKey: 'caseEmployee',
-        sortingValue: row.assignedTo.name,
+        sortingValue: row.assignee,
         children: (
           <Text truncate variant="medium">
-            {row.assignedTo.name}
+            {row.assignee}
           </Text>
         ),
       },

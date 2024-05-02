@@ -13,7 +13,11 @@ import { CasePublishingTab } from '../components/case-publishing-tab/CasePublish
 import { Section } from '../components/section/Section'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, GetCasesStatusEnum, Paging } from '../gen/fetch'
+import {
+  CaseWithApplication,
+  GetCasesWithApplicationStatusEnum,
+  Paging,
+} from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useNotificationContext } from '../hooks/useNotificationContext'
@@ -26,7 +30,7 @@ import { Screen } from '../lib/types'
 import { extractCaseProcessingFilters } from '../lib/utils'
 
 type Props = {
-  cases: Case[]
+  cases: CaseWithApplication[]
   paging: Paging
   filters: FilterGroup[]
 }
@@ -48,25 +52,33 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
 
   const [screen, setScreen] = useState(CasePublishViews.Overview)
 
-  const [casesToPublish, setCasesToPublish] = useState<Case[]>([])
+  const [casesToPublish, setCasesToPublish] = useState<CaseWithApplication[]>(
+    [],
+  )
 
-  const [departmentACases, setDepartmentACases] = useState<Case[]>([])
+  const [departmentACases, setDepartmentACases] = useState<
+    CaseWithApplication[]
+  >([])
   const [
     departmentACasesReadyForPublication,
     setDepartmentACasesReadyForPublication,
-  ] = useState<Case[]>([])
+  ] = useState<CaseWithApplication[]>([])
 
-  const [departmentBCases, setDepartmentBCases] = useState<Case[]>([])
+  const [departmentBCases, setDepartmentBCases] = useState<
+    CaseWithApplication[]
+  >([])
   const [
     departmentBCasesReadyForPublication,
     setDepartmentBCasesReadyForPublication,
-  ] = useState<Case[]>([])
+  ] = useState<CaseWithApplication[]>([])
 
-  const [departmentCCases, setDepartmentCCases] = useState<Case[]>([])
+  const [departmentCCases, setDepartmentCCases] = useState<
+    CaseWithApplication[]
+  >([])
   const [
     departmentCCasesReadyForPublication,
     setDepartmentCCasesReadyForPublication,
-  ] = useState<Case[]>([])
+  ] = useState<CaseWithApplication[]>([])
 
   const onTabChange = (id: string) => {
     setSelectedTab(id)
@@ -79,7 +91,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
     setScreen(CasePublishViews.Overview)
   }
 
-  const proceedToPublishing = (selectedCases: Case[]) => {
+  const proceedToPublishing = (selectedCases: CaseWithApplication[]) => {
     setCasesToPublish(selectedCases)
     setRenderFilters(false)
     setScreen(CasePublishViews.Confirm)
@@ -163,7 +175,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
               <>
                 <CasePublishingList
                   cases={cases.filter((cs) =>
-                    casesToPublish.find((c) => c.id === cs.id),
+                    casesToPublish.find((c) => c.caseId === cs.caseId),
                   )}
                 />
                 <Box marginTop={3} display="flex" justifyContent="spaceBetween">
@@ -210,10 +222,10 @@ CasePublishingOverview.getProps = async ({ query }) => {
     },
   ]
 
-  const { cases, paging } = await dmrClient.getCases({
+  const { cases, paging } = await dmrClient.getCasesWithApplication({
     ...extractedFilters,
     department: tab,
-    status: GetCasesStatusEnum.Tilbi,
+    status: GetCasesWithApplicationStatusEnum.Tilbi,
   })
 
   return {

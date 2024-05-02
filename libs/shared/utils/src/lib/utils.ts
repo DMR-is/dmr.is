@@ -1,6 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
+import { NotFoundException } from '@nestjs/common'
 export function generatePaging(
   data: unknown[],
   page: number | undefined = 1,
@@ -10,6 +11,12 @@ export function generatePaging(
   const totalItems = data.length
   const nextPage = page + 1
   const previousPage = page - 1
+
+  if (page > pageSize) {
+    throw new NotFoundException('Page out of range', {
+      cause: 'Page out of range',
+    })
+  }
 
   return {
     page: Number(page),

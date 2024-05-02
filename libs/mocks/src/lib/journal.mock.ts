@@ -212,7 +212,7 @@ const MOCK_CATEGORY_GAELUDYR: Category = {
   title: 'Gæludýr',
   slug: 'gaeludyr',
   mainCategory: MOCK_MAIN_CATEGORY_LANDBUNADUR,
-  department: JOURNAL_DEPARTMENT_B,
+  // department: JOURNAL_DEPARTMENT_B, // category does not have a department, should it?
 }
 
 const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
@@ -220,7 +220,7 @@ const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
   title: 'Skipulagsmál',
   slug: 'skipulagsmal',
   mainCategory: MOCK_MAIN_CATEGORY_DOMSTOLAR,
-  department: JOURNAL_DEPARTMENT_A,
+  // department: JOURNAL_DEPARTMENT_A, // category does not have a department, should it?
 }
 
 const MOCK_CATEGORY_REYKJAVIK: Category = {
@@ -228,7 +228,7 @@ const MOCK_CATEGORY_REYKJAVIK: Category = {
   title: 'Reykjavík',
   slug: 'reykjavik',
   mainCategory: MOCK_MAIN_CATEGORY_SJAVARUTVEGUR,
-  department: JOURNAL_DEPARTMENT_C,
+  // department: JOURNAL_DEPARTMENT_C, // category does not have a department, should it?
 }
 
 export const ALL_MOCK_JOURNAL_CATEGORIES = [

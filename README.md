@@ -6,6 +6,12 @@ Monorepo DMR
 
 TODO
 
+## Start by running submodules checkout
+
+```bash
+./.gitscripts/checkout-submodules.sh
+```
+
 ## Generate client and schemas for web app
 
 ```bash

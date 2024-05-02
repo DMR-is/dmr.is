@@ -93,3 +93,4 @@ apps/**/index.html
 
 .nx/
 apps/*/dist/
+.vscode

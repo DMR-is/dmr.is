@@ -3,9 +3,11 @@ import {
   CaseComment,
   CaseEditorialOverview,
   CaseHistory,
+  CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -17,6 +19,14 @@ export interface ICaseService {
   getCase(id: string): Promise<Case | null>
 
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse>
+
+  getCaseWithApplication(id: string): Promise<CaseWithApplication | null>
+
+  getCasesWithApplication(
+    params?: GetCasesQuery,
+  ): Promise<GetCasesWithApplicationReponse>
+
+  getCaseHistory(caseId: string): Promise<CaseHistory>
 
   getCaseByApplicationId(applicationId: string): Promise<Case | null>
 

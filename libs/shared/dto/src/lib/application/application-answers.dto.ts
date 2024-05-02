@@ -124,7 +124,7 @@ class ApplicationCommitteeSignature {
   })
   date!: string
 
-  chairmain?: ApplicationSignatureMember
+  chairman?: ApplicationSignatureMember
 
   @ApiProperty({
     type: [ApplicationSignatureMember],

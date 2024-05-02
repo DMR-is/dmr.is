@@ -3,9 +3,11 @@ import {
   Case,
   CaseComment,
   CaseEditorialOverview,
+  CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostCaseComment,
@@ -55,6 +57,27 @@ export class CaseController {
     return this.caseService.getCase(id)
   }
 
+  @Get('case-with-application')
+  @ApiQuery({ name: 'id', type: String, required: true })
+  @ApiOperation({
+    operationId: 'getCaseWithApplication',
+    summary: 'Get case with application by ID.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CaseWithApplication,
+    description: 'Case with application by ID.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Case with application not found.',
+  })
+  async caseWithApplication(
+    @Query('id') id: string,
+  ): Promise<CaseWithApplication | null> {
+    return this.caseService.getCaseWithApplication(id)
+  }
+
   @Get('cases')
   @ApiOperation({
     operationId: 'getCases',
@@ -67,6 +90,22 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return this.caseService.getCases(params)
+  }
+
+  @Get('cases-with-application')
+  @ApiOperation({
+    operationId: 'getCasesWithApplication',
+    summary: 'Get cases with application.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetCasesWithApplicationReponse,
+    description: 'All cases with application.',
+  })
+  async casesWithApplication(
+    @Query() params?: GetCasesQuery,
+  ): Promise<GetCasesWithApplicationReponse> {
+    return this.caseService.getCasesWithApplication(params)
   }
 
   @Get('users')

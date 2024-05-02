@@ -3,16 +3,15 @@ import { RefObject, useEffect, useRef, useState } from 'react'
 
 import { Icon, Table as T, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { CaseWithApplication } from '../../gen/fetch'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
 import { TableHeadCell } from './CaseTableHeadCell'
-import { messages } from './messages'
 
 type RowProps = {
-  row: Case
+  row: CaseWithApplication
   container: RefObject<HTMLElement>
   number: number
   onReorder: () => void
@@ -27,10 +26,13 @@ const CasePublishingTableRow = ({
   const controls = useDragControls()
   const [isDragging, setIsDragging] = useState<boolean>(false)
 
+  // TODO: FIND CORRECT CASE NUMBER
+  const randomNumber = Math.floor((Math.random() + 100) * 500)
+
   return (
     <Reorder.Item
       as="tr"
-      key={row.id}
+      key={row.caseId}
       value={row}
       dragListener={false}
       className={styles.tableRow}
@@ -43,17 +45,17 @@ const CasePublishingTableRow = ({
     >
       <TableCell fixed>
         <Text variant="medium" whiteSpace="nowrap">
-          {`${number}/${row.year}`}
+          {`${randomNumber}/${new Date().getFullYear()}`}
         </Text>
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
-          {row.advert.title}
+          {row.advertTitle}
         </Text>
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
-          {row.advert.involvedParty.title}
+          {row.institutionTitle}
         </Text>
       </TableCell>
       <TableCell>
@@ -73,14 +75,15 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  updateRows: React.Dispatch<React.SetStateAction<Case[]>>
+  updateRows: React.Dispatch<React.SetStateAction<CaseWithApplication[]>>
   columns: CaseTableHeadCellProps[]
-  rows: Case[]
+  rows: CaseWithApplication[]
 }
 
 export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
-  const [reorderableItems, setReorderableItems] = useState<Case[]>(rows)
+  const [reorderableItems, setReorderableItems] =
+    useState<CaseWithApplication[]>(rows)
 
   // TODO: figure out how we get this number from the DB
   const latestPublicationNumber = 123
@@ -121,7 +124,7 @@ export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
         >
           {reorderableItems.map((row, i) => (
             <CasePublishingTableRow
-              key={row.id}
+              key={row.caseId}
               row={row}
               container={dragContainerRef}
               number={latestPublicationNumber + (i + 1)}

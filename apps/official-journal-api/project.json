@@ -93,6 +93,20 @@
         "command": "sequelize-cli db:seed:all",
         "cwd": "apps/official-journal-api"
       }
+    },
+    "seed/undo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:seed:undo",
+        "cwd": "apps/official-journal-api"
+      }
+    },
+    "seed/generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli seed:generate --name $(whoami)",
+        "cwd": "apps/official-journal-api"
+      }
     }
   },
   "tags": []

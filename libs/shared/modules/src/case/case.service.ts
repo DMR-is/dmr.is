@@ -9,12 +9,14 @@ import {
   CaseCommentPublicity,
   CaseCommunicationStatus,
   CaseEditorialOverview,
+  CaseHistory,
   CaseStatus,
   CaseTag,
   CaseWithApplication,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -53,10 +55,17 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
+  getCaseHistory(caseId: string): Promise<CaseHistory> {
+    throw new Error('Method not implemented.')
+  }
 
   private async getLatestApplication(theCase: Case) {
     if (!theCase.history.length) {
-      throw new InternalServerErrorException('Case has no history')
+      this.logger.error('Case history is missing or empty', {
+        id: theCase.id,
+        category: LOGGING_CATEGORY,
+      })
+      throw new InternalServerErrorException('Case history is missing or empty')
     }
 
     return theCase.history[theCase.history.length - 1]
@@ -68,9 +77,11 @@ export class CaseService implements ICaseService {
     const application = await this.getLatestApplication(theCase)
 
     if (!application.answers.advert?.department) {
-      throw new InternalServerErrorException(
-        'Case advert does not belong to any department',
-      )
+      this.logger.error('Department is missing', {
+        id: theCase.id,
+        category: LOGGING_CATEGORY,
+      })
+      throw new InternalServerErrorException('Department is missing')
     }
 
     const { department } = await this.journalService.getDepartment(
@@ -78,25 +89,47 @@ export class CaseService implements ICaseService {
     )
 
     if (!department) {
-      throw new InternalServerErrorException('Department not found')
+      this.logger.error(
+        `Department with id ${application.answers.advert.department} not found`,
+        {
+          id: theCase.id,
+          departmentId: application.answers.advert.department,
+          category: LOGGING_CATEGORY,
+        },
+      )
+      throw new InternalServerErrorException(
+        `Department with id ${application.answers.advert.department} not found`,
+      )
     }
 
     const advertTitle = application.answers.advert.title
 
     if (!advertTitle) {
-      throw new InternalServerErrorException('Advert title not found')
+      this.logger.error('Advert title is missing or empty', {
+        id: theCase.id,
+        category: LOGGING_CATEGORY,
+      })
+      throw new InternalServerErrorException('Advert title is missing or empty')
     }
 
     const requestedPublicationDate = application.answers.publishing?.date
 
     if (!requestedPublicationDate) {
+      this.logger.error('Advert request publication date is empty or missing', {
+        id: theCase.id,
+        category: LOGGING_CATEGORY,
+      })
       throw new InternalServerErrorException(
-        'Requested publication date not found',
+        'Advert request publication date is empty or missing',
       )
     }
 
     if (!application.applicant) {
-      throw new NotFoundException('Application applicant not found')
+      this.logger.error('Advert applicant is empty or missing', {
+        id: theCase.id,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Advert applicant is empty or missing')
     }
     const { institution } = await this.journalService.getInstitution(
       application.applicant,
@@ -105,6 +138,7 @@ export class CaseService implements ICaseService {
     return {
       caseId: theCase.id,
       applicationId: theCase.applicationId,
+      publicationNumber: null,
       advertDepartment: department.title,
       advertTitle: advertTitle,
       requestedPublicationDate: requestedPublicationDate,
@@ -331,6 +365,46 @@ export class CaseService implements ICaseService {
     }
   }
 
+  async getCaseWithApplication(
+    id: string,
+  ): Promise<CaseWithApplication | null> {
+    this.logger.info('Getting case with application', {
+      id,
+      category: LOGGING_CATEGORY,
+    })
+
+    return this.getCase(id).then(async (theCase) => {
+      if (!theCase) {
+        return null
+      }
+
+      return await this.convertToCaseWithApplication(theCase)
+    })
+  }
+
+  async getCasesWithApplication(
+    params?: GetCasesQuery | undefined,
+  ): Promise<GetCasesWithApplicationReponse> {
+    try {
+      const { cases, paging } = await this.getCases(params)
+
+      const casesWithApplication = await Promise.all(
+        cases.map(async (c) => await this.convertToCaseWithApplication(c)),
+      )
+
+      this.logger.log('Successfully fetched cases with application', {
+        category: LOGGING_CATEGORY,
+      })
+
+      return {
+        cases: casesWithApplication,
+        paging,
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
+  }
+
   getCaseByApplicationId(applicationId: string): Promise<Case | null> {
     const found = ALL_MOCK_CASES.find((c) => c.applicationId === applicationId)
 
@@ -391,22 +465,24 @@ export class CaseService implements ICaseService {
 
     const { cases, paging } = await this.getCases(params)
 
-    const casesWithApplicatiom = await Promise.all(
-      cases.map(async (c) => {
-        return await this.convertToCaseWithApplication(c)
-      }),
-    )
+    try {
+      const casesWithApplication = await Promise.all(
+        cases.map(async (c) => await this.convertToCaseWithApplication(c)),
+      )
 
-    return Promise.resolve({
-      data: casesWithApplicatiom,
-      totalItems: {
-        submitted: submitted.length,
-        inProgress: inProgress.length,
-        inReview: inReview.length,
-        ready: ready.length,
-      },
-      paging,
-    })
+      return Promise.resolve({
+        data: casesWithApplication,
+        totalItems: {
+          submitted: submitted.length,
+          inProgress: inProgress.length,
+          inReview: inReview.length,
+          ready: ready.length,
+        },
+        paging,
+      })
+    } catch (error) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
   }
 
   postCasesPublish(body: PostCasePublishBody): Promise<void> {
