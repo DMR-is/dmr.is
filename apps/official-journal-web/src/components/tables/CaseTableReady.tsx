@@ -1,6 +1,6 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
+import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
@@ -13,11 +13,13 @@ import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: Case[]
+  data: CaseWithApplication[]
   paging: Paging
-  selectedCases: Case[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
-  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
+  selectedCases: CaseWithApplication[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<CaseWithApplication[]>>
+  setCasesReadyForPublication: React.Dispatch<
+    React.SetStateAction<CaseWithApplication[]>
+  >
 }
 
 export const CaseTableReady = ({
@@ -73,7 +75,7 @@ export const CaseTableReady = ({
       {
         children: (
           <Checkbox
-            checked={selectedCases.some((c) => c.id === row.id)}
+            checked={selectedCases.some((c) => c.caseId === row.caseId)}
             onChange={(e) => {
               if (e.target.checked) {
                 setSelectedCases((prev) => {
@@ -83,7 +85,7 @@ export const CaseTableReady = ({
                 })
               } else {
                 setSelectedCases((prev) => {
-                  const cases = prev.filter((c) => c.id !== row.id)
+                  const cases = prev.filter((c) => c.caseId !== row.caseId)
                   setCasesReadyForPublication(cases)
                   return cases
                 })
@@ -103,7 +105,7 @@ export const CaseTableReady = ({
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.advert.title}
+              {row.advertTitle}
             </Text>
           </div>
         ),
@@ -111,8 +113,8 @@ export const CaseTableReady = ({
       {
         children: (
           <Text variant="medium">
-            {row.advert.publicationDate
-              ? formatDate(row.advert.publicationDate)
+            {row.requestedPublicationDate
+              ? formatDate(row.requestedPublicationDate)
               : null}
           </Text>
         ),
@@ -120,7 +122,7 @@ export const CaseTableReady = ({
       {
         children: (
           <Text whiteSpace="nowrap" variant="medium">
-            {row.advert.involvedParty.title}
+            {row.institutionTitle}
           </Text>
         ),
       },

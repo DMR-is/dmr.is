@@ -14,7 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Advert, Case, Paging } from '../../gen/fetch'
+import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
@@ -41,7 +41,7 @@ export type CaseTableCellProps = {
 }
 
 export type CaseTableRowProps = {
-  case: Case
+  case: CaseWithApplication
   cells: CaseTableCellProps[]
 }
 

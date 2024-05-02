@@ -31,8 +31,8 @@ export class AdvertType {
   @ApiProperty({
     description: 'Department the advert type belongs to.',
     required: true,
-    nullable: false,
+    nullable: true,
     type: Department,
   })
-  readonly department!: Department
+  readonly department!: Department | null
 }

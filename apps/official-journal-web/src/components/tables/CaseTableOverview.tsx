@@ -1,9 +1,7 @@
 import { Text } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
-import { CaseTag } from '../case-tag/CaseTag'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -11,13 +9,9 @@ import {
 } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
+import { PublishedTableProps } from './types'
 
-type Props = {
-  data: Case[]
-  paging: Paging
-}
-
-export const CaseTableOverview = ({ data, paging }: Props) => {
+export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
@@ -51,24 +45,16 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
     case: row,
     cells: [
       {
-        children: (
-          <Text variant="medium">
-            {formatDate(row.advert.publicationDate ?? '')}
-          </Text>
-        ),
+        children: <Text variant="medium">{formatDate(row.publishDate)}</Text>,
       },
       {
-        children: row.published ? (
-          <Text variant="medium">{row.advert.publicationNumber?.full}</Text>
-        ) : (
-          <CaseTag tag={row.status} />
-        ),
+        children: <Text variant="medium">{row.number}</Text>,
       },
       {
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.advert.title}
+              {row.title}
             </Text>
           </div>
         ),
@@ -76,7 +62,7 @@ export const CaseTableOverview = ({ data, paging }: Props) => {
       {
         children: (
           <Text truncate variant="medium">
-            {row.advert.involvedParty.title}
+            {row.institution}
           </Text>
         ),
       },

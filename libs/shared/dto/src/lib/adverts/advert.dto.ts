@@ -28,7 +28,7 @@ export class Advert {
     type: Department,
     example: 'A deild',
   })
-  readonly department!: Department
+  readonly department!: Department | null
 
   @ApiProperty({
     description: 'Type of the advert.',
@@ -36,7 +36,7 @@ export class Advert {
     required: true,
     type: AdvertType,
   })
-  readonly type!: AdvertType
+  readonly type!: AdvertType | null
 
   @ApiProperty({
     description: 'Subject of the advert, always dependant on the `type`.',
@@ -62,7 +62,7 @@ export class Advert {
     type: AdvertStatus,
     example: 'Virk',
   })
-  readonly status!: AdvertStatus
+  readonly status!: AdvertStatus | null
 
   @ApiProperty({
     description: 'Publication number of the advert',
@@ -148,5 +148,5 @@ export class Advert {
     description: 'Attachments for the advert.',
     required: true,
   })
-  readonly attachments!: AdvertAttachment[]
+  readonly attachments!: AdvertAttachment[] | null
 }
