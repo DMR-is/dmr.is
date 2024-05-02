@@ -1,4 +1,4 @@
-import { Case } from '../../gen/fetch'
+import { CaseWithApplication } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CasePublishingTable } from './CasePublishingTable'
 import { CaseTableHeadCellProps } from './CaseTable'
@@ -6,8 +6,10 @@ import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
 import { messages } from './messages'
 
 type Props = {
-  data: Case[]
-  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
+  data: CaseWithApplication[]
+  setCasesReadyForPublication: React.Dispatch<
+    React.SetStateAction<CaseWithApplication[]>
+  >
 }
 
 export const CaseTableSelectedCases = ({

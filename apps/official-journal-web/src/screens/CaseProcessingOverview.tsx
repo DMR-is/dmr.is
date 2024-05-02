@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { CaseWithApplication } from '@dmr.is/shared/dto'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
@@ -8,7 +9,7 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -22,7 +23,7 @@ import {
   mapTabIdToCaseStatus,
 } from '../lib/utils'
 type Props = {
-  data: Case[]
+  data: CaseWithApplication[]
   paging: Paging
   filters?: FilterGroup[]
   totalItems: {

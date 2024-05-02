@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger'
 
 // Here we store the fields we want to be able to differentiate between,
 // when we are comparing the case history of the case.
+
+// We are using the `Application` dto now
 export class CaseHistory {
   @ApiProperty({
     type: String,
