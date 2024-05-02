@@ -19,35 +19,37 @@ import {
 } from '@dmr.is/shared/dto'
 
 export interface IJournalService {
-  getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse>
+  getAdverts(params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse | null>
 
   getAdvert(id: string): Promise<Advert | null>
 
-  getDepartment(id: string): Promise<GetDepartmentResponse>
+  getDepartment(id: string): Promise<GetDepartmentResponse | null>
 
   getDepartments(
     params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse>
+  ): Promise<GetDepartmentsResponse | null>
 
-  getTypes(params?: GetAdvertTypesQueryParams): Promise<GetAdvertTypesResponse>
+  getTypes(
+    params?: GetAdvertTypesQueryParams,
+  ): Promise<GetAdvertTypesResponse | null>
 
   getMainCategories(
     params?: GetMainCategoriesQueryParams,
-  ): Promise<GetMainCategoriesResponse>
+  ): Promise<GetMainCategoriesResponse | null>
 
   getCategories(
     params?: GetCategoriesQueryParams,
-  ): Promise<GetCategoriesResponse>
+  ): Promise<GetCategoriesResponse | null>
 
-  getInstitution(id: string): Promise<GetInstitutionResponse>
+  getInstitution(id: string): Promise<GetInstitutionResponse | null>
 
   getInstitutions(
     params?: GetInstitutionsQueryParams,
-  ): Promise<GetInstitutionsResponse>
+  ): Promise<GetInstitutionsResponse | null>
 
   getSignatures(
     params?: GetAdvertSignatureQuery,
-  ): Promise<GetAdvertSignatureResponse>
+  ): Promise<GetAdvertSignatureResponse | null>
 
   // TODO Testing logging process only, remove later
   error(): void

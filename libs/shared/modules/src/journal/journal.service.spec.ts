@@ -33,7 +33,7 @@ describe('JournalService', () => {
   describe('getAdverts', () => {
     it('should return two mock adverts', async () => {
       const results = await service.getAdverts()
-      expect(results.adverts.length).toEqual(2)
+      expect(results?.adverts.length).toEqual(2)
     })
   })
 })
