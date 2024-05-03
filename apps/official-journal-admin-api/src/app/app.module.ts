@@ -1,7 +1,7 @@
 import {
   ApplicationModule,
   HealthController,
-  JournalModule,
+  SharedJournalModule,
 } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
@@ -15,7 +15,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     ApplicationModule,
     CaseModule,
     StatisticsModule,
-    JournalModule,
+    SharedJournalModule,
     RouterModule.register([
       {
         path: 'cases',
@@ -27,7 +27,7 @@ import { StatisticsModule } from './statistics/statistics.module'
       },
       {
         path: 'journal',
-        module: JournalModule,
+        module: SharedJournalModule,
       },
     ]),
   ],

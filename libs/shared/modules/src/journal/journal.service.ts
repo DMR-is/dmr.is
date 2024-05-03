@@ -93,7 +93,11 @@ export class JournalService implements IJournalService {
       const mainCategories = await this.advertMainCategoryModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
       })
       return Promise.resolve({
         mainCategories: mainCategories.map((item) =>
@@ -134,7 +138,11 @@ export class JournalService implements IJournalService {
       const departments = await this.advertDepartmentModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
       })
       return Promise.resolve({
         departments: departments.map((item) => advertDepartmentMigrate(item)),
@@ -154,7 +162,11 @@ export class JournalService implements IJournalService {
         include: AdvertDepartmentDTO,
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
       })
       return Promise.resolve({
         types: types.map((item) => advertTypesMigrate(item)),
@@ -193,7 +205,11 @@ export class JournalService implements IJournalService {
       const parties = await this.advertInvolvedPartyModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
       })
 
       return Promise.resolve({
@@ -214,7 +230,11 @@ export class JournalService implements IJournalService {
       const categories = await this.advertCategoryModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
         include: AdvertMainCategoryDTO,
       })
       return Promise.resolve({
@@ -274,7 +294,11 @@ export class JournalService implements IJournalService {
       const adverts = await this.advertModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: { title: { [Op.iLike]: `%${params?.search}%` } },
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
         include: [
           AdvertTypeDTO,
           AdvertDepartmentDTO,
