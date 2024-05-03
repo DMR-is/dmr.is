@@ -19,11 +19,15 @@ import {
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { SequelizeConfigService } from '../../sequelizeConfig.service'
 import { JournalController } from './journal.controller'
 const MOCK_DATA = process.env.API_MOCK === 'true'
 @Module({
   imports: [
     LoggingModule,
+    SequelizeModule.forRootAsync({
+      useClass: SequelizeConfigService,
+    }),
     SequelizeModule.forFeature([
       AdvertMainCategoryDTO,
       AdvertDepartmentDTO,

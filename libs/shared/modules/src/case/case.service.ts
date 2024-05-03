@@ -493,6 +493,7 @@ export class CaseService implements ICaseService {
     if (!caseIds || !caseIds.length) {
       throw new BadRequestException('Missing ids')
     }
+    return Promise.resolve()
   }
 
   getComments(
