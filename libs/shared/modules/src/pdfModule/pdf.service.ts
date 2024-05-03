@@ -6,6 +6,7 @@ import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
+  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -25,12 +26,12 @@ const LOGGING_CATEGORY = 'PdfService'
 export class PdfService implements IPdfService {
   private browser: Browser | null = null
   private css: Buffer | null = null
-
   private s3: S3Client | null = null
 
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(forwardRef(() => ICaseService))
+    private readonly caseService: ICaseService,
   ) {
     this.logger.info('Using PdfService', {
       category: LOGGING_CATEGORY,
@@ -109,11 +110,7 @@ export class PdfService implements IPdfService {
       })
 
       await this.s3.send(command)
-
-      // get url of the uploaded pdf
       const url = `https://${bucket}.s3.amazonaws.com/pdf/${key}`
-
-      // set pdf url in case
     } catch (e) {
       this.logger.error('Failed to upload pdf to S3', {
         category: LOGGING_CATEGORY,
