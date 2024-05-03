@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import { AdvertStatus } from '@dmr.is/shared/dto'
@@ -37,7 +36,9 @@ export class MockStatisticsService implements IStatisticsService {
 
     const adverts = ALL_MOCK_ADVERTS.filter(
       (advert) =>
-        advert.department.id === id && statuses.includes(advert.status),
+        advert?.department?.id === id &&
+        advert.status &&
+        statuses.includes(advert.status),
     )
 
     let submitted = 0
