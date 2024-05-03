@@ -21,6 +21,7 @@ import {
 } from '@dmr.is/shared/dto'
 
 import {
+  BadRequestException,
   Controller,
   Get,
   Inject,
@@ -77,11 +78,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  adverts(
+  async adverts(
     @Query()
     params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse> {
-    return this.journalService.getAdverts(params)
+  ): Promise<GetAdvertsResponse | null> {
+    const adverts = await this.journalService.getAdverts(params)
+    if (!adverts) {
+      throw new BadRequestException('adverts not found', {
+        cause: 'adverts not found',
+      })
+    }
+    return adverts
   }
 
   @Get('departments')
@@ -95,11 +102,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  departments(
+  async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse> {
-    return this.journalService.getDepartments(params)
+  ): Promise<GetDepartmentsResponse | null> {
+    const departments = await this.journalService.getDepartments(params)
+    if (!departments) {
+      throw new BadRequestException('departments not found', {
+        cause: 'departments not found',
+      })
+    }
+    return departments
   }
 
   @Get('types')
@@ -113,11 +126,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  types(
+  async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse> {
-    return this.journalService.getTypes(params)
+  ): Promise<GetAdvertTypesResponse | null> {
+    const types = await this.journalService.getTypes(params)
+    if (!types) {
+      throw new BadRequestException('types not found', {
+        cause: 'types not found',
+      })
+    }
+    return types
   }
 
   @Get('maincategories')
@@ -131,11 +150,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  mainCategories(
+  async mainCategories(
     @Query()
     params?: GetMainCategoriesQueryParams,
-  ): Promise<GetMainCategoriesResponse> {
-    return this.journalService.getMainCategories(params)
+  ): Promise<GetMainCategoriesResponse | null> {
+    const mainCategories = await this.journalService.getMainCategories(params)
+    if (!mainCategories) {
+      throw new BadRequestException('Main categories not found', {
+        cause: 'Main categories not found',
+      })
+    }
+    return mainCategories
   }
 
   @Get('categories')
@@ -149,11 +174,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  categories(
+  async categories(
     @Query()
     params?: GetCategoriesQueryParams,
-  ): Promise<GetCategoriesResponse> {
-    return this.journalService.getCategories(params)
+  ): Promise<GetCategoriesResponse | null> {
+    const categories = await this.journalService.getCategories(params)
+    if (!categories) {
+      throw new BadRequestException('Categories not found', {
+        cause: 'Categories not found',
+      })
+    }
+    return categories
   }
 
   @Get('institutions')
@@ -167,11 +198,17 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  institutions(
+  async institutions(
     @Query()
     params?: GetInstitutionsQueryParams,
-  ): Promise<GetInstitutionsResponse> {
-    return this.journalService.getInstitutions(params)
+  ): Promise<GetInstitutionsResponse | null> {
+    const institutions = this.journalService.getInstitutions(params)
+    if (!institutions) {
+      throw new BadRequestException('Institutions not found', {
+        cause: 'Institutions not found',
+      })
+    }
+    return institutions
   }
 
   @Get('signatures')
@@ -180,10 +217,21 @@ export class JournalController {
     type: GetAdvertSignatureResponse,
     description: 'List of signatures',
   })
-  signatures(
+  @ApiResponse({
+    status: 400,
+    type: ValidationResponse,
+    description: 'Query string validation failed.',
+  })
+  async signatures(
     @Query() params?: GetAdvertSignatureQuery,
-  ): Promise<GetAdvertSignatureResponse> {
-    return this.journalService.getSignatures(params)
+  ): Promise<GetAdvertSignatureResponse | null> {
+    const signatures = this.journalService.getSignatures(params)
+    if (!signatures) {
+      throw new BadRequestException('Signatures not found', {
+        cause: 'Signatures not found',
+      })
+    }
+    return signatures
   }
 
   @Get('error')

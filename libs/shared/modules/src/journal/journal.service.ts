@@ -1,9 +1,5 @@
+import { Op } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  ADVERT_B_866_2006,
-  ADVERT_B_1278_2023,
-  MOCK_PAGING_SINGLE_PAGE,
-} from '@dmr.is/mocks'
 import {
   Advert,
   GetAdvertSignatureQuery,
@@ -51,9 +47,8 @@ import {
 } from '../util'
 import { IJournalService } from './journal.service.interface'
 
-const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
-
 const LOGGING_CATEGORY = 'JournalService'
+const DEFAULT_PAGE_SIZE = 20
 @Injectable()
 export class JournalService implements IJournalService {
   constructor(
@@ -82,7 +77,7 @@ export class JournalService implements IJournalService {
   }
 
   getSignatures(
-    params?: GetAdvertSignatureQuery | undefined,
+    params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
     throw new Error('Method not implemented.')
   }
@@ -91,87 +86,165 @@ export class JournalService implements IJournalService {
   }
 
   async getMainCategories(
-    params?: GetMainCategoriesQueryParams | undefined,
-  ): Promise<GetMainCategoriesResponse> {
-    const mainCategories = await this.advertMainCategoryModel.findAll()
-    return Promise.resolve({
-      mainCategories: mainCategories.map((item) =>
-        advertMainCategoryMigrate(item),
-      ),
-      paging: generatePaging(mainCategories, 1),
-    })
+    params?: GetMainCategoriesQueryParams,
+  ): Promise<GetMainCategoriesResponse | null> {
+    try {
+      const page = params?.page ?? 1
+      const mainCategories = await this.advertMainCategoryModel.findAll({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
+      })
+      return Promise.resolve({
+        mainCategories: mainCategories.map((item) =>
+          advertMainCategoryMigrate(item),
+        ),
+        paging: generatePaging(mainCategories, page),
+      })
+    } catch (e) {
+      this.logger.error('Error in getMainCategories', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
-  async getDepartment(id: string): Promise<GetDepartmentResponse> {
-    const department = await this.advertDepartmentModel.findOne({
-      where: { id },
-    })
+  async getDepartment(id: string): Promise<GetDepartmentResponse | null> {
+    try {
+      if (!id) {
+        this.logger.error('No id present in getDepartment')
+        return Promise.resolve(null)
+      }
+      const department = await this.advertDepartmentModel.findOne({
+        where: { id },
+      })
 
-    return Promise.resolve({
-      department: department ? advertDepartmentMigrate(department) : null,
-    })
+      return Promise.resolve({
+        department: department ? advertDepartmentMigrate(department) : null,
+      })
+    } catch (e) {
+      this.logger.error('Error in getDepartment', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
   async getDepartments(
     params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse> {
-    const departments = await this.advertDepartmentModel.findAll()
-    //TODO filtering and fix paging
-    return Promise.resolve({
-      departments: departments.map((item) => advertDepartmentMigrate(item)),
-      paging: MOCK_PAGING_SINGLE_PAGE,
-    })
+  ): Promise<GetDepartmentsResponse | null> {
+    try {
+      const page = params?.page ?? 1
+      const departments = await this.advertDepartmentModel.findAll({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
+      })
+      return Promise.resolve({
+        departments: departments.map((item) => advertDepartmentMigrate(item)),
+        paging: generatePaging(departments, page),
+      })
+    } catch (e) {
+      this.logger.error('Error in getDepartments', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
   async getTypes(
     params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse> {
-    const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
-      include: AdvertDepartmentDTO,
-    })
-    // TODO need filtering
-    return Promise.resolve({
-      types: types.map((item) => advertTypesMigrate(item)),
-      paging: generatePaging(types, 1),
-    })
+  ): Promise<GetAdvertTypesResponse | null> {
+    try {
+      const page = params?.page ?? 1
+      const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
+        include: AdvertDepartmentDTO,
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
+      })
+      return Promise.resolve({
+        types: types.map((item) => advertTypesMigrate(item)),
+        paging: generatePaging(types, page),
+      })
+    } catch (e) {
+      this.logger.error('Error in getTypes', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
-  async getInstitution(id: string): Promise<GetInstitutionResponse> {
-    const party = await this.advertInvolvedPartyModel.findOne({
-      where: { id },
-    })
+  async getInstitution(id: string): Promise<GetInstitutionResponse | null> {
+    try {
+      if (!id) {
+        this.logger.error('No id present in getInstitution')
+        return Promise.resolve(null)
+      }
+      const party = await this.advertInvolvedPartyModel.findOne({
+        where: { id },
+      })
 
-    return Promise.resolve({
-      institution: party ? advertInvolvedPartyMigrate(party) : null,
-    })
-    /*const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
-
-    const institution = mockCategories.find((category) => category.id === id)
-
-    return Promise.resolve({
-      institution: institution ?? null,
-    })*/
+      return Promise.resolve({
+        institution: party ? advertInvolvedPartyMigrate(party) : null,
+      })
+    } catch (e) {
+      this.logger.error('Error in getInstitution', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
   async getInstitutions(
-    params?: GetInstitutionsQueryParams | undefined,
-  ): Promise<GetInstitutionsResponse> {
-    const parties = await this.advertInvolvedPartyModel.findAll()
-    return Promise.resolve({
-      institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
-      paging: generatePaging(parties, 1),
-    })
+    params?: GetInstitutionsQueryParams,
+  ): Promise<GetInstitutionsResponse | null> {
+    try {
+      const page = params?.page ?? 1
+      const parties = await this.advertInvolvedPartyModel.findAll({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
+      })
+
+      return Promise.resolve({
+        institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
+        paging: generatePaging(parties, page),
+      })
+    } catch (e) {
+      this.logger.error('Error in getInstitution', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
   async getCategories(
-    params?: GetCategoriesQueryParams | undefined,
-  ): Promise<GetCategoriesResponse> {
-    const categories = await this.advertCategoryModel.findAll({
-      include: AdvertMainCategoryDTO,
-    })
-    return Promise.resolve({
-      categories: categories.map((item) => advertCategoryMigrate(item)),
-      paging: generatePaging(categories, 1),
-    })
+    params?: GetCategoriesQueryParams,
+  ): Promise<GetCategoriesResponse | null> {
+    try {
+      const page = params?.page ?? 1
+      const categories = await this.advertCategoryModel.findAll({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
+            }
+          : undefined,
+        include: AdvertMainCategoryDTO,
+      })
+      return Promise.resolve({
+        categories: categories.map((item) => advertCategoryMigrate(item)),
+        paging: generatePaging(categories, 1),
+      })
+    } catch (e) {
+      this.logger.error('Error in getCategories', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
 
   async getAdvert(id: string): Promise<Advert | null> {
@@ -179,232 +252,71 @@ export class JournalService implements IJournalService {
       category: LOGGING_CATEGORY,
       metadata: { id },
     })
-
-    const advert = await this.advertModel.findOne({
-      where: { id: parseInt(id, 10) },
-    })
-    if (advert) {
-      const ad = advertMigrate(advert)
-      return Promise.resolve({
-        ...ad,
-        document: {
-          isLegacy: advert.isLegacy,
-          html: advert.isLegacy
-            ? dirtyClean(advert.documentHtml as HTMLText)
-            : advert.documentHtml,
-          pdfUrl: advert.documentPdfUrl,
-        },
+    try {
+      if (!id) {
+        this.logger.error('No id present in getAdvert')
+        return Promise.resolve(null)
+      }
+      const advert = await this.advertModel.findOne({
+        where: { id: parseInt(id, 10) },
       })
-    } else {
+      if (advert) {
+        const ad = advertMigrate(advert)
+        return Promise.resolve({
+          ...ad,
+          document: {
+            isLegacy: advert.isLegacy,
+            html: advert.isLegacy
+              ? dirtyClean(advert.documentHtml as HTMLText)
+              : advert.documentHtml,
+            pdfUrl: advert.documentPdfUrl,
+          },
+        })
+      } else {
+        this.logger.warn(`Article not found in getAdvert - ${id}`)
+        return Promise.resolve(null)
+      }
+    } catch (e) {
+      this.logger.error('Error in getAdvert', { error: e as Error })
       return Promise.resolve(null)
     }
   }
 
   async getAdverts(
     params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse> {
+  ): Promise<GetAdvertsResponse | null> {
     this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
-
-    const adverts = await this.advertModel.findAll({
-      include: [
-        AdvertTypeDTO,
-        AdvertDepartmentDTO,
-        AdvertStatusDTO,
-        AdvertInvolvedPartyDTO,
-        AdvertAttachmentsDTO,
-        AdvertCategoryDTO,
-      ],
-    })
-    //TODO FILTERING
-    /* const filteredMockAdverts = (allMockAdverts as Advert[]).filter(
-      (advert) => {
-        if (!params?.search) {
-          return true
-        }
-
-        return advert.title.includes(params.search)
-      },
-    )
-*/
-    const result: GetAdvertsResponse = {
-      adverts: adverts.map((item) => advertMigrate(item)),
-      paging: {
-        page: 1,
-        pageSize: 10,
-        totalPages: 1,
-        totalItems: 0,
-        nextPage: 0,
-        previousPage: null,
-        hasNextPage: false,
-        hasPreviousPage: false,
-      },
-    }
-
-    return Promise.resolve(result)
-  }
-
-  /* const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
-    const filtered = mockCategories.filter((category) => {
-      if (params?.search && category.id !== params.search) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-    const data: GetCategoriesResponse = {
-      categories: paged,
-      paging: generatePaging(filtered, page),
-    }
-
-    return Promise.resolve(data)
- }
-
-  /* const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
-    const filtered = mockCategories.filter((category) => {
-      if (params?.search && category.id !== params.search) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-    const data: GetInstitutionsResponse = {
-      institutions: paged,
-      paging: generatePaging(filtered, page),
-    }
-
-    return Promise.resolve(data)*/
-  /*  }
-  /* const mockTypes = ALL_MOCK_JOURNAL_TYPES
-
-    const filtered = mockTypes.filter((type) => {
-      if (params?.department && params.department !== type.department.id) {
-        return false
-      }
-
-      if (
-        params?.search &&
-        !type.id.toLocaleLowerCase().includes(params.search.toLocaleLowerCase())
-      ) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-
-    return Promise.resolve({
-      types: paged,
-      paging: generatePaging(filtered, page),
-    })
-  */
-
-  /* const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
-    const filtered = mockCategories.filter((category) => {
-      if (params?.search && category.id !== params.search) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-    const data: GetMainCategoriesResponse = {
-      mainCategories: paged,
-      paging: generatePaging(filtered, page),
-    }
-
-    return Promise.resolve(data)*/
-
-  /*
-
-
-
-
-    */
-}
-
-/*  async getCategories(
-    params?: GetCategoriesQueryParams | undefined,
-  ): Promise<GetCategoriesResponse> {
-    const categories = await this.advertCategoryModel.findAll()
-    return Promise.resolve({
-      categories: categories.map((item) => advertCategoryMigrate(item)),
-      paging: generatePaging(categories, 1),
-    })
-
-    /* const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
-    const filtered = mockCategories.filter((category) => {
-      if (params?.search && category.id !== params.search) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-    const data: GetCategoriesResponse = {
-      categories: paged,
-      paging: generatePaging(filtered, page),
-    }
-
-    return Promise.resolve(data)*/
-/* }
-
-
-
-  getSignatures(
-    params?: GetAdvertSignatureQuery,
-  ): Promise<GetAdvertSignatureResponse> {
-    const filtered = ALL_MOCK_SIGNATURES.filter((signature) => {
-      if (params?.id && params.id !== signature.id) {
-        return false
-      }
-
-      if (params?.type && params.type !== signature.type) {
-        return false
-      }
-
-      if (params?.search) {
-        const search = params.search.toLocaleLowerCase()
-
-        signature.data.forEach((signature) =>
-          signature.members.forEach((m) => {
-            if (!m.name.toLocaleLowerCase().includes(search)) {
-              return false
+    try {
+      const page = params?.page ?? 1
+      const adverts = await this.advertModel.findAll({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        where: params?.search
+          ? {
+              title: { [Op.iLike]: `%${params?.search}%` },
             }
-            return true
-          }),
-        )
+          : undefined,
+        include: [
+          AdvertTypeDTO,
+          AdvertDepartmentDTO,
+          AdvertStatusDTO,
+          AdvertInvolvedPartyDTO,
+          AdvertAttachmentsDTO,
+          AdvertCategoryDTO,
+        ],
+      })
+      const result: GetAdvertsResponse = {
+        adverts: adverts.map((item) => advertMigrate(item)),
+        paging: generatePaging(adverts, page),
       }
 
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-
-    return Promise.resolve({
-      items: paged,
-      paging: generatePaging(filtered, page),
-    })
+      return Promise.resolve(result)
+    } catch (e) {
+      this.logger.error('Error in getAdverts', { error: e as Error })
+      return Promise.resolve(null)
+    }
   }
-
-  error(): void {
-    this.logger.warn('about to throw error from service', {
-      category: LOGGING_CATEGORY,
-    })
-    throw new Error('error from service')
-  }*/
+}

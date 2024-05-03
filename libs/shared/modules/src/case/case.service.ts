@@ -84,11 +84,11 @@ export class CaseService implements ICaseService {
       throw new InternalServerErrorException('Department is missing')
     }
 
-    const { department } = await this.journalService.getDepartment(
+    const departmentReq = await this.journalService.getDepartment(
       application.answers.advert.department,
     )
 
-    if (!department) {
+    if (!departmentReq || !departmentReq.department) {
       this.logger.error(
         `Department with id ${application.answers.advert.department} not found`,
         {
@@ -131,15 +131,18 @@ export class CaseService implements ICaseService {
       })
       throw new NotFoundException('Advert applicant is empty or missing')
     }
-    const { institution } = await this.journalService.getInstitution(
+    const institutionReq = await this.journalService.getInstitution(
       application.applicant,
     )
+    if (!institutionReq || !institutionReq.institution) {
+      throw new NotFoundException('Institution not found')
+    }
 
     return {
       caseId: theCase.id,
       applicationId: theCase.applicationId,
       publicationNumber: null,
-      advertDepartment: department.title,
+      advertDepartment: departmentReq.department.title,
       advertTitle: advertTitle,
       requestedPublicationDate: requestedPublicationDate,
       communicationStatus: theCase.communicationStatus,
@@ -147,7 +150,7 @@ export class CaseService implements ICaseService {
       tag: theCase.tag,
       fastTrack: theCase.fastTrack,
       assignee: theCase.assignedTo?.name || null,
-      institutionTitle: institution?.title || null,
+      institutionTitle: institutionReq.institution.title || null,
     }
   }
 
@@ -491,29 +494,7 @@ export class CaseService implements ICaseService {
     if (!caseIds || !caseIds.length) {
       throw new BadRequestException('Missing ids')
     }
-
-    try {
-      const cases = caseIds.map((id) => {
-        const found = ALL_MOCK_CASES.find((c) => c.id === id)
-
-        if (!found) {
-          throw new NotFoundException('Case not found')
-        }
-
-        return found
-      })
-
-      const now = new Date().toISOString()
-      cases.forEach((c) => {
-        c.modifiedAt = now
-        c.publishedAt = now
-        c.published = true
-      })
-
-      return Promise.resolve()
-    } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
+    return Promise.resolve()
   }
 
   getComments(
