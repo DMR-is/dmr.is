@@ -191,6 +191,7 @@ export class CaseService implements ICaseService {
 
       const newCase: Case = {
         id: uuid(),
+        isLegacy: false,
         caseNumber: 0,
         applicationId: body.applicationId,
         assignedTo: null,

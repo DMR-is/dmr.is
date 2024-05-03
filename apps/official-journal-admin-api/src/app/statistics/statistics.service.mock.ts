@@ -34,13 +34,12 @@ export class MockStatisticsService implements IStatisticsService {
       AdvertStatus.ReadyForPublication,
     ]
 
-    const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-      if (!advert.department || !advert.department.id || !advert.status) {
-        return false
-      }
-
-      return advert.department.id === id && statuses.includes(advert.status)
-    })
+    const adverts = ALL_MOCK_ADVERTS.filter(
+      (advert) =>
+        advert?.department?.id === id &&
+        advert.status &&
+        statuses.includes(advert.status),
+    )
 
     let submitted = 0
     let inProgress = 0

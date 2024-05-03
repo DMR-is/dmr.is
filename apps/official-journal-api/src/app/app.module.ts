@@ -7,12 +7,6 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { JournalModule } from './journal/journal.module'
 
 @Module({
-  imports: [
-    SequelizeModule.forRootAsync({
-      useClass: SequelizeConfigService,
-    }),
-    JournalModule,
-    HealthModule,
-  ],
+  imports: [JournalModule, HealthModule],
 })
 export class AppModule {}

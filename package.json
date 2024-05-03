@@ -78,6 +78,7 @@
     "url-loader": "^4.1.1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.567.0",
     "@island.is/regulations-tools": "^0.7.15",
     "@nestjs/common": "^10.2.10",
     "@nestjs/core": "^10.2.10",
@@ -117,6 +118,7 @@
     "node-fetch": "2.6.7",
     "oidc-client-ts": "2.0.3",
     "pg": "^8.11.3",
+    "puppeteer": "^22.7.1",
     "react": "18.2.0",
     "react-animate-height": "3.1.2",
     "react-datepicker": "4.10.0",

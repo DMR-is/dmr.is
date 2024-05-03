@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": ["src/**/*.ts", "../../../apps/official-journal-api/src/app/journal.module.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
