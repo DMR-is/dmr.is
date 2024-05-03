@@ -113,7 +113,7 @@
     "lodash": "4.17.21",
     "mssql": "^10.0.2",
     "nest-winston": "^1.9.4",
-    "next": "14.0.4",
+    "next": "13.3.0",
     "node-fetch": "2.6.7",
     "oidc-client-ts": "2.0.3",
     "pg": "^8.11.3",
