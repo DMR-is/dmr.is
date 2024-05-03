@@ -169,9 +169,9 @@ export const CaseTable = ({
             {sortedData.map((row) => (
               <tr
                 className={styles.tableRow}
-                onMouseOver={() => setHoveredRow(row.case.id)}
+                onMouseOver={() => setHoveredRow(row.case.caseId)}
                 onMouseLeave={() => setHoveredRow(null)}
-                key={row.case.id}
+                key={row.case.caseId}
               >
                 {row.cells.map((cell, cellIndex) => (
                   <TableCell
@@ -185,7 +185,7 @@ export const CaseTable = ({
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
-                        visible: hoveredRow === row.case.id,
+                        visible: hoveredRow === row.case.caseId,
                       })}
                       component={!modalLink ? LinkV2 : 'button'}
                       onClick={

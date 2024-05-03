@@ -39,6 +39,13 @@ export class CaseWithApplication {
   readonly communicationStatus!: CaseCommunicationStatus
 
   @ApiProperty({
+    type: String,
+    description: 'Full advert document html',
+    example: '<p>GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.</p>',
+  })
+  readonly document!: string
+
+  @ApiProperty({
     enum: CaseTag,
     example: CaseTag.InReview,
   })

@@ -134,9 +134,9 @@ export class CaseService implements ICaseService {
     const institutionReq = await this.journalService.getInstitution(
       application.applicant,
     )
-    if (!institutionReq || !institutionReq.institution) {
-      throw new NotFoundException('Institution not found')
-    }
+    // if (!institutionReq || !institutionReq.institution) {
+    //   throw new NotFoundException('Institution not found')
+    // }
 
     return {
       caseId: theCase.id,
@@ -150,7 +150,7 @@ export class CaseService implements ICaseService {
       tag: theCase.tag,
       fastTrack: theCase.fastTrack,
       assignee: theCase.assignedTo?.name || null,
-      institutionTitle: institutionReq.institution.title || null,
+      institutionTitle: institutionReq?.institution?.title || null,
     }
   }
 
@@ -464,6 +464,8 @@ export class CaseService implements ICaseService {
         ready.push(c)
       }
     })
+
+    console.log(params)
 
     const { cases, paging } = await this.getCases(params)
 
