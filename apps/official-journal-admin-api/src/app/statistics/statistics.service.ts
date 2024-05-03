@@ -36,7 +36,9 @@ export class StatisticsService implements IStatisticsService {
 
     const adverts = ALL_MOCK_ADVERTS.filter(
       (advert) =>
-        advert.department.id === id && statuses.includes(advert.status),
+        advert?.department?.id === id &&
+        advert.status &&
+        statuses.includes(advert.status),
     )
 
     let submitted = 0
