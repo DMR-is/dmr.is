@@ -17,7 +17,7 @@ const JOURNAL_DEPARTMENT_A: Department = {
 }
 
 const JOURNAL_DEPARTMENT_B: Department = {
-  id: '8ad799e0-93ac-4c69-9e5b-83d4b230da8a',
+  id: '637291f2-f7f4-405d-8586-ef88b59cab00',
   title: 'B deild',
   slug: 'b-deild',
 }

@@ -98,7 +98,7 @@ export class PdfService implements IPdfService {
       return
     }
 
-    const key = `case-${caseId}.pdf`
+    // const key = `case-${caseId}.pdf`
 
     try {
       const command = new UploadPartCommand({
@@ -110,7 +110,7 @@ export class PdfService implements IPdfService {
       })
 
       await this.s3.send(command)
-      const url = `https://${bucket}.s3.amazonaws.com/pdf/${key}`
+      // const url = `https://${bucket}.s3.amazonaws.com/pdf/${key}`
     } catch (e) {
       this.logger.error('Failed to upload pdf to S3', {
         category: LOGGING_CATEGORY,

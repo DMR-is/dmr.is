@@ -13,13 +13,13 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertType, Case } from '../../gen/fetch'
+import { AdvertType, Case, CaseWithApplication } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseDepartmentTabs } from '../../lib/constants'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: Case
+  activeCase: CaseWithApplication
   advertTypes: Array<AdvertType> | null
 }
 
@@ -27,9 +27,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const activeTypes =
-    advertTypes?.filter(
-      (t) => t.department.slug === activeCase.advert.department.slug,
-    ) ?? []
+    advertTypes?.filter((t) => t.id === activeCase.advertType.id) ?? []
 
   const typeOptions: StringOption[] = activeTypes.map((t) => ({
     label: t.title,
@@ -54,7 +52,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
                 readOnly
                 disabled
                 name="institution"
-                value={activeCase?.advert.involvedParty.title}
+                // value={activeCase?.advert.involvedParty.title } TOOD: Not implemented
                 label={formatMessage(messages.grunnvinnsla.institution)}
                 size="sm"
               />
@@ -66,7 +64,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Select
                 name="department"
                 value={CaseDepartmentTabs.find(
-                  (o) => o.value === activeCase?.advert.department.slug,
+                  (o) => o.value === activeCase.advertDepartment,
                 )}
                 options={CaseDepartmentTabs}
                 label={formatMessage(messages.grunnvinnsla.department)}
@@ -81,7 +79,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Select
                 name="type"
                 value={typeOptions.find(
-                  (o) => o.value === activeCase?.advert.type.slug,
+                  (o) => o.value === activeCase.advertType.id,
                 )}
                 options={typeOptions}
                 label={formatMessage(messages.grunnvinnsla.type)}
@@ -96,7 +94,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Input
                 readOnly
                 name="subject"
-                value={activeCase?.advert.subject}
+                value={activeCase.advertTitle}
                 label={formatMessage(messages.grunnvinnsla.subject)}
                 size="sm"
                 textarea
@@ -107,8 +105,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12']}>
               <Inline space={1}>
-                {activeCase.advert.categories.map((cat, i) => (
-                  <Tag key={cat.id} variant="white" outlined disabled>
+                {activeCase.categories.map((cat, i) => (
+                  <Tag key={i} variant="white" outlined disabled>
                     {cat.title}
                   </Tag>
                 ))}
@@ -135,8 +133,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
                 disabled
                 name="createdDate"
                 selected={
-                  activeCase?.advert.createdDate
-                    ? new Date(activeCase?.advert.createdDate)
+                  activeCase.createdDate
+                    ? new Date(activeCase.createdDate)
                     : undefined
                 }
                 label={formatMessage(messages.grunnvinnsla.createdDate)}
@@ -152,8 +150,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <DatePicker
                 name="publicationDate"
                 selected={
-                  activeCase?.advert.publicationDate
-                    ? new Date(activeCase?.advert.publicationDate)
+                  activeCase.publishDate
+                    ? new Date(activeCase.publishDate)
                     : undefined
                 }
                 label={formatMessage(messages.grunnvinnsla.publicationDate)}
@@ -176,7 +174,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Input
                 name="price"
-                value={activeCase?.price}
+                value={activeCase.price}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="tel"

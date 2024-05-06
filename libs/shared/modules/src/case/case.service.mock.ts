@@ -34,25 +34,31 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('Using CaseServiceMock')
   }
   getCaseWithApplication(id: string): Promise<CaseWithApplication | null> {
+    this.logger.info('getCaseWithApplication', id)
     throw new Error('Method not implemented.')
   }
   getCasesWithApplication(
     params?: GetCasesQuery | undefined,
   ): Promise<GetCasesWithApplicationReponse> {
+    this.logger.info('getCasesWithApplication', params)
     throw new Error('Method not implemented.')
   }
   getCaseHistory(caseId: string): Promise<CaseHistory> {
+    this.logger.info('getCaseHistory', caseId)
     throw new Error('Method not implemented.')
   }
   updateCaseHistory(caseId: string): Promise<Case> {
+    this.logger.info('updateCaseHistory', caseId)
     throw new Error('Method not implemented.')
   }
 
   createCase(body: PostApplicationBody): Promise<Case> {
+    this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
 
   getCaseByApplicationId(applicationId: string): Promise<Case | null> {
+    this.logger.info('getCaseByApplicationId', applicationId)
     throw new Error('Method not implemented.')
   }
 
@@ -60,12 +66,15 @@ export class CaseServiceMock implements ICaseService {
     caseId: string,
     params?: GetCaseCommentsQuery | undefined,
   ): Promise<CaseComment[]> {
+    this.logger.info('getComments', caseId, params)
     throw new Error('Method not implemented.')
   }
   postComment(caseId: string, body: PostCaseComment): Promise<CaseComment[]> {
+    this.logger.info('postComment', caseId, body)
     throw new Error('Method not implemented.')
   }
   deleteComment(caseId: string, commentId: string): Promise<CaseComment[]> {
+    this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
   getCase(id: string): Promise<Case | null> {

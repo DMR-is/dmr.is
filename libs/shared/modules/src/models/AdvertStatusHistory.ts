@@ -4,7 +4,6 @@ import {
   DataType,
   HasOne,
   Model,
-  NotNull,
   Table,
 } from 'sequelize-typescript'
 

@@ -2,6 +2,8 @@ import { Op } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
+  AdvertType,
+  Category,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -21,7 +23,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
@@ -79,6 +81,10 @@ export class JournalService implements IJournalService {
   getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
+    this.logger.info('getSignatures', {
+      category: LOGGING_CATEGORY,
+      metadata: { params },
+    })
     throw new Error('Method not implemented.')
   }
   error(): void {
@@ -153,23 +159,51 @@ export class JournalService implements IJournalService {
       return Promise.resolve(null)
     }
   }
+
+  async getType(id: string): Promise<AdvertType | null> {
+    try {
+      const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
+        include: AdvertDepartmentDTO,
+        where: {
+          id: { [Op.eq]: id },
+        },
+      })
+
+      if (!type) {
+        throw new NotFoundException(`Type not found with id: ${id}`)
+      }
+
+      return Promise.resolve(advertTypesMigrate(type))
+    } catch (e) {
+      this.logger.error('Error in getType', {
+        category: LOGGING_CATEGORY,
+        error: e as Error,
+      })
+      return Promise.resolve(null)
+    }
+  }
+
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse | null> {
     try {
       const page = params?.page ?? 1
+
       const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
         where: params?.search
           ? {
-              title: { [Op.iLike]: `%${params?.search}%` },
+              id: { [Op.eq]: params.search },
             }
           : undefined,
       })
+
+      const mappedTypes = types.map((item) => advertTypesMigrate(item))
+
       return Promise.resolve({
-        types: types.map((item) => advertTypesMigrate(item)),
+        types: mappedTypes,
         paging: generatePaging(types, page),
       })
     } catch (e) {
@@ -218,6 +252,20 @@ export class JournalService implements IJournalService {
       })
     } catch (e) {
       this.logger.error('Error in getInstitution', { error: e as Error })
+      return Promise.resolve(null)
+    }
+  }
+
+  async getCategory(id: string): Promise<Category | null> {
+    try {
+      const category = await this.advertCategoryModel.findOne({
+        where: { id },
+        include: AdvertMainCategoryDTO,
+      })
+
+      return Promise.resolve(category ? advertCategoryMigrate(category) : null)
+    } catch (e) {
+      this.logger.error('Error in getCategory', { error: e as Error })
       return Promise.resolve(null)
     }
   }

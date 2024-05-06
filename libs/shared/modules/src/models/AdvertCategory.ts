@@ -4,9 +4,7 @@ import {
   Column,
   CreatedAt,
   DataType,
-  ForeignKey,
   Model,
-  NotNull,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'

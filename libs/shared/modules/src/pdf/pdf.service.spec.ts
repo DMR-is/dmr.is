@@ -7,8 +7,6 @@ import { ICaseService } from '../case/case.service.interface'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
 describe('PdfService', () => {
   let service: IPdfService
 

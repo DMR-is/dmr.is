@@ -7,7 +7,7 @@ import {
 // import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import * as dbConfig from '../sequelize.config.js'
+import * as dbConfig from './sequelize.config.js'
 import { getOptions } from './sequelize'
 
 @Injectable()
@@ -24,6 +24,8 @@ export class SequelizeConfigService implements SequelizeOptionsFactory {
       ...getOptions(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
+    console.log('options :>> ', options)
+    //options.username = 'foo'
     options.autoLoadModels = true
     return options
   }

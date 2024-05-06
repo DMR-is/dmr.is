@@ -1,4 +1,3 @@
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
@@ -13,6 +12,8 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
+  AdvertType,
+  Category,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -47,11 +48,33 @@ export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
   }
+  getCategory(id: string): Promise<Category | null> {
+    this.logger.info('getCategory', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
+    throw new Error('Method not implemented.')
+  }
+  getType(id: string): Promise<AdvertType | null> {
+    this.logger.info('getType', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
+    throw new Error('Method not implemented.')
+  }
   getInstitution(id: string): Promise<GetInstitutionResponse> {
+    this.logger.info('getInstitution', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
     throw new Error('Method not implemented.')
   }
 
   getDepartment(id: string): Promise<GetDepartmentResponse> {
+    this.logger.info('getDepartment', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
     throw new Error('Method not implemented.')
   }
 

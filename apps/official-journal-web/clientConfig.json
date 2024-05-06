@@ -571,6 +571,47 @@
         }
       }
     },
+    "/api/v1/cases/advert/types": {
+      "get": {
+        "operationId": "getAdvertTypes",
+        "summary": "Get advert types.",
+        "parameters": [
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Department slug to get categories for.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for in types.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number to return.",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All advert types.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertTypesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/statistics/department": {
       "get": {
         "operationId": "StatisticsController_department",
@@ -684,6 +725,17 @@
           "template",
           "subType"
         ]
+      },
+      "ApplicationPreview": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "type": "string",
+            "example": "<html><p>GJALDSKRÁ</p></html>",
+            "description": "HTML string of the advert with signature"
+          }
+        },
+        "required": ["document"]
       },
       "ApplicationSignatureMember": {
         "type": "object",
@@ -918,6 +970,10 @@
             "description": "Application advert",
             "allOf": [{ "$ref": "#/components/schemas/ApplicationAdvert" }]
           },
+          "preview": {
+            "description": "Contents of the full document",
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationPreview" }]
+          },
           "signature": {
             "description": "Application signature",
             "allOf": [{ "$ref": "#/components/schemas/ApplicationSignature" }]
@@ -934,6 +990,7 @@
         "required": [
           "requirements",
           "advert",
+          "preview",
           "signature",
           "attachments",
           "publishing"
@@ -1205,6 +1262,11 @@
             "example": "2024-01-01T09:00:00Z",
             "description": "Date when the case was last updated. ISO 8601 date and time format in UTC."
           },
+          "isLegacy": {
+            "type": "boolean",
+            "example": false,
+            "description": "Is legacy case."
+          },
           "assignedTo": {
             "description": "User the case is assigned to.",
             "allOf": [{ "$ref": "#/components/schemas/User" }]
@@ -1267,6 +1329,7 @@
           "history",
           "createdAt",
           "modifiedAt",
+          "isLegacy",
           "assignedTo",
           "communicationStatus",
           "fastTrack",
@@ -1276,6 +1339,110 @@
           "paid",
           "comments"
         ]
+      },
+      "Department": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert department, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert department.",
+            "example": "A deild"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert department, used in URLs and API requests.",
+            "example": "a-deild"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "AdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert type, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert type, always uppercased.",
+            "example": "AUGLÝSING"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert type, used in URLs and API requests.",
+            "example": "auglysing"
+          },
+          "department": {
+            "description": "Department the advert type belongs to.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          }
+        },
+        "required": ["id", "title", "slug", "department"]
+      },
+      "MainCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the main category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the main category.",
+            "example": "Dómstólar og réttarfar"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the main category, used in URLs and API requests.",
+            "example": "domstolar-og-rettarfar"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category, used on front page.",
+            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
+          }
+        },
+        "required": ["id", "title", "slug", "description"]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert category.",
+            "example": "Evrópska efnahagssvæðið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert category, used in URLs and API requests.",
+            "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategory": {
+            "description": "The main category this category belongs to.",
+            "nullable": true,
+            "example": "Dómstólar og réttarfar",
+            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
+          }
+        },
+        "required": ["id", "title", "slug"]
       },
       "CaseWithApplication": {
         "type": "object",
@@ -1295,6 +1462,24 @@
             "enum": [0, 1, 2, 3],
             "example": 3
           },
+          "document": {
+            "type": "string",
+            "description": "Full advert document html",
+            "example": "<p>GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.</p>"
+          },
+          "caseStatus": {
+            "type": "string",
+            "enum": [
+              "Innsent",
+              "Grunnvinnsla",
+              "Yfirlestur",
+              "Tilbúið",
+              "Útgefið",
+              "Tekið úr birtingu",
+              "Birtingu hafnað"
+            ],
+            "example": "Grunnvinnsla"
+          },
           "tag": {
             "type": "string",
             "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
@@ -1308,13 +1493,74 @@
             "type": "string",
             "example": "2024-01-01T00:00:00.000Z"
           },
-          "advertDepartment": { "type": "string", "example": "GJALDSKRÁ" },
+          "publishDate": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "advertDepartment": {
+            "example": "GJALDSKRÁ",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          },
           "advertTitle": {
             "type": "string",
             "example": "GJALDSKRÁ fyrir hundahald í Reykjavíkurborg."
           },
-          "assignee": { "type": "string", "example": "Ármann" },
-          "institutionTitle": { "type": "string", "example": "Reykjavíkurborg" }
+          "assignedTo": {
+            "description": "User the case is assigned to.",
+            "allOf": [{ "$ref": "#/components/schemas/User" }]
+          },
+          "institutionTitle": {
+            "type": "string",
+            "example": "Reykjavíkurborg"
+          },
+          "caseComments": {
+            "description": "Comments on the case.",
+            "example": {
+              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "createdAt": "2024-01-01T09:00:00Z",
+              "type": "Comment",
+              "task": {
+                "from": "Ármann",
+                "to": null,
+                "title": "gerir athugasemd",
+                "comment": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?"
+              }
+            },
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseComment" }
+          },
+          "isLegacy": {
+            "type": "boolean",
+            "example": false,
+            "description": "Is legacy case."
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "Date the advert was signed, can be null. ISO 8601 date and time format in UTC.",
+            "nullable": true,
+            "example": "2024-01-10T16:00:00Z"
+          },
+          "advertType": {
+            "description": "Type of the advert.",
+            "example": "GJALDSKRÁ",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+          },
+          "categories": {
+            "description": "List of advert categories.",
+            "nullable": false,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "paid": {
+            "type": "boolean",
+            "example": false,
+            "description": "Is the case paid for."
+          },
+          "price": {
+            "type": "number",
+            "example": 23000,
+            "description": "The cost of the case."
+          }
         },
         "required": [
           "caseId",
@@ -1322,13 +1568,23 @@
           "publicationNumber",
           "fastTrack",
           "communicationStatus",
+          "document",
+          "caseStatus",
           "tag",
           "requestedPublicationDate",
           "createdDate",
+          "publishDate",
           "advertDepartment",
           "advertTitle",
-          "assignee",
-          "institutionTitle"
+          "assignedTo",
+          "institutionTitle",
+          "caseComments",
+          "isLegacy",
+          "signatureDate",
+          "advertType",
+          "categories",
+          "paid",
+          "price"
         ]
       },
       "Paging": {
@@ -1478,6 +1734,21 @@
           }
         },
         "required": ["internal", "type", "comment", "from"]
+      },
+      "GetAdvertTypesResponse": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "description": "List of advert types",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertType" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["types", "paging"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",
