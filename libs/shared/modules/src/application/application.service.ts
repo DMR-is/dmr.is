@@ -4,7 +4,6 @@ import {
   CaseComment,
   CaseCommentPublicity,
   CaseCommentType,
-  PostApplicationBody,
   PostApplicationComment,
   SubmitApplicationBody,
   UpdateApplicationBody,

@@ -1,9 +1,9 @@
 import { isBooleanString } from 'class-validator'
-import { AdvertSignatureType } from 'libs/shared/dto/src/lib/advert-signatures/advert-signature-constants.dto'
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
+  AdvertSignatureType,
   ApplicationAnswerOption,
   Case,
   CaseComment,
@@ -58,6 +58,7 @@ export class CaseService implements ICaseService {
     this.logger.info('Using CaseService')
   }
   getCaseHistory(caseId: string): Promise<CaseHistory> {
+    this.logger.info('getCaseHistory', caseId)
     throw new Error('Method not implemented.')
   }
 

@@ -81,6 +81,10 @@ export class JournalService implements IJournalService {
   getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
+    this.logger.info('getSignatures', {
+      category: LOGGING_CATEGORY,
+      metadata: { params },
+    })
     throw new Error('Method not implemented.')
   }
   error(): void {
@@ -184,10 +188,6 @@ export class JournalService implements IJournalService {
   ): Promise<GetAdvertTypesResponse | null> {
     try {
       const page = params?.page ?? 1
-
-      const where = params?.search
-        ? { title: { [Op.iLike]: `%${params.search}%` } }
-        : undefined
 
       const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,

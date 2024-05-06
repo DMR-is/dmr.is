@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseCommentTitle, CaseCommentType } from './case-comment-constants'
+import { CaseCommentType } from './case-comment-constants'
 
 export class PostCaseComment {
   @ApiProperty({
