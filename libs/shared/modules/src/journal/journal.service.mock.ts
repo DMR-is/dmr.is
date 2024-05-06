@@ -13,6 +13,8 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
+  AdvertType,
+  Category,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -46,6 +48,12 @@ const LOGGING_CATEGORY = 'MockJournalService'
 export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
+  }
+  getCategory(id: string): Promise<Category | null> {
+    throw new Error('Method not implemented.')
+  }
+  getType(id: string): Promise<AdvertType | null> {
+    throw new Error('Method not implemented.')
   }
   getInstitution(id: string): Promise<GetInstitutionResponse> {
     throw new Error('Method not implemented.')

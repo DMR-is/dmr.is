@@ -76,10 +76,10 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
       },
       {
         sortingKey: 'caseDepartment',
-        sortingValue: row.advertDepartment,
+        sortingValue: row.advertDepartment.title,
         children: (
           <Text truncate variant="medium">
-            {row.advertDepartment}
+            {row.advertDepartment.title}
           </Text>
         ),
       },

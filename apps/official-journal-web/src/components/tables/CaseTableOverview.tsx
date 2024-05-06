@@ -48,13 +48,13 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
         children: <Text variant="medium">{formatDate(row.publishDate)}</Text>,
       },
       {
-        children: <Text variant="medium">{row.number}</Text>,
+        children: <Text variant="medium">{row.publicationNumber}</Text>,
       },
       {
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.title}
+              {row.advertTitle}
             </Text>
           </div>
         ),
@@ -62,7 +62,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       {
         children: (
           <Text truncate variant="medium">
-            {row.institution}
+            {row.institutionTitle}
           </Text>
         ),
       },

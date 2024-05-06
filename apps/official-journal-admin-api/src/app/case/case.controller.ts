@@ -1,9 +1,11 @@
-import { ICaseService } from '@dmr.is/modules'
+import { ICaseService, IJournalService } from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
   CaseEditorialOverview,
   CaseWithApplication,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
@@ -36,6 +38,9 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
+
+    @Inject(IJournalService)
+    private readonly journalService: IJournalService,
   ) {}
 
   @Get('case')
@@ -225,5 +230,22 @@ export class CaseController {
     @Param('commentId') commentId: string,
   ): Promise<CaseComment[]> {
     return this.caseService.deleteComment(caseId, commentId)
+  }
+
+  @Get('advert/types')
+  @ApiOperation({
+    operationId: 'getAdvertTypes',
+    summary: 'Get advert types.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetAdvertTypesResponse,
+    description: 'All advert types.',
+  })
+  async advertTypes(
+    @Query()
+    params?: GetAdvertTypesQueryParams,
+  ): Promise<GetAdvertTypesResponse | null> {
+    return this.journalService.getTypes(params)
   }
 }

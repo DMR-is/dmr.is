@@ -5,14 +5,14 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { CaseWithApplication } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: Case
+  activeCase: CaseWithApplication
 }
 
 export const StepTilbuid = ({ activeCase }: Props) => {
@@ -31,16 +31,16 @@ export const StepTilbuid = ({ activeCase }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <AdvertDisplay
-            advertNumber={activeCase.advert.publicationNumber?.full}
+            advertNumber={activeCase.publicationNumber}
             signatureDate={
-              activeCase.advert.signatureDate
-                ? formatDate(activeCase.advert.signatureDate, 'dd. MMMM yyyy')
+              activeCase.signatureDate
+                ? formatDate(activeCase.signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advert.type.title}
-            advertSubject={activeCase.advert.subject ?? ''}
-            advertText={activeCase.advert.document.html ?? ''}
-            isLegacy={activeCase.advert.document.isLegacy ?? false}
+            advertType={activeCase.advertTitle}
+            advertSubject={activeCase.advertDepartment.title}
+            advertText={activeCase.document}
+            isLegacy={activeCase.isLegacy}
           />
         </GridColumn>
       </GridRow>

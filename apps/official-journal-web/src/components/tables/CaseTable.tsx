@@ -14,7 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
+import { CaseWithApplication, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
@@ -118,14 +118,17 @@ export const CaseTable = ({
   }
 
   const portalRef = useRef<Element>()
-  const [modalActive, setModalActive] = useState<Advert>()
+  const [modalActive, setModalActive] = useState<CaseWithApplication>()
   useEffect(() => {
     portalRef.current = document.querySelector('#__next') as Element
   })
 
-  const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
+  const openModal = (
+    e: React.MouseEvent<HTMLElement>,
+    activeCase: CaseWithApplication,
+  ) => {
     e.preventDefault()
-    setModalActive(activeCase.advert)
+    setModalActive(activeCase)
   }
 
   useEffect(() => {
@@ -193,7 +196,10 @@ export const CaseTable = ({
                       }
                       href={
                         !modalLink
-                          ? generateCaseLink(row.case.status, row.case.id)
+                          ? generateCaseLink(
+                              row.case.caseStatus,
+                              row.case.caseId,
+                            )
                           : undefined
                       }
                     >
@@ -251,16 +257,20 @@ export const CaseTable = ({
                 </button>
               </div>
               <AdvertDisplay
-                advertNumber={modalActive.publicationNumber?.full}
+                advertNumber={modalActive.publicationNumber}
+                // TODO: get correct date
                 signatureDate={
-                  modalActive.signatureDate
-                    ? formatDate(modalActive.signatureDate, 'dd. MMMM yyyy')
+                  modalActive.requestedPublicationDate
+                    ? formatDate(
+                        modalActive.requestedPublicationDate,
+                        'dd. MMMM yyyy',
+                      )
                     : undefined
                 }
-                advertType={modalActive.type.title}
-                advertSubject={modalActive.subject ?? ''}
-                advertText={modalActive.document.html ?? ''}
-                isLegacy={modalActive.document.isLegacy ?? false}
+                advertType={modalActive.advertTitle}
+                advertSubject={modalActive.advertDepartment.title}
+                advertText={modalActive.document}
+                isLegacy={false}
                 paddingTop={[5, 6, 8]}
               />
             </div>

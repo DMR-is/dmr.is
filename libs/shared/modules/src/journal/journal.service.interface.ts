@@ -1,5 +1,7 @@
 import {
   Advert,
+  AdvertType,
+  Category,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -29,6 +31,8 @@ export interface IJournalService {
     params?: GetDepartmentsQueryParams,
   ): Promise<GetDepartmentsResponse | null>
 
+  getType(id: string): Promise<AdvertType | null>
+
   getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse | null>
@@ -36,6 +40,8 @@ export interface IJournalService {
   getMainCategories(
     params?: GetMainCategoriesQueryParams,
   ): Promise<GetMainCategoriesResponse | null>
+
+  getCategory(id: string): Promise<Category | null>
 
   getCategories(
     params?: GetCategoriesQueryParams,

@@ -6,6 +6,6 @@ export type TableProps = {
 }
 
 export type PublishedTableProps = {
-  data: Array<Case>
+  data: Array<CaseWithApplication>
   paging: Paging
 }
