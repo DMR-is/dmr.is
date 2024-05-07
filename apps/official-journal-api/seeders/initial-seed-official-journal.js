@@ -33,11 +33,11 @@ module.exports = {
       './seeders/sql/07_category_department.sql',
       'utf8',
     )
-
     const caseStatusSeed = await readFile(
-      './seeders/sql/10_case_statuses.sql',
+      './seeders/sql/10_case_status.sql',
       'utf8',
     )
+    const caseTagSeed = await readFile('./seeders/sql/11_case_tag.sql', 'utf8')
 
     const seed = `
       BEGIN;
@@ -51,6 +51,7 @@ module.exports = {
       ${categoryDepartmentSeed}
       ${advertCategoriesSeed}
       ${caseStatusSeed}
+      ${caseTagSeed}
 
       COMMIT;`
     return await queryInterface.sequelize.query(seed)
@@ -59,16 +60,16 @@ module.exports = {
   async down(queryInterface) {
     return await queryInterface.sequelize.query(`
       BEGIN;
-      DELETE FROM advert_categories;
-      DELETE FROM category_department;
+        DELETE FROM advert_categories;
+        DELETE FROM category_department;
         DELETE FROM advert;
         DELETE FROM advert_type;
         DELETE FROM advert_department;
         DELETE FROM advert_category;
         DELETE FROM advert_main_category;
-
         DELETE FROM advert_status;
-
+        DELETE FROM case_status;
+        DELETE FROM case_tag;
       COMMIT;
     `)
   },

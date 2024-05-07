@@ -20,7 +20,7 @@ export class CaseStatusDto extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: string
+  key!: string
 
   @Column({
     type: DataType.STRING,
