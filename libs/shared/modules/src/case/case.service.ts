@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
+  AdvertSignatureType,
   ApplicationAnswerOption,
   Case,
   CaseComment,
@@ -13,6 +14,7 @@ import {
   CaseStatus,
   CaseTag,
   CaseWithApplication,
+  Category,
   GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
@@ -56,6 +58,7 @@ export class CaseService implements ICaseService {
     this.logger.info('Using CaseService')
   }
   getCaseHistory(caseId: string): Promise<CaseHistory> {
+    this.logger.info('getCaseHistory', caseId)
     throw new Error('Method not implemented.')
   }
 
@@ -134,23 +137,63 @@ export class CaseService implements ICaseService {
     const institutionReq = await this.journalService.getInstitution(
       application.applicant,
     )
-    if (!institutionReq || !institutionReq.institution) {
-      throw new NotFoundException('Institution not found')
-    }
+    // if (!institutionReq || !institutionReq.institution) {
+    //   throw new NotFoundException('Institution not found')
+    // }
+
+    const signatureDate =
+      application.answers.signature?.type === AdvertSignatureType.Regular
+        ? application.answers.signature?.regular?.at(0)?.date
+        : application.answers.signature?.committee?.date
+
+    // TODO: Switch to real types when ready
+    const advertType = await this.journalService.getType(
+      '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
+    )
+
+    const contentCategories =
+      application.answers.publishing?.contentCategories ?? []
+
+    const categories: Category[] = []
+
+    const result = await Promise.all(
+      contentCategories.map(async (c) => {
+        const category = await this.journalService.getCategory(c.value)
+        return category
+      }),
+    )
+
+    result.forEach((r) => {
+      if (r) {
+        categories.push(r)
+      }
+    })
 
     return {
       caseId: theCase.id,
       applicationId: theCase.applicationId,
       publicationNumber: null,
-      advertDepartment: departmentReq.department.title,
-      advertTitle: advertTitle,
-      requestedPublicationDate: requestedPublicationDate,
+      caseStatus: theCase.status,
+      document:
+        theCase.history[theCase.history.length - 1].answers.preview?.document ||
+        '',
+      publishDate: theCase.publishedAt,
       communicationStatus: theCase.communicationStatus,
       createdDate: theCase.createdAt,
       tag: theCase.tag,
       fastTrack: theCase.fastTrack,
-      assignee: theCase.assignedTo?.name || null,
-      institutionTitle: institutionReq.institution.title || null,
+      assignedTo: theCase.assignedTo,
+      caseComments: theCase.comments,
+      isLegacy: theCase.isLegacy,
+      paid: theCase.paid,
+      price: theCase.price,
+      advertType: advertType,
+      advertDepartment: departmentReq.department,
+      advertTitle: advertTitle,
+      requestedPublicationDate: requestedPublicationDate,
+      institutionTitle: institutionReq?.institution?.title || null,
+      categories: categories,
+      signatureDate: signatureDate || null,
     }
   }
 
@@ -191,6 +234,7 @@ export class CaseService implements ICaseService {
 
       const newCase: Case = {
         id: uuid(),
+        isLegacy: false,
         caseNumber: 0,
         applicationId: body.applicationId,
         assignedTo: null,
@@ -464,6 +508,8 @@ export class CaseService implements ICaseService {
         ready.push(c)
       }
     })
+
+    console.log(params)
 
     const { cases, paging } = await this.getCases(params)
 

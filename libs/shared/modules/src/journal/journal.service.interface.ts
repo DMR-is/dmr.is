@@ -39,6 +39,8 @@ export interface IJournalService {
   insertDepartment(model: Department): Promise<GetDepartmentResponse | null>
   updateDepartment(model: Department): Promise<GetDepartmentResponse | null>
 
+  getType(id: string): Promise<AdvertType | null>
+
   getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse | null>
@@ -55,6 +57,8 @@ export interface IJournalService {
   updateMainCategory(
     model: MainCategory,
   ): Promise<GetMainCategoryResponse | null>
+
+  getCategory(id: string): Promise<Category | null>
 
   getCategories(
     params?: GetCategoriesQueryParams,

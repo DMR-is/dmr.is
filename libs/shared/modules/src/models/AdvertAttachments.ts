@@ -3,7 +3,6 @@ import {
   DataType,
   DefaultScope,
   Model,
-  NotNull,
   Table,
 } from 'sequelize-typescript'
 

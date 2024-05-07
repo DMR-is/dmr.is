@@ -6,7 +6,12 @@ import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, Paging } from '../gen/fetch'
+import {
+  Case,
+  CaseWithApplication,
+  GetCasesWithApplicationRequest,
+  Paging,
+} from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -18,7 +23,7 @@ import { Screen } from '../lib/types'
 import { extractCaseProcessingFilters } from '../lib/utils'
 
 type Props = {
-  cases: Case[]
+  cases: CaseWithApplication[]
   paging: Paging
   filters?: FilterGroup[]
 }
@@ -72,11 +77,15 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
 }
 
 CaseOverview.getProps = async ({ query }) => {
-  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
+  const { filters: ex, tab } = extractCaseProcessingFilters(query)
   const dmrClient = createDmrClient()
 
-  const { cases, paging } = await dmrClient.getCases({
-    ...extractedFilters,
+  const extracted = {
+    ...ex,
+  } as GetCasesWithApplicationRequest
+
+  const { cases, paging } = await dmrClient.getCasesWithApplication({
+    ...extracted,
     department: tab,
   })
 

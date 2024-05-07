@@ -1,4 +1,3 @@
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
@@ -67,9 +66,6 @@ export class MockJournalService implements IJournalService {
   updateDepartment(model: Department): Promise<GetDepartmentResponse | null> {
     throw new Error('Method not implemented.')
   }
-  getType(id: string): Promise<GetAdvertTypeResponse | null> {
-    throw new Error('Method not implemented.')
-  }
   insertType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
     throw new Error('Method not implemented.')
   }
@@ -102,15 +98,37 @@ export class MockJournalService implements IJournalService {
   ): Promise<GetInstitutionResponse | null> {
     throw new Error('Method not implemented.')
   }
+  getCategory(id: string): Promise<Category | null> {
+    this.logger.info('getCategory', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
+    throw new Error('Method not implemented.')
+  }
+  getType(id: string): Promise<GetAdvertTypeResponse | null> {
+    this.logger.info('getType', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
+    throw new Error('Method not implemented.')
+  }
   getInstitution(id: string): Promise<GetInstitutionResponse> {
+    this.logger.info('getInstitution', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
     throw new Error('Method not implemented.')
   }
 
   getDepartment(id: string): Promise<GetDepartmentResponse> {
+    this.logger.info('getDepartment', {
+      category: LOGGING_CATEGORY,
+      id: id,
+    })
     throw new Error('Method not implemented.')
   }
 
-  async getAdvert(id: string): Promise<Advert | null> {
+  getAdvert(id: string): Promise<Advert | null> {
     this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },

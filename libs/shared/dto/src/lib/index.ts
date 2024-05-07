@@ -40,6 +40,7 @@ export * from './advert-signatures/get-advert-signature-response.dto'
 export * from './advert-signatures/advert-signature-member.dto'
 export * from './advert-signatures/get-advert-signature-query.dto'
 export * from './advert-signatures/advert-signature.dto'
+export * from './advert-signatures/advert-signature-constants.dto'
 
 export * from './advert-types/advert-type.dto'
 export * from './advert-types/get-adverttypes-query.dto'

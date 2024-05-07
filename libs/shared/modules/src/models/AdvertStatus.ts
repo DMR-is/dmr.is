@@ -1,4 +1,4 @@
-import { Column, DataType, Model, NotNull, Table } from 'sequelize-typescript'
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'advert_status', timestamps: false })
 export class AdvertStatusDTO extends Model {

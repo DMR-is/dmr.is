@@ -16,7 +16,11 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import { AdvertType, Case, CaseStatusEnum } from '../gen/fetch'
+import {
+  AdvertType,
+  CaseWithApplication,
+  CaseWithApplicationCaseStatusEnum,
+} from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -25,7 +29,7 @@ import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
-  activeCase: Case | null
+  activeCase: CaseWithApplication | null
   advertTypes: Array<AdvertType> | null
   step: CaseStep | null
 }
@@ -53,7 +57,9 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
     { label: 'Pálína J', value: 'Pálína J' },
   ]
 
-  const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
+  const caseStatusOptions = Object.values(
+    CaseWithApplicationCaseStatusEnum,
+  ).map((c) => ({
     label: c,
     value: c,
   }))
@@ -109,7 +115,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
             name="status"
             options={caseStatusOptions}
             defaultValue={caseStatusOptions.find(
-              (c) => c.value === activeCase.status,
+              (c) => c.value === activeCase.caseStatus,
             )}
             label={formatMessage(messages.actions.status)}
             size="sm"
@@ -125,9 +131,10 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-        {activeCase.advert.attachments.length ? (
+        {/* TODO: Implement attachment logic */}
+        {/* {activeCase.advert.attachments.length ? (
           <Attachments activeCase={activeCase} />
-        ) : null}
+        ) : null} */}
 
         <Comments activeCase={activeCase} />
 
@@ -139,7 +146,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
           paddingTop={[2, 3, 4]}
         >
           {prevStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
+            <LinkV2 href={`/ritstjorn/${activeCase.caseId}/${prevStep}`}>
               <Button as="span" variant="ghost" unfocusable>
                 {formatMessage(messages.paging.goBack)}
               </Button>
@@ -152,7 +159,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
             </LinkV2>
           )}
           {nextStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
+            <LinkV2 href={`/ritstjorn/${activeCase.caseId}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
               </Button>
@@ -178,43 +185,31 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   }
 
   const [activeCase, advertTypes] = await Promise.all([
-    dmrClient.getCase({
+    dmrClient.getCaseWithApplication({
       id: caseId,
     }),
-    dmrClient.journalControllerTypes({}),
+    dmrClient.getAdvertTypes({}),
   ]).catch((err) => {
     console.log('Error fetcing case', { err })
     throw new Error('Error fetcing case')
   })
 
-  const application = await dmrClient.getApplication({
-    id: activeCase.applicationId,
+  const { types } = await dmrClient.getAdvertTypes({
+    // search: application.answers.advert.type,
+    search: '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
   })
 
-  const { types } = await dmrClient.journalControllerTypes({
-    search: application.answers.advert.type,
-  })
-
-  const advertType = types.find((t) => t.id === application.answers.advert.type)
+  // const advertType = types.find((t) => t.id === application.answers.advert.type)
+  const advertType = types.find(
+    (t) => t.id === '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9',
+  )
 
   if (!advertType) {
     throw new Error('Advert type not found')
   }
 
   return {
-    activeCase: {
-      ...activeCase,
-      advert: {
-        ...activeCase.advert,
-        title: advertType.title,
-        subject: application.answers.advert.title,
-
-        document: {
-          isLegacy: false,
-          html: application.answers.advert.document,
-        },
-      },
-    },
+    activeCase: activeCase,
     advertTypes: advertTypes.types,
     step,
   }

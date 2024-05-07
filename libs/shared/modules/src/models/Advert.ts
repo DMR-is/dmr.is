@@ -2,13 +2,10 @@ import {
   BelongsTo,
   BelongsToMany,
   Column,
-  CreatedAt,
   DataType,
   HasMany,
-  HasOne,
   Model,
   Table,
-  UpdatedAt,
 } from 'sequelize-typescript'
 
 import { AdvertAttachmentsDTO } from './AdvertAttachments'
