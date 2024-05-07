@@ -126,6 +126,13 @@ module.exports = {
       CONSTRAINT fk_category_department_department_id FOREIGN KEY (department_id) REFERENCES advert_department(id)
       );
 
+    CREATE TABLE case_status (
+        id UUID NOT NULL DEFAULT uuid_generate_v4(),
+        title VARCHAR NOT NULL,
+        value VARCHAR NOT NULL,
+        PRIMARY KEY (id)
+    );
+
   COMMIT;
     `)
   },
@@ -143,6 +150,7 @@ module.exports = {
     DROP TABLE advert_attachments CASCADE;
 	  DROP TABLE advert CASCADE;
     DROP TABLE category_department CASCADE;
+    DROP TABLE case_status CASCADE;
     `)
   },
 }
