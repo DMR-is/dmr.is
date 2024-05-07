@@ -86,10 +86,75 @@ export class JournalService implements IJournalService {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
   async insertAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model) {
+      this.logger.error('No model in insertAdvert')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const ad = await this.advertModel.create({
+        title: model.title,
+        departmentId: model.department?.id,
+        typeId: model.type?.id,
+        subject: model.subject,
+        serialNumber: model.publicationNumber?.number,
+        publicationYear: model.publicationNumber?.year,
+        signatureDate: model.signatureDate,
+        publicationDate: model.publicationDate,
+        documentHtml: model.document.html,
+        documentPdfUrl: model.document.pdfUrl,
+        isLegacy: model.document.isLegacy,
+        attachments: model.attachments,
+        involvedPartyId: model.involvedParty?.id,
+        status: model.status,
+      })
+      return { ok: true, value: { advert: advertMigrate(ad) } }
+    } catch (e) {
+      this.logger.error('Error in insertAdvert', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model) {
+      this.logger.error('No model in updateAdvert')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const ad = await this.advertModel.update(
+        {
+          title: model.title,
+          departmentId: model.department?.id,
+          typeId: model.type?.id,
+          subject: model.subject,
+          serialNumber: model.publicationNumber?.number,
+          publicationYear: model.publicationNumber?.year,
+          signatureDate: model.signatureDate,
+          publicationDate: model.publicationDate,
+          documentHtml: model.document.html,
+          documentPdfUrl: model.document.pdfUrl,
+          isLegacy: model.document.isLegacy,
+          attachments: model.attachments,
+          involvedPartyId: model.involvedParty?.id,
+          status: model.status,
+        },
+        { where: { id: model.id }, returning: true },
+      )
+      return { ok: true, value: { advert: advertMigrate(ad[1][0]) } }
+    } catch (e) {
+      this.logger.error('Error in updateAdvert', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async insertDepartment(
     model: Department,
@@ -119,7 +184,32 @@ export class JournalService implements IJournalService {
   async updateDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateDepartment')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const dep = await this.advertDepartmentModel.update(
+        { title: model.title, slug: model.slug },
+        { where: { id: model.id }, returning: true },
+      )
+      if (!dep) {
+        throw new NotFoundException()
+      }
+      return {
+        ok: true,
+        value: { department: advertDepartmentMigrate(dep[1][0]) },
+      }
+    } catch (e) {
+      this.logger.error('Error in updateDepartment', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async insertInstitution(
     model: Institution,
@@ -137,6 +227,7 @@ export class JournalService implements IJournalService {
         title: model.title,
         slug: model.slug,
       })
+
       return { ok: true, value: { institution: inst } }
     } catch (e) {
       this.logger.error('Error in insertInstitution', e as Error)
@@ -149,7 +240,32 @@ export class JournalService implements IJournalService {
   async updateInstitution(
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateInstitution')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const inst = await this.advertInvolvedPartyModel.update(
+        { title: model.title, slug: model.slug },
+        { where: { id: model.id }, returning: true },
+      )
+      if (!inst) {
+        throw new NotFoundException()
+      }
+      return {
+        ok: true,
+        value: { institution: advertInvolvedPartyMigrate(inst[1][0]) },
+      }
+    } catch (e) {
+      this.logger.error('Error in updateInstitution', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async getSignatures(
     params?: GetAdvertSignatureQuery,
@@ -204,6 +320,9 @@ export class JournalService implements IJournalService {
         },
         { where: { id: model.id }, returning: true },
       )
+      if (!type) {
+        throw new NotFoundException()
+      }
       return { ok: true, value: { type: advertTypesMigrate(type[1][0]) } }
     } catch (e) {
       this.logger.error('Error in updateType', e as Error)
@@ -262,7 +381,7 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!mainCat) {
-        throw NotFoundException
+        throw new NotFoundException()
       }
       return {
         ok: true,
@@ -318,6 +437,9 @@ export class JournalService implements IJournalService {
         },
         { where: { id: model.id }, returning: true },
       )
+      if (!category) {
+        throw new NotFoundException()
+      }
       return {
         ok: true,
         value: { category: advertCategoryMigrate(category[1][0]) },
