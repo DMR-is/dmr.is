@@ -1,4 +1,4 @@
-import { ICaseService, IJournalService } from '@dmr.is/modules'
+import { ICaseService, IJournalService, Result } from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
@@ -245,7 +245,7 @@ export class CaseController {
   async advertTypes(
     @Query()
     params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse | null> {
+  ): Promise<Result<GetAdvertTypesResponse>> {
     return this.journalService.getTypes(params)
   }
 }
