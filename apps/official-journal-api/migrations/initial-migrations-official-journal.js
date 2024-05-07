@@ -124,7 +124,42 @@ module.exports = {
       PRIMARY KEY (category_id,department_id),
       CONSTRAINT fk_category_department_category_id FOREIGN KEY (category_id) REFERENCES advert_category(id),
       CONSTRAINT fk_category_department_department_id FOREIGN KEY (department_id) REFERENCES advert_department(id)
-      );
+    );
+
+    CREATE TABLE case_status (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_tag (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_communication_status (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comment_title (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comment_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
 
   COMMIT;
     `)
@@ -143,6 +178,11 @@ module.exports = {
     DROP TABLE advert_attachments CASCADE;
 	  DROP TABLE advert CASCADE;
     DROP TABLE category_department CASCADE;
+    DROP TABLE case_status CASCADE;
+    DROP TABLE case_tag CASCADE;
+    DROP TABLE case_communication_status CASCADE;
+    DROP TABLE case_comment_title CASCADE;
+    DROP TABLE case_comment_type CASCADE;
     `)
   },
 }
