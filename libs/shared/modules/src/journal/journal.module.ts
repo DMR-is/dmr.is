@@ -3,6 +3,9 @@ import { LoggingModule } from '@dmr.is/logging'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { JournalService } from './journal.service'
+import { IJournalService } from './journal.service.interface'
+import { MockJournalService } from './journal.service.mock'
 import {
   AdvertAttachmentsDTO,
   AdvertCategoriesDTO,
@@ -15,10 +18,7 @@ import {
   AdvertStatusHistoryDTO,
   AdvertTypeDTO,
   CategoryDepartmentsDTO,
-} from '../models'
-import { JournalService } from './journal.service'
-import { IJournalService } from './journal.service.interface'
-import { MockJournalService } from './journal.service.mock'
+} from './models'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
 @Module({

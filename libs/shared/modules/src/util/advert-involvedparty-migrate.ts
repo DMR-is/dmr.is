@@ -1,6 +1,6 @@
 import { Institution } from '@dmr.is/shared/dto'
 
-import { AdvertInvolvedPartyDTO } from '../models/AdvertInvolvedParty'
+import { AdvertInvolvedPartyDTO } from '../journal/models/AdvertInvolvedParty'
 
 export function advertInvolvedPartyMigrate(
   model: AdvertInvolvedPartyDTO,

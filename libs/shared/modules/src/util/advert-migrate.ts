@@ -1,6 +1,6 @@
 import { Advert, AdvertAttachment, AdvertStatus } from '@dmr.is/shared/dto'
 
-import { AdvertDTO } from '../models'
+import { AdvertDTO } from '../journal/models'
 import { advertCategoryMigrate } from './advert-category-migrate'
 import { advertDepartmentMigrate } from './advert-department-migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty-migrate'

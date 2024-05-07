@@ -36,16 +36,6 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import {
-  AdvertAttachmentsDTO,
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertMainCategoryDTO,
-  AdvertStatusDTO,
-  AdvertTypeDTO,
-} from '../models'
-import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
   advertInvolvedPartyMigrate,
@@ -54,6 +44,16 @@ import {
   advertTypesMigrate,
 } from '../util'
 import { IJournalService } from './journal.service.interface'
+import {
+  AdvertAttachmentsDTO,
+  AdvertCategoryDTO,
+  AdvertDepartmentDTO,
+  AdvertDTO,
+  AdvertInvolvedPartyDTO,
+  AdvertMainCategoryDTO,
+  AdvertStatusDTO,
+  AdvertTypeDTO,
+} from './models'
 
 const LOGGING_CATEGORY = 'JournalService'
 const DEFAULT_PAGE_SIZE = 20
