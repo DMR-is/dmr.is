@@ -6,7 +6,9 @@ import { ApiResponse } from '@nestjs/swagger'
   path: 'health',
 })
 export class HealthController {
-  @Get('')
+  constructor() {}
+
+  @Get()
   @ApiResponse({
     status: 200,
     description: 'Health check endpoint.',
