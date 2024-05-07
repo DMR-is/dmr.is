@@ -2,14 +2,19 @@ import { Op } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
+  AdvertType,
+  Category,
+  Department,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetCategoryResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
@@ -18,6 +23,9 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
+  GetMainCategoryResponse,
+  Institution,
+  MainCategory,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -74,6 +82,92 @@ export class JournalService implements IJournalService {
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
+  }
+  async insertAdvert(model: Advert): Promise<Advert | null> {
+    throw new Error('Method not implemented.')
+  }
+  async updateAdvert(model: Advert): Promise<Advert | null> {
+    throw new Error('Method not implemented.')
+  }
+  async insertDepartment(
+    model: Department,
+  ): Promise<GetDepartmentResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async updateDepartment(
+    model: Department,
+  ): Promise<GetDepartmentResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async getType(id: string): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async insertType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async updateType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async insertMainCategory(
+    model: MainCategory,
+  ): Promise<GetMainCategoryResponse | null> {
+    if (!model) {
+      this.logger.error('No model in insertMainCategory')
+      return Promise.resolve(null)
+    }
+    try {
+      const mainCategory = await this.advertMainCategoryModel.create({
+        title: model.title,
+        slug: model.slug,
+        description: model.description,
+      })
+      return { mainCategory: advertMainCategoryMigrate(mainCategory) }
+    } catch (e) {
+      this.logger.error('Error in insertMainCategory', e as Error)
+      return Promise.resolve(null)
+    }
+  }
+  async updateMainCategory(
+    model: MainCategory,
+  ): Promise<GetMainCategoryResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  async insertCategory(model: Category): Promise<GetCategoryResponse | null> {
+    if (!model) {
+      this.logger.error('No model in insertCategory')
+      return Promise.resolve(null)
+    }
+    const category = await this.advertCategoryModel.create({
+      title: model.title,
+      slug: model.slug,
+      mainCategoryID: model.mainCategory?.id,
+    })
+    return { category: advertCategoryMigrate(category) }
+  }
+  async updateCategory(model: Category): Promise<GetCategoryResponse | null> {
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateCategory')
+      return Promise.resolve(null)
+    }
+    const category = await this.advertCategoryModel.update(
+      {
+        title: model.title,
+        slug: model.slug,
+        mainCategoryID: model.mainCategory?.id,
+      },
+      { where: { id: model.id }, returning: true },
+    )
+    return { category: advertCategoryMigrate(category[1][0]) }
+  }
+  insertInstitution(
+    model: Institution,
+  ): Promise<GetInstitutionResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateInstitution(
+    model: Institution,
+  ): Promise<GetInstitutionResponse | null> {
+    throw new Error('Method not implemented.')
   }
 
   getSignatures(

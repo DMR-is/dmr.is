@@ -13,14 +13,19 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
+  AdvertType,
+  Category,
+  Department,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetCategoryResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
@@ -29,6 +34,9 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
+  GetMainCategoryResponse,
+  Institution,
+  MainCategory,
 } from '@dmr.is/shared/dto'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
@@ -46,6 +54,53 @@ const LOGGING_CATEGORY = 'MockJournalService'
 export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
+  }
+  insertAdvert(model: Advert): Promise<Advert | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateAdvert(model: Advert): Promise<Advert | null> {
+    throw new Error('Method not implemented.')
+  }
+  insertDepartment(model: Department): Promise<GetDepartmentResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateDepartment(model: Department): Promise<GetDepartmentResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  getType(id: string): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  insertType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  insertMainCategory(
+    model: MainCategory,
+  ): Promise<GetMainCategoryResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateMainCategory(
+    model: MainCategory,
+  ): Promise<GetMainCategoryResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  insertCategory(model: Category): Promise<GetCategoryResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateCategory(model: Category): Promise<GetCategoryResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  insertInstitution(
+    model: Institution,
+  ): Promise<GetInstitutionResponse | null> {
+    throw new Error('Method not implemented.')
+  }
+  updateInstitution(
+    model: Institution,
+  ): Promise<GetInstitutionResponse | null> {
+    throw new Error('Method not implemented.')
   }
   getInstitution(id: string): Promise<GetInstitutionResponse> {
     throw new Error('Method not implemented.')

@@ -18,6 +18,7 @@ export * from './application/post-application-comment.dto'
 export * from './categories/category.dto'
 export * from './categories/get-categories-query.dto'
 export * from './categories/get-categories-responses.dto'
+export * from './categories/get-category-responses.dto'
 
 export * from './departments/department.dto'
 export * from './departments/get-departments-query.dto'
@@ -31,6 +32,7 @@ export * from './institutions/get-institution-response.dto'
 
 export * from './main-categories/get-maincategories-query.dto'
 export * from './main-categories/get-maincategories-response.dto'
+export * from './main-categories/get-maincategory-response.dto'
 export * from './main-categories/maincategory.dto'
 
 export * from './advert-signatures/advert-signature-body.dto'
@@ -42,6 +44,7 @@ export * from './advert-signatures/advert-signature.dto'
 export * from './advert-types/advert-type.dto'
 export * from './advert-types/get-adverttypes-query.dto'
 export * from './advert-types/get-adverttypes-response.dto'
+export * from './advert-types/get-adverttype-response.dto'
 
 export * from './adverts/advert-document'
 export * from './journal/journal-error'
