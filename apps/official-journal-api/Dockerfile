@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 COPY ./apps/official-journal-api/dist/package.json ./
 COPY ./apps/official-journal-api/migrations ./migrations
 COPY ./apps/official-journal-api/.sequelizerc ./
-COPY ./apps/official-journal-api/sequelize.config.js ./
+COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./
 RUN yarn add pg
 RUN yarn install --only=production
 
@@ -25,4 +25,6 @@ COPY ./apps/official-journal-api/dist .
 RUN npm install -g sequelize-cli
 USER node
 EXPOSE 3000
-CMD ["dumb-init", "node", "main.js"]
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["sh", "-c", "sequelize-cli db:migrate && node main.js"]
+
