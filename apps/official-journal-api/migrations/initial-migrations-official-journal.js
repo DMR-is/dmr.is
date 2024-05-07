@@ -174,6 +174,7 @@ module.exports = {
     DROP TABLE case_status CASCADE;
     DROP TABLE case_tag CASCADE;
     DROP TABLE case_communication_status CASCADE;
+    DROP TABLE case_comment_title CASCADE;
     `)
   },
 }
