@@ -46,6 +46,10 @@ module.exports = {
       './seeders/sql/13_case_comment_title.sql',
       'utf8',
     )
+    const caseCommentTypeSeed = await readFile(
+      './seeders/sql/14_case_comment_type.sql',
+      'utf8',
+    )
 
     const seed = `
       BEGIN;
@@ -62,6 +66,7 @@ module.exports = {
       ${caseTagSeed}
       ${caseCommunicationSeed}
       ${caseCommentTitleSeed}
+      ${caseCommentTypeSeed}
 
       COMMIT;`
     return await queryInterface.sequelize.query(seed)
@@ -82,6 +87,7 @@ module.exports = {
         DELETE FROM case_tag;
         DELETE FROM case_communication_status;
         DELETE FROM case_comment_title;
+        DELETE FROM case_comment_type;
       COMMIT;
     `)
   },

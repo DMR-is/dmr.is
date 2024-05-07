@@ -154,6 +154,13 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_comment_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
   COMMIT;
     `)
   },
@@ -175,6 +182,7 @@ module.exports = {
     DROP TABLE case_tag CASCADE;
     DROP TABLE case_communication_status CASCADE;
     DROP TABLE case_comment_title CASCADE;
+    DROP TABLE case_comment_type CASCADE;
     `)
   },
 }
