@@ -94,18 +94,124 @@ export class JournalService implements IJournalService {
   async insertDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model) {
+      this.logger.error('No model in insertDepartment')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+
+    try {
+      const dep = await this.advertDepartmentModel.create({
+        title: model.title,
+        slug: model.slug,
+      })
+      return { ok: true, value: { department: dep } }
+    } catch (e) {
+      this.logger.error('Error in insertDepartment', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async updateDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  async insertInstitution(
+    model: Institution,
+  ): Promise<Result<GetInstitutionResponse>> {
+    if (!model) {
+      this.logger.error('No model in insertInstitution')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+
+    try {
+      const inst = await this.advertInvolvedPartyModel.create({
+        title: model.title,
+        slug: model.slug,
+      })
+      return { ok: true, value: { institution: inst } }
+    } catch (e) {
+      this.logger.error('Error in insertInstitution', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
+  }
+  async updateInstitution(
+    model: Institution,
+  ): Promise<Result<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
-  async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  async getSignatures(
+    params?: GetAdvertSignatureQuery,
+  ): Promise<Result<GetAdvertSignatureResponse>> {
+    this.logger.info('getSignatures', {
+      category: LOGGING_CATEGORY,
+      metadata: { params },
+    })
     throw new Error('Method not implemented.')
+  }
+  error(): void {
+    throw new Error('Method not implemented.')
+  }
+  async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+    if (!model) {
+      this.logger.error('No model in insertType')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+
+    try {
+      const type = await this.advertTypeModel.create({
+        title: model.title,
+        slug: model.slug,
+        departmentId: model.department?.id,
+      })
+      return Promise.resolve({ ok: true, value: { type: type } })
+    } catch (e) {
+      this.logger.error('Error in insertType', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
+  }
+  async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateMainCategory')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const type = await this.advertTypeModel.update(
+        {
+          title: model.title,
+          slug: model.slug,
+          departmentId: model.department?.id,
+        },
+        { where: { id: model.id }, returning: true },
+      )
+      return { ok: true, value: { type: advertTypesMigrate(type[1][0]) } }
+    } catch (e) {
+      this.logger.error('Error in updateType', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   async insertMainCategory(
     model: MainCategory,
@@ -135,11 +241,42 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
   async updateMainCategory(
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
-    throw new Error('Method not implemented.')
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateMainCategory')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const mainCat = await this.advertMainCategoryModel.update(
+        {
+          title: model.title,
+          description: model.description,
+          slug: model.slug,
+        },
+        { where: { id: model.id }, returning: true },
+      )
+      if (!mainCat) {
+        throw NotFoundException
+      }
+      return {
+        ok: true,
+        value: { mainCategory: advertMainCategoryMigrate(mainCat[1][0]) },
+      }
+    } catch (e) {
+      this.logger.error('Error in updateMainCategory', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
+
   async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model) {
       this.logger.error('No model in insertCategory')
@@ -163,6 +300,7 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
   async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model || !model.id) {
       this.logger.error('No model or id in updateCategory')
@@ -185,34 +323,12 @@ export class JournalService implements IJournalService {
         value: { category: advertCategoryMigrate(category[1][0]) },
       }
     } catch (e) {
+      this.logger.error('Error in updateCategory', e as Error)
       return Promise.resolve({
         ok: false,
         error: { code: '500', message: 'Error' },
       })
     }
-  }
-  insertInstitution(
-    model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  updateInstitution(
-    model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
-    throw new Error('Method not implemented.')
-  }
-
-  getSignatures(
-    params?: GetAdvertSignatureQuery,
-  ): Promise<Result<GetAdvertSignatureResponse>> {
-    this.logger.info('getSignatures', {
-      category: LOGGING_CATEGORY,
-      metadata: { params },
-    })
-    throw new Error('Method not implemented.')
-  }
-  error(): void {
-    throw new Error('Method not implemented.')
   }
 
   async getMainCategories(
