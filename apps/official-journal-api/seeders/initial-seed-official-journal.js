@@ -38,6 +38,10 @@ module.exports = {
       'utf8',
     )
     const caseTagSeed = await readFile('./seeders/sql/11_case_tag.sql', 'utf8')
+    const caseCommunicationSeed = await readFile(
+      './seeders/sql/12_case_communication_status.sql',
+      'utf8',
+    )
 
     const seed = `
       BEGIN;
@@ -52,6 +56,7 @@ module.exports = {
       ${advertCategoriesSeed}
       ${caseStatusSeed}
       ${caseTagSeed}
+      ${caseCommunicationSeed}
 
       COMMIT;`
     return await queryInterface.sequelize.query(seed)
