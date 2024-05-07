@@ -75,6 +75,7 @@ module.exports = {
         DELETE FROM advert_status;
         DELETE FROM case_status;
         DELETE FROM case_tag;
+        DELETE FROM case_communication_status;
       COMMIT;
     `)
   },
