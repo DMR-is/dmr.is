@@ -5,6 +5,7 @@ export * from './adverts/get-adverts-query.dto'
 export * from './adverts/advert-constants.dto'
 export * from './journal/validation-response.dto'
 export * from './adverts/advert-attachment'
+export * from './adverts/get-advert-response.dto'
 
 export * from './application/application.dto'
 export * from './application/post-application-body.dto'

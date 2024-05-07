@@ -5,6 +5,7 @@ import {
   AdvertType,
   Category,
   Department,
+  GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -35,6 +36,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { Result } from '../types/result'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -83,34 +85,37 @@ export class JournalService implements IJournalService {
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
-  async insertAdvert(model: Advert): Promise<Advert | null> {
+  async insertAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
-  async updateAdvert(model: Advert): Promise<Advert | null> {
+  async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
   async insertDepartment(
     model: Department,
-  ): Promise<GetDepartmentResponse | null> {
+  ): Promise<Result<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
   async updateDepartment(
     model: Department,
-  ): Promise<GetDepartmentResponse | null> {
+  ): Promise<Result<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  async insertType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+  async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
-  async updateType(model: AdvertType): Promise<GetAdvertTypeResponse | null> {
+  async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
   async insertMainCategory(
     model: MainCategory,
-  ): Promise<GetMainCategoryResponse | null> {
+  ): Promise<Result<GetMainCategoryResponse>> {
     if (!model) {
       this.logger.error('No model in insertMainCategory')
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
     }
     try {
       const mainCategory = await this.advertMainCategoryModel.create({
@@ -118,58 +123,88 @@ export class JournalService implements IJournalService {
         slug: model.slug,
         description: model.description,
       })
-      return { mainCategory: advertMainCategoryMigrate(mainCategory) }
+      return {
+        ok: true,
+        value: { mainCategory: advertMainCategoryMigrate(mainCategory) },
+      }
     } catch (e) {
       this.logger.error('Error in insertMainCategory', e as Error)
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
   async updateMainCategory(
     model: MainCategory,
-  ): Promise<GetMainCategoryResponse | null> {
+  ): Promise<Result<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  async insertCategory(model: Category): Promise<GetCategoryResponse | null> {
+  async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model) {
       this.logger.error('No model in insertCategory')
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
     }
-    const category = await this.advertCategoryModel.create({
-      title: model.title,
-      slug: model.slug,
-      mainCategoryID: model.mainCategory?.id,
-    })
-    return { category: advertCategoryMigrate(category) }
-  }
-  async updateCategory(model: Category): Promise<GetCategoryResponse | null> {
-    if (!model || !model.id) {
-      this.logger.error('No model or id in updateCategory')
-      return Promise.resolve(null)
-    }
-    const category = await this.advertCategoryModel.update(
-      {
+    try {
+      const category = await this.advertCategoryModel.create({
         title: model.title,
         slug: model.slug,
         mainCategoryID: model.mainCategory?.id,
-      },
-      { where: { id: model.id }, returning: true },
-    )
-    return { category: advertCategoryMigrate(category[1][0]) }
+      })
+      return { ok: true, value: { category: advertCategoryMigrate(category) } }
+    } catch (e) {
+      this.logger.error('Error in insertCategory', e as Error)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
+  }
+  async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+    if (!model || !model.id) {
+      this.logger.error('No model or id in updateCategory')
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
+    try {
+      const category = await this.advertCategoryModel.update(
+        {
+          title: model.title,
+          slug: model.slug,
+          mainCategoryID: model.mainCategory?.id,
+        },
+        { where: { id: model.id }, returning: true },
+      )
+      return {
+        ok: true,
+        value: { category: advertCategoryMigrate(category[1][0]) },
+      }
+    } catch (e) {
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
+    }
   }
   insertInstitution(
     model: Institution,
-  ): Promise<GetInstitutionResponse | null> {
+  ): Promise<Result<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
   updateInstitution(
     model: Institution,
-  ): Promise<GetInstitutionResponse | null> {
+  ): Promise<Result<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
 
   getSignatures(
     params?: GetAdvertSignatureQuery,
-  ): Promise<GetAdvertSignatureResponse> {
+  ): Promise<Result<GetAdvertSignatureResponse>> {
     this.logger.info('getSignatures', {
       category: LOGGING_CATEGORY,
       metadata: { params },
@@ -182,7 +217,7 @@ export class JournalService implements IJournalService {
 
   async getMainCategories(
     params?: GetMainCategoriesQueryParams,
-  ): Promise<GetMainCategoriesResponse | null> {
+  ): Promise<Result<GetMainCategoriesResponse>> {
     try {
       const page = params?.page ?? 1
       const mainCategories = await this.advertMainCategoryModel.findAll({
@@ -195,39 +230,54 @@ export class JournalService implements IJournalService {
           : undefined,
       })
       return Promise.resolve({
-        mainCategories: mainCategories.map((item) =>
-          advertMainCategoryMigrate(item),
-        ),
-        paging: generatePaging(mainCategories, page),
+        ok: true,
+        value: {
+          mainCategories: mainCategories.map((item) =>
+            advertMainCategoryMigrate(item),
+          ),
+          paging: generatePaging(mainCategories, page),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getMainCategories', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
-  async getDepartment(id: string): Promise<GetDepartmentResponse | null> {
+  async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
     try {
       if (!id) {
         this.logger.error('No id present in getDepartment')
-        return Promise.resolve(null)
+        return Promise.resolve({
+          ok: false,
+          error: { code: '400', message: 'Bad request' },
+        })
       }
       const department = await this.advertDepartmentModel.findOne({
         where: { id },
       })
 
       return Promise.resolve({
-        department: department ? advertDepartmentMigrate(department) : null,
+        ok: true,
+        value: {
+          department: department ? advertDepartmentMigrate(department) : null,
+        },
       })
     } catch (e) {
       this.logger.error('Error in getDepartment', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
   async getDepartments(
     params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse | null> {
+  ): Promise<Result<GetDepartmentsResponse>> {
     try {
       const page = params?.page ?? 1
       const departments = await this.advertDepartmentModel.findAll({
@@ -240,16 +290,22 @@ export class JournalService implements IJournalService {
           : undefined,
       })
       return Promise.resolve({
-        departments: departments.map((item) => advertDepartmentMigrate(item)),
-        paging: generatePaging(departments, page),
+        ok: true,
+        value: {
+          departments: departments.map((item) => advertDepartmentMigrate(item)),
+          paging: generatePaging(departments, page),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getDepartments', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
-  async getType(id: string): Promise<GetAdvertTypeResponse | null> {
+  async getType(id: string): Promise<Result<GetAdvertTypeResponse>> {
     try {
       const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
@@ -259,22 +315,29 @@ export class JournalService implements IJournalService {
       })
 
       if (!type) {
-        throw new NotFoundException(`Type not found with id: ${id}`)
+        this.logger.warn('Type not found')
+        return Promise.resolve({
+          ok: false,
+          error: { code: '404', message: 'Not found' },
+        })
       }
 
-      return { type: type }
+      return { ok: true, value: { type: type } }
     } catch (e) {
       this.logger.error('Error in getType', {
         category: LOGGING_CATEGORY,
         error: e as Error,
       })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
   async getTypes(
     params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse | null> {
+  ): Promise<Result<GetAdvertTypesResponse>> {
     try {
       const page = params?.page ?? 1
 
@@ -292,8 +355,11 @@ export class JournalService implements IJournalService {
       const mappedTypes = types.map((item) => advertTypesMigrate(item))
 
       return Promise.resolve({
-        types: mappedTypes,
-        paging: generatePaging(types, page),
+        ok: true,
+        value: {
+          types: mappedTypes,
+          paging: generatePaging(types, page),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getTypes', { error: e as Error })
@@ -301,7 +367,7 @@ export class JournalService implements IJournalService {
     }
   }
 
-  async getInstitution(id: string): Promise<GetInstitutionResponse | null> {
+  async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
     try {
       if (!id) {
         this.logger.error('No id present in getInstitution')
@@ -322,7 +388,7 @@ export class JournalService implements IJournalService {
 
   async getInstitutions(
     params?: GetInstitutionsQueryParams,
-  ): Promise<GetInstitutionsResponse | null> {
+  ): Promise<Result<GetInstitutionsResponse>> {
     try {
       const page = params?.page ?? 1
       const parties = await this.advertInvolvedPartyModel.findAll({
@@ -345,7 +411,7 @@ export class JournalService implements IJournalService {
     }
   }
 
-  async getCategory(id: string): Promise<Category | null> {
+  async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
     try {
       const category = await this.advertCategoryModel.findOne({
         where: { id },
@@ -361,7 +427,7 @@ export class JournalService implements IJournalService {
 
   async getCategories(
     params?: GetCategoriesQueryParams,
-  ): Promise<GetCategoriesResponse | null> {
+  ): Promise<Result<GetCategoriesResponse>> {
     try {
       const page = params?.page ?? 1
       const categories = await this.advertCategoryModel.findAll({
@@ -384,7 +450,7 @@ export class JournalService implements IJournalService {
     }
   }
 
-  async getAdvert(id: string): Promise<Advert | null> {
+  async getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
     this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
@@ -421,7 +487,7 @@ export class JournalService implements IJournalService {
 
   async getAdverts(
     params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse | null> {
+  ): Promise<Result<GetAdvertsResponse>> {
     this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
