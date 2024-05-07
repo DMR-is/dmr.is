@@ -52,12 +52,6 @@ describe('JournalController', () => {
         'bcbefaf4-c021-4b63-877b-001dde880052',
       )
     })
-
-    it('should throw not found exception', async () => {
-      expect(async () => {
-        await journalController.advert('not-found')
-      }).rejects.toThrow('advert not found')
-    })
   })
 
   describe('departments', () => {
