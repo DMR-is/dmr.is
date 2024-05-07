@@ -147,6 +147,13 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_comment_title (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      key VARCHAR NOT NULL,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
   COMMIT;
     `)
   },
