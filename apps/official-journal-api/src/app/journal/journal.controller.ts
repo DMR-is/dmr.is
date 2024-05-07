@@ -1,8 +1,9 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IJournalService } from '@dmr.is/modules'
+import { IJournalService, Result } from '@dmr.is/modules'
 import {
   Advert,
   AdvertNotFound,
+  GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
@@ -52,19 +53,8 @@ export class JournalController {
     description: 'Advert not found.',
     type: AdvertNotFound,
   })
-  async advert(@Query('id') id: string): Promise<Advert | null> {
-    const advert = await this.journalService.getAdvert(id)
-    if (!advert) {
-      this.logger.info('advert not found', {
-        category: LOGGING_CATEGORY,
-        metadata: { id },
-      })
-      throw new NotFoundException('advert not found', {
-        cause: 'advert not found',
-      })
-    }
-
-    return advert
+  async advert(@Query('id') id: string): Promise<Result<GetAdvertResponse>> {
+    return await this.journalService.getAdvert(id)
   }
 
   @Get('adverts')
@@ -81,14 +71,8 @@ export class JournalController {
   async adverts(
     @Query()
     params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse | null> {
-    const adverts = await this.journalService.getAdverts(params)
-    if (!adverts) {
-      throw new BadRequestException('adverts not found', {
-        cause: 'adverts not found',
-      })
-    }
-    return adverts
+  ): Promise<Result<GetAdvertsResponse>> {
+    return await this.journalService.getAdverts(params)
   }
 
   @Get('departments')
@@ -105,14 +89,8 @@ export class JournalController {
   async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse | null> {
-    const departments = await this.journalService.getDepartments(params)
-    if (!departments) {
-      throw new BadRequestException('departments not found', {
-        cause: 'departments not found',
-      })
-    }
-    return departments
+  ): Promise<Result<GetDepartmentsResponse>> {
+    return await this.journalService.getDepartments(params)
   }
 
   @Get('types')
@@ -129,14 +107,8 @@ export class JournalController {
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse | null> {
-    const types = await this.journalService.getTypes(params)
-    if (!types) {
-      throw new BadRequestException('types not found', {
-        cause: 'types not found',
-      })
-    }
-    return types
+  ): Promise<Result<GetAdvertTypesResponse>> {
+    return await this.journalService.getTypes(params)
   }
 
   @Get('maincategories')
@@ -153,14 +125,8 @@ export class JournalController {
   async mainCategories(
     @Query()
     params?: GetMainCategoriesQueryParams,
-  ): Promise<GetMainCategoriesResponse | null> {
-    const mainCategories = await this.journalService.getMainCategories(params)
-    if (!mainCategories) {
-      throw new BadRequestException('Main categories not found', {
-        cause: 'Main categories not found',
-      })
-    }
-    return mainCategories
+  ): Promise<Result<GetMainCategoriesResponse>> {
+    return await this.journalService.getMainCategories(params)
   }
 
   @Get('categories')
@@ -177,14 +143,8 @@ export class JournalController {
   async categories(
     @Query()
     params?: GetCategoriesQueryParams,
-  ): Promise<GetCategoriesResponse | null> {
-    const categories = await this.journalService.getCategories(params)
-    if (!categories) {
-      throw new BadRequestException('Categories not found', {
-        cause: 'Categories not found',
-      })
-    }
-    return categories
+  ): Promise<Result<GetCategoriesResponse>> {
+    return await this.journalService.getCategories(params)
   }
 
   @Get('institutions')
@@ -201,14 +161,8 @@ export class JournalController {
   async institutions(
     @Query()
     params?: GetInstitutionsQueryParams,
-  ): Promise<GetInstitutionsResponse | null> {
-    const institutions = this.journalService.getInstitutions(params)
-    if (!institutions) {
-      throw new BadRequestException('Institutions not found', {
-        cause: 'Institutions not found',
-      })
-    }
-    return institutions
+  ): Promise<Result<GetInstitutionsResponse>> {
+    return this.journalService.getInstitutions(params)
   }
 
   @Get('signatures')
@@ -224,14 +178,8 @@ export class JournalController {
   })
   async signatures(
     @Query() params?: GetAdvertSignatureQuery,
-  ): Promise<GetAdvertSignatureResponse | null> {
-    const signatures = this.journalService.getSignatures(params)
-    if (!signatures) {
-      throw new BadRequestException('Signatures not found', {
-        cause: 'Signatures not found',
-      })
-    }
-    return signatures
+  ): Promise<Result<GetAdvertSignatureResponse>> {
+    return this.journalService.getSignatures(params)
   }
 
   @Get('error')
