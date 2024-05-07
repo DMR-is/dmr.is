@@ -91,7 +91,7 @@ export class CaseService implements ICaseService {
       application.answers.advert.department,
     )
 
-    if (!departmentReq || !departmentReq.department) {
+    if (!departmentReq.ok) {
       this.logger.error(
         `Department with id ${application.answers.advert.department} not found`,
         {
@@ -104,6 +104,7 @@ export class CaseService implements ICaseService {
         `Department with id ${application.answers.advert.department} not found`,
       )
     }
+    const dep = departmentReq.value
 
     const advertTitle = application.answers.advert.title
 
@@ -157,10 +158,12 @@ export class CaseService implements ICaseService {
     const categories: Category[] = []
 
     const result = await Promise.all(
-      contentCategories.map(async (c) => {
-        const category = await this.journalService.getCategory(c.value)
-        return category
-      }),
+      contentCategories
+        .map(async (c) => {
+          const category = await this.journalService.getCategory(c.value)
+          return category.ok ? category.value.category : null
+        })
+        .filter((i) => Boolean(i)),
     )
 
     result.forEach((r) => {
@@ -187,11 +190,13 @@ export class CaseService implements ICaseService {
       isLegacy: theCase.isLegacy,
       paid: theCase.paid,
       price: theCase.price,
-      advertType: advertType,
-      advertDepartment: departmentReq.department,
+      advertType: advertType.ok ? advertType.value.type : null,
+      advertDepartment: dep.department,
       advertTitle: advertTitle,
       requestedPublicationDate: requestedPublicationDate,
-      institutionTitle: institutionReq?.institution?.title || null,
+      institutionTitle: institutionReq.ok
+        ? institutionReq?.value.institution?.title ?? null
+        : null,
       categories: categories,
       signatureDate: signatureDate || null,
     }

@@ -497,11 +497,18 @@ export class JournalService implements IJournalService {
       const department = await this.advertDepartmentModel.findOne({
         where: { id },
       })
+      if (!department) {
+        this.logger.warn('Department not found')
+        return Promise.resolve({
+          ok: false,
+          error: { code: '404', message: 'Not found' },
+        })
+      }
 
       return Promise.resolve({
         ok: true,
         value: {
-          department: department ? advertDepartmentMigrate(department) : null,
+          department: advertDepartmentMigrate(department),
         },
       })
     } catch (e) {
