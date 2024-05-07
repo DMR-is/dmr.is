@@ -1,4 +1,3 @@
-import { SequelizeConfigService } from '@dmr.is/db'
 import {
   ApplicationModule,
   HealthController,
@@ -7,16 +6,12 @@ import {
 
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
-import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CaseModule } from './case/case.module'
 import { StatisticsModule } from './statistics/statistics.module'
 
 @Module({
   imports: [
-    SequelizeModule.forRootAsync({
-      useClass: SequelizeConfigService,
-    }),
     ApplicationModule,
     CaseModule,
     StatisticsModule,

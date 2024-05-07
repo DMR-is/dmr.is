@@ -1,3 +1,4 @@
+import { SequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
 
 import { Module } from '@nestjs/common'
@@ -24,6 +25,9 @@ const MOCK_DATA = process.env.API_MOCK === 'true'
 @Module({
   imports: [
     LoggingModule,
+    SequelizeModule.forRootAsync({
+      useClass: SequelizeConfigService,
+    }),
     SequelizeModule.forFeature([
       AdvertMainCategoryDTO,
       AdvertDepartmentDTO,
