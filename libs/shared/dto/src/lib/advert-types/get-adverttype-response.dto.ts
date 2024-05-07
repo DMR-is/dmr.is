@@ -8,5 +8,5 @@ export class GetAdvertTypeResponse {
     required: true,
     type: AdvertType,
   })
-  readonly types!: AdvertType
+  readonly type!: AdvertType
 }

@@ -249,12 +249,12 @@ export class JournalService implements IJournalService {
     }
   }
 
-  async getType(id: string): Promise<AdvertType | null> {
+  async getType(id: string): Promise<GetAdvertTypeResponse | null> {
     try {
       const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
         where: {
-          id: { [Op.eq]: id },
+          id: id,
         },
       })
 
@@ -262,7 +262,7 @@ export class JournalService implements IJournalService {
         throw new NotFoundException(`Type not found with id: ${id}`)
       }
 
-      return Promise.resolve(advertTypesMigrate(type))
+      return { type: type }
     } catch (e) {
       this.logger.error('Error in getType', {
         category: LOGGING_CATEGORY,
