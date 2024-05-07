@@ -363,7 +363,10 @@ export class JournalService implements IJournalService {
       })
     } catch (e) {
       this.logger.error('Error in getTypes', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
@@ -371,18 +374,33 @@ export class JournalService implements IJournalService {
     try {
       if (!id) {
         this.logger.error('No id present in getInstitution')
-        return Promise.resolve(null)
+        return Promise.resolve({
+          ok: false,
+          error: { code: '400', message: 'Bad request' },
+        })
       }
       const party = await this.advertInvolvedPartyModel.findOne({
         where: { id },
       })
+      if (!party) {
+        return Promise.resolve({
+          ok: false,
+          error: { code: '404', message: 'Not found' },
+        })
+      }
 
       return Promise.resolve({
-        institution: party ? advertInvolvedPartyMigrate(party) : null,
+        ok: true,
+        value: {
+          institution: advertInvolvedPartyMigrate(party),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getInstitution', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
@@ -402,26 +420,50 @@ export class JournalService implements IJournalService {
       })
 
       return Promise.resolve({
-        institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
-        paging: generatePaging(parties, page),
+        ok: true,
+        value: {
+          institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
+          paging: generatePaging(parties, page),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getInstitution', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
   async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
+    if (!id) {
+      return Promise.resolve({
+        ok: false,
+        error: { code: '400', message: 'Bad request' },
+      })
+    }
     try {
       const category = await this.advertCategoryModel.findOne({
         where: { id },
         include: AdvertMainCategoryDTO,
       })
+      if (!category) {
+        return Promise.resolve({
+          ok: false,
+          error: { code: '404', message: 'Not found' },
+        })
+      }
 
-      return Promise.resolve(category ? advertCategoryMigrate(category) : null)
+      return Promise.resolve({
+        ok: true,
+        value: { category: advertCategoryMigrate(category) },
+      })
     } catch (e) {
       this.logger.error('Error in getCategory', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
@@ -441,12 +483,18 @@ export class JournalService implements IJournalService {
         include: AdvertMainCategoryDTO,
       })
       return Promise.resolve({
-        categories: categories.map((item) => advertCategoryMigrate(item)),
-        paging: generatePaging(categories, 1),
+        ok: true,
+        value: {
+          categories: categories.map((item) => advertCategoryMigrate(item)),
+          paging: generatePaging(categories, 1),
+        },
       })
     } catch (e) {
       this.logger.error('Error in getCategories', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
@@ -458,7 +506,10 @@ export class JournalService implements IJournalService {
     try {
       if (!id) {
         this.logger.error('No id present in getAdvert')
-        return Promise.resolve(null)
+        return Promise.resolve({
+          ok: false,
+          error: { code: '400', message: 'Bad request' },
+        })
       }
       const advert = await this.advertModel.findOne({
         where: { id: parseInt(id, 10) },
@@ -466,22 +517,33 @@ export class JournalService implements IJournalService {
       if (advert) {
         const ad = advertMigrate(advert)
         return Promise.resolve({
-          ...ad,
-          document: {
-            isLegacy: advert.isLegacy,
-            html: advert.isLegacy
-              ? dirtyClean(advert.documentHtml as HTMLText)
-              : advert.documentHtml,
-            pdfUrl: advert.documentPdfUrl,
+          ok: true,
+          value: {
+            advert: {
+              ...ad,
+              document: {
+                isLegacy: advert.isLegacy,
+                html: advert.isLegacy
+                  ? dirtyClean(advert.documentHtml as HTMLText)
+                  : advert.documentHtml,
+                pdfUrl: advert.documentPdfUrl,
+              },
+            },
           },
         })
       } else {
         this.logger.warn(`Article not found in getAdvert - ${id}`)
-        return Promise.resolve(null)
+        return Promise.resolve({
+          ok: false,
+          error: { code: '404', message: 'Not found' },
+        })
       }
     } catch (e) {
       this.logger.error('Error in getAdvert', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 
@@ -516,10 +578,13 @@ export class JournalService implements IJournalService {
         paging: generatePaging(adverts, page),
       }
 
-      return Promise.resolve(result)
+      return Promise.resolve({ ok: true, value: result })
     } catch (e) {
       this.logger.error('Error in getAdverts', { error: e as Error })
-      return Promise.resolve(null)
+      return Promise.resolve({
+        ok: false,
+        error: { code: '500', message: 'Error' },
+      })
     }
   }
 }
