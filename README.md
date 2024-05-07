@@ -58,7 +58,7 @@ To play around with the automation script you can modify the the config file and
 ./.gitscripts/checkout-submodules.sh
 ```
 
-## Connection to DEV XRoad Services locally
+## Connection to AWS DEV Services
 
 ### Pre-requisites
 
@@ -66,7 +66,33 @@ To play around with the automation script you can modify the the config file and
 - AWS credentials
 - AWS credentials configured in a terminal session (e.g. login to AWS console and copy the programmatic access key and secret key credentials and export them in the terminal session)
 
-### Expose XRoad host on localhost
+
+### Connection to DEV Database
+
+#### Expose Database host on localhost
+
+Database should be exposed on port 5432 on the bastion, but you can expose it to any port on your localhost.
+
+```shell
+# Example using port 5432
+export INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
+aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["5432"],"localPortNumber":["5432"]}'
+```
+
+#### Connect to database
+
+After exposing the database you can connect to it using any database client you would like.
+
+**Connection details:**
+
+* Official Journal DEV Database:
+  * *DB_Name:* `official_journal`
+  * *DB_User:* `official_journal`
+  * *DB_Password:* Can be found in AWS Secrets manager [here](https://eu-west-1.console.aws.amazon.com/secretsmanager/secret?name=utgafa_user_password20240130130225816700000001&region=eu-west-1&tab=overview).
+
+### Connection to DEV XRoad Services locally
+
+#### Expose XRoad host on localhost
 
 XRoad should be exposed on port 8000 on the bastion, but you can expose it to any port on your localhost.
 
@@ -76,7 +102,7 @@ export INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=
 aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8000"],"localPortNumber":["8000"]}'
 ```
 
-### Set environment variables for island-is XRoad in application
+#### Set environment variables for island-is XRoad in application
 
 ```shell
 export XROAD_ISLAND_IS_PATH="http://localhost:8000/r1/IS-DEV/GOV/10000/island-is/"

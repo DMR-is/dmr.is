@@ -1,0 +1,48 @@
+version: '3'
+
+include:
+  - docker-compose.db.yml
+
+services:
+  official_journal_api:
+    build:
+      context: ../
+      dockerfile: apps/official-journal-api/Dockerfile
+    container_name: official-journal-api
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - ${DB_HOST}
+  official_journal_admin_api:
+    build:
+      context: ../
+      dockerfile: apps/official-journal-admin-api/Dockerfile
+    container_name: official-journal-admin-api
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}
+    ports:
+      - '4000:4000'
+    depends_on:
+      - ${DB_HOST}
+  official_journal_application_api:
+    build:
+      context: ../
+      dockerfile: apps/official-journal-application-api/Dockerfile
+    container_name: official-journal-application-api
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}
+    ports:
+      - '5000:5000'
+    depends_on:
+      - ${DB_HOST}
