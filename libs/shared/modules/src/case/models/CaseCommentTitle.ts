@@ -1,6 +1,17 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
 @Table({ tableName: 'case_comment_title', timestamps: true })
+@DefaultScope(() => ({
+  attributes: {
+    exclude: ['created', 'updated'],
+  },
+}))
 export class CaseCommentTitleDto extends Model {
   @Column({
     type: DataType.UUIDV4,
