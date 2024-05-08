@@ -1,5 +1,14 @@
-import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  BelongsToMany,
+  Column,
+  DataType,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
+import { CaseDto } from './Case'
+import { CaseCommentsDto } from './CaseComments'
 import { CaseCommentTaskDto } from './CaseCommentTask'
 import { CaseCommentTypeDto } from './CaseCommentType'
 import { CaseStatusDto } from './CaseStatus'
@@ -34,4 +43,9 @@ export class CaseCommentDto extends Model {
 
   @BelongsTo(() => CaseCommentTaskDto)
   task!: CaseCommentTaskDto
+
+  @BelongsToMany(() => CaseDto, {
+    through: () => CaseCommentsDto,
+  })
+  cases!: CaseDto[]
 }

@@ -184,6 +184,19 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      applicant_id UUID NOT NULL
+    );
+
+    CREATE TABLE case_comments (
+      case_id UUID NOT NULL,
+      case_comment_id UUID NOT NULL,
+      PRIMARY KEY (case_id, case_comment_id),
+      CONSTRAINT fk_case_comments_case_id FOREIGN KEY (case_id) REFERENCES case (id),
+      CONSTRAINT fk_case_comments_comment_id FOREIGN KEY (comment_id) REFERENCES case_comment (id)
+    );
+
   COMMIT;
     `)
   },

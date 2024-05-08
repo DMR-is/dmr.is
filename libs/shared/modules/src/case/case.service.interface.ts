@@ -1,17 +1,14 @@
 import {
   Case,
-  CaseComment,
   CaseEditorialOverview,
   CaseHistory,
   CaseWithApplication,
-  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
-  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
