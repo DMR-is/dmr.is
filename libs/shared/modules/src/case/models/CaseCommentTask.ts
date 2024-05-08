@@ -1,13 +1,5 @@
-import { Model } from 'sequelize'
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  HasOne,
-  Table,
-} from 'sequelize-typescript'
+import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { AdvertStatusDTO } from '../../journal/models'
 import { CaseCommentTitleDto } from './CaseCommentTitle'
 
 @Table({ tableName: 'case_comment_task', timestamps: true })
@@ -18,7 +10,7 @@ export class CaseCommentTaskDto extends Model {
     allowNull: false,
     defaultValue: DataType.UUIDV4,
   })
-  id!: string
+  override id!: string
 
   @Column({
     type: DataType.STRING,
@@ -32,9 +24,6 @@ export class CaseCommentTaskDto extends Model {
   })
   to!: string | null
 
-  // @BelongsTo(() => AdvertStatusDTO)
-  // title!: CaseCommentTitleDto
-
-  // @BelongsTo(() => CaseCommentTitleDto)
-  // title!: CaseCommentTitleDto
+  @BelongsTo(() => CaseCommentTitleDto)
+  title!: CaseCommentTitleDto
 }

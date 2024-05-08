@@ -1,5 +1,4 @@
-import { Model } from 'sequelize'
-import { Column, DataType, Table } from 'sequelize-typescript'
+import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'case_comment', timestamps: true })
 export class CaseCommentDto extends Model {
@@ -9,5 +8,5 @@ export class CaseCommentDto extends Model {
     allowNull: false,
     defaultValue: DataType.UUIDV4,
   })
-  id!: string
+  override id!: string
 }
