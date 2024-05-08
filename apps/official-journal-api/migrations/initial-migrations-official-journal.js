@@ -161,6 +161,16 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_comment_task (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      from VARCHAR,
+      to VARCHAR,
+      title_id UUID NOT NULL,
+      comment TEXT,
+      CONSTRAINT fk_case_comment_title_id FOREIGN KEY (title_id) REFERENCES case_comment_title (id),
+      PRIMARY KEY (id),
+    );
+
   COMMIT;
     `)
   },
@@ -183,6 +193,7 @@ module.exports = {
     DROP TABLE case_communication_status CASCADE;
     DROP TABLE case_comment_title CASCADE;
     DROP TABLE case_comment_type CASCADE;
+    DROP TABLE case_comment_task CASCADE;
     `)
   },
 }
