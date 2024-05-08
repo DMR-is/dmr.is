@@ -161,6 +161,29 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_comment_task (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      from_id UUID,
+      to_id UUID,
+      title_id UUID NOT NULL,
+      comment TEXT,
+      CONSTRAINT fk_case_comment_title_id FOREIGN KEY (title_id) REFERENCES case_comment_title (id),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comment (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      createdAt TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      internal BOOLEAN DEFAULT TRUE,
+      type_id UUID NOT NULL,
+      status_id UUID NOT NULL,
+      task_id UUID NOT NULL,
+      CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id),
+      CONSTRAINT fk_case_comment_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
+      CONSTRAINT fk_case_comment_task_id FOREIGN KEY (task_id) REFERENCES case_comment_task (id),
+      PRIMARY KEY (id)
+    );
+
   COMMIT;
     `)
   },
@@ -183,6 +206,8 @@ module.exports = {
     DROP TABLE case_communication_status CASCADE;
     DROP TABLE case_comment_title CASCADE;
     DROP TABLE case_comment_type CASCADE;
+    DROP TABLE case_comment_task CASCADE;
+    DROP TABLE case_comment CASCADE;
     `)
   },
 }
