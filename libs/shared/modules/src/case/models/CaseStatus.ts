@@ -1,5 +1,10 @@
-import { Model } from 'sequelize'
-import { Column, DataType, DefaultScope, Table } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
 @Table({ tableName: 'case_status', timestamps: true })
 @DefaultScope(() => ({
@@ -14,7 +19,7 @@ export class CaseStatusDto extends Model {
     allowNull: false,
     defaultValue: DataType.UUIDV4,
   })
-  id!: string
+  override id!: string
 
   @Column({
     type: DataType.STRING,
