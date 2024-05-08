@@ -26,4 +26,10 @@ export class CaseCommentTaskDto extends Model {
 
   @BelongsTo(() => CaseCommentTitleDto)
   title!: CaseCommentTitleDto
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  comment!: string | null
 }
