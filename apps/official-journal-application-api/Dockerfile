@@ -4,6 +4,7 @@ FROM docker.io/node:lts-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/official-journal-application-api/dist/package.json ./
+RUN yarn add pg
 RUN yarn install --only=production
 
 # Production image, copy all the files and run nest
