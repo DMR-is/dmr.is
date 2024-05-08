@@ -1,1 +1,1 @@
-INSERT INTO case_comment (id, createdAt, internal, type_id, status_id, task_id) VALUES('d0c1c55e-ddcd-40fb-81de-4c885ab71519', '2024-05-08T10:41:44.139Z', TRUE, 'be3b0ccd-51c8-4e96-8957-485bc35c8568', '799722be-5530-439a-91dc-606e129b030d', '582285ae-edec-4631-a9e6-12235e4a982a')
+INSERT INTO case_comment (id, createdAt, internal, type_id, status_id, task_id) VALUES('d0c1c55e-ddcd-40fb-81de-4c885ab71519', '2024-05-08T10:41:44.139Z', TRUE, 'be3b0ccd-51c8-4e96-8957-485bc35c8568', '799722be-5530-439a-91dc-606e129b030d', '582285ae-edec-4631-a9e6-12235e4a982a');

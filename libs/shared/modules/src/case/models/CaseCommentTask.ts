@@ -16,13 +16,13 @@ export class CaseCommentTaskDto extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  from!: string | null
+  from_id!: string | null
 
   @Column({
     type: DataType.STRING,
     allowNull: true,
   })
-  to!: string | null
+  to_id!: string | null
 
   @BelongsTo(() => CaseCommentTitleDto)
   title!: CaseCommentTitleDto

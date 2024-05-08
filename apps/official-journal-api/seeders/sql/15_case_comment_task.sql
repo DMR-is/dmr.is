@@ -1,1 +1,1 @@
-INSERT INTO case_comment_task (id, from, to, title_id, comment) VALUES ('582285ae-edec-4631-a9e6-12235e4a982a', 'cf8ce92b-8838-4a76-8fb3-956ce35bca3b', NULL, '72dbba56-6808-4344-883f-48e67783ab49', NULL);
+INSERT INTO case_comment_task (id, from_id, to_id, title_id, comment) VALUES ('582285ae-edec-4631-a9e6-12235e4a982a', 'cf8ce92b-8838-4a76-8fb3-956ce35bca3b', NULL, '72dbba56-6808-4344-883f-48e67783ab49', NULL);
