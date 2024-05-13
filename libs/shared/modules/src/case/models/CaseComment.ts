@@ -1,14 +1,6 @@
-import {
-  BelongsTo,
-  BelongsToMany,
-  Column,
-  DataType,
-  Model,
-  Table,
-} from 'sequelize-typescript'
+import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
 
 import { CaseDto } from './Case'
-import { CaseCommentsDto } from './CaseComments'
 import { CaseCommentTaskDto } from './CaseCommentTask'
 import { CaseCommentTypeDto } from './CaseCommentType'
 import { CaseStatusDto } from './CaseStatus'
@@ -39,13 +31,12 @@ export class CaseCommentDto extends Model {
   type!: CaseCommentTypeDto
 
   @BelongsTo(() => CaseStatusDto)
-  caseStatus!: CaseStatusDto
+  case_status!: CaseStatusDto
 
   @BelongsTo(() => CaseCommentTaskDto)
   task!: CaseCommentTaskDto
 
-  @BelongsToMany(() => CaseDto, {
-    through: () => CaseCommentsDto,
-  })
-  cases!: CaseDto[]
+  // TODO: CaseComment should only belog to one case
+  @BelongsTo(() => CaseDto)
+  case!: CaseDto
 }
