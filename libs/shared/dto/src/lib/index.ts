@@ -58,6 +58,7 @@ export * from './case-comments/case-comment.dto'
 export * from './case-comments/case-comment-constants'
 export * from './case-comments/post-case-comment.dto'
 export * from './case-comments/get-case-comment-query.dto'
+export * from './case-comments/get-case-comments-response.dto'
 
 export * from './cases/case-constants'
 export * from './cases/case.dto'

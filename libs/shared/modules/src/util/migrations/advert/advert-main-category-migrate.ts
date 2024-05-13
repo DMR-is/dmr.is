@@ -1,6 +1,6 @@
 import { MainCategory } from '@dmr.is/shared/dto'
 
-import { AdvertMainCategoryDTO } from '../journal/models'
+import { AdvertMainCategoryDTO } from '../../../journal/models'
 
 export function advertMainCategoryMigrate(
   model: AdvertMainCategoryDTO,

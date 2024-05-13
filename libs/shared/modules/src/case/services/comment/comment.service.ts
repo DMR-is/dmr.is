@@ -2,12 +2,15 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseComment,
   GetCaseCommentsQuery,
+  GetCaseCommentsResponse,
   PostCaseComment,
 } from '@dmr.is/shared/dto'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
-import { CaseCommentTypeDto } from '../../models/CaseCommentType'
+import { caseCommentMigrate } from '../../../util'
+import { CaseDto } from '../../models/Case'
+import { CaseCommentsDto } from '../../models/CaseComments'
 import { ICaseCommentService } from './comment.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCommentService'
@@ -16,43 +19,45 @@ const LOGGING_CATEGORY = 'CaseCommentService'
 export class CaseCommentService implements ICaseCommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(CaseCommentTypeDto)
-    private readonly caseCommentTypeDto: CaseCommentTypeDto,
+    @Inject(CaseDto) private caseModel: typeof CaseDto,
+    @Inject(CaseCommentsDto) private caseCommentsModels: typeof CaseCommentsDto,
   ) {
     this.logger.info('Using CaseServiceMock')
   }
-  getComments(
+  async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
-  ): Promise<CaseComment[]> {
+  ): Promise<GetCaseCommentsResponse> {
     this.logger.info('Getting comments for case', {
       id: caseId,
       category: LOGGING_CATEGORY,
     })
 
-    const found = ALL_MOCK_CASES.find((c) => c.id === caseId)
+    const onlyExternal = params?.type === 'external'
+    const onlyInternal = params?.type === 'internal'
 
-    if (!found) {
-      this.logger.warn('Case not found', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
+    const found = await this.caseCommentsModels.findAll({
+      where: { case_id: caseId },
+      // include: [CaseCommentDto], // TODO: Test this
+    })
+
+    const comments = found
+      .map((c) => caseCommentMigrate(c.case_comment))
+      .filter((c) => {
+        if (onlyExternal) {
+          return !c.internal
+        }
+
+        if (onlyInternal) {
+          return c.internal
+        }
+
+        return true
       })
-      throw new NotFoundException('Case not found')
-    }
 
-    if (params?.type && params?.type !== CaseCommentPublicity.All) {
-      const internal = params.type === CaseCommentPublicity.Internal
-
-      console.log(internal)
-
-      const filtered = found.comments.filter(
-        (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
-      )
-
-      return Promise.resolve(filtered)
-    }
-
-    return Promise.resolve(found.comments)
+    return Promise.resolve({
+      comments,
+    })
   }
 
   async postComment(

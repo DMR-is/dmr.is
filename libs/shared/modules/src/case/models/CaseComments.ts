@@ -28,8 +28,8 @@ export class CaseCommentsDto extends Model {
   case_comment_id!: string
 
   @BelongsTo(() => CaseDto)
-  case?: CaseDto
+  case!: CaseDto
 
   @BelongsTo(() => CaseCommentDto)
-  case_comment?: CaseCommentDto
+  case_comment!: CaseCommentDto
 }
