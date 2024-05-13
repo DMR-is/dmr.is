@@ -6,8 +6,6 @@ import {
   AdvertSignatureType,
   ApplicationAnswerOption,
   Case,
-  CaseComment,
-  CaseCommentPublicity,
   CaseCommunicationStatus,
   CaseEditorialOverview,
   CaseHistory,
@@ -15,25 +13,21 @@ import {
   CaseTag,
   CaseWithApplication,
   Category,
-  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
-  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
-import {
-  generatePaging,
-  mapCaseCommentTypeToCaseCommentTitle,
-} from '@dmr.is/utils'
+import { generatePaging } from '@dmr.is/utils'
 
 import {
   BadRequestException,
   forwardRef,
   Inject,
+  Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -46,6 +40,7 @@ import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
 
+@Injectable()
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

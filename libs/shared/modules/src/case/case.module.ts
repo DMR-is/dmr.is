@@ -10,22 +10,22 @@ import { ICaseCommentService } from './services/comment/comment.service.interfac
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import { models } from './models'
+import { CaseDto } from './models'
 
 export { ICaseService } from './case.service.interface'
 export { CaseServiceMock } from './case.service.mock'
 export { CaseService } from './case.service'
+export { ICaseCommentService } from './services/comment/comment.service.interface'
 
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
+    SequelizeModule.forFeature([CaseDto]),
     LoggingModule,
     SharedJournalModule,
     forwardRef(() => ApplicationModule),
-    SequelizeModule.forFeature([...models]),
   ],
-  controllers: [],
   providers: [
     {
       provide: ICaseService,
@@ -36,6 +36,6 @@ const API_MOCK = process.env.API_MOCK === 'true'
       useClass: CaseCommentService,
     },
   ],
-  exports: [ICaseService],
+  exports: [ICaseService, ICaseCommentService],
 })
 export class SharedCaseModule {}

@@ -1,18 +1,26 @@
-import { ICaseService, IJournalService, Result } from '@dmr.is/modules'
+import {
+  ICaseCommentService,
+  ICaseService,
+  IJournalService,
+  Result,
+} from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
   CaseEditorialOverview,
   CaseWithApplication,
+  DeleteCaseCommentResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCaseCommentsQuery,
+  GetCaseCommentsResponse,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostCaseComment,
+  PostCaseCommentResponse,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
@@ -38,6 +46,9 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
+
+    @Inject(ICaseCommentService)
+    private readonly caseCommentService: ICaseCommentService,
 
     @Inject(IJournalService)
     private readonly journalService: IJournalService,
@@ -190,8 +201,8 @@ export class CaseController {
   async getComments(
     @Param('caseId') caseId: string,
     @Query('params') params?: GetCaseCommentsQuery,
-  ): Promise<CaseComment[]> {
-    return this.caseService.getComments(caseId, params)
+  ): Promise<GetCaseCommentsResponse> {
+    return this.caseCommentService.getComments(caseId, params)
   }
 
   @Post(':caseId/comments')
@@ -207,8 +218,8 @@ export class CaseController {
   async addComment(
     @Param('caseId') id: string,
     @Body() body: PostCaseComment,
-  ): Promise<CaseComment[]> {
-    return this.caseService.postComment(id, body)
+  ): Promise<PostCaseCommentResponse> {
+    return this.caseCommentService.postComment(id, body)
   }
 
   @Delete(':caseId/comments/:commentId')
@@ -228,8 +239,8 @@ export class CaseController {
   async deleteComment(
     @Param('caseId') caseId: string,
     @Param('commentId') commentId: string,
-  ): Promise<CaseComment[]> {
-    return this.caseService.deleteComment(caseId, commentId)
+  ): Promise<DeleteCaseCommentResponse> {
+    return this.caseCommentService.deleteComment(caseId, commentId)
   }
 
   @Get('advert/types')

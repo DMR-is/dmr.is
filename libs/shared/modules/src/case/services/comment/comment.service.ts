@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseComment,
   DeleteCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -49,8 +48,9 @@ export class CaseCommentService implements ICaseCommentService {
     @Inject(CaseCommentTypeDto)
     private caseCommentTypeModel: typeof CaseCommentTypeDto,
   ) {
-    this.logger.info('Using CaseServiceMock')
+    this.logger.info('Using CaseCommentSerivce')
   }
+
   async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,

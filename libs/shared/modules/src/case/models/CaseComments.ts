@@ -5,11 +5,13 @@ import {
   ForeignKey,
   Model,
   PrimaryKey,
+  Table,
 } from 'sequelize-typescript'
 
 import { CaseDto } from './Case'
 import { CaseCommentDto } from './CaseComment'
 
+@Table({ tableName: 'case_comments', timestamps: true })
 export class CaseCommentsDto extends Model {
   @PrimaryKey
   @ForeignKey(() => CaseDto)

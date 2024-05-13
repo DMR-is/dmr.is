@@ -195,11 +195,13 @@ module.exports = {
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
       is_legacy BOOLEAN NOT NULL DEFAULT FALSE,
       assigned_user_id UUID,
+      case_communication_status_id UUID,
       published_at TIMESTAMP WITH TIME ZONE,
       price INTEGER,
       paid BOOLEAN DEFAULT FALSE,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
+      CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
       PRIMARY KEY (id)
     );
 

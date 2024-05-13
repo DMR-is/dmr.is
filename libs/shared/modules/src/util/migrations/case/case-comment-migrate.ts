@@ -34,8 +34,8 @@ export const caseCommentMigrate = (model: CaseCommentDto): CaseComment => {
     type: type,
     task: {
       comment: model.task.comment,
-      from: model.task.from_id,
-      to: model.task.to_id,
+      from: model.task.fromId,
+      to: model.task.toId,
       title: title,
     },
   }

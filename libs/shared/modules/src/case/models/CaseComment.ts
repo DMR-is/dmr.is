@@ -18,6 +18,7 @@ export class CaseCommentDto extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    field: 'created_at',
   })
   override createdAt!: string
 
@@ -27,16 +28,36 @@ export class CaseCommentDto extends Model {
   })
   internal!: boolean
 
-  @BelongsTo(() => CaseCommentTypeDto)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'type_id',
+  })
+  typeId!: string
+
+  @BelongsTo(() => CaseCommentTypeDto, 'type_id')
   type!: CaseCommentTypeDto
 
-  @BelongsTo(() => CaseStatusDto)
-  case_status!: CaseStatusDto
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'status_id',
+  })
+  caseStatusId!: string
 
-  @BelongsTo(() => CaseCommentTaskDto)
+  @BelongsTo(() => CaseStatusDto, 'status_id')
+  caseStatus!: CaseStatusDto
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'task_id',
+  })
+  taskId!: string
+
+  @BelongsTo(() => CaseCommentTaskDto, 'task_id')
   task!: CaseCommentTaskDto
 
-  // TODO: CaseComment should only belog to one case
-  @BelongsTo(() => CaseDto)
+  @BelongsTo(() => CaseDto, 'case_id')
   case!: CaseDto
 }

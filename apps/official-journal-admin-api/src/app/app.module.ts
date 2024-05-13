@@ -1,7 +1,7 @@
 import { SequelizeConfigService } from '@dmr.is/db'
 import {
   ApplicationModule,
-  HealthController,
+  HealthModule,
   SharedJournalModule,
 } from '@dmr.is/modules'
 
@@ -21,6 +21,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     CaseModule,
     StatisticsModule,
     SharedJournalModule,
+    HealthModule,
     RouterModule.register([
       {
         path: 'cases',
@@ -36,6 +37,5 @@ import { StatisticsModule } from './statistics/statistics.module'
       },
     ]),
   ],
-  controllers: [HealthController],
 })
 export class AppModule {}
