@@ -10,7 +10,7 @@ import { ICaseCommentService } from './services/comment/comment.service.interfac
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import { CaseDto } from './models'
+import { models } from './models'
 
 export { ICaseService } from './case.service.interface'
 export { CaseServiceMock } from './case.service.mock'
@@ -21,7 +21,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([CaseDto]),
+    SequelizeModule.forFeature([...models]),
     LoggingModule,
     SharedJournalModule,
     forwardRef(() => ApplicationModule),

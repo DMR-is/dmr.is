@@ -15,6 +15,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
 import {
   caseCommentMigrate,
@@ -35,17 +36,19 @@ const LOGGING_CATEGORY = 'CaseCommentService'
 export class CaseCommentService implements ICaseCommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(CaseDto) private caseModel: typeof CaseDto,
-    @Inject(CaseCommentsDto) private caseCommentsModel: typeof CaseCommentsDto,
-    @Inject(CaseCommentDto) private caseCommentModel: typeof CaseCommentDto,
+    @InjectModel(CaseDto) private caseModel: typeof CaseDto,
+    @InjectModel(CaseCommentsDto)
+    private caseCommentsModel: typeof CaseCommentsDto,
+    @InjectModel(CaseCommentDto)
+    private caseCommentModel: typeof CaseCommentDto,
 
-    @Inject(CaseCommentTaskDto)
+    @InjectModel(CaseCommentTaskDto)
     private caseCommentTaskModel: typeof CaseCommentTaskDto,
 
-    @Inject(CaseCommentTitleDto)
+    @InjectModel(CaseCommentTitleDto)
     private caseCommentTitleModel: typeof CaseCommentTitleDto,
 
-    @Inject(CaseCommentTypeDto)
+    @InjectModel(CaseCommentTypeDto)
     private caseCommentTypeModel: typeof CaseCommentTypeDto,
   ) {
     this.logger.info('Using CaseCommentSerivce')
