@@ -24,7 +24,6 @@ import {
   caseCommentTitleMapper,
   caseCommentTypeMapper,
 } from '../../../util'
-import { caseCommentsMigrate } from '../../../util/migrations/case/case-comments-migrate'
 import { CaseStatusDto } from '../../models'
 import { CaseDto } from '../../models/Case'
 import { CaseCommentDto } from '../../models/CaseComment'
@@ -292,6 +291,7 @@ export class CaseCommentService implements ICaseCommentService {
         caseId,
         commentId,
       },
+      include: [CaseCommentDto],
     })
 
     if (!exists) {
@@ -321,10 +321,17 @@ export class CaseCommentService implements ICaseCommentService {
         },
       })
 
+      await this.caseCommentTaskModel.destroy({
+        where: {
+          id: exists.caseComment.taskId,
+        },
+      })
+
       return Promise.resolve({
         success: true,
       })
     } catch (error) {
+      console.log(error)
       this.logger.error('Error in deleteComment', {
         caseId,
         commentId,
