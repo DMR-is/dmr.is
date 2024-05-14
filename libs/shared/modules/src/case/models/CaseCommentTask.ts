@@ -2,7 +2,7 @@ import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
 
 import { CaseCommentTitleDto } from './CaseCommentTitle'
 
-@Table({ tableName: 'case_comment_task', timestamps: true })
+@Table({ tableName: 'case_comment_task', timestamps: false })
 export class CaseCommentTaskDto extends Model {
   @Column({
     type: DataType.UUIDV4,

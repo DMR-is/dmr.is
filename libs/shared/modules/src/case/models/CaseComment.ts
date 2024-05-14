@@ -1,11 +1,17 @@
-import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  HasOne,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
-import { CaseDto } from './Case'
 import { CaseCommentTaskDto } from './CaseCommentTask'
 import { CaseCommentTypeDto } from './CaseCommentType'
 import { CaseStatusDto } from './CaseStatus'
 
-@Table({ tableName: 'case_comment', timestamps: true })
+@Table({ tableName: 'case_comment', timestamps: false })
 export class CaseCommentDto extends Model {
   @Column({
     type: DataType.UUIDV4,
@@ -43,10 +49,10 @@ export class CaseCommentDto extends Model {
     allowNull: false,
     field: 'status_id',
   })
-  caseStatusId!: string
+  statusId!: string
 
-  @BelongsTo(() => CaseStatusDto, 'status_id')
-  caseStatus!: CaseStatusDto
+  @HasOne(() => CaseStatusDto, 'status_id')
+  status!: CaseStatusDto
 
   @Column({
     type: DataType.UUID,
@@ -57,7 +63,4 @@ export class CaseCommentDto extends Model {
 
   @BelongsTo(() => CaseCommentTaskDto, 'task_id')
   task!: CaseCommentTaskDto
-
-  @BelongsTo(() => CaseDto, 'case_id')
-  case!: CaseDto
 }

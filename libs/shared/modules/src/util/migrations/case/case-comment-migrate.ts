@@ -1,4 +1,4 @@
-import { CaseComment } from '@dmr.is/shared/dto'
+import { CaseComment, CaseStatus } from '@dmr.is/shared/dto'
 
 import { CaseCommentDto } from '../../../case/models/CaseComment'
 import {
@@ -8,11 +8,11 @@ import {
 } from '../../mappers'
 
 export const caseCommentMigrate = (model: CaseCommentDto): CaseComment => {
-  const status = caseStatusMapper(model.caseStatus.value)
+  // const status = caseStatusMapper(model.caseStatus.value)
 
-  if (!status) {
-    throw new Error(`Unknown case status: ${model.caseStatus.value}`)
-  }
+  // if (!status) {
+  //   throw new Error(`Unknown case status: ${model.caseStatus.value}`)
+  // }
 
   const type = caseCommentTypeMapper(model.type.value)
 
@@ -30,7 +30,7 @@ export const caseCommentMigrate = (model: CaseCommentDto): CaseComment => {
     id: model.id,
     internal: model.internal,
     createdAt: model.createdAt,
-    caseStatus: status,
+    caseStatus: 'Submitted' as CaseStatus,
     type: type,
     task: {
       comment: model.task.comment,

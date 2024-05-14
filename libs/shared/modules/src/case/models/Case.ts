@@ -13,7 +13,7 @@ import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
 
-@Table({ tableName: 'case_case', timestamps: true })
+@Table({ tableName: 'case_case', timestamps: false })
 export class CaseDto extends Model {
   @Column({
     type: DataType.UUID,

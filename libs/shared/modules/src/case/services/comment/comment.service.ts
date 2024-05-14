@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   DeleteCaseCommentResponse,
+  GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   PostCaseComment,
@@ -13,6 +14,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -22,6 +24,8 @@ import {
   caseCommentTitleMapper,
   caseCommentTypeMapper,
 } from '../../../util'
+import { caseCommentsMigrate } from '../../../util/migrations/case/case-comment-migrate copy'
+import { CaseStatusDto } from '../../models'
 import { CaseDto } from '../../models/Case'
 import { CaseCommentDto } from '../../models/CaseComment'
 import { CaseCommentsDto } from '../../models/CaseComments'
@@ -53,6 +57,45 @@ export class CaseCommentService implements ICaseCommentService {
   ) {
     this.logger.info('Using CaseCommentSerivce')
   }
+  async getComment(
+    caseId: string,
+    commentId: string,
+  ): Promise<GetCaseCommentResponse> {
+    this.logger.log('Getting comment for case', {
+      caseId,
+      commentId,
+      category: LOGGING_CATEGORY,
+    })
+
+    try {
+      const comment = await this.caseCommentsModel.findOne({
+        where: { case_id: caseId, case_comment_id: commentId },
+        include: [CaseCommentDto, CaseDto],
+        logging: (msg) => this.logger.info(msg),
+      })
+
+      if (!comment) {
+        return Promise.resolve({
+          comment: null,
+        })
+      }
+
+      const migrated = caseCommentsMigrate(comment)
+
+      return Promise.resolve({
+        comment: migrated.caseComment,
+      })
+    } catch (error) {
+      console.log(error)
+      this.logger.error('Error in getComment', {
+        caseId,
+        commentId,
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      throw new InternalServerErrorException('Failed to get comment')
+    }
+  }
 
   async getComments(
     caseId: string,
@@ -63,31 +106,54 @@ export class CaseCommentService implements ICaseCommentService {
       category: LOGGING_CATEGORY,
     })
 
-    const onlyExternal = params?.type === 'external'
-    const onlyInternal = params?.type === 'internal'
+    try {
+      const onlyExternal = params?.type === 'external'
+      const onlyInternal = params?.type === 'internal'
 
-    const found = await this.caseCommentsModel.findAll({
-      where: { case_id: caseId },
-      // include: [CaseCommentDto], // TODO: Test this
-    })
+      const found = await this.caseCommentsModel
+        .findAll({
+          where: { case_id: caseId },
+          logging: (msg) => this.logger.debug(msg),
+          include: [
+            CaseCommentDto,
+            { nested: true, model: CaseStatusDto },
+            //{ model: CaseStatusDto, as: 'status' },
+            // CaseCommentTaskDto,
+            // CaseCommentTypeDto,
+          ],
+        })
+        .then((data) => {
+          return data
+        })
 
-    const comments = found
-      .map((c) => caseCommentMigrate(c.case_comment))
-      .filter((c) => {
-        if (onlyExternal) {
-          return !c.internal
-        }
+      console.log(found)
 
-        if (onlyInternal) {
-          return c.internal
-        }
+      const comments = found
+        .map((c) => caseCommentMigrate(c.case_comment))
+        .filter((c) => {
+          if (onlyExternal) {
+            return !c.internal
+          }
 
-        return true
+          if (onlyInternal) {
+            return c.internal
+          }
+
+          return true
+        })
+
+      return Promise.resolve({
+        comments,
       })
-
-    return Promise.resolve({
-      comments,
-    })
+    } catch (error) {
+      console.log(error)
+      this.logger.error('Error in getComments', {
+        id: caseId,
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      throw new InternalServerErrorException('Failed to get comments')
+    }
   }
 
   async postComment(

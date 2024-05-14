@@ -12,6 +12,7 @@ import {
   DeleteCaseCommentResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
+  GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCasesQuery,
@@ -203,6 +204,23 @@ export class CaseController {
     @Query('params') params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     return this.caseCommentService.getComments(caseId, params)
+  }
+
+  @Get(':caseId/comments/:commentId')
+  @ApiOperation({
+    operationId: 'getComment',
+    summary: 'Get case comment',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetCaseCommentResponse,
+    description: 'Comment for case',
+  })
+  async getComment(
+    @Param('caseId') caseId: string,
+    @Param('commentId') commentId: string,
+  ): Promise<GetCaseCommentResponse> {
+    return this.caseCommentService.getComment(caseId, commentId)
   }
 
   @Post(':caseId/comments')

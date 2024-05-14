@@ -1,6 +1,7 @@
 import {
   CaseComment,
   DeleteCaseCommentResponse,
+  GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   PostCaseComment,
@@ -8,6 +9,7 @@ import {
 } from '@dmr.is/shared/dto'
 
 export interface ICaseCommentService {
+  getComment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
   getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
