@@ -13,6 +13,12 @@ export class CaseCommentTaskDto extends Model {
   override id!: string
 
   @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  comment!: string | null
+
+  @Column({
     type: DataType.UUID,
     allowNull: true,
     field: 'from_id',
@@ -28,17 +34,10 @@ export class CaseCommentTaskDto extends Model {
 
   @Column({
     type: DataType.UUID,
-    allowNull: true,
     field: 'title_id',
   })
-  titleId!: string | null
+  titleId!: string
 
   @BelongsTo(() => CaseCommentTitleDto, 'title_id')
   title!: CaseCommentTitleDto
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
-  })
-  comment!: string | null
 }

@@ -36,6 +36,6 @@ export class CaseStatusDto extends Model {
   })
   value!: string
 
-  @BelongsTo(() => CaseCommentDto, 'status_id')
+  @BelongsTo(() => CaseCommentDto, 'id')
   comment?: CaseCommentDto
 }

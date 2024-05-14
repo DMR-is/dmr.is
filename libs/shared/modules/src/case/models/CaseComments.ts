@@ -26,19 +26,20 @@ export class CaseCommentsDto extends Model {
     allowNull: false,
     field: 'case_case_id',
   })
-  case_id!: string
+  caseId!: string
 
   @PrimaryKey
   @ForeignKey(() => CaseCommentDto)
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,
+    field: 'case_comment_id',
   })
-  case_comment_id!: string
+  commentId!: string
 
-  @BelongsTo(() => CaseDto, 'case_case_id')
+  @BelongsTo(() => CaseDto)
   case!: CaseDto
 
-  @BelongsTo(() => CaseCommentDto, 'case_comment_id')
-  case_comment!: CaseCommentDto
+  @BelongsTo(() => CaseCommentDto)
+  caseComment!: CaseCommentDto
 }

@@ -24,7 +24,7 @@ import {
   caseCommentTitleMapper,
   caseCommentTypeMapper,
 } from '../../../util'
-import { caseCommentsMigrate } from '../../../util/migrations/case/case-comment-migrate copy'
+import { caseCommentsMigrate } from '../../../util/migrations/case/case-comments-migrate'
 import { CaseStatusDto } from '../../models'
 import { CaseDto } from '../../models/Case'
 import { CaseCommentDto } from '../../models/CaseComment'
@@ -61,16 +61,21 @@ export class CaseCommentService implements ICaseCommentService {
     caseId: string,
     commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    this.logger.log('Getting comment for case', {
+    this.logger.info('Getting comment for case', {
       caseId,
       commentId,
       category: LOGGING_CATEGORY,
     })
 
     try {
-      const comment = await this.caseCommentsModel.findOne({
-        where: { case_id: caseId, case_comment_id: commentId },
-        include: [CaseCommentDto, CaseDto],
+      const comment = await this.caseCommentModel.findOne({
+        where: { id: commentId },
+        nest: true,
+        include: [
+          CaseCommentTypeDto,
+          CaseStatusDto,
+          { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+        ],
         logging: (msg) => this.logger.info(msg),
       })
 
@@ -80,10 +85,10 @@ export class CaseCommentService implements ICaseCommentService {
         })
       }
 
-      const migrated = caseCommentsMigrate(comment)
+      const migrated = caseCommentMigrate(comment)
 
       return Promise.resolve({
-        comment: migrated.caseComment,
+        comment: migrated,
       })
     } catch (error) {
       console.log(error)
@@ -129,7 +134,7 @@ export class CaseCommentService implements ICaseCommentService {
       console.log(found)
 
       const comments = found
-        .map((c) => caseCommentMigrate(c.case_comment))
+        .map((c) => caseCommentMigrate(c.caseComment))
         .filter((c) => {
           if (onlyExternal) {
             return !c.internal

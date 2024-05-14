@@ -5,9 +5,9 @@ import { caseCommentMigrate } from './case-comment-migrate'
 
 export const caseCommentsMigrate = (model: CaseCommentsDto): CaseComments => {
   console.log(model.case)
-  console.log(model.case_comment)
+  console.log(model.caseComment)
 
   return {
-    caseComment: caseCommentMigrate(model.case_comment),
+    caseComment: caseCommentMigrate(model.caseComment),
   }
 }
