@@ -1,5 +1,4 @@
 import {
-  CaseComment,
   DeleteCaseCommentResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,

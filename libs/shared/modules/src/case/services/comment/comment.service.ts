@@ -76,7 +76,7 @@ export class CaseCommentService implements ICaseCommentService {
           CaseStatusDto,
           { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
         ],
-        logging: (msg) => this.logger.info(msg),
+        logging: (sql) => this.logger.info(sql),
       })
 
       if (!comment) {
@@ -91,7 +91,6 @@ export class CaseCommentService implements ICaseCommentService {
         comment: migrated,
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in getComment', {
         caseId,
         commentId,
@@ -117,21 +116,22 @@ export class CaseCommentService implements ICaseCommentService {
 
       const found = await this.caseCommentsModel
         .findAll({
-          where: { case_id: caseId },
-          logging: (msg) => this.logger.debug(msg),
+          where: { case_case_id: caseId },
+          logging: (sql) => this.logger.info(sql),
           include: [
-            CaseCommentDto,
-            { nested: true, model: CaseStatusDto },
-            //{ model: CaseStatusDto, as: 'status' },
-            // CaseCommentTaskDto,
-            // CaseCommentTypeDto,
+            {
+              model: CaseCommentDto,
+              include: [
+                CaseCommentTypeDto,
+                CaseStatusDto,
+                { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+              ],
+            },
           ],
         })
         .then((data) => {
           return data
         })
-
-      console.log(found)
 
       const comments = found
         .map((c) => caseCommentMigrate(c.caseComment))
@@ -151,7 +151,6 @@ export class CaseCommentService implements ICaseCommentService {
         comments,
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in getComments', {
         id: caseId,
         category: LOGGING_CATEGORY,
@@ -165,8 +164,8 @@ export class CaseCommentService implements ICaseCommentService {
     caseId: string,
     body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
-    this.logger.info('Adding comment to application', {
-      id: caseId,
+    this.logger.info('postComment', {
+      caseId: caseId,
       category: LOGGING_CATEGORY,
     })
 
@@ -183,7 +182,10 @@ export class CaseCommentService implements ICaseCommentService {
     try {
       const now = new Date().toISOString()
 
-      const theCase = await this.caseModel.findByPk(caseId)
+      const theCase = await this.caseModel.findOne({
+        where: { id: caseId },
+        include: [CaseStatusDto],
+      })
 
       if (!theCase) {
         throw new NotFoundException('Case not found')
@@ -193,6 +195,7 @@ export class CaseCommentService implements ICaseCommentService {
       const title = caseCommentTitleMapper(
         mapCaseCommentTypeToCaseCommentTitle(body.type),
       )
+
       const titleRef = await this.caseCommentTitleModel.findOne({
         where: { value: title },
       })
@@ -207,36 +210,64 @@ export class CaseCommentService implements ICaseCommentService {
         throw new BadRequestException('Invalid comment type')
       }
 
-      const newCommentRef = await this.caseCommentTypeModel.findOne({
+      const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
         where: { value: newCommentType },
       })
 
-      if (!newCommentRef) {
+      if (!newCommentTypeRef) {
         throw new NotFoundException('Comment type not found')
       }
 
       const newCommentTask = await this.caseCommentTaskModel.create({
         id: uuid(),
-        from_id: body.from, // TODO: check if this is correct
-        to_id: body.to, // TODO: Use auth service
         comment: body.comment,
-        title: titleRef.id,
+        fromId: body.from,
+        toId: body.to,
+        titleId: titleRef.id,
       })
 
-      const newComment = await this.caseCommentModel.create({
-        id: uuid(),
-        created_at: now,
-        internal: body.internal,
-        type: newCommentRef.id,
-        case_status: theCase.status,
-        task: newCommentTask.id,
+      const newComment = await this.caseCommentModel.create(
+        {
+          id: uuid(),
+          createdAt: now,
+          internal: body.internal,
+          typeId: newCommentTypeRef.id,
+          statusId: theCase.statusId,
+          taskId: newCommentTask.id,
+        },
+        {
+          returning: true,
+          logging: (sql) => this.logger.info(sql),
+        },
+      )
+
+      // adding row to relation table
+      await this.caseCommentsModel.create({
+        caseId: caseId,
+        commentId: newComment.id,
       })
+
+      const withRelations = await this.caseCommentModel.findByPk(
+        newComment.id,
+        {
+          nest: true,
+          include: [
+            CaseCommentTypeDto,
+            CaseStatusDto,
+            { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+          ],
+        },
+      )
+
+      if (!withRelations) {
+        throw new NotFoundException('Could not create comment')
+      }
 
       return Promise.resolve({
-        comment: caseCommentMigrate(newComment),
+        comment: caseCommentMigrate(withRelations),
       })
     } catch (error) {
-      this.logger.error('Failed to create comment', {
+      this.logger.error('Error in postComment', {
         id: caseId,
         category: LOGGING_CATEGORY,
         error,
@@ -255,24 +286,54 @@ export class CaseCommentService implements ICaseCommentService {
       category: LOGGING_CATEGORY,
     })
 
+    // check if case and comment exists
+    const exists = await this.caseCommentsModel.findOne({
+      where: {
+        caseId,
+        commentId,
+      },
+    })
+
+    if (!exists) {
+      this.logger.warn('Trying to delete comment that does not exist on case', {
+        caseId,
+        commentId,
+        category: LOGGING_CATEGORY,
+      })
+      return Promise.resolve({
+        success: false,
+      })
+    }
+
     try {
-      const comment = await this.caseCommentModel.destroy({
+      // delete from relation table
+      await this.caseCommentsModel.destroy({
+        where: {
+          caseId,
+          commentId,
+        },
+      })
+
+      // delete from comment table
+      await this.caseCommentModel.destroy({
         where: {
           id: commentId,
         },
       })
 
       return Promise.resolve({
-        success: comment > 0,
+        success: true,
       })
     } catch (error) {
-      this.logger.error('Failed to delete comment', {
-        id: caseId,
+      this.logger.error('Error in deleteComment', {
+        caseId,
         commentId,
         category: LOGGING_CATEGORY,
         error,
       })
-      throw new BadRequestException('Failed to delete comment')
+      return Promise.resolve({
+        success: false,
+      })
     }
   }
 }

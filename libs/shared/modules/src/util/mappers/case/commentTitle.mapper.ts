@@ -1,6 +1,8 @@
 import { CaseCommentTitle } from '@dmr.is/shared/dto'
 
-export const caseCommentTitleMapper = (type?: string | null) => {
+export const caseCommentTitleMapper = (
+  type?: string | null,
+): CaseCommentTitle | null => {
   if (!type) return null
 
   switch (type) {
