@@ -24,7 +24,7 @@ export class SequelizeConfigService implements SequelizeOptionsFactory {
       ...getOptions(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
-    console.log('options :>> ', options)
+
     //options.username = 'foo'
     options.autoLoadModels = true
     return options

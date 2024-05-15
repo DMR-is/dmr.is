@@ -2,7 +2,7 @@ import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
 
 import { CaseCommentTitleDto } from './CaseCommentTitle'
 
-@Table({ tableName: 'case_comment_task', timestamps: true })
+@Table({ tableName: 'case_comment_task', timestamps: false })
 export class CaseCommentTaskDto extends Model {
   @Column({
     type: DataType.UUIDV4,
@@ -16,20 +16,28 @@ export class CaseCommentTaskDto extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  from_id!: string | null
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
-  })
-  to_id!: string | null
-
-  @BelongsTo(() => CaseCommentTitleDto)
-  title!: CaseCommentTitleDto
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
-  })
   comment!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'from_id',
+  })
+  fromId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'to_id',
+  })
+  toId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    field: 'title_id',
+  })
+  titleId!: string
+
+  @BelongsTo(() => CaseCommentTitleDto, 'title_id')
+  title!: CaseCommentTitleDto
 }

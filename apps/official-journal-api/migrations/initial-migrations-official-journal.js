@@ -173,7 +173,7 @@ module.exports = {
 
     CREATE TABLE case_comment (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      createdAt TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
       internal BOOLEAN DEFAULT TRUE,
       type_id UUID NOT NULL,
       status_id UUID NOT NULL,
@@ -182,6 +182,35 @@ module.exports = {
       CONSTRAINT fk_case_comment_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_comment_task_id FOREIGN KEY (task_id) REFERENCES case_comment_task (id),
       PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_case (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      application_id UUID NOT NULL,
+      year INTEGER NOT NULL,
+      case_number INTEGER NOT NULL,
+      status_id UUID NOT NULL,
+      tag_id UUID,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      is_legacy BOOLEAN NOT NULL DEFAULT FALSE,
+      assigned_user_id UUID,
+      case_communication_status_id UUID,
+      published_at TIMESTAMP WITH TIME ZONE,
+      price INTEGER,
+      paid BOOLEAN DEFAULT FALSE,
+      CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
+      CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
+      CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comments (
+      case_case_id UUID NOT NULL,
+      case_comment_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, case_comment_id),
+      CONSTRAINT fk_case_comments_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_comments_comment_id FOREIGN KEY (case_comment_id) REFERENCES case_comment (id)
     );
 
   COMMIT;
@@ -208,6 +237,8 @@ module.exports = {
     DROP TABLE case_comment_type CASCADE;
     DROP TABLE case_comment_task CASCADE;
     DROP TABLE case_comment CASCADE;
+    DROP TABLE case_case CASCADE;
+    DROP TABLE case_comments CASCADE;
     `)
   },
 }

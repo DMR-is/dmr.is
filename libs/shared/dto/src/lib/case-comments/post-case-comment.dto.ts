@@ -29,7 +29,7 @@ export class PostCaseComment {
     description: 'The task itself',
     required: true,
   })
-  from!: string | null
+  from!: string
 
   @ApiProperty({
     type: String,

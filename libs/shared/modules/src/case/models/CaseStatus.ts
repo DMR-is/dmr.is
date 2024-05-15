@@ -1,4 +1,5 @@
 import {
+  BelongsTo,
   Column,
   DataType,
   DefaultScope,
@@ -6,7 +7,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'case_status', timestamps: true })
+import { CaseCommentDto } from './CaseComment'
+
+@Table({ tableName: 'case_status', timestamps: false })
 @DefaultScope(() => ({
   attributes: {
     exclude: ['created', 'updated'],
@@ -32,4 +35,7 @@ export class CaseStatusDto extends Model {
     allowNull: false,
   })
   value!: string
+
+  @BelongsTo(() => CaseCommentDto, 'id')
+  comment?: CaseCommentDto
 }

@@ -6,7 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'case_tag', timestamps: true })
+@Table({ tableName: 'case_tag', timestamps: false })
 @DefaultScope(() => ({
   attributes: {
     exclude: ['created', 'updated'],
