@@ -75,13 +75,10 @@ export class CaseCommentService implements ICaseCommentService {
           CaseStatusDto,
           { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
         ],
-        logging: (sql) => this.logger.info(sql),
       })
 
       if (!comment) {
-        return Promise.resolve({
-          comment: null,
-        })
+        throw new NotFoundException('Comment not found')
       }
 
       const migrated = caseCommentMigrate(comment)
@@ -113,24 +110,19 @@ export class CaseCommentService implements ICaseCommentService {
       const onlyExternal = params?.type === 'external'
       const onlyInternal = params?.type === 'internal'
 
-      const found = await this.caseCommentsModel
-        .findAll({
-          where: { case_case_id: caseId },
-          logging: (sql) => this.logger.info(sql),
-          include: [
-            {
-              model: CaseCommentDto,
-              include: [
-                CaseCommentTypeDto,
-                CaseStatusDto,
-                { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-              ],
-            },
-          ],
-        })
-        .then((data) => {
-          return data
-        })
+      const found = await this.caseCommentsModel.findAll({
+        where: { case_case_id: caseId },
+        include: [
+          {
+            model: CaseCommentDto,
+            include: [
+              CaseCommentTypeDto,
+              CaseStatusDto,
+              { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+            ],
+          },
+        ],
+      })
 
       const comments = found
         .map((c) => caseCommentMigrate(c.caseComment))
@@ -167,16 +159,6 @@ export class CaseCommentService implements ICaseCommentService {
       caseId: caseId,
       category: LOGGING_CATEGORY,
     })
-
-    const theCase = await this.caseModel.findByPk(caseId)
-
-    if (!theCase) {
-      this.logger.warn('Case not found', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException('Case not found')
-    }
 
     try {
       const now = new Date().toISOString()
@@ -236,7 +218,6 @@ export class CaseCommentService implements ICaseCommentService {
         },
         {
           returning: true,
-          logging: (sql) => this.logger.info(sql),
         },
       )
 

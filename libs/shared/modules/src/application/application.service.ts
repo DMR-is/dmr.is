@@ -1,7 +1,6 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseComment,
   CaseCommentPublicity,
   CaseCommentType,
   GetCaseCommentsResponse,

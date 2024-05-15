@@ -4,10 +4,8 @@ import { CaseCommentsDto } from '../../../case/models'
 import { caseCommentMigrate } from './case-comment-migrate'
 
 export const caseCommentsMigrate = (model: CaseCommentsDto): CaseComments => {
-  console.log(model.case)
-  console.log(model.caseComment)
-
   return {
     caseComment: caseCommentMigrate(model.caseComment),
+    // Todo add case here?
   }
 }
