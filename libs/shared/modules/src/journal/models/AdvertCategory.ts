@@ -30,7 +30,7 @@ export class AdvertCategoryDTO extends Model {
   slug!: string
 
   @Column({ type: DataType.UUIDV4, field: 'main_category_id' })
-  mainCategoryID!: string
+  mainCategoryID!: string | null
 
   @CreatedAt
   created!: Date

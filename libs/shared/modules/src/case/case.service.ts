@@ -6,8 +6,6 @@ import {
   AdvertSignatureType,
   ApplicationAnswerOption,
   Case,
-  CaseComment,
-  CaseCommentPublicity,
   CaseCommunicationStatus,
   CaseEditorialOverview,
   CaseHistory,
@@ -15,25 +13,21 @@ import {
   CaseTag,
   CaseWithApplication,
   Category,
-  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
-  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
-import {
-  generatePaging,
-  mapCaseCommentTypeToCaseCommentTitle,
-} from '@dmr.is/utils'
+import { generatePaging } from '@dmr.is/utils'
 
 import {
   BadRequestException,
   forwardRef,
   Inject,
+  Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -46,6 +40,7 @@ import { ICaseService } from './case.service.interface'
 
 const LOGGING_CATEGORY = 'CaseService'
 
+@Injectable()
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -91,7 +86,7 @@ export class CaseService implements ICaseService {
       application.answers.advert.department,
     )
 
-    if (!departmentReq || !departmentReq.department) {
+    if (!departmentReq.ok) {
       this.logger.error(
         `Department with id ${application.answers.advert.department} not found`,
         {
@@ -104,6 +99,7 @@ export class CaseService implements ICaseService {
         `Department with id ${application.answers.advert.department} not found`,
       )
     }
+    const dep = departmentReq.value
 
     const advertTitle = application.answers.advert.title
 
@@ -157,10 +153,12 @@ export class CaseService implements ICaseService {
     const categories: Category[] = []
 
     const result = await Promise.all(
-      contentCategories.map(async (c) => {
-        const category = await this.journalService.getCategory(c.value)
-        return category
-      }),
+      contentCategories
+        .map(async (c) => {
+          const category = await this.journalService.getCategory(c.value)
+          return category.ok ? category.value.category : null
+        })
+        .filter((i) => Boolean(i)),
     )
 
     result.forEach((r) => {
@@ -187,11 +185,13 @@ export class CaseService implements ICaseService {
       isLegacy: theCase.isLegacy,
       paid: theCase.paid,
       price: theCase.price,
-      advertType: advertType,
-      advertDepartment: departmentReq.department,
+      advertType: advertType.ok ? advertType.value.type : null,
+      advertDepartment: dep.department,
       advertTitle: advertTitle,
       requestedPublicationDate: requestedPublicationDate,
-      institutionTitle: institutionReq?.institution?.title || null,
+      institutionTitle: institutionReq.ok
+        ? institutionReq?.value.institution?.title ?? null
+        : null,
       categories: categories,
       signatureDate: signatureDate || null,
     }
@@ -540,120 +540,5 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Missing ids')
     }
     return Promise.resolve()
-  }
-
-  getComments(
-    caseId: string,
-    params?: GetCaseCommentsQuery,
-  ): Promise<CaseComment[]> {
-    this.logger.info('Getting comments for case', {
-      id: caseId,
-      category: LOGGING_CATEGORY,
-    })
-
-    const found = ALL_MOCK_CASES.find((c) => c.id === caseId)
-
-    if (!found) {
-      this.logger.warn('Case not found', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException('Case not found')
-    }
-
-    if (params?.type && params?.type !== CaseCommentPublicity.All) {
-      const internal = params.type === CaseCommentPublicity.Internal
-
-      console.log(internal)
-
-      const filtered = found.comments.filter(
-        (c) => c.internal === (CaseCommentPublicity.Internal === params.type),
-      )
-
-      return Promise.resolve(filtered)
-    }
-
-    return Promise.resolve(found.comments)
-  }
-
-  async postComment(
-    caseId: string,
-    body: PostCaseComment,
-  ): Promise<CaseComment[]> {
-    this.logger.info('Adding comment to application', {
-      id: caseId,
-      category: LOGGING_CATEGORY,
-    })
-
-    const theCase = await this.getCase(caseId)
-
-    if (!theCase) {
-      this.logger.warn('Case not found', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException('Case not found')
-    }
-
-    const newCommentTitle = mapCaseCommentTypeToCaseCommentTitle(body.type)
-    if (!newCommentTitle) {
-      this.logger.warn('Invalid comment type', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new BadRequestException('Invalid comment type')
-    }
-
-    const newComment: CaseComment = {
-      id: uuid(),
-      caseStatus: theCase.status,
-      createdAt: new Date().toISOString(),
-      internal: body.internal,
-      type: body.type,
-      task: {
-        to: body.to,
-        from: body.from,
-        comment: body.comment,
-        title: newCommentTitle,
-      },
-    }
-
-    // TODO: plug into db when rdy
-
-    return Promise.resolve([...theCase.comments, newComment])
-  }
-
-  async deleteComment(
-    caseId: string,
-    commentId: string,
-  ): Promise<CaseComment[]> {
-    this.logger.info('Deleting comment from application', {
-      id: caseId,
-      commentId,
-      category: LOGGING_CATEGORY,
-    })
-
-    const caseComments = await this.getComments(caseId)
-
-    if (!caseComments) {
-      throw new NotFoundException('Case not found')
-    }
-
-    const found = caseComments.find((c) => c.id === commentId)
-
-    if (!found) {
-      this.logger.warn('Comment not found', {
-        id: caseId,
-        commentId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException('Comment not found')
-    }
-
-    const newComments = caseComments.filter((c) => c.id !== commentId)
-
-    // TODO: plug into db when rdy
-
-    return Promise.resolve(newComments)
   }
 }

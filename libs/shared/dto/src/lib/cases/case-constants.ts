@@ -16,8 +16,8 @@ export enum CaseTag {
 }
 
 export enum CaseCommunicationStatus {
-  NotStarted,
-  WaitingForAnswers,
-  HasAnswers,
-  Done,
+  NotStarted = 'Ekki hafin',
+  WaitingForAnswers = 'Beðið eftir svörum',
+  HasAnswers = 'Svör hafa borist',
+  Done = 'Lokið',
 }

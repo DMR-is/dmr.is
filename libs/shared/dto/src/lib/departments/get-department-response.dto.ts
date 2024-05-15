@@ -7,5 +7,5 @@ export class GetDepartmentResponse {
     type: Department,
     description: 'The department that was found.',
   })
-  readonly department!: Department | null
+  readonly department!: Department
 }

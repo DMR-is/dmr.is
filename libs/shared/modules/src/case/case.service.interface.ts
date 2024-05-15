@@ -1,17 +1,14 @@
 import {
   Case,
-  CaseComment,
   CaseEditorialOverview,
   CaseHistory,
   CaseWithApplication,
-  GetCaseCommentsQuery,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
-  PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
@@ -39,15 +36,6 @@ export interface ICaseService {
   getEditorialOverview(params?: GetCasesQuery): Promise<CaseEditorialOverview>
 
   postCasesPublish(body: PostCasePublishBody): Promise<void>
-
-  getComments(
-    caseId: string,
-    params?: GetCaseCommentsQuery,
-  ): Promise<CaseComment[]>
-
-  postComment(caseId: string, body: PostCaseComment): Promise<CaseComment[]>
-
-  deleteComment(caseId: string, commentId: string): Promise<CaseComment[]>
 }
 
 export const ICaseService = Symbol('ICaseService')
