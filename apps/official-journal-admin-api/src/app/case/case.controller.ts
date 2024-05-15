@@ -225,7 +225,7 @@ export class CaseController {
 
   @Post(':caseId/comments')
   @ApiOperation({
-    operationId: 'addComment',
+    operationId: 'postComment',
     summary: 'Add comment to case',
   })
   @ApiResponse({
@@ -233,7 +233,7 @@ export class CaseController {
     status: 200,
     description: 'Comment added',
   })
-  async addComment(
+  async postComment(
     @Param('caseId') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {

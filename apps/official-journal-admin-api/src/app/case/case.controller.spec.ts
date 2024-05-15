@@ -1,89 +1,198 @@
+import { Model } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
-import { ICaseService, IJournalService } from '@dmr.is/modules'
-import { CaseStatus } from '@dmr.is/shared/dto'
+import {
+  CaseCommentDto,
+  CaseCommentsDto,
+  CaseCommentService,
+  CaseCommentTaskDto,
+  CaseCommentTitleDto,
+  CaseCommentTypeDto,
+  CaseDto,
+  CaseService,
+  IApplicationService,
+  ICaseCommentService,
+  ICaseService,
+  IJournalService,
+} from '@dmr.is/modules'
+import { CaseComment } from '@dmr.is/shared/dto'
 
-import { Test, TestingModule } from '@nestjs/testing'
+import { getModelToken } from '@nestjs/sequelize'
+import { Test } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const provideModel = (model: any) => ({
+  provide: getModelToken(model),
+  useValue: model,
+})
+
+// mock sequelize models
+
 describe('CaseController', () => {
-  let theCase: TestingModule
+  let caseService: ICaseService
+  let commentService: ICaseCommentService
   let caseController: CaseController
 
-  beforeAll(async () => {
-    theCase = await Test.createTestingModule({
-      controllers: [CaseController],
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
       imports: [LoggingModule],
+      controllers: [CaseController],
       providers: [
+        provideModel(CaseDto),
+        provideModel(CaseCommentDto),
+        provideModel(CaseCommentsDto),
+        provideModel(CaseCommentTaskDto),
+        provideModel(CaseCommentTitleDto),
+        provideModel(CaseCommentTypeDto),
         {
           provide: ICaseService,
-          useValue: {
-            getCases: jest
-              .fn()
-              .mockImplementation(() => ({ cases: ALL_MOCK_CASES })),
-            getCase: jest
-              .fn()
-              .mockImplementation((id) =>
-                ALL_MOCK_CASES.find((c) => c.id === id),
-              ),
-            getEditorialOverview: jest.fn().mockImplementation(),
-          },
+          useClass: CaseService,
+        },
+        {
+          provide: ICaseCommentService,
+          useClass: CaseCommentService,
         },
         {
           provide: IJournalService,
-          useValue: {
-            getJournal: jest.fn().mockImplementation(),
-          },
+          useValue: jest.fn(),
+        },
+        {
+          provide: IApplicationService,
+          useValue: jest.fn(),
         },
         {
           provide: LOGGER_PROVIDER,
           useValue: {
-            debug: jest.fn(),
             info: jest.fn(),
-            warn: jest.fn(),
             error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
           },
         },
       ],
     }).compile()
-    caseController = theCase.get<CaseController>(CaseController)
+
+    caseService = moduleRef.get<ICaseService>(ICaseService)
+    commentService = moduleRef.get<ICaseCommentService>(ICaseCommentService)
+    caseController = moduleRef.get<CaseController>(CaseController)
   })
-  describe('case', () => {
+
+  describe('getCases', () => {
     it('should return correct case', async () => {
-      const result = await caseController.case(
-        'e6d7c050-a462-4183-972a-5c375e6e348d',
+      const result = ALL_MOCK_CASES
+      jest.spyOn(caseService, 'getCases')
+
+      expect((await caseController.cases()).cases).toEqual(result)
+    })
+  })
+
+  describe('getCase', () => {
+    it('should return cases', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)
+
+      jest.spyOn(caseService, 'getCase')
+
+      expect(await caseController.case(caseId)).toEqual(result)
+    })
+  })
+
+  describe('getComment', () => {
+    it('should return correct comment', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
+      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)?.comments.find(
+        (c) => c.id === commentId,
       )
-      expect(result?.id).toEqual('e6d7c050-a462-4183-972a-5c375e6e348d')
+
+      jest.spyOn(commentService, 'getComment').mockResolvedValue({
+        comment: result!,
+      })
+
+      expect(await caseController.getComment(caseId, commentId)).toEqual({
+        comment: result,
+      })
     })
   })
 
-  describe('cases', () => {
-    it('should return correct cases', async () => {
-      const result = await caseController.cases()
-      expect(result.cases.length).toEqual(ALL_MOCK_CASES.length)
+  describe('getComments', () => {
+    it('should return correct comments', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)?.comments
+
+      jest.spyOn(commentService, 'getComments').mockResolvedValue({
+        comments: result!,
+      })
+
+      expect(await caseController.getComments(caseId)).toEqual({
+        comments: result,
+      })
     })
-
-    it('should return case with caseNumber 5824', async () => {
-      const result = await caseController.cases({ caseNumber: 12582434 })
-      expect(result.cases.length).toBeGreaterThanOrEqual(1)
-    })
-
-    // it('should return no results', async () => {
-    //   const result = await caseController.cases()
-
-    //   expect(result.cases.length).toEqual(0)
-    // })
   })
 
-  // describe('getEditorialOverview', () => {
-  //   it('Should return editorial overview', async () => {
-  //     const results = await caseController.editorialOverview({
-  //       status: CaseStatus.Submitted,
-  //     })
-  //     expect(results.data.length).toEqual(
-  //       ALL_MOCK_CASES.filter((c) => c.status === CaseStatus.Submitted).length,
-  //     )
-  //   })
-  // })
+  describe('postComment', () => {
+    it('should return correct comment', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+
+      const comment = {
+        id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
+        type: 'comment',
+        createdAt: '2024-03-12T12:45:48.21Z',
+        caseStatus: 'Innsent',
+        internal: false,
+        task: {
+          from: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+          to: 'Ármann',
+          title: 'gerir athugasemd',
+          comment: 'getur þú athugað þetta?',
+        },
+      } as unknown as CaseComment
+
+      jest.spyOn(commentService, 'postComment').mockResolvedValue({
+        comment: comment,
+      })
+
+      expect(
+        await caseController.postComment(caseId, {
+          comment: comment.task.comment!,
+          from: comment.task.from!,
+          internal: comment.internal,
+          to: comment.task.to,
+          type: comment.type,
+        }),
+      ).toEqual({
+        comment: comment,
+      })
+    })
+  })
+
+  describe('deleteComment', () => {
+    it('should return success `true`', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
+
+      jest.spyOn(commentService, 'deleteComment').mockResolvedValue({
+        success: true,
+      })
+
+      expect(await caseController.deleteComment(caseId, commentId)).toEqual({
+        success: true,
+      })
+    })
+
+    it('should return success `false`', async () => {
+      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
+
+      jest.spyOn(commentService, 'deleteComment').mockResolvedValue({
+        success: false,
+      })
+
+      expect(await caseController.deleteComment(caseId, commentId)).toEqual({
+        success: false,
+      })
+    })
+  })
 })
