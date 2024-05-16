@@ -9,7 +9,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseDto } from './Case'
+import { CaseDto } from '../../case/models'
 import { CaseCommentDto } from './CaseComment'
 
 @Table({ tableName: 'case_comments', timestamps: false })

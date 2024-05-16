@@ -8,7 +8,7 @@ import {
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
 
-export interface ICaseCommentService {
+export interface ICommentService {
   getComment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
   getComments(
     caseId: string,
@@ -27,4 +27,4 @@ export interface ICaseCommentService {
   ): Promise<DeleteCaseCommentResponse>
 }
 
-export const ICaseCommentService = Symbol('ICaseCommentService')
+export const ICommentService = Symbol('ICaseCommentService')

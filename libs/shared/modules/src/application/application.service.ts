@@ -19,7 +19,8 @@ import {
 } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
-import { ICaseCommentService, ICaseService } from '../case/case.module'
+import { ICaseService } from '../case/case.module'
+import { ICommentService } from '../comment/comment.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CATEGORY = 'application-service'
@@ -28,8 +29,8 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(ICaseCommentService)
-    private readonly commentService: ICaseCommentService,
+    @Inject(ICommentService)
+    private readonly commentService: ICommentService,
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     private readonly authService: AuthService,
@@ -79,11 +80,15 @@ export class ApplicationService implements IApplicationService {
     // This method handles the submission from the application system
 
     // check if the application is already submitted
-    const hasSubmittedBefore = await this.caseService.getCaseByApplicationId(
+    const caseResponse = await this.caseService.getCases({
       applicationId,
+    })
+
+    const activeCase = caseResponse.cases.find(
+      (c) => c.applicationId === applicationId,
     )
 
-    if (hasSubmittedBefore) {
+    if (activeCase) {
       // update history property on case
       try {
         // await this.caseService.updateCaseHistory(hasSubmittedBefore.id)
@@ -227,9 +232,15 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
     })
 
-    const theCase = await this.caseService.getCaseByApplicationId(applicationId)
+    const caseResponse = await this.caseService.getCases({
+      applicationId,
+    })
 
-    if (!theCase) {
+    const activeCase = caseResponse.cases.find(
+      (c) => c.applicationId === applicationId,
+    )
+
+    if (!activeCase) {
       this.logger.error('Case not found', {
         applicationId,
         category: LOGGING_CATEGORY,
@@ -237,7 +248,15 @@ export class ApplicationService implements IApplicationService {
       throw new NotFoundException('Case not found')
     }
 
-    return await this.commentService.getComments(theCase.id, {
+    if (!activeCase) {
+      this.logger.error('Case not found', {
+        applicationId,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException('Case not found')
+    }
+
+    return await this.commentService.getComments(activeCase.id, {
       type: CaseCommentPublicity.External,
     })
   }
@@ -251,9 +270,15 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
     })
 
-    const theCase = await this.caseService.getCaseByApplicationId(applicationId)
+    const caseResponse = await this.caseService.getCases({
+      applicationId,
+    })
 
-    if (!theCase) {
+    const activeCase = caseResponse.cases.find(
+      (c) => c.applicationId === applicationId,
+    )
+
+    if (!activeCase) {
       this.logger.error('Case not found', {
         applicationId,
         category: LOGGING_CATEGORY,
@@ -261,7 +286,7 @@ export class ApplicationService implements IApplicationService {
       throw new NotFoundException('Case not found')
     }
 
-    return await this.commentService.postComment(theCase.id, {
+    return await this.commentService.postComment(activeCase.id, {
       comment: commentBody.comment,
       from: commentBody.from,
       to: commentBody.name ? commentBody.name : null,

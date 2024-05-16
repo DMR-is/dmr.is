@@ -1,4 +1,4 @@
-import { ICaseCommentService, ICaseService } from '@dmr.is/modules'
+import { ICaseService, ICommentService } from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
@@ -8,6 +8,7 @@ import {
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
+  GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
   PostApplicationBody,
@@ -39,8 +40,8 @@ export class CaseController {
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
 
-    @Inject(ICaseCommentService)
-    private readonly caseCommentService: ICaseCommentService,
+    @Inject(ICommentService)
+    private readonly caseCommentService: ICommentService,
   ) {}
 
   @Get('case')
@@ -58,7 +59,7 @@ export class CaseController {
     status: 404,
     description: 'Case not found.',
   })
-  async case(@Query('id') id: string): Promise<Case | null> {
+  async case(@Query('id') id: string): Promise<GetCaseResponse> {
     return this.caseService.getCase(id)
   }
 

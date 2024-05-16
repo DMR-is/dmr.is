@@ -20,24 +20,23 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { CaseDto, CaseStatusDto } from '../case/models'
 import {
   caseCommentMigrate,
   caseCommentTitleMapper,
   caseCommentTypeMapper,
-} from '../../../helpers'
-import { CaseStatusDto } from '../../models'
-import { CaseDto } from '../../models/Case'
-import { CaseCommentDto } from '../../models/CaseComment'
-import { CaseCommentsDto } from '../../models/CaseComments'
-import { CaseCommentTaskDto } from '../../models/CaseCommentTask'
-import { CaseCommentTitleDto } from '../../models/CaseCommentTitle'
-import { CaseCommentTypeDto } from '../../models/CaseCommentType'
-import { ICaseCommentService } from './comment.service.interface'
+} from '../helpers'
+import { CaseCommentDto } from './models/CaseComment'
+import { CaseCommentsDto } from './models/CaseComments'
+import { CaseCommentTaskDto } from './models/CaseCommentTask'
+import { CaseCommentTitleDto } from './models/CaseCommentTitle'
+import { CaseCommentTypeDto } from './models/CaseCommentType'
+import { ICommentService } from './comment.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCommentService'
 
 @Injectable()
-export class CaseCommentService implements ICaseCommentService {
+export class CommentService implements ICommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseDto) private caseModel: typeof CaseDto,

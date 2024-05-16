@@ -4,45 +4,22 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
+import { CommentModule } from '../comment/comment.module'
 import { SharedJournalModule } from '../journal/journal.module'
-import { CaseCommentService } from './services/comment/comment.service'
-import { ICaseCommentService } from './services/comment/comment.service.interface'
+import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 import {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
-  CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
   CaseTagDto,
   models as caseModels,
 } from './models'
 
-export {
-  CaseDto,
-  CaseTagDto,
-  CaseStatusDto,
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTypeDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommunicationStatusDto,
-}
+export { CaseDto, CaseTagDto, CaseStatusDto }
 
-export {
-  ICaseService,
-  ICaseCommentService,
-  CaseService,
-  CaseCommentService,
-  CaseServiceMock,
-  caseModels,
-}
+export { ICaseService, CaseService, CaseServiceMock, caseModels }
 
 const API_MOCK = process.env.API_MOCK === 'true'
 
@@ -51,6 +28,8 @@ const API_MOCK = process.env.API_MOCK === 'true'
     SequelizeModule.forFeature([...caseModels]),
     LoggingModule,
     SharedJournalModule,
+    CommentModule,
+    UtilityModule,
     forwardRef(() => ApplicationModule),
   ],
   providers: [
@@ -58,11 +37,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
       provide: ICaseService,
       useClass: API_MOCK ? CaseServiceMock : CaseService,
     },
-    {
-      provide: ICaseCommentService,
-      useClass: CaseCommentService,
-    },
   ],
-  exports: [ICaseService, ICaseCommentService],
+  exports: [ICaseService],
 })
 export class SharedCaseModule {}

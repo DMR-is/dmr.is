@@ -1,6 +1,6 @@
 import { CaseComment } from '@dmr.is/shared/dto'
 
-import { CaseCommentDto } from '../../../case/models/CaseComment'
+import { CaseCommentDto } from '../../../comment/models'
 import {
   caseCommentTitleMapper,
   caseCommentTypeMapper,

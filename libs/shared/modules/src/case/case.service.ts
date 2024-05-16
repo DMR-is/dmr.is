@@ -35,15 +35,17 @@ import { InjectModel } from '@nestjs/sequelize'
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { IJournalService } from '../journal/journal.service.interface'
-import { ICaseCommentService } from './case.module'
-import { ICaseService } from './case.service.interface'
+import { ICommentService } from '../comment/comment.service.interface'
 import {
   CaseCommentDto,
   CaseCommentTaskDto,
   CaseCommentTitleDto,
   CaseCommentTypeDto,
+} from '../comment/models'
+import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { IUtilityService } from '../utility/utility.service.interface'
+import { ICaseService } from './case.service.interface'
+import {
   CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
@@ -59,8 +61,10 @@ export class CaseService implements ICaseService {
     @Inject(forwardRef(() => IApplicationService))
     private readonly applicationService: IApplicationService,
 
-    @Inject(forwardRef(() => ICaseCommentService))
-    private readonly commentService: ICaseCommentService,
+    @Inject(forwardRef(() => ICommentService))
+    private readonly commentService: ICommentService,
+
+    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
 
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseStatusDto)
@@ -364,35 +368,10 @@ export class CaseService implements ICaseService {
 
   async getCase(id: string): Promise<GetCaseResponse> {
     try {
-      const activeCase = await this.caseModel.findByPk(id, {
-        include: [
-          CaseTagDto,
-          CaseStatusDto,
-          CaseCommunicationStatusDto,
-          {
-            model: CaseCommentDto,
-            include: [
-              {
-                model: CaseCommentTaskDto,
-                include: [CaseCommentTitleDto],
-              },
-              CaseStatusDto,
-              CaseCommentTypeDto,
-            ],
-          },
-        ],
-      })
-
-      if (!activeCase) {
-        return Promise.resolve({
-          case: null,
-        })
-      }
-
-      const migrated = caseMigrate(activeCase)
+      const caseWithAdvert = await this.utilityService.getCaseWithAdvert(id)
 
       return Promise.resolve({
-        case: migrated,
+        case: caseWithAdvert,
       })
     } catch (error) {
       this.logger.error('Error in getCase', {

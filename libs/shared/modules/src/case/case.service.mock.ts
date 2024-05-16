@@ -10,6 +10,7 @@ import {
   CaseWithAdvert,
   CreateCaseResponse,
   GetCaseCommentsQuery,
+  GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
   GetUsersQueryParams,
@@ -67,20 +68,9 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  getCase(id: string): Promise<Case | null> {
-    const found = ALL_MOCK_CASES.find((c) => c.id === id)
-
-    if (!found) {
-      throw new NotFoundException('Case not found')
-    }
-
-    // if (found.advert.document.isLegacy) {
-    //   found.advert.document.html = dirtyClean(
-    //     found.advert.document.html as HTMLText,
-    //   )
-    // }
-
-    return Promise.resolve(found)
+  getCase(id: string): Promise<GetCaseResponse> {
+    this.logger.info('getCase', id)
+    throw new Error('Method not implemented.')
   }
 
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {

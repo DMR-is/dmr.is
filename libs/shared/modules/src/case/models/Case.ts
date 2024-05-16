@@ -7,8 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseCommentDto } from './CaseComment'
-import { CaseCommentsDto } from './CaseComments'
+import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'

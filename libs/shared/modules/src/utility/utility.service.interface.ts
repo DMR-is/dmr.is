@@ -1,6 +1,7 @@
+import { CaseWithAdvert } from '@dmr.is/shared/dto'
 
+export interface IUtilityService {
+  getCaseWithAdvert(caseId: string): Promise<CaseWithAdvert>
+}
 
-
-export interface IUtilityService {}
-
-export symbol IUtilityService
+export const IUtilityService = Symbol('IUtilityService')

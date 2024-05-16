@@ -139,14 +139,14 @@ export class ApplicationSignature {
     example: 'committee',
     description: 'Signature type of the application',
   })
-  type?: string
+  type!: string
 
   @ApiProperty({
     type: String,
     example: '<p>Jón Jónsson</p>',
     description: 'HTML string of the signature',
   })
-  signature?: string
+  signature!: string
 
   @ApiProperty({
     type: String,
@@ -289,35 +289,35 @@ export class ApplicationAnswers {
     example: 'true',
     description: 'Has the applicant approved the external data',
   })
-  requirements?: ApplicationRequirements
+  requirements!: ApplicationRequirements
 
   @ApiProperty({
     type: ApplicationAdvert,
     description: 'Application advert',
   })
-  advert?: ApplicationAdvert
+  advert!: ApplicationAdvert
 
   @ApiProperty({
     type: ApplicationPreview,
     description: 'Contents of the full document',
   })
-  preview?: ApplicationPreview
+  preview!: ApplicationPreview
 
   @ApiProperty({
     type: ApplicationSignature,
     description: 'Application signature',
   })
-  signature?: ApplicationSignature
+  signature!: ApplicationSignature
 
   @ApiProperty({
     type: ApplicationAttachments,
     description: 'Application attachments',
   })
-  attachments?: ApplicationAttachments
+  attachments!: ApplicationAttachments
 
   @ApiProperty({
     type: ApplicationPublishing,
     description: 'Application publishing',
   })
-  publishing?: ApplicationPublishing
+  publishing!: ApplicationPublishing
 }
