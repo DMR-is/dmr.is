@@ -35,8 +35,8 @@ import { InjectModel } from '@nestjs/sequelize'
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
+import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal/journal.service.interface'
-import { caseMigrate } from '../util/migrations/case/case-migrate'
 import { ICaseCommentService } from './case.module'
 import { ICaseService } from './case.service.interface'
 import {
@@ -58,9 +58,6 @@ export class CaseService implements ICaseService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(forwardRef(() => IApplicationService))
     private readonly applicationService: IApplicationService,
-
-    @Inject(forwardRef(() => IJournalService))
-    private readonly journalService: IJournalService,
 
     @Inject(forwardRef(() => ICaseCommentService))
     private readonly commentService: ICaseCommentService,

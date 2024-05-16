@@ -44,7 +44,7 @@ import {
   advertMainCategoryMigrate,
   advertMigrate,
   advertTypesMigrate,
-} from '../util'
+} from '../helpers'
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,

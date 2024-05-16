@@ -24,7 +24,7 @@ import {
   caseCommentMigrate,
   caseCommentTitleMapper,
   caseCommentTypeMapper,
-} from '../../../util'
+} from '../../../helpers'
 import { CaseStatusDto } from '../../models'
 import { CaseDto } from '../../models/Case'
 import { CaseCommentDto } from '../../models/CaseComment'
