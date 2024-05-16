@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import {
   DeleteCaseCommentResponse,
   GetCaseCommentResponse,
@@ -17,6 +18,7 @@ export interface ICaseCommentService {
   postComment(
     caseId: string,
     body: PostCaseComment,
+    transaction?: Transaction,
   ): Promise<PostCaseCommentResponse>
 
   deleteComment(

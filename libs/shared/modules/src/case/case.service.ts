@@ -1,21 +1,20 @@
 import { isBooleanString } from 'class-validator'
+import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { ALL_MOCK_CASES, ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
-  AdvertSignatureType,
-  ApplicationAnswerOption,
   Case,
+  CaseCommentType,
   CaseCommunicationStatus,
   CaseEditorialOverview,
-  CaseHistory,
   CaseStatus,
   CaseTag,
-  CaseWithApplication,
-  Category,
+  CaseWithAdvert,
+  CreateCaseResponse,
+  GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -31,12 +30,25 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { IJournalService } from '../journal/journal.service.interface'
+import { caseMigrate } from '../util/migrations/case/case-migrate'
+import { ICaseCommentService } from './case.module'
 import { ICaseService } from './case.service.interface'
+import {
+  CaseCommentDto,
+  CaseCommentTaskDto,
+  CaseCommentTitleDto,
+  CaseCommentTypeDto,
+  CaseCommunicationStatusDto,
+  CaseDto,
+  CaseStatusDto,
+  CaseTagDto,
+} from './models'
 
 const LOGGING_CATEGORY = 'CaseService'
 
@@ -49,239 +61,29 @@ export class CaseService implements ICaseService {
 
     @Inject(forwardRef(() => IJournalService))
     private readonly journalService: IJournalService,
+
+    @Inject(forwardRef(() => ICaseCommentService))
+    private readonly commentService: ICaseCommentService,
+
+    @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
+    @InjectModel(CaseStatusDto)
+    private readonly caseStatusModel: typeof CaseStatusDto,
+
+    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
+    @InjectModel(CaseCommunicationStatusDto)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
+    private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
   }
-  getCaseHistory(caseId: string): Promise<CaseHistory> {
-    this.logger.info('getCaseHistory', caseId)
+  getEditorialOverview(
+    params?: GetCasesQuery | undefined,
+  ): Promise<CaseEditorialOverview> {
     throw new Error('Method not implemented.')
   }
-
-  private async getLatestApplication(theCase: Case) {
-    if (!theCase.history.length) {
-      this.logger.error('Case history is missing or empty', {
-        id: theCase.id,
-        category: LOGGING_CATEGORY,
-      })
-      throw new InternalServerErrorException('Case history is missing or empty')
-    }
-
-    return theCase.history[theCase.history.length - 1]
-  }
-
-  private async convertToCaseWithApplication(
+  private async convertToCaseWithAdvert(
     theCase: Case,
-  ): Promise<CaseWithApplication> {
-    const application = await this.getLatestApplication(theCase)
-
-    if (!application.answers.advert?.department) {
-      this.logger.error('Department is missing', {
-        id: theCase.id,
-        category: LOGGING_CATEGORY,
-      })
-      throw new InternalServerErrorException('Department is missing')
-    }
-
-    const departmentReq = await this.journalService.getDepartment(
-      application.answers.advert.department,
-    )
-
-    if (!departmentReq.ok) {
-      this.logger.error(
-        `Department with id ${application.answers.advert.department} not found`,
-        {
-          id: theCase.id,
-          departmentId: application.answers.advert.department,
-          category: LOGGING_CATEGORY,
-        },
-      )
-      throw new InternalServerErrorException(
-        `Department with id ${application.answers.advert.department} not found`,
-      )
-    }
-    const dep = departmentReq.value
-
-    const advertTitle = application.answers.advert.title
-
-    if (!advertTitle) {
-      this.logger.error('Advert title is missing or empty', {
-        id: theCase.id,
-        category: LOGGING_CATEGORY,
-      })
-      throw new InternalServerErrorException('Advert title is missing or empty')
-    }
-
-    const requestedPublicationDate = application.answers.publishing?.date
-
-    if (!requestedPublicationDate) {
-      this.logger.error('Advert request publication date is empty or missing', {
-        id: theCase.id,
-        category: LOGGING_CATEGORY,
-      })
-      throw new InternalServerErrorException(
-        'Advert request publication date is empty or missing',
-      )
-    }
-
-    if (!application.applicant) {
-      this.logger.error('Advert applicant is empty or missing', {
-        id: theCase.id,
-        category: LOGGING_CATEGORY,
-      })
-      throw new NotFoundException('Advert applicant is empty or missing')
-    }
-    const institutionReq = await this.journalService.getInstitution(
-      application.applicant,
-    )
-    // if (!institutionReq || !institutionReq.institution) {
-    //   throw new NotFoundException('Institution not found')
-    // }
-
-    const signatureDate =
-      application.answers.signature?.type === AdvertSignatureType.Regular
-        ? application.answers.signature?.regular?.at(0)?.date
-        : application.answers.signature?.committee?.date
-
-    // TODO: Switch to real types when ready
-    const advertType = await this.journalService.getType(
-      '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
-    )
-
-    const contentCategories =
-      application.answers.publishing?.contentCategories ?? []
-
-    const categories: Category[] = []
-
-    const result = await Promise.all(
-      contentCategories
-        .map(async (c) => {
-          const category = await this.journalService.getCategory(c.value)
-          return category.ok ? category.value.category : null
-        })
-        .filter((i) => Boolean(i)),
-    )
-
-    result.forEach((r) => {
-      if (r) {
-        categories.push(r)
-      }
-    })
-
-    return {
-      caseId: theCase.id,
-      applicationId: theCase.applicationId,
-      publicationNumber: null,
-      caseStatus: theCase.status,
-      document:
-        theCase.history[theCase.history.length - 1].answers.preview?.document ||
-        '',
-      publishDate: theCase.publishedAt,
-      communicationStatus: theCase.communicationStatus,
-      createdDate: theCase.createdAt,
-      tag: theCase.tag,
-      fastTrack: theCase.fastTrack,
-      assignedTo: theCase.assignedTo,
-      caseComments: theCase.comments,
-      isLegacy: theCase.isLegacy,
-      paid: theCase.paid,
-      price: theCase.price,
-      advertType: advertType.ok ? advertType.value.type : null,
-      advertDepartment: dep.department,
-      advertTitle: advertTitle,
-      requestedPublicationDate: requestedPublicationDate,
-      institutionTitle: institutionReq.ok
-        ? institutionReq?.value.institution?.title ?? null
-        : null,
-      categories: categories,
-      signatureDate: signatureDate || null,
-    }
-  }
-
-  async createCase(body: PostApplicationBody): Promise<Case> {
-    try {
-      this.logger.info('Creating case', {
-        applicationId: body.applicationId,
-        category: LOGGING_CATEGORY,
-      })
-
-      const application = await this.applicationService.getApplication(
-        body.applicationId,
-      )
-
-      if (!application) {
-        throw new NotFoundException('Application not found')
-      }
-
-      // if (
-      //   !application.answers.advert?.department ||
-      //   !application.answers.publishing?.date ||
-      //   !application.answers.advert?.title ||
-      //   !application.answers.advert?.type
-      // ) {
-      //   // this should not happen
-      //   throw new BadRequestException('Missing required fields')
-      // }
-
-      const now = new Date()
-
-      // const history: CaseHistory = {
-      //   date: now.toISOString(),
-      //   department: application.answers.advert?.department,
-      //   requestedPublicationDate: application.answers.publishing?.date,
-      //   subject: application.answers.advert?.title,
-      //   type: application.answers.advert?.type,
-      // }
-
-      const newCase: Case = {
-        id: uuid(),
-        isLegacy: false,
-        caseNumber: 0,
-        applicationId: body.applicationId,
-        assignedTo: null,
-        communicationStatus: CaseCommunicationStatus.NotStarted,
-        createdAt: now.toISOString(),
-        modifiedAt: now.toISOString(),
-        history: [application],
-        paid: false,
-        price: 23000,
-        published: false,
-        publishedAt: null,
-        status: CaseStatus.Submitted,
-        year: now.getFullYear(),
-        fastTrack:
-          application.answers.publishing?.fastTrack ===
-            ApplicationAnswerOption.YES || false,
-        comments: [],
-        tag: CaseTag.NotStarted,
-      }
-
-      this.logger.info('Successfully created case', {
-        caseId: newCase.id,
-        category: LOGGING_CATEGORY,
-      })
-
-      return Promise.resolve(newCase)
-    } catch (error) {
-      this.logger.error('Error creating case', {
-        error,
-        category: LOGGING_CATEGORY,
-      })
-      throw new InternalServerErrorException('Internal server error.')
-    }
-  }
-
-  async updateCaseHistory(caseId: string): Promise<Case> {
-    this.logger.info('Updating case history', {
-      id: caseId,
-      category: LOGGING_CATEGORY,
-    })
-
-    const theCase = ALL_MOCK_CASES.find((c) => c.id === caseId)
-
-    if (!theCase) {
-      throw new NotFoundException('Case not found')
-    }
-
+  ): Promise<CaseWithAdvert> {
     const application = await this.applicationService.getApplication(
       theCase.applicationId,
     )
@@ -290,33 +92,319 @@ export class CaseService implements ICaseService {
       throw new NotFoundException('Application not found')
     }
 
-    // if (
-    //   !application.answers.advert?.department ||
-    //   !application.answers.publishing?.date ||
-    //   !application.answers.advert?.title ||
-    //   !application.answers.advert?.type
-    // ) {
-    //   // this should not happen
-    //   throw new BadRequestException('Missing required fields')
+    throw new Error('Method not implemented.')
+
+    // if (!application.answers.advert?.department) {
+    //   this.logger.error('Department is missing', {
+    //     id: theCase.id,
+    //     category: LOGGING_CATEGORY,
+    //   })
+    //   throw new InternalServerErrorException('Department is missing')
     // }
 
-    theCase.history.push(application)
+    // const departmentReq = await this.journalService.getDepartment(
+    //   application.answers.advert.department,
+    // )
 
-    return Promise.resolve(theCase)
+    // if (!departmentReq.ok) {
+    //   this.logger.error(
+    //     `Department with id ${application.answers.advert.department} not found`,
+    //     {
+    //       id: theCase.id,
+    //       departmentId: application.answers.advert.department,
+    //       category: LOGGING_CATEGORY,
+    //     },
+    //   )
+    //   throw new InternalServerErrorException(
+    //     `Department with id ${application.answers.advert.department} not found`,
+    //   )
+    // }
+    // const dep = departmentReq.value
+
+    // const advertTitle = application.answers.advert.title
+
+    // if (!advertTitle) {
+    //   this.logger.error('Advert title is missing or empty', {
+    //     id: theCase.id,
+    //     category: LOGGING_CATEGORY,
+    //   })
+    //   throw new InternalServerErrorException('Advert title is missing or empty')
+    // }
+
+    // const requestedPublicationDate = application.answers.publishing?.date
+
+    // if (!requestedPublicationDate) {
+    //   this.logger.error('Advert request publication date is empty or missing', {
+    //     id: theCase.id,
+    //     category: LOGGING_CATEGORY,
+    //   })
+    //   throw new InternalServerErrorException(
+    //     'Advert request publication date is empty or missing',
+    //   )
+    // }
+
+    // if (!application.applicant) {
+    //   this.logger.error('Advert applicant is empty or missing', {
+    //     id: theCase.id,
+    //     category: LOGGING_CATEGORY,
+    //   })
+    //   throw new NotFoundException('Advert applicant is empty or missing')
+    // }
+    // const institutionReq = await this.journalService.getInstitution(
+    //   application.applicant,
+    // )
+    // // if (!institutionReq || !institutionReq.institution) {
+    // //   throw new NotFoundException('Institution not found')
+    // // }
+
+    // const signatureDate =
+    //   application.answers.signature?.type === AdvertSignatureType.Regular
+    //     ? application.answers.signature?.regular?.at(0)?.date
+    //     : application.answers.signature?.committee?.date
+
+    // // TODO: Switch to real types when ready
+    // const advertType = await this.journalService.getType(
+    //   '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
+    // )
+
+    // const contentCategories =
+    //   application.answers.publishing?.contentCategories ?? []
+
+    // const categories: Category[] = []
+
+    // const result = await Promise.all(
+    //   contentCategories
+    //     .map(async (c) => {
+    //       const category = await this.journalService.getCategory(c.value)
+    //       return category.ok ? category.value.category : null
+    //     })
+    //     .filter((i) => Boolean(i)),
+    // )
+
+    // result.forEach((r) => {
+    //   if (r) {
+    //     categories.push(r)
+    //   }
+    // })
+
+    // return {
+    //   caseId: theCase.id,
+    //   applicationId: theCase.applicationId,
+    //   publicationNumber: null,
+    //   caseStatus: theCase.status,
+    //   document: application.answers.preview.document,
+    //   publishDate: theCase.publishedAt,
+    //   communicationStatus: theCase.communicationStatus,
+    //   createdDate: theCase.createdAt,
+    //   tag: theCase.tag,
+    //   fastTrack: theCase.fastTrack,
+    //   assignedTo: theCase.assignedTo,
+    //   caseComments: theCase.comments,
+    //   isLegacy: theCase.isLegacy,
+    //   paid: theCase.paid,
+    //   price: theCase.price,
+    //   advertType: advertType.ok ? advertType.value.type : null,
+    //   advertDepartment: dep.department,
+    //   advertTitle: advertTitle,
+    //   requestedPublicationDate: requestedPublicationDate,
+    //   institutionTitle: institutionReq.ok
+    //     ? institutionReq?.value.institution?.title ?? null
+    //     : null,
+    //   categories: categories,
+    //   signatureDate: signatureDate || null,
+    // }
   }
 
-  getCase(id: string): Promise<Case | null> {
-    this.logger.info('Getting case', {
-      id,
-      category: LOGGING_CATEGORY,
-    })
-    const found = ALL_MOCK_CASES.find((c) => c.id === id)
+  async createCase(body: PostApplicationBody): Promise<CreateCaseResponse> {
+    try {
+      this.logger.info('Creating case', {
+        applicationId: body.applicationId,
+        category: LOGGING_CATEGORY,
+      })
 
-    if (!found) {
-      throw new NotFoundException('Case not found')
+      const newCase = await this.sequelize.transaction(async (t) => {
+        // check if case with application id already exists
+
+        const existingCase = await this.caseModel.findOne({
+          where: {
+            applicationId: body.applicationId,
+          },
+        })
+
+        if (existingCase) {
+          throw new BadRequestException(
+            'Case with application id already exists',
+          )
+        }
+
+        const application = await this.applicationService.getApplication(
+          body.applicationId,
+        )
+
+        if (!application) {
+          throw new NotFoundException('Application not found')
+        }
+
+        const now = new Date()
+
+        const nextCaseNumber = await this.caseModel.count({
+          transaction: t,
+          where: {
+            year: now.getFullYear(),
+            publishedAt: null,
+          },
+        })
+
+        const caseStatusSubmitted = await this.caseStatusModel.findOne({
+          transaction: t,
+          where: {
+            value: CaseStatus.Submitted,
+          },
+        })
+
+        if (!caseStatusSubmitted) {
+          throw new NotFoundException('Case status not found')
+        }
+
+        const caseTag = await this.caseTagModel.findOne({
+          transaction: t,
+          where: {
+            value: CaseTag.NotStarted,
+          },
+        })
+
+        if (!caseTag) {
+          throw new NotFoundException('Case tag not found')
+        }
+
+        const caseCommunicationStatus =
+          await this.caseCommunicationStatusModel.findOne({
+            transaction: t,
+            where: {
+              value: CaseCommunicationStatus.NotStarted,
+            },
+          })
+
+        if (!caseCommunicationStatus) {
+          throw new NotFoundException('Case communication status not found')
+        }
+
+        const newCase = await this.caseModel.create(
+          {
+            id: uuid(),
+            applicationId: application.id,
+            year: now.getFullYear(),
+            caseNumber: nextCaseNumber + 1, // start at 1
+            statusId: caseStatusSubmitted.id,
+            tagId: caseTag.id,
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+            isLegacy: false,
+            assignedUserId: null,
+            communicationStatusId: caseCommunicationStatus.id,
+            publishedAt: null,
+            price: null,
+            paid: false,
+            fastTrack: application.answers.publishing?.fastTrack ?? false,
+          },
+          {
+            returning: ['id'],
+            transaction: t,
+          },
+        )
+
+        // TODO: When auth is setup, use the user id from the token
+        await this.commentService.postComment(
+          newCase.id,
+          {
+            internal: true,
+            type: CaseCommentType.Submit,
+            comment: null,
+            from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+            to: null,
+          },
+          t,
+        )
+
+        const activeCase = await this.caseModel.findByPk(newCase.id, {
+          include: [
+            CaseTagDto,
+            CaseStatusDto,
+            CaseCommunicationStatusDto,
+            {
+              model: CaseCommentDto,
+              include: [
+                {
+                  model: CaseCommentTaskDto,
+                  include: [CaseCommentTitleDto],
+                },
+                CaseStatusDto,
+                CaseCommentTypeDto,
+              ],
+            },
+          ],
+          transaction: t,
+        })
+
+        if (!activeCase) {
+          throw new InternalServerErrorException('Failed to create case')
+        }
+
+        return caseMigrate(activeCase)
+      })
+
+      return Promise.resolve({
+        case: newCase,
+      })
+    } catch (error) {
+      this.logger.error('Error in createCase', {
+        error,
+        category: LOGGING_CATEGORY,
+      })
+      throw new InternalServerErrorException('Internal server error.')
     }
+  }
 
-    return Promise.resolve(found)
+  async getCase(id: string): Promise<GetCaseResponse> {
+    try {
+      const activeCase = await this.caseModel.findByPk(id, {
+        include: [
+          CaseTagDto,
+          CaseStatusDto,
+          CaseCommunicationStatusDto,
+          {
+            model: CaseCommentDto,
+            include: [
+              {
+                model: CaseCommentTaskDto,
+                include: [CaseCommentTitleDto],
+              },
+              CaseStatusDto,
+              CaseCommentTypeDto,
+            ],
+          },
+        ],
+      })
+
+      if (!activeCase) {
+        return Promise.resolve({
+          case: null,
+        })
+      }
+
+      const migrated = caseMigrate(activeCase)
+
+      return Promise.resolve({
+        case: migrated,
+      })
+    } catch (error) {
+      this.logger.error('Error in getCase', {
+        id,
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      throw new InternalServerErrorException('Failed to get case')
+    }
   }
 
   getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
@@ -411,45 +499,45 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async getCaseWithApplication(
-    id: string,
-  ): Promise<CaseWithApplication | null> {
-    this.logger.info('Getting case with application', {
-      id,
-      category: LOGGING_CATEGORY,
-    })
+  // async getCaseWithApplication(
+  //   id: string,
+  // ): Promise<CaseWithApplication | null> {
+  //   this.logger.info('Getting case with application', {
+  //     id,
+  //     category: LOGGING_CATEGORY,
+  //   })
 
-    return this.getCase(id).then(async (theCase) => {
-      if (!theCase) {
-        return null
-      }
+  //   return this.getCase(id).then(async (theCase) => {
+  //     if (!theCase) {
+  //       return null
+  //     }
 
-      return await this.convertToCaseWithApplication(theCase)
-    })
-  }
+  //     return await this.convertToCaseWithApplication(theCase)
+  //   })
+  // }
 
-  async getCasesWithApplication(
-    params?: GetCasesQuery | undefined,
-  ): Promise<GetCasesWithApplicationReponse> {
-    try {
-      const { cases, paging } = await this.getCases(params)
+  // async getCasesWithApplication(
+  //   params?: GetCasesQuery | undefined,
+  // ): Promise<GetCasesWithApplicationReponse> {
+  //   try {
+  //     const { cases, paging } = await this.getCases(params)
 
-      const casesWithApplication = await Promise.all(
-        cases.map(async (c) => await this.convertToCaseWithApplication(c)),
-      )
+  //     const casesWithApplication = await Promise.all(
+  //       cases.map(async (c) => await this.convertToCaseWithApplication(c)),
+  //     )
 
-      this.logger.log('Successfully fetched cases with application', {
-        category: LOGGING_CATEGORY,
-      })
+  //     this.logger.log('Successfully fetched cases with application', {
+  //       category: LOGGING_CATEGORY,
+  //     })
 
-      return {
-        cases: casesWithApplication,
-        paging,
-      }
-    } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
-  }
+  //     return {
+  //       cases: casesWithApplication,
+  //       paging,
+  //     }
+  //   } catch (error) {
+  //     throw new InternalServerErrorException('Internal server error.')
+  //   }
+  // }
 
   getCaseByApplicationId(applicationId: string): Promise<Case | null> {
     const found = ALL_MOCK_CASES.find((c) => c.applicationId === applicationId)
@@ -485,53 +573,53 @@ export class CaseService implements ICaseService {
     })
   }
 
-  async getEditorialOverview(
-    params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
-    const submitted: Case[] = []
-    const inProgress: Case[] = []
-    const inReview: Case[] = []
-    const ready: Case[] = []
+  // async getEditorialOverview(
+  //   params?: GetCasesQuery,
+  // ): Promise<CaseEditorialOverview> {
+  //   const submitted: Case[] = []
+  //   const inProgress: Case[] = []
+  //   const inReview: Case[] = []
+  //   const ready: Case[] = []
 
-    if (!params?.status) {
-      throw new BadRequestException('Missing status')
-    }
+  //   if (!params?.status) {
+  //     throw new BadRequestException('Missing status')
+  //   }
 
-    ALL_MOCK_CASES.forEach((c) => {
-      if (c.status === CaseStatus.Submitted) {
-        submitted.push(c)
-      } else if (c.status === CaseStatus.InProgress) {
-        inProgress.push(c)
-      } else if (c.status === CaseStatus.InReview) {
-        inReview.push(c)
-      } else if (c.status === CaseStatus.ReadyForPublishing) {
-        ready.push(c)
-      }
-    })
+  //   ALL_MOCK_CASES.forEach((c) => {
+  //     if (c.status === CaseStatus.Submitted) {
+  //       submitted.push(c)
+  //     } else if (c.status === CaseStatus.InProgress) {
+  //       inProgress.push(c)
+  //     } else if (c.status === CaseStatus.InReview) {
+  //       inReview.push(c)
+  //     } else if (c.status === CaseStatus.ReadyForPublishing) {
+  //       ready.push(c)
+  //     }
+  //   })
 
-    console.log(params)
+  //   console.log(params)
 
-    const { cases, paging } = await this.getCases(params)
+  //   const { cases, paging } = await this.getCases(params)
 
-    try {
-      const casesWithApplication = await Promise.all(
-        cases.map(async (c) => await this.convertToCaseWithApplication(c)),
-      )
+  //   try {
+  //     const casesWithApplication = await Promise.all(
+  //       cases.map(async (c) => await this.convertToCaseWithApplication(c)),
+  //     )
 
-      return Promise.resolve({
-        data: casesWithApplication,
-        totalItems: {
-          submitted: submitted.length,
-          inProgress: inProgress.length,
-          inReview: inReview.length,
-          ready: ready.length,
-        },
-        paging,
-      })
-    } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
-  }
+  //     return Promise.resolve({
+  //       data: casesWithApplication,
+  //       totalItems: {
+  //         submitted: submitted.length,
+  //         inProgress: inProgress.length,
+  //         inReview: inReview.length,
+  //         ready: ready.length,
+  //       },
+  //       paging,
+  //     })
+  //   } catch (error) {
+  //     throw new InternalServerErrorException('Internal server error.')
+  //   }
+  // }
 
   postCasesPublish(body: PostCasePublishBody): Promise<void> {
     const { caseIds } = body

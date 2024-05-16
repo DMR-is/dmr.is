@@ -1,25 +1,16 @@
-import {
-  ICaseCommentService,
-  ICaseService,
-  IJournalService,
-  Result,
-} from '@dmr.is/modules'
+import { ICaseCommentService, ICaseService } from '@dmr.is/modules'
 import {
   Case,
   CaseComment,
   CaseEditorialOverview,
-  CaseWithApplication,
+  CreateCaseResponse,
   DeleteCaseCommentResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCasesWithApplicationReponse,
-  GetUsersQueryParams,
-  GetUsersResponse,
+  PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
   PostCasePublishBody,
@@ -38,7 +29,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 @Controller({
   version: '1',
@@ -50,9 +41,6 @@ export class CaseController {
 
     @Inject(ICaseCommentService)
     private readonly caseCommentService: ICaseCommentService,
-
-    @Inject(IJournalService)
-    private readonly journalService: IJournalService,
   ) {}
 
   @Get('case')
@@ -74,25 +62,24 @@ export class CaseController {
     return this.caseService.getCase(id)
   }
 
-  @Get('case-with-application')
-  @ApiQuery({ name: 'id', type: String, required: true })
+  @Post('')
   @ApiOperation({
-    operationId: 'getCaseWithApplication',
-    summary: 'Get case with application by ID.',
+    operationId: 'postCase',
+    summary: 'Create case.',
   })
   @ApiResponse({
     status: 200,
-    type: CaseWithApplication,
-    description: 'Case with application by ID.',
+    type: CreateCaseResponse,
+    description: 'Case created.',
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Case with application not found.',
+  @ApiBody({
+    type: PostApplicationBody,
+    required: true,
   })
-  async caseWithApplication(
-    @Query('id') id: string,
-  ): Promise<CaseWithApplication | null> {
-    return this.caseService.getCaseWithApplication(id)
+  async createCase(
+    @Body() body: PostApplicationBody,
+  ): Promise<CreateCaseResponse> {
+    return this.caseService.createCase(body)
   }
 
   @Get('cases')
@@ -107,38 +94,6 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return this.caseService.getCases(params)
-  }
-
-  @Get('cases-with-application')
-  @ApiOperation({
-    operationId: 'getCasesWithApplication',
-    summary: 'Get cases with application.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCasesWithApplicationReponse,
-    description: 'All cases with application.',
-  })
-  async casesWithApplication(
-    @Query() params?: GetCasesQuery,
-  ): Promise<GetCasesWithApplicationReponse> {
-    return this.caseService.getCasesWithApplication(params)
-  }
-
-  @Get('users')
-  @ApiOperation({
-    operationId: 'getUsers',
-    summary: 'Get users.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetUsersResponse,
-    description: 'All active users.',
-  })
-  async users(
-    @Query() params?: GetUsersQueryParams,
-  ): Promise<GetUsersResponse> {
-    return this.caseService.getUsers(params)
   }
 
   @Get('editorialOverview')
@@ -259,22 +214,5 @@ export class CaseController {
     @Param('commentId') commentId: string,
   ): Promise<DeleteCaseCommentResponse> {
     return this.caseCommentService.deleteComment(caseId, commentId)
-  }
-
-  @Get('advert/types')
-  @ApiOperation({
-    operationId: 'getAdvertTypes',
-    summary: 'Get advert types.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertTypesResponse,
-    description: 'All advert types.',
-  })
-  async advertTypes(
-    @Query()
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<Result<GetAdvertTypesResponse>> {
-    return this.journalService.getTypes(params)
   }
 }

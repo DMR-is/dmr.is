@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
-import { CaseWithApplication } from './case-with-application.dto'
+import { CaseWithAdvert } from './case-with-application.dto'
 
 class CaseOverviewTotalItems {
   @ApiProperty({
@@ -39,11 +39,11 @@ class CaseOverviewTotalItems {
 
 export class CaseEditorialOverview {
   @ApiProperty({
-    type: [CaseWithApplication],
+    type: [CaseWithAdvert],
     description: 'Cases for selected tab',
     required: true,
   })
-  data!: CaseWithApplication[]
+  data!: CaseWithAdvert[]
 
   @ApiProperty({
     type: CaseOverviewTotalItems,

@@ -71,14 +71,8 @@ export class Case {
     description: 'Internal tag for the case, default to null',
   })
   @IsEnum(CaseTag)
-  tag!: CaseTag
-
-  @ApiProperty({
-    type: [Application],
-    description:
-      'Snapshot of the submitted fields, used for tracking changes in the case.',
-  })
-  history!: Application[]
+  @ValidateIf((o) => o.tag !== null)
+  tag!: CaseTag | null
 
   @ApiProperty({
     type: String,
@@ -130,14 +124,6 @@ export class Case {
   })
   @IsBoolean()
   fastTrack!: boolean
-
-  @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Is the case published.',
-  })
-  @IsBoolean()
-  published!: boolean
 
   @ApiProperty({
     type: String,

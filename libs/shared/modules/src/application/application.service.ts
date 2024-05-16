@@ -86,7 +86,8 @@ export class ApplicationService implements IApplicationService {
     if (hasSubmittedBefore) {
       // update history property on case
       try {
-        await this.caseService.updateCaseHistory(hasSubmittedBefore.id)
+        // await this.caseService.updateCaseHistory(hasSubmittedBefore.id)
+        // TODO: Post comment to case
       } catch (error) {
         this.logger.error('Could not update case history', {
           error,
