@@ -93,20 +93,27 @@ export class UtilityService implements IUtilityService {
         )
       }
 
-      const [department, type, categories] = await Promise.all([
-        await this.departmentModel.findByPk(
-          application.answers.advert?.department,
-        ),
-        await this.typeDto.findByPk(application.answers.advert?.type),
-        // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
-        await this.categoryModel.findAll({
-          where: {
-            id: {
-              in: application.answers.publishing?.contentCategories ?? [],
-            },
+      const department = await this.departmentModel.findByPk(
+        application.answers.advert?.department,
+      )
+
+      console.log(department)
+
+      const type = await this.typeDto.findByPk(application.answers.advert?.type)
+      // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
+
+      const categories = await this.categoryModel.findAll({
+        where: {
+          id: {
+            in:
+              application.answers.publishing?.contentCategories?.map(
+                (c) => c.value,
+              ) ?? [],
           },
-        }),
-      ])
+        },
+      })
+
+      console.log(categories)
 
       if (!department) {
         throw new NotFoundException(
@@ -128,9 +135,16 @@ export class UtilityService implements IUtilityService {
       // }
 
       const activeDepartment = advertDepartmentMigrate(department)
+
+      console.log(activeDepartment)
+
       const activeType = advertTypesMigrate(type)
 
+      console.log(activeType)
+
       const activeCategories = categories.map((c) => advertCategoryMigrate(c))
+
+      console.log(activeCategories)
 
       let signatureDate = null
       switch (application.answers.signature.type) {
@@ -147,6 +161,8 @@ export class UtilityService implements IUtilityService {
       if (!signatureDate) {
         throw new NotFoundException(`Signature date not found`)
       }
+
+      console.log(signatureDate)
 
       return Promise.resolve({
         case: activeCase,

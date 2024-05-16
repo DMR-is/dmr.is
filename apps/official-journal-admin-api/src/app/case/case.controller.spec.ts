@@ -2,17 +2,10 @@ import { Model } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentService,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
-  CaseDto,
   CaseService,
   IApplicationService,
-  ICaseCommentService,
   ICaseService,
+  ICommentService,
   IJournalService,
 } from '@dmr.is/modules'
 import { CaseComment } from '@dmr.is/shared/dto'
@@ -32,7 +25,7 @@ const provideModel = (model: any) => ({
 
 describe('CaseController', () => {
   let caseService: ICaseService
-  let commentService: ICaseCommentService
+  let commentService: ICommentService
   let caseController: CaseController
 
   beforeEach(async () => {
@@ -51,7 +44,7 @@ describe('CaseController', () => {
           useClass: CaseService,
         },
         {
-          provide: ICaseCommentService,
+          provide: ICommentService,
           useClass: CaseCommentService,
         },
         {
@@ -75,7 +68,7 @@ describe('CaseController', () => {
     }).compile()
 
     caseService = moduleRef.get<ICaseService>(ICaseService)
-    commentService = moduleRef.get<ICaseCommentService>(ICaseCommentService)
+    commentService = moduleRef.get<ICommentService>(ICommentService)
     caseController = moduleRef.get<CaseController>(CaseController)
   })
 

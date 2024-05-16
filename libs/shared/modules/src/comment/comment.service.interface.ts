@@ -27,4 +27,4 @@ export interface ICommentService {
   ): Promise<DeleteCaseCommentResponse>
 }
 
-export const ICommentService = Symbol('ICaseCommentService')
+export const ICommentService = Symbol('ICommentService')

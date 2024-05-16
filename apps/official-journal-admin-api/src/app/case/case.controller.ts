@@ -44,8 +44,7 @@ export class CaseController {
     private readonly caseCommentService: ICommentService,
   ) {}
 
-  @Get('case')
-  @ApiQuery({ name: 'id', type: String, required: true })
+  @Get('case/:id')
   @ApiOperation({
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -59,7 +58,7 @@ export class CaseController {
     status: 404,
     description: 'Case not found.',
   })
-  async case(@Query('id') id: string): Promise<GetCaseResponse> {
+  async case(@Param('id') id: string): Promise<GetCaseResponse> {
     return this.caseService.getCase(id)
   }
 

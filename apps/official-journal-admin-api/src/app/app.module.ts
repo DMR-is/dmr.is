@@ -24,7 +24,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     HealthModule,
     RouterModule.register([
       {
-        path: 'cases',
+        path: '/',
         module: CaseModule,
       },
       {

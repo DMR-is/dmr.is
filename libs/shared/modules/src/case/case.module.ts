@@ -5,19 +5,13 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
 import { CommentModule } from '../comment/comment.module'
+import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import {
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
-  models as caseModels,
-} from './models'
-
-export { CaseDto, CaseTagDto, CaseStatusDto }
+import caseModels from './models'
 
 export { ICaseService, CaseService, CaseServiceMock, caseModels }
 
@@ -25,11 +19,11 @@ const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([...caseModels]),
+    SequelizeModule.forFeature([...commentModels, ...caseModels]),
     LoggingModule,
     SharedJournalModule,
-    CommentModule,
-    UtilityModule,
+    forwardRef(() => CommentModule),
+    forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),
   ],
   providers: [
