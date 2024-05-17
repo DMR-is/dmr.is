@@ -83,7 +83,7 @@ export class CaseController {
     return this.caseService.create(body)
   }
 
-  @Get('cases')
+  @Get('')
   @ApiOperation({
     operationId: 'getCases',
     summary: 'Get cases.',
@@ -97,7 +97,7 @@ export class CaseController {
     return this.caseService.cases(params)
   }
 
-  @Get('editorialOverview')
+  @Get('overview')
   @ApiOperation({
     operationId: 'getEditorialOverview',
     summary: 'Get overview for cases in progress.',
@@ -145,7 +145,7 @@ export class CaseController {
     }
   }
 
-  @Get('/cases:id/comments')
+  @Get(':id/comments')
   @ApiOperation({
     operationId: 'getComments',
     summary: 'Get case comments',
