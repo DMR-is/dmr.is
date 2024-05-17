@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CaseWithAdvert } from '@dmr.is/shared/dto'
 
@@ -93,40 +94,38 @@ export class UtilityService implements IUtilityService {
         )
       }
 
+      // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(
-        application.answers.advert?.department,
+        '69cd3e90-106e-4b9c-8419-148c29e1738a',
       )
 
-      console.log(department)
-
-      const type = await this.typeDto.findByPk(application.answers.advert?.type)
-      // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
-
-      const categories = await this.categoryModel.findAll({
-        where: {
-          id: {
-            in:
-              application.answers.publishing?.contentCategories?.map(
-                (c) => c.value,
-              ) ?? [],
-          },
-        },
-      })
-
-      console.log(categories)
-
       if (!department) {
-        throw new NotFoundException(
-          `Department with id ${application.answers.advert?.department} not found`,
-        )
+        throw new NotFoundException(`Department with id not found`)
       }
 
+      // const type = await this.typeDto.findByPk(application.answers.advert?.type)
+      const type = await this.typeDto.findByPk(
+        'cb2c8386-bd1e-4e52-883c-260aa9f642de',
+      )
       if (!type) {
         throw new NotFoundException(
           `Type with id ${application.answers.advert?.type} not found`,
         )
       }
 
+      const categoryIds =
+        application.answers.publishing.contentCategories?.map((c) => c.value) ??
+        []
+
+      const categories = await this.categoryModel.findAll({
+        where: {
+          id: {
+            [Op.in]: categoryIds,
+          },
+        },
+      })
+
+      // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
       // TODO: Implement this when users are implemented
       // if (!involvedParty) {
       //   throw new NotFoundException(
@@ -136,15 +135,9 @@ export class UtilityService implements IUtilityService {
 
       const activeDepartment = advertDepartmentMigrate(department)
 
-      console.log(activeDepartment)
-
       const activeType = advertTypesMigrate(type)
 
-      console.log(activeType)
-
       const activeCategories = categories.map((c) => advertCategoryMigrate(c))
-
-      console.log(activeCategories)
 
       let signatureDate = null
       switch (application.answers.signature.type) {
@@ -161,8 +154,6 @@ export class UtilityService implements IUtilityService {
       if (!signatureDate) {
         throw new NotFoundException(`Signature date not found`)
       }
-
-      console.log(signatureDate)
 
       return Promise.resolve({
         case: activeCase,
@@ -186,6 +177,7 @@ export class UtilityService implements IUtilityService {
         },
       })
     } catch (error) {
+      console.log(error)
       this.logger.error('Error in getCaseWithAdvert', {
         category: LOGGING_CATEGORY,
         error,

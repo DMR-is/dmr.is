@@ -265,7 +265,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async cases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+  async cases(params: GetCasesQuery): Promise<GetCasesReponse> {
     try {
       this.logger.info('Getting cases', {
         category: LOGGING_CATEGORY,
@@ -275,7 +275,9 @@ export class CaseService implements ICaseService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      if (!params) {
+      const hasParams = Object.keys(params).length > 0
+
+      if (!hasParams) {
         const cases = await this.caseModel.findAll({
           offset: (page - 1) * pageSize,
           limit: pageSize,
@@ -352,6 +354,7 @@ export class CaseService implements ICaseService {
         paging: generatePaging(cases, page, pageSize),
       })
     } catch (error) {
+      console.log(error)
       this.logger.error('Error in getCases', {
         category: LOGGING_CATEGORY,
         error,
