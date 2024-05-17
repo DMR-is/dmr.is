@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript'
 
 import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
+import { AdvertDepartmentDTO } from '../../journal/models'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
@@ -113,6 +114,16 @@ export class CaseDto extends Model {
     field: 'fast_track',
   })
   fastTrack!: boolean
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'department_id',
+  })
+  departmentId!: string | null
+
+  @BelongsTo(() => AdvertDepartmentDTO, 'department_id')
+  department!: AdvertDepartmentDTO | null
 
   @BelongsToMany(() => CaseCommentDto, {
     through: { model: () => CaseCommentsDto },

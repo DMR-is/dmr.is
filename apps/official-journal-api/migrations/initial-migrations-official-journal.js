@@ -201,9 +201,11 @@ module.exports = {
       price INTEGER,
       paid BOOLEAN DEFAULT FALSE,
       fast_track BOOLEAN DEFAULT FALSE,
+      department_id UUID,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
+      CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       PRIMARY KEY (id)
     );
 

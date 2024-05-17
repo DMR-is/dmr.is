@@ -4,6 +4,7 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -30,6 +31,16 @@ export class GetCasesQuery {
   @IsOptional()
   @IsString()
   applicationId?: string
+
+  @ApiProperty({
+    name: 'year',
+    type: Number,
+    description: 'Year',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumberString()
+  year?: number
 
   @ApiProperty({
     name: 'page',
@@ -63,14 +74,14 @@ export class GetCasesQuery {
   caseNumber?: number
 
   @ApiProperty({
-    enum: CaseStatus,
     name: 'status',
     description:
-      'Status to filter cases on, takes into account `status` on `Case`.',
+      'Case status id to filter cases on, takes into account `status` on `Case`.',
     required: false,
   })
   @IsOptional()
   @IsString()
+  @IsUUID()
   status?: string
 
   @ApiProperty({
@@ -126,7 +137,7 @@ export class GetCasesQuery {
   })
   @IsOptional()
   @IsDateString()
-  dateFrom?: string
+  fromDate?: string
 
   @ApiProperty({
     name: 'dateTo',
@@ -137,7 +148,7 @@ export class GetCasesQuery {
   })
   @IsOptional()
   @IsDateString()
-  dateTo?: string
+  toDate?: string
 
   @ApiProperty({
     name: 'department',
@@ -147,6 +158,6 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   department?: string
 }

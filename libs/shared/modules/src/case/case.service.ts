@@ -1,6 +1,7 @@
-import { isBooleanString } from 'class-validator'
+import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -43,6 +44,7 @@ import {
   CaseCommentTypeDto,
 } from '../comment/models'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { AdvertDepartmentDTO } from '../journal/models'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { ICaseService } from './case.service.interface'
 import {
@@ -73,6 +75,9 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
     @InjectModel(CaseCommunicationStatusDto)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
+
+    @InjectModel(AdvertDepartmentDTO)
+    private readonly departmentModel: typeof AdvertDepartmentDTO,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -157,6 +162,17 @@ export class CaseService implements ICaseService {
           throw new NotFoundException('Case communication status not found')
         }
 
+        const department = await this.departmentModel.findByPk(
+          application.answers.advert.department,
+          {
+            transaction: t,
+          },
+        )
+
+        if (!department) {
+          throw new NotFoundException('Department not found')
+        }
+
         const newCase = await this.caseModel.create(
           {
             id: uuid(),
@@ -174,6 +190,7 @@ export class CaseService implements ICaseService {
             price: null,
             paid: false,
             fastTrack: application.answers.publishing?.fastTrack ?? false,
+            departmentId: department,
           },
           {
             returning: ['id'],
@@ -250,95 +267,98 @@ export class CaseService implements ICaseService {
     }
   }
 
-  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
-    if (!params) {
-      return Promise.resolve({
-        cases: ALL_MOCK_CASES,
-        paging: generatePaging(ALL_MOCK_CASES),
-      })
-    }
-
+  async getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     try {
-      const { page, pageSize } = params
-
-      const filteredCases = ALL_MOCK_CASES.filter((c) => {
-        if (params?.search) {
-          // if (
-          //   !c.advert.department.title
-          //     .toLowerCase()
-          //     .includes(params.search.toLowerCase()) &&
-          //   !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
-          // ) {
-          //   return false
-          // }
-        }
-
-        if (params.applicationId && c.applicationId !== params.applicationId) {
-          return false
-        }
-
-        if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
-          return false
-        }
-
-        if (
-          params?.dateFrom &&
-          new Date(c.createdAt) < new Date(params?.dateFrom)
-        ) {
-          return false
-        }
-
-        if (
-          params?.dateTo &&
-          new Date(c.createdAt) > new Date(params?.dateTo)
-        ) {
-          return false
-        }
-
-        if (params?.status && c.status !== params?.status) {
-          return false
-        }
-
-        if (params?.fastTrack && isBooleanString(params.fastTrack)) {
-          if (c.fastTrack !== Boolean(params.fastTrack)) {
-            return false
-          }
-        }
-
-        if (params?.employeeId && c.assignedTo?.id !== params?.employeeId) {
-          return false
-        }
-
-        // if (
-        //   params?.department &&
-        //   c.advert.department.slug !== params.department.toLowerCase()
-        // ) {
-        //   return false
-        // }
-
-        return true
+      this.logger.info('Getting cases', {
+        category: LOGGING_CATEGORY,
+        params,
       })
 
-      const withPaging = generatePaging(filteredCases, page, pageSize)
-      const pagedCases = filteredCases.slice(
-        withPaging.pageSize * (withPaging.page - 1),
-        withPaging.pageSize * withPaging.page,
-      )
-      // pagedCases.forEach((c) => {
-      //   if (c.advert.document.isLegacy) {
-      //     c.advert.document.html = dirtyClean(
-      //       c.advert.document.html as HTMLText,
-      //     )
-      //   }
-      //   return c
-      // })
+      const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
+      if (!params) {
+        const cases = await this.caseModel.findAll({
+          offset: (page - 1) * pageSize,
+          limit: pageSize,
+          where: {
+            publishedAt: null,
+          },
+          include: [
+            CaseTagDto,
+            CaseStatusDto,
+            CaseCommunicationStatusDto,
+            {
+              model: CaseCommentDto,
+              include: [
+                {
+                  model: CaseCommentTaskDto,
+                  include: [CaseCommentTitleDto],
+                },
+                CaseStatusDto,
+                CaseCommentTypeDto,
+              ],
+            },
+          ],
+        })
+
+        return Promise.resolve({
+          cases: cases.map(caseMigrate),
+          paging: generatePaging(cases, page, pageSize),
+        })
+      }
+
+      const cases = await this.caseModel.findAll({
+        offset: (page - 1) * pageSize,
+        limit: pageSize,
+        where: {
+          applicationId: params.applicationId,
+          year: params.year,
+          caseNumber: params.caseNumber,
+          assignedUserId: params.employeeId,
+          publishedAt:
+            params.published === 'true'
+              ? { [Op.not]: null }
+              : params.published === 'false'
+              ? { [Op.is]: null }
+              : undefined,
+          statusId: params.status,
+          assgiendUserId: params.employeeId,
+          fastTrack: params.fastTrack,
+          createdAt: {
+            [Op.gte]: params.fromDate,
+            [Op.lte]: params.toDate,
+          },
+          departmentId: params.department,
+        },
+        include: [
+          CaseTagDto,
+          CaseStatusDto,
+          CaseCommunicationStatusDto,
+          {
+            model: CaseCommentDto,
+            include: [
+              {
+                model: CaseCommentTaskDto,
+                include: [CaseCommentTitleDto],
+              },
+              CaseStatusDto,
+              CaseCommentTypeDto,
+            ],
+          },
+        ],
+      })
 
       return Promise.resolve({
-        cases: pagedCases,
-        paging: withPaging,
+        cases: cases.map((c) => caseMigrate(c)),
+        paging: generatePaging(cases, page, pageSize),
       })
     } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
+      this.logger.error('Error in getCases', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      throw new InternalServerErrorException('Failed to get cases')
     }
   }
 
