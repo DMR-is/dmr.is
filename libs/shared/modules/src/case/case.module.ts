@@ -12,8 +12,23 @@ import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 import caseModels from './models'
+import {
+  CaseCommunicationStatusDto,
+  CaseDto,
+  CaseStatusDto,
+  CaseTagDto,
+} from './models'
 
-export { ICaseService, CaseService, CaseServiceMock, caseModels }
+export {
+  ICaseService,
+  CaseService,
+  CaseServiceMock,
+  caseModels,
+  CaseDto,
+  CaseTagDto,
+  CaseStatusDto,
+  CaseCommunicationStatusDto,
+}
 
 const API_MOCK = process.env.API_MOCK === 'true'
 

@@ -8,6 +8,8 @@ import caseModels from '../case/models'
 import advertModels from '../journal/models'
 import { UtilityService } from './utility.service'
 import { IUtilityService } from './utility.service.interface'
+
+export { IUtilityService, UtilityService }
 @Module({
   imports: [
     SequelizeModule.forFeature([...caseModels, ...advertModels]),

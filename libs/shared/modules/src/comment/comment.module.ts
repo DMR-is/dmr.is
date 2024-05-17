@@ -6,9 +6,24 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import caseModels from '../case/models'
 import { CommentService } from './comment.service'
 import { ICommentService } from './comment.service.interface'
-import commentModels from './models'
+import commentModels, {
+  CaseCommentDto,
+  CaseCommentsDto,
+  CaseCommentTaskDto,
+  CaseCommentTitleDto,
+  CaseCommentTypeDto,
+} from './models'
 
-export { CommentService, ICommentService, commentModels }
+export {
+  CommentService,
+  ICommentService,
+  commentModels,
+  CaseCommentDto,
+  CaseCommentsDto,
+  CaseCommentTypeDto,
+  CaseCommentTaskDto,
+  CaseCommentTitleDto,
+}
 
 @Module({
   imports: [

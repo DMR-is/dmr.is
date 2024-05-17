@@ -33,19 +33,13 @@ describe('CaseController', () => {
       imports: [LoggingModule],
       controllers: [CaseController],
       providers: [
-        provideModel(CaseDto),
-        provideModel(CaseCommentDto),
-        provideModel(CaseCommentsDto),
-        provideModel(CaseCommentTaskDto),
-        provideModel(CaseCommentTitleDto),
-        provideModel(CaseCommentTypeDto),
         {
           provide: ICaseService,
-          useClass: CaseService,
+          useValue: jest.fn(),
         },
         {
           provide: ICommentService,
-          useClass: CaseCommentService,
+          useValue: jest.fn(),
         },
         {
           provide: IJournalService,

@@ -44,7 +44,7 @@ export class CaseController {
     private readonly caseCommentService: ICommentService,
   ) {}
 
-  @Get('case/:id')
+  @Get('cases/:id')
   @ApiOperation({
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -62,7 +62,7 @@ export class CaseController {
     return this.caseService.getCase(id)
   }
 
-  @Post('')
+  @Post('cases')
   @ApiOperation({
     operationId: 'postCase',
     summary: 'Create case.',
@@ -112,7 +112,7 @@ export class CaseController {
     return this.caseService.getEditorialOverview(params)
   }
 
-  @Post('publish')
+  @Post('cases/publish')
   @ApiOperation({
     operationId: 'postPublish',
     summary: 'Publish cases',
@@ -144,7 +144,7 @@ export class CaseController {
     }
   }
 
-  @Get(':caseId/comments')
+  @Get('/cases:id/comments')
   @ApiOperation({
     operationId: 'getComments',
     summary: 'Get case comments',
@@ -155,13 +155,13 @@ export class CaseController {
     description: 'Comments for case',
   })
   async getComments(
-    @Param('caseId') caseId: string,
+    @Param('id') id: string,
     @Query('params') params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
-    return this.caseCommentService.getComments(caseId, params)
+    return this.caseCommentService.getComments(id, params)
   }
 
-  @Get(':caseId/comments/:commentId')
+  @Get('cases/:id/comments/:commentId')
   @ApiOperation({
     operationId: 'getComment',
     summary: 'Get case comment',
@@ -172,13 +172,13 @@ export class CaseController {
     description: 'Comment for case',
   })
   async getComment(
-    @Param('caseId') caseId: string,
+    @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    return this.caseCommentService.getComment(caseId, commentId)
+    return this.caseCommentService.getComment(id, commentId)
   }
 
-  @Post(':caseId/comments')
+  @Post('cases/:id/comments')
   @ApiOperation({
     operationId: 'postComment',
     summary: 'Add comment to case',
@@ -189,13 +189,13 @@ export class CaseController {
     description: 'Comment added',
   })
   async postComment(
-    @Param('caseId') id: string,
+    @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
     return this.caseCommentService.postComment(id, body)
   }
 
-  @Delete(':caseId/comments/:commentId')
+  @Delete('cases/:id/comments/:commentId')
   @ApiOperation({
     operationId: 'deleteComment',
     summary: 'Delete comment from case',
@@ -210,9 +210,9 @@ export class CaseController {
     description: 'Comment not found',
   })
   async deleteComment(
-    @Param('caseId') caseId: string,
+    @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<DeleteCaseCommentResponse> {
-    return this.caseCommentService.deleteComment(caseId, commentId)
+    return this.caseCommentService.deleteComment(id, commentId)
   }
 }

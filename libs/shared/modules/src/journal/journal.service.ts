@@ -36,7 +36,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Result } from '../types/result'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -45,6 +44,7 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
+import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,
