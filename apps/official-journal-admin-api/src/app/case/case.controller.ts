@@ -34,6 +34,7 @@ import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 @Controller({
   version: '1',
+  path: 'cases',
 })
 export class CaseController {
   constructor(
@@ -44,7 +45,7 @@ export class CaseController {
     private readonly caseCommentService: ICommentService,
   ) {}
 
-  @Get('cases/:id')
+  @Get(':id')
   @ApiOperation({
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -62,7 +63,7 @@ export class CaseController {
     return this.caseService.case(id)
   }
 
-  @Post('cases')
+  @Post('')
   @ApiOperation({
     operationId: 'postCase',
     summary: 'Create case.',
@@ -112,7 +113,7 @@ export class CaseController {
     return this.caseService.overview(params)
   }
 
-  @Post('cases/publish')
+  @Post('publish')
   @ApiOperation({
     operationId: 'postPublish',
     summary: 'Publish cases',
@@ -161,7 +162,7 @@ export class CaseController {
     return this.caseCommentService.comments(id, params)
   }
 
-  @Get('cases/:id/comments/:commentId')
+  @Get(':id/comments/:commentId')
   @ApiOperation({
     operationId: 'getComment',
     summary: 'Get case comment',
@@ -178,7 +179,7 @@ export class CaseController {
     return this.caseCommentService.comment(id, commentId)
   }
 
-  @Post('cases/:id/comments')
+  @Post(':id/comments')
   @ApiOperation({
     operationId: 'postComment',
     summary: 'Add comment to case',
@@ -195,7 +196,7 @@ export class CaseController {
     return this.caseCommentService.create(id, body)
   }
 
-  @Delete('cases/:id/comments/:commentId')
+  @Delete(':id/comments/:commentId')
   @ApiOperation({
     operationId: 'deleteComment',
     summary: 'Delete comment from case',
