@@ -82,13 +82,11 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
-  getEditorialOverview(
-    params?: GetCasesQuery | undefined,
-  ): Promise<CaseEditorialOverview> {
+  overview(params?: GetCasesQuery | undefined): Promise<CaseEditorialOverview> {
     throw new Error('Method not implemented.')
   }
 
-  async createCase(body: PostApplicationBody): Promise<CreateCaseResponse> {
+  async create(body: PostApplicationBody): Promise<CreateCaseResponse> {
     try {
       this.logger.info('Creating case', {
         applicationId: body.applicationId,
@@ -199,7 +197,7 @@ export class CaseService implements ICaseService {
         )
 
         // TODO: When auth is setup, use the user id from the token
-        await this.commentService.postComment(
+        await this.commentService.create(
           newCase.id,
           {
             internal: true,
@@ -250,7 +248,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async getCase(id: string): Promise<GetCaseResponse> {
+  async case(id: string): Promise<GetCaseResponse> {
     try {
       const caseWithAdvert = await this.utilityService.getCaseWithAdvert(id)
 
@@ -267,7 +265,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+  async cases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     try {
       this.logger.info('Getting cases', {
         category: LOGGING_CATEGORY,
@@ -362,129 +360,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  // async getCaseWithApplication(
-  //   id: string,
-  // ): Promise<CaseWithApplication | null> {
-  //   this.logger.info('Getting case with application', {
-  //     id,
-  //     category: LOGGING_CATEGORY,
-  //   })
-
-  //   return this.getCase(id).then(async (theCase) => {
-  //     if (!theCase) {
-  //       return null
-  //     }
-
-  //     return await this.convertToCaseWithApplication(theCase)
-  //   })
-  // }
-
-  // async getCasesWithApplication(
-  //   params?: GetCasesQuery | undefined,
-  // ): Promise<GetCasesWithApplicationReponse> {
-  //   try {
-  //     const { cases, paging } = await this.getCases(params)
-
-  //     const casesWithApplication = await Promise.all(
-  //       cases.map(async (c) => await this.convertToCaseWithApplication(c)),
-  //     )
-
-  //     this.logger.log('Successfully fetched cases with application', {
-  //       category: LOGGING_CATEGORY,
-  //     })
-
-  //     return {
-  //       cases: casesWithApplication,
-  //       paging,
-  //     }
-  //   } catch (error) {
-  //     throw new InternalServerErrorException('Internal server error.')
-  //   }
-  // }
-
-  getCaseByApplicationId(applicationId: string): Promise<Case | null> {
-    const found = ALL_MOCK_CASES.find((c) => c.applicationId === applicationId)
-
-    if (!found) {
-      throw new NotFoundException('Case not found')
-    }
-
-    // if (found.advert.document.isLegacy) {
-    //   found.advert.document.html = dirtyClean(
-    //     found.advert.document.html as HTMLText,
-    //   )
-    // }
-
-    return Promise.resolve(found)
-  }
-
-  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
-    const filtered = ALL_MOCK_USERS.filter((user) => {
-      if (params?.search && user.id !== params.search) {
-        return false
-      }
-
-      if (!user.active) {
-        return false
-      }
-
-      return true
-    })
-
-    return Promise.resolve({
-      users: filtered,
-    })
-  }
-
-  // async getEditorialOverview(
-  //   params?: GetCasesQuery,
-  // ): Promise<CaseEditorialOverview> {
-  //   const submitted: Case[] = []
-  //   const inProgress: Case[] = []
-  //   const inReview: Case[] = []
-  //   const ready: Case[] = []
-
-  //   if (!params?.status) {
-  //     throw new BadRequestException('Missing status')
-  //   }
-
-  //   ALL_MOCK_CASES.forEach((c) => {
-  //     if (c.status === CaseStatus.Submitted) {
-  //       submitted.push(c)
-  //     } else if (c.status === CaseStatus.InProgress) {
-  //       inProgress.push(c)
-  //     } else if (c.status === CaseStatus.InReview) {
-  //       inReview.push(c)
-  //     } else if (c.status === CaseStatus.ReadyForPublishing) {
-  //       ready.push(c)
-  //     }
-  //   })
-
-  //   console.log(params)
-
-  //   const { cases, paging } = await this.getCases(params)
-
-  //   try {
-  //     const casesWithApplication = await Promise.all(
-  //       cases.map(async (c) => await this.convertToCaseWithApplication(c)),
-  //     )
-
-  //     return Promise.resolve({
-  //       data: casesWithApplication,
-  //       totalItems: {
-  //         submitted: submitted.length,
-  //         inProgress: inProgress.length,
-  //         inReview: inReview.length,
-  //         ready: ready.length,
-  //       },
-  //       paging,
-  //     })
-  //   } catch (error) {
-  //     throw new InternalServerErrorException('Internal server error.')
-  //   }
-  // }
-
-  postCasesPublish(body: PostCasePublishBody): Promise<void> {
+  publish(body: PostCasePublishBody): Promise<void> {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {

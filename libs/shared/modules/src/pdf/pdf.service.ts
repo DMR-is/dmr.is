@@ -125,7 +125,7 @@ export class PdfService implements IPdfService {
       category: LOGGING_CATEGORY,
     })
 
-    const theCase = await this.caseService.getCase(caseId)
+    const theCase = await this.caseService.case(caseId)
 
     if (!theCase) {
       this.logger.warn(`Case ${caseId} not found`, {

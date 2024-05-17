@@ -56,7 +56,7 @@ export class CommentService implements ICommentService {
   ) {
     this.logger.info('Using CaseCommentSerivce')
   }
-  async getComment(
+  async comment(
     caseId: string,
     commentId: string,
   ): Promise<GetCaseCommentResponse> {
@@ -97,7 +97,7 @@ export class CommentService implements ICommentService {
     }
   }
 
-  async getComments(
+  async comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
@@ -151,7 +151,7 @@ export class CommentService implements ICommentService {
     }
   }
 
-  async postComment(
+  async create(
     caseId: string,
     body: PostCaseComment,
     transaction?: Transaction,
@@ -277,7 +277,7 @@ export class CommentService implements ICommentService {
     }
   }
 
-  async deleteComment(
+  async delete(
     caseId: string,
     commentId: string,
   ): Promise<DeleteCaseCommentResponse> {

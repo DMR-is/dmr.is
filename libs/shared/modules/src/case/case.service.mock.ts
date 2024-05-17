@@ -43,7 +43,7 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
 
-  createCase(body: PostApplicationBody): Promise<CreateCaseResponse> {
+  create(body: PostApplicationBody): Promise<CreateCaseResponse> {
     this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
@@ -68,12 +68,12 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  getCase(id: string): Promise<GetCaseResponse> {
+  case(id: string): Promise<GetCaseResponse> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
 
-  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+  cases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     if (!params) {
       return Promise.resolve({
         cases: ALL_MOCK_CASES,
@@ -180,9 +180,7 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  async getEditorialOverview(
-    params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
+  async overview(params?: GetCasesQuery): Promise<CaseEditorialOverview> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -204,7 +202,7 @@ export class CaseServiceMock implements ICaseService {
       }
     })
 
-    const { cases, paging } = await this.getCases(params)
+    const { cases, paging } = await this.cases(params)
 
     return Promise.resolve({
       data: cases as unknown as CaseWithAdvert[],
@@ -218,7 +216,7 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  postCasesPublish(body: PostCasePublishBody): Promise<void> {
+  publish(body: PostCasePublishBody): Promise<void> {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {

@@ -59,7 +59,7 @@ export class CaseController {
     description: 'Case not found.',
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
-    return this.caseService.getCase(id)
+    return this.caseService.case(id)
   }
 
   @Post('cases')
@@ -79,7 +79,7 @@ export class CaseController {
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
-    return this.caseService.createCase(body)
+    return this.caseService.create(body)
   }
 
   @Get('cases')
@@ -93,7 +93,7 @@ export class CaseController {
     description: 'All cases.',
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    return this.caseService.getCases(params)
+    return this.caseService.cases(params)
   }
 
   @Get('editorialOverview')
@@ -109,7 +109,7 @@ export class CaseController {
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
-    return this.caseService.getEditorialOverview(params)
+    return this.caseService.overview(params)
   }
 
   @Post('cases/publish')
@@ -131,7 +131,7 @@ export class CaseController {
   })
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
     try {
-      await this.caseService.postCasesPublish(body)
+      await this.caseService.publish(body)
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
@@ -158,7 +158,7 @@ export class CaseController {
     @Param('id') id: string,
     @Query('params') params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
-    return this.caseCommentService.getComments(id, params)
+    return this.caseCommentService.comments(id, params)
   }
 
   @Get('cases/:id/comments/:commentId')
@@ -175,7 +175,7 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    return this.caseCommentService.getComment(id, commentId)
+    return this.caseCommentService.comment(id, commentId)
   }
 
   @Post('cases/:id/comments')
@@ -192,7 +192,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
-    return this.caseCommentService.postComment(id, body)
+    return this.caseCommentService.create(id, body)
   }
 
   @Delete('cases/:id/comments/:commentId')
@@ -213,6 +213,6 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<DeleteCaseCommentResponse> {
-    return this.caseCommentService.deleteComment(id, commentId)
+    return this.caseCommentService.delete(id, commentId)
   }
 }

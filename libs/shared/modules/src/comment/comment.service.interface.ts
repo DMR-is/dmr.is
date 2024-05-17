@@ -9,22 +9,19 @@ import {
 } from '@dmr.is/shared/dto'
 
 export interface ICommentService {
-  getComment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
-  getComments(
+  comment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
+  comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse>
 
-  postComment(
+  create(
     caseId: string,
     body: PostCaseComment,
     transaction?: Transaction,
   ): Promise<PostCaseCommentResponse>
 
-  deleteComment(
-    caseId: string,
-    commentId: string,
-  ): Promise<DeleteCaseCommentResponse>
+  delete(caseId: string, commentId: string): Promise<DeleteCaseCommentResponse>
 }
 
 export const ICommentService = Symbol('ICommentService')

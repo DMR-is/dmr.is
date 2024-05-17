@@ -80,7 +80,7 @@ export class ApplicationService implements IApplicationService {
     // This method handles the submission from the application system
 
     // check if the application is already submitted
-    const caseResponse = await this.caseService.getCases({
+    const caseResponse = await this.caseService.cases({
       applicationId,
     })
 
@@ -103,7 +103,7 @@ export class ApplicationService implements IApplicationService {
     } else {
       // we create a new case
       try {
-        await this.caseService.createCase({
+        await this.caseService.create({
           applicationId,
         })
       } catch (error) {
@@ -232,7 +232,7 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
     })
 
-    const caseResponse = await this.caseService.getCases({
+    const caseResponse = await this.caseService.cases({
       applicationId,
     })
 
@@ -256,7 +256,7 @@ export class ApplicationService implements IApplicationService {
       throw new NotFoundException('Case not found')
     }
 
-    return await this.commentService.getComments(activeCase.id, {
+    return await this.commentService.comments(activeCase.id, {
       type: CaseCommentPublicity.External,
     })
   }
@@ -270,7 +270,7 @@ export class ApplicationService implements IApplicationService {
       category: LOGGING_CATEGORY,
     })
 
-    const caseResponse = await this.caseService.getCases({
+    const caseResponse = await this.caseService.cases({
       applicationId,
     })
 
@@ -286,7 +286,7 @@ export class ApplicationService implements IApplicationService {
       throw new NotFoundException('Case not found')
     }
 
-    return await this.commentService.postComment(activeCase.id, {
+    return await this.commentService.create(activeCase.id, {
       comment: commentBody.comment,
       from: commentBody.from,
       to: commentBody.name ? commentBody.name : null,
