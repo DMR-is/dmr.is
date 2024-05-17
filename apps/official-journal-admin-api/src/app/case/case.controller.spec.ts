@@ -2,17 +2,10 @@ import { Model } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentService,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
-  CaseDto,
   CaseService,
   IApplicationService,
-  ICaseCommentService,
   ICaseService,
+  ICommentService,
   IJournalService,
 } from '@dmr.is/modules'
 import { CaseComment } from '@dmr.is/shared/dto'
@@ -32,7 +25,7 @@ const provideModel = (model: any) => ({
 
 describe('CaseController', () => {
   let caseService: ICaseService
-  let commentService: ICaseCommentService
+  let commentService: ICommentService
   let caseController: CaseController
 
   beforeEach(async () => {
@@ -40,19 +33,13 @@ describe('CaseController', () => {
       imports: [LoggingModule],
       controllers: [CaseController],
       providers: [
-        provideModel(CaseDto),
-        provideModel(CaseCommentDto),
-        provideModel(CaseCommentsDto),
-        provideModel(CaseCommentTaskDto),
-        provideModel(CaseCommentTitleDto),
-        provideModel(CaseCommentTypeDto),
         {
           provide: ICaseService,
-          useClass: CaseService,
+          useValue: jest.fn(),
         },
         {
-          provide: ICaseCommentService,
-          useClass: CaseCommentService,
+          provide: ICommentService,
+          useValue: jest.fn(),
         },
         {
           provide: IJournalService,
@@ -75,7 +62,7 @@ describe('CaseController', () => {
     }).compile()
 
     caseService = moduleRef.get<ICaseService>(ICaseService)
-    commentService = moduleRef.get<ICaseCommentService>(ICaseCommentService)
+    commentService = moduleRef.get<ICommentService>(ICommentService)
     caseController = moduleRef.get<CaseController>(CaseController)
   })
 

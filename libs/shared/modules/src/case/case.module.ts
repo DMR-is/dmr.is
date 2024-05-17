@@ -4,53 +4,46 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
+import { CommentModule } from '../comment/comment.module'
+import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
-import { CaseCommentService } from './services/comment/comment.service'
-import { ICaseCommentService } from './services/comment/comment.service.interface'
+import { AdvertDepartmentDTO } from '../journal/models'
+import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
+import caseModels from './models'
 import {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
   CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
   CaseTagDto,
-  models as caseModels,
 } from './models'
 
 export {
+  ICaseService,
+  CaseService,
+  CaseServiceMock,
+  caseModels,
   CaseDto,
   CaseTagDto,
   CaseStatusDto,
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTypeDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
   CaseCommunicationStatusDto,
-}
-
-export {
-  ICaseService,
-  ICaseCommentService,
-  CaseService,
-  CaseCommentService,
-  CaseServiceMock,
-  caseModels,
 }
 
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([...caseModels]),
+    SequelizeModule.forFeature([
+      ...commentModels,
+      ...caseModels,
+      AdvertDepartmentDTO,
+    ]),
     LoggingModule,
     SharedJournalModule,
+    forwardRef(() => CommentModule),
+    forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),
   ],
   providers: [
@@ -58,11 +51,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
       provide: ICaseService,
       useClass: API_MOCK ? CaseServiceMock : CaseService,
     },
-    {
-      provide: ICaseCommentService,
-      useClass: CaseCommentService,
-    },
   ],
-  exports: [ICaseService, ICaseCommentService],
+  exports: [ICaseService],
 })
 export class SharedCaseModule {}

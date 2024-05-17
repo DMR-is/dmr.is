@@ -7,11 +7,12 @@ import {
   CaseEditorialOverview,
   CaseHistory,
   CaseStatus,
-  CaseWithApplication,
+  CaseWithAdvert,
+  CreateCaseResponse,
   GetCaseCommentsQuery,
+  GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -33,16 +34,6 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
-  getCaseWithApplication(id: string): Promise<CaseWithApplication | null> {
-    this.logger.info('getCaseWithApplication', id)
-    throw new Error('Method not implemented.')
-  }
-  getCasesWithApplication(
-    params?: GetCasesQuery | undefined,
-  ): Promise<GetCasesWithApplicationReponse> {
-    this.logger.info('getCasesWithApplication', params)
-    throw new Error('Method not implemented.')
-  }
   getCaseHistory(caseId: string): Promise<CaseHistory> {
     this.logger.info('getCaseHistory', caseId)
     throw new Error('Method not implemented.')
@@ -52,7 +43,7 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
 
-  createCase(body: PostApplicationBody): Promise<Case> {
+  create(body: PostApplicationBody): Promise<CreateCaseResponse> {
     this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
@@ -77,23 +68,12 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  getCase(id: string): Promise<Case | null> {
-    const found = ALL_MOCK_CASES.find((c) => c.id === id)
-
-    if (!found) {
-      throw new NotFoundException('Case not found')
-    }
-
-    // if (found.advert.document.isLegacy) {
-    //   found.advert.document.html = dirtyClean(
-    //     found.advert.document.html as HTMLText,
-    //   )
-    // }
-
-    return Promise.resolve(found)
+  case(id: string): Promise<GetCaseResponse> {
+    this.logger.info('getCase', id)
+    throw new Error('Method not implemented.')
   }
 
-  getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+  cases(params?: GetCasesQuery): Promise<GetCasesReponse> {
     if (!params) {
       return Promise.resolve({
         cases: ALL_MOCK_CASES,
@@ -101,85 +81,7 @@ export class CaseServiceMock implements ICaseService {
       })
     }
 
-    try {
-      const { page, pageSize } = params
-
-      const filteredCases = ALL_MOCK_CASES.filter((c) => {
-        if (params?.search) {
-          // for now search for department and name
-          // if (
-          //   !c.advert.department.title
-          //     .toLowerCase()
-          //     .includes(params.search.toLowerCase()) &&
-          //   !c.advert.title.toLowerCase().includes(params.search.toLowerCase())
-          // ) {
-          //   return false
-          // }
-        }
-
-        if (params?.caseNumber && c.caseNumber !== params?.caseNumber) {
-          return false
-        }
-
-        if (
-          params?.dateFrom &&
-          new Date(c.createdAt) < new Date(params?.dateFrom)
-        ) {
-          return false
-        }
-
-        if (
-          params?.dateTo &&
-          new Date(c.createdAt) > new Date(params?.dateTo)
-        ) {
-          return false
-        }
-
-        if (params?.status && c.status !== params?.status) {
-          return false
-        }
-
-        if (params?.fastTrack && isBooleanString(params.fastTrack)) {
-          if (c.fastTrack !== Boolean(params.fastTrack)) {
-            return false
-          }
-        }
-
-        if (params?.employeeId && c.assignedTo?.id !== params?.employeeId) {
-          return false
-        }
-
-        // if (
-        //   params?.department &&
-        //   c.advert.department.slug !== params.department.toLowerCase()
-        // ) {
-        //   return false
-        // }
-
-        return true
-      })
-
-      const withPaging = generatePaging(filteredCases, page, pageSize)
-      const pagedCases = filteredCases.slice(
-        withPaging.pageSize * (withPaging.page - 1),
-        withPaging.pageSize * withPaging.page,
-      )
-      // pagedCases.forEach((c) => {
-      // if (c.advert.document.isLegacy) {
-      //   c.advert.document.html = dirtyClean(
-      //     c.advert.document.html as HTMLText,
-      //   )
-      // }
-      //   return c
-      // })
-
-      return Promise.resolve({
-        cases: pagedCases,
-        paging: withPaging,
-      })
-    } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
+    throw new Error('Method not implemented.')
   }
 
   getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
@@ -200,9 +102,7 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  async getEditorialOverview(
-    params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
+  async overview(params?: GetCasesQuery): Promise<CaseEditorialOverview> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -224,10 +124,10 @@ export class CaseServiceMock implements ICaseService {
       }
     })
 
-    const { cases, paging } = await this.getCases(params)
+    const { cases, paging } = await this.cases(params)
 
     return Promise.resolve({
-      data: cases as unknown as CaseWithApplication[],
+      data: cases as unknown as CaseWithAdvert[],
       totalItems: {
         submitted: submitted.length,
         inProgress: inProgress.length,
@@ -238,7 +138,7 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  postCasesPublish(body: PostCasePublishBody): Promise<void> {
+  publish(body: PostCasePublishBody): Promise<void> {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
@@ -260,7 +160,6 @@ export class CaseServiceMock implements ICaseService {
       cases.forEach((c) => {
         c.modifiedAt = now
         c.publishedAt = now
-        c.published = true
       })
 
       return Promise.resolve()

@@ -7,7 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseCommentDto } from './CaseComment'
+import { CaseCommentDto } from '../../comment/models'
 
 @Table({ tableName: 'case_status', timestamps: false })
 @DefaultScope(() => ({

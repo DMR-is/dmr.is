@@ -22,11 +22,11 @@ export class PostCaseComment {
     description: 'The case comment itself',
     required: true,
   })
-  comment!: string
+  comment!: string | null
 
   @ApiProperty({
     type: String,
-    description: 'The task itself',
+    description: 'Id of the user who created the comment',
     required: true,
   })
   from!: string

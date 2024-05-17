@@ -1,154 +1,69 @@
 import { Type } from 'class-transformer'
-import {
-  IsArray,
-  IsBoolean,
-  IsDateString,
-  IsEnum,
-  IsNumber,
-  IsUUID,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator'
+import { IsDateString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-types/advert-type.dto'
-import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories/category.dto'
 import { Department } from '../departments/department.dto'
-import { User } from '../users/user.dto'
-import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
+import { Institution } from '../institutions/institution.dto'
+import { Case } from './case.dto'
 
-export class CaseWithApplication {
+class AdvertDocument {
   @ApiProperty({
     type: String,
-    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+    description: 'HTML of the advert',
   })
-  @IsUUID()
-  readonly caseId!: string
-
-  @ApiProperty({
-    type: String,
-    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
-  })
-  @IsUUID()
-  readonly applicationId!: string
+  readonly advert!: string
 
   @ApiProperty({
     type: String,
-    example: '244',
+    description: 'HTML of the signature',
   })
-  readonly publicationNumber!: string | null
-
-  @ApiProperty({
-    type: Boolean,
-    example: true,
-  })
-  readonly fastTrack!: boolean
-
-  @ApiProperty({
-    enum: CaseCommunicationStatus,
-    example: CaseCommunicationStatus.Done,
-  })
-  @IsEnum(CaseCommunicationStatus)
-  readonly communicationStatus!: CaseCommunicationStatus
+  readonly signature!: string
 
   @ApiProperty({
     type: String,
-    description: 'Full advert document html',
-    example: '<p>GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.</p>',
+    description: 'HTLM of the full document',
   })
-  readonly document!: string
+  readonly full!: string
+}
 
+class AdvertFields {
   @ApiProperty({
-    enum: CaseStatus,
-    example: CaseStatus.InProgress,
+    type: String,
   })
-  @IsEnum(CaseStatus)
-  readonly caseStatus!: CaseStatus
-
-  @ApiProperty({
-    enum: CaseTag,
-    example: CaseTag.InReview,
-  })
-  @IsEnum(CaseTag)
-  readonly tag!: CaseTag | null
+  readonly department!: Department
 
   @ApiProperty({
     type: String,
-    example: '2024-01-01T00:00:00.000Z',
   })
-  @IsDateString()
-  readonly requestedPublicationDate!: string
+  readonly title!: string
 
   @ApiProperty({
-    type: String,
-    example: '2024-01-01T00:00:00.000Z',
+    description: 'Type of the advert.',
+    required: true,
+    type: AdvertType,
   })
-  @IsDateString()
-  readonly createdDate!: string
+  readonly type!: AdvertType | null
 
   @ApiProperty({
-    type: String,
-    example: '2024-01-01T00:00:00.000Z',
+    type: AdvertDocument,
+    description: 'Advert documents',
   })
-  @IsDateString()
-  readonly publishDate!: string | null
+  readonly documents!: AdvertDocument
 
   @ApiProperty({
-    type: Department,
-    example: 'GJALDSKRÁ',
+    type: Institution,
+    description: 'Institution the advert is for.',
   })
-  readonly advertDepartment!: Department
+  readonly institution!: Institution
 
   @ApiProperty({
-    type: String,
-    example: 'GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.',
+    type: [Category],
+    description: 'Categories of the advert.',
   })
-  readonly advertTitle!: string
-
-  @ApiProperty({
-    type: User,
-    description: 'User the case is assigned to.',
-  })
-  @ValidateIf((o) => o.assignedTo !== null)
-  @Type(() => User)
-  assignedTo!: User | null
-
-  @ApiProperty({
-    type: String,
-    example: 'Reykjavíkurborg',
-  })
-  institutionTitle!: string | null
-
-  @ApiProperty({
-    type: [CaseComment],
-    description: 'Comments on the case.',
-    example: {
-      id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
-      createdAt: '2024-01-01T09:00:00Z',
-      type: 'Comment',
-      task: {
-        from: 'Ármann',
-        to: null,
-        title: 'gerir athugasemd',
-        comment:
-          'Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?',
-      },
-    },
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CaseComment)
-  caseComments!: CaseComment[]
-
-  @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Is legacy case.',
-  })
-  @IsBoolean()
-  isLegacy!: boolean
+  readonly categories!: Category[]
 
   @ApiProperty({
     description:
@@ -156,40 +71,29 @@ export class CaseWithApplication {
     required: true,
     nullable: true,
     type: String,
-    example: '2024-01-10T16:00:00Z',
   })
   readonly signatureDate!: string | null
 
   @ApiProperty({
-    description: 'Type of the advert.',
-    example: 'GJALDSKRÁ',
-    required: true,
-    type: AdvertType,
+    type: String,
+    description: 'The date the advert requested publication day.',
   })
-  readonly advertType!: AdvertType | null
+  @IsDateString()
+  readonly publicationDate!: string
+}
+
+export class CaseWithAdvert {
+  @ApiProperty({
+    type: AdvertFields,
+    description: 'Advert fields',
+  })
+  @Type(() => AdvertFields)
+  readonly advert!: AdvertFields
 
   @ApiProperty({
-    description: 'List of advert categories.',
-    required: true,
-    type: [Category],
-    nullable: false,
+    type: Case,
+    description: 'Case fields',
   })
-  readonly categories!: Category[]
-
-  @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Is the case paid for.',
-  })
-  @IsBoolean()
-  paid!: boolean
-
-  @ApiProperty({
-    type: Number,
-    example: 23000,
-    description: 'The cost of the case.',
-  })
-  @ValidateIf((o) => o.price !== null)
-  @IsNumber()
-  price!: number | null
+  @Type(() => Case)
+  readonly case!: Case
 }

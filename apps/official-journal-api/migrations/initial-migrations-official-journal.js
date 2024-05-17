@@ -178,6 +178,7 @@ module.exports = {
       type_id UUID NOT NULL,
       status_id UUID NOT NULL,
       task_id UUID NOT NULL,
+      state JSONB,
       CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id),
       CONSTRAINT fk_case_comment_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_comment_task_id FOREIGN KEY (task_id) REFERENCES case_comment_task (id),
@@ -199,9 +200,12 @@ module.exports = {
       published_at TIMESTAMP WITH TIME ZONE,
       price INTEGER,
       paid BOOLEAN DEFAULT FALSE,
+      fast_track BOOLEAN DEFAULT FALSE,
+      department_id UUID,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
+      CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       PRIMARY KEY (id)
     );
 

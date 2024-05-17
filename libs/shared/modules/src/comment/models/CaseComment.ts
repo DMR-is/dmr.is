@@ -7,11 +7,10 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseDto } from './Case'
+import { CaseDto, CaseStatusDto } from '../../case/models'
 import { CaseCommentsDto } from './CaseComments'
 import { CaseCommentTaskDto } from './CaseCommentTask'
 import { CaseCommentTypeDto } from './CaseCommentType'
-import { CaseStatusDto } from './CaseStatus'
 
 @Table({ tableName: 'case_comment', timestamps: false })
 export class CaseCommentDto extends Model {

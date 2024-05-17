@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import { v4 as uuid } from 'uuid'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -19,24 +20,23 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { CaseDto, CaseStatusDto } from '../case/models'
 import {
   caseCommentMigrate,
   caseCommentTitleMapper,
   caseCommentTypeMapper,
-} from '../../../util'
-import { CaseStatusDto } from '../../models'
-import { CaseDto } from '../../models/Case'
-import { CaseCommentDto } from '../../models/CaseComment'
-import { CaseCommentsDto } from '../../models/CaseComments'
-import { CaseCommentTaskDto } from '../../models/CaseCommentTask'
-import { CaseCommentTitleDto } from '../../models/CaseCommentTitle'
-import { CaseCommentTypeDto } from '../../models/CaseCommentType'
-import { ICaseCommentService } from './comment.service.interface'
+} from '../helpers'
+import { CaseCommentDto } from './models/CaseComment'
+import { CaseCommentsDto } from './models/CaseComments'
+import { CaseCommentTaskDto } from './models/CaseCommentTask'
+import { CaseCommentTitleDto } from './models/CaseCommentTitle'
+import { CaseCommentTypeDto } from './models/CaseCommentType'
+import { ICommentService } from './comment.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCommentService'
 
 @Injectable()
-export class CaseCommentService implements ICaseCommentService {
+export class CommentService implements ICommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseDto) private caseModel: typeof CaseDto,
@@ -56,7 +56,7 @@ export class CaseCommentService implements ICaseCommentService {
   ) {
     this.logger.info('Using CaseCommentSerivce')
   }
-  async getComment(
+  async comment(
     caseId: string,
     commentId: string,
   ): Promise<GetCaseCommentResponse> {
@@ -97,7 +97,7 @@ export class CaseCommentService implements ICaseCommentService {
     }
   }
 
-  async getComments(
+  async comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
@@ -151,9 +151,10 @@ export class CaseCommentService implements ICaseCommentService {
     }
   }
 
-  async postComment(
+  async create(
     caseId: string,
     body: PostCaseComment,
+    transaction?: Transaction,
   ): Promise<PostCaseCommentResponse> {
     this.logger.info('postComment', {
       caseId: caseId,
@@ -166,6 +167,7 @@ export class CaseCommentService implements ICaseCommentService {
       const theCase = await this.caseModel.findOne({
         where: { id: caseId },
         include: [CaseStatusDto],
+        transaction: transaction,
       })
 
       if (!theCase) {
@@ -179,6 +181,7 @@ export class CaseCommentService implements ICaseCommentService {
 
       const titleRef = await this.caseCommentTitleModel.findOne({
         where: { value: title },
+        transaction: transaction,
       })
 
       if (!titleRef) {
@@ -193,18 +196,29 @@ export class CaseCommentService implements ICaseCommentService {
 
       const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
         where: { value: newCommentType },
+        transaction: transaction,
       })
 
       if (!newCommentTypeRef) {
         throw new NotFoundException('Comment type not found')
       }
 
-      const newCommentTask = await this.caseCommentTaskModel.create({
-        id: uuid(),
-        comment: body.comment,
-        fromId: body.from,
-        toId: body.to,
-        titleId: titleRef.id,
+      const newCommentTask = await this.caseCommentTaskModel.create(
+        {
+          id: uuid(),
+          comment: body.comment,
+          fromId: body.from,
+          toId: body.to,
+          titleId: titleRef.id,
+        },
+        {
+          transaction: transaction,
+        },
+      )
+
+      this.logger.debug('Created new comment task', {
+        newCommentTask,
+        category: LOGGING_CATEGORY,
       })
 
       const newComment = await this.caseCommentModel.create(
@@ -218,14 +232,20 @@ export class CaseCommentService implements ICaseCommentService {
         },
         {
           returning: true,
+          transaction: transaction,
         },
       )
 
       // adding row to relation table
-      await this.caseCommentsModel.create({
-        caseId: caseId,
-        commentId: newComment.id,
-      })
+      await this.caseCommentsModel.create(
+        {
+          caseId: caseId,
+          commentId: newComment.id,
+        },
+        {
+          transaction: transaction,
+        },
+      )
 
       const withRelations = await this.caseCommentModel.findByPk(
         newComment.id,
@@ -236,6 +256,7 @@ export class CaseCommentService implements ICaseCommentService {
             CaseStatusDto,
             { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
           ],
+          transaction: transaction,
         },
       )
 
@@ -256,7 +277,7 @@ export class CaseCommentService implements ICaseCommentService {
     }
   }
 
-  async deleteComment(
+  async delete(
     caseId: string,
     commentId: string,
   ): Promise<DeleteCaseCommentResponse> {
@@ -312,7 +333,6 @@ export class CaseCommentService implements ICaseCommentService {
         success: true,
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in deleteComment', {
         caseId,
         commentId,

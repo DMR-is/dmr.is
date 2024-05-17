@@ -7,6 +7,13 @@ export const ARMANN: User = {
   active: true,
 }
 
+export const REYKJAVIKUR_BORG: User = {
+  id: 'd9329178-86c4-4f7b-a876-205e119be739',
+  name: 'Reykjavíkurborg',
+  lastName: '',
+  active: true,
+}
+
 export const PALINA: User = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cde',
   name: 'Pálína J',

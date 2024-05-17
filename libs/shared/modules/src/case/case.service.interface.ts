@@ -1,11 +1,9 @@
 import {
-  Case,
   CaseEditorialOverview,
-  CaseHistory,
-  CaseWithApplication,
+  CreateCaseResponse,
+  GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCasesWithApplicationReponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -13,29 +11,14 @@ import {
 } from '@dmr.is/shared/dto'
 
 export interface ICaseService {
-  getCase(id: string): Promise<Case | null>
+  case(id: string): Promise<GetCaseResponse>
 
-  getCases(params?: GetCasesQuery): Promise<GetCasesReponse>
+  cases(params?: GetCasesQuery): Promise<GetCasesReponse>
 
-  getCaseWithApplication(id: string): Promise<CaseWithApplication | null>
+  create(body: PostApplicationBody): Promise<CreateCaseResponse>
 
-  getCasesWithApplication(
-    params?: GetCasesQuery,
-  ): Promise<GetCasesWithApplicationReponse>
-
-  getCaseHistory(caseId: string): Promise<CaseHistory>
-
-  getCaseByApplicationId(applicationId: string): Promise<Case | null>
-
-  createCase(body: PostApplicationBody): Promise<Case>
-
-  updateCaseHistory(caseId: string): Promise<Case>
-
-  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse>
-
-  getEditorialOverview(params?: GetCasesQuery): Promise<CaseEditorialOverview>
-
-  postCasesPublish(body: PostCasePublishBody): Promise<void>
+  publish(body: PostCasePublishBody): Promise<void>
+  overview(params?: GetCasesQuery): Promise<CaseEditorialOverview>
 }
 
 export const ICaseService = Symbol('ICaseService')

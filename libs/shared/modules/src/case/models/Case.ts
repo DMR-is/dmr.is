@@ -7,8 +7,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseCommentDto } from './CaseComment'
-import { CaseCommentsDto } from './CaseComments'
+import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
+import { AdvertDepartmentDTO } from '../../journal/models'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
@@ -26,8 +26,9 @@ export class CaseDto extends Model {
   @Column({
     type: DataType.UUID,
     allowNull: false,
+    field: 'application_id',
   })
-  application_id!: string
+  applicationId!: string
 
   @Column({
     type: DataType.INTEGER,
@@ -38,8 +39,9 @@ export class CaseDto extends Model {
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
+    field: 'case_number',
   })
-  case_number!: number
+  caseNumber!: number
 
   @Column({ type: DataType.UUID, field: 'status_id' })
   statusId!: string
@@ -52,8 +54,6 @@ export class CaseDto extends Model {
 
   @BelongsTo(() => CaseTagDto, 'tag_id')
   tag!: CaseTagDto | null
-
-  // TODO: Add application history
 
   @Column({
     type: DataType.STRING,
@@ -72,24 +72,27 @@ export class CaseDto extends Model {
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
+    field: 'is_legacy',
   })
-  is_legacy!: boolean
+  isLegacy!: boolean
 
   @Column({
     type: DataType.UUID,
     allowNull: true,
+    field: 'assigned_user_id',
   })
-  assigned_user_id!: string | null
+  assignedUserId!: string | null
 
   @Column({ type: DataType.UUID, field: 'case_communication_status_id' })
-  caseCommunicationStatusId!: string
+  communicationStatusId!: string
 
   @BelongsTo(() => CaseCommunicationStatusDto, 'case_communication_status_id')
-  caseCommunicationStatus!: CaseCommunicationStatusDto
+  communicationStatus!: CaseCommunicationStatusDto
 
   @Column({
     type: DataType.STRING,
     allowNull: true,
+    field: 'published_at',
   })
   publishedAt!: string | null
 
@@ -104,6 +107,23 @@ export class CaseDto extends Model {
     allowNull: true,
   })
   paid!: boolean | null
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    field: 'fast_track',
+  })
+  fastTrack!: boolean
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'department_id',
+  })
+  departmentId!: string | null
+
+  @BelongsTo(() => AdvertDepartmentDTO, 'department_id')
+  department!: AdvertDepartmentDTO | null
 
   @BelongsToMany(() => CaseCommentDto, {
     through: { model: () => CaseCommentsDto },

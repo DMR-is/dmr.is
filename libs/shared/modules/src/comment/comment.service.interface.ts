@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import {
   DeleteCaseCommentResponse,
   GetCaseCommentResponse,
@@ -7,22 +8,20 @@ import {
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
 
-export interface ICaseCommentService {
-  getComment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
-  getComments(
+export interface ICommentService {
+  comment(caseId: string, commentId: string): Promise<GetCaseCommentResponse>
+  comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse>
 
-  postComment(
+  create(
     caseId: string,
     body: PostCaseComment,
+    transaction?: Transaction,
   ): Promise<PostCaseCommentResponse>
 
-  deleteComment(
-    caseId: string,
-    commentId: string,
-  ): Promise<DeleteCaseCommentResponse>
+  delete(caseId: string, commentId: string): Promise<DeleteCaseCommentResponse>
 }
 
-export const ICaseCommentService = Symbol('ICaseCommentService')
+export const ICommentService = Symbol('ICommentService')
