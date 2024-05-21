@@ -46,31 +46,4 @@ describe('PdfService', () => {
       expect(service).toBeDefined()
     })
   })
-
-  // describe('Create case pdf', () => {
-  // it('should return a Buffer', async () => {
-  //   const retries = 10
-  //   let tries = 0
-  //   let pdf = null
-  //   const wait = async (ms: number) => {
-  //     await sleep(ms)
-  //   }
-  //   while (tries < retries) {
-  //     try {
-  //       console.log('try number', tries)
-  //       await wait(1000)
-  //       pdf = await service.getCasePdf('e637c050-a462-4183-972a-5re54he34ad')
-  //       writeFileSync(path.join(__dirname, '/test.pdf'), pdf)
-  //       break
-  //     } catch (error) {
-  //       console.log('error', error)
-  //       tries++
-  //     }
-  //   }
-  //   if (tries === retries) {
-  //     throw new Error('Failed to generate PDF')
-  //   }
-  //   expect(pdf).toBeInstanceOf(Buffer)
-  // })
-  // })
 })
