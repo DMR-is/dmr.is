@@ -1,25 +1,22 @@
-import { Model } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { ALL_MOCK_CASES } from '@dmr.is/mocks'
 import {
-  CaseService,
   IApplicationService,
   ICaseService,
   ICommentService,
   IJournalService,
 } from '@dmr.is/modules'
-import { CaseComment } from '@dmr.is/shared/dto'
+import {
+  CaseComment,
+  CaseCommentTitle,
+  CaseCommentType,
+  CaseCommunicationStatus,
+  CaseStatus,
+  CaseTag,
+} from '@dmr.is/shared/dto'
 
-import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const provideModel = (model: any) => ({
-  provide: getModelToken(model),
-  useValue: model,
-})
 
 // mock sequelize models
 
@@ -28,6 +25,39 @@ describe('CaseController', () => {
   let commentService: ICommentService
   let caseController: CaseController
 
+  const comment = {
+    id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
+    type: CaseCommentType.Submit,
+    createdAt: '2024-03-12T12:45:48.21Z',
+    caseStatus: CaseStatus.Submitted,
+    internal: false,
+    task: {
+      from: null,
+      to: 'Stofnun x',
+      title: CaseCommentTitle.Submit,
+      comment: null,
+    },
+  }
+
+  const activeCase = {
+    id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
+    applicationId: '1c65e8fd-bd6a-4038-9678-202770a85e89',
+    year: 2024,
+    caseNumber: 1234,
+    isLegacy: true,
+    status: CaseStatus.Submitted,
+    tag: CaseTag.NotStarted,
+    createdAt: '2024-03-12T12:45:48.21Z',
+    modifiedAt: '2024-03-12T12:45:48.21Z',
+    publishedAt: null,
+    paid: false,
+    price: null,
+    fastTrack: false,
+    assignedTo: null,
+    communicationStatus: CaseCommunicationStatus.NotStarted,
+    comments: [comment],
+  }
+
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -35,11 +65,16 @@ describe('CaseController', () => {
       providers: [
         {
           provide: ICaseService,
-          useValue: jest.fn(),
+          useClass: jest.fn(() => ({
+            create: () => ({}),
+          })),
         },
         {
           provide: ICommentService,
-          useValue: jest.fn(),
+          useClass: jest.fn(() => ({
+            create: () => ({}),
+            delete: () => ({}),
+          })),
         },
         {
           provide: IJournalService,
@@ -66,120 +101,105 @@ describe('CaseController', () => {
     caseController = moduleRef.get<CaseController>(CaseController)
   })
 
-  describe('getCases', () => {
-    it('should return correct case', async () => {
-      const result = ALL_MOCK_CASES
-      jest.spyOn(caseService, 'getCases')
+  describe('createCase', () => {
+    it('should create a case', async () => {
+      const createSpy = jest.spyOn(caseService, 'create')
 
-      expect((await caseController.cases()).cases).toEqual(result)
-    })
-  })
-
-  describe('getCase', () => {
-    it('should return cases', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
-      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)
-
-      jest.spyOn(caseService, 'getCase')
-
-      expect(await caseController.case(caseId)).toEqual(result)
-    })
-  })
-
-  describe('getComment', () => {
-    it('should return correct comment', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
-      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
-      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)?.comments.find(
-        (c) => c.id === commentId,
+      jest.spyOn(caseService, 'create').mockImplementation(() =>
+        Promise.resolve({
+          case: activeCase,
+        }),
       )
 
-      jest.spyOn(commentService, 'getComment').mockResolvedValue({
-        comment: result!,
+      const result = await caseController.createCase({
+        applicationId: activeCase.applicationId,
       })
 
-      expect(await caseController.getComment(caseId, commentId)).toEqual({
-        comment: result,
-      })
-    })
-  })
-
-  describe('getComments', () => {
-    it('should return correct comments', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
-      const result = ALL_MOCK_CASES.find((c) => c.id === caseId)?.comments
-
-      jest.spyOn(commentService, 'getComments').mockResolvedValue({
-        comments: result!,
+      expect(createSpy).toHaveBeenCalledWith({
+        applicationId: activeCase.applicationId,
       })
 
-      expect(await caseController.getComments(caseId)).toEqual({
-        comments: result,
+      expect(result).toEqual({
+        case: activeCase,
       })
     })
   })
 
-  describe('postComment', () => {
+  describe('createComment', () => {
+    const comment = {
+      id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
+      type: 'comment',
+      createdAt: '2024-03-12T12:45:48.21Z',
+      caseStatus: 'Innsent',
+      internal: false,
+      task: {
+        from: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+        to: 'Ármann',
+        title: 'gerir athugasemd',
+        comment: 'getur þú athugað þetta?',
+      },
+    } as unknown as CaseComment
+
     it('should return correct comment', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
+      const createSpy = jest.spyOn(commentService, 'create')
 
-      const comment = {
-        id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-        type: 'comment',
-        createdAt: '2024-03-12T12:45:48.21Z',
-        caseStatus: 'Innsent',
-        internal: false,
-        task: {
-          from: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-          to: 'Ármann',
-          title: 'gerir athugasemd',
-          comment: 'getur þú athugað þetta?',
-        },
-      } as unknown as CaseComment
+      jest.spyOn(commentService, 'create').mockImplementation(() =>
+        Promise.resolve({
+          comment: comment,
+        }),
+      )
 
-      jest.spyOn(commentService, 'postComment').mockResolvedValue({
-        comment: comment,
+      const results = await caseController.createComment(activeCase.id, {
+        comment: comment.task.comment,
+        from: `${comment.task.from}`,
+        to: comment.task.to,
+        internal: comment.internal,
+        type: comment.type,
       })
 
-      expect(
-        await caseController.postComment(caseId, {
-          comment: comment.task.comment!,
-          from: comment.task.from!,
-          internal: comment.internal,
-          to: comment.task.to,
-          type: comment.type,
-        }),
-      ).toEqual({
+      expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
+        comment: comment.task.comment,
+        from: `${comment.task.from}`,
+        to: comment.task.to,
+        internal: comment.internal,
+        type: comment.type,
+      })
+
+      expect(results).toEqual({
         comment: comment,
       })
     })
   })
 
   describe('deleteComment', () => {
-    it('should return success `true`', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
-      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
+    it('should delete a comment', async () => {
+      jest
+        .spyOn(commentService, 'delete')
+        .mockImplementation(() => Promise.resolve({ success: true }))
+      const deleteSpy = jest.spyOn(commentService, 'delete')
 
-      jest.spyOn(commentService, 'deleteComment').mockResolvedValue({
-        success: true,
-      })
+      await caseController.deleteComment('caseId', 'commentId')
 
-      expect(await caseController.deleteComment(caseId, commentId)).toEqual({
-        success: true,
-      })
+      expect(deleteSpy).toHaveBeenCalledWith('caseId', 'commentId')
     })
 
-    it('should return success `false`', async () => {
-      const caseId = 'e6d7c050-a462-4183-972a-5c375e6e348d'
-      const commentId = '76caef40-c98d-40bf-9c78-76832d2ea1d1'
+    it('should throw error if comment not found', async () => {
+      const unknownId = 'fa81d7a9-934c-47c3-b45c-12f1014bd425'
 
-      jest.spyOn(commentService, 'deleteComment').mockResolvedValue({
-        success: false,
-      })
+      jest
+        .spyOn(commentService, 'delete')
+        .mockImplementation(() => Promise.resolve(null))
 
-      expect(await caseController.deleteComment(caseId, commentId)).toEqual({
-        success: false,
-      })
+      try {
+        expect(await caseController.deleteComment(unknownId, comment.id))
+        expect('Should not reach here').toEqual('')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        expect(e.message).toEqual(
+          `Comment<${comment.id}> not found on case<${unknownId}>`,
+        )
+        expect(e.status).toEqual(404)
+      }
     })
   })
 })

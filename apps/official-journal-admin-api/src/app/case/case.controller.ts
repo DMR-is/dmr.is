@@ -26,11 +26,18 @@ import {
   HttpException,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBody,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 @Controller({
   version: '1',
@@ -65,7 +72,7 @@ export class CaseController {
 
   @Post('')
   @ApiOperation({
-    operationId: 'postCase',
+    operationId: 'createCase',
     summary: 'Create case.',
   })
   @ApiResponse({
@@ -152,7 +159,7 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: [CaseComment],
+    type: GetCaseCommentsResponse,
     description: 'Comments for case',
   })
   async getComments(
@@ -181,15 +188,15 @@ export class CaseController {
 
   @Post(':id/comments')
   @ApiOperation({
-    operationId: 'postComment',
+    operationId: 'createComment',
     summary: 'Add comment to case',
   })
   @ApiResponse({
-    type: [CaseComment],
+    type: PostCaseCommentResponse,
     status: 200,
     description: 'Comment added',
   })
-  async postComment(
+  async createComment(
     @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
@@ -201,19 +208,17 @@ export class CaseController {
     operationId: 'deleteComment',
     summary: 'Delete comment from case',
   })
-  @ApiResponse({
-    type: [CaseComment],
-    status: 200,
-    description: 'Comment deleted',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Comment not found',
-  })
+  @ApiNoContentResponse()
   async deleteComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,
-  ): Promise<DeleteCaseCommentResponse> {
-    return this.caseCommentService.delete(id, commentId)
+  ): Promise<void> {
+    const result = await this.caseCommentService.delete(id, commentId)
+
+    if (!result) {
+      throw new NotFoundException(
+        `Comment<${commentId}> not found on case<${id}>`,
+      )
+    }
   }
 }

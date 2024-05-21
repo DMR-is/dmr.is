@@ -280,7 +280,7 @@ export class CommentService implements ICommentService {
   async delete(
     caseId: string,
     commentId: string,
-  ): Promise<DeleteCaseCommentResponse> {
+  ): Promise<DeleteCaseCommentResponse | null> {
     this.logger.info('Deleting comment from application', {
       caseId,
       commentId,
@@ -302,9 +302,8 @@ export class CommentService implements ICommentService {
         commentId,
         category: LOGGING_CATEGORY,
       })
-      return Promise.resolve({
-        success: false,
-      })
+
+      return null
     }
 
     try {
