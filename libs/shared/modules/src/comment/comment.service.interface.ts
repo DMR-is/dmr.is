@@ -21,7 +21,10 @@ export interface ICommentService {
     transaction?: Transaction,
   ): Promise<PostCaseCommentResponse>
 
-  delete(caseId: string, commentId: string): Promise<DeleteCaseCommentResponse>
+  delete(
+    caseId: string,
+    commentId: string,
+  ): Promise<DeleteCaseCommentResponse | null>
 }
 
 export const ICommentService = Symbol('ICommentService')

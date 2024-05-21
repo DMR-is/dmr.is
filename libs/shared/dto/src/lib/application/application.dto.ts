@@ -67,6 +67,12 @@ export class Application {
   name!: string
 
   @ApiProperty({
+    type: [String],
+    description: 'List of applicant actors',
+  })
+  applicantActors!: string[]
+
+  @ApiProperty({
     type: ApplicationAnswers,
     description: 'Application answers',
   })
