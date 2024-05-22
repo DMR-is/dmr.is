@@ -49,6 +49,12 @@ export class CaseComment {
   caseStatus!: CaseStatus
 
   @ApiProperty({
+    type: String,
+    description: 'JSON state of the application',
+  })
+  state!: string | null
+
+  @ApiProperty({
     type: CaseCommentTask,
     example: {
       from: 'Ármann',

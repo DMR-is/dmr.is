@@ -34,6 +34,7 @@ export const caseCommentMigrate = (model: CaseCommentDto): CaseComment => {
       createdAt: model.createdAt,
       caseStatus: status,
       type: type,
+      state: model.state,
       task: {
         comment: model.task.comment,
         from: userMapper(model.task.fromId),
