@@ -142,7 +142,7 @@ export class MockJournalService implements IJournalService {
     } else {
       return Promise.resolve({
         ok: false,
-        error: { message: 'no advert', code: '500' },
+        error: { message: 'no advert', code: 500 },
       })
     }
   }

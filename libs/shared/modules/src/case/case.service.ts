@@ -3,21 +3,17 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES, ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
+import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
-  Case,
   CaseCommentType,
   CaseCommunicationStatus,
   CaseEditorialOverview,
   CaseStatus,
   CaseTag,
-  CaseWithAdvert,
   CreateCaseResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetUsersQueryParams,
-  GetUsersResponse,
   PostApplicationBody,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
@@ -205,6 +201,7 @@ export class CaseService implements ICaseService {
             comment: null,
             from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
             to: null,
+            state: JSON.stringify(application),
           },
           t,
         )

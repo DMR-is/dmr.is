@@ -36,6 +36,12 @@ export class CaseCommentDto extends Model {
   internal!: boolean
 
   @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+  })
+  state!: string | null
+
+  @Column({
     type: DataType.UUID,
     allowNull: false,
     field: 'type_id',

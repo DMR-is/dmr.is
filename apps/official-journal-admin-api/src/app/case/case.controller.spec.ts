@@ -31,6 +31,7 @@ describe('CaseController', () => {
     createdAt: '2024-03-12T12:45:48.21Z',
     caseStatus: CaseStatus.Submitted,
     internal: false,
+    state: null,
     task: {
       from: null,
       to: 'Stofnun x',
@@ -131,6 +132,7 @@ describe('CaseController', () => {
       type: 'comment',
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: 'Innsent',
+      state: null,
       internal: false,
       task: {
         from: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
@@ -155,6 +157,7 @@ describe('CaseController', () => {
         to: comment.task.to,
         internal: comment.internal,
         type: comment.type,
+        state: null,
       })
 
       expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
@@ -163,6 +166,7 @@ describe('CaseController', () => {
         to: comment.task.to,
         internal: comment.internal,
         type: comment.type,
+        state: null,
       })
 
       expect(results).toEqual({

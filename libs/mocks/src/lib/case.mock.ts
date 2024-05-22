@@ -34,6 +34,7 @@ export const CASE_SUBMITTED: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -68,6 +69,7 @@ export const CASE_IN_PROGRESS: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -81,6 +83,7 @@ export const CASE_IN_PROGRESS: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -94,6 +97,7 @@ export const CASE_IN_PROGRESS: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -107,6 +111,7 @@ export const CASE_IN_PROGRESS: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -142,6 +147,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -155,6 +161,7 @@ export const CASE_IN_REVIEW: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -168,6 +175,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -181,6 +189,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -195,6 +204,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Pálína J',
@@ -208,6 +218,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Pálína J',
         to: 'Yfirlestur',
@@ -221,6 +232,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
       internal: false,
+      state: null,
       task: {
         from: 'Pálína J',
         to: null,
@@ -234,6 +246,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
       internal: false,
+      state: null,
       task: {
         from: 'Pálína J',
         to: 'Ármann',
@@ -247,6 +260,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -260,6 +274,7 @@ export const CASE_IN_REVIEW: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InReview,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Tilbúið',
@@ -294,6 +309,7 @@ export const CASE_READY: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -307,6 +323,7 @@ export const CASE_READY: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -320,6 +337,7 @@ export const CASE_READY: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -333,6 +351,7 @@ export const CASE_READY: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -368,6 +387,7 @@ export const CASE_READY_2: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -381,6 +401,7 @@ export const CASE_READY_2: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -394,6 +415,7 @@ export const CASE_READY_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -407,6 +429,7 @@ export const CASE_READY_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -442,6 +465,7 @@ export const CASE_READY_3: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -455,6 +479,7 @@ export const CASE_READY_3: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -468,6 +493,7 @@ export const CASE_READY_3: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -481,6 +507,7 @@ export const CASE_READY_3: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -516,6 +543,7 @@ export const CASE_PUBLISHED: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -529,6 +557,7 @@ export const CASE_PUBLISHED: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -542,6 +571,7 @@ export const CASE_PUBLISHED: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -555,6 +585,7 @@ export const CASE_PUBLISHED: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -590,6 +621,7 @@ export const CASE_PUBLISHED_2: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -603,6 +635,7 @@ export const CASE_PUBLISHED_2: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -616,6 +649,7 @@ export const CASE_PUBLISHED_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: 'Grunnvinnsla',
@@ -629,6 +663,7 @@ export const CASE_PUBLISHED_2: Case = {
       createdAt: '2024-03-13T12:45:48.21Z',
       caseStatus: CaseStatus.InProgress,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,
@@ -664,6 +699,7 @@ export const CASE_PUBLISHED_3: Case = {
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: null,
         to: 'Stofnun x',
@@ -677,6 +713,7 @@ export const CASE_PUBLISHED_3: Case = {
       type: CaseCommentType.Assign,
       caseStatus: CaseStatus.Submitted,
       internal: false,
+      state: null,
       task: {
         from: 'Ármann',
         to: null,

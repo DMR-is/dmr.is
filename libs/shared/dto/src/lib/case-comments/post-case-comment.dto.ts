@@ -37,4 +37,11 @@ export class PostCaseComment {
     required: false,
   })
   to!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'State of the application as JSONB',
+    required: false,
+  })
+  state!: string | null
 }
