@@ -1,8 +1,6 @@
 const path = require('path')
 
 module.exports = {
-  config: path.resolve(
-    '../../libs/shared/sequelize/src/lib/sequelize.config.js',
-  ),
+  config: path.resolve('sequelize.config.js'),
   'migrations-path': path.resolve('migrations'),
 }
