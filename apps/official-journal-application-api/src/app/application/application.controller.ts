@@ -2,13 +2,32 @@ import { IApplicationService } from '@dmr.is/modules'
 import {
   Application,
   CaseComment,
+  GetCaseCommentsResponse,
   PostApplicationComment,
-  SubmitApplicationBody,
+  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 
-import { Body, Controller, Get, Inject, Param, Post, Put } from '@nestjs/common'
-import { ApiBody, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpException,
+  Inject,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common'
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiExcludeEndpoint,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger'
 
 @Controller({
   path: 'applications',
@@ -28,17 +47,15 @@ export class ApplicationController {
   @ApiOkResponse({
     type: Application,
   })
+  @ApiExcludeEndpoint()
   async getApplication(@Param('id') id: string): Promise<Application | null> {
     return await this.applicationService.getApplication(id)
   }
 
-  @Put(':id/submit')
+  @Post(':id/submit')
   @ApiOperation({
     operationId: 'submitApplication',
     summary: 'Submit application by ID.',
-  })
-  @ApiOkResponse({
-    type: Application,
   })
   @ApiParam({
     type: String,
@@ -47,16 +64,17 @@ export class ApplicationController {
     required: true,
     allowEmptyValue: false,
   })
-  @ApiBody({
-    type: SubmitApplicationBody,
-    required: true,
-    description: 'Submit application body, approve or reject the application.',
-  })
-  async submitApplication(
-    @Param('id') id: string,
-    @Body() body: SubmitApplicationBody,
-  ): Promise<Application | null> {
-    return await this.applicationService.submitApplication(id, body)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiExcludeEndpoint()
+  async submitApplication(@Param('id') id: string) {
+    const results = await this.applicationService.submitApplication(id)
+
+    if (!results.ok) {
+      throw new HttpException(results.error.message, results.error.code)
+    }
+
+    return Promise.resolve()
   }
 
   @Put(':id')
@@ -79,11 +97,36 @@ export class ApplicationController {
     required: true,
     description: 'Update application body, answers to update.',
   })
+  @ApiExcludeEndpoint()
   async updateApplication(
     @Param('id') id: string,
     @Body() body: UpdateApplicationBody,
   ): Promise<Application | null> {
     return await this.applicationService.updateApplication(id, body)
+  }
+
+  @Post(':id/post')
+  @ApiOperation({
+    operationId: 'postApplication',
+    summary: 'Post application.',
+  })
+  @ApiParam({
+    type: String,
+    name: 'id',
+    description: 'Id of the application to post.',
+    required: true,
+    allowEmptyValue: false,
+  })
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  async postApplication(@Param('id') applicationId: string) {
+    const results = await this.applicationService.postApplication(applicationId)
+
+    if (!results.ok) {
+      throw new HttpException(results.error.message, results.error.code)
+    }
+
+    return Promise.resolve()
   }
 
   @Get(':id/comments')
@@ -92,24 +135,45 @@ export class ApplicationController {
     summary: 'Get comments by application ID.',
   })
   @ApiOkResponse({
-    type: [CaseComment],
+    type: GetCaseCommentsResponse,
   })
-  async getComments(@Param('id') applicationId: string) {
-    return await this.applicationService.getComments(applicationId)
+  async getComments(
+    @Param('id') applicationId: string,
+  ): Promise<GetCaseCommentsResponse> {
+    const result = await this.applicationService.getComments(applicationId)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return Promise.resolve({
+      comments: result.value.comments,
+    })
   }
 
   @Post(':id/comments')
-  @ApiOperation({
-    operationId: 'addComment',
-    summary: 'Add comment to application.',
+  @ApiCreatedResponse({
+    type: PostCaseCommentResponse,
   })
-  @ApiOkResponse({
-    type: [CaseComment],
+  @ApiOperation({
+    operationId: 'postComment',
+    summary: 'Add comment to application.',
   })
   async postComment(
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,
-  ) {
-    return await this.applicationService.postComment(applicationId, commentBody)
+  ): Promise<PostCaseCommentResponse> {
+    const result = await this.applicationService.postComment(
+      applicationId,
+      commentBody,
+    )
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return Promise.resolve({
+      comment: result.value.comment,
+    })
   }
 }

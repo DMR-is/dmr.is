@@ -205,6 +205,7 @@ export class CaseService implements ICaseService {
             comment: null,
             from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
             to: null,
+            state: JSON.stringify(application),
           },
           t,
         )

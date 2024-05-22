@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   Application,
   CaseCommentPublicity,
@@ -6,7 +7,6 @@ import {
   GetCaseCommentsResponse,
   PostApplicationComment,
   PostCaseCommentResponse,
-  SubmitApplicationBody,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 
@@ -21,6 +21,7 @@ import {
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
+import { Result } from '../types/result'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CATEGORY = 'application-service'
@@ -76,46 +77,6 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  async postApplication(applicationId: string): Promise<void> {
-    // This method handles the submission from the application system
-
-    // check if the application is already submitted
-    const caseResponse = await this.caseService.cases({
-      applicationId,
-    })
-
-    const activeCase = caseResponse.cases.find(
-      (c) => c.applicationId === applicationId,
-    )
-
-    if (activeCase) {
-      // update history property on case
-      try {
-        // await this.caseService.updateCaseHistory(hasSubmittedBefore.id)
-        // TODO: Post comment to case
-      } catch (error) {
-        this.logger.error('Could not update case history', {
-          error,
-          category: LOGGING_CATEGORY,
-        })
-      }
-      throw new InternalServerErrorException('Could not update case')
-    } else {
-      // we create a new case
-      try {
-        await this.caseService.create({
-          applicationId,
-        })
-      } catch (error) {
-        this.logger.error('Could not create case', {
-          error,
-          category: LOGGING_CATEGORY,
-        })
-        throw new InternalServerErrorException('Could not create case')
-      }
-    }
-  }
-
   async getApplication(id: string): Promise<Application | null> {
     this.logger.info('getAdvert', { id, category: LOGGING_CATEGORY })
 
@@ -147,10 +108,10 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
-  async submitApplication(id: string, body: SubmitApplicationBody) {
+  async submitApplication(id: string): Promise<Result<undefined>> {
+    // This method handles state transitions of the application from admin system
     this.logger.info('submitApplication', {
       id,
-      body,
       category: LOGGING_CATEGORY,
     })
 
@@ -166,22 +127,37 @@ export class ApplicationService implements IApplicationService {
       )
 
       if (res.status !== 200) {
-        this.logger.error('Could not submit application', {
+        this.logger.error('Error in submitApplication', {
           status: res.status,
           category: LOGGING_CATEGORY,
         })
-        return null
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: res.status,
+            message: 'Could not submit application',
+          },
+        })
       }
 
-      const application: Application = await res.json()
+      const newCase = await this.caseService.create({
+        applicationId: id,
+      })
 
-      return application
+      return Promise.resolve({ ok: true, value: undefined })
     } catch (error) {
-      this.logger.error('Exception occured, could not submit application', {
+      this.logger.error('Error in submitAppication', {
         error,
         category: LOGGING_CATEGORY,
+        id: id,
       })
-      return null
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Could not submit application',
+        },
+      })
     }
   }
 
@@ -226,72 +202,211 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
-  async getComments(applicationId: string): Promise<GetCaseCommentsResponse> {
+  async postApplication(applicationId: string): Promise<Result<undefined>> {
+    this.logger.info('postApplication', {
+      applicationId,
+      category: LOGGING_CATEGORY,
+    })
+
+    try {
+      const caseResponse = await this.caseService.cases({
+        applicationId,
+      })
+
+      const found = caseResponse.cases.find(
+        (c) => c.applicationId === applicationId,
+      )
+
+      const application = await this.getApplication(applicationId)
+
+      if (!application) {
+        this.logger.error('Application not found', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Application with id<${applicationId}> not found`,
+          },
+        })
+      }
+
+      if (found) {
+        await this.commentService.create(found.id, {
+          internal: true,
+          type: CaseCommentType.Submit,
+          comment: null,
+          from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+          to: null,
+          state: JSON.stringify(application),
+        })
+
+        return Promise.resolve({
+          ok: true,
+          value: undefined,
+        })
+      } else {
+        await this.caseService.create({
+          applicationId,
+        })
+
+        return Promise.resolve({
+          ok: true,
+          value: undefined,
+        })
+      }
+    } catch (error) {
+      this.logger.error('Error in postApplication', {
+        error,
+        applicationId,
+        category: LOGGING_CATEGORY,
+      })
+
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: `Could not create case for application applicationId<${applicationId}>`,
+        },
+      })
+    }
+  }
+
+  async getComments(
+    applicationId: string,
+  ): Promise<Result<GetCaseCommentsResponse>> {
     this.logger.info('Getting comments for application', {
       applicationId,
       category: LOGGING_CATEGORY,
     })
 
-    const caseResponse = await this.caseService.cases({
-      applicationId,
-    })
+    try {
+      const caseResponse = await this.caseService.cases({
+        applicationId,
+      })
 
-    const activeCase = caseResponse.cases.find(
-      (c) => c.applicationId === applicationId,
-    )
+      const activeCase = caseResponse.cases.find(
+        (c) => c.applicationId === applicationId,
+      )
 
-    if (!activeCase) {
-      this.logger.error('Case not found', {
+      if (!activeCase) {
+        this.logger.error('Case not found', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Case with applicationId<${applicationId}> not found`,
+          },
+        })
+      }
+
+      const comments = await this.commentService.comments(activeCase.id, {
+        type: CaseCommentPublicity.External,
+      })
+
+      return Promise.resolve({
+        ok: true,
+        value: comments,
+      })
+    } catch (error) {
+      this.logger.error('Error in getComments', {
+        error,
         applicationId,
         category: LOGGING_CATEGORY,
       })
-      throw new NotFoundException('Case not found')
-    }
 
-    if (!activeCase) {
-      this.logger.error('Case not found', {
-        applicationId,
-        category: LOGGING_CATEGORY,
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: `Could not get comments for applicationId<${applicationId}>`,
+        },
       })
-      throw new NotFoundException('Case not found')
     }
-
-    return await this.commentService.comments(activeCase.id, {
-      type: CaseCommentPublicity.External,
-    })
   }
 
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<PostCaseCommentResponse> {
+  ): Promise<Result<PostCaseCommentResponse>> {
     this.logger.info('Posting comment for application', {
       applicationId,
       category: LOGGING_CATEGORY,
     })
 
-    const caseResponse = await this.caseService.cases({
-      applicationId,
-    })
+    try {
+      const caseResponse = await this.caseService.cases({
+        applicationId,
+      })
 
-    const activeCase = caseResponse.cases.find(
-      (c) => c.applicationId === applicationId,
-    )
+      const activeCase = caseResponse.cases.find(
+        (c) => c.applicationId === applicationId,
+      )
 
-    if (!activeCase) {
-      this.logger.error('Case not found', {
+      if (!activeCase) {
+        this.logger.error('Case not found', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Case with applicationId<${applicationId}> not found`,
+          },
+        })
+      }
+
+      const created = await this.commentService.create(activeCase.id, {
+        comment: commentBody.comment,
+        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        to: null,
+        internal: false,
+        type: CaseCommentType.Comment,
+        state: null,
+      })
+
+      if (!created) {
+        this.logger.error('Could not create comment', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 500,
+            message: `Could not create comment for applicationId<${applicationId}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: created,
+      })
+    } catch (error) {
+      this.logger.error('Error in postComment', {
+        error,
         applicationId,
         category: LOGGING_CATEGORY,
       })
-      throw new NotFoundException('Case not found')
-    }
 
-    return await this.commentService.create(activeCase.id, {
-      comment: commentBody.comment,
-      from: commentBody.from,
-      to: commentBody.name ? commentBody.name : null,
-      internal: false,
-      type: CaseCommentType.Comment,
-    })
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: `Could not create comment for applicationId<${applicationId}>`,
+        },
+      })
+    }
   }
 }

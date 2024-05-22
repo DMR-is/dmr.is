@@ -194,7 +194,7 @@ export class CaseController {
   @ApiResponse({
     type: PostCaseCommentResponse,
     status: 200,
-    description: 'Comment added',
+    description: 'Comment created',
   })
   async createComment(
     @Param('id') id: string,
