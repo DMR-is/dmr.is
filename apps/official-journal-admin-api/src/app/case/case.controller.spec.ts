@@ -155,6 +155,7 @@ describe('CaseController', () => {
         to: comment.task.to,
         internal: comment.internal,
         type: comment.type,
+        state: null,
       })
 
       expect(createSpy).toHaveBeenCalledWith(activeCase.id, {

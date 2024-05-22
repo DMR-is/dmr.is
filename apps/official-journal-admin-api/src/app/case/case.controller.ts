@@ -1,10 +1,8 @@
 import { ICaseService, ICommentService } from '@dmr.is/modules'
 import {
   Case,
-  CaseComment,
   CaseEditorialOverview,
   CreateCaseResponse,
-  DeleteCaseCommentResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -35,7 +33,6 @@ import {
   ApiBody,
   ApiNoContentResponse,
   ApiOperation,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
