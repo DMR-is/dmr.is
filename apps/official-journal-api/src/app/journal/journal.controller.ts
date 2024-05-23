@@ -1,5 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IJournalService, Result } from '@dmr.is/modules'
+import { IJournalService } from '@dmr.is/modules'
 import {
   Advert,
   AdvertNotFound,
@@ -21,14 +21,7 @@ import {
   ValidationResponse,
 } from '@dmr.is/shared/dto'
 
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Inject,
-  NotFoundException,
-  Query,
-} from '@nestjs/common'
+import { Controller, Get, HttpException, Inject, Query } from '@nestjs/common'
 import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 const LOGGING_CATEGORY = 'JournalController'
@@ -53,8 +46,16 @@ export class JournalController {
     description: 'Advert not found.',
     type: AdvertNotFound,
   })
-  async advert(@Query('id') id: string): Promise<Result<GetAdvertResponse>> {
-    return await this.journalService.getAdvert(id)
+  async advert(@Query('id') id: string): Promise<GetAdvertResponse> {
+    const result = await this.journalService.getAdvert(id)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('adverts')
@@ -71,8 +72,16 @@ export class JournalController {
   async adverts(
     @Query()
     params?: GetAdvertsQueryParams,
-  ): Promise<Result<GetAdvertsResponse>> {
-    return await this.journalService.getAdverts(params)
+  ): Promise<GetAdvertsResponse> {
+    const result = await this.journalService.getAdverts(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('departments')
@@ -89,8 +98,16 @@ export class JournalController {
   async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
-  ): Promise<Result<GetDepartmentsResponse>> {
-    return await this.journalService.getDepartments(params)
+  ): Promise<GetDepartmentsResponse> {
+    const result = await this.journalService.getDepartments(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('types')
@@ -107,8 +124,16 @@ export class JournalController {
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
-  ): Promise<Result<GetAdvertTypesResponse>> {
-    return await this.journalService.getTypes(params)
+  ): Promise<GetAdvertTypesResponse> {
+    const result = await this.journalService.getTypes(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('maincategories')
@@ -125,8 +150,16 @@ export class JournalController {
   async mainCategories(
     @Query()
     params?: GetMainCategoriesQueryParams,
-  ): Promise<Result<GetMainCategoriesResponse>> {
-    return await this.journalService.getMainCategories(params)
+  ): Promise<GetMainCategoriesResponse> {
+    const result = await this.journalService.getMainCategories(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('categories')
@@ -143,8 +176,16 @@ export class JournalController {
   async categories(
     @Query()
     params?: GetCategoriesQueryParams,
-  ): Promise<Result<GetCategoriesResponse>> {
-    return await this.journalService.getCategories(params)
+  ): Promise<GetCategoriesResponse> {
+    const result = await this.journalService.getCategories(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('institutions')
@@ -161,8 +202,16 @@ export class JournalController {
   async institutions(
     @Query()
     params?: GetInstitutionsQueryParams,
-  ): Promise<Result<GetInstitutionsResponse>> {
-    return this.journalService.getInstitutions(params)
+  ): Promise<GetInstitutionsResponse> {
+    const result = await this.journalService.getInstitutions(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('signatures')
@@ -178,8 +227,16 @@ export class JournalController {
   })
   async signatures(
     @Query() params?: GetAdvertSignatureQuery,
-  ): Promise<Result<GetAdvertSignatureResponse>> {
-    return this.journalService.getSignatures(params)
+  ): Promise<GetAdvertSignatureResponse> {
+    const result = await this.journalService.getSignatures(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
   }
 
   @Get('error')

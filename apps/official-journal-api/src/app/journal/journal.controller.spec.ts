@@ -34,35 +34,33 @@ describe('JournalController', () => {
   describe('adverts', () => {
     it('should return correct amount of mocked adverts', async () => {
       const results = await journalController.adverts()
-      expect(results.ok && results?.value.adverts.length).toEqual(2)
+      expect(results.adverts.length).toEqual(2)
     })
 
     it('should return no results when searching for non-existing advert', async () => {
       const results = await journalController.adverts({ search: 'foo' })
-      expect(results.ok && results?.value.adverts.length).toEqual(0)
+      expect(results.adverts.length).toEqual(0)
     })
   })
 
   describe('advert', () => {
     it('should return correct advert', async () => {
-      const result = await journalController.advert(
+      const results = await journalController.advert(
         'bcbefaf4-c021-4b63-877b-001dde880052',
       )
-      expect(result.ok && result?.value.advert.id).toEqual(
-        'bcbefaf4-c021-4b63-877b-001dde880052',
-      )
+      expect(results.advert.id).toEqual('bcbefaf4-c021-4b63-877b-001dde880052')
     })
   })
 
   describe('departments', () => {
     it('should return correct amount of mocked departments', async () => {
       const results = await journalController.departments()
-      expect(results.ok && results?.value.departments.length).toEqual(3)
+      expect(results.departments.length).toEqual(3)
     })
 
     it('should return no results when searching for non-existing department', async () => {
       const results = await journalController.departments({ search: 'foo' })
-      expect(results.ok && results?.value.departments.length).toEqual(0)
+      expect(results.departments.length).toEqual(0)
     })
   })
 
