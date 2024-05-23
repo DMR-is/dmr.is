@@ -116,6 +116,20 @@ export class CaseDto extends Model {
   fastTrack!: boolean
 
   @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'advert_title',
+  })
+  advertTitle!: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'advert_requested_publication_date',
+  })
+  requestedPublicationDate!: string
+
+  @Column({
     type: DataType.UUID,
     allowNull: true,
     field: 'department_id',
@@ -123,7 +137,7 @@ export class CaseDto extends Model {
   departmentId!: string | null
 
   @BelongsTo(() => AdvertDepartmentDTO, 'department_id')
-  department!: AdvertDepartmentDTO | null
+  department!: AdvertDepartmentDTO
 
   @BelongsToMany(() => CaseCommentDto, {
     through: { model: () => CaseCommentsDto },

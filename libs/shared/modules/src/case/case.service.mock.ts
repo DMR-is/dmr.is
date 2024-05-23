@@ -127,7 +127,7 @@ export class CaseServiceMock implements ICaseService {
     const { cases, paging } = await this.cases(params)
 
     return Promise.resolve({
-      data: cases as unknown as CaseWithAdvert[],
+      data: cases as unknown as Case[],
       totalItems: {
         submitted: submitted.length,
         inProgress: inProgress.length,

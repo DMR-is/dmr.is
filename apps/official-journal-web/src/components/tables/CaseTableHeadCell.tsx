@@ -1,6 +1,9 @@
+import cn from 'classnames'
+
 import { Box, Icon, Table as T, Text } from '@island.is/island-ui/core'
 
 import * as styles from './CaseTable.css'
+
 type Props = {
   children?: React.ReactNode | string
   sortable?: boolean
@@ -9,8 +12,6 @@ type Props = {
   fixed?: boolean
   size?: 'tiny' | 'small' | 'default'
 }
-
-import cn from 'classnames'
 
 export const TableHeadCell = ({
   children,

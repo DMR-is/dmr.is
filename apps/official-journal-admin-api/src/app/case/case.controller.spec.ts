@@ -1,4 +1,5 @@
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
 import {
   IApplicationService,
   ICaseService,
@@ -6,6 +7,7 @@ import {
   IJournalService,
 } from '@dmr.is/modules'
 import {
+  Case,
   CaseComment,
   CaseCommentTitle,
   CaseCommentType,
@@ -57,7 +59,10 @@ describe('CaseController', () => {
     assignedTo: null,
     communicationStatus: CaseCommunicationStatus.NotStarted,
     comments: [comment],
-  }
+    advertDepartment: JOURNAL_DEPARTMENT_B,
+    advertTitle: 'Test adver title',
+    requestedPublicationDate: '2024-03-12T12:45:48.21Z',
+  } as Case
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({

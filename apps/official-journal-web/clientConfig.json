@@ -1,331 +1,7 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/health": {
-      "get": {
-        "operationId": "HealthController_health",
-        "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } }
-      }
-    },
-    "/api/v1/cases/case": {
-      "get": {
-        "operationId": "getCase",
-        "summary": "Get case by ID.",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Case by ID.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Case" }
-              }
-            }
-          },
-          "404": { "description": "Case not found." }
-        }
-      }
-    },
-    "/api/v1/cases/case-with-application": {
-      "get": {
-        "operationId": "getCaseWithApplication",
-        "summary": "Get case with application by ID.",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Case with application by ID.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseWithApplication" }
-              }
-            }
-          },
-          "404": { "description": "Case with application not found." }
-        }
-      }
-    },
-    "/api/v1/cases/cases": {
-      "get": {
-        "operationId": "getCases",
-        "summary": "Get cases.",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "String to search for in cases.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Application ID",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "Page size",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "caseNumber",
-            "required": false,
-            "in": "query",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Status to filter cases on, takes into account `status` on `Case`.",
-            "schema": {
-              "enum": [
-                "Innsent",
-                "Grunnvinnsla",
-                "Yfirlestur",
-                "Tilbúið",
-                "Útgefið",
-                "Tekið úr birtingu",
-                "Birtingu hafnað"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "name": "employeeId",
-            "required": false,
-            "in": "query",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "required": false,
-            "in": "query",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "All cases.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/cases/cases-with-application": {
-      "get": {
-        "operationId": "getCasesWithApplication",
-        "summary": "Get cases with application.",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "String to search for in cases.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Application ID",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "Page size",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "caseNumber",
-            "required": false,
-            "in": "query",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Status to filter cases on, takes into account `status` on `Case`.",
-            "schema": {
-              "enum": [
-                "Innsent",
-                "Grunnvinnsla",
-                "Yfirlestur",
-                "Tilbúið",
-                "Útgefið",
-                "Tekið úr birtingu",
-                "Birtingu hafnað"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "name": "employeeId",
-            "required": false,
-            "in": "query",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "required": false,
-            "in": "query",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "required": false,
-            "in": "query",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "All cases with application.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCasesWithApplicationReponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/cases/users": {
-      "get": {
-        "operationId": "getUsers",
-        "summary": "Get users.",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "String to search for user.",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "All active users.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetUsersResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/cases/editorialOverview": {
+    "/api/v1/cases/overview": {
       "get": {
         "operationId": "getEditorialOverview",
         "summary": "Get overview for cases in progress.",
@@ -345,6 +21,13 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "description": "Year",
+            "schema": { "type": "number" }
+          },
+          {
             "name": "page",
             "required": false,
             "in": "query",
@@ -369,19 +52,8 @@
             "name": "status",
             "required": false,
             "in": "query",
-            "description": "Status to filter cases on, takes into account `status` on `Case`.",
-            "schema": {
-              "enum": [
-                "Innsent",
-                "Grunnvinnsla",
-                "Yfirlestur",
-                "Tilbúið",
-                "Útgefið",
-                "Tekið úr birtingu",
-                "Birtingu hafnað"
-              ],
-              "type": "string"
-            }
+            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
+            "schema": { "type": "string" }
           },
           {
             "name": "employeeId",
@@ -447,6 +119,170 @@
         }
       }
     },
+    "/api/v1/cases/{id}": {
+      "get": {
+        "operationId": "getCase",
+        "summary": "Get case by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Case by ID.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Case" }
+              }
+            }
+          },
+          "404": { "description": "Case not found." }
+        }
+      }
+    },
+    "/api/v1/cases": {
+      "post": {
+        "operationId": "createCase",
+        "summary": "Create case.",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PostApplicationBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Case created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreateCaseResponse" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getCases",
+        "summary": "Get cases.",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for in cases.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "Application ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "description": "Year",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "caseNumber",
+            "required": false,
+            "in": "query",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "employeeId",
+            "required": false,
+            "in": "query",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fastTrack",
+            "required": false,
+            "in": "query",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "institution",
+            "required": false,
+            "in": "query",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All cases.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/publish": {
       "post": {
         "operationId": "postPublish",
@@ -467,13 +303,13 @@
         }
       }
     },
-    "/api/v1/cases/{caseId}/comments": {
+    "/api/v1/cases/{id}/comments": {
       "get": {
         "operationId": "getComments",
         "summary": "Get case comments",
         "parameters": [
           {
-            "name": "caseId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -495,8 +331,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CaseComment" }
+                  "$ref": "#/components/schemas/GetCaseCommentsResponse"
                 }
               }
             }
@@ -504,11 +339,11 @@
         }
       },
       "post": {
-        "operationId": "addComment",
+        "operationId": "createComment",
         "summary": "Add comment to case",
         "parameters": [
           {
-            "name": "caseId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -528,8 +363,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CaseComment" }
+                  "$ref": "#/components/schemas/PostCaseCommentResponse"
                 }
               }
             }
@@ -537,13 +371,13 @@
         }
       }
     },
-    "/api/v1/cases/{caseId}/comments/{commentId}": {
-      "delete": {
-        "operationId": "deleteComment",
-        "summary": "Delete comment from case",
+    "/api/v1/cases/{id}/comments/{commentId}": {
+      "get": {
+        "operationId": "getComment",
+        "summary": "Get case comment",
         "parameters": [
           {
-            "name": "caseId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -557,59 +391,35 @@
         ],
         "responses": {
           "200": {
-            "description": "Comment deleted",
+            "description": "Comment for case",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CaseComment" }
+                  "$ref": "#/components/schemas/GetCaseCommentResponse"
                 }
               }
             }
-          },
-          "404": { "description": "Comment not found" }
+          }
         }
-      }
-    },
-    "/api/v1/cases/advert/types": {
-      "get": {
-        "operationId": "getAdvertTypes",
-        "summary": "Get advert types.",
+      },
+      "delete": {
+        "operationId": "deleteComment",
+        "summary": "Delete comment from case",
         "parameters": [
           {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Department slug to get categories for.",
+            "name": "id",
+            "required": true,
+            "in": "path",
             "schema": { "type": "string" }
           },
           {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "String to search for in types.",
+            "name": "commentId",
+            "required": true,
+            "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number to return.",
-            "schema": { "type": "number" }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "All advert types.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertTypesResponse"
-                }
-              }
-            }
-          }
-        }
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {
@@ -661,6 +471,13 @@
           }
         }
       }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": { "200": { "description": "Health check endpoint." } }
+      }
     }
   },
   "info": {
@@ -673,416 +490,6 @@
   "servers": [],
   "components": {
     "schemas": {
-      "ApplicationRequirements": {
-        "type": "object",
-        "properties": {
-          "approveExternalData": {
-            "type": "string",
-            "enum": ["yes", "no"],
-            "example": "yes",
-            "description": "Has the applicant approved the requirements"
-          }
-        },
-        "required": ["approveExternalData"]
-      },
-      "ApplicationAdvert": {
-        "type": "object",
-        "properties": {
-          "department": {
-            "type": "string",
-            "example": "b783c4d5-6e78-9f01-2g34-h56i7j8k9l0m",
-            "description": "Id of the selected department for the application advert"
-          },
-          "type": {
-            "type": "string",
-            "example": "a71ka2b3-4c56-7d89-0e12-3f45g6h7i8j9",
-            "description": "Id of the selected type for the application advert"
-          },
-          "title": {
-            "type": "string",
-            "example": "GJALDSKRÁ fyrir hundahald í Reykjavík",
-            "description": "Title of the application advert"
-          },
-          "document": {
-            "type": "string",
-            "description": "HTML string of the application advert"
-          },
-          "template": {
-            "type": "string",
-            "description": "Selected template for the application advert"
-          },
-          "subType": {
-            "type": "string",
-            "example": "b781ks2-3c45-6d78-9e01-2f34g5h6i7j8",
-            "description": "Id of the selected subType for the application advert, only when type is \"Reglugerð\""
-          }
-        },
-        "required": [
-          "department",
-          "type",
-          "title",
-          "document",
-          "template",
-          "subType"
-        ]
-      },
-      "ApplicationPreview": {
-        "type": "object",
-        "properties": {
-          "document": {
-            "type": "string",
-            "example": "<html><p>GJALDSKRÁ</p></html>",
-            "description": "HTML string of the advert with signature"
-          }
-        },
-        "required": ["document"]
-      },
-      "ApplicationSignatureMember": {
-        "type": "object",
-        "properties": {
-          "above": {
-            "type": "string",
-            "example": "F.h.r",
-            "description": "Text above the name of the signature"
-          },
-          "name": {
-            "type": "string",
-            "example": "Jón Jónsson",
-            "description": "Name of the signature"
-          },
-          "after": {
-            "type": "string",
-            "example": "ráðherra",
-            "description": "Text after the name of the signature"
-          },
-          "below": {
-            "type": "string",
-            "example": "Text below the name of the signature",
-            "description": "borgarstjóri"
-          }
-        },
-        "required": ["above", "name", "after", "below"]
-      },
-      "ApplicationRegularSignature": {
-        "type": "object",
-        "properties": {
-          "institution": {
-            "type": "string",
-            "example": "Dómsmálaráðuneytið",
-            "description": "Institution/place of the signature"
-          },
-          "date": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Date of the signature"
-          },
-          "members": {
-            "description": "Member of the signature",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationSignatureMember"
-            }
-          }
-        },
-        "required": ["institution", "date", "members"]
-      },
-      "ApplicationCommitteeSignature": {
-        "type": "object",
-        "properties": {
-          "institution": {
-            "type": "string",
-            "example": "Dómsmálaráðuneytið",
-            "description": "Institution/place of the signature"
-          },
-          "date": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Date of the signature"
-          },
-          "members": {
-            "description": "Member of the signature",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationSignatureMember"
-            }
-          }
-        },
-        "required": ["institution", "date", "members"]
-      },
-      "ApplicationSignature": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "example": "committee",
-            "description": "Signature type of the application"
-          },
-          "signature": {
-            "type": "string",
-            "example": "<p>Jón Jónsson</p>",
-            "description": "HTML string of the signature"
-          },
-          "additional": {
-            "type": "string",
-            "example": "Dagur B. Eggertsson",
-            "description": "Additional name of the signature"
-          },
-          "regular": {
-            "description": "Regular signature of the application",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationRegularSignature"
-            }
-          },
-          "committee": {
-            "description": "Committee signature of the application",
-            "allOf": [
-              { "$ref": "#/components/schemas/ApplicationCommitteeSignature" }
-            ]
-          }
-        },
-        "required": ["type", "signature", "additional", "regular", "committee"]
-      },
-      "ApplicationAttachmentsFileSchema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "filename.doc",
-            "description": "Name of the attachment"
-          },
-          "key": {
-            "type": "string",
-            "example": "key",
-            "description": "Key of the attachment"
-          },
-          "url": {
-            "type": "string",
-            "example": "https://example.com/document.pdf",
-            "description": "URL of the attachment"
-          }
-        },
-        "required": ["name", "key", "url"]
-      },
-      "ApplicationAttachments": {
-        "type": "object",
-        "properties": {
-          "files": {
-            "description": "List of attachments",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationAttachmentsFileSchema"
-            }
-          },
-          "fileNames": {
-            "type": "string",
-            "example": "document",
-            "description": "Selected department for the application attachment, should be \"document\" or \"additions\""
-          }
-        },
-        "required": ["files", "fileNames"]
-      },
-      "ApplicationContentCategories": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string",
-            "example": "Gæludýr",
-            "description": "Label of the category"
-          },
-          "value": {
-            "type": "string",
-            "example": "b619j2k3-4l56-7m89-0n12-3o45p6q7r8s9",
-            "description": "Id of the selected category"
-          }
-        },
-        "required": ["label", "value"]
-      },
-      "ApplicationCommunicationChannels": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "email",
-            "description": "Selected communication channel"
-          },
-          "phone": {
-            "type": "string",
-            "example": "5555555",
-            "description": "Phone number of the communication channel"
-          }
-        },
-        "required": ["email", "phone"]
-      },
-      "ApplicationPublishing": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Requested publishing date"
-          },
-          "fastTrack": {
-            "type": "string",
-            "enum": ["yes", "no"],
-            "example": "yes",
-            "description": "Request fast track for the advert"
-          },
-          "contentCategories": {
-            "description": "List of selected categories",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationContentCategories"
-            }
-          },
-          "communicationChannels": {
-            "description": "Selected communication channels",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationCommunicationChannels"
-            }
-          },
-          "message": {
-            "type": "string",
-            "example": "Some message..",
-            "description": "Message for the publisher"
-          }
-        },
-        "required": [
-          "date",
-          "fastTrack",
-          "contentCategories",
-          "communicationChannels",
-          "message"
-        ]
-      },
-      "ApplicationAnswers": {
-        "type": "object",
-        "properties": {
-          "requirements": {
-            "example": "true",
-            "description": "Has the applicant approved the external data",
-            "allOf": [
-              { "$ref": "#/components/schemas/ApplicationRequirements" }
-            ]
-          },
-          "advert": {
-            "description": "Application advert",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationAdvert" }]
-          },
-          "preview": {
-            "description": "Contents of the full document",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationPreview" }]
-          },
-          "signature": {
-            "description": "Application signature",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationSignature" }]
-          },
-          "attachments": {
-            "description": "Application attachments",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationAttachments" }]
-          },
-          "publishing": {
-            "description": "Application publishing",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationPublishing" }]
-          }
-        },
-        "required": [
-          "requirements",
-          "advert",
-          "preview",
-          "signature",
-          "attachments",
-          "publishing"
-        ]
-      },
-      "Application": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0",
-            "description": "Guid of the application"
-          },
-          "applicant": {
-            "type": "string",
-            "example": "0101015050",
-            "description": "National id of the applicant"
-          },
-          "assignees": {
-            "example": ["0101015050"],
-            "description": "List of assignees",
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "state": {
-            "type": "string",
-            "example": "draft",
-            "description": "State of the application"
-          },
-          "status": {
-            "type": "string",
-            "example": "inprogress",
-            "description": "Status of the application"
-          },
-          "typeId": {
-            "type": "string",
-            "example": "OfficialJournalOfIceland",
-            "description": "Type of the application"
-          },
-          "created": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Application creation date"
-          },
-          "modified": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Application last modified date"
-          },
-          "name": {
-            "type": "string",
-            "example": "Stjórnartíðindi",
-            "description": "Name of the application"
-          },
-          "answers": {
-            "description": "Application answers",
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationAnswers" }]
-          },
-          "externalData": { "type": "object" },
-          "listed": {
-            "type": "boolean",
-            "example": true,
-            "description": "Is the application listed"
-          },
-          "prunedAt": {
-            "type": "string",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Prune date of the application"
-          },
-          "pruned": {
-            "type": "boolean",
-            "example": "2021-04-01T00:00:00.000Z",
-            "description": "Date of the application"
-          }
-        },
-        "required": [
-          "id",
-          "applicant",
-          "assignees",
-          "state",
-          "status",
-          "typeId",
-          "created",
-          "modified",
-          "name",
-          "answers",
-          "externalData",
-          "listed",
-          "prunedAt",
-          "pruned"
-        ]
-      },
       "User": {
         "type": "object",
         "properties": {
@@ -1109,6 +516,28 @@
           }
         },
         "required": ["id", "name", "lastName", "active"]
+      },
+      "Department": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert department, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert department.",
+            "example": "A deild"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert department, used in URLs and API requests.",
+            "example": "a-deild"
+          }
+        },
+        "required": ["id", "title", "slug"]
       },
       "CaseCommentTask": {
         "type": "object",
@@ -1247,11 +676,6 @@
             "example": "Ekki hafið",
             "description": "Internal tag for the case, default to null"
           },
-          "history": {
-            "description": "Snapshot of the submitted fields, used for tracking changes in the case.",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Application" }
-          },
           "createdAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
@@ -1272,9 +696,14 @@
             "allOf": [{ "$ref": "#/components/schemas/User" }]
           },
           "communicationStatus": {
-            "type": "number",
-            "enum": [0, 1, 2, 3],
-            "example": 0,
+            "type": "string",
+            "enum": [
+              "Ekki hafin",
+              "Beðið eftir svörum",
+              "Svör hafa borist",
+              "Lokið"
+            ],
+            "example": "Ekki hafin",
             "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`"
           },
           "fastTrack": {
@@ -1282,15 +711,25 @@
             "example": false,
             "description": "Requested fast track"
           },
-          "published": {
-            "type": "boolean",
-            "example": false,
-            "description": "Is the case published."
-          },
           "publishedAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
             "description": "Date the case was published. ISO 8601 date and time format in UTC."
+          },
+          "requestedPublicationDate": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Requested advert publication date. ISO 8601 date and time format in UTC."
+          },
+          "advertTitle": {
+            "type": "string",
+            "example": "Titill á máli",
+            "description": "Advert title on case"
+          },
+          "advertDepartment": {
+            "example": "B-Deild",
+            "description": "Advert department",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
           },
           "price": {
             "type": "number",
@@ -1326,266 +765,46 @@
           "caseNumber",
           "status",
           "tag",
-          "history",
           "createdAt",
           "modifiedAt",
           "isLegacy",
           "assignedTo",
           "communicationStatus",
           "fastTrack",
-          "published",
           "publishedAt",
+          "requestedPublicationDate",
+          "advertTitle",
+          "advertDepartment",
           "price",
           "paid",
           "comments"
         ]
       },
-      "Department": {
+      "CaseOverviewTotalItems": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert department, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert department.",
-            "example": "A deild"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert department, used in URLs and API requests.",
-            "example": "a-deild"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "AdvertType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert type, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert type, always uppercased.",
-            "example": "AUGLÝSING"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert type, used in URLs and API requests.",
-            "example": "auglysing"
-          },
-          "department": {
-            "description": "Department the advert type belongs to.",
-            "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          }
-        },
-        "required": ["id", "title", "slug", "department"]
-      },
-      "MainCategory": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the main category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the main category.",
-            "example": "Dómstólar og réttarfar"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the main category, used in URLs and API requests.",
-            "example": "domstolar-og-rettarfar"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the main category, used on front page.",
-            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
-          }
-        },
-        "required": ["id", "title", "slug", "description"]
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert category.",
-            "example": "Evrópska efnahagssvæðið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert category, used in URLs and API requests.",
-            "example": "evropska-efnahagssvaedid"
-          },
-          "mainCategory": {
-            "description": "The main category this category belongs to.",
-            "nullable": true,
-            "example": "Dómstólar og réttarfar",
-            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "CaseWithApplication": {
-        "type": "object",
-        "properties": {
-          "caseId": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "applicationId": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "publicationNumber": { "type": "string", "example": "244" },
-          "fastTrack": { "type": "boolean", "example": true },
-          "communicationStatus": {
+          "submitted": {
             "type": "number",
-            "enum": [0, 1, 2, 3],
+            "description": "Total submitted cases",
+            "example": 7
+          },
+          "inProgress": {
+            "type": "number",
+            "description": "Total in progress cases",
             "example": 3
           },
-          "document": {
-            "type": "string",
-            "description": "Full advert document html",
-            "example": "<p>GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.</p>"
-          },
-          "caseStatus": {
-            "type": "string",
-            "enum": [
-              "Innsent",
-              "Grunnvinnsla",
-              "Yfirlestur",
-              "Tilbúið",
-              "Útgefið",
-              "Tekið úr birtingu",
-              "Birtingu hafnað"
-            ],
-            "example": "Grunnvinnsla"
-          },
-          "tag": {
-            "type": "string",
-            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
-            "example": "Í yfirlestri"
-          },
-          "requestedPublicationDate": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00.000Z"
-          },
-          "createdDate": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00.000Z"
-          },
-          "publishDate": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00.000Z"
-          },
-          "advertDepartment": {
-            "example": "GJALDSKRÁ",
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          },
-          "advertTitle": {
-            "type": "string",
-            "example": "GJALDSKRÁ fyrir hundahald í Reykjavíkurborg."
-          },
-          "assignedTo": {
-            "description": "User the case is assigned to.",
-            "allOf": [{ "$ref": "#/components/schemas/User" }]
-          },
-          "institutionTitle": {
-            "type": "string",
-            "example": "Reykjavíkurborg"
-          },
-          "caseComments": {
-            "description": "Comments on the case.",
-            "example": {
-              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-              "createdAt": "2024-01-01T09:00:00Z",
-              "type": "Comment",
-              "task": {
-                "from": "Ármann",
-                "to": null,
-                "title": "gerir athugasemd",
-                "comment": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?"
-              }
-            },
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseComment" }
-          },
-          "isLegacy": {
-            "type": "boolean",
-            "example": false,
-            "description": "Is legacy case."
-          },
-          "signatureDate": {
-            "type": "string",
-            "description": "Date the advert was signed, can be null. ISO 8601 date and time format in UTC.",
-            "nullable": true,
-            "example": "2024-01-10T16:00:00Z"
-          },
-          "advertType": {
-            "description": "Type of the advert.",
-            "example": "GJALDSKRÁ",
-            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
-          },
-          "categories": {
-            "description": "List of advert categories.",
-            "nullable": false,
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Category" }
-          },
-          "paid": {
-            "type": "boolean",
-            "example": false,
-            "description": "Is the case paid for."
-          },
-          "price": {
+          "inReview": {
             "type": "number",
-            "example": 23000,
-            "description": "The cost of the case."
+            "description": "Total in review cases",
+            "example": 2
+          },
+          "ready": {
+            "type": "number",
+            "description": "Total ready cases",
+            "example": 1
           }
         },
-        "required": [
-          "caseId",
-          "applicationId",
-          "publicationNumber",
-          "fastTrack",
-          "communicationStatus",
-          "document",
-          "caseStatus",
-          "tag",
-          "requestedPublicationDate",
-          "createdDate",
-          "publishDate",
-          "advertDepartment",
-          "advertTitle",
-          "assignedTo",
-          "institutionTitle",
-          "caseComments",
-          "isLegacy",
-          "signatureDate",
-          "advertType",
-          "categories",
-          "paid",
-          "price"
-        ]
+        "required": ["submitted", "inProgress", "inReview", "ready"]
       },
       "Paging": {
         "type": "object",
@@ -1615,6 +834,42 @@
           "hasPreviousPage"
         ]
       },
+      "CaseEditorialOverview": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Cases for selected tab",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Case" }
+          },
+          "totalItems": {
+            "description": "Total cases for each status",
+            "allOf": [{ "$ref": "#/components/schemas/CaseOverviewTotalItems" }]
+          },
+          "paging": {
+            "description": "Paging information",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["data", "totalItems", "paging"]
+      },
+      "PostApplicationBody": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "description": "Application id",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          }
+        },
+        "required": ["applicationId"]
+      },
+      "CreateCaseResponse": {
+        "type": "object",
+        "properties": { "case": { "$ref": "#/components/schemas/Case" } },
+        "required": ["case"]
+      },
       "GetCasesReponse": {
         "type": "object",
         "properties": {
@@ -1629,76 +884,6 @@
         },
         "required": ["cases", "paging"]
       },
-      "GetCasesWithApplicationReponse": {
-        "type": "object",
-        "properties": {
-          "cases": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseWithApplication" }
-          },
-          "paging": {
-            "description": "Paging info",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
-          }
-        },
-        "required": ["cases", "paging"]
-      },
-      "GetUsersResponse": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "description": "List of all active users",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/User" }
-          }
-        },
-        "required": ["users"]
-      },
-      "CaseOverviewTotalItems": {
-        "type": "object",
-        "properties": {
-          "submitted": {
-            "type": "number",
-            "description": "Total submitted cases",
-            "example": 7
-          },
-          "inProgress": {
-            "type": "number",
-            "description": "Total in progress cases",
-            "example": 3
-          },
-          "inReview": {
-            "type": "number",
-            "description": "Total in review cases",
-            "example": 2
-          },
-          "ready": {
-            "type": "number",
-            "description": "Total ready cases",
-            "example": 1
-          }
-        },
-        "required": ["submitted", "inProgress", "inReview", "ready"]
-      },
-      "CaseEditorialOverview": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Cases for selected tab",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseWithApplication" }
-          },
-          "totalItems": {
-            "description": "Total cases for each status",
-            "allOf": [{ "$ref": "#/components/schemas/CaseOverviewTotalItems" }]
-          },
-          "paging": {
-            "description": "Paging information",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
-          }
-        },
-        "required": ["data", "totalItems", "paging"]
-      },
       "PostCasePublishBody": {
         "type": "object",
         "properties": {
@@ -1710,6 +895,27 @@
           }
         },
         "required": ["caseIds"]
+      },
+      "GetCaseCommentsResponse": {
+        "type": "object",
+        "properties": {
+          "comments": {
+            "description": "List of case comments.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseComment" }
+          }
+        },
+        "required": ["comments"]
+      },
+      "GetCaseCommentResponse": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "description": "The comment that was found or null.",
+            "allOf": [{ "$ref": "#/components/schemas/CaseComment" }]
+          }
+        },
+        "required": ["comment"]
       },
       "PostCaseComment": {
         "type": "object",
@@ -1727,7 +933,10 @@
             "type": "string",
             "description": "The case comment itself"
           },
-          "from": { "type": "string", "description": "The task itself" },
+          "from": {
+            "type": "string",
+            "description": "Id of the user who created the comment"
+          },
           "to": {
             "type": "string",
             "description": "To whom or what the task is assigned to."
@@ -1735,20 +944,15 @@
         },
         "required": ["internal", "type", "comment", "from"]
       },
-      "GetAdvertTypesResponse": {
+      "PostCaseCommentResponse": {
         "type": "object",
         "properties": {
-          "types": {
-            "description": "List of advert types",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertType" }
-          },
-          "paging": {
-            "description": "Paging info",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          "comment": {
+            "description": "The created case comment",
+            "allOf": [{ "$ref": "#/components/schemas/CaseComment" }]
           }
         },
-        "required": ["types", "paging"]
+        "required": ["comment"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

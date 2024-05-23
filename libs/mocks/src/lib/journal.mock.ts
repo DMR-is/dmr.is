@@ -16,7 +16,7 @@ const JOURNAL_DEPARTMENT_A: Department = {
   slug: 'a-deild',
 }
 
-const JOURNAL_DEPARTMENT_B: Department = {
+export const JOURNAL_DEPARTMENT_B: Department = {
   id: '637291f2-f7f4-405d-8586-ef88b59cab00',
   title: 'B deild',
   slug: 'b-deild',

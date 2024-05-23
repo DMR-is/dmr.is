@@ -14,7 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseWithApplication, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
@@ -41,7 +41,7 @@ export type CaseTableCellProps = {
 }
 
 export type CaseTableRowProps = {
-  case: CaseWithApplication
+  case: Case
   cells: CaseTableCellProps[]
 }
 
@@ -118,14 +118,14 @@ export const CaseTable = ({
   }
 
   const portalRef = useRef<Element>()
-  const [modalActive, setModalActive] = useState<CaseWithApplication>()
+  const [modalActive, setModalActive] = useState<Case>()
   useEffect(() => {
     portalRef.current = document.querySelector('#__next') as Element
   })
 
   const openModal = (
     e: React.MouseEvent<HTMLElement>,
-    activeCase: CaseWithApplication,
+    activeCase: Case,
   ) => {
     e.preventDefault()
     setModalActive(activeCase)
@@ -172,9 +172,9 @@ export const CaseTable = ({
             {sortedData.map((row) => (
               <tr
                 className={styles.tableRow}
-                onMouseOver={() => setHoveredRow(row.case.caseId)}
+                onMouseOver={() => setHoveredRow(row.case.id)}
                 onMouseLeave={() => setHoveredRow(null)}
-                key={row.case.caseId}
+                key={row.case.id}
               >
                 {row.cells.map((cell, cellIndex) => (
                   <TableCell
@@ -188,7 +188,7 @@ export const CaseTable = ({
                   <td align="center" className={styles.linkTableCell}>
                     <Box
                       className={styles.seeMoreTableCellLink({
-                        visible: hoveredRow === row.case.caseId,
+                        visible: hoveredRow === row.case.id,
                       })}
                       component={!modalLink ? LinkV2 : 'button'}
                       onClick={
@@ -197,8 +197,8 @@ export const CaseTable = ({
                       href={
                         !modalLink
                           ? generateCaseLink(
-                              row.case.caseStatus,
-                              row.case.caseId,
+                              row.case.status,
+                              row.case.id,
                             )
                           : undefined
                       }
@@ -257,7 +257,7 @@ export const CaseTable = ({
                 </button>
               </div>
               <AdvertDisplay
-                advertNumber={modalActive.publicationNumber}
+                advertNumber={String(modalActive.caseNumber)}
                 // TODO: get correct date
                 signatureDate={
                   modalActive.requestedPublicationDate
@@ -268,8 +268,8 @@ export const CaseTable = ({
                     : undefined
                 }
                 advertType={modalActive.advertTitle}
-                advertSubject={modalActive.advertDepartment.title}
-                advertText={modalActive.document}
+                advertSubject="'STRING'" // modalActive.advertDepartment.title
+                advertText="'STRING'" // modalActive.document
                 isLegacy={false}
                 paddingTop={[5, 6, 8]}
               />

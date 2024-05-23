@@ -17,6 +17,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { Application } from '../application/application.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
+import { Department } from '../departments/department.dto'
 import { User } from '../users/user.dto'
 import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
 
@@ -133,6 +134,33 @@ export class Case {
   })
   @IsDateString()
   publishedAt!: string | null
+
+  @ApiProperty({
+    type: String,
+    example: '2024-01-01T09:00:00Z',
+    description:
+      'Requested advert publication date. ISO 8601 date and time format in UTC.',
+  })
+  @IsDateString()
+  requestedPublicationDate!: string
+
+  @ApiProperty({
+    type: String,
+    example: 'Titill á máli',
+    description:
+      'Advert title on case',
+  })
+  @IsString()
+  advertTitle!: string
+
+  @ApiProperty({
+    type: Department,
+    example: 'B-Deild',
+    description:
+      'Advert department',
+  })
+  @Type(() => Department)
+  advertDepartment!: Department
 
   @ApiProperty({
     type: Number,
