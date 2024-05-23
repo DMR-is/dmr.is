@@ -15,11 +15,11 @@ export const fixedCellWrapper = style({
   boxShadow: '4px 0px 4px 0px #0161FD1A',
 })
 
-export const tableHeadCell = {
+export const tableHeadCell = style({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing[1],
-}
+})
 
 export const iconWrapper = style({
   display: 'flex',

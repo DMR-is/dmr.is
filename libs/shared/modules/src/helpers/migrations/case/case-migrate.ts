@@ -42,5 +42,8 @@ export const caseMigrate = (model: CaseDto): Case => {
     paid: model.paid ?? false,
     price: model.price,
     publishedAt: model.publishedAt,
+    requestedPublicationDate: model.requestedPublicationDate,
+    advertTitle: model.advertTitle,
+    advertDepartment: model.department,
   }
 }

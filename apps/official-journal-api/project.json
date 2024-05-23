@@ -107,6 +107,17 @@
         "command": "sequelize-cli seed:generate --name $(whoami)",
         "cwd": "apps/official-journal-api"
       }
+    },
+    "dev-init": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run official-journal-api:dev-services",
+          "yarn nx run official-journal-api:migrate",
+          "yarn nx run official-journal-api:seed"
+        ],
+        "parallel": false
+      }
     }
   },
   "tags": []

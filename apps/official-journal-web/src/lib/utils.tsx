@@ -81,15 +81,15 @@ export const handleFilterToggle = (
 export const mapTabIdToCaseStatus = (param?: string) => {
   switch (param) {
     case CaseStatusEnum.Innsent:
-      return GetEditorialOverviewStatusEnum.Innsent
+      return CaseStatusEnum.Innsent
     case CaseStatusEnum.Grunnvinnsla:
-      return GetEditorialOverviewStatusEnum.Grunnvinnsla
+      return CaseStatusEnum.Grunnvinnsla
     case CaseStatusEnum.Yfirlestur:
-      return GetEditorialOverviewStatusEnum.Yfirlestur
+      return CaseStatusEnum.Yfirlestur
     case CaseStatusEnum.Tilbi:
-      return GetEditorialOverviewStatusEnum.Tilbi
+      return CaseStatusEnum.Tilbi
     default:
-      return GetEditorialOverviewStatusEnum.Tilbi
+      return CaseStatusEnum.Tilbi
   }
 }
 

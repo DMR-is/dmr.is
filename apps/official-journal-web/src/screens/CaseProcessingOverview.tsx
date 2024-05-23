@@ -8,7 +8,7 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { CaseStatusEnum, CaseWithApplication, Paging } from '../gen/fetch'
+import { Case,CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -22,7 +22,7 @@ import {
   mapTabIdToCaseStatus,
 } from '../lib/utils'
 type Props = {
-  data: CaseWithApplication[]
+  data: Case[]
   paging: Paging
   filters?: FilterGroup[]
   totalItems: {
@@ -128,7 +128,7 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
 
   const response = await dmrClient.getEditorialOverview({
     ...params,
-    pageSize: 1,
+    pageSize: 10,
   })
 
   const filters: FilterGroup[] = [

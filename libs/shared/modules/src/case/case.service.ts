@@ -43,6 +43,7 @@ import {
   CaseCommentTitleDto,
   CaseCommentTypeDto,
 } from '../comment/models'
+import { caseParameters, counterResult, statusResMapper } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { AdvertDepartmentDTO } from '../journal/models'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -82,8 +83,33 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
-  overview(params?: GetCasesQuery | undefined): Promise<CaseEditorialOverview> {
-    throw new Error('Method not implemented.')
+  async overview(params?: GetCasesQuery | undefined): Promise<CaseEditorialOverview> {
+    try {
+      const res = await this.cases(params ?? {})
+
+      const counter = await this.caseModel.findAll({
+        attributes: [
+          [Sequelize.literal(`status.value`), 'caseStatusValue'],
+          [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count']
+        ],
+        include: [
+          {
+            model: CaseStatusDto,
+            as: 'status',
+            attributes: [],
+          }
+        ],
+        group: ["status_id", `status.value`],
+      });
+  
+      return Promise.resolve({
+        data: res.cases,
+        paging: res.paging,
+        totalItems: counterResult(counter),
+      })
+    } catch (e) {
+      throw new Error(JSON.stringify(e))
+    }
   }
 
   async create(body: PostApplicationBody): Promise<CreateCaseResponse> {
@@ -248,6 +274,29 @@ export class CaseService implements ICaseService {
     }
   }
 
+  private async caseStatusLookup(val: string): Promise<{
+    value: string
+    id: string
+    key: string
+  }> {
+    try {
+      const caseStatusRes = await this.caseStatusModel.findOne({
+        where: {
+          value: val
+        }
+      })
+
+      return Promise.resolve(caseStatusRes?.dataValues)
+    } catch (error) {
+      this.logger.error('Error in caseStatusLookup', {
+        val,
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      throw new InternalServerErrorException('Failed to lookup case status')
+    }
+  }
+
   async case(id: string): Promise<GetCaseResponse> {
     try {
       const caseWithAdvert = await this.utilityService.getCaseWithAdvert(id)
@@ -275,66 +324,22 @@ export class CaseService implements ICaseService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const hasParams = Object.keys(params).length > 0
-
-      if (!hasParams) {
-        const cases = await this.caseModel.findAll({
-          offset: (page - 1) * pageSize,
-          limit: pageSize,
-          where: {
-            publishedAt: null,
-          },
-          include: [
-            CaseTagDto,
-            CaseStatusDto,
-            CaseCommunicationStatusDto,
-            {
-              model: CaseCommentDto,
-              include: [
-                {
-                  model: CaseCommentTaskDto,
-                  include: [CaseCommentTitleDto],
-                },
-                CaseStatusDto,
-                CaseCommentTypeDto,
-              ],
-            },
-          ],
-        })
-
-        return Promise.resolve({
-          cases: cases.map(caseMigrate),
-          paging: generatePaging(cases, page, pageSize),
-        })
+      let statusValue = undefined
+      if (params.status) {
+        const statusVal = await this.caseStatusLookup(params.status)
+        statusValue = statusVal.id
       }
+      const whereParams = caseParameters(params, statusValue)
 
       const cases = await this.caseModel.findAll({
         offset: (page - 1) * pageSize,
         limit: pageSize,
-        where: {
-          applicationId: params.applicationId,
-          year: params.year,
-          caseNumber: params.caseNumber,
-          assignedUserId: params.employeeId,
-          publishedAt:
-            params.published === 'true'
-              ? { [Op.not]: null }
-              : params.published === 'false'
-              ? { [Op.is]: null }
-              : undefined,
-          statusId: params.status,
-          assgiendUserId: params.employeeId,
-          fastTrack: params.fastTrack,
-          createdAt: {
-            [Op.gte]: params.fromDate,
-            [Op.lte]: params.toDate,
-          },
-          departmentId: params.department,
-        },
+        where: whereParams,
         include: [
           CaseTagDto,
           CaseStatusDto,
           CaseCommunicationStatusDto,
+          AdvertDepartmentDTO,
           {
             model: CaseCommentDto,
             include: [
@@ -350,7 +355,7 @@ export class CaseService implements ICaseService {
       })
 
       return Promise.resolve({
-        cases: cases.map((c) => caseMigrate(c)),
+        cases: cases.map(caseMigrate),
         paging: generatePaging(cases, page, pageSize),
       })
     } catch (error) {

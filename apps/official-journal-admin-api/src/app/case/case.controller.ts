@@ -52,6 +52,22 @@ export class CaseController {
     private readonly caseCommentService: ICommentService,
   ) {}
 
+  @Get('overview')
+  @ApiOperation({
+    operationId: 'getEditorialOverview',
+    summary: 'Get overview for cases in progress.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CaseEditorialOverview,
+    description: 'Cases overview.',
+  })
+  async editorialOverview(
+    @Query() params?: GetCasesQuery,
+  ): Promise<CaseEditorialOverview> {
+    return this.caseService.overview(params)
+  }
+
   @Get(':id')
   @ApiOperation({
     operationId: 'getCase',
@@ -102,22 +118,6 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return this.caseService.cases(params)
-  }
-
-  @Get('overview')
-  @ApiOperation({
-    operationId: 'getEditorialOverview',
-    summary: 'Get overview for cases in progress.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: CaseEditorialOverview,
-    description: 'Cases overview.',
-  })
-  async editorialOverview(
-    @Query() params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
-    return this.caseService.overview(params)
   }
 
   @Post('publish')

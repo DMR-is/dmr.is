@@ -9,8 +9,6 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseStatus } from './case-constants'
-
 export class GetCasesQuery {
   @ApiProperty({
     name: 'search',
@@ -81,7 +79,6 @@ export class GetCasesQuery {
   })
   @IsOptional()
   @IsString()
-  @IsUUID()
   status?: string
 
   @ApiProperty({

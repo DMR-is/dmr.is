@@ -107,10 +107,10 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       },
       {
         sortingKey: 'caseEmployee',
-        sortingValue: row.assignedTo.name,
+        sortingValue: row.assignedTo?.name,
         children: (
           <Text truncate variant="medium">
-            {row.assignedTo.name}
+            {row.assignedTo?.name}
           </Text>
         ),
       },
