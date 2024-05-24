@@ -146,7 +146,9 @@ export class PdfService implements IPdfService {
     }
 
     const pdf = await this.generatePdfFromHtml(
-      theCase.case.case.isLegacy ? dirtyClean(document as HTMLText) : document,
+      theCase.case.activeCase.isLegacy
+        ? dirtyClean(document as HTMLText)
+        : document,
     )
     return pdf
   }
