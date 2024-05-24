@@ -82,8 +82,8 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       },
       {
         sortingKey: 'caseRegistrationDate',
-        sortingValue: row.createdDate,
-        children: <Text variant="medium">{formatDate(row.createdDate)}</Text>,
+        sortingValue: row.createdAt,
+        children: <Text variant="medium">{formatDate(row.createdAt)}</Text>,
       },
       {
         sortingKey: 'caseDepartment',

@@ -6,14 +6,14 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseTagEnum, CaseWithApplication } from '../../gen/fetch'
+import { CaseTagEnum, CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { enumToOptions, formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: CaseWithApplication
+  activeCase: CaseWithAdvert
 }
 
 export const StepYfirlestur = ({ activeCase }: Props) => {
@@ -34,16 +34,16 @@ export const StepYfirlestur = ({ activeCase }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <AdvertDisplay
-            advertNumber={activeCase.publicationNumber}
+            advertNumber={`${activeCase.activeCase.caseNumber}`}
             signatureDate={
-              activeCase.signatureDate
-                ? formatDate(activeCase.signatureDate, 'dd. MMMM yyyy')
+              activeCase.advert.signatureDate
+                ? formatDate(activeCase.advert.signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertType.title}
-            advertSubject={activeCase.advertTitle}
-            advertText={activeCase.document}
-            isLegacy={activeCase.isLegacy}
+            advertType={activeCase.activeCase.advertTitle}
+            advertSubject={activeCase.advert.title}
+            advertText={activeCase.advert.documents.advert}
+            isLegacy={activeCase.activeCase.isLegacy}
           />
         </GridColumn>
       </GridRow>
@@ -52,7 +52,9 @@ export const StepYfirlestur = ({ activeCase }: Props) => {
         <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
           <Select
             name="tag"
-            value={tagOptions.find((o) => o.value === activeCase?.tag)}
+            value={tagOptions.find(
+              (o) => o.value === activeCase?.activeCase.tag,
+            )}
             options={tagOptions}
             label={formatMessage(messages.yfirlestur.tag)}
             size="sm"

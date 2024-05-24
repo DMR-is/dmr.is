@@ -6,17 +6,13 @@ import { StringOption } from '@island.is/island-ui/core'
 import { isDefined } from '@island.is/shared/utils'
 
 import {
-  Application,
-  Case,
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
   CaseTagEnum,
-  CaseWithApplication,
-  CaseWithApplicationCaseStatusEnum,
+  CaseWithAdvert,
   GetCasesRequest,
-  GetEditorialOverviewStatusEnum,
 } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
@@ -112,10 +108,7 @@ const caseStatusToIndex: Record<CaseStatusEnum, number> = {
   [CaseStatusEnum.BirtinguHafna]: 6,
 }
 
-export const generateCaseLink = (
-  status: CaseStatusEnum | CaseWithApplicationCaseStatusEnum,
-  caseId: string,
-) => {
+export const generateCaseLink = (status: CaseStatusEnum, caseId: string) => {
   let route = Routes.OverviewDetail
 
   if (
@@ -169,8 +162,8 @@ export const commentTaskToNode = (task: CaseComment['task']) => {
   )
 }
 
-export const generateSteps = (activeCase: CaseWithApplication): StepsType[] => {
-  const statusIndex = caseStatusToIndex[activeCase.caseStatus]
+export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
+  const statusIndex = caseStatusToIndex[activeCase.activeCase.status]
   const displayTypes = [CaseCommentTypeEnum.Submit, CaseCommentTypeEnum.Assign]
   return [
     {
@@ -178,7 +171,7 @@ export const generateSteps = (activeCase: CaseWithApplication): StepsType[] => {
       title: 'Innsending',
       isActive: statusIndex === 0,
       isComplete: statusIndex > 0,
-      notes: activeCase.caseComments
+      notes: activeCase.activeCase.comments
         .filter(
           (c) =>
             c.caseStatus === CaseCommentCaseStatusEnum.Innsent &&
@@ -191,7 +184,7 @@ export const generateSteps = (activeCase: CaseWithApplication): StepsType[] => {
       title: 'Grunnvinnsla',
       isActive: statusIndex === 1,
       isComplete: statusIndex > 1,
-      notes: activeCase.caseComments
+      notes: activeCase.activeCase.comments
         .filter(
           (c) =>
             c.caseStatus === CaseCommentCaseStatusEnum.Grunnvinnsla &&
@@ -204,7 +197,7 @@ export const generateSteps = (activeCase: CaseWithApplication): StepsType[] => {
       title: 'Yfirlestur',
       isActive: statusIndex === 2,
       isComplete: statusIndex > 2,
-      notes: activeCase.caseComments
+      notes: activeCase.activeCase.comments
         .filter(
           (c) =>
             c.caseStatus === CaseCommentCaseStatusEnum.Yfirlestur &&
@@ -217,7 +210,7 @@ export const generateSteps = (activeCase: CaseWithApplication): StepsType[] => {
       title: 'Tilbúið til útgáfu',
       isActive: statusIndex === 3,
       isComplete: statusIndex > 3,
-      notes: activeCase.caseComments
+      notes: activeCase.activeCase.comments
         .filter(
           (c) =>
             c.caseStatus === CaseCommentCaseStatusEnum.Tilbi &&

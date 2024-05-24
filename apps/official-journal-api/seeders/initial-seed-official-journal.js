@@ -34,6 +34,9 @@ module.exports = {
       './seeders/sql/07_category_department.sql',
       'utf8',
     )
+
+    */
+
     const caseStatusSeed = await readFile(
       './seeders/sql/10_case_status.sql',
       'utf8',
@@ -63,12 +66,22 @@ module.exports = {
     const caseCommentsSeed = await readFile(
       './seeders/sql/18_case_comments.sql',
       'utf8',
-    )*/
+    )
 
     const seed = `
       BEGIN;
 
       ${allSeed}
+      ${caseStatusSeed}
+      ${caseTagSeed}
+      ${caseCommunicationSeed}
+      ${caseCommentTitleSeed}
+      ${caseCommentTypeSeed}
+      ${caseCommentTaskSeed}
+      ${caseCommentSeed}
+      ${caseSeed}
+      ${caseCommentsSeed}
+
 
       COMMIT;`
     return await queryInterface.sequelize.query(seed)

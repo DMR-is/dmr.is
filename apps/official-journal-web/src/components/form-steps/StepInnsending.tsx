@@ -6,14 +6,14 @@ import {
   Tag,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseWithApplication } from '../../gen/fetch'
+import { Case, CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: CaseWithApplication
+  activeCase: CaseWithAdvert
 }
 
 export const StepInnsending = ({ activeCase }: Props) => {
@@ -24,13 +24,14 @@ export const StepInnsending = ({ activeCase }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <Inline space={1}>
-            {[activeCase.advertDepartment, ...activeCase.categories]?.map(
-              (cat) => (
-                <Tag key={cat.id} variant="white" outlined disabled>
-                  {cat.title}
-                </Tag>
-              ),
-            )}
+            {[
+              activeCase.activeCase.advertDepartment,
+              ...activeCase.advert.categories,
+            ]?.map((cat) => (
+              <Tag key={cat.id} variant="white" outlined disabled>
+                {cat.title}
+              </Tag>
+            ))}
           </Inline>
         </GridColumn>
       </GridRow>
@@ -38,16 +39,16 @@ export const StepInnsending = ({ activeCase }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <AdvertDisplay
-            advertNumber={activeCase.publicationNumber}
+            advertNumber={`${activeCase.activeCase.caseNumber}`} // TODO: add publication number to case
             signatureDate={
-              activeCase.signatureDate
-                ? formatDate(activeCase.signatureDate, 'dd. MMMM yyyy')
+              activeCase.advert.signatureDate
+                ? formatDate(activeCase.advert.signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertType.title}
-            advertSubject={activeCase.advertTitle}
-            advertText={activeCase.document}
-            isLegacy={activeCase.isLegacy}
+            advertType={activeCase.advert.type.title}
+            advertSubject={activeCase.activeCase.advertTitle}
+            advertText={activeCase.advert.documents.advert}
+            isLegacy={activeCase.activeCase.isLegacy}
           />
         </GridColumn>
       </GridRow>

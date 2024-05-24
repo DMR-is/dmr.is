@@ -7,7 +7,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Attachments } from '../components/attachments/Attachments'
 import { Comments } from '../components/comments/Comments'
 import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
@@ -16,11 +15,7 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import {
-  AdvertType,
-  CaseWithApplication,
-  CaseWithApplicationCaseStatusEnum,
-} from '../gen/fetch'
+import { AdvertType, CaseStatusEnum, CaseWithAdvert } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -29,7 +24,7 @@ import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
-  activeCase: CaseWithApplication | null
+  activeCase: CaseWithAdvert | null
   advertTypes: Array<AdvertType> | null
   step: CaseStep | null
 }
@@ -57,9 +52,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
     { label: 'Pálína J', value: 'Pálína J' },
   ]
 
-  const caseStatusOptions = Object.values(
-    CaseWithApplicationCaseStatusEnum,
-  ).map((c) => ({
+  const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
     label: c,
     value: c,
   }))
@@ -105,7 +98,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
             name="assignedTo"
             options={employeesMock}
             defaultValue={employeesMock.find(
-              (e) => e.value === activeCase.assignedTo.name,
+              (e) => e.value === activeCase.activeCase.assignedTo.name,
             )}
             label={formatMessage(messages.actions.assignedTo)}
             placeholder={formatMessage(messages.actions.assignedToPlaceholder)}
@@ -115,7 +108,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
             name="status"
             options={caseStatusOptions}
             defaultValue={caseStatusOptions.find(
-              (c) => c.value === activeCase.caseStatus,
+              (c) => c.value === activeCase.activeCase.status,
             )}
             label={formatMessage(messages.actions.status)}
             size="sm"
@@ -146,7 +139,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
           paddingTop={[2, 3, 4]}
         >
           {prevStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.caseId}/${prevStep}`}>
+            <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${prevStep}`}>
               <Button as="span" variant="ghost" unfocusable>
                 {formatMessage(messages.paging.goBack)}
               </Button>
@@ -159,7 +152,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
             </LinkV2>
           )}
           {nextStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.caseId}/${nextStep}`}>
+            <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
               </Button>
@@ -184,33 +177,33 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     return { activeCase: null, advertTypes: null, step: null }
   }
 
-  const [activeCase, advertTypes] = await Promise.all([
-    dmrClient.getCaseWithApplication({
+  const [activeCase] = await Promise.all([
+    dmrClient.getCase({
       id: caseId,
     }),
-    dmrClient.getAdvertTypes({}),
   ]).catch((err) => {
+    // dmrClient.getAdvertTypes({}),
     console.log('Error fetcing case', { err })
     throw new Error('Error fetcing case')
   })
 
-  const { types } = await dmrClient.getAdvertTypes({
-    // search: application.answers.advert.type,
-    search: '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
-  })
+  // const { types } = await dmrClient.getAdvertTypes({
+  //   // search: application.answers.advert.type,
+  //   search: '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
+  // })
 
-  // const advertType = types.find((t) => t.id === application.answers.advert.type)
-  const advertType = types.find(
-    (t) => t.id === '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9',
-  )
+  // // const advertType = types.find((t) => t.id === application.answers.advert.type)
+  // const advertType = types.find(
+  //   (t) => t.id === '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9',
+  // )
 
-  if (!advertType) {
-    throw new Error('Advert type not found')
-  }
+  // if (!advertType) {
+  //   throw new Error('Advert type not found')
+  // }
 
   return {
-    activeCase: activeCase,
-    advertTypes: advertTypes.types,
+    activeCase: activeCase._case,
+    advertTypes: [],
     step,
   }
 }

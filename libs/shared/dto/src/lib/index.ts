@@ -70,7 +70,7 @@ export * from './cases/get-cases-response'
 export * from './cases/case-editorial-overview.dto'
 export * from './cases/post-publish-body.dto'
 export * from './cases/case-history.dto'
-export * from './cases/case-with-application.dto'
+export * from './cases/case-with-advert.dto'
 export * from './cases/create-case-response.dto'
 export * from './cases/get-case-response.dto'
 

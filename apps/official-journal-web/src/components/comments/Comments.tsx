@@ -10,28 +10,32 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseCommentTypeEnum, CaseWithApplication } from '../../gen/fetch'
+import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: CaseWithApplication
+  activeCase: CaseWithAdvert
 }
 
 export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const [expanded, setExpanded] = useState(activeCase.caseComments.length < 5)
+  const [expanded, setExpanded] = useState(
+    activeCase.activeCase.comments.length < 5,
+  )
   const [commentValue, setCommentValue] = useState('')
   const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
-  const [caseComments, setCaseComments] = useState(activeCase.caseComments)
+  const [caseComments, setCaseComments] = useState(
+    activeCase.activeCase.comments,
+  )
   const now = new Date()
 
   const deleteComment = (id: string) => {
     const deleteComment = async () => {
       await fetch(
-        `/api/comments/delete?caseId=${activeCase.caseId}&commentId=${id}`,
+        `/api/comments/delete?caseId=${activeCase.activeCase.id}&commentId=${id}`,
         {
           method: 'DELETE',
           headers: {
@@ -60,7 +64,7 @@ export const Comments = ({ activeCase }: Props) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          caseId: activeCase.caseId,
+          caseId: activeCase.activeCase.id,
           comment: commentValue,
           internal: isInternalComment,
           type: isInternalComment
@@ -92,7 +96,11 @@ export const Comments = ({ activeCase }: Props) => {
             ? formatMessage(messages.comments.day)
             : formatMessage(messages.comments.days)
 
-        if (!expanded && i !== 0 && i < activeCase.caseComments.length - 4) {
+        if (
+          !expanded &&
+          i !== 0 &&
+          i < activeCase.activeCase.comments.length - 4
+        ) {
           return null
         }
         return (
@@ -163,7 +171,7 @@ export const Comments = ({ activeCase }: Props) => {
                   onClick={() => setExpanded(true)}
                 >
                   {formatMessage(messages.comments.seeAll)} (
-                  {activeCase.caseComments.length - 5})
+                  {activeCase.activeCase.comments.length - 5})
                 </Button>
               </Box>
             ) : null}
@@ -171,7 +179,7 @@ export const Comments = ({ activeCase }: Props) => {
         )
       })}
 
-      {activeCase.assignedTo && (
+      {activeCase.activeCase.assignedTo && (
         <Box marginTop={2}>
           <Stack space={2}>
             <Input

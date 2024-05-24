@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseWithAdvert } from './case-with-application.dto'
+import { CaseWithAdvert } from './case-with-advert.dto'
 
 export class GetCaseResponse {
   @ApiProperty({

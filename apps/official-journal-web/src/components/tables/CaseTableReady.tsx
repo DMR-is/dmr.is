@@ -1,6 +1,6 @@
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
@@ -13,13 +13,11 @@ import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseWithApplication[]
+  data: Case[]
   paging: Paging
-  selectedCases: CaseWithApplication[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<CaseWithApplication[]>>
-  setCasesReadyForPublication: React.Dispatch<
-    React.SetStateAction<CaseWithApplication[]>
-  >
+  selectedCases: Case[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
+  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
 }
 
 export const CaseTableReady = ({
@@ -75,7 +73,7 @@ export const CaseTableReady = ({
       {
         children: (
           <Checkbox
-            checked={selectedCases.some((c) => c.caseId === row.caseId)}
+            checked={selectedCases.some((c) => c.id === row.id)}
             onChange={(e) => {
               if (e.target.checked) {
                 setSelectedCases((prev) => {
@@ -85,7 +83,7 @@ export const CaseTableReady = ({
                 })
               } else {
                 setSelectedCases((prev) => {
-                  const cases = prev.filter((c) => c.caseId !== row.caseId)
+                  const cases = prev.filter((c) => c.id !== row.id)
                   setCasesReadyForPublication(cases)
                   return cases
                 })
@@ -122,7 +120,9 @@ export const CaseTableReady = ({
       {
         children: (
           <Text whiteSpace="nowrap" variant="medium">
-            {row.institutionTitle}
+            Reykjavíkurborg
+            {/* TODO: Add involved party to case */}
+            {/* {row.institution.title} */}
           </Text>
         ),
       },
