@@ -73,7 +73,9 @@ export default async function handler(
     return res.status(404).json({ error: 'Case not found' })
   }
 
-  const caseCommentStatus = mapCaseCommentStatus(theCase.status)
+  const caseCommentStatus = mapCaseCommentStatus(
+    theCase._case.activeCase.status,
+  )
 
   if (!caseCommentStatus) {
     return res.status(400).json({ error: 'Invalid case status' })
@@ -88,8 +90,8 @@ export default async function handler(
       route: '/api/comments/post',
     })
 
-    const addCommentResponse = await dmrClient.addComment({
-      caseId: body.caseId,
+    const addCommentResponse = await dmrClient.createComment({
+      id: body.caseId,
       postCaseComment: {
         comment: body.comment,
         internal: body.internal,

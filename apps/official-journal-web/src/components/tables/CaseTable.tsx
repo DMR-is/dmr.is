@@ -123,10 +123,7 @@ export const CaseTable = ({
     portalRef.current = document.querySelector('#__next') as Element
   })
 
-  const openModal = (
-    e: React.MouseEvent<HTMLElement>,
-    activeCase: Case,
-  ) => {
+  const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
     e.preventDefault()
     setModalActive(activeCase)
   }
@@ -196,10 +193,7 @@ export const CaseTable = ({
                       }
                       href={
                         !modalLink
-                          ? generateCaseLink(
-                              row.case.status,
-                              row.case.id,
-                            )
+                          ? generateCaseLink(row.case.status, row.case.id)
                           : undefined
                       }
                     >

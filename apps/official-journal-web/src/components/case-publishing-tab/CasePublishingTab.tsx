@@ -1,21 +1,19 @@
 import { Box, Button, Text } from '@island.is/island-ui/core'
 
-import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableReady } from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
 
 type Props = {
-  cases: CaseWithApplication[]
+  cases: Case[]
   paging: Paging
-  selectedCases: CaseWithApplication[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<CaseWithApplication[]>>
-  onContinue: (selectedCases: CaseWithApplication[]) => void
-  casesReadyForPublication: CaseWithApplication[]
-  setCasesReadyForPublication: React.Dispatch<
-    React.SetStateAction<CaseWithApplication[]>
-  >
+  selectedCases: Case[]
+  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
+  onContinue: (selectedCases: Case[]) => void
+  casesReadyForPublication: Case[]
+  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
 }
 
 export const CasePublishingTab = ({

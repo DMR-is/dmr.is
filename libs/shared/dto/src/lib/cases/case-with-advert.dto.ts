@@ -95,5 +95,5 @@ export class CaseWithAdvert {
     description: 'Case fields',
   })
   @Type(() => Case)
-  readonly case!: Case
+  readonly activeCase!: Case
 }

@@ -45,7 +45,7 @@ export default async function handler(
 
   try {
     const result = await dmrClient.deleteComment({
-      caseId: body.caseId,
+      id: body.caseId,
       commentId: body.commentId,
     })
 

@@ -1,11 +1,11 @@
 import { Stack } from '@island.is/island-ui/core'
 
-import { CaseWithApplication } from '../../gen/fetch'
+import { Case } from '../../gen/fetch'
 // import { generateCaseLink } from '../../lib/utils'
 import { CaseCard } from '../cards/CaseCard'
 
 type Props = {
-  cases: CaseWithApplication[]
+  cases: Case[]
 }
 
 export const CasePublishingList = ({ cases }: Props) => {
@@ -13,12 +13,11 @@ export const CasePublishingList = ({ cases }: Props) => {
     <Stack space={3} component="ul">
       {cases.map((c) => (
         <CaseCard
-          key={c.caseId}
+          key={c.id}
           department={c.advertDepartment.title}
-          // publicationDate={c.advert.publicationDate}
           publicationDate={c.requestedPublicationDate}
-          insitiution={c.institutionTitle}
-          publicationNumber={c.publicationNumber}
+          insitiution={'Reykjavíkurborg'} // TODO: ADd involved party to case
+          publicationNumber={`${c.caseNumber}`}
           title={c.advertTitle}
           // categories={c.advert.categories.map((cat) => cat.title)} TODO: add categories with case with application, and status
           // link={generateCaseLink(c.status, c.id)} TODO: add link with case with application

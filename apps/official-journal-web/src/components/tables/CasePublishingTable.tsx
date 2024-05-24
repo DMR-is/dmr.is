@@ -3,7 +3,7 @@ import { RefObject, useEffect, useRef, useState } from 'react'
 
 import { Icon, Table as T, Text } from '@island.is/island-ui/core'
 
-import { CaseWithApplication } from '../../gen/fetch'
+import { Case } from '../../gen/fetch'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -11,7 +11,7 @@ import { CaseTableEmpty } from './CaseTableEmpty'
 import { TableHeadCell } from './CaseTableHeadCell'
 
 type RowProps = {
-  row: CaseWithApplication
+  row: Case
   container: RefObject<HTMLElement>
   number: number
   onReorder: () => void
@@ -32,7 +32,7 @@ const CasePublishingTableRow = ({
   return (
     <Reorder.Item
       as="tr"
-      key={row.caseId}
+      key={row.id}
       value={row}
       dragListener={false}
       className={styles.tableRow}
@@ -55,7 +55,8 @@ const CasePublishingTableRow = ({
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
-          {row.institutionTitle}
+          Reykjavíkurborg
+          {/* TODO: Add invovled party to case */}
         </Text>
       </TableCell>
       <TableCell>
@@ -75,15 +76,14 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  updateRows: React.Dispatch<React.SetStateAction<CaseWithApplication[]>>
+  updateRows: React.Dispatch<React.SetStateAction<Case[]>>
   columns: CaseTableHeadCellProps[]
-  rows: CaseWithApplication[]
+  rows: Case[]
 }
 
 export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
-  const [reorderableItems, setReorderableItems] =
-    useState<CaseWithApplication[]>(rows)
+  const [reorderableItems, setReorderableItems] = useState<Case[]>(rows)
 
   // TODO: figure out how we get this number from the DB
   const latestPublicationNumber = 123
@@ -124,7 +124,7 @@ export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
         >
           {reorderableItems.map((row, i) => (
             <CasePublishingTableRow
-              key={row.caseId}
+              key={row.id}
               row={row}
               container={dragContainerRef}
               number={latestPublicationNumber + (i + 1)}

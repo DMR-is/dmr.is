@@ -72,7 +72,7 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: Case,
+    type: GetCaseResponse,
     description: 'Case by ID.',
   })
   @ApiResponse({

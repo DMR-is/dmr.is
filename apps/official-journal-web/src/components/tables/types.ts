@@ -1,11 +1,11 @@
-import { Case, CaseWithApplication, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 
 export type TableProps = {
-  data: Array<CaseWithApplication>
+  data: Array<Case>
   paging: Paging
 }
 
 export type PublishedTableProps = {
-  data: Array<CaseWithApplication>
+  data: Array<Case>
   paging: Paging
 }

@@ -13,13 +13,13 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertType, Case, CaseWithApplication } from '../../gen/fetch'
+import { AdvertType, Case, CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseDepartmentTabs } from '../../lib/constants'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: CaseWithApplication
+  activeCase: CaseWithAdvert
   advertTypes: Array<AdvertType> | null
 }
 
@@ -27,7 +27,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const activeTypes =
-    advertTypes?.filter((t) => t.id === activeCase.advertType.id) ?? []
+    advertTypes?.filter((t) => t.id === activeCase.advert.type.id) ?? []
 
   const typeOptions: StringOption[] = activeTypes.map((t) => ({
     label: t.title,
@@ -64,7 +64,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Select
                 name="department"
                 value={CaseDepartmentTabs.find(
-                  (o) => o.value === activeCase.advertDepartment.title,
+                  (o) =>
+                    o.value === activeCase.activeCase.advertDepartment.title,
                 )}
                 options={CaseDepartmentTabs}
                 label={formatMessage(messages.grunnvinnsla.department)}
@@ -79,7 +80,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Select
                 name="type"
                 value={typeOptions.find(
-                  (o) => o.value === activeCase.advertType.id,
+                  (o) => o.value === activeCase.advert.type.id,
                 )}
                 options={typeOptions}
                 label={formatMessage(messages.grunnvinnsla.type)}
@@ -94,7 +95,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Input
                 readOnly
                 name="subject"
-                value={activeCase.advertTitle}
+                value={activeCase.activeCase.advertTitle}
                 label={formatMessage(messages.grunnvinnsla.subject)}
                 size="sm"
                 textarea
@@ -105,7 +106,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12']}>
               <Inline space={1}>
-                {activeCase.categories.map((cat, i) => (
+                {activeCase.advert.categories.map((cat, i) => (
                   <Tag key={i} variant="white" outlined disabled>
                     {cat.title}
                   </Tag>
@@ -133,8 +134,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
                 disabled
                 name="createdDate"
                 selected={
-                  activeCase.createdDate
-                    ? new Date(activeCase.createdDate)
+                  activeCase.activeCase.createdAt
+                    ? new Date(activeCase.activeCase.createdAt)
                     : undefined
                 }
                 label={formatMessage(messages.grunnvinnsla.createdDate)}
@@ -150,8 +151,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <DatePicker
                 name="publicationDate"
                 selected={
-                  activeCase.publishDate
-                    ? new Date(activeCase.publishDate)
+                  activeCase.activeCase.publishedAt
+                    ? new Date(activeCase.activeCase.publishedAt)
                     : undefined
                 }
                 label={formatMessage(messages.grunnvinnsla.publicationDate)}
@@ -164,7 +165,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
                 name="fastTrack"
-                checked={activeCase.fastTrack}
+                checked={activeCase.activeCase.fastTrack}
                 label={formatMessage(messages.grunnvinnsla.fastTrack)}
               />
             </GridColumn>
@@ -174,7 +175,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Input
                 name="price"
-                value={activeCase.price}
+                value={activeCase.activeCase.price}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="tel"
@@ -185,7 +186,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
                 name="paid"
-                checked={activeCase.paid}
+                checked={activeCase.activeCase.paid}
                 label={formatMessage(messages.grunnvinnsla.paid)}
               />
             </GridColumn>

@@ -156,7 +156,7 @@ export class UtilityService implements IUtilityService {
       }
 
       return Promise.resolve({
-        case: activeCase,
+        activeCase: activeCase,
         advert: {
           title: application.answers.advert.title,
           documents: {
@@ -170,7 +170,7 @@ export class UtilityService implements IUtilityService {
           type: activeType,
           categories: activeCategories,
           institution: {
-            id: '4f3ea720-1695-481a-ab42-8bd0624c9d20',
+            id: '4f3ea720-1695-481a-ab42-8bd0624c9d20', // TODO switch to real data when auth is implemented
             slug: 'reykjavikur-borg',
             title: 'Reykjavíkurborg',
           },

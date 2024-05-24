@@ -45,10 +45,10 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
     case: row,
     cells: [
       {
-        children: <Text variant="medium">{formatDate(row.publishDate)}</Text>,
+        children: <Text variant="medium">{formatDate(row.publishedAt)}</Text>,
       },
       {
-        children: <Text variant="medium">{row.publicationNumber}</Text>,
+        children: <Text variant="medium">{row.caseNumber}</Text>, // TODO: Add publication number to case
       },
       {
         children: (
@@ -60,9 +60,10 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
         ),
       },
       {
+        // TODO: Add institution (involved party) name to case
         children: (
           <Text truncate variant="medium">
-            {row.institutionTitle}
+            {'Reykjavík'}
           </Text>
         ),
       },
