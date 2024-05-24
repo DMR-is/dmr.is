@@ -2,19 +2,16 @@ export type Department = {
   id: string
   title: string
   slug: string
-  count: number
 }
 
 export type DbDepartment = Omit<Department, 'slug'>
 
 export type Type = {
-  departmentName: string
-  departmentId: string
+  department_id: string
   title: string
   slug: string
-  count: number
   id: string
-  legacyId: string
+  legacy_id: string
 }
 export type DbType = Omit<Type, 'slug'>
 
@@ -22,8 +19,7 @@ export type Category = {
   id: string
   title: string
   slug: string
-  count: number
-  superCategoryId: string | null
+  main_category_id?: string | null
 }
 export type DbCategory = Omit<Category, 'slug' | 'superCategoryId'>
 
@@ -43,26 +39,27 @@ export type DbStatus = Status
 export type InvolvedParty = {
   id: string
   name: string
+  slug: string
+  legacy_id: string
 }
-export type DbInvolvedParty = Omit<InvolvedParty, ''>
+export type DbInvolvedParty = Omit<InvolvedParty, 'slug' | 'legacy_id'>
 
 export type Advert = {
   id: string
-  departmentId: string
-  typeId: string
+  department_id: string
+  type_id: string | null
   subject: string
-  statusId: string
-  serialNumber: string
-  publicationYear: number
-  signatureDate: string
-  publicationDate: string
-  involvedPartyId: string
-  createdDate: string
-  modifiedDate: string
-
-  date: string
-  url: string
-  html: string
+  status_id: string
+  serial_number: number
+  publication_year: number
+  signature_date: string
+  publication_date: string
+  involved_party_id: string
+  is_legacy: boolean
+  document_pdf_url: string
+  document_html: string
+  created: Date
+  modified: Date
 }
 export type DbAdvert = Omit<Advert, ''> & { typeName: string }
 
@@ -73,9 +70,20 @@ export type DbAdverts = {
   total: number
 }
 
+export type Document = {
+  RecordID: string
+  FileName: string
+  Type: string
+  OriginalCreationDate: string
+  ContentType: string
+  Stream: string
+  FileSize: number
+}
+export type DbDocuments = Array<Document>
+
 export type AdvertCategory = {
-  advertId: string
-  categoryId: string
+  advert_id: string
+  category_id: string
 }
 
 export type CategoryDepartment = {

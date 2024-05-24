@@ -271,7 +271,7 @@ export const emptyAdvert: Advert = {
   title: '',
   status: AdvertStatus.Submitted,
   publicationNumber: {
-    number: 0,
+    number: '0',
     year: 0,
     full: '',
   },
@@ -332,7 +332,7 @@ export const ADVERT_READY_A: Advert = {
   title: 'AUGLÝSING um eitthvað í A deild.',
   status: AdvertStatus.ReadyForPublication,
   publicationNumber: {
-    number: 123,
+    number: '123',
     year: 2024,
     full: '123/2024',
   },

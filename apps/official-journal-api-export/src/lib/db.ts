@@ -10,6 +10,7 @@ import {
   DbStatus,
   DbInvolvedParty,
   AdvertCategory,
+  DbDocuments,
 } from '../types'
 
 const DEPARTMENT_QUERY =
@@ -77,7 +78,7 @@ const ADVERTS_QUERY = (limit = 10, offset = 0) => `
   FROM
     [Adverts]
   ORDER BY
-    [ModifiedDate] DESC
+    [ModifiedDate] ASC
   OFFSET ${offset} ROWS
   FETCH NEXT ${limit} ROWS ONLY
 `
@@ -95,6 +96,26 @@ const ADVERTS_CATEGORIES_QUERY = `
     listvalues.ListValueID IS NOT NULL
 `
 
+const ADVERT_DOCUMENTS_QUERY = (recordId: string) => `
+SELECT TOP 1
+	Documents.RecordID,
+	Records.Name as FileName,
+	Documents.Type,
+	Records.OriginalCreationDate,
+	DocumentVersions.ContentType,
+	DocumentStreams.StreamData AS Stream,
+	DATALENGTH(DocumentStreams.StreamData) AS FileSize
+FROM Documents
+INNER JOIN DocumentVersions ON DocumentVersions.VersionID = Documents.VersionID
+INNER JOIN DocumentStreams ON DocumentStreams.StreamID = DocumentVersions.StreamID
+INNER JOIN Records ON Records.RecordID = Documents.RecordID
+INNER JOIN Metadata ON Records.RecordID = Metadata.RecordID
+WHERE
+	Records.MainDocumentID = '${recordId}' AND Records.Deleted = 0 AND records.ismarkedfordelete = 0
+	AND MetadataName = 'IsActive' AND MetadataValue = 1
+
+`
+
 export async function connect(mssqlConnectionString: string) {
   await mssql.connect(mssqlConnectionString)
 }
@@ -107,7 +128,6 @@ export async function getDepartments(): Promise<Array<DbDepartment>> {
     const dep = {
       id: department.id,
       title: department.name,
-      count: department.count,
     }
     deps.push(dep)
   })
@@ -121,12 +141,10 @@ export async function getTypes() {
 
   records.forEach((type) => {
     const t = {
-      departmentName: type.departmentName,
-      departmentId: type.departmentId,
+      department_id: type.departmentId,
       title: type.name,
-      count: type.count,
       id: type.id,
-      legacyId: type.id,
+      legacy_id: type.id,
     }
     types.push(t)
   })
@@ -142,7 +160,6 @@ export async function getCategories(): Promise<DbCategory[]> {
     const c = {
       id: category.id,
       title: category.name,
-      count: category.count,
     }
     categories.push(c)
   })
@@ -178,6 +195,11 @@ export async function getInvolvedParties(): Promise<DbInvolvedParty[]> {
   })
   return involvedParties
 }
+//TODO advert attachments
+//TODO advert_categories - er ekki notað
+//TODO main category - verður ekki
+//TODO status history - sleppum for now
+//TODO category_department - ekki mappað
 
 export async function getAdverts(
   limit: number,
@@ -194,27 +216,23 @@ export async function getAdverts(
   records.forEach((advert) => {
     const a = {
       id: advert.RecordID,
-      departmentId: advert.TypeID,
-
-      // This will be fixed later in the process
-      typeId: '',
+      department_id: advert.TypeID,
       typeName: advert.Name,
-
-      // categoryId: advert.CategoryID,
-
+      type_id: '',
       subject: advert.Subject2,
-      statusId: advert.StatusID,
-      serialNumber: advert.PublicationNumber,
-      publicationYear: advert.PublicationDate,
-      signatureDate: advert.SignatureDate,
-      publicationDate: advert.PublicationDate,
-      involvedPartyId: advert.InvolvedPartyID,
-      createdDate: advert.CreationDate,
-      modifiedDate: advert.ModifiedDate,
+      status_id: advert.StatusID,
+      serial_number: parseInt(advert.PublicationNumber.split('/')[0], 10),
+      publication_year: advert.PublicationDate,
+      signature_date: advert.SignatureDate,
+      publication_date: advert.PublicationDate,
+      involved_party_id: advert.InvolvedPartyID,
+      created: advert.CreationDate,
+      modified: advert.ModifiedDate,
       date: advert.PublicationDate,
-      url: '',
       content: advert.Body,
-      html: advert.Body,
+      is_legacy: true,
+      document_html: advert.Body,
+      document_pdf_url: '',
     }
     adverts.push(a)
   })
@@ -227,6 +245,18 @@ export async function getAdverts(
   }
 }
 
+export async function getAdvertDocuments(
+  adverts: DbAdverts,
+): Promise<DbDocuments> {
+  const documents: DbDocuments = []
+  adverts.adverts.forEach(async (item) => {
+    const documentFromDB = await mssql.query(ADVERT_DOCUMENTS_QUERY(item.id))
+
+    documents.push(documentFromDB.recordset[0])
+  })
+  return documents
+}
+
 export async function getAdvertsCategories() {
   const advertsCategoriesFromDb = await mssql.query(ADVERTS_CATEGORIES_QUERY)
   const records = advertsCategoriesFromDb.recordset as Array<any>
@@ -234,8 +264,8 @@ export async function getAdvertsCategories() {
 
   records.forEach((advertCategory) => {
     const ac = {
-      advertId: advertCategory.ad_id,
-      categoryId: advertCategory.category_id,
+      advert_id: advertCategory.ad_id,
+      category_id: advertCategory.category_id,
     }
     advertsCategories.push(ac)
   })

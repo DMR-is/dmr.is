@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import {
   connect,
+  getAdvertDocuments,
   getAdvertStatuses,
   getAdverts,
   getAdvertsCategories,
@@ -28,9 +29,9 @@ import {
   fixAdverts,
   fixCats,
   fixDeps,
+  fixInvolvedParties,
   fixTypes,
   mapAdvertsCategories,
-  mapCategoryDepartments,
 } from './lib/fixers.js'
 import { getSuperCategories } from './lib/static.js'
 
@@ -83,16 +84,18 @@ async function main() {
   )
 
   // TODO page this
-  const dbAdverts = await exec('get adverts', () => getAdverts(10, 0))
-
+  const dbAdverts = await exec('get adverts', () => getAdverts(1000, 0))
+  /*const advertDocuments = await exec('getDocuments', () =>
+    getAdvertDocuments(dbAdverts),
+  )*/
   // Step 1.2: Select our custom data
-  const superCategories = await exec('get super categories', getSuperCategories)
-
+  //const superCategories = await exec('get super categories', getSuperCategories)
   // Step 2: Fix, map and wrangle the data
   const departments = await exec('fix deps', () => fixDeps(dbDepartments))
   const fixedTypes = await exec('fix types', () => fixTypes(dbTypes))
-  const cats = await exec('fix cats', () =>
-    fixCats(dbCategories, superCategories),
+  const cats = await exec('fix cats', () => fixCats(dbCategories))
+  const parties = await exec('fix involved parties', () =>
+    fixInvolvedParties(dbInvolvedParties),
   )
   const adverts = await exec('fix adverts', () =>
     fixAdverts(fixedTypes.types, dbAdverts),
@@ -102,7 +105,8 @@ async function main() {
     cats,
     dbAdvertsCategories,
   )
-  const categoryDepartments = mapCategoryDepartments(dbCategories, departments)
+
+  // const categoryDepartments = mapCategoryDepartments(dbCategories, departments)
   // Step 3: Generate the inserts
   const inserts: Record<string, string[]> = {}
 
@@ -111,16 +115,15 @@ async function main() {
     () => {
       inserts.departments = generateDepartmentInserts(departments)
       inserts.types = generateTypeInserts(fixedTypes.types)
-      inserts.superCategories = generateSuperCategoryInserts(superCategories)
+      //inserts.superCategories = generateSuperCategoryInserts(superCategories)
       inserts.categories = generateCategoryInserts(cats)
       inserts.advertStatuses = generateAdvertStatusesInserts(dbAdvertStatuses)
-      inserts.involvedParties =
-        generateInvolvedPartiesInserts(dbInvolvedParties)
+      inserts.involvedParties = generateInvolvedPartiesInserts(parties)
       inserts.adverts = generateAdvertsInserts(adverts)
       inserts.advertsCategories =
         generateAdvertsCategoriesInserts(advertsCategories)
-      inserts.categoryDepartments =
-        generateCategoryDepartmentInserts(categoryDepartments)
+      /*inserts.categoryDepartments =
+        generateCategoryDepartmentInserts(categoryDepartments)*/
       return Promise.resolve()
     },
     '🔨',
@@ -132,15 +135,21 @@ async function main() {
     () => {
       write('00_departments.sql', inserts.departments.join('\n'))
       write('01_types.sql', inserts.types.join('\n'))
-      write('02_main_categories.sql', inserts.superCategories.join('\n'))
+      //write('02_main_categories.sql', inserts.superCategories.join('\n'))
       write('03_categories.sql', inserts.categories.join('\n'))
       write('04_advert_statuses.sql', inserts.advertStatuses.join('\n'))
-      write('05_involved_parties.sql', inserts.advertStatuses.join('\n'))
+      write('05_involved_parties.sql', inserts.involvedParties.join('\n'))
       write('06_adverts.sql', inserts.adverts.join('\n'))
-      write('07_adverts_categories.sql', inserts.adverts.join('\n'))
+      write('07_adverts_categories.sql', inserts.advertsCategories.join('\n'))
       write(
-        '08_category_department.sql',
-        inserts.categoryDepartments.join('\n'),
+        'all.sql',
+        `${inserts.departments.join('\n')}\n${inserts.types.join(
+          '\n',
+        )}${inserts.categories.join('\n')}\n${inserts.advertStatuses.join(
+          '\n',
+        )}\n${inserts.involvedParties.join('\n')}\n${inserts.adverts.join(
+          '\n',
+        )}\n${inserts.advertsCategories.join('\n')}`,
       )
       return Promise.resolve()
     },
