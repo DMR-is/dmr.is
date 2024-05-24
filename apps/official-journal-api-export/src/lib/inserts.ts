@@ -1,3 +1,4 @@
+
 import {
   Department,
   Type,
@@ -20,7 +21,7 @@ export function generateDepartmentInserts(departments: Array<Department>) {
 
 export function generateTypeInserts(types: Array<Type>) {
   const inserts = types.map((type) => {
-    return `INSERT INTO advert_type (id, title, slug, department_id, legacy_id) VALUES ('${type.id}', '${type.title}', '${type.slug}', '${type.departmentId}', '${type.legacyId}');`
+    return `INSERT INTO advert_type (id, title, slug, department_id, legacy_id) VALUES ('${type.id}', '${type.title}', '${type.slug}', '${type.department_id}', '${type.legacy_id}');`
   })
 
   return inserts
@@ -56,17 +57,16 @@ export function generateInvolvedPartiesInserts(
   involvedParties: Array<InvolvedParty>,
 ) {
   const inserts = involvedParties.map((involvedParty) => {
-    return `INSERT INTO advert_involved_party (id, name) VALUES ('${involvedParty.id}', '${involvedParty.name}');`
+    return `INSERT INTO advert_involved_party (id, title, slug) VALUES ('${involvedParty.id}', '${involvedParty.name}','${involvedParty.slug}');`
   })
 
   return inserts
 }
 
 export function generateAdvertsInserts(adverts: Array<Advert>) {
+
   const inserts = adverts.map((advert) => {
-    return `INSERT INTO advert (id, department_id, type_id, subject, status_id, serial_number, publication_year, signature_date, publication_date, involved_party_id) VALUES ('
-    ${advert.id}', '${advert.departmentId}', '${advert.typeId}', '${advert.subject}', '${advert.statusId}', '${advert.serialNumber}', '${advert.publicationYear}', '${advert.signatureDate}', '${advert.publicationDate}', '${advert.involvedPartyId}');`
-  })
+    return `INSERT INTO advert (id, department_id, type_id, subject, status_id, serial_number, signature_date, publication_date, involved_party_id,is_legacy,publication_year,document_html,document_pdf_url) VALUES ('${advert.id}', '${advert.department_id}', ${advert.type_id ? `'${advert.type_id}'` : null} , '${advert.subject}', '${advert.status_id}', ${advert.serial_number}, '${new Date(advert.signature_date).toISOString()}', '${new Date(advert.publication_date).toISOString()}', '${advert.involved_party_id}',${advert.is_legacy},${new Date(advert.publication_year).getFullYear()},'${advert.document_html.replaceAll("'","''")}','${advert.document_pdf_url}');`})
   return inserts
 }
 
@@ -74,7 +74,7 @@ export function generateAdvertsCategoriesInserts(
   advertCategories: Array<AdvertCategory>,
 ) {
   const inserts = advertCategories.map((advertCategory) => {
-    return `INSERT INTO advert_categories (advert_id, category_id) VALUES ('${advertCategory.advertId}', '${advertCategory.categoryId}');`
+    return `INSERT INTO advert_categories (advert_id, category_id) VALUES ('${advertCategory.advert_id}', '${advertCategory.category_id}');`
   })
   return inserts
 }

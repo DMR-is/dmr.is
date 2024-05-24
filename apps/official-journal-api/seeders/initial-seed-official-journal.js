@@ -7,7 +7,8 @@ const { cwd } = require('process')
 module.exports = {
   async up(queryInterface) {
     console.log(cwd())
-    const departmentsSeed = await readFile(
+    const allSeed = await readFile('./seeders/sql/all.sql', 'utf8')
+    /*const departmentsSeed = await readFile(
       './seeders/sql/00_departments.sql',
       'utf8',
     )
@@ -62,28 +63,12 @@ module.exports = {
     const caseCommentsSeed = await readFile(
       './seeders/sql/18_case_comments.sql',
       'utf8',
-    )
+    )*/
 
     const seed = `
       BEGIN;
 
-      ${departmentsSeed}
-      ${typesSeed}
-      ${mainCategoriesSeed}
-      ${categoriesSeed}
-      ${advertStatusSeed}
-      ${advertsSeed}
-      ${categoryDepartmentSeed}
-      ${advertCategoriesSeed}
-      ${caseStatusSeed}
-      ${caseTagSeed}
-      ${caseCommunicationSeed}
-      ${caseCommentTitleSeed}
-      ${caseCommentTypeSeed}
-      ${caseCommentTaskSeed}
-      ${caseCommentSeed}
-      ${caseSeed}
-      ${caseCommentsSeed}
+      ${allSeed}
 
       COMMIT;`
     return await queryInterface.sequelize.query(seed)
@@ -100,6 +85,7 @@ module.exports = {
         DELETE FROM advert_category;
         DELETE FROM advert_main_category;
         DELETE FROM advert_status;
+        DELETE FROM advert_involved_party;
         DELETE FROM case_status;
         DELETE FROM case_tag;
         DELETE FROM case_communication_status;
@@ -108,7 +94,7 @@ module.exports = {
         DELETE FROM case_comment_task;
         DELETE FROM case_comment;
         DELETE FROM case_comments;
-        DELETE FROM case;
+        DELETE FROM case_case;
       COMMIT;
     `)
   },

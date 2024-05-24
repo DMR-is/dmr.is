@@ -7,8 +7,10 @@ import {
   DbAdverts,
   DbCategory,
   DbDepartment,
+  DbInvolvedParty,
   DbType,
   Department,
+  InvolvedParty,
   SuperCategory,
   Type,
 } from '../types'
@@ -37,7 +39,12 @@ const TYPE_MAP: Record<string, string> = {
   AULGÝSING: 'AUGLÝSING',
 }
 
-const SKIP_TYPES = ['TEST', 'TEST Á AÐ STOFNA MÁL SEINT Í GOPRO', 'TEST ADVERT']
+const SKIP_TYPES = [
+  'TEST',
+  'TEST Á AÐ STOFNA MÁL SEINT Í GOPRO',
+  'TEST ADVERT',
+  'ÞETTA ER PRUFUAUGLÝSING',
+]
 
 export async function fixTypes(types: Array<DbType>): Promise<{
   types: Array<Type>
@@ -61,12 +68,12 @@ export async function fixTypes(types: Array<DbType>): Promise<{
     const skip = SKIP_TYPES.indexOf(type.title) === -1
 
     if (!skip) {
-      removedTypes.push(type.legacyId)
+      removedTypes.push(type.legacy_id)
     }
     return skip
   })
 
-  const withConsolidatedTypes = withoutSkippedTypes
+  /* const withConsolidatedTypes = withoutSkippedTypes
     .map((type) => {
       if (type.title in TYPE_MAP) {
         const targetTypeTitle = TYPE_MAP[type.title]
@@ -78,17 +85,18 @@ export async function fixTypes(types: Array<DbType>): Promise<{
           throw new Error(`type ${type.title} not found`)
         }
 
-        typeLegacyMap.set(type.legacyId, type.id)
-        return null
+        typeLegacyMap.set(type.legacy_id, type.id)
+
+        return type
       }
       return type
     })
     .filter((type): type is Type => Boolean(type))
-
+*/
   const idMap = new Map<string, Array<Type>>()
 
   // Group by id
-  for (const type of withConsolidatedTypes) {
+  for (const type of withoutSkippedTypes) {
     if (idMap.has(type.id)) {
       idMap.get(type.id)!.push(type)
     } else {
@@ -102,13 +110,13 @@ export async function fixTypes(types: Array<DbType>): Promise<{
       for (const type of types) {
         // Updated via reference
         type.id = uuid()
-        typeLegacyMap.set(type.legacyId, type.id)
+        typeLegacyMap.set(type.legacy_id, type.id)
       }
     }
   }
 
   const data = {
-    types: withSlugs,
+    types: withoutSkippedTypes,
     typeLegacyMap,
     removedTypes,
   }
@@ -117,22 +125,46 @@ export async function fixTypes(types: Array<DbType>): Promise<{
 
 export function fixCats(
   categories: Array<DbCategory>,
-  superCategories: SuperCategory[],
+  //superCategories: SuperCategory[],
 ): Promise<Array<Category>> {
   const mapped = categories.map((category) => {
-    const superCategoryId =
+    /* const superCategoryId =
       superCategories.find(
         (superCategory) => superCategory.children.indexOf(category.id) !== -1,
-      )?.id ?? null
+      )?.id ?? null*/
     const mapped: Category = {
       ...category,
       slug: slugit(category.title),
-      superCategoryId,
+      main_category_id: null,
     }
     return mapped
   })
 
   return Promise.resolve(mapped)
+}
+
+export function fixInvolvedParties(
+  involvedParties: Array<DbInvolvedParty>,
+): Promise<Array<InvolvedParty>> {
+  const arr: Array<InvolvedParty> = []
+
+  const mapped = involvedParties
+    .filter(
+      (x) => x.id !== '' && x.name !== '' && x.id !== null && x.name !== null,
+    )
+    .map((party) => {
+      const mapped: InvolvedParty = {
+        ...party,
+        slug: slugit(party.name),
+        legacy_id: party.id,
+      }
+      if (arr.findIndex((item) => item.id === party.id) > -1) {
+        mapped.id = uuid()
+      }
+
+      return arr.push(mapped)
+    })
+  return Promise.resolve(arr)
 }
 
 const HTML_STRINGS_TO_REMOVE = [
@@ -159,8 +191,17 @@ export function fixAdverts(
   const mapped = adverts.adverts.map((advert) => {
     return {
       ...advert,
-      slug: slugit(advert.subject),
-      html: fixHtml(advert.html),
+      document_html: fixHtml(advert.document_html),
+
+      type_id:
+        types
+          .filter(
+            (x) =>
+              x.title.toLowerCase() ===
+              advert.typeName.toLocaleLowerCase().trim(),
+          )
+          .find((x) => x.department_id === advert.department_id)?.id ?? null,
+      document_pdf_url: 'www.mbl.is', //fixPdfUrl() //need to take in attachments here
     }
   })
 
@@ -175,4 +216,11 @@ export function mapAdvertsCategories(
   // This should be 1:1 between migrations, placeholder if not
 
   return advertsCategories
+    .map((item) => {
+      if (adverts.find((x) => x.id === item.advert_id) !== undefined) {
+        return item
+      }
+      return null
+    })
+    .filter((type): type is AdvertCategory => Boolean(type))
 }
