@@ -90,7 +90,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertAdvert')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -115,7 +119,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertAdvert', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -124,7 +133,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in updateAdvert')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -152,7 +165,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateAdvert', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -163,7 +181,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertDepartment')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
 
@@ -177,7 +199,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertDepartment', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -188,7 +215,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model or id in updateDepartment')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -207,7 +238,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateDepartment', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -218,7 +254,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertInstitution')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
 
@@ -233,7 +273,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertInstitution', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -244,7 +289,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model or id in updateInstitution')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -263,7 +312,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateInstitution', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -284,7 +338,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertType')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
 
@@ -299,7 +357,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertType', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -308,7 +371,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model or id in updateMainCategory')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -328,7 +395,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateType', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -339,7 +411,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertMainCategory')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -356,7 +432,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertMainCategory', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -368,7 +449,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model or id in updateMainCategory')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -391,7 +476,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateMainCategory', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -401,7 +491,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model in insertCategory')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -415,7 +509,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in insertCategory', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -425,7 +524,11 @@ export class JournalService implements IJournalService {
       this.logger.error('No model or id in updateCategory')
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -448,7 +551,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in updateCategory', e as Error)
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -480,7 +588,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getMainCategories', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -491,7 +604,11 @@ export class JournalService implements IJournalService {
         this.logger.error('No id present in getDepartment')
         return Promise.resolve({
           ok: false,
-          error: { code: 400, message: 'Bad request' },
+          error: {
+            code: 400,
+            message: 'Bad request',
+            category: LOGGING_CATEGORY,
+          },
         })
       }
       const department = await this.advertDepartmentModel.findOne({
@@ -515,7 +632,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getDepartment', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -545,7 +667,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getDepartments', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -575,7 +702,12 @@ export class JournalService implements IJournalService {
       })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -610,7 +742,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getTypes', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -621,7 +758,11 @@ export class JournalService implements IJournalService {
         this.logger.error('No id present in getInstitution')
         return Promise.resolve({
           ok: false,
-          error: { code: 400, message: 'Bad request' },
+          error: {
+            code: 400,
+            message: 'Bad request',
+            category: LOGGING_CATEGORY,
+          },
         })
       }
       const party = await this.advertInvolvedPartyModel.findOne({
@@ -644,7 +785,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getInstitution', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -675,7 +821,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getInstitution', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -684,7 +835,11 @@ export class JournalService implements IJournalService {
     if (!id) {
       return Promise.resolve({
         ok: false,
-        error: { code: 400, message: 'Bad request' },
+        error: {
+          code: 400,
+          message: 'Bad request',
+          category: LOGGING_CATEGORY,
+        },
       })
     }
     try {
@@ -707,7 +862,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getCategory', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -738,7 +898,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getCategories', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -753,7 +918,11 @@ export class JournalService implements IJournalService {
         this.logger.error('No id present in getAdvert')
         return Promise.resolve({
           ok: false,
-          error: { code: 400, message: 'Bad request' },
+          error: {
+            code: 400,
+            message: 'Bad request',
+            category: LOGGING_CATEGORY,
+          },
         })
       }
       const advert = await this.advertModel.findOne({
@@ -787,7 +956,12 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getAdvert', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: {
+          code: 500,
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+          category: LOGGING_CATEGORY,
+        },
       })
     }
   }
@@ -825,7 +999,13 @@ export class JournalService implements IJournalService {
 
       return Promise.resolve({ ok: true, value: result })
     } catch (e) {
-      this.logger.error('Error in getAdverts', { error: e as Error })
+      this.logger.error('Error in getAdverts', {
+        error: {
+          message: (e as Error).message,
+          stack: (e as Error).stack,
+        },
+        category: LOGGING_CATEGORY,
+      })
       return Promise.resolve({
         ok: false,
         error: { code: 500, message: 'Could not get adverts' },

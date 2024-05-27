@@ -54,12 +54,6 @@ class AdvertFields {
   readonly documents!: AdvertDocument
 
   @ApiProperty({
-    type: Institution,
-    description: 'Institution the advert is for.',
-  })
-  readonly institution!: Institution
-
-  @ApiProperty({
     type: [Category],
     description: 'Categories of the advert.',
   })
@@ -80,6 +74,12 @@ class AdvertFields {
   })
   @IsDateString()
   readonly publicationDate!: string
+
+  @ApiProperty({
+    type: Institution,
+    description: 'Involved party of the advert.',
+  })
+  involvedParty!: Institution
 }
 
 export class CaseWithAdvert {

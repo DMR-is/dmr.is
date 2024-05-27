@@ -900,28 +900,6 @@
         },
         "required": ["advert", "signature", "full"]
       },
-      "Institution": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the institution, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the institution",
-            "example": "Dómsmálaráðuneytið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the institution, used in URLs and API requests.",
-            "example": "domsmalaraduneytid"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
       "MainCategory": {
         "type": "object",
         "properties": {
@@ -977,6 +955,28 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "Institution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the institution, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the institution",
+            "example": "Dómsmálaráðuneytið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the institution, used in URLs and API requests.",
+            "example": "domsmalaraduneytid"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
       "AdvertFields": {
         "type": "object",
         "properties": {
@@ -989,10 +989,6 @@
           "documents": {
             "description": "Advert documents",
             "allOf": [{ "$ref": "#/components/schemas/AdvertDocument" }]
-          },
-          "institution": {
-            "description": "Institution the advert is for.",
-            "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
           "categories": {
             "description": "Categories of the advert.",
@@ -1007,6 +1003,10 @@
           "publicationDate": {
             "type": "string",
             "description": "The date the advert requested publication day."
+          },
+          "involvedParty": {
+            "description": "Involved party of the advert.",
+            "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           }
         },
         "required": [
@@ -1014,10 +1014,10 @@
           "title",
           "type",
           "documents",
-          "institution",
           "categories",
           "signatureDate",
-          "publicationDate"
+          "publicationDate",
+          "involvedParty"
         ]
       },
       "CaseWithAdvert": {
