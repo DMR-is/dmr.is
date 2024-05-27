@@ -4,8 +4,8 @@ module.exports = {
     username: process.env.DB_USER || 'dev_db',
     password: process.env.DB_PASS || 'dev_db',
     database: process.env.DB_NAME || 'dev_db_official_journal',
-    host: process.env.DB_NAME || 'localhost',
-    port: '5432',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || '5432',
     dialect: 'postgres',
   },
   test: {
