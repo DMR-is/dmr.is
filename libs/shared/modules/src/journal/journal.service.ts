@@ -618,7 +618,7 @@ export class JournalService implements IJournalService {
         this.logger.warn('Department not found')
         return Promise.resolve({
           ok: false,
-          error: { code: 404, message: 'Not found' },
+          error: { code: 404, message: `Could not find department<${id}>` },
         })
       }
 
@@ -690,7 +690,7 @@ export class JournalService implements IJournalService {
         this.logger.warn('Type not found')
         return Promise.resolve({
           ok: false,
-          error: { code: 404, message: 'Not found' },
+          error: { code: 404, message: `Could not find type<${id}>` },
         })
       }
 
@@ -771,7 +771,7 @@ export class JournalService implements IJournalService {
       if (!party) {
         return Promise.resolve({
           ok: false,
-          error: { code: 404, message: 'Not found' },
+          error: { code: 404, message: `Could not find institution<${id}` },
         })
       }
 
@@ -850,7 +850,7 @@ export class JournalService implements IJournalService {
       if (!category) {
         return Promise.resolve({
           ok: false,
-          error: { code: 404, message: 'Not found' },
+          error: { code: 404, message: `Could not find category<${id}>` },
         })
       }
 
@@ -949,7 +949,7 @@ export class JournalService implements IJournalService {
         this.logger.warn(`Article not found in getAdvert - ${id}`)
         return Promise.resolve({
           ok: false,
-          error: { code: 404, message: 'Not found' },
+          error: { code: 404, message: `Could not find advert<${id}>` },
         })
       }
     } catch (e) {
