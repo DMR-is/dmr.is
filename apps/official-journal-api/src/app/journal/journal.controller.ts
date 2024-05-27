@@ -21,8 +21,20 @@ import {
   ValidationResponse,
 } from '@dmr.is/shared/dto'
 
-import { Controller, Get, HttpException, Inject, Query } from '@nestjs/common'
-import { ApiNotFoundResponse, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import {
+  Controller,
+  Get,
+  HttpException,
+  Inject,
+  Param,
+  Query,
+} from '@nestjs/common'
+import {
+  ApiNotFoundResponse,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -35,8 +47,7 @@ export class JournalController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Get('advert')
-  @ApiQuery({ name: 'id', type: String, required: true })
+  @Get('adverts/:id')
   @ApiResponse({
     status: 200,
     type: Advert,
@@ -46,7 +57,13 @@ export class JournalController {
     description: 'Advert not found.',
     type: AdvertNotFound,
   })
-  async advert(@Query('id') id: string): Promise<GetAdvertResponse> {
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+    description: 'Advert ID.',
+  })
+  async advert(@Param('id') id: string): Promise<GetAdvertResponse> {
     const result = await this.journalService.getAdvert(id)
 
     if (!result.ok) {

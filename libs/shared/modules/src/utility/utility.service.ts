@@ -133,6 +133,14 @@ export class UtilityService implements IUtilityService {
       //   )
       // }
 
+      const involvedParty = await this.involvedPartyModel.findByPk(
+        '195eccdc-baf3-4cec-97ac-ef1c5161b091',
+      )
+
+      if (!involvedParty) {
+        throw new NotFoundException(`Involved party with id not found`)
+      }
+
       const activeDepartment = advertDepartmentMigrate(department)
 
       const activeType = advertTypesMigrate(type)
@@ -169,11 +177,7 @@ export class UtilityService implements IUtilityService {
           department: activeDepartment,
           type: activeType,
           categories: activeCategories,
-          institution: {
-            id: '4f3ea720-1695-481a-ab42-8bd0624c9d20', // TODO switch to real data when auth is implemented
-            slug: 'reykjavikur-borg',
-            title: 'Reykjavíkurborg',
-          },
+          involvedParty: involvedParty,
         },
       })
     } catch (error) {
