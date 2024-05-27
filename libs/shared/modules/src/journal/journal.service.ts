@@ -828,7 +828,7 @@ export class JournalService implements IJournalService {
       this.logger.error('Error in getAdverts', { error: e as Error })
       return Promise.resolve({
         ok: false,
-        error: { code: 500, message: 'Error' },
+        error: { code: 500, message: 'Could not get adverts' },
       })
     }
   }

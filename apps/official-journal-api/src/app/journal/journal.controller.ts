@@ -69,6 +69,10 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @ApiQuery({
+    type: GetAdvertsQueryParams,
+    required: false,
+  })
   async adverts(
     @Query()
     params?: GetAdvertsQueryParams,
