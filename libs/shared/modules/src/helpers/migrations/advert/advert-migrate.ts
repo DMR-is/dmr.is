@@ -38,9 +38,7 @@ export function advertMigrate(model: AdvertDTO): Advert {
     categories: model.categories
       ? model.categories.map((item) => advertCategoryMigrate(item))
       : [],
-    involvedParty: model.involvedParty
-      ? advertInvolvedPartyMigrate(model.involvedParty)
-      : null,
+    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     document: {
       //no migrate because this is not a database table.
       html: model.documentHtml,

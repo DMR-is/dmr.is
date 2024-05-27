@@ -46,7 +46,7 @@ const STATUSES_QUERY = `select StatusID, StatusName from adverts group by Status
 
 const INVOLVED_PARTIES_QUERY = `
   -- InvolvedParties should be the same as UserGroups, but in some cases they are not, they're still the person responsible for the advert
-  SELECT UserGroupID, UserGroupName FROM Adverts GROUP BY UserGroupID, UserGroupName;
+  SELECT InvolvedPartyID, InvolvedPartyName FROM Adverts  GROUP BY InvolvedPartyID, InvolvedPartyName
 `
 
 const ADVERTS_QUERY = (limit = 10, offset = 0) => `
@@ -188,8 +188,8 @@ export async function getInvolvedParties(): Promise<DbInvolvedParty[]> {
   const involvedParties: Array<DbInvolvedParty> = []
   records.forEach((involvedParty) => {
     const ip = {
-      id: involvedParty.UserGroupID,
-      name: involvedParty.UserGroupName,
+      id: involvedParty.InvolvedPartyID,
+      name: involvedParty.InvolvedPartyName,
     }
     involvedParties.push(ip)
   })

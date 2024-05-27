@@ -126,7 +126,7 @@ export class Advert {
     nullable: false,
     type: Institution,
   })
-  readonly involvedParty!: Institution | null
+  readonly involvedParty!: Institution
 
   @ApiProperty({
     description: 'Advert document in different formats.',
