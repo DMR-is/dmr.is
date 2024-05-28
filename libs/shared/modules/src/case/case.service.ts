@@ -79,25 +79,27 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
-  async overview(params?: GetCasesQuery | undefined): Promise<CaseEditorialOverview> {
+  async overview(
+    params?: GetCasesQuery | undefined,
+  ): Promise<CaseEditorialOverview> {
     try {
       const res = await this.cases(params ?? {})
 
       const counter = await this.caseModel.findAll({
         attributes: [
           [Sequelize.literal(`status.value`), 'caseStatusValue'],
-          [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count']
+          [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
         ],
         include: [
           {
             model: CaseStatusDto,
             as: 'status',
             attributes: [],
-          }
+          },
         ],
-        group: ["status_id", `status.value`],
-      });
-  
+        group: ['status_id', `status.value`],
+      })
+
       return Promise.resolve({
         data: res.cases,
         paging: res.paging,
@@ -130,13 +132,14 @@ export class CaseService implements ICaseService {
           )
         }
 
-        const application = await this.applicationService.getApplication(
-          body.applicationId,
-        )
+        const applicationResponse =
+          await this.applicationService.getApplication(body.applicationId)
 
-        if (!application) {
+        if (!applicationResponse.ok) {
           throw new NotFoundException('Application not found')
         }
+
+        const application = applicationResponse.value.application
 
         const now = new Date()
 
@@ -279,8 +282,8 @@ export class CaseService implements ICaseService {
     try {
       const caseStatusRes = await this.caseStatusModel.findOne({
         where: {
-          value: val
-        }
+          value: val,
+        },
       })
 
       return Promise.resolve(caseStatusRes?.dataValues)

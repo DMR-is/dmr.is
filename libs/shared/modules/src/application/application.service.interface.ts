@@ -1,5 +1,6 @@
 import {
   Application,
+  GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
   PostCaseCommentResponse,
@@ -9,7 +10,7 @@ import {
 import { Result } from '../types/result'
 
 export interface IApplicationService {
-  getApplication(id: string): Promise<Application | null>
+  getApplication(id: string): Promise<Result<GetApplicationResponse>>
 
   updateApplication(
     id: string,
