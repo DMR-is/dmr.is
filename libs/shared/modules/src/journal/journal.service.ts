@@ -925,8 +925,15 @@ export class JournalService implements IJournalService {
           },
         })
       }
-      const advert = await this.advertModel.findOne({
-        where: { id: parseInt(id, 10) },
+      const advert = await this.advertModel.findByPk(id, {
+        include: [
+          AdvertTypeDTO,
+          AdvertDepartmentDTO,
+          AdvertStatusDTO,
+          AdvertInvolvedPartyDTO,
+          AdvertAttachmentsDTO,
+          AdvertCategoryDTO,
+        ],
       })
       if (advert) {
         const ad = advertMigrate(advert)
@@ -946,7 +953,7 @@ export class JournalService implements IJournalService {
           },
         })
       } else {
-        this.logger.warn(`Article not found in getAdvert - ${id}`)
+        this.logger.warn(`Advert not found in getAdvert<${id}>`)
         return Promise.resolve({
           ok: false,
           error: { code: 404, message: `Could not find advert<${id}>` },
