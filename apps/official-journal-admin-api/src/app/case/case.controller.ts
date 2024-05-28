@@ -100,7 +100,13 @@ export class CaseController {
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
-    return this.caseService.create(body)
+    const result = await this.caseService.create(body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
   }
 
   @Get('')
@@ -114,7 +120,13 @@ export class CaseController {
     description: 'All cases.',
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    return this.caseService.cases(params)
+    const result = await this.caseService.cases(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
   }
 
   @Post('publish')
@@ -122,30 +134,12 @@ export class CaseController {
     operationId: 'postPublish',
     summary: 'Publish cases',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Cases published',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiNoContentResponse()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
-    try {
-      await this.caseService.publish(body)
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-      }
+    const result = await this.caseService.publish(body)
 
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
     }
   }
 

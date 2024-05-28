@@ -57,7 +57,11 @@ export class UtilityService implements IUtilityService {
     this.logger.info('Using UtilityService')
   }
 
-  async getCaseWithAdvert(caseId: string): Promise<CaseWithAdvert> {
+  async getCaseWithAdvert(caseId: string): Promise<CaseWithAdvert | null> {
+    this.logger.info('getCaseWithAdvert', {
+      category: LOGGING_CATEGORY,
+      caseId: caseId,
+    })
     try {
       const found = await this.caseModel.findByPk(caseId, {
         include: [
@@ -79,7 +83,12 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        throw new NotFoundException(`Case with id ${caseId} not found`)
+        this.logger.warn(`Could not find case<${caseId}>`, {
+          category: LOGGING_CATEGORY,
+          caseId: caseId,
+        })
+
+        return null
       }
 
       const activeCase = caseMigrate(found)
@@ -89,18 +98,17 @@ export class UtilityService implements IUtilityService {
       )
 
       if (!applicationResponse.ok) {
-        throw new NotFoundException(
-          `Application with id ${activeCase.applicationId} not found`,
-        )
+        this.logger.error('Failed to get application', {
+          category: LOGGING_CATEGORY,
+          applicationId: activeCase.applicationId,
+          caseId: caseId,
+          error: applicationResponse.error,
+        })
+
+        return null
       }
 
       const application = applicationResponse.value.application
-
-      if (!application) {
-        throw new NotFoundException(
-          `Application with id ${activeCase.applicationId} not found`,
-        )
-      }
 
       // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(

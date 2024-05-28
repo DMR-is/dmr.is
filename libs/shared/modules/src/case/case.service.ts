@@ -42,6 +42,7 @@ import {
 import { caseParameters, counterResult, statusResMapper } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { AdvertDepartmentDTO } from '../journal/models'
+import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { ICaseService } from './case.service.interface'
 import {
@@ -81,7 +82,7 @@ export class CaseService implements ICaseService {
   }
   async overview(
     params?: GetCasesQuery | undefined,
-  ): Promise<CaseEditorialOverview> {
+  ): Promise<Result<CaseEditorialOverview>> {
     try {
       const res = await this.cases(params ?? {})
 
@@ -110,7 +111,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async create(body: PostApplicationBody): Promise<CreateCaseResponse> {
+  async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
     try {
       this.logger.info('Creating case', {
         applicationId: body.applicationId,
@@ -297,7 +298,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async case(id: string): Promise<GetCaseResponse> {
+  async case(id: string): Promise<Result<GetCaseResponse>> {
     try {
       const caseWithAdvert = await this.utilityService.getCaseWithAdvert(id)
 
@@ -314,7 +315,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  async cases(params: GetCasesQuery): Promise<GetCasesReponse> {
+  async cases(params: GetCasesQuery): Promise<Result<GetCasesReponse>> {
     try {
       this.logger.info('Getting cases', {
         category: LOGGING_CATEGORY,
@@ -355,25 +356,50 @@ export class CaseService implements ICaseService {
       })
 
       return Promise.resolve({
-        cases: cases.map(caseMigrate),
-        paging: generatePaging(cases, page, pageSize),
+        ok: true,
+        value: {
+          cases: cases.map(caseMigrate),
+          paging: generatePaging(cases, page, pageSize),
+        },
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in getCases', {
         category: LOGGING_CATEGORY,
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
       })
-      throw new InternalServerErrorException('Failed to get cases')
+      return Promise.resolve({
+        ok: false,
+        error: {
+          message: 'Failed to get cases',
+          code: 500,
+        },
+      })
     }
   }
 
-  publish(body: PostCasePublishBody): Promise<void> {
+  publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+    this.logger.info('Publishing cases', {
+      caseIds: body.caseIds,
+      category: LOGGING_CATEGORY,
+    })
+
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
-      throw new BadRequestException('Missing ids')
+      return Promise.resolve({
+        ok: false,
+        error: {
+          message: 'Missing caseIds',
+          code: 400,
+        },
+      })
     }
-    return Promise.resolve()
+    return Promise.resolve({
+      ok: true,
+      value: undefined,
+    })
   }
 }
