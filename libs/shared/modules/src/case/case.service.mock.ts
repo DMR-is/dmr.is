@@ -26,6 +26,7 @@ import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common'
 
 import { Result } from '../types/result'
@@ -34,6 +35,9 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
   }
   getCaseHistory(caseId: string): Promise<CaseHistory> {
     this.logger.info('getCaseHistory', caseId)
@@ -44,7 +48,7 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
 
-  create(body: PostApplicationBody): Promise<CreateCaseResponse> {
+  create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
     this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
@@ -74,14 +78,7 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
 
-  cases(params?: GetCasesQuery): Promise<GetCasesReponse> {
-    if (!params) {
-      return Promise.resolve({
-        cases: ALL_MOCK_CASES,
-        paging: generatePaging(ALL_MOCK_CASES),
-      })
-    }
-
+  cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>> {
     throw new Error('Method not implemented.')
   }
 
@@ -103,7 +100,9 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  async overview(params?: GetCasesQuery): Promise<CaseEditorialOverview> {
+  async overview(
+    params?: GetCasesQuery,
+  ): Promise<Result<CaseEditorialOverview>> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -125,47 +124,29 @@ export class CaseServiceMock implements ICaseService {
       }
     })
 
-    const { cases, paging } = await this.cases(params)
+    const response = await this.cases(params)
+    if (!response.ok) {
+      throw new InternalServerErrorException('Internal server error.')
+    }
+
+    const { cases, paging } = response.value
 
     return Promise.resolve({
-      data: cases as unknown as Case[],
-      totalItems: {
-        submitted: submitted.length,
-        inProgress: inProgress.length,
-        inReview: inReview.length,
-        ready: ready.length,
+      ok: true,
+      value: {
+        data: cases as unknown as Case[],
+        totalItems: {
+          submitted: submitted.length,
+          inProgress: inProgress.length,
+          inReview: inReview.length,
+          ready: ready.length,
+        },
+        paging,
       },
-      paging,
     })
   }
 
-  publish(body: PostCasePublishBody): Promise<void> {
-    const { caseIds } = body
-
-    if (!caseIds || !caseIds.length) {
-      throw new BadRequestException('Missing ids')
-    }
-
-    try {
-      const cases = caseIds.map((id) => {
-        const found = ALL_MOCK_CASES.find((c) => c.id === id)
-
-        if (!found) {
-          throw new NotFoundException('Case not found')
-        }
-
-        return found
-      })
-
-      const now = new Date().toISOString()
-      cases.forEach((c) => {
-        c.modifiedAt = now
-        c.publishedAt = now
-      })
-
-      return Promise.resolve()
-    } catch (error) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
+  pblish(body: PostCasePublishBody): Promise<Result<undefined>> {
+    throw new NotImplementedException()
   }
 }

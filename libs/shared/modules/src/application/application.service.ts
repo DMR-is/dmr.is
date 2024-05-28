@@ -79,7 +79,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async getApplication(id: string): Promise<Result<GetApplicationResponse>> {
-    this.logger.info('getAdvert', {
+    this.logger.info('getApplication', {
       applicationId: id,
       category: LOGGING_CATEGORY,
     })
@@ -93,7 +93,7 @@ export class ApplicationService implements IApplicationService {
       )
 
       if (res.status != 200) {
-        this.logger.error(`Could not get application<${id}>`, {
+        this.logger.error(`getApplication, could not get application<${id}>`, {
           applicationId: id,
           status: res.status,
           category: LOGGING_CATEGORY,
@@ -205,7 +205,7 @@ export class ApplicationService implements IApplicationService {
       )
 
       if (res.status !== 200) {
-        this.logger.error('Could not update application', {
+        this.logger.error('updateApplicaton, could not update application', {
           status: res.status,
           category: LOGGING_CATEGORY,
         })
@@ -237,17 +237,35 @@ export class ApplicationService implements IApplicationService {
         applicationId,
       })
 
-      const found = caseResponse.cases.find(
+      if (!caseResponse.ok) {
+        this.logger.error('postApplication, could not get cases', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 500,
+            message: `Could not get cases for application<${applicationId}>`,
+          },
+        })
+      }
+
+      const found = caseResponse.value.cases.find(
         (c) => c.applicationId === applicationId,
       )
 
       const application = await this.getApplication(applicationId)
 
       if (!application.ok) {
-        this.logger.error('Application not found', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
+        this.logger.error(
+          `postApplication, application<${applicationId}> not found`,
+          {
+            applicationId: applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
 
         return Promise.resolve({
           ok: false,
@@ -293,7 +311,7 @@ export class ApplicationService implements IApplicationService {
         ok: false,
         error: {
           code: 500,
-          message: `Could not create case for application applicationId<${applicationId}>`,
+          message: `Could not create case for application<${applicationId}>`,
         },
       })
     }
@@ -302,8 +320,8 @@ export class ApplicationService implements IApplicationService {
   async getComments(
     applicationId: string,
   ): Promise<Result<GetCaseCommentsResponse>> {
-    this.logger.info('Getting comments for application', {
-      applicationId,
+    this.logger.info('getComments', {
+      applicationId: applicationId,
       category: LOGGING_CATEGORY,
     })
 
@@ -312,15 +330,36 @@ export class ApplicationService implements IApplicationService {
         applicationId,
       })
 
-      const activeCase = caseResponse.cases.find(
+      if (!caseResponse.ok) {
+        this.logger.error(
+          `getComments, could not get case with applicationId<${applicationId}>`,
+          {
+            applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 500,
+            message: `Failed to get case with applicationId<${applicationId}>`,
+          },
+        })
+      }
+
+      const activeCase = caseResponse.value.cases.find(
         (c) => c.applicationId === applicationId,
       )
 
       if (!activeCase) {
-        this.logger.error('Case not found', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
+        this.logger.error(
+          `getComments, could not find case with applicationId<${applicationId}>`,
+          {
+            applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
 
         return Promise.resolve({
           ok: false,
@@ -341,7 +380,10 @@ export class ApplicationService implements IApplicationService {
       })
     } catch (error) {
       this.logger.error('Error in getComments', {
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
         applicationId,
         category: LOGGING_CATEGORY,
       })
@@ -360,8 +402,8 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     commentBody: PostApplicationComment,
   ): Promise<Result<PostCaseCommentResponse>> {
-    this.logger.info('Posting comment for application', {
-      applicationId,
+    this.logger.info('postComment', {
+      applicationId: applicationId,
       category: LOGGING_CATEGORY,
     })
 
@@ -370,15 +412,33 @@ export class ApplicationService implements IApplicationService {
         applicationId,
       })
 
-      const activeCase = caseResponse.cases.find(
+      if (!caseResponse.ok) {
+        this.logger.error('postComment, could not get case', {
+          applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 500,
+            message: `Could not get case with applicationId<${applicationId}>`,
+          },
+        })
+      }
+
+      const activeCase = caseResponse.value.cases.find(
         (c) => c.applicationId === applicationId,
       )
 
       if (!activeCase) {
-        this.logger.error('Case not found', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
+        this.logger.error(
+          `postComment, could not find case with application<${applicationId}>`,
+          {
+            applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
 
         return Promise.resolve({
           ok: false,
@@ -399,7 +459,7 @@ export class ApplicationService implements IApplicationService {
       })
 
       if (!created) {
-        this.logger.error('Could not create comment', {
+        this.logger.error('postComment, could not create comment', {
           applicationId,
           category: LOGGING_CATEGORY,
         })
@@ -419,7 +479,10 @@ export class ApplicationService implements IApplicationService {
       })
     } catch (error) {
       this.logger.error('Error in postComment', {
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
         applicationId,
         category: LOGGING_CATEGORY,
       })

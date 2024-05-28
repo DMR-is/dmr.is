@@ -54,7 +54,9 @@ export class UtilityService implements IUtilityService {
     this.logger.info('Using UtilityService')
   }
 
-  async getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>> {
+  async getCaseWithAdvert(
+    caseId: string,
+  ): Promise<Result<CaseWithAdvert | null>> {
     this.logger.info('getCaseWithAdvert', {
       category: LOGGING_CATEGORY,
       caseId: caseId,
@@ -81,9 +83,10 @@ export class UtilityService implements IUtilityService {
 
       if (!found) {
         this.logger.warn(`getCaseWithAdvert, could not find case<${caseId}>`, {
-          caseId: caseId,
           category: LOGGING_CATEGORY,
+          caseId: caseId,
         })
+
         return Promise.resolve({
           ok: false,
           error: {
@@ -100,11 +103,12 @@ export class UtilityService implements IUtilityService {
       )
 
       if (!applicationResponse.ok) {
-        this.logger.warn(
-          `getCaseWithAdvert, could not find application <${activeCase.applicationId}`,
+        this.logger.error(
+          `getCaseWithAdvert, failed to get application<${activeCase.applicationId}>`,
           {
             caseId: caseId,
             applicationId: activeCase.applicationId,
+            error: applicationResponse.error,
             category: LOGGING_CATEGORY,
           },
         )
@@ -112,14 +116,15 @@ export class UtilityService implements IUtilityService {
         return Promise.resolve({
           ok: false,
           error: {
-            code: 404,
-            message: `Could not find application <${activeCase.applicationId}`,
+            code: 500,
+            message: `Could not get application<${activeCase.applicationId}>`,
           },
         })
       }
 
-      const application = applicationResponse.value.application
+      const { application } = applicationResponse.value
 
+      // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(
         application.answers.advert.department,
       )
