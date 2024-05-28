@@ -113,7 +113,10 @@ describe('CaseController', () => {
 
       jest.spyOn(caseService, 'create').mockImplementation(() =>
         Promise.resolve({
-          case: activeCase,
+          ok: true,
+          value: {
+            case: activeCase,
+          },
         }),
       )
 
