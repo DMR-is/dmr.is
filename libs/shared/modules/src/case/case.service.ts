@@ -315,8 +315,8 @@ export class CaseService implements ICaseService {
         value: { case: result.value },
       })
     } catch (error) {
-      this.logger.error('Error in case', {
-        id,
+      this.logger.error(`Error in case<${id}>`, {
+        caseId: id,
         category: LOGGING_CATEGORY,
         error: {
           message: (error as Error).message,
@@ -379,7 +379,6 @@ export class CaseService implements ICaseService {
         paging: generatePaging(cases, page, pageSize),
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in getCases', {
         category: LOGGING_CATEGORY,
         error,
