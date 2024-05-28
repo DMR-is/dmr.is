@@ -243,7 +243,7 @@ export class ApplicationService implements IApplicationService {
 
       const application = await this.getApplication(applicationId)
 
-      if (!application) {
+      if (!application.ok) {
         this.logger.error('Application not found', {
           applicationId,
           category: LOGGING_CATEGORY,

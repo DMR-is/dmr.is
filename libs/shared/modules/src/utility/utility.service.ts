@@ -2,11 +2,7 @@ import { Op } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CaseWithAdvert } from '@dmr.is/shared/dto'
 
-import {
-  Inject,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
@@ -34,6 +30,7 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
+import { Result } from '../types/result'
 import { IUtilityService } from './utility.service.interface'
 
 const LOGGING_CATEGORY = 'UtilityService'
@@ -57,7 +54,11 @@ export class UtilityService implements IUtilityService {
     this.logger.info('Using UtilityService')
   }
 
-  async getCaseWithAdvert(caseId: string): Promise<CaseWithAdvert> {
+  async getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>> {
+    this.logger.info('getCaseWithAdvert', {
+      category: LOGGING_CATEGORY,
+      caseId: caseId,
+    })
     try {
       const found = await this.caseModel.findByPk(caseId, {
         include: [
@@ -79,7 +80,17 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        throw new NotFoundException(`Case with id ${caseId} not found`)
+        this.logger.warn(`getCaseWithAdvert, could not find case<${caseId}>`, {
+          caseId: caseId,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find case<${caseId}>`,
+          },
+        })
       }
 
       const activeCase = caseMigrate(found)
@@ -89,36 +100,66 @@ export class UtilityService implements IUtilityService {
       )
 
       if (!applicationResponse.ok) {
-        throw new NotFoundException(
-          `Application with id ${activeCase.applicationId} not found`,
+        this.logger.warn(
+          `getCaseWithAdvert, could not find application <${activeCase.applicationId}`,
+          {
+            caseId: caseId,
+            applicationId: activeCase.applicationId,
+            category: LOGGING_CATEGORY,
+          },
         )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find application <${activeCase.applicationId}`,
+          },
+        })
       }
 
       const application = applicationResponse.value.application
 
-      if (!application) {
-        throw new NotFoundException(
-          `Application with id ${activeCase.applicationId} not found`,
-        )
-      }
-
-      // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(
-        '69cd3e90-106e-4b9c-8419-148c29e1738a',
+        application.answers.advert.department,
       )
 
       if (!department) {
-        throw new NotFoundException(`Department with id not found`)
+        this.logger.warn(
+          `getCaseWithAdvert, could not find department <${application.answers.advert.department}>`,
+          {
+            caseId: caseId,
+            departmentId: application.answers.advert.department,
+            category: LOGGING_CATEGORY,
+          },
+        )
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find department <${application.answers.advert.department}>`,
+          },
+        })
       }
 
-      // const type = await this.typeDto.findByPk(application.answers.advert?.type)
-      const type = await this.typeDto.findByPk(
-        'cb2c8386-bd1e-4e52-883c-260aa9f642de',
-      )
+      const type = await this.typeDto.findByPk(application.answers.advert?.type)
       if (!type) {
-        throw new NotFoundException(
-          `Type with id ${application.answers.advert?.type} not found`,
+        this.logger.warn(
+          `getCaseWithAdvert, could not find type <${application.answers.advert.type}>`,
+          {
+            caseId: caseId,
+            typeId: application.answers.advert.type,
+            applicationId: activeCase.applicationId,
+            category: LOGGING_CATEGORY,
+          },
         )
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find type <${application.answers.advert.type}>`,
+          },
+        })
       }
 
       const categoryIds =
@@ -146,7 +187,21 @@ export class UtilityService implements IUtilityService {
       )
 
       if (!involvedParty) {
-        throw new NotFoundException(`Involved party with id not found`)
+        this.logger.warn(
+          `getCaseWithAdvert, could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
+          {
+            caseId: caseId,
+            applicationId: activeCase.applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
+          },
+        })
       }
 
       const activeDepartment = advertDepartmentMigrate(department)
@@ -168,34 +223,57 @@ export class UtilityService implements IUtilityService {
       }
 
       if (!signatureDate) {
-        throw new NotFoundException(`Signature date not found`)
+        this.logger.warn(`getCaseWithAdvert, could not find signature date`, {
+          caseId: caseId,
+          applicationId: activeCase.applicationId,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find signature date`,
+          },
+        })
       }
 
       return Promise.resolve({
-        activeCase: activeCase,
-        advert: {
-          title: application.answers.advert.title,
-          documents: {
-            advert: application.answers.advert.document,
-            signature: application.answers.signature.signature,
-            full: application.answers.preview.document,
+        ok: true,
+        value: {
+          activeCase: activeCase,
+          advert: {
+            title: application.answers.advert.title,
+            documents: {
+              advert: application.answers.advert.document,
+              signature: application.answers.signature.signature,
+              full: application.answers.preview.document,
+            },
+            publicationDate: application.answers.publishing.date,
+            signatureDate: signatureDate,
+            department: activeDepartment,
+            type: activeType,
+            categories: activeCategories,
+            involvedParty: involvedParty,
           },
-          publicationDate: application.answers.publishing.date,
-          signatureDate: signatureDate,
-          department: activeDepartment,
-          type: activeType,
-          categories: activeCategories,
-          involvedParty: involvedParty,
         },
       })
     } catch (error) {
-      console.log(error)
       this.logger.error('Error in getCaseWithAdvert', {
+        caseId: caseId,
         category: LOGGING_CATEGORY,
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
       })
 
-      throw new InternalServerErrorException('Failed to get case with advert')
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Could not get case with advert',
+        },
+      })
     }
   }
 }

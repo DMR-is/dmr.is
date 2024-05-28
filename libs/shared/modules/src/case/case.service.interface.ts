@@ -4,14 +4,14 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetUsersQueryParams,
-  GetUsersResponse,
   PostApplicationBody,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
 
+import { Result } from '../types/result'
+
 export interface ICaseService {
-  case(id: string): Promise<GetCaseResponse>
+  case(id: string): Promise<Result<GetCaseResponse>>
 
   cases(params?: GetCasesQuery): Promise<GetCasesReponse>
 

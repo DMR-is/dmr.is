@@ -86,8 +86,6 @@ export class AuthService implements IAuthService {
         body: new URLSearchParams(body),
       })
 
-      console.log(tokenResponse.status === 200)
-
       if (tokenResponse.status === 200) {
         const token: IdsToken = await tokenResponse.json()
 

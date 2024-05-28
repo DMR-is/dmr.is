@@ -127,7 +127,7 @@ export class PdfService implements IPdfService {
 
     const theCase = await this.caseService.case(caseId)
 
-    if (!theCase) {
+    if (!theCase.ok) {
       this.logger.warn(`Case ${caseId} not found`, {
         caseId,
         category: LOGGING_CATEGORY,
@@ -135,7 +135,7 @@ export class PdfService implements IPdfService {
       throw new NotFoundException()
     }
 
-    const document = theCase.case?.advert.documents.full
+    const document = theCase.value.case?.advert.documents.full
 
     if (!document) {
       this.logger.warn(`Document not found for case ${caseId}`, {
@@ -146,7 +146,7 @@ export class PdfService implements IPdfService {
     }
 
     const pdf = await this.generatePdfFromHtml(
-      theCase.case.activeCase.isLegacy
+      theCase.value.case?.activeCase.isLegacy
         ? dirtyClean(document as HTMLText)
         : document,
     )
