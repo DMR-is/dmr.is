@@ -49,6 +49,13 @@ export class ApplicationController {
     type: GetApplicationResponse,
   })
   @ApiExcludeEndpoint()
+  @ApiParam({
+    type: String,
+    name: 'id',
+    description: 'Id of the application to get.',
+    required: true,
+    allowEmptyValue: false,
+  })
   async getApplication(
     @Param('id') id: string,
   ): Promise<GetApplicationResponse> {
@@ -80,10 +87,6 @@ export class ApplicationController {
   @ApiExcludeEndpoint()
   async submitApplication(@Param('id') id: string) {
     const results = await this.applicationService.submitApplication(id)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
 
     return Promise.resolve()
   }

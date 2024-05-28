@@ -80,7 +80,13 @@ export class CaseController {
     description: 'Case not found.',
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
-    return this.caseService.case(id)
+    const result = await this.caseService.case(id)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
   }
 
   @Post('')

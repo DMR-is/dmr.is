@@ -28,6 +28,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import { Result } from '../types/result'
 import { ICaseService } from './case.service.interface'
 
 export class CaseServiceMock implements ICaseService {
@@ -68,7 +69,7 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  case(id: string): Promise<GetCaseResponse> {
+  case(id: string): Promise<Result<GetCaseResponse>> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
