@@ -299,19 +299,38 @@ export class CaseService implements ICaseService {
   }
 
   async case(id: string): Promise<Result<GetCaseResponse>> {
+    this.logger.info(`case<${id}>`, {
+      caseId: id,
+      category: LOGGING_CATEGORY,
+    })
     try {
-      const caseWithAdvert = await this.utilityService.getCaseWithAdvert(id)
+      const result = await this.utilityService.getCaseWithAdvert(id)
+
+      if (!result.ok) {
+        return Promise.resolve(result)
+      }
 
       return Promise.resolve({
-        case: caseWithAdvert,
+        ok: true,
+        value: { case: result.value },
       })
     } catch (error) {
-      this.logger.error('Error in getCase', {
-        id,
+      this.logger.error(`Error in case<${id}>`, {
+        caseId: id,
         category: LOGGING_CATEGORY,
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
       })
-      throw new InternalServerErrorException('Failed to get case')
+
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: `Failed to get case<${id}>`,
+        },
+      })
     }
   }
 
