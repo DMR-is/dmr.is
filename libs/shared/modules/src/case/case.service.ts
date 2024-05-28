@@ -1,4 +1,3 @@
-import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
@@ -20,12 +19,10 @@ import {
 import { generatePaging } from '@dmr.is/utils'
 
 import {
-  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -39,7 +36,7 @@ import {
   CaseCommentTitleDto,
   CaseCommentTypeDto,
 } from '../comment/models'
-import { caseParameters, counterResult, statusResMapper } from '../helpers'
+import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { AdvertDepartmentDTO } from '../journal/models'
 import { Result } from '../types/result'
@@ -101,10 +98,17 @@ export class CaseService implements ICaseService {
         group: ['status_id', `status.value`],
       })
 
+      if (!res.ok) {
+        return res
+      }
+
       return Promise.resolve({
-        data: res.cases,
-        paging: res.paging,
-        totalItems: counterResult(counter),
+        ok: true,
+        value: {
+          data: res.value.cases,
+          paging: res.value.paging,
+          totalItems: counterResult(counter),
+        },
       })
     } catch (e) {
       throw new Error(JSON.stringify(e))
@@ -113,14 +117,14 @@ export class CaseService implements ICaseService {
 
   async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
     try {
-      this.logger.info('Creating case', {
+      this.logger.info('create', {
         applicationId: body.applicationId,
         category: LOGGING_CATEGORY,
       })
 
-      const newCase = await this.sequelize.transaction(async (t) => {
-        // check if case with application id already exists
-
+      const newCase = await this.sequelize.transaction<
+        Result<CreateCaseResponse>
+      >(async (t) => {
         const existingCase = await this.caseModel.findOne({
           where: {
             applicationId: body.applicationId,
@@ -128,16 +132,37 @@ export class CaseService implements ICaseService {
         })
 
         if (existingCase) {
-          throw new BadRequestException(
-            'Case with application id already exists',
+          this.logger.warn(
+            `create, case with application<${body.applicationId}> already exists`,
+            {
+              applicationId: body.applicationId,
+              category: LOGGING_CATEGORY,
+            },
           )
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 400,
+              message: `Case with application<${body.applicationId}> already exists`,
+            },
+          })
         }
 
         const applicationResponse =
           await this.applicationService.getApplication(body.applicationId)
 
         if (!applicationResponse.ok) {
-          throw new NotFoundException('Application not found')
+          this.logger.error('create, failed to get application', {
+            applicationId: body.applicationId,
+            category: LOGGING_CATEGORY,
+          })
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 400,
+              message: `Failed to get application<${body.applicationId}>`,
+            },
+          })
         }
 
         const application = applicationResponse.value.application
@@ -160,7 +185,18 @@ export class CaseService implements ICaseService {
         })
 
         if (!caseStatusSubmitted) {
-          throw new NotFoundException('Case status not found')
+          this.logger.error('create, case status submitted not found', {
+            category: LOGGING_CATEGORY,
+            caseStatusId: CaseStatus.Submitted,
+          })
+
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 500,
+              message: 'Case status submitted not found',
+            },
+          })
         }
 
         const caseTag = await this.caseTagModel.findOne({
@@ -171,7 +207,18 @@ export class CaseService implements ICaseService {
         })
 
         if (!caseTag) {
-          throw new NotFoundException('Case tag not found')
+          this.logger.error('create, case tag not started not found', {
+            category: LOGGING_CATEGORY,
+            caseTagId: CaseTag.NotStarted,
+          })
+
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 500,
+              message: 'Case tag not started not found',
+            },
+          })
         }
 
         const caseCommunicationStatus =
@@ -183,7 +230,21 @@ export class CaseService implements ICaseService {
           })
 
         if (!caseCommunicationStatus) {
-          throw new NotFoundException('Case communication status not found')
+          this.logger.error(
+            'create, case communication status not started not found',
+            {
+              category: LOGGING_CATEGORY,
+              caseCommunicationStatusId: CaseCommunicationStatus.NotStarted,
+            },
+          )
+
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 500,
+              message: 'Case communication status not started not found',
+            },
+          })
         }
 
         const department = await this.departmentModel.findByPk(
@@ -194,7 +255,21 @@ export class CaseService implements ICaseService {
         )
 
         if (!department) {
-          throw new NotFoundException('Department not found')
+          this.logger.error(
+            `create, department<${application.answers.advert.department}> not found`,
+            {
+              category: LOGGING_CATEGORY,
+              departmentId: application.answers.advert.department,
+            },
+          )
+
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 500,
+              message: 'Department not found',
+            },
+          })
         }
 
         const newCase = await this.caseModel.create(
@@ -257,21 +332,44 @@ export class CaseService implements ICaseService {
         })
 
         if (!activeCase) {
-          throw new InternalServerErrorException('Failed to create case')
+          this.logger.error('create, failed to get newly created case', {
+            category: LOGGING_CATEGORY,
+            caseId: newCase.id,
+          })
+
+          return Promise.resolve({
+            ok: false,
+            error: {
+              code: 500,
+              message: `Failed to get case<${newCase.id}>`,
+            },
+          })
         }
 
-        return caseMigrate(activeCase)
+        return Promise.resolve({
+          ok: true,
+          value: {
+            case: caseMigrate(activeCase),
+          },
+        })
       })
 
-      return Promise.resolve({
-        case: newCase,
-      })
+      return Promise.resolve(newCase)
     } catch (error) {
       this.logger.error('Error in createCase', {
-        error,
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
         category: LOGGING_CATEGORY,
       })
-      throw new InternalServerErrorException('Internal server error.')
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Failed to create case',
+        },
+      })
     }
   }
 
@@ -336,7 +434,7 @@ export class CaseService implements ICaseService {
 
   async cases(params: GetCasesQuery): Promise<Result<GetCasesReponse>> {
     try {
-      this.logger.info('Getting cases', {
+      this.logger.info('cases', {
         category: LOGGING_CATEGORY,
         params,
       })
@@ -400,7 +498,7 @@ export class CaseService implements ICaseService {
   }
 
   publish(body: PostCasePublishBody): Promise<Result<undefined>> {
-    this.logger.info('Publishing cases', {
+    this.logger.info('publish', {
       caseIds: body.caseIds,
       category: LOGGING_CATEGORY,
     })
@@ -408,10 +506,13 @@ export class CaseService implements ICaseService {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
+      this.logger.warn('publish, missing body', {
+        category: LOGGING_CATEGORY,
+      })
       return Promise.resolve({
         ok: false,
         error: {
-          message: 'Missing caseIds',
+          message: 'Missing or invalid body',
           code: 400,
         },
       })

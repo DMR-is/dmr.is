@@ -1,6 +1,5 @@
 import { ICaseService, ICommentService } from '@dmr.is/modules'
 import {
-  Case,
   CaseEditorialOverview,
   CreateCaseResponse,
   GetCaseCommentResponse,
@@ -16,13 +15,11 @@ import {
 } from '@dmr.is/shared/dto'
 
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpException,
-  HttpStatus,
   Inject,
   NotFoundException,
   Param,
@@ -62,7 +59,13 @@ export class CaseController {
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<CaseEditorialOverview> {
-    return this.caseService.overview(params)
+    const result = await this.caseService.overview(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
   }
 
   @Get(':id')

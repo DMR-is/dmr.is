@@ -82,12 +82,18 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        this.logger.warn(`Could not find case<${caseId}>`, {
+        this.logger.warn(`getCaseWithAdvert, could not find case<${caseId}>`, {
           category: LOGGING_CATEGORY,
           caseId: caseId,
         })
 
-        return null
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find case<${caseId}>`,
+          },
+        })
       }
 
       const activeCase = caseMigrate(found)
@@ -97,23 +103,26 @@ export class UtilityService implements IUtilityService {
       )
 
       if (!applicationResponse.ok) {
-        this.logger.error('Failed to get application', {
-          category: LOGGING_CATEGORY,
-          applicationId: activeCase.applicationId,
-          caseId: caseId,
-          error: applicationResponse.error,
-        })
-
-        return null
-      }
-
-      const application = applicationResponse.value.application
-
-      if (!application) {
-        throw new NotFoundException(
-          `Application with id ${activeCase.applicationId} not found`,
+        this.logger.error(
+          `getCaseWithAdvert, failed to get application<${activeCase.applicationId}>`,
+          {
+            caseId: caseId,
+            applicationId: activeCase.applicationId,
+            error: applicationResponse.error,
+            category: LOGGING_CATEGORY,
+          },
         )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 500,
+            message: `Could not get application<${activeCase.applicationId}>`,
+          },
+        })
       }
+
+      const { application } = applicationResponse.value
 
       // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(

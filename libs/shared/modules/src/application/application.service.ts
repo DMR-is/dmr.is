@@ -79,7 +79,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async getApplication(id: string): Promise<Result<GetApplicationResponse>> {
-    this.logger.info('getAdvert', {
+    this.logger.info('getApplication', {
       applicationId: id,
       category: LOGGING_CATEGORY,
     })
@@ -293,7 +293,7 @@ export class ApplicationService implements IApplicationService {
         ok: false,
         error: {
           code: 500,
-          message: `Could not create case for application applicationId<${applicationId}>`,
+          message: `Could not create case for application<${applicationId}>`,
         },
       })
     }
