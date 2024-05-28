@@ -4,6 +4,7 @@ import {
   Application,
   CaseCommentPublicity,
   CaseCommentType,
+  GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
   PostCaseCommentResponse,
@@ -77,8 +78,11 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  async getApplication(id: string): Promise<Application | null> {
-    this.logger.info('getAdvert', { id, category: LOGGING_CATEGORY })
+  async getApplication(id: string): Promise<Result<GetApplicationResponse>> {
+    this.logger.info('getAdvert', {
+      applicationId: id,
+      category: LOGGING_CATEGORY,
+    })
 
     try {
       const res = await this.xroadFetch(
@@ -88,23 +92,43 @@ export class ApplicationService implements IApplicationService {
         },
       )
 
-      if (res.status !== 200) {
-        this.logger.error('Could not get application from xroad', {
+      if (res.status != 200) {
+        this.logger.error(`Could not get application<${id}>`, {
+          applicationId: id,
           status: res.status,
           category: LOGGING_CATEGORY,
         })
-        return null
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: res.status,
+            message: `Could not get application<${id}>`,
+          },
+        })
       }
 
       const application: Application = await res.json()
 
-      return application
+      return Promise.resolve({
+        ok: true,
+        value: { application: application },
+      })
     } catch (error) {
-      this.logger.error('Exception occured, could not get application', {
-        error,
+      this.logger.error(`Error in getApplication`, {
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        },
+        applicationId: id,
         category: LOGGING_CATEGORY,
       })
-      return null
+      return {
+        ok: false,
+        error: {
+          code: 500,
+          message: `Could not get application<${id}>`,
+        },
+      }
     }
   }
 

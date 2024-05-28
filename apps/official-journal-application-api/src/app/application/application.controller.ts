@@ -2,6 +2,7 @@ import { IApplicationService } from '@dmr.is/modules'
 import {
   Application,
   CaseComment,
+  GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
   PostCaseCommentResponse,
@@ -45,11 +46,21 @@ export class ApplicationController {
     summary: 'Get application by ID.',
   })
   @ApiOkResponse({
-    type: Application,
+    type: GetApplicationResponse,
   })
   @ApiExcludeEndpoint()
-  async getApplication(@Param('id') id: string): Promise<Application | null> {
-    return await this.applicationService.getApplication(id)
+  async getApplication(
+    @Param('id') id: string,
+  ): Promise<GetApplicationResponse> {
+    const result = await this.applicationService.getApplication(id)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return Promise.resolve({
+      application: result.value.application,
+    })
   }
 
   @Post(':id/submit')

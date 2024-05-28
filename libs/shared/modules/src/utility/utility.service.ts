@@ -84,9 +84,17 @@ export class UtilityService implements IUtilityService {
 
       const activeCase = caseMigrate(found)
 
-      const application = await this.applicationService.getApplication(
+      const applicationResponse = await this.applicationService.getApplication(
         activeCase.applicationId,
       )
+
+      if (!applicationResponse.ok) {
+        throw new NotFoundException(
+          `Application with id ${activeCase.applicationId} not found`,
+        )
+      }
+
+      const application = applicationResponse.value.application
 
       if (!application) {
         throw new NotFoundException(
