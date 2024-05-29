@@ -296,11 +296,7 @@
             }
           }
         },
-        "responses": {
-          "200": { "description": "Cases published" },
-          "400": { "description": "Bad request" },
-          "500": { "description": "Internal server error" }
-        }
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/{id}/comments": {
@@ -698,6 +694,7 @@
           },
           "assignedTo": {
             "description": "User the case is assigned to.",
+            "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/User" }]
           },
           "communicationStatus": {
@@ -980,7 +977,7 @@
       "AdvertFields": {
         "type": "object",
         "properties": {
-          "department": { "type": "string" },
+          "department": { "$ref": "#/components/schemas/Department" },
           "title": { "type": "string" },
           "type": {
             "description": "Type of the advert.",
