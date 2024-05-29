@@ -15,7 +15,12 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import { AdvertType, CaseStatusEnum, CaseWithAdvert } from '../gen/fetch'
+import {
+  AdvertType,
+  CaseStatusEnum,
+  CaseWithAdvert,
+  Department,
+} from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -25,11 +30,17 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: CaseWithAdvert | null
-  advertTypes: Array<AdvertType> | null
+  advertTypes: Array<AdvertType>
+  departments: Array<Department>
   step: CaseStep | null
 }
 
-const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
+const CaseSingle: Screen<Props> = ({
+  activeCase,
+  advertTypes,
+  departments,
+  step,
+}) => {
   const { formatMessage } = useFormatMessage()
 
   if (!activeCase || !step) {
@@ -119,7 +130,15 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
       <Stack space={[2, 3, 4]}>
         {step === 'innsending' && <StepInnsending activeCase={activeCase} />}
         {step === 'grunnvinnsla' && (
-          <StepGrunnvinnsla activeCase={activeCase} advertTypes={advertTypes} />
+          <StepGrunnvinnsla
+            activeCase={activeCase}
+            advertTypes={advertTypes.sort((a, b) =>
+              a.slug.localeCompare(b.slug),
+            )}
+            departments={departments.sort((a, b) =>
+              a.slug.localeCompare(b.slug),
+            )}
+          />
         )}
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
@@ -151,16 +170,12 @@ const CaseSingle: Screen<Props> = ({ activeCase, advertTypes, step }) => {
               </Button>
             </LinkV2>
           )}
-          {nextStep ? (
+          {nextStep && (
             <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
               </Button>
             </LinkV2>
-          ) : (
-            <Button disabled={!nextStep}>
-              {formatMessage(messages.paging.nextStep)}
-            </Button>
           )}
         </Box>
       </Stack>
@@ -174,36 +189,27 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const step = query.uid?.[1] as CaseStep | undefined
 
   if (!caseId || !step || !caseSteps.includes(step)) {
-    return { activeCase: null, advertTypes: null, step: null }
+    return { activeCase: null, advertTypes: [], step: null, departments: [] }
   }
 
-  const [activeCase] = await Promise.all([
-    dmrClient.getCase({
-      id: caseId,
-    }),
-  ]).catch((err) => {
-    // dmrClient.getAdvertTypes({}),
-    console.log('Error fetcing case', { err })
-    throw new Error('Error fetcing case')
+  const activeCase = await dmrClient.getCase({
+    id: caseId,
   })
 
-  // const { types } = await dmrClient.getAdvertTypes({
-  //   // search: application.answers.advert.type,
-  //   search: '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9', // Using this for now as the application system only has mock types
-  // })
+  const departments = await dmrClient.getDepartments()
 
-  // // const advertType = types.find((t) => t.id === application.answers.advert.type)
-  // const advertType = types.find(
-  //   (t) => t.id === '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9',
-  // )
+  const selectedDepartment =
+    (query.department as string) ?? activeCase._case.advert.department.id
 
-  // if (!advertType) {
-  //   throw new Error('Advert type not found')
-  // }
+  const activeTypes = await dmrClient.getTypes({
+    department: selectedDepartment,
+    pageSize: 100,
+  })
 
   return {
     activeCase: activeCase._case,
-    advertTypes: [],
+    departments: departments.departments,
+    advertTypes: activeTypes.types,
     step,
   }
 }

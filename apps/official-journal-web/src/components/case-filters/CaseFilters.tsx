@@ -41,7 +41,7 @@ export const CaseFilters = () => {
   useEffect(() => {
     const filters: ActiveFilters = []
     Object.entries(qp.query).forEach(([key, values]) => {
-      if (allFilters?.find((f) => f.key === key)) {
+      if (allFilters?.find((f) => f?.key === key)) {
         const value = typeof values === 'string' ? values.split(',') : undefined
         value?.forEach((v) => {
           filters.push({ key, value: v })
