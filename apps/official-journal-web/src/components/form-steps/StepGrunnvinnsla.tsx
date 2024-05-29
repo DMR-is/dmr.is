@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
   Box,
   Checkbox,
@@ -8,31 +10,56 @@ import {
   Inline,
   Input,
   Select,
-  StringOption,
   Tag,
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertType, Case, CaseWithAdvert } from '../../gen/fetch'
+import { AdvertType, CaseWithAdvert, Department } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { CaseDepartmentTabs } from '../../lib/constants'
+import { useQueryParams } from '../../hooks/useQueryParams'
 import { messages } from './messages'
 
 type Props = {
   activeCase: CaseWithAdvert
-  advertTypes: Array<AdvertType> | null
+  departments: Array<Department>
+  advertTypes: Array<AdvertType>
 }
 
-export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
+export const StepGrunnvinnsla = ({
+  activeCase,
+  advertTypes,
+  departments,
+}: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const activeTypes =
-    advertTypes?.filter((t) => t.id === activeCase.advert.type.id) ?? []
+  const { add } = useQueryParams()
 
-  const typeOptions: StringOption[] = activeTypes.map((t) => ({
-    label: t.title,
-    value: t.slug,
-  }))
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department | null>(
+      departments.find((d) => d.id === activeCase.advert.department.id) || null,
+    )
+
+  const [selectedType, setSelectedType] = useState<AdvertType | null>(
+    advertTypes.find((t) => t.id === activeCase.advert.type.id) || null,
+  )
+
+  const [hasPaid, setHasPaid] = useState(activeCase.activeCase.paid)
+
+  const [price, setPrice] = useState(activeCase.activeCase.price)
+
+  const onDepartmentChange = (department?: Department) => {
+    setSelectedDepartment(
+      departments.find((d) => d.id === department?.id) ?? null,
+    )
+
+    if (department) {
+      setSelectedType(null)
+
+      add({
+        department: department.id,
+      })
+    }
+  }
 
   return (
     <>
@@ -52,7 +79,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
                 readOnly
                 disabled
                 name="institution"
-                // value={activeCase?.advert.involvedParty.title } TOOD: Not implemented
+                value={activeCase.advert.involvedParty.title}
                 label={formatMessage(messages.grunnvinnsla.institution)}
                 size="sm"
               />
@@ -63,13 +90,22 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
                 name="department"
-                value={CaseDepartmentTabs.find(
-                  (o) => o.value === activeCase.advert.department.title,
-                )}
-                options={CaseDepartmentTabs}
+                value={{
+                  label: selectedDepartment?.title || '',
+                  value: selectedDepartment?.id || '',
+                }}
+                options={departments.map((d) => ({
+                  label: d.title,
+                  value: d.id,
+                }))}
                 label={formatMessage(messages.grunnvinnsla.department)}
                 size="sm"
                 isSearchable={false}
+                onChange={(opt) =>
+                  onDepartmentChange(
+                    departments.find((d) => d.id === opt?.value),
+                  )
+                }
               />
             </GridColumn>
           </GridRow>
@@ -78,11 +114,20 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
                 name="type"
-                value={typeOptions.find(
-                  (o) => o.value === activeCase.advert.type.id,
-                )}
-                options={typeOptions}
+                value={{
+                  label: selectedType?.title || '',
+                  value: selectedType?.id || '',
+                }}
+                options={advertTypes.map((t) => ({
+                  label: t.title,
+                  value: t.id,
+                }))}
                 label={formatMessage(messages.grunnvinnsla.type)}
+                onChange={(opt) =>
+                  setSelectedType(
+                    advertTypes.find((t) => t.id === opt?.value) ?? null,
+                  )
+                }
                 size="sm"
                 isSearchable={false}
               />
@@ -163,6 +208,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
 
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
+                disabled
                 name="fastTrack"
                 checked={activeCase.activeCase.fastTrack}
                 label={formatMessage(messages.grunnvinnsla.fastTrack)}
@@ -174,7 +220,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Input
                 name="price"
-                value={activeCase.activeCase.price}
+                value={price}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="tel"
@@ -185,7 +231,8 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
                 name="paid"
-                checked={activeCase.activeCase.paid}
+                checked={hasPaid}
+                onChange={() => setHasPaid(!hasPaid)}
                 label={formatMessage(messages.grunnvinnsla.paid)}
               />
             </GridColumn>

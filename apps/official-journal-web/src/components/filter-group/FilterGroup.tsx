@@ -20,7 +20,7 @@ type Props = {
 export const FilterGroup = ({
   label,
   expanded,
-  filters,
+  filters = [],
   activeFilters,
 }: Props) => {
   const { formatMessage } = useFormatMessage()

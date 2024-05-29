@@ -43,6 +43,7 @@ import {
   advertMainCategoryMigrate,
   advertMigrate,
   advertTypesMigrate,
+  typesParameters,
 } from '../helpers'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
@@ -717,16 +718,15 @@ export class JournalService implements IJournalService {
   ): Promise<Result<GetAdvertTypesResponse>> {
     try {
       const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
+      const whereParams = typesParameters(params)
 
       const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: params?.search
-          ? {
-              id: { [Op.eq]: params.search },
-            }
-          : undefined,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        where: whereParams,
       })
 
       const mappedTypes = types.map((item) => advertTypesMigrate(item))
@@ -735,7 +735,7 @@ export class JournalService implements IJournalService {
         ok: true,
         value: {
           types: mappedTypes,
-          paging: generatePaging(types, page),
+          paging: generatePaging(types, page, pageSize),
         },
       })
     } catch (e) {
