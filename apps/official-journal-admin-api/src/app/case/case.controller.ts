@@ -1,13 +1,16 @@
-import { ICaseService, ICommentService } from '@dmr.is/modules'
+import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CaseEditorialOverview,
   CreateCaseResponse,
+  GetAdvertTypesQueryParams,
+  GetAdvertTypesResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetDepartmentsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -30,6 +33,7 @@ import {
   ApiBody,
   ApiNoContentResponse,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -42,9 +46,57 @@ export class CaseController {
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
 
+    @Inject(IJournalService)
+    private readonly journalService: IJournalService,
+
     @Inject(ICommentService)
     private readonly caseCommentService: ICommentService,
   ) {}
+
+  @Get('departments')
+  @ApiOperation({
+    operationId: 'getDepartments',
+    summary: 'Get departments',
+  })
+  @ApiResponse({
+    type: GetDepartmentsResponse,
+    status: 200,
+    description: 'Departments',
+  })
+  async departments(): Promise<GetDepartmentsResponse> {
+    const result = await this.journalService.getDepartments()
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
+  }
+
+  @Get('types')
+  @ApiResponse({
+    status: 200,
+    type: GetAdvertTypesResponse,
+    description: 'List of advert types.',
+  })
+  @ApiOperation({
+    operationId: 'getTypes',
+    summary: 'Get advert types.',
+  })
+  async types(
+    @Query()
+    params?: GetAdvertTypesQueryParams,
+  ): Promise<GetAdvertTypesResponse> {
+    const result = await this.journalService.getTypes(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
+  }
 
   @Get('overview')
   @ApiOperation({

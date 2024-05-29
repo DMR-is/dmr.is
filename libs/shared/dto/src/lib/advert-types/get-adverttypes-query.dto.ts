@@ -35,4 +35,16 @@ export class GetAdvertTypesQueryParams {
   @IsPositive()
   @IsOptional()
   page?: number
+
+  @ApiProperty({
+    name: 'pageSize',
+    description: 'Number of items per page.',
+    type: Number,
+    required: false,
+  })
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  pageSize?: number
 }
