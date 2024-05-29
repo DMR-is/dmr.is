@@ -89,11 +89,10 @@ export class JournalController {
   @ApiQuery({
     type: GetAdvertsQueryParams,
     required: false,
+    name: 'params'
   })
   async adverts(
-    @Query()
-    params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse> {
+    @Query('params') params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse> {
     const result = await this.journalService.getAdverts(params)
 
     if (!result.ok) {
