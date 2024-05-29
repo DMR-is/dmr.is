@@ -31,7 +31,7 @@ class AdvertDocument {
 
 class AdvertFields {
   @ApiProperty({
-    type: String,
+    type: Department,
   })
   readonly department!: Department
 

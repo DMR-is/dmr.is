@@ -75,6 +75,8 @@ export const handleFilterToggle = (
 }
 
 export const mapTabIdToCaseStatus = (param?: string) => {
+  if (!param) return CaseStatusEnum.Innsent
+
   switch (param) {
     case CaseStatusEnum.Innsent:
       return CaseStatusEnum.Innsent

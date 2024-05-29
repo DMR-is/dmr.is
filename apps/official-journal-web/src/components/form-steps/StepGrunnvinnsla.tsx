@@ -64,8 +64,7 @@ export const StepGrunnvinnsla = ({ activeCase, advertTypes }: Props) => {
               <Select
                 name="department"
                 value={CaseDepartmentTabs.find(
-                  (o) =>
-                    o.value === activeCase.activeCase.advertDepartment.title,
+                  (o) => o.value === activeCase.advert.department.title,
                 )}
                 options={CaseDepartmentTabs}
                 label={formatMessage(messages.grunnvinnsla.department)}

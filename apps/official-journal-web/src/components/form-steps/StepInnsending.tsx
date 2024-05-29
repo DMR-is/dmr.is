@@ -25,7 +25,7 @@ export const StepInnsending = ({ activeCase }: Props) => {
         <GridColumn span={['12/12']}>
           <Inline space={1}>
             {[
-              activeCase.activeCase.advertDepartment,
+              activeCase.advert.department,
               ...activeCase.advert.categories,
             ]?.map((cat) => (
               <Tag key={cat.id} variant="white" outlined disabled>

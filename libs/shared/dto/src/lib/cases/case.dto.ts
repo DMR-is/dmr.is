@@ -104,6 +104,7 @@ export class Case {
   @ApiProperty({
     type: User,
     description: 'User the case is assigned to.',
+    nullable: true,
   })
   @ValidateIf((o) => o.assignedTo !== null)
   @Type(() => User)
@@ -147,8 +148,7 @@ export class Case {
   @ApiProperty({
     type: String,
     example: 'Titill á máli',
-    description:
-      'Advert title on case',
+    description: 'Advert title on case',
   })
   @IsString()
   advertTitle!: string
@@ -156,8 +156,7 @@ export class Case {
   @ApiProperty({
     type: Department,
     example: 'B-Deild',
-    description:
-      'Advert department',
+    description: 'Advert department',
   })
   @Type(() => Department)
   advertDepartment!: Department
