@@ -148,5 +148,5 @@ export class Advert {
     description: 'Attachments for the advert.',
     required: true,
   })
-  readonly attachments!: AdvertAttachment[] | null
+  readonly attachments!: AdvertAttachment[]
 }

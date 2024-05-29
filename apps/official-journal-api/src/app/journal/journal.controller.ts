@@ -50,7 +50,7 @@ export class JournalController {
   @Get('adverts/:id')
   @ApiResponse({
     status: 200,
-    type: Advert,
+    type: GetAdvertResponse,
     description: 'Advert by ID.',
   })
   @ApiNotFoundResponse({
