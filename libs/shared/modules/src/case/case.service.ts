@@ -290,6 +290,8 @@ export class CaseService implements ICaseService {
             paid: false,
             fastTrack: application.answers.publishing?.fastTrack ?? false,
             departmentId: department,
+            advertTitle: application.answers.advert.title,
+            requestedPublicationDate: application.answers.publishing.date,
           },
           {
             returning: ['id'],
