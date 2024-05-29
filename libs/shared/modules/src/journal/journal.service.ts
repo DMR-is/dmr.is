@@ -980,23 +980,46 @@ export class JournalService implements IJournalService {
       category: LOGGING_CATEGORY,
       metadata: { params },
     })
+
+    const searchCondition = params?.search ? `%${params.search}%` : undefined;
     try {
       const page = params?.page ?? 1
       const adverts = await this.advertModel.findAll({
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
-        where: params?.search
-          ? {
-              title: { [Op.iLike]: `%${params?.search}%` },
-            }
-          : undefined,
+        where: {
+          [Op.and]: [
+            searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
+          ]
+        },
         include: [
-          AdvertTypeDTO,
-          AdvertDepartmentDTO,
+          {
+            model: AdvertTypeDTO,
+            where: params?.type ? {
+              slug: params?.type
+            } : undefined,
+          },
+          {
+            model: AdvertDepartmentDTO,
+            where: params?.department ? {
+              slug: params?.department
+            } : undefined,
+          },
           AdvertStatusDTO,
-          AdvertInvolvedPartyDTO,
+          {
+            model: AdvertInvolvedPartyDTO,
+            where: params?.involvedParty ? {
+              slug: params?.involvedParty
+            } : undefined,
+          },
           AdvertAttachmentsDTO,
           AdvertCategoryDTO,
+          {
+            model: AdvertCategoryDTO,
+            where: params?.category ? {
+              slug: params?.category
+            } : undefined,
+          },
         ],
       })
       const result: GetAdvertsResponse = {
