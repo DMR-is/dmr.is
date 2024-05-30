@@ -723,7 +723,16 @@ export class JournalService implements IJournalService {
       const whereParams = typesParameters(params)
 
       const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
-        include: AdvertDepartmentDTO,
+        include: [
+          {
+            model: AdvertDepartmentDTO,
+            where: params?.department
+              ? {
+                  slug: params?.department,
+                }
+              : undefined,
+          },
+        ],
         limit: pageSize,
         offset: (page - 1) * pageSize,
         where: whereParams,
@@ -981,7 +990,7 @@ export class JournalService implements IJournalService {
       metadata: { params },
     })
 
-    const searchCondition = params?.search ? `%${params.search}%` : undefined;
+    const searchCondition = params?.search ? `%${params.search}%` : undefined
     try {
       const page = params?.page ?? 1
       const adverts = await this.advertModel.findAll({
@@ -990,35 +999,43 @@ export class JournalService implements IJournalService {
         where: {
           [Op.and]: [
             searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
-          ]
+          ],
         },
         include: [
           {
             model: AdvertTypeDTO,
-            where: params?.type ? {
-              slug: params?.type
-            } : undefined,
+            where: params?.type
+              ? {
+                  slug: params?.type,
+                }
+              : undefined,
           },
           {
             model: AdvertDepartmentDTO,
-            where: params?.department ? {
-              slug: params?.department
-            } : undefined,
+            where: params?.department
+              ? {
+                  slug: params?.department,
+                }
+              : undefined,
           },
           AdvertStatusDTO,
           {
             model: AdvertInvolvedPartyDTO,
-            where: params?.involvedParty ? {
-              slug: params?.involvedParty
-            } : undefined,
+            where: params?.involvedParty
+              ? {
+                  slug: params?.involvedParty,
+                }
+              : undefined,
           },
           AdvertAttachmentsDTO,
           AdvertCategoryDTO,
           {
             model: AdvertCategoryDTO,
-            where: params?.category ? {
-              slug: params?.category
-            } : undefined,
+            where: params?.category
+              ? {
+                  slug: params?.category,
+                }
+              : undefined,
           },
         ],
       })
