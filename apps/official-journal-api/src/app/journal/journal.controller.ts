@@ -45,7 +45,7 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) { }
 
   @Get('adverts/:id')
   @ApiResponse({
@@ -86,13 +86,9 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
-  @ApiQuery({
-    type: GetAdvertsQueryParams,
-    required: false,
-    name: 'params'
-  })
   async adverts(
-    @Query('params') params?: GetAdvertsQueryParams): Promise<GetAdvertsResponse> {
+    @Query() params?: GetAdvertsQueryParams
+  ): Promise<GetAdvertsResponse> {
     const result = await this.journalService.getAdverts(params)
 
     if (!result.ok) {
