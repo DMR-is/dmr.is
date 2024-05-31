@@ -16,7 +16,6 @@ export function advertMigrate(model: AdvertDTO): Advert {
     (item) => {
       const result: AdvertApplicationAttachment = {
         name: item.name,
-        type: item.type,
         url: item.url,
       }
       return result
@@ -52,7 +51,7 @@ export function advertMigrate(model: AdvertDTO): Advert {
       pdfUrl: model.documentPdfUrl,
     },
     signature: null,
-    attachments: attachmentsDTO,
+    attachments: attachmentsDTO.map((item) => ({ ...item, type: '' })),
   }
   return advert
 }
