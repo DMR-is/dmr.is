@@ -1071,6 +1071,14 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "AdvertApplicationAttachment": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Name of the attachment" },
+          "url": { "type": "string", "description": "URL of the attachment" }
+        },
+        "required": ["name", "url"]
+      },
       "AdvertFields": {
         "type": "object",
         "properties": {
@@ -1101,6 +1109,13 @@
           "involvedParty": {
             "description": "Involved party of the advert.",
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
+          },
+          "attachments": {
+            "description": "Attachments of the advert.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvertApplicationAttachment"
+            }
           }
         },
         "required": [
@@ -1111,7 +1126,8 @@
           "categories",
           "signatureDate",
           "publicationDate",
-          "involvedParty"
+          "involvedParty",
+          "attachments"
         ]
       },
       "CaseWithAdvert": {

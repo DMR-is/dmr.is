@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+import { Filenames } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CaseWithAdvert } from '@dmr.is/shared/dto'
 
@@ -242,6 +243,33 @@ export class UtilityService implements IUtilityService {
         })
       }
 
+      const attachments: { name: string; url: string }[] = []
+
+      application.answers.original.files.forEach((file) => {
+        const url = application.attachments[file.key]
+
+        attachments.push({
+          name: file.name,
+          url: url,
+        })
+      })
+
+      const fileNamePrefix =
+        application.answers.additionsAndDocuments.fileNames === 'document'
+          ? Filenames.Documents
+          : Filenames.Appendix
+
+      application.answers.additionsAndDocuments.files.forEach((file, i) => {
+        const url = application.attachments[file.key]
+
+        const name = `${fileNamePrefix} ${i + 1}`
+
+        attachments.push({
+          name: name,
+          url: url,
+        })
+      })
+
       return Promise.resolve({
         ok: true,
         value: {
@@ -259,6 +287,7 @@ export class UtilityService implements IUtilityService {
             type: activeType,
             categories: activeCategories,
             involvedParty: involvedParty,
+            attachments: attachments,
           },
         },
       })

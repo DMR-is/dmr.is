@@ -1,4 +1,8 @@
-import { Advert, AdvertAttachment, AdvertStatus } from '@dmr.is/shared/dto'
+import {
+  Advert,
+  AdvertApplicationAttachment,
+  AdvertStatus,
+} from '@dmr.is/shared/dto'
 
 import { AdvertDTO } from '../../../journal/models'
 import { advertCategoryMigrate } from './advert-category-migrate'
@@ -8,14 +12,16 @@ import { advertTypesMigrate } from './advert-types-migrate'
 
 export function advertMigrate(model: AdvertDTO): Advert {
   const status = model.status.title as keyof typeof AdvertStatus
-  const attachmentsDTO = model.attachments.map<AdvertAttachment>((item) => {
-    const result: AdvertAttachment = {
-      name: item.name,
-      type: item.type,
-      url: item.url,
-    }
-    return result
-  })
+  const attachmentsDTO = model.attachments.map<AdvertApplicationAttachment>(
+    (item) => {
+      const result: AdvertApplicationAttachment = {
+        name: item.name,
+        type: item.type,
+        url: item.url,
+      }
+      return result
+    },
+  )
 
   const advert: Advert = {
     id: model.id,

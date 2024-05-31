@@ -182,13 +182,6 @@ class ApplicationAttachmentsFileSchema {
     description: 'Key of the attachment',
   })
   key!: string
-
-  @ApiProperty({
-    type: String,
-    example: 'https://example.com/document.pdf',
-    description: 'URL of the attachment',
-  })
-  url?: string
 }
 
 export class ApplicationAttachments {
@@ -196,7 +189,7 @@ export class ApplicationAttachments {
     type: [ApplicationAttachmentsFileSchema],
     description: 'List of attachments',
   })
-  files?: ApplicationAttachmentsFileSchema[]
+  files!: ApplicationAttachmentsFileSchema[]
 
   @ApiProperty({
     type: String,
@@ -204,7 +197,7 @@ export class ApplicationAttachments {
     description:
       'Selected department for the application attachment, should be "document" or "additions"',
   })
-  fileNames?: string
+  fileNames!: string
 }
 
 class ApplicationContentCategories {
@@ -283,6 +276,14 @@ export class ApplicationPreview {
   document!: string
 }
 
+export class ApplicationOriginalFiles {
+  @ApiProperty({
+    type: [ApplicationAttachmentsFileSchema],
+    description: 'List of original files',
+  })
+  files!: ApplicationAttachmentsFileSchema[]
+}
+
 export class ApplicationAnswers {
   @ApiProperty({
     type: ApplicationRequirements,
@@ -313,11 +314,17 @@ export class ApplicationAnswers {
     type: ApplicationAttachments,
     description: 'Application attachments',
   })
-  attachments!: ApplicationAttachments
+  additionsAndDocuments!: ApplicationAttachments
 
   @ApiProperty({
     type: ApplicationPublishing,
     description: 'Application publishing',
   })
   publishing!: ApplicationPublishing
+
+  @ApiProperty({
+    type: ApplicationOriginalFiles,
+    description: 'Application original files',
+  })
+  original!: ApplicationOriginalFiles
 }

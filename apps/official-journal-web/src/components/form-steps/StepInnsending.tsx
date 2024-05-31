@@ -6,12 +6,10 @@ import {
   Tag,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseWithAdvert } from '../../gen/fetch'
+import { CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
-import { messages } from './messages'
-
 type Props = {
   activeCase: CaseWithAdvert
 }

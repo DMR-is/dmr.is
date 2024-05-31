@@ -7,6 +7,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { Attachments } from '../components/attachments/Attachments'
 import { Comments } from '../components/comments/Comments'
 import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
@@ -143,10 +144,9 @@ const CaseSingle: Screen<Props> = ({
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-        {/* TODO: Implement attachment logic */}
-        {/* {activeCase.advert.attachments.length ? (
+        {activeCase.advert.attachments.length > 0 && (
           <Attachments activeCase={activeCase} />
-        ) : null} */}
+        )}
 
         <Comments activeCase={activeCase} />
 
