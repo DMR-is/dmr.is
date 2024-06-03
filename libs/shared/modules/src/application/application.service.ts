@@ -283,7 +283,6 @@ export class ApplicationService implements IApplicationService {
           comment: null,
           from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
           to: null,
-          state: JSON.stringify(application),
         })
 
         return Promise.resolve({
@@ -455,7 +454,6 @@ export class ApplicationService implements IApplicationService {
         to: null,
         internal: false,
         type: CaseCommentType.Comment,
-        state: null,
       })
 
       if (!created) {

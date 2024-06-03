@@ -29,7 +29,7 @@ export class PostCaseComment {
     description: 'Id of the user who created the comment',
     required: true,
   })
-  from!: string
+  from!: string | null
 
   @ApiProperty({
     type: String,
@@ -37,11 +37,4 @@ export class PostCaseComment {
     required: false,
   })
   to!: string | null
-
-  @ApiProperty({
-    type: String,
-    description: 'State of the application as JSONB',
-    required: false,
-  })
-  state!: string | null
 }

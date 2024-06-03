@@ -186,6 +186,27 @@
         }
       }
     },
+    "/api/v1/cases/{id}/assign/{userId}": {
+      "post": {
+        "operationId": "assignEmployee",
+        "summary": "Assign case to user.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -207,7 +228,22 @@
               }
             }
           },
-          "404": { "description": "Case not found." }
+          "404": {
+            "description": "Case not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
         }
       }
     },
@@ -680,7 +716,7 @@
             "example": "Jónsson"
           },
           "active": {
-            "type": "string",
+            "type": "boolean",
             "description": "Status of the user",
             "example": true
           }
@@ -1135,6 +1171,7 @@
         },
         "required": ["case"]
       },
+      "Error": { "type": "object", "properties": {} },
       "PostApplicationBody": {
         "type": "object",
         "properties": {

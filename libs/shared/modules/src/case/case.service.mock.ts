@@ -36,6 +36,9 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  assign(id: string, userId: string): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
   publish(body: PostCasePublishBody): Promise<Result<undefined>> {
     throw new Error('Method not implemented.')
   }

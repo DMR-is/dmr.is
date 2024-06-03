@@ -86,9 +86,9 @@ export class JournalService implements IJournalService {
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
-  async insertAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
+  async create(model: Advert): Promise<Result<GetAdvertResponse>> {
     if (!model) {
-      this.logger.error('No model in insertAdvert')
+      this.logger.error('create, no model')
       return Promise.resolve({
         ok: false,
         error: {
@@ -117,7 +117,7 @@ export class JournalService implements IJournalService {
       })
       return { ok: true, value: { advert: advertMigrate(ad) } }
     } catch (e) {
-      this.logger.error('Error in insertAdvert', e as Error)
+      this.logger.error('Error in create', e as Error)
       return Promise.resolve({
         ok: false,
         error: {

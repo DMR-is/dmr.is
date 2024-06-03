@@ -16,6 +16,9 @@ export interface ICaseService {
   cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>>
 
   create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>>
+
+  assign(id: string, userId: string): Promise<Result<undefined>>
+
   publish(body: PostCasePublishBody): Promise<Result<undefined>>
   overview(params?: GetCasesQuery): Promise<Result<CaseEditorialOverview>>
 }

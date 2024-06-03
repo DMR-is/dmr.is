@@ -37,22 +37,6 @@ export const Section: FC<
   const isClient = typeof window === 'object'
   const isSmallScreen = width <= islandUITheme.breakpoints.md
 
-  useEffect(() => {
-    if (!isClient) return
-
-    if (containerRef.current) {
-      setContainerHeight(activeHeight)
-    }
-  }, [isActive, isClient, activeHeight])
-
-  useEffect(() => {
-    if (!isClient) return
-
-    if (containerRef.current) {
-      setContainerWidth(activeWidth)
-    }
-  }, [isComplete, isActive, activeWidth, isClient])
-
   return (
     <Box
       ref={containerRef}
@@ -60,34 +44,6 @@ export const Section: FC<
       style={{
         marginLeft: isSmallScreen && isComplete ? `-${containerWidth}px` : '0',
       }}
-    >
-      <Box display="flex" alignItems="center" marginBottom={[0, 0, 1]}>
-        <Box paddingTop={[0, 0, 2]}>
-          <SectionNumber
-            theme={theme}
-            lineHeight={containerHeight}
-            currentState={
-              isActive ? 'active' : isComplete ? 'previous' : 'next'
-            }
-            number={sectionIndex + 1}
-          />
-        </Box>
-        <Box
-          paddingTop={[0, 0, 2]}
-          paddingRight={[2, 2, 0]}
-          width="full"
-          className={cn(styles.name, {
-            [styles.nameWithActiveSubSections]: subSections && isActive,
-          })}
-        >
-          <Text lineHeight="lg" fontWeight={isActive ? 'semiBold' : 'light'}>
-            {section}
-          </Text>
-        </Box>
-      </Box>
-      {isSmallScreen || !subSections ? null : (
-        <SubSections isActive={isActive} subSections={subSections} />
-      )}
-    </Box>
+    ></Box>
   )
 }

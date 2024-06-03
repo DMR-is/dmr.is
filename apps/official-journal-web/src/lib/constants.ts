@@ -1,5 +1,7 @@
 import { StringOption } from '@island.is/island-ui/core'
 
+import { AssignEmployeeRequest } from '../gen/fetch'
+
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
 export const BLEED_HEIGHT = 56
@@ -28,3 +30,20 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'B deild', value: 'b-deild', key: 'department' },
   { label: 'C deild', value: 'c-deild', key: 'department' },
 ]
+
+export const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+export async function assignEmployee(
+  url: string,
+  { arg }: { arg: AssignEmployeeRequest },
+) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+  }).then((res) => res)
+}
+export enum APIRotues {
+  AssignEmployee = '/api/case/assign',
+  CreateComment = '/api/comments/create',
+  DeleteComment = '/api/comments/delete',
+}

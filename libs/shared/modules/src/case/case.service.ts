@@ -1,8 +1,9 @@
+import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
+import { ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   CaseCommentType,
   CaseCommunicationStatus,
@@ -38,6 +39,7 @@ import {
 } from '../comment/models'
 import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { IJournalService } from '../journal'
 import { AdvertDepartmentDTO } from '../journal/models'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -57,7 +59,8 @@ export class CaseService implements ICaseService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(forwardRef(() => IApplicationService))
     private readonly applicationService: IApplicationService,
-
+    @Inject(forwardRef(() => IJournalService))
+    private readonly journalService: IJournalService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
 
@@ -77,6 +80,7 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
+
   async overview(
     params?: GetCasesQuery | undefined,
   ): Promise<Result<CaseEditorialOverview>> {
@@ -308,7 +312,6 @@ export class CaseService implements ICaseService {
             comment: null,
             from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
             to: null,
-            state: JSON.stringify(application),
           },
           t,
         )
@@ -499,7 +502,7 @@ export class CaseService implements ICaseService {
     }
   }
 
-  publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+  async publish(body: PostCasePublishBody): Promise<Result<undefined>> {
     this.logger.info('publish', {
       caseIds: body.caseIds,
       category: LOGGING_CATEGORY,
@@ -519,9 +522,134 @@ export class CaseService implements ICaseService {
         },
       })
     }
+
+    await this.sequelize.transaction(async (t) => {
+      this.caseModel.update(
+        {
+          publishedAt: new Date().toISOString(),
+        },
+        {
+          where: {
+            id: {
+              [Op.in]: caseIds,
+            },
+          },
+          transaction: t,
+        },
+      )
+
+      // for each case, create a comment
+
+      // for each case insert advert
+
+      caseIds.forEach(async (caseId) => {
+        const application = await this.case(caseId)
+
+        // await this.journalService.insertAdvert({})
+      })
+    })
+
+    this.logger.info('publish, successfully publised cases', {
+      caseIds: body.caseIds,
+      category: LOGGING_CATEGORY,
+    })
+
     return Promise.resolve({
       ok: true,
       value: undefined,
     })
+  }
+
+  async assign(id: string, userId: string): Promise<Result<undefined>> {
+    this.logger.info(`assign, case<${id}>`, {
+      caseId: id,
+      userId: userId,
+      category: LOGGING_CATEGORY,
+    })
+
+    try {
+      if (!id || !userId) {
+        this.logger.warn('assign, missing id or userId', {
+          category: LOGGING_CATEGORY,
+          userId: userId,
+          caseId: id,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            message: 'Missing or invalid body',
+            code: 400,
+          },
+        })
+      }
+
+      const caseRes = await this.caseModel.findByPk(id)
+
+      if (!caseRes) {
+        this.logger.warn(`assign, case<${id}> not found`, {
+          caseId: id,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            message: `Case<${id}> not found`,
+            code: 404,
+          },
+        })
+      }
+
+      const mockUser = ALL_MOCK_USERS.find((u) => u.id === userId)
+
+      if (!mockUser) {
+        this.logger.warn(`assign, user<${userId}> not found`, {
+          userId: userId,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            message: `User<${userId}> not found`,
+            code: 404,
+          },
+        })
+      }
+
+      await this.caseModel.update(
+        {
+          assignedUserId: userId,
+        },
+        {
+          where: {
+            id,
+          },
+        },
+      )
+
+      await this.commentService.create(id, {
+        internal: true,
+        type: CaseCommentType.Assign,
+        comment: null,
+        from: caseRes.assignedUserId,
+        to: mockUser.id, // TODO: REPLACE WITH ACTUAL USER
+      })
+
+      return Promise.resolve({
+        ok: true,
+        value: undefined,
+      })
+    } catch (e) {
+      this.logger.error('Error in assign', {
+        error: e,
+        category: LOGGING_CATEGORY,
+      })
+      return Promise.resolve({
+        ok: false,
+        error: {
+          message: 'Failed to assign user to the case',
+          code: 500,
+        },
+      })
+    }
   }
 }

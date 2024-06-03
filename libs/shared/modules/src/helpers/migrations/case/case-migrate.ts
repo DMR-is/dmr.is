@@ -1,3 +1,4 @@
+import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { Case } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../../../case/models'
@@ -33,7 +34,8 @@ export const caseMigrate = (model: CaseDto): Case => {
     status: status,
     tag: caseTag,
     createdAt: model.createdAt,
-    assignedTo: null, // TODO: Implement this when auth is ready
+    assignedTo:
+      ALL_MOCK_USERS.find((u) => u.id === model.assignedUserId) ?? null, // TODO: Implement this when auth is ready
     comments: model.comments.map((c) => caseCommentMigrate(c)),
     communicationStatus: communicationStatus,
     fastTrack: model.fastTrack,
