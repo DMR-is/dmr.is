@@ -104,8 +104,6 @@ export const Comments = ({ activeCase }: Props) => {
           return null
         }
 
-        console.log(c)
-
         return (
           <Fragment key={c.id}>
             <Box
