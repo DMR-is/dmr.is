@@ -83,6 +83,8 @@ const CaseSingle: Screen<Props> = ({
 
   const { trigger } = useSWRMutation(APIRotues.AssignEmployee, assignEmployee)
 
+  console.log(activeCase.activeCase)
+
   return (
     <FormShell
       header={{
@@ -192,7 +194,11 @@ const CaseSingle: Screen<Props> = ({
               </Button>
             </LinkV2>
           )}
-          {nextStep && (
+          {nextStep && activeCase.activeCase.assignedTo === null ? (
+            <Button icon="arrowForward" disabled>
+              {formatMessage(messages.paging.nextStep)}
+            </Button>
+          ) : (
             <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}

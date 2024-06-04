@@ -599,9 +599,9 @@ export class CaseService implements ICaseService {
         })
       }
 
-      const mockUser = ALL_MOCK_USERS.find((u) => u.id === userId)
+      const newlyAssignedEmployee = ALL_MOCK_USERS.find((u) => u.id === userId)
 
-      if (!mockUser) {
+      if (!newlyAssignedEmployee) {
         this.logger.warn(`assign, user<${userId}> not found`, {
           userId: userId,
           category: LOGGING_CATEGORY,
@@ -628,10 +628,12 @@ export class CaseService implements ICaseService {
 
       await this.commentService.create(id, {
         internal: true,
-        type: CaseCommentType.Assign,
+        type: caseRes.assignedUserId
+          ? CaseCommentType.Assign
+          : CaseCommentType.AssignSelf,
         comment: null,
         from: caseRes.assignedUserId,
-        to: mockUser.id, // TODO: REPLACE WITH ACTUAL USER
+        to: newlyAssignedEmployee.id, // TODO: REPLACE WITH ACTUAL USER
       })
 
       return Promise.resolve({

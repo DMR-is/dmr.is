@@ -51,6 +51,8 @@ export const mapCaseCommentTypeToCaseCommentTitle = (val?: string) => {
       return CaseCommentTitle.Message
     case CaseCommentType.Assign:
       return CaseCommentTitle.Assign
+    case CaseCommentType.AssignSelf:
+      return CaseCommentTitle.AssignSelf
     case CaseCommentType.Submit:
       return CaseCommentTitle.Submit
     case CaseCommentType.Update:
