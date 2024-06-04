@@ -25,6 +25,12 @@ export class Application {
   assignees!: string[]
 
   @ApiProperty({
+    type: Object,
+    description: 'Attachments',
+  })
+  attachments!: Record<string, string>
+
+  @ApiProperty({
     type: String,
     example: 'draft',
     description: 'State of the application',
