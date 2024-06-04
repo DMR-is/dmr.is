@@ -1,6 +1,7 @@
 export enum CaseCommentType {
   Submit = 'submit',
   Assign = 'assign',
+  AssignSelf = 'assign_self',
   Update = 'update',
   Comment = 'comment',
   Message = 'message',

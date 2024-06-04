@@ -6,6 +6,8 @@ export const caseCommentTypeMapper = (type?: string | null) => {
   switch (type) {
     case CaseCommentType.Assign:
       return CaseCommentType.Assign
+    case CaseCommentType.AssignSelf:
+      return CaseCommentType.AssignSelf
     case CaseCommentType.Comment:
       return CaseCommentType.Comment
     case CaseCommentType.Message:

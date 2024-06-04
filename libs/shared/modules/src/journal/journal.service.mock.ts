@@ -56,7 +56,7 @@ export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
   }
-  insertAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
+  create(model: Advert): Promise<Result<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
   updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {

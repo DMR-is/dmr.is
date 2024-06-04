@@ -30,7 +30,7 @@ export class User {
     description: 'Status of the user',
     example: true,
     required: true,
-    type: String,
+    type: Boolean,
   })
   active!: boolean
 }

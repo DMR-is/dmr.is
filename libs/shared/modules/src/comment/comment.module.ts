@@ -1,8 +1,9 @@
 import { LoggingModule } from '@dmr.is/logging'
 
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { ApplicationModule } from '../application/application.module'
 import caseModels from '../case/models'
 import { CommentService } from './comment.service'
 import { ICommentService } from './comment.service.interface'
@@ -29,6 +30,7 @@ export {
   imports: [
     SequelizeModule.forFeature([...caseModels, ...commentModels]),
     LoggingModule,
+    forwardRef(() => ApplicationModule),
   ],
   providers: [
     {

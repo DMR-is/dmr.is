@@ -155,6 +155,15 @@ type StepsType = {
 }
 
 export const commentTaskToNode = (task: CaseComment['task']) => {
+  if (task.to && !task.from) {
+    return (
+      <>
+        {task.to ? <strong>{task.to}</strong> : null}{' '}
+        {task.title ? task.title : null}{' '}
+      </>
+    )
+  }
+
   return (
     <>
       {task.from ? <strong>{task.from}</strong> : null}{' '}
