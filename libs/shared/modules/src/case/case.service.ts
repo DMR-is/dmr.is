@@ -18,36 +18,20 @@ import {
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import {
-  CaseCommentDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
-} from '../comment/models'
 import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { AdvertDepartmentDTO } from '../journal/models'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { ICaseService } from './case.service.interface'
-import {
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
-} from './models'
+import { CaseDto, CaseStatusDto } from './models'
+import { CASE_RELATIONS } from './relations'
 
 const LOGGING_CATEGORY = 'CaseService'
 
@@ -64,15 +48,6 @@ export class CaseService implements ICaseService {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
 
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
-    @InjectModel(CaseStatusDto)
-    private readonly caseStatusModel: typeof CaseStatusDto,
-
-    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
-    @InjectModel(CaseCommunicationStatusDto)
-    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
-
-    @InjectModel(AdvertDepartmentDTO)
-    private readonly departmentModel: typeof AdvertDepartmentDTO,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -111,7 +86,18 @@ export class CaseService implements ICaseService {
         },
       })
     } catch (e) {
-      throw new Error(JSON.stringify(e))
+      this.logger.error('Error in overview', {
+        category: LOGGING_CATEGORY,
+        error: e,
+      })
+
+      return Promise.resolve({
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Failed to get overview',
+        },
+      })
     }
   }
 
@@ -125,151 +111,69 @@ export class CaseService implements ICaseService {
       const newCase = await this.sequelize.transaction<
         Result<CreateCaseResponse>
       >(async (t) => {
-        const existingCase = await this.caseModel.findOne({
-          where: {
-            applicationId: body.applicationId,
-          },
-        })
-
-        if (existingCase) {
-          this.logger.warn(
-            `create, case with application<${body.applicationId}> already exists`,
-            {
-              applicationId: body.applicationId,
-              category: LOGGING_CATEGORY,
-            },
+        const existingCaseLookup =
+          await this.utilityService.caseLookupByApplicationId(
+            body.applicationId,
           )
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 400,
-              message: `Case with application<${body.applicationId}> already exists`,
-            },
-          })
-        }
 
-        const applicationResponse =
-          await this.applicationService.getApplication(body.applicationId)
-
-        if (!applicationResponse.ok) {
-          this.logger.error('create, failed to get application', {
+        if (existingCaseLookup.ok) {
+          this.logger.warn('Case already exists for this application', {
             applicationId: body.applicationId,
             category: LOGGING_CATEGORY,
           })
-          return Promise.resolve({
+
+          return {
             ok: false,
             error: {
-              code: 400,
-              message: `Failed to get application<${body.applicationId}>`,
+              code: 409,
+              message: 'Case already exists for this application',
             },
-          })
+          }
         }
 
-        const application = applicationResponse.value.application
+        const applicationLookup = await this.applicationService.getApplication(
+          body.applicationId,
+        )
 
-        const now = new Date()
-
-        const nextCaseNumber = await this.caseModel.count({
-          transaction: t,
-          where: {
-            year: now.getFullYear(),
-            publishedAt: null,
-          },
-        })
-
-        const caseStatusSubmitted = await this.caseStatusModel.findOne({
-          transaction: t,
-          where: {
-            value: CaseStatus.Submitted,
-          },
-        })
-
-        if (!caseStatusSubmitted) {
-          this.logger.error('create, case status submitted not found', {
-            category: LOGGING_CATEGORY,
-            caseStatusId: CaseStatus.Submitted,
-          })
-
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 500,
-              message: 'Case status submitted not found',
-            },
-          })
+        if (!applicationLookup.ok) {
+          return applicationLookup
         }
 
-        const caseTag = await this.caseTagModel.findOne({
-          transaction: t,
-          where: {
-            value: CaseTag.NotStarted,
-          },
-        })
+        const caseStatusLookup = await this.utilityService.caseStatusLookup(
+          CaseStatus.Submitted,
+        )
 
-        if (!caseTag) {
-          this.logger.error('create, case tag not started not found', {
-            category: LOGGING_CATEGORY,
-            caseTagId: CaseTag.NotStarted,
-          })
+        if (!caseStatusLookup.ok) {
+          return caseStatusLookup
+        }
 
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 500,
-              message: 'Case tag not started not found',
-            },
-          })
+        const caseTagLookup = await this.utilityService.caseTagLookup(
+          CaseTag.NotStarted,
+        )
+
+        if (!caseTagLookup.ok) {
+          return caseTagLookup
         }
 
         const caseCommunicationStatus =
-          await this.caseCommunicationStatusModel.findOne({
-            transaction: t,
-            where: {
-              value: CaseCommunicationStatus.NotStarted,
-            },
-          })
-
-        if (!caseCommunicationStatus) {
-          this.logger.error(
-            'create, case communication status not started not found',
-            {
-              category: LOGGING_CATEGORY,
-              caseCommunicationStatusId: CaseCommunicationStatus.NotStarted,
-            },
+          await this.utilityService.caseCommunicationStatusLookup(
+            CaseCommunicationStatus.NotStarted,
           )
 
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 500,
-              message: 'Case communication status not started not found',
-            },
-          })
+        if (!caseCommunicationStatus.ok) {
+          return caseCommunicationStatus
         }
 
-        const department = await this.departmentModel.findByPk(
+        const now = new Date()
+        const application = applicationLookup.value.application
+        const nextCaseNumber = this.utilityService.generateCaseNumber()
+
+        const departmentLookup = await this.utilityService.departmentLookup(
           application.answers.advert.department,
-          {
-            transaction: t,
-          },
         )
 
-        if (!department) {
-          this.logger.error(
-            `create, department<${application.answers.advert.department}> not found`,
-            {
-              category: LOGGING_CATEGORY,
-              departmentId: application.answers.advert.department,
-            },
-          )
-
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 500,
-              message: 'Department not found',
-            },
-          })
+        if (!departmentLookup.ok) {
+          return departmentLookup
         }
 
         const newCase = await this.caseModel.create(
@@ -277,19 +181,19 @@ export class CaseService implements ICaseService {
             id: uuid(),
             applicationId: application.id,
             year: now.getFullYear(),
-            caseNumber: nextCaseNumber + 1, // start at 1
-            statusId: caseStatusSubmitted.id,
-            tagId: caseTag.id,
+            caseNumber: nextCaseNumber,
+            statusId: caseStatusLookup.value.id,
+            tagId: caseTagLookup.value.id,
             createdAt: now.toISOString(),
             updatedAt: now.toISOString(),
             isLegacy: false,
             assignedUserId: null,
-            communicationStatusId: caseCommunicationStatus.id,
+            communicationStatusId: caseCommunicationStatus.value.id,
             publishedAt: null,
             price: null,
             paid: false,
             fastTrack: application.answers.publishing?.fastTrack ?? false,
-            departmentId: department.id,
+            departmentId: departmentLookup.value.id,
             advertTitle: application.answers.advert.title,
             requestedPublicationDate: application.answers.publishing.date,
           },
@@ -313,45 +217,16 @@ export class CaseService implements ICaseService {
           t,
         )
 
-        const activeCase = await this.caseModel.findByPk(newCase.id, {
-          include: [
-            CaseTagDto,
-            CaseStatusDto,
-            CaseCommunicationStatusDto,
-            {
-              model: CaseCommentDto,
-              include: [
-                {
-                  model: CaseCommentTaskDto,
-                  include: [CaseCommentTitleDto],
-                },
-                CaseStatusDto,
-                CaseCommentTypeDto,
-              ],
-            },
-          ],
-          transaction: t,
-        })
+        const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
 
-        if (!activeCase) {
-          this.logger.error('create, failed to get newly created case', {
-            category: LOGGING_CATEGORY,
-            caseId: newCase.id,
-          })
-
-          return Promise.resolve({
-            ok: false,
-            error: {
-              code: 500,
-              message: `Failed to get case<${newCase.id}>`,
-            },
-          })
+        if (!newCaseLookup.ok) {
+          return newCaseLookup
         }
 
         return Promise.resolve({
           ok: true,
           value: {
-            case: caseMigrate(activeCase),
+            case: caseMigrate(newCaseLookup.value),
           },
         })
       })
@@ -372,29 +247,6 @@ export class CaseService implements ICaseService {
           message: 'Failed to create case',
         },
       })
-    }
-  }
-
-  private async caseStatusLookup(val: string): Promise<{
-    value: string
-    id: string
-    key: string
-  }> {
-    try {
-      const caseStatusRes = await this.caseStatusModel.findOne({
-        where: {
-          value: val,
-        },
-      })
-
-      return Promise.resolve(caseStatusRes?.dataValues)
-    } catch (error) {
-      this.logger.error('Error in caseStatusLookup', {
-        val,
-        category: LOGGING_CATEGORY,
-        error,
-      })
-      throw new InternalServerErrorException('Failed to lookup case status')
     }
   }
 
@@ -444,34 +296,21 @@ export class CaseService implements ICaseService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      let statusValue = undefined
+      let statusLookup: Result<CaseStatusDto> | undefined = undefined
       if (params.status) {
-        const statusVal = await this.caseStatusLookup(params.status)
-        statusValue = statusVal.id
+        statusLookup = await this.utilityService.caseStatusLookup(params.status)
       }
-      const whereParams = caseParameters(params, statusValue)
+
+      const whereParams = caseParameters(
+        params,
+        statusLookup?.ok ? statusLookup.value.id : undefined,
+      )
 
       const cases = await this.caseModel.findAll({
         offset: (page - 1) * pageSize,
         limit: pageSize,
         where: whereParams,
-        include: [
-          CaseTagDto,
-          CaseStatusDto,
-          CaseCommunicationStatusDto,
-          AdvertDepartmentDTO,
-          {
-            model: CaseCommentDto,
-            include: [
-              {
-                model: CaseCommentTaskDto,
-                include: [CaseCommentTitleDto],
-              },
-              CaseStatusDto,
-              CaseCommentTypeDto,
-            ],
-          },
-        ],
+        include: CASE_RELATIONS,
       })
 
       return Promise.resolve({

@@ -12,12 +12,7 @@ import {
   CaseStatusDto,
   CaseTagDto,
 } from '../case/models'
-import {
-  CaseCommentDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
-} from '../comment/models'
+import { CASE_RELATIONS } from '../case/relations'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -30,6 +25,7 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
+import { handleException } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from './utility.service.interface'
 
@@ -50,8 +46,324 @@ export class UtilityService implements IUtilityService {
     private involvedPartyModel: typeof AdvertInvolvedPartyDTO,
     @InjectModel(AdvertCategoryDTO)
     private categoryModel: typeof AdvertCategoryDTO,
+
+    @InjectModel(CaseStatusDto) private caseStatusModel: typeof CaseStatusDto,
+
+    @InjectModel(CaseTagDto) private caseTagModel: typeof CaseTagDto,
+    @InjectModel(CaseCommunicationStatusDto)
+    private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
   ) {
     this.logger.info('Using UtilityService')
+  }
+  async departmentLookup(
+    departmentId: string,
+  ): Promise<Result<AdvertDepartmentDTO>> {
+    this.logger.info('advertDepartmentLookup', {
+      category: LOGGING_CATEGORY,
+      departmentId: departmentId,
+    })
+
+    try {
+      const departmentLookup = await this.departmentModel.findByPk(departmentId)
+
+      if (!departmentLookup) {
+        this.logger.warn(
+          `advertDepartmentLookup, could not find department<${departmentId}>`,
+          {
+            category: LOGGING_CATEGORY,
+            departmentId: departmentId,
+          },
+        )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find department<${departmentId}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: departmentLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'advertDepartmentLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get department',
+        error,
+        info: {
+          departmentId,
+        },
+      })
+    }
+  }
+  async caseCommunicationStatusLookup(
+    status: string,
+  ): Promise<Result<CaseCommunicationStatusDto>> {
+    this.logger.info('caseCommunicationStatusLookup', {
+      category: LOGGING_CATEGORY,
+      status: status,
+    })
+
+    try {
+      const statusLookup = await this.caseCommunicationStatusModel.findOne({
+        where: {
+          value: status,
+        },
+      })
+
+      if (!statusLookup) {
+        this.logger.warn(
+          `caseCommunicationStatusLookup, could not find status<${status}>`,
+          {
+            category: LOGGING_CATEGORY,
+            status: status,
+          },
+        )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find status<${status}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: statusLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'caseCommunicationStatusLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get case communication status',
+        error,
+        info: {
+          status,
+        },
+      })
+    }
+  }
+  async caseTagLookup(tag: string): Promise<Result<CaseStatusDto>> {
+    this.logger.info('caseTagLookup', {
+      category: LOGGING_CATEGORY,
+      tag: tag,
+    })
+
+    try {
+      const tagLookup = await this.caseTagModel.findOne({
+        where: {
+          value: tag,
+        },
+      })
+
+      if (!tagLookup) {
+        this.logger.warn(`caseTagLookup, could not find tag<${tag}>`, {
+          category: LOGGING_CATEGORY,
+          tag: tag,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find tag<${tag}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: tagLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'caseTagLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get case tag',
+        error,
+        info: {
+          tag,
+        },
+      })
+    }
+  }
+  async caseStatusLookup(status: string): Promise<Result<CaseStatusDto>> {
+    this.logger.info('caseStatusLookup', {
+      category: LOGGING_CATEGORY,
+      status: status,
+    })
+
+    try {
+      const statusLookup = await this.caseStatusModel.findOne({
+        where: {
+          value: status,
+        },
+      })
+
+      if (!statusLookup) {
+        this.logger.warn(`caseStatusLookup, could not find status<${status}>`, {
+          category: LOGGING_CATEGORY,
+          status: status,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find status<${status}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: statusLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'caseStatusLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get case status',
+        error,
+        info: {
+          status,
+        },
+      })
+    }
+  }
+  async generateCaseNumber(): Promise<Result<string>> {
+    this.logger.info('generateCaseNumber', {
+      category: LOGGING_CATEGORY,
+    })
+
+    try {
+      const now = new Date().toISOString()
+      const [year, month, date] = now.split('T')[0].split('-')
+
+      const caseCount = await this.caseModel.count({
+        where: {
+          createdAt: {
+            [Op.between]: [`${year}-${month}-${date} 00:00:00`, now],
+          },
+        },
+      })
+
+      const count = caseCount + 1
+
+      const withLeadingZeros =
+        count < 10 ? `00${count}` : count < 100 ? `0${count}` : count
+
+      const caseNumber = `${year}${month}${date}${withLeadingZeros}`
+
+      return Promise.resolve({
+        ok: true,
+        value: caseNumber,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'generateCaseNumber',
+        category: LOGGING_CATEGORY,
+        message: 'Could not generate case number',
+        error,
+      })
+    }
+  }
+  async caseLookupByApplicationId(
+    applicationId: string,
+  ): Promise<Result<CaseDto>> {
+    this.logger.info('caseLookupByApplicationId', {
+      category: LOGGING_CATEGORY,
+      applicationId: applicationId,
+    })
+
+    try {
+      const found = await this.caseModel.findOne({
+        where: {
+          applicationId: applicationId,
+        },
+      })
+
+      if (!found) {
+        this.logger.warn(
+          `caseLookupByApplicationId, could not find case<${applicationId}>`,
+          {
+            category: LOGGING_CATEGORY,
+            applicationId: applicationId,
+          },
+        )
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find case<${applicationId}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: found,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'caseLookupByApplicationId',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get case',
+        error,
+        info: {
+          applicationId,
+        },
+      })
+    }
+  }
+  async caseLookup(caseId: string): Promise<Result<CaseDto>> {
+    this.logger.info('caseLookup', {
+      category: LOGGING_CATEGORY,
+      caseId: caseId,
+    })
+
+    try {
+      const found = await this.caseModel.findByPk(caseId, {
+        include: CASE_RELATIONS,
+      })
+
+      if (!found) {
+        this.logger.warn(`caseLookup, could not find case<${caseId}>`, {
+          category: LOGGING_CATEGORY,
+          caseId: caseId,
+        })
+
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find case<${caseId}>`,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: found,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'caseLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get case',
+        error,
+        info: {
+          caseId,
+        },
+      })
+    }
   }
 
   async getCaseWithAdvert(
@@ -63,22 +375,7 @@ export class UtilityService implements IUtilityService {
     })
     try {
       const found = await this.caseModel.findByPk(caseId, {
-        include: [
-          CaseTagDto,
-          CaseStatusDto,
-          CaseCommunicationStatusDto,
-          {
-            model: CaseCommentDto,
-            include: [
-              {
-                model: CaseCommentTaskDto,
-                include: [CaseCommentTitleDto],
-              },
-              CaseStatusDto,
-              CaseCommentTypeDto,
-            ],
-          },
-        ],
+        include: CASE_RELATIONS,
       })
 
       if (!found) {
@@ -124,7 +421,6 @@ export class UtilityService implements IUtilityService {
 
       const { application } = applicationResponse.value
 
-      // application.answers.advert?.department, only mock data here still using fixed for now (A-deild)
       const department = await this.departmentModel.findByPk(
         application.answers.advert.department,
       )
@@ -263,20 +559,13 @@ export class UtilityService implements IUtilityService {
         },
       })
     } catch (error) {
-      this.logger.error('Error in getCaseWithAdvert', {
-        caseId: caseId,
+      return handleException({
+        method: 'getCaseWithAdvert',
         category: LOGGING_CATEGORY,
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
-      })
-
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: 'Could not get case with advert',
+        message: 'Could not get case with advert',
+        error,
+        info: {
+          caseId,
         },
       })
     }
