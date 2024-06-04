@@ -74,6 +74,7 @@ export * from './cases/case-history.dto'
 export * from './cases/case-with-advert.dto'
 export * from './cases/create-case-response.dto'
 export * from './cases/get-case-response.dto'
+export * from './cases/update-case-status-body.dto'
 
 export * from './statistics/statistics-department.dto'
 export * from './statistics/statistics-overview-dto'

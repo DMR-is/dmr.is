@@ -16,6 +16,7 @@ import {
   GetCasesReponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -649,6 +650,73 @@ export class CaseService implements ICaseService {
         ok: false,
         error: {
           message: 'Failed to assign user to the case',
+          code: 500,
+        },
+      })
+    }
+  }
+
+  async updateStatus(
+    id: string,
+    body: UpdateCaseStatusBody,
+  ): Promise<Result<undefined>> {
+    try {
+      const caseRes = await this.caseModel.findByPk(id)
+
+      if (!caseRes) {
+        this.logger.warn(`updateStatus, case<${id}> not found`, {
+          caseId: id,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            message: `Case<${id}> not found`,
+            code: 404,
+          },
+        })
+      }
+
+      const status = await this.caseStatusLookup(body.status)
+
+      if (!status) {
+        this.logger.warn(`updateStatus, status<${body.status}> not found`, {
+          status: body.status,
+          category: LOGGING_CATEGORY,
+        })
+        return Promise.resolve({
+          ok: false,
+          error: {
+            message: `Status<${body.status}> not found`,
+            code: 404,
+          },
+        })
+      }
+
+      await this.caseModel.update(
+        {
+          statusId: status.id,
+        },
+        {
+          where: {
+            id,
+          },
+        },
+      )
+
+      return Promise.resolve({
+        ok: true,
+        value: undefined,
+      })
+    } catch (error) {
+      this.logger.error('Error in updateStatus', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      return Promise.resolve({
+        ok: false,
+        error: {
+          message: 'Failed to update case status',
           code: 500,
         },
       })

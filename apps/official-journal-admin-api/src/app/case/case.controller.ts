@@ -15,6 +15,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
   PostCasePublishBody,
+  UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
 
 import {
@@ -143,6 +144,32 @@ export class CaseController {
     @Param('userId') userId: string,
   ): Promise<void> {
     const result = await this.caseService.assign(id, userId)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Post(':id/status')
+  @ApiOperation({
+    operationId: 'updateCaseStatus',
+    summary: 'Update case status.',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCaseStatusBody,
+    required: true,
+  })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseStatusBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateStatus(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
