@@ -420,36 +420,16 @@ export class CaseService implements ICaseService {
         })
       }
 
-      const caseRes = await this.caseModel.findByPk(id)
+      const caseRes = await this.utilityService.caseLookup(id)
 
-      if (!caseRes) {
-        this.logger.warn(`assign, case<${id}> not found`, {
-          caseId: id,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            message: `Case<${id}> not found`,
-            code: 404,
-          },
-        })
+      if (!caseRes.ok) {
+        return caseRes
       }
 
-      const newlyAssignedEmployee = ALL_MOCK_USERS.find((u) => u.id === userId)
+      const employeeLookup = await this.utilityService.userLookup(userId)
 
-      if (!newlyAssignedEmployee) {
-        this.logger.warn(`assign, user<${userId}> not found`, {
-          userId: userId,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            message: `User<${userId}> not found`,
-            code: 404,
-          },
-        })
+      if (!employeeLookup.ok) {
+        return employeeLookup
       }
 
       await this.caseModel.update(
@@ -465,12 +445,12 @@ export class CaseService implements ICaseService {
 
       await this.commentService.create(id, {
         internal: true,
-        type: caseRes.assignedUserId
+        type: caseRes.value.assignedUserId
           ? CaseCommentType.Assign
           : CaseCommentType.AssignSelf,
         comment: null,
-        from: caseRes.assignedUserId,
-        to: newlyAssignedEmployee.id, // TODO: REPLACE WITH ACTUAL USER
+        from: caseRes.value.assignedUserId,
+        to: employeeLookup.value.id, // TODO: REPLACE WITH ACTUAL USER
       })
 
       return Promise.resolve({
@@ -502,41 +482,21 @@ export class CaseService implements ICaseService {
         category: LOGGING_CATEGORY,
       })
 
-      const caseRes = await this.caseModel.findByPk(id)
+      const caseLookup = await this.utilityService.caseLookup(id)
 
-      if (!caseRes) {
-        this.logger.warn(`updateStatus, case<${id}> not found`, {
-          caseId: id,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            message: `Case<${id}> not found`,
-            code: 404,
-          },
-        })
+      if (!caseLookup.ok) {
+        return caseLookup
       }
 
-      const status = await this.caseStatusLookup(body.status)
+      const status = await this.utilityService.caseStatusLookup(body.status)
 
-      if (!status) {
-        this.logger.warn(`updateStatus, status<${body.status}> not found`, {
-          status: body.status,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            message: `Status<${body.status}> not found`,
-            code: 404,
-          },
-        })
+      if (!status.ok) {
+        return status
       }
 
       await this.caseModel.update(
         {
-          statusId: status.id,
+          statusId: status.value.id,
         },
         {
           where: {
@@ -549,7 +509,7 @@ export class CaseService implements ICaseService {
         internal: true,
         type: CaseCommentType.Update,
         comment: null,
-        from: caseRes.assignedUserId,
+        from: caseLookup.value.assignedUserId,
         to: null,
       })
 

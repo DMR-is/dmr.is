@@ -1,7 +1,8 @@
 import { Op } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { CaseWithAdvert } from '@dmr.is/shared/dto'
+import { ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
 
 import { Inject } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -55,6 +56,82 @@ export class UtilityService implements IUtilityService {
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
   ) {
     this.logger.info('Using UtilityService')
+  }
+  async typeLookup(type: string): Promise<Result<AdvertTypeDTO>> {
+    this.logger.info('typeLookup', {
+      category: LOGGING_CATEGORY,
+      type: type,
+    })
+
+    try {
+      const typeLookup = await this.typeDto.findByPk(type, {
+        include: [AdvertDepartmentDTO],
+      })
+
+      if (!typeLookup) {
+        return handleNotFoundLookup({
+          method: 'typeLookup',
+          entity: 'type',
+          id: type,
+          category: LOGGING_CATEGORY,
+          info: {
+            type,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: typeLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'typeLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get type',
+        error,
+        info: {
+          type,
+        },
+      })
+    }
+  }
+  userLookup(userId: string): Promise<Result<User>> {
+    this.logger.info('userLookup', {
+      category: LOGGING_CATEGORY,
+      userId: userId,
+    })
+
+    try {
+      const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
+
+      if (!userLookup) {
+        return handleNotFoundLookup({
+          method: 'userLookup',
+          entity: 'user',
+          id: userId,
+          category: LOGGING_CATEGORY,
+          info: {
+            userId,
+          },
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        value: userLookup,
+      })
+    } catch (error) {
+      return handleException({
+        method: 'userLookup',
+        category: LOGGING_CATEGORY,
+        message: 'Could not get user',
+        error,
+        info: {
+          userId,
+        },
+      })
+    }
   }
   async departmentLookup(
     departmentId: string,
@@ -340,98 +417,39 @@ export class UtilityService implements IUtilityService {
     }
   }
 
-  async getCaseWithAdvert(
-    caseId: string,
-  ): Promise<Result<CaseWithAdvert | null>> {
+  async getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>> {
     this.logger.info('getCaseWithAdvert', {
       category: LOGGING_CATEGORY,
       caseId: caseId,
     })
     try {
-      const found = await this.caseModel.findByPk(caseId, {
-        include: CASE_RELATIONS,
-      })
-
-      if (!found) {
-        return handleNotFoundLookup({
-          method: 'getCaseWithAdvert',
-          entity: 'case',
-          id: caseId,
-          category: LOGGING_CATEGORY,
-          info: {
-            caseId,
-          },
-        })
+      const caseLookup = await this.caseLookup(caseId)
+      if (!caseLookup.ok) {
+        return caseLookup
       }
+      const activeCase = caseMigrate(caseLookup.value)
 
-      const activeCase = caseMigrate(found)
-
-      const applicationResponse = await this.applicationService.getApplication(
+      const applicationLookup = await this.applicationService.getApplication(
         activeCase.applicationId,
       )
 
-      if (!applicationResponse.ok) {
-        this.logger.error(
-          `getCaseWithAdvert, failed to get application<${activeCase.applicationId}>`,
-          {
-            caseId: caseId,
-            applicationId: activeCase.applicationId,
-            error: applicationResponse.error,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 500,
-            message: `Could not get application<${activeCase.applicationId}>`,
-          },
-        })
+      if (!applicationLookup.ok) {
+        return applicationLookup
       }
 
-      const { application } = applicationResponse.value
+      const { application } = applicationLookup.value
 
-      const department = await this.departmentModel.findByPk(
+      const departmentLookup = await this.departmentLookup(
         application.answers.advert.department,
       )
 
-      if (!department) {
-        this.logger.warn(
-          `getCaseWithAdvert, could not find department <${application.answers.advert.department}>`,
-          {
-            caseId: caseId,
-            departmentId: application.answers.advert.department,
-            category: LOGGING_CATEGORY,
-          },
-        )
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find department <${application.answers.advert.department}>`,
-          },
-        })
+      if (!departmentLookup.ok) {
+        return departmentLookup
       }
 
-      const type = await this.typeDto.findByPk(application.answers.advert?.type)
-      if (!type) {
-        this.logger.warn(
-          `getCaseWithAdvert, could not find type <${application.answers.advert.type}>`,
-          {
-            caseId: caseId,
-            typeId: application.answers.advert.type,
-            applicationId: activeCase.applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find type <${application.answers.advert.type}>`,
-          },
-        })
+      const type = await this.typeLookup(application.answers.advert.type)
+      if (!type.ok) {
+        return type
       }
 
       const categoryIds =
@@ -476,10 +494,8 @@ export class UtilityService implements IUtilityService {
         })
       }
 
-      const activeDepartment = advertDepartmentMigrate(department)
-
-      const activeType = advertTypesMigrate(type)
-
+      const activeDepartment = advertDepartmentMigrate(departmentLookup.value)
+      const activeType = advertTypesMigrate(type.value)
       const activeCategories = categories.map((c) => advertCategoryMigrate(c))
 
       let signatureDate = null
