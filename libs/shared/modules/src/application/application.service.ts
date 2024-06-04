@@ -11,13 +11,7 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
@@ -44,9 +38,12 @@ export class ApplicationService implements IApplicationService {
     const idsToken = await this.authService.getAccessToken()
 
     if (!idsToken) {
-      this.logger.error('Could not get access token from auth service', {
-        category: LOGGING_CATEGORY,
-      })
+      this.logger.error(
+        'xroadFetch, could not get access token from auth service',
+        {
+          category: LOGGING_CATEGORY,
+        },
+      )
       throw new Error('Could not get access token from auth service')
     }
 
@@ -283,7 +280,6 @@ export class ApplicationService implements IApplicationService {
           comment: null,
           from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
           to: null,
-          state: JSON.stringify(application),
         })
 
         return Promise.resolve({
@@ -455,7 +451,6 @@ export class ApplicationService implements IApplicationService {
         to: null,
         internal: false,
         type: CaseCommentType.Comment,
-        state: null,
       })
 
       if (!created) {

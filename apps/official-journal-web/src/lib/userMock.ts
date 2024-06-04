@@ -1,4 +1,4 @@
-import { User } from '@dmr.is/shared/dto'
+import { User } from '../gen/fetch'
 
 export const ARMANN: User = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
@@ -22,10 +22,8 @@ export const PALINA: User = {
 }
 
 const INACTIVE: User = {
-  id: '3d918322-8e60-44ad-be5e-7485d0e45cdb',
+  id: 'e9a3c901-5130-4006-99bb-de647c2076e9',
   name: 'Jón',
   lastName: 'Jónsson',
   active: false,
 }
-
-export const ALL_MOCK_USERS = [ARMANN, PALINA, INACTIVE]

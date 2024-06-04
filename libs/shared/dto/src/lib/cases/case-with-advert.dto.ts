@@ -29,6 +29,20 @@ class AdvertDocument {
   readonly full!: string
 }
 
+export class AdvertApplicationAttachment {
+  @ApiProperty({
+    type: String,
+    description: 'Name of the attachment',
+  })
+  readonly name!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'URL of the attachment',
+  })
+  readonly url!: string
+}
+
 class AdvertFields {
   @ApiProperty({
     type: Department,
@@ -80,6 +94,12 @@ class AdvertFields {
     description: 'Involved party of the advert.',
   })
   involvedParty!: Institution
+
+  @ApiProperty({
+    type: [AdvertApplicationAttachment],
+    description: 'Attachments of the advert.',
+  })
+  attachments!: AdvertApplicationAttachment[]
 }
 
 export class CaseWithAdvert {

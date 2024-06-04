@@ -186,6 +186,50 @@
         }
       }
     },
+    "/api/v1/cases/{id}/assign/{userId}": {
+      "post": {
+        "operationId": "assignEmployee",
+        "summary": "Assign case to user.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/status": {
+      "post": {
+        "operationId": "updateCaseStatus",
+        "summary": "Update case status.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCaseStatusBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -207,7 +251,8 @@
               }
             }
           },
-          "404": { "description": "Case not found." }
+          "404": { "description": "Case not found." },
+          "500": { "description": "Internal server error." }
         }
       }
     },
@@ -680,7 +725,7 @@
             "example": "Jónsson"
           },
           "active": {
-            "type": "string",
+            "type": "boolean",
             "description": "Status of the user",
             "example": true
           }
@@ -744,7 +789,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment", "message"],
+            "enum": [
+              "submit",
+              "assign",
+              "assign_self",
+              "update",
+              "comment",
+              "message"
+            ],
             "example": "comment",
             "description": "Type of the case task."
           },
@@ -979,6 +1031,17 @@
         },
         "required": ["data", "totalItems", "paging"]
       },
+      "UpdateCaseStatusBody": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Case status",
+            "example": "ready"
+          }
+        },
+        "required": ["status"]
+      },
       "AdvertDocument": {
         "type": "object",
         "properties": {
@@ -1071,6 +1134,14 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "AdvertApplicationAttachment": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Name of the attachment" },
+          "url": { "type": "string", "description": "URL of the attachment" }
+        },
+        "required": ["name", "url"]
+      },
       "AdvertFields": {
         "type": "object",
         "properties": {
@@ -1101,6 +1172,13 @@
           "involvedParty": {
             "description": "Involved party of the advert.",
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
+          },
+          "attachments": {
+            "description": "Attachments of the advert.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvertApplicationAttachment"
+            }
           }
         },
         "required": [
@@ -1111,7 +1189,8 @@
           "categories",
           "signatureDate",
           "publicationDate",
-          "involvedParty"
+          "involvedParty",
+          "attachments"
         ]
       },
       "CaseWithAdvert": {
@@ -1208,7 +1287,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment", "message"],
+            "enum": [
+              "submit",
+              "assign",
+              "assign_self",
+              "update",
+              "comment",
+              "message"
+            ],
             "description": "Type of the comment"
           },
           "comment": {
@@ -1222,10 +1308,6 @@
           "to": {
             "type": "string",
             "description": "To whom or what the task is assigned to."
-          },
-          "state": {
-            "type": "string",
-            "description": "State of the application as JSONB"
           }
         },
         "required": ["internal", "type", "comment", "from"]

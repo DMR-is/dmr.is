@@ -1,3 +1,8 @@
+import { useEffect, useState } from 'react'
+import { active } from 'submodules/island.is/libs/island-ui/core/src/lib/Tag/Tag.css'
+import useSWR from 'swr'
+import useSWRMutation from 'swr/mutation'
+
 import {
   Box,
   Button,
@@ -7,6 +12,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { Attachments } from '../components/attachments/Attachments'
 import { Comments } from '../components/comments/Comments'
 import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
@@ -20,10 +26,12 @@ import {
   CaseStatusEnum,
   CaseWithAdvert,
   Department,
+  PostCaseComment,
 } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
+import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
 import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
@@ -59,14 +67,30 @@ const CaseSingle: Screen<Props> = ({
       : undefined
 
   const employeesMock = [
-    { label: 'Ármann', value: 'Ármann' },
-    { label: 'Pálína J', value: 'Pálína J' },
+    {
+      label: 'Ármann',
+      value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+    },
+    {
+      label: 'Pálína J',
+      value: '21140e6b-e272-4d78-b085-dbc3190b2a0a',
+    },
   ]
 
   const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
     label: c,
     value: c,
   }))
+
+  const { trigger: onAssignEmployee } = useSWRMutation(
+    APIRotues.AssignEmployee,
+    assignEmployee,
+  )
+
+  const { trigger: onUpdateCaseStatus } = useSWRMutation(
+    APIRotues.UpdateCaseStatus,
+    updateCaseStatus,
+  )
 
   return (
     <FormShell
@@ -109,11 +133,18 @@ const CaseSingle: Screen<Props> = ({
             name="assignedTo"
             options={employeesMock}
             defaultValue={employeesMock.find(
-              (e) => e.value === activeCase.activeCase.assignedTo?.name,
+              (e) => e.value === activeCase.activeCase.assignedTo?.id,
             )}
             label={formatMessage(messages.actions.assignedTo)}
             placeholder={formatMessage(messages.actions.assignedToPlaceholder)}
             size="sm"
+            onChange={(e) => {
+              if (!e) return
+              onAssignEmployee({
+                id: activeCase.activeCase.id,
+                userId: e.value,
+              })
+            }}
           ></Select>
           <Select
             name="status"
@@ -123,6 +154,13 @@ const CaseSingle: Screen<Props> = ({
             )}
             label={formatMessage(messages.actions.status)}
             size="sm"
+            onChange={(e) => {
+              if (!e) return
+              onUpdateCaseStatus({
+                caseId: activeCase.activeCase.id,
+                status: e.value,
+              })
+            }}
           ></Select>
         </Stack>
       }
@@ -143,10 +181,9 @@ const CaseSingle: Screen<Props> = ({
         {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-        {/* TODO: Implement attachment logic */}
-        {/* {activeCase.advert.attachments.length ? (
+        {activeCase.advert.attachments.length > 0 && (
           <Attachments activeCase={activeCase} />
-        ) : null} */}
+        )}
 
         <Comments activeCase={activeCase} />
 
@@ -170,7 +207,11 @@ const CaseSingle: Screen<Props> = ({
               </Button>
             </LinkV2>
           )}
-          {nextStep && (
+          {nextStep && activeCase.activeCase.assignedTo === null ? (
+            <Button icon="arrowForward" disabled>
+              {formatMessage(messages.paging.nextStep)}
+            </Button>
+          ) : (
             <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
@@ -182,7 +223,6 @@ const CaseSingle: Screen<Props> = ({
     </FormShell>
   )
 }
-
 CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const dmrClient = createDmrClient()
   const caseId = query.uid?.[0]

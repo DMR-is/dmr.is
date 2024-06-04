@@ -34,7 +34,7 @@ export interface IJournalService {
     params?: GetAdvertsQueryParams,
   ): Promise<Result<GetAdvertsResponse>>
   getAdvert(id: string): Promise<Result<GetAdvertResponse>>
-  insertAdvert(model: Advert): Promise<Result<GetAdvertResponse>>
+  create(model: Advert): Promise<Result<GetAdvertResponse>>
   updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>>
 
   getDepartment(id: string): Promise<Result<GetDepartmentResponse>>

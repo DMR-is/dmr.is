@@ -13,6 +13,7 @@ import { mapCaseCommentTypeToCaseCommentTitle } from '@dmr.is/utils'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -20,6 +21,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { IApplicationService } from '../application/application.service.interface'
 import { CaseDto, CaseStatusDto } from '../case/models'
 import {
   caseCommentMigrate,
@@ -39,6 +41,9 @@ const LOGGING_CATEGORY = 'CaseCommentService'
 export class CommentService implements ICommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+
+    @Inject(forwardRef(() => IApplicationService))
+    private applicationService: IApplicationService,
     @InjectModel(CaseDto) private caseModel: typeof CaseDto,
     @InjectModel(CaseCommentsDto)
     private caseCommentsModel: typeof CaseCommentsDto,
@@ -216,10 +221,14 @@ export class CommentService implements ICommentService {
         },
       )
 
-      this.logger.debug('Created new comment task', {
-        newCommentTask,
-        category: LOGGING_CATEGORY,
-      })
+      const applicationRes = await this.applicationService.getApplication(
+        theCase.applicationId,
+      )
+
+      if (!applicationRes.ok) {
+        throw new InternalServerErrorException('Could not add comment to case')
+      }
+      const { application } = applicationRes.value
 
       const newComment = await this.caseCommentModel.create(
         {
@@ -229,6 +238,7 @@ export class CommentService implements ICommentService {
           typeId: newCommentTypeRef.id,
           statusId: theCase.statusId,
           taskId: newCommentTask.id,
+          state: JSON.stringify(application),
         },
         {
           returning: true,

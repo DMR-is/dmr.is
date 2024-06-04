@@ -15,6 +15,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
   PostCasePublishBody,
+  UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
 
 import {
@@ -22,6 +23,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   Inject,
   NotFoundException,
@@ -33,6 +35,7 @@ import {
   ApiBody,
   ApiNoContentResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
@@ -120,6 +123,59 @@ export class CaseController {
     return result.value
   }
 
+  @Post(':id/assign/:userId')
+  @ApiOperation({
+    operationId: 'assignEmployee',
+    summary: 'Assign case to user.',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiParam({
+    name: 'userId',
+    type: 'string',
+    required: true,
+  })
+  async assign(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<void> {
+    const result = await this.caseService.assign(id, userId)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Post(':id/status')
+  @ApiOperation({
+    operationId: 'updateCaseStatus',
+    summary: 'Update case status.',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCaseStatusBody,
+    required: true,
+  })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseStatusBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateStatus(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
   @Get(':id')
   @ApiOperation({
     operationId: 'getCase',
@@ -133,6 +189,16 @@ export class CaseController {
   @ApiResponse({
     status: 404,
     description: 'Case not found.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error.',
+  })
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
     const result = await this.caseService.case(id)

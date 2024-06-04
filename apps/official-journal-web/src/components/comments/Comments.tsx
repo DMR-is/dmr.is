@@ -103,6 +103,7 @@ export const Comments = ({ activeCase }: Props) => {
         ) {
           return null
         }
+
         return (
           <Fragment key={c.id}>
             <Box
@@ -127,24 +128,21 @@ export const Comments = ({ activeCase }: Props) => {
               <div className={styles.text}>
                 <Text>{commentTaskToNode(c.task)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
-                {/* TODO: Replace with actual user */}
-                {c.task.from === 'Ármann Árni' && (
-                  <Button
-                    variant="text"
-                    as="button"
-                    size="small"
-                    onClick={() => deleteComment(c.id)}
+                <Button
+                  variant="text"
+                  as="button"
+                  size="small"
+                  onClick={() => deleteComment(c.id)}
+                >
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    columnGap="smallGutter"
                   >
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      columnGap="smallGutter"
-                    >
-                      {formatMessage(messages.comments.deleteComment)}
-                      <Icon icon="trash" type="outline" size="small" />
-                    </Box>
-                  </Button>
-                )}
+                    {formatMessage(messages.comments.deleteComment)}
+                    <Icon icon="trash" type="outline" size="small" />
+                  </Box>
+                </Button>
               </div>
 
               <Text whiteSpace="nowrap">
