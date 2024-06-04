@@ -43,3 +43,31 @@ export const handleException = <T>({
     },
   })
 }
+
+export const handleNotFoundLookup = <T>({
+  method,
+  entity,
+  id,
+  category,
+  info,
+}: {
+  method: string
+  entity: string
+  id: string
+  category: string
+  info?: Record<string, unknown>
+}): Promise<Result<T>> => {
+  logger.warn(`${method}, could not find ${entity}<${id}>`, {
+    ...info,
+    category,
+    method,
+  })
+
+  return Promise.resolve({
+    ok: false,
+    error: {
+      code: 404,
+      message: 'Could not find ${entity}<${id}>',
+    },
+  })
+}

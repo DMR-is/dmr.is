@@ -25,7 +25,7 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { handleException } from '../lib/utils'
+import { handleException, handleNotFoundLookup } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from './utility.service.interface'
 
@@ -67,19 +67,13 @@ export class UtilityService implements IUtilityService {
       const departmentLookup = await this.departmentModel.findByPk(departmentId)
 
       if (!departmentLookup) {
-        this.logger.warn(
-          `advertDepartmentLookup, could not find department<${departmentId}>`,
-          {
-            category: LOGGING_CATEGORY,
-            departmentId: departmentId,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find department<${departmentId}>`,
+        return handleNotFoundLookup({
+          method: 'advertDepartmentLookup',
+          entity: 'department',
+          id: departmentId,
+          category: LOGGING_CATEGORY,
+          info: {
+            departmentId,
           },
         })
       }
@@ -116,19 +110,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!statusLookup) {
-        this.logger.warn(
-          `caseCommunicationStatusLookup, could not find status<${status}>`,
-          {
-            category: LOGGING_CATEGORY,
-            status: status,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find status<${status}>`,
+        return handleNotFoundLookup({
+          method: 'caseCommunicationStatusLookup',
+          entity: 'status',
+          id: status,
+          category: LOGGING_CATEGORY,
+          info: {
+            status,
           },
         })
       }
@@ -163,16 +151,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!tagLookup) {
-        this.logger.warn(`caseTagLookup, could not find tag<${tag}>`, {
+        return handleNotFoundLookup({
+          method: 'caseTagLookup',
+          entity: 'tag',
+          id: tag,
           category: LOGGING_CATEGORY,
-          tag: tag,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find tag<${tag}>`,
+          info: {
+            tag,
           },
         })
       }
@@ -207,16 +192,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!statusLookup) {
-        this.logger.warn(`caseStatusLookup, could not find status<${status}>`, {
+        return handleNotFoundLookup({
+          method: 'caseStatusLookup',
+          entity: 'status',
+          id: status,
           category: LOGGING_CATEGORY,
-          status: status,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find status<${status}>`,
+          info: {
+            status,
           },
         })
       }
@@ -290,19 +272,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        this.logger.warn(
-          `caseLookupByApplicationId, could not find case<${applicationId}>`,
-          {
-            category: LOGGING_CATEGORY,
-            applicationId: applicationId,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find case<${applicationId}>`,
+        return handleNotFoundLookup({
+          method: 'caseLookupByApplicationId',
+          entity: 'case',
+          id: applicationId,
+          category: LOGGING_CATEGORY,
+          info: {
+            applicationId,
           },
         })
       }
@@ -335,16 +311,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        this.logger.warn(`caseLookup, could not find case<${caseId}>`, {
+        return handleNotFoundLookup({
+          method: 'caseLookup',
+          entity: 'case',
+          id: caseId,
           category: LOGGING_CATEGORY,
-          caseId: caseId,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find case<${caseId}>`,
+          info: {
+            caseId,
           },
         })
       }
@@ -379,16 +352,13 @@ export class UtilityService implements IUtilityService {
       })
 
       if (!found) {
-        this.logger.warn(`getCaseWithAdvert, could not find case<${caseId}>`, {
+        return handleNotFoundLookup({
+          method: 'getCaseWithAdvert',
+          entity: 'case',
+          id: caseId,
           category: LOGGING_CATEGORY,
-          caseId: caseId,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find case<${caseId}>`,
+          info: {
+            caseId,
           },
         })
       }
