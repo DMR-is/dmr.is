@@ -1,13 +1,10 @@
-import { isBooleanString } from 'class-validator'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
   CaseEditorialOverview,
-  CaseHistory,
   CaseStatus,
-  CaseWithAdvert,
   CreateCaseResponse,
   GetCaseCommentsQuery,
   GetCaseResponse,
@@ -19,14 +16,11 @@ import {
   PostCaseComment,
   PostCasePublishBody,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
 
 import {
   BadRequestException,
   Inject,
   InternalServerErrorException,
-  NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 
 import { Result } from '../types/result'
@@ -37,14 +31,6 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('Using CaseServiceMock')
   }
   publish(body: PostCasePublishBody): Promise<Result<undefined>> {
-    throw new Error('Method not implemented.')
-  }
-  getCaseHistory(caseId: string): Promise<CaseHistory> {
-    this.logger.info('getCaseHistory', caseId)
-    throw new Error('Method not implemented.')
-  }
-  updateCaseHistory(caseId: string): Promise<Case> {
-    this.logger.info('updateCaseHistory', caseId)
     throw new Error('Method not implemented.')
   }
 
@@ -144,9 +130,5 @@ export class CaseServiceMock implements ICaseService {
         paging,
       },
     })
-  }
-
-  pblish(body: PostCasePublishBody): Promise<Result<undefined>> {
-    throw new NotImplementedException()
   }
 }
