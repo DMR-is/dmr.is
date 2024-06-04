@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
+import { IJournalService } from '../journal'
 import { AdvertDepartmentDTO } from '../journal/models'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseService } from './case.service'
@@ -22,6 +23,7 @@ describe('CaseService', () => {
   let caseService: ICaseService
   let commentService: ICommentService
   let applicationService: IApplicationService
+  let journalService: IJournalService
   let caseModel: CaseDto
   let sequelize: Sequelize
 
@@ -47,6 +49,10 @@ describe('CaseService', () => {
         },
         {
           provide: IUtilityService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IJournalService,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -102,6 +108,7 @@ describe('CaseService', () => {
     caseService = app.get<ICaseService>(ICaseService)
     commentService = app.get<ICommentService>(ICommentService)
     applicationService = app.get<IApplicationService>(IApplicationService)
+    journalService = app.get<IJournalService>(IJournalService)
     caseModel = app.get<CaseDto>(getModelToken(CaseDto))
     sequelize = app.get<Sequelize>(Sequelize)
   })
