@@ -207,6 +207,29 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/status": {
+      "post": {
+        "operationId": "updateCaseStatus",
+        "summary": "Update case status.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCaseStatusBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -228,22 +251,8 @@
               }
             }
           },
-          "404": {
-            "description": "Case not found.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
+          "404": { "description": "Case not found." },
+          "500": { "description": "Internal server error." }
         }
       }
     },
@@ -780,7 +789,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment", "message"],
+            "enum": [
+              "submit",
+              "assign",
+              "assign_self",
+              "update",
+              "comment",
+              "message"
+            ],
             "example": "comment",
             "description": "Type of the case task."
           },
@@ -1015,6 +1031,17 @@
         },
         "required": ["data", "totalItems", "paging"]
       },
+      "UpdateCaseStatusBody": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Case status",
+            "example": "ready"
+          }
+        },
+        "required": ["status"]
+      },
       "AdvertDocument": {
         "type": "object",
         "properties": {
@@ -1171,7 +1198,6 @@
         },
         "required": ["case"]
       },
-      "Error": { "type": "object", "properties": {} },
       "PostApplicationBody": {
         "type": "object",
         "properties": {
@@ -1245,7 +1271,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["submit", "assign", "update", "comment", "message"],
+            "enum": [
+              "submit",
+              "assign",
+              "assign_self",
+              "update",
+              "comment",
+              "message"
+            ],
             "description": "Type of the comment"
           },
           "comment": {
@@ -1259,10 +1292,6 @@
           "to": {
             "type": "string",
             "description": "To whom or what the task is assigned to."
-          },
-          "state": {
-            "type": "string",
-            "description": "State of the application as JSONB"
           }
         },
         "required": ["internal", "type", "comment", "from"]

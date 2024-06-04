@@ -661,6 +661,11 @@ export class CaseService implements ICaseService {
     body: UpdateCaseStatusBody,
   ): Promise<Result<undefined>> {
     try {
+      this.logger.info(`updateStatus, case<${id}>`, {
+        caseId: id,
+        category: LOGGING_CATEGORY,
+      })
+
       const caseRes = await this.caseModel.findByPk(id)
 
       if (!caseRes) {
@@ -703,6 +708,14 @@ export class CaseService implements ICaseService {
           },
         },
       )
+
+      await this.commentService.create(id, {
+        internal: true,
+        type: CaseCommentType.Update,
+        comment: null,
+        from: caseRes.assignedUserId,
+        to: null,
+      })
 
       return Promise.resolve({
         ok: true,

@@ -1,6 +1,6 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { AssignEmployeeRequest } from '../gen/fetch'
+import { AssignEmployeeRequest, UpdateCaseStatusBody } from '../gen/fetch'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -40,10 +40,28 @@ export async function assignEmployee(
   return fetch(url, {
     method: 'POST',
     body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   }).then((res) => res)
 }
+
+export async function updateCaseStatus(
+  url: string,
+  { arg }: { arg: UpdateCaseStatusBody & { caseId: string } },
+) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then((res) => res)
+}
+
 export enum APIRotues {
   AssignEmployee = '/api/case/assign',
+  UpdateCaseStatus = '/api/case/status',
   CreateComment = '/api/comments/create',
   DeleteComment = '/api/comments/delete',
 }

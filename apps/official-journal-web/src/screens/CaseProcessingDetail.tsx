@@ -30,7 +30,7 @@ import {
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { APIRotues, assignEmployee } from '../lib/constants'
+import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
 import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
@@ -81,9 +81,15 @@ const CaseSingle: Screen<Props> = ({
     value: c,
   }))
 
-  const { trigger } = useSWRMutation(APIRotues.AssignEmployee, assignEmployee)
+  const { trigger: onAssignEmployee } = useSWRMutation(
+    APIRotues.AssignEmployee,
+    assignEmployee,
+  )
 
-  console.log(activeCase.activeCase)
+  const { trigger: onUpdateCaseStatus } = useSWRMutation(
+    APIRotues.UpdateCaseStatus,
+    updateCaseStatus,
+  )
 
   return (
     <FormShell
@@ -133,7 +139,7 @@ const CaseSingle: Screen<Props> = ({
             size="sm"
             onChange={(e) => {
               if (!e) return
-              trigger({
+              onAssignEmployee({
                 id: activeCase.activeCase.id,
                 userId: e.value,
               })
@@ -147,6 +153,13 @@ const CaseSingle: Screen<Props> = ({
             )}
             label={formatMessage(messages.actions.status)}
             size="sm"
+            onChange={(e) => {
+              if (!e) return
+              onUpdateCaseStatus({
+                caseId: activeCase.activeCase.id,
+                status: e.value,
+              })
+            }}
           ></Select>
         </Stack>
       }
