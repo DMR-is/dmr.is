@@ -29,7 +29,7 @@ export class GetAdvertsQueryParams {
   page?: number
 
   @ApiProperty({
-    name: 'page',
+    name: 'pageSize',
     description: 'Page size to return.',
     type: Number,
     required: false,
