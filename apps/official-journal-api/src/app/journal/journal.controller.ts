@@ -13,6 +13,7 @@ import {
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
+  GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionsQueryParams,
@@ -91,6 +92,30 @@ export class JournalController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     const result = await this.journalService.getAdverts(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
+  }
+
+  @Get('departments/:id')
+  @ApiResponse({
+    status: 200,
+    type: GetDepartmentResponse,
+    description: 'Department by ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+    description: 'Department ID.',
+  })
+  async department(@Param('id') id: string): Promise<GetDepartmentResponse> {
+    const result = await this.journalService.getDepartment(id)
 
     if (!result.ok) {
       throw new HttpException(result.error, result.error.code)
