@@ -8,6 +8,7 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCategoriesQueryParams,
@@ -45,7 +46,7 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   @Get('adverts/:id')
   @ApiResponse({
@@ -87,7 +88,7 @@ export class JournalController {
     description: 'Query string validation failed.',
   })
   async adverts(
-    @Query() params?: GetAdvertsQueryParams
+    @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     const result = await this.journalService.getAdverts(params)
 
@@ -116,6 +117,30 @@ export class JournalController {
     params?: GetDepartmentsQueryParams,
   ): Promise<GetDepartmentsResponse> {
     const result = await this.journalService.getDepartments(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error, result.error.code)
+    }
+
+    return Promise.resolve({
+      ...result.value,
+    })
+  }
+
+  @Get('types/:id')
+  @ApiResponse({
+    status: 200,
+    type: GetAdvertTypeResponse,
+    description: 'Advert type by ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+    description: 'Advert type ID.',
+  })
+  async type(@Param('id') id: string): Promise<GetAdvertTypeResponse> {
+    const result = await this.journalService.getType(id)
 
     if (!result.ok) {
       throw new HttpException(result.error, result.error.code)
