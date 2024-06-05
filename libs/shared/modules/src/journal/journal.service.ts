@@ -716,6 +716,10 @@ export class JournalService implements IJournalService {
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<Result<GetAdvertTypesResponse>> {
+    this.logger.info('getTypes', {
+      category: LOGGING_CATEGORY,
+      params,
+    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -991,11 +995,12 @@ export class JournalService implements IJournalService {
     })
 
     const searchCondition = params?.search ? `%${params.search}%` : undefined
+    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     try {
       const page = params?.page ?? 1
       const adverts = await this.advertModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: {
           [Op.and]: [
             searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
@@ -1041,7 +1046,7 @@ export class JournalService implements IJournalService {
       })
       const result: GetAdvertsResponse = {
         adverts: adverts.map((item) => advertMigrate(item)),
-        paging: generatePaging(adverts, page),
+        paging: generatePaging(adverts, page, pageSize),
       }
 
       return Promise.resolve({ ok: true, value: result })
