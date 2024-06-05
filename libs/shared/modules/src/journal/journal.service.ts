@@ -748,7 +748,7 @@ export class JournalService implements IJournalService {
         ok: true,
         value: {
           types: mappedTypes,
-          paging: generatePaging(types, page, pageSize),
+          paging: generatePaging(mappedTypes, page, pageSize),
         },
       })
     } catch (e) {
@@ -1044,9 +1044,12 @@ export class JournalService implements IJournalService {
           },
         ],
       })
+
+      const mapped = adverts.map((item) => advertMigrate(item))
+
       const result: GetAdvertsResponse = {
-        adverts: adverts.map((item) => advertMigrate(item)),
-        paging: generatePaging(adverts, page, pageSize),
+        adverts: mapped,
+        paging: generatePaging(mapped, page, pageSize),
       }
 
       return Promise.resolve({ ok: true, value: result })
