@@ -29,6 +29,16 @@ export class GetAdvertsQueryParams {
   page?: number
 
   @ApiProperty({
+    name: 'pageSize',
+    description: 'Page size to return.',
+    type: Number,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumberString()
+  pageSize?: number
+
+  @ApiProperty({
     name: 'department',
     description: 'One or more departments (by `slug`) to filter on.',
     type: [String],

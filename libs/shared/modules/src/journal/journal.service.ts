@@ -87,6 +87,10 @@ export class JournalService implements IJournalService {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
   async create(model: Advert): Promise<Result<GetAdvertResponse>> {
+    this.logger.info('create', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('create, no model')
       return Promise.resolve({
@@ -130,6 +134,10 @@ export class JournalService implements IJournalService {
     }
   }
   async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
+    this.logger.info('updateAdvert', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in updateAdvert')
       return Promise.resolve({
@@ -178,6 +186,10 @@ export class JournalService implements IJournalService {
   async insertDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
+    this.logger.info('insertDepartment', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in insertDepartment')
       return Promise.resolve({
@@ -212,6 +224,10 @@ export class JournalService implements IJournalService {
   async updateDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
+    this.logger.info('updateDepartment', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model || !model.id) {
       this.logger.error('No model or id in updateDepartment')
       return Promise.resolve({
@@ -251,6 +267,10 @@ export class JournalService implements IJournalService {
   async insertInstitution(
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
+    this.logger.info('insertInstitution', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in insertInstitution')
       return Promise.resolve({
@@ -286,6 +306,10 @@ export class JournalService implements IJournalService {
   async updateInstitution(
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
+    this.logger.info('updateInstitution', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model || !model.id) {
       this.logger.error('No model or id in updateInstitution')
       return Promise.resolve({
@@ -335,6 +359,10 @@ export class JournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+    this.logger.info('insertType', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in insertType')
       return Promise.resolve({
@@ -368,6 +396,10 @@ export class JournalService implements IJournalService {
     }
   }
   async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+    this.logger.info('updateType', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model || !model.id) {
       this.logger.error('No model or id in updateMainCategory')
       return Promise.resolve({
@@ -408,6 +440,10 @@ export class JournalService implements IJournalService {
   async insertMainCategory(
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
+    this.logger.info('insertMainCategory', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in insertMainCategory')
       return Promise.resolve({
@@ -446,6 +482,10 @@ export class JournalService implements IJournalService {
   async updateMainCategory(
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
+    this.logger.info('updateMainCategory', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model || !model.id) {
       this.logger.error('No model or id in updateMainCategory')
       return Promise.resolve({
@@ -488,6 +528,10 @@ export class JournalService implements IJournalService {
   }
 
   async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+    this.logger.info('insertCategory', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model) {
       this.logger.error('No model in insertCategory')
       return Promise.resolve({
@@ -521,6 +565,10 @@ export class JournalService implements IJournalService {
   }
 
   async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+    this.logger.info('updateCategory', {
+      category: LOGGING_CATEGORY,
+      model,
+    })
     if (!model || !model.id) {
       this.logger.error('No model or id in updateCategory')
       return Promise.resolve({
@@ -565,24 +613,32 @@ export class JournalService implements IJournalService {
   async getMainCategories(
     params?: GetMainCategoriesQueryParams,
   ): Promise<Result<GetMainCategoriesResponse>> {
+    this.logger.info('getMainCategories', {
+      category: LOGGING_CATEGORY,
+      params,
+    })
     try {
       const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
       const mainCategories = await this.advertMainCategoryModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: params?.search
           ? {
               title: { [Op.iLike]: `%${params?.search}%` },
             }
           : undefined,
       })
+
+      const mapped = mainCategories.map((item) =>
+        advertMainCategoryMigrate(item),
+      )
+
       return Promise.resolve({
         ok: true,
         value: {
-          mainCategories: mainCategories.map((item) =>
-            advertMainCategoryMigrate(item),
-          ),
-          paging: generatePaging(mainCategories, page),
+          mainCategories: mapped,
+          paging: generatePaging(mapped, page, pageSize),
         },
       })
     } catch (e) {
@@ -600,6 +656,10 @@ export class JournalService implements IJournalService {
   }
 
   async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
+    this.logger.info('getDepartment', {
+      category: LOGGING_CATEGORY,
+      id,
+    })
     try {
       if (!id) {
         this.logger.error('No id present in getDepartment')
@@ -646,22 +706,31 @@ export class JournalService implements IJournalService {
   async getDepartments(
     params?: GetDepartmentsQueryParams,
   ): Promise<Result<GetDepartmentsResponse>> {
+    this.logger.info('getDepartments', {
+      category: LOGGING_CATEGORY,
+      metadata: { params },
+    })
     try {
       const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
       const departments = await this.advertDepartmentModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: params?.search
           ? {
               title: { [Op.iLike]: `%${params?.search}%` },
             }
           : undefined,
       })
+
+      const mapped = departments.map((item) => advertDepartmentMigrate(item))
+
       return Promise.resolve({
         ok: true,
         value: {
-          departments: departments.map((item) => advertDepartmentMigrate(item)),
-          paging: generatePaging(departments, page),
+          departments: mapped,
+          paging: generatePaging(mapped, page, pageSize),
         },
       })
     } catch (e) {
@@ -679,6 +748,10 @@ export class JournalService implements IJournalService {
   }
 
   async getType(id: string): Promise<Result<GetAdvertTypeResponse>> {
+    this.logger.info('getType', {
+      category: LOGGING_CATEGORY,
+      id,
+    })
     try {
       const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
@@ -716,6 +789,10 @@ export class JournalService implements IJournalService {
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<Result<GetAdvertTypesResponse>> {
+    this.logger.info('getTypes', {
+      category: LOGGING_CATEGORY,
+      params,
+    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -738,13 +815,13 @@ export class JournalService implements IJournalService {
         where: whereParams,
       })
 
-      const mappedTypes = types.map((item) => advertTypesMigrate(item))
+      const mapped = types.map((item) => advertTypesMigrate(item))
 
       return Promise.resolve({
         ok: true,
         value: {
-          types: mappedTypes,
-          paging: generatePaging(types, page, pageSize),
+          types: mapped,
+          paging: generatePaging(mapped, page, pageSize),
         },
       })
     } catch (e) {
@@ -762,6 +839,10 @@ export class JournalService implements IJournalService {
   }
 
   async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
+    this.logger.info('getInstitution', {
+      category: LOGGING_CATEGORY,
+      id,
+    })
     try {
       if (!id) {
         this.logger.error('No id present in getInstitution')
@@ -807,11 +888,17 @@ export class JournalService implements IJournalService {
   async getInstitutions(
     params?: GetInstitutionsQueryParams,
   ): Promise<Result<GetInstitutionsResponse>> {
+    this.logger.info('getInstitutions', {
+      category: LOGGING_CATEGORY,
+      params,
+    })
     try {
       const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
       const parties = await this.advertInvolvedPartyModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: params?.search
           ? {
               title: { [Op.iLike]: `%${params?.search}%` },
@@ -819,11 +906,13 @@ export class JournalService implements IJournalService {
           : undefined,
       })
 
+      const mapped = parties.map((item) => advertInvolvedPartyMigrate(item))
+
       return Promise.resolve({
         ok: true,
         value: {
-          institutions: parties.map((item) => advertInvolvedPartyMigrate(item)),
-          paging: generatePaging(parties, page),
+          institutions: mapped,
+          paging: generatePaging(mapped, page, pageSize),
         },
       })
     } catch (e) {
@@ -841,6 +930,10 @@ export class JournalService implements IJournalService {
   }
 
   async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
+    this.logger.info('getCategory', {
+      category: LOGGING_CATEGORY,
+      id,
+    })
     if (!id) {
       return Promise.resolve({
         ok: false,
@@ -884,11 +977,17 @@ export class JournalService implements IJournalService {
   async getCategories(
     params?: GetCategoriesQueryParams,
   ): Promise<Result<GetCategoriesResponse>> {
+    this.logger.info('getCategories', {
+      category: LOGGING_CATEGORY,
+      metadata: { params },
+    })
     try {
       const page = params?.page ?? 1
+      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
       const categories = await this.advertCategoryModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: params?.search
           ? {
               title: { [Op.iLike]: `%${params?.search}%` },
@@ -896,11 +995,14 @@ export class JournalService implements IJournalService {
           : undefined,
         include: AdvertMainCategoryDTO,
       })
+
+      const mapped = categories.map((item) => advertCategoryMigrate(item))
+
       return Promise.resolve({
         ok: true,
         value: {
           categories: categories.map((item) => advertCategoryMigrate(item)),
-          paging: generatePaging(categories, 1),
+          paging: generatePaging(mapped, page, pageSize),
         },
       })
     } catch (e) {
@@ -990,12 +1092,13 @@ export class JournalService implements IJournalService {
       metadata: { params },
     })
 
+    const page = params?.page ?? 1
+    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
     try {
-      const page = params?.page ?? 1
       const adverts = await this.advertModel.findAll({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: (page - 1) * DEFAULT_PAGE_SIZE,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         where: {
           [Op.and]: [
             searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
@@ -1039,9 +1142,12 @@ export class JournalService implements IJournalService {
           },
         ],
       })
+
+      const mapped = adverts.map((item) => advertMigrate(item))
+
       const result: GetAdvertsResponse = {
-        adverts: adverts.map((item) => advertMigrate(item)),
-        paging: generatePaging(adverts, page),
+        adverts: mapped,
+        paging: generatePaging(mapped, page, pageSize),
       }
 
       return Promise.resolve({ ok: true, value: result })

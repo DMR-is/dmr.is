@@ -32,4 +32,16 @@ export class GetInstitutionsQueryParams {
   @IsPositive()
   @IsOptional()
   page?: number
+
+  @ApiProperty({
+    name: 'pageSize',
+    description: 'Page size number to return.',
+    type: Number,
+    required: false,
+  })
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  pageSize?: number
 }
