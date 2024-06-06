@@ -45,7 +45,7 @@ import {
   advertTypesMigrate,
   typesParameters,
 } from '../helpers'
-import { handleException } from '../lib/utils'
+import { handleBadRequest, handleException } from '../lib/utils'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -87,6 +87,7 @@ export class JournalService implements IJournalService {
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
+
   async create(model: Advert): Promise<Result<GetAdvertResponse>> {
     this.logger.info('create', {
       category: LOGGING_CATEGORY,
@@ -94,14 +95,13 @@ export class JournalService implements IJournalService {
     })
     if (!model) {
       this.logger.error('create, no model')
-      return Promise.resolve({
+      return {
         ok: false,
         error: {
           code: 400,
           message: 'Bad request',
-          category: LOGGING_CATEGORY,
         },
-      })
+      }
     }
     try {
       const ad = await this.advertModel.create({
@@ -125,7 +125,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in create',
+        message: 'Could not create advert',
         method: 'create',
         info: {
           model,
@@ -139,14 +139,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in updateAdvert')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateAdvert',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -174,7 +170,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateAdvert',
+        message: 'Could not update advert',
         method: 'updateAdvert',
         info: {
           model,
@@ -190,14 +186,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in insertDepartment')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'insertDepartment',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
 
@@ -211,7 +203,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in insertDepartment',
+        message: 'Could not insert department',
         method: 'insertDepartment',
         info: {
           model,
@@ -227,14 +219,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model || !model.id) {
-      this.logger.error('No model or id in updateDepartment')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateDepartment',
+        reason: 'missing model or id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -243,13 +231,13 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!dep) {
-        return Promise.resolve({
+        return {
           ok: false,
           error: {
             code: 404,
             message: `Could not find department<${model.id}>`,
           },
-        })
+        }
       }
       return {
         ok: true,
@@ -259,7 +247,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateDepartment',
+        message: 'Could not update department',
         method: 'updateDepartment',
         info: {
           model,
@@ -275,14 +263,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in insertInstitution')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'insertInstitution',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
 
@@ -297,7 +281,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in insertInstitution',
+        message: 'Could not insert institution',
         method: 'insertInstitution',
         info: {
           model,
@@ -313,14 +297,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model || !model.id) {
-      this.logger.error('No model or id in updateInstitution')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateInstitution',
+        reason: 'missing model or id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -339,7 +319,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateInstitution',
+        message: 'Could not update institution',
         method: 'updateInstitution',
         info: {
           model,
@@ -365,14 +345,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in insertType')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'insertType',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
 
@@ -382,12 +358,12 @@ export class JournalService implements IJournalService {
         slug: model.slug,
         departmentId: model.department?.id,
       })
-      return Promise.resolve({ ok: true, value: { type: type } })
+      return { ok: true, value: { type: type } }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in insertType',
+        message: 'Could not insert type',
         method: 'insertType',
         info: {
           model,
@@ -401,14 +377,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model || !model.id) {
-      this.logger.error('No model or id in updateMainCategory')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateType',
+        reason: 'missing model or id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -421,14 +393,20 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!type) {
-        throw new NotFoundException()
+        return {
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find type<${model.id}>`,
+          },
+        }
       }
       return { ok: true, value: { type: advertTypesMigrate(type[1][0]) } }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateType',
+        message: 'Could not update type',
         method: 'updateType',
         info: {
           model,
@@ -444,14 +422,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in insertMainCategory')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'insertMainCategory',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -468,7 +442,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in insertMainCategory',
+        message: 'Could not insert main category',
         method: 'insertMainCategory',
         info: {
           model,
@@ -485,14 +459,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model || !model.id) {
-      this.logger.error('No model or id in updateMainCategory')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateMainCategory',
+        reason: 'missing model or id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -505,7 +475,13 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!mainCat) {
-        throw new NotFoundException()
+        return {
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find main category<${model.id}>`,
+          },
+        }
       }
       return {
         ok: true,
@@ -515,7 +491,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateMainCategory',
+        message: 'Could not update main category',
         method: 'updateMainCategory',
         info: {
           model,
@@ -530,14 +506,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model) {
-      this.logger.error('No model in insertCategory')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'insertCategory',
+        reason: 'missing model',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -551,7 +523,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in insertCategory',
+        message: 'Could not insert category',
         method: 'insertCategory',
         info: {
           model,
@@ -566,14 +538,10 @@ export class JournalService implements IJournalService {
       model,
     })
     if (!model || !model.id) {
-      this.logger.error('No model or id in updateCategory')
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'updateCategory',
+        reason: 'missing model or id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -586,7 +554,13 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!category) {
-        throw new NotFoundException()
+        return {
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find category<${model.id}>`,
+          },
+        }
       }
       return {
         ok: true,
@@ -596,7 +570,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in updateCategory',
+        message: 'Could not update category',
         method: 'updateCategory',
         info: {
           model,
@@ -631,18 +605,18 @@ export class JournalService implements IJournalService {
         advertMainCategoryMigrate(item),
       )
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           mainCategories: mapped,
           paging: generatePaging(mapped, page, pageSize, mainCategories.count),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getMainCategories',
+        message: 'Could not get main categories',
         method: 'getMainCategories',
         info: {
           params,
@@ -658,14 +632,10 @@ export class JournalService implements IJournalService {
     })
     try {
       if (!id) {
-        this.logger.error('No id present in getDepartment')
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 400,
-            message: 'Bad request',
-            category: LOGGING_CATEGORY,
-          },
+        return handleBadRequest({
+          method: 'getDepartment',
+          reason: 'missing id',
+          category: LOGGING_CATEGORY,
         })
       }
       const department = await this.advertDepartmentModel.findOne({
@@ -673,23 +643,23 @@ export class JournalService implements IJournalService {
       })
       if (!department) {
         this.logger.warn('Department not found')
-        return Promise.resolve({
+        return {
           ok: false,
           error: { code: 404, message: `Could not find department<${id}>` },
-        })
+        }
       }
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           department: advertDepartmentMigrate(department),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getDepartment',
+        message: `Could not get department<${id}>`,
         method: 'getDepartment',
         info: {
           id,
@@ -723,18 +693,18 @@ export class JournalService implements IJournalService {
         advertDepartmentMigrate(item),
       )
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           departments: mapped,
           paging: generatePaging(mapped, page, pageSize, departments.count),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getDepartments',
+        message: 'Could not get departments',
         method: 'getDepartments',
         info: {
           params,
@@ -757,11 +727,10 @@ export class JournalService implements IJournalService {
       })
 
       if (!type) {
-        this.logger.warn('Type not found')
-        return Promise.resolve({
+        return {
           ok: false,
           error: { code: 404, message: `Could not find type<${id}>` },
-        })
+        }
       }
 
       return { ok: true, value: { type: type } }
@@ -769,7 +738,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getType',
+        message: `Could not get type<${id}>`,
         method: 'getType',
         info: {
           id,
@@ -813,7 +782,7 @@ export class JournalService implements IJournalService {
       })
 
       // we need more context on dev to understand what is happening
-      if (types.count === 0) {
+      if (types.count === 0 || types.rows.length === 0) {
         this.logger.warn('No types found', {
           category: LOGGING_CATEGORY,
           params: params,
@@ -840,7 +809,7 @@ export class JournalService implements IJournalService {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getTypes',
+        message: 'Could not get types',
         method: 'getTypes',
         info: {
           params,
@@ -856,37 +825,33 @@ export class JournalService implements IJournalService {
     })
     try {
       if (!id) {
-        this.logger.error('No id present in getInstitution')
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 400,
-            message: 'Bad request',
-            category: LOGGING_CATEGORY,
-          },
+        return handleBadRequest({
+          method: 'getInstitution',
+          reason: 'missing id',
+          category: LOGGING_CATEGORY,
         })
       }
       const party = await this.advertInvolvedPartyModel.findOne({
         where: { id },
       })
       if (!party) {
-        return Promise.resolve({
+        return {
           ok: false,
           error: { code: 404, message: `Could not find institution<${id}` },
-        })
+        }
       }
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           institution: advertInvolvedPartyMigrate(party),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getInstitution',
+        message: `Could not get institution<${id}>`,
         method: 'getInstitution',
         info: {
           id,
@@ -920,18 +885,18 @@ export class JournalService implements IJournalService {
         advertInvolvedPartyMigrate(item),
       )
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           institutions: mapped,
           paging: generatePaging(mapped, page, pageSize, parties.count),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getInstitutions',
+        message: 'Could not get institutions',
         method: 'getInstitutions',
         info: {
           params,
@@ -946,13 +911,10 @@ export class JournalService implements IJournalService {
       id,
     })
     if (!id) {
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-          category: LOGGING_CATEGORY,
-        },
+      return handleBadRequest({
+        method: 'getCategory',
+        reason: 'missing id',
+        category: LOGGING_CATEGORY,
       })
     }
     try {
@@ -961,21 +923,21 @@ export class JournalService implements IJournalService {
         include: AdvertMainCategoryDTO,
       })
       if (!category) {
-        return Promise.resolve({
+        return {
           ok: false,
           error: { code: 404, message: `Could not find category<${id}>` },
-        })
+        }
       }
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: { category: advertCategoryMigrate(category) },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getCategory',
+        message: `Could not get category<${id}>`,
         method: 'getCategory',
         info: {
           id,
@@ -1008,18 +970,18 @@ export class JournalService implements IJournalService {
 
       const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: {
           categories: mapped,
           paging: generatePaging(mapped, page, pageSize, categories.count),
         },
-      })
+      }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getCategories',
+        message: 'Could not get categories',
         method: 'getCategories',
         info: {
           params,
@@ -1035,14 +997,10 @@ export class JournalService implements IJournalService {
     })
     try {
       if (!id) {
-        this.logger.error('No id present in getAdvert')
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 400,
-            message: 'Bad request',
-            category: LOGGING_CATEGORY,
-          },
+        return handleBadRequest({
+          method: 'getAdvert',
+          reason: 'missing id',
+          category: LOGGING_CATEGORY,
         })
       }
       const advert = await this.advertModel.findByPk(id, {
@@ -1055,35 +1013,35 @@ export class JournalService implements IJournalService {
           AdvertCategoryDTO,
         ],
       })
-      if (advert) {
-        const ad = advertMigrate(advert)
-        return Promise.resolve({
-          ok: true,
-          value: {
-            advert: {
-              ...ad,
-              document: {
-                isLegacy: advert.isLegacy,
-                html: advert.isLegacy
-                  ? dirtyClean(advert.documentHtml as HTMLText)
-                  : advert.documentHtml,
-                pdfUrl: advert.documentPdfUrl,
-              },
-            },
-          },
-        })
-      } else {
-        this.logger.warn(`Advert not found in getAdvert<${id}>`)
-        return Promise.resolve({
+
+      if (!advert) {
+        return {
           ok: false,
           error: { code: 404, message: `Could not find advert<${id}>` },
-        })
+        }
+      }
+
+      const ad = advertMigrate(advert)
+      return {
+        ok: true,
+        value: {
+          advert: {
+            ...ad,
+            document: {
+              isLegacy: advert.isLegacy,
+              html: advert.isLegacy
+                ? dirtyClean(advert.documentHtml as HTMLText)
+                : advert.documentHtml,
+              pdfUrl: advert.documentPdfUrl,
+            },
+          },
+        },
       }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getAdvert',
+        message: `Could not get advert<${id}>`,
         method: 'getAdvert',
         info: {
           id,
@@ -1158,12 +1116,12 @@ export class JournalService implements IJournalService {
         paging: generatePaging(mapped, page, pageSize, adverts.count),
       }
 
-      return Promise.resolve({ ok: true, value: result })
+      return { ok: true, value: result }
     } catch (e) {
       return handleException({
         category: LOGGING_CATEGORY,
         error: e,
-        message: 'Error in getAdverts',
+        message: 'Could not get adverts',
         method: 'getAdverts',
         info: {
           params,
