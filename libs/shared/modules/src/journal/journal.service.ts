@@ -45,6 +45,7 @@ import {
   advertTypesMigrate,
   typesParameters,
 } from '../helpers'
+import { handleException } from '../lib/utils'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -121,14 +122,13 @@ export class JournalService implements IJournalService {
       })
       return { ok: true, value: { advert: advertMigrate(ad) } }
     } catch (e) {
-      this.logger.error('Error in create', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in create',
+        method: 'create',
+        info: {
+          model,
         },
       })
     }
@@ -171,14 +171,13 @@ export class JournalService implements IJournalService {
       )
       return { ok: true, value: { advert: advertMigrate(ad[1][0]) } }
     } catch (e) {
-      this.logger.error('Error in updateAdvert', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateAdvert',
+        method: 'updateAdvert',
+        info: {
+          model,
         },
       })
     }
@@ -209,14 +208,13 @@ export class JournalService implements IJournalService {
       })
       return { ok: true, value: { department: dep } }
     } catch (e) {
-      this.logger.error('Error in insertDepartment', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in insertDepartment',
+        method: 'insertDepartment',
+        info: {
+          model,
         },
       })
     }
@@ -245,21 +243,26 @@ export class JournalService implements IJournalService {
         { where: { id: model.id }, returning: true },
       )
       if (!dep) {
-        throw new NotFoundException()
+        return Promise.resolve({
+          ok: false,
+          error: {
+            code: 404,
+            message: `Could not find department<${model.id}>`,
+          },
+        })
       }
       return {
         ok: true,
         value: { department: advertDepartmentMigrate(dep[1][0]) },
       }
     } catch (e) {
-      this.logger.error('Error in updateDepartment', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateDepartment',
+        method: 'updateDepartment',
+        info: {
+          model,
         },
       })
     }
@@ -291,14 +294,13 @@ export class JournalService implements IJournalService {
 
       return { ok: true, value: { institution: inst } }
     } catch (e) {
-      this.logger.error('Error in insertInstitution', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in insertInstitution',
+        method: 'insertInstitution',
+        info: {
+          model,
         },
       })
     }
@@ -334,14 +336,13 @@ export class JournalService implements IJournalService {
         value: { institution: advertInvolvedPartyMigrate(inst[1][0]) },
       }
     } catch (e) {
-      this.logger.error('Error in updateInstitution', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateInstitution',
+        method: 'updateInstitution',
+        info: {
+          model,
         },
       })
     }
@@ -383,14 +384,13 @@ export class JournalService implements IJournalService {
       })
       return Promise.resolve({ ok: true, value: { type: type } })
     } catch (e) {
-      this.logger.error('Error in insertType', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in insertType',
+        method: 'insertType',
+        info: {
+          model,
         },
       })
     }
@@ -425,14 +425,13 @@ export class JournalService implements IJournalService {
       }
       return { ok: true, value: { type: advertTypesMigrate(type[1][0]) } }
     } catch (e) {
-      this.logger.error('Error in updateType', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateType',
+        method: 'updateType',
+        info: {
+          model,
         },
       })
     }
@@ -466,14 +465,13 @@ export class JournalService implements IJournalService {
         value: { mainCategory: advertMainCategoryMigrate(mainCategory) },
       }
     } catch (e) {
-      this.logger.error('Error in insertMainCategory', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in insertMainCategory',
+        method: 'insertMainCategory',
+        info: {
+          model,
         },
       })
     }
@@ -514,14 +512,13 @@ export class JournalService implements IJournalService {
         value: { mainCategory: advertMainCategoryMigrate(mainCat[1][0]) },
       }
     } catch (e) {
-      this.logger.error('Error in updateMainCategory', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateMainCategory',
+        method: 'updateMainCategory',
+        info: {
+          model,
         },
       })
     }
@@ -551,14 +548,13 @@ export class JournalService implements IJournalService {
       })
       return { ok: true, value: { category: advertCategoryMigrate(category) } }
     } catch (e) {
-      this.logger.error('Error in insertCategory', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in insertCategory',
+        method: 'insertCategory',
+        info: {
+          model,
         },
       })
     }
@@ -597,14 +593,13 @@ export class JournalService implements IJournalService {
         value: { category: advertCategoryMigrate(category[1][0]) },
       }
     } catch (e) {
-      this.logger.error('Error in updateCategory', e as Error)
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in updateCategory',
+        method: 'updateCategory',
+        info: {
+          model,
         },
       })
     }
@@ -620,17 +615,19 @@ export class JournalService implements IJournalService {
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-      const mainCategories = await this.advertMainCategoryModel.findAll({
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        where: params?.search
-          ? {
-              title: { [Op.iLike]: `%${params?.search}%` },
-            }
-          : undefined,
-      })
+      const mainCategories = await this.advertMainCategoryModel.findAndCountAll(
+        {
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+          where: params?.search
+            ? {
+                title: { [Op.iLike]: `%${params?.search}%` },
+              }
+            : undefined,
+        },
+      )
 
-      const mapped = mainCategories.map((item) =>
+      const mapped = mainCategories.rows.map((item) =>
         advertMainCategoryMigrate(item),
       )
 
@@ -638,18 +635,17 @@ export class JournalService implements IJournalService {
         ok: true,
         value: {
           mainCategories: mapped,
-          paging: generatePaging(mapped, page, pageSize),
+          paging: generatePaging(mapped, page, pageSize, mainCategories.count),
         },
       })
     } catch (e) {
-      this.logger.error('Error in getMainCategories', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getMainCategories',
+        method: 'getMainCategories',
+        info: {
+          params,
         },
       })
     }
@@ -690,14 +686,13 @@ export class JournalService implements IJournalService {
         },
       })
     } catch (e) {
-      this.logger.error('Error in getDepartment', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getDepartment',
+        method: 'getDepartment',
+        info: {
+          id,
         },
       })
     }
@@ -714,7 +709,7 @@ export class JournalService implements IJournalService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const departments = await this.advertDepartmentModel.findAll({
+      const departments = await this.advertDepartmentModel.findAndCountAll({
         limit: pageSize,
         offset: (page - 1) * pageSize,
         where: params?.search
@@ -724,24 +719,25 @@ export class JournalService implements IJournalService {
           : undefined,
       })
 
-      const mapped = departments.map((item) => advertDepartmentMigrate(item))
+      const mapped = departments.rows.map((item) =>
+        advertDepartmentMigrate(item),
+      )
 
       return Promise.resolve({
         ok: true,
         value: {
           departments: mapped,
-          paging: generatePaging(mapped, page, pageSize),
+          paging: generatePaging(mapped, page, pageSize, departments.count),
         },
       })
     } catch (e) {
-      this.logger.error('Error in getDepartments', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getDepartments',
+        method: 'getDepartments',
+        info: {
+          params,
         },
       })
     }
@@ -770,17 +766,13 @@ export class JournalService implements IJournalService {
 
       return { ok: true, value: { type: type } }
     } catch (e) {
-      this.logger.error('Error in getType', {
+      return handleException({
         category: LOGGING_CATEGORY,
-        error: e as Error,
-      })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getType',
+        method: 'getType',
+        info: {
+          id,
         },
       })
     }
@@ -799,7 +791,12 @@ export class JournalService implements IJournalService {
 
       const whereParams = typesParameters(params)
 
-      const types = await this.advertTypeModel.findAll<AdvertTypeDTO>({
+      let query = ''
+
+      const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
+        logging(sql) {
+          query = sql
+        },
         include: [
           {
             model: AdvertDepartmentDTO,
@@ -815,24 +812,38 @@ export class JournalService implements IJournalService {
         where: whereParams,
       })
 
-      const mapped = types.map((item) => advertTypesMigrate(item))
+      // we need more context on dev to understand what is happening
+      if (types.count === 0) {
+        this.logger.warn('No types found', {
+          category: LOGGING_CATEGORY,
+          params: params,
+          typesWhereParams: whereParams,
+          departmentsWhereParams: params?.department
+            ? {
+                slug: params?.department,
+              }
+            : undefined,
+          query,
+        })
+      }
 
-      return Promise.resolve({
+      const mapped = types.rows.map((item) => advertTypesMigrate(item))
+
+      return {
         ok: true,
         value: {
           types: mapped,
-          paging: generatePaging(mapped, page, pageSize),
+          paging: generatePaging(mapped, page, pageSize, types.count),
         },
-      })
+      }
     } catch (e) {
-      this.logger.error('Error in getTypes', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getTypes',
+        method: 'getTypes',
+        info: {
+          params,
         },
       })
     }
@@ -872,14 +883,13 @@ export class JournalService implements IJournalService {
         },
       })
     } catch (e) {
-      this.logger.error('Error in getInstitution', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getInstitution',
+        method: 'getInstitution',
+        info: {
+          id,
         },
       })
     }
@@ -896,7 +906,7 @@ export class JournalService implements IJournalService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const parties = await this.advertInvolvedPartyModel.findAll({
+      const parties = await this.advertInvolvedPartyModel.findAndCountAll({
         limit: pageSize,
         offset: (page - 1) * pageSize,
         where: params?.search
@@ -906,24 +916,25 @@ export class JournalService implements IJournalService {
           : undefined,
       })
 
-      const mapped = parties.map((item) => advertInvolvedPartyMigrate(item))
+      const mapped = parties.rows.map((item) =>
+        advertInvolvedPartyMigrate(item),
+      )
 
       return Promise.resolve({
         ok: true,
         value: {
           institutions: mapped,
-          paging: generatePaging(mapped, page, pageSize),
+          paging: generatePaging(mapped, page, pageSize, parties.count),
         },
       })
     } catch (e) {
-      this.logger.error('Error in getInstitution', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getInstitutions',
+        method: 'getInstitutions',
+        info: {
+          params,
         },
       })
     }
@@ -961,14 +972,13 @@ export class JournalService implements IJournalService {
         value: { category: advertCategoryMigrate(category) },
       })
     } catch (e) {
-      this.logger.error('Error in getCategory', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getCategory',
+        method: 'getCategory',
+        info: {
+          id,
         },
       })
     }
@@ -985,7 +995,7 @@ export class JournalService implements IJournalService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const categories = await this.advertCategoryModel.findAll({
+      const categories = await this.advertCategoryModel.findAndCountAll({
         limit: pageSize,
         offset: (page - 1) * pageSize,
         where: params?.search
@@ -996,24 +1006,23 @@ export class JournalService implements IJournalService {
         include: AdvertMainCategoryDTO,
       })
 
-      const mapped = categories.map((item) => advertCategoryMigrate(item))
+      const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
 
       return Promise.resolve({
         ok: true,
         value: {
-          categories: categories.map((item) => advertCategoryMigrate(item)),
-          paging: generatePaging(mapped, page, pageSize),
+          categories: mapped,
+          paging: generatePaging(mapped, page, pageSize, categories.count),
         },
       })
     } catch (e) {
-      this.logger.error('Error in getCategories', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getCategories',
+        method: 'getCategories',
+        info: {
+          params,
         },
       })
     }
@@ -1071,14 +1080,13 @@ export class JournalService implements IJournalService {
         })
       }
     } catch (e) {
-      this.logger.error('Error in getAdvert', { error: e as Error })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-          category: LOGGING_CATEGORY,
+      return handleException({
+        category: LOGGING_CATEGORY,
+        error: e,
+        message: 'Error in getAdvert',
+        method: 'getAdvert',
+        info: {
+          id,
         },
       })
     }
@@ -1096,7 +1104,7 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
     try {
-      const adverts = await this.advertModel.findAll({
+      const adverts = await this.advertModel.findAndCountAll({
         limit: pageSize,
         offset: (page - 1) * pageSize,
         where: {
@@ -1143,25 +1151,23 @@ export class JournalService implements IJournalService {
         ],
       })
 
-      const mapped = adverts.map((item) => advertMigrate(item))
+      const mapped = adverts.rows.map((item) => advertMigrate(item))
 
       const result: GetAdvertsResponse = {
         adverts: mapped,
-        paging: generatePaging(mapped, page, pageSize),
+        paging: generatePaging(mapped, page, pageSize, adverts.count),
       }
 
       return Promise.resolve({ ok: true, value: result })
     } catch (e) {
-      this.logger.error('Error in getAdverts', {
-        error: {
-          message: (e as Error).message,
-          stack: (e as Error).stack,
-        },
+      return handleException({
         category: LOGGING_CATEGORY,
-      })
-      return Promise.resolve({
-        ok: false,
-        error: { code: 500, message: 'Could not get adverts' },
+        error: e,
+        message: 'Error in getAdverts',
+        method: 'getAdverts',
+        info: {
+          params,
+        },
       })
     }
   }
