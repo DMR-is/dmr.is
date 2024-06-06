@@ -20,7 +20,6 @@ import { ICommentService } from '../comment/comment.service.interface'
 import { Audit } from '../decorators/audit.decorator'
 import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
@@ -261,13 +260,20 @@ export class ApplicationService implements IApplicationService {
       return caseResponse
     }
 
-    const comments = await this.commentService.comments(caseResponse.value.id, {
-      type: CaseCommentPublicity.External,
-    })
+    const commentsResult = await this.commentService.comments(
+      caseResponse.value.id,
+      {
+        type: CaseCommentPublicity.External,
+      },
+    )
+
+    if (!commentsResult.ok) {
+      return commentsResult
+    }
 
     return {
       ok: true,
-      value: comments,
+      value: commentsResult.value,
     }
   }
 
@@ -285,32 +291,24 @@ export class ApplicationService implements IApplicationService {
       return caseLookup
     }
 
-    const created = await this.commentService.create(caseLookup.value.id, {
-      comment: commentBody.comment,
-      from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-      to: null,
-      internal: false,
-      type: CaseCommentType.Comment,
-    })
+    const createdResult = await this.commentService.create(
+      caseLookup.value.id,
+      {
+        comment: commentBody.comment,
+        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        to: null,
+        internal: false,
+        type: CaseCommentType.Comment,
+      },
+    )
 
-    if (!created) {
-      this.logger.error('postComment, could not create comment', {
-        applicationId,
-        category: LOGGING_CATEGORY,
-      })
-
-      return {
-        ok: false,
-        error: {
-          code: 500,
-          message: `Could not create comment for applicationId<${applicationId}>`,
-        },
-      }
+    if (!createdResult.ok) {
+      return createdResult
     }
 
     return {
       ok: true,
-      value: created,
+      value: createdResult.value,
     }
   }
 }

@@ -30,8 +30,10 @@ import {
   caseCommentTitleMapper,
   caseCommentTypeMapper,
 } from '../helpers'
-import { handleNotFoundLookup } from '../lib/utils'
+import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { handleBadRequest, handleNotFoundLookup } from '../lib/utils'
 import { Result } from '../types/result'
+import { IUtilityService } from '../utility/utility.module'
 import { CaseCommentDto } from './models/CaseComment'
 import { CaseCommentsDto } from './models/CaseComments'
 import { CaseCommentTaskDto } from './models/CaseCommentTask'
@@ -45,6 +47,8 @@ const LOGGING_CATEGORY = 'CaseCommentService'
 export class CommentService implements ICommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => IUtilityService))
+    private utilityService: IUtilityService,
 
     @Inject(forwardRef(() => IApplicationService))
     private applicationService: IApplicationService,
@@ -105,201 +109,201 @@ export class CommentService implements ICommentService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
-  ): Promise<GetCaseCommentsResponse> {
-    this.logger.info('Getting comments for case', {
-      id: caseId,
-      category: LOGGING_CATEGORY,
-    })
+  ): Promise<Result<GetCaseCommentsResponse>> {
+    const onlyExternal = params?.type === 'external'
+    const onlyInternal = params?.type === 'internal'
 
-    try {
-      const onlyExternal = params?.type === 'external'
-      const onlyInternal = params?.type === 'internal'
-
-      const found = await this.caseCommentsModel.findAll({
-        where: { case_case_id: caseId },
-        include: [
-          {
-            model: CaseCommentDto,
-            include: [
-              CaseCommentTypeDto,
-              CaseStatusDto,
-              { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-            ],
-          },
-        ],
-      })
-
-      const comments = found
-        .map((c) => caseCommentMigrate(c.caseComment))
-        .filter((c) => {
-          if (onlyExternal) {
-            return !c.internal
-          }
-
-          if (onlyInternal) {
-            return c.internal
-          }
-
-          return true
-        })
-
-      return Promise.resolve({
-        comments,
-      })
-    } catch (error) {
-      this.logger.error('Error in getComments', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-        error,
-      })
-      throw new InternalServerErrorException('Failed to get comments')
-    }
-  }
-
-  async create(
-    caseId: string,
-    body: PostCaseComment,
-    transaction?: Transaction,
-  ): Promise<PostCaseCommentResponse> {
-    this.logger.info('postComment', {
-      caseId: caseId,
-      category: LOGGING_CATEGORY,
-    })
-
-    try {
-      const now = new Date().toISOString()
-
-      const theCase = await this.caseModel.findOne({
-        where: { id: caseId },
-        include: [CaseStatusDto],
-        transaction: transaction,
-      })
-
-      if (!theCase) {
-        throw new NotFoundException('Case not found')
-      }
-
-      // find which title to use
-      const title = caseCommentTitleMapper(
-        mapCaseCommentTypeToCaseCommentTitle(body.type),
-      )
-
-      const titleRef = await this.caseCommentTitleModel.findOne({
-        where: { value: title },
-        transaction: transaction,
-      })
-
-      if (!titleRef) {
-        throw new NotFoundException('Title not found')
-      }
-
-      const newCommentType = caseCommentTypeMapper(body.type)
-
-      if (!newCommentType) {
-        throw new BadRequestException('Invalid comment type')
-      }
-
-      const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
-        where: { value: newCommentType },
-        transaction: transaction,
-      })
-
-      if (!newCommentTypeRef) {
-        throw new NotFoundException('Comment type not found')
-      }
-
-      const newCommentTask = await this.caseCommentTaskModel.create(
+    const found = await this.caseCommentsModel.findAll({
+      where: { case_case_id: caseId },
+      include: [
         {
-          id: uuid(),
-          comment: body.comment,
-          fromId: body.from,
-          toId: body.to,
-          titleId: titleRef.id,
-        },
-        {
-          transaction: transaction,
-        },
-      )
-
-      const applicationRes = await this.applicationService.getApplication(
-        theCase.applicationId,
-      )
-
-      if (!applicationRes.ok) {
-        throw new InternalServerErrorException('Could not add comment to case')
-      }
-      const { application } = applicationRes.value
-
-      const newComment = await this.caseCommentModel.create(
-        {
-          id: uuid(),
-          createdAt: now,
-          internal: body.internal,
-          typeId: newCommentTypeRef.id,
-          statusId: theCase.statusId,
-          taskId: newCommentTask.id,
-          state: JSON.stringify(application),
-        },
-        {
-          returning: true,
-          transaction: transaction,
-        },
-      )
-
-      // adding row to relation table
-      await this.caseCommentsModel.create(
-        {
-          caseId: caseId,
-          commentId: newComment.id,
-        },
-        {
-          transaction: transaction,
-        },
-      )
-
-      const withRelations = await this.caseCommentModel.findByPk(
-        newComment.id,
-        {
-          nest: true,
+          model: CaseCommentDto,
           include: [
             CaseCommentTypeDto,
             CaseStatusDto,
             { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
           ],
-          transaction: transaction,
         },
-      )
+      ],
+    })
 
-      if (!withRelations) {
-        throw new NotFoundException('Could not create comment')
-      }
+    const comments = found
+      .map((c) => caseCommentMigrate(c.caseComment))
+      .filter((c) => {
+        if (onlyExternal) {
+          return !c.internal
+        }
 
-      return Promise.resolve({
-        comment: caseCommentMigrate(withRelations),
+        if (onlyInternal) {
+          return c.internal
+        }
+
+        return true
       })
-    } catch (error) {
-      this.logger.error('Error in postComment', {
-        id: caseId,
-        category: LOGGING_CATEGORY,
-        error,
-      })
-      throw new BadRequestException('Failed to create comment')
+
+    return {
+      ok: true,
+      value: {
+        comments,
+      },
     }
   }
 
+  @Audit()
+  @HandleException()
+  async create(
+    caseId: string,
+    body: PostCaseComment,
+    transaction?: Transaction,
+  ): Promise<Result<PostCaseCommentResponse>> {
+    const now = new Date().toISOString()
+
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const theCase = caseMigrate(caseLookup.value)
+
+    // find which title to use
+    const title = caseCommentTitleMapper(
+      mapCaseCommentTypeToCaseCommentTitle(body.type),
+    )
+
+    const titleRef = await this.caseCommentTitleModel.findOne({
+      where: { value: title },
+      transaction: transaction,
+    })
+
+    if (!titleRef) {
+      return {
+        ok: false,
+        error: {
+          code: 404,
+          message: 'Title not found',
+        },
+      }
+    }
+
+    const newCommentType = caseCommentTypeMapper(body.type)
+
+    if (!newCommentType) {
+      return handleBadRequest({
+        category: LOGGING_CATEGORY,
+        method: 'create',
+        reason: 'invalid comment type',
+        info: {
+          caseId,
+          body,
+        },
+      })
+    }
+
+    const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
+      where: { value: newCommentType },
+      transaction: transaction,
+    })
+
+    if (!newCommentTypeRef) {
+      return {
+        ok: false,
+        error: {
+          code: 404,
+          message: 'Type not found',
+        },
+      }
+    }
+
+    const newCommentTask = await this.caseCommentTaskModel.create(
+      {
+        id: uuid(),
+        comment: body.comment,
+        fromId: body.from,
+        toId: body.to,
+        titleId: titleRef.id,
+      },
+      {
+        transaction: transaction,
+      },
+    )
+
+    const applicationRes = await this.applicationService.getApplication(
+      theCase.applicationId,
+    )
+
+    if (!applicationRes.ok) {
+      return applicationRes
+    }
+
+    const { application } = applicationRes.value
+
+    const newComment = await this.caseCommentModel.create(
+      {
+        id: uuid(),
+        createdAt: now,
+        internal: body.internal,
+        typeId: newCommentTypeRef.id,
+        statusId: caseLookup.value.statusId,
+        taskId: newCommentTask.id,
+        state: JSON.stringify(application),
+      },
+      {
+        returning: true,
+        transaction: transaction,
+      },
+    )
+
+    // adding row to relation table
+    await this.caseCommentsModel.create(
+      {
+        caseId: caseId,
+        commentId: newComment.id,
+      },
+      {
+        transaction: transaction,
+      },
+    )
+
+    const withRelations = await this.caseCommentModel.findByPk(newComment.id, {
+      nest: true,
+      include: [
+        CaseCommentTypeDto,
+        CaseStatusDto,
+        { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+      ],
+      transaction: transaction,
+    })
+
+    if (!withRelations) {
+      return {
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Failed to create comment',
+        },
+      }
+    }
+
+    return {
+      ok: true,
+      value: {
+        comment: caseCommentMigrate(withRelations),
+      },
+    }
+  }
+
+  @Audit()
+  @HandleException()
   async delete(
     caseId: string,
     commentId: string,
-  ): Promise<DeleteCaseCommentResponse | null> {
-    this.logger.info('Deleting comment from application', {
-      caseId,
-      commentId,
-      category: LOGGING_CATEGORY,
-    })
-
+  ): Promise<Result<DeleteCaseCommentResponse>> {
     // check if case and comment exists
     const exists = await this.caseCommentsModel.findOne({
       where: {
@@ -310,50 +314,44 @@ export class CommentService implements ICommentService {
     })
 
     if (!exists) {
-      this.logger.warn('Trying to delete comment that does not exist on case', {
-        caseId,
-        commentId,
+      return handleNotFoundLookup({
+        id: commentId,
         category: LOGGING_CATEGORY,
-      })
-
-      return null
-    }
-
-    try {
-      // delete from relation table
-      await this.caseCommentsModel.destroy({
-        where: {
+        entity: 'comment',
+        method: 'delete',
+        info: {
           caseId,
           commentId,
         },
       })
+    }
 
-      // delete from comment table
-      await this.caseCommentModel.destroy({
-        where: {
-          id: commentId,
-        },
-      })
-
-      await this.caseCommentTaskModel.destroy({
-        where: {
-          id: exists.caseComment.taskId,
-        },
-      })
-
-      return Promise.resolve({
-        success: true,
-      })
-    } catch (error) {
-      this.logger.error('Error in deleteComment', {
+    // delete from relation table
+    await this.caseCommentsModel.destroy({
+      where: {
         caseId,
         commentId,
-        category: LOGGING_CATEGORY,
-        error,
-      })
-      return Promise.resolve({
-        success: false,
-      })
+      },
+    })
+
+    // delete from comment table
+    await this.caseCommentModel.destroy({
+      where: {
+        id: commentId,
+      },
+    })
+
+    await this.caseCommentTaskModel.destroy({
+      where: {
+        id: exists.caseComment.taskId,
+      },
+    })
+
+    return {
+      ok: true,
+      value: {
+        success: true,
+      },
     }
   }
 }

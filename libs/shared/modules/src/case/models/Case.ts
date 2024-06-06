@@ -37,11 +37,11 @@ export class CaseDto extends Model {
   year!: number
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.STRING,
     allowNull: false,
     field: 'case_number',
   })
-  caseNumber!: number
+  caseNumber!: string
 
   @Column({ type: DataType.UUID, field: 'status_id' })
   statusId!: string

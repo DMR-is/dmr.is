@@ -168,7 +168,11 @@ export class CaseService implements ICaseService {
 
         const now = new Date()
         const application = applicationLookup.value.application
-        const nextCaseNumber = this.utilityService.generateCaseNumber()
+        const nextCaseNumber = await this.utilityService.generateCaseNumber()
+
+        if (!nextCaseNumber.ok) {
+          return nextCaseNumber
+        }
 
         const departmentLookup = await this.utilityService.departmentLookup(
           application.answers.advert.department,
@@ -178,12 +182,45 @@ export class CaseService implements ICaseService {
           return departmentLookup
         }
 
+        const requestedPublicationDate = new Date(
+          application.answers.publishing.date,
+        )
+        const today = new Date()
+        const diff = requestedPublicationDate.getTime() - today.getTime()
+        const diffDays = diff / (1000 * 3600 * 24)
+        let fastTrack = false
+        if (diffDays > 10) {
+          fastTrack = true
+        }
+
+        console.log({
+          applicationId: application.id,
+          year: now.getFullYear(),
+          caseNumber: nextCaseNumber.value,
+          statusId: caseStatusLookup.value.id,
+          tagId: caseTagLookup.value.id,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          isLegacy: false,
+          assignedUserId: null,
+          communicationStatusId: caseCommunicationStatus.value.id,
+          publishedAt: null,
+          price: 0,
+          paid: false,
+          fastTrack: fastTrack,
+          advertTitle: application.answers.advert.title,
+          requestedPublicationDate: application.answers.publishing.date,
+          departmentId: departmentLookup.value.id,
+        })
+
+        const caseNumber = nextCaseNumber.value
+
         const newCase = await this.caseModel.create(
           {
             id: uuid(),
             applicationId: application.id,
             year: now.getFullYear(),
-            caseNumber: nextCaseNumber,
+            caseNumber: caseNumber,
             statusId: caseStatusLookup.value.id,
             tagId: caseTagLookup.value.id,
             createdAt: now.toISOString(),
@@ -192,12 +229,12 @@ export class CaseService implements ICaseService {
             assignedUserId: null,
             communicationStatusId: caseCommunicationStatus.value.id,
             publishedAt: null,
-            price: null,
+            price: 0,
             paid: false,
-            fastTrack: application.answers.publishing?.fastTrack ?? false,
-            departmentId: departmentLookup.value.id,
+            fastTrack: fastTrack,
             advertTitle: application.answers.advert.title,
             requestedPublicationDate: application.answers.publishing.date,
+            departmentId: departmentLookup.value.id,
           },
           {
             returning: ['id'],
@@ -205,9 +242,15 @@ export class CaseService implements ICaseService {
           },
         )
 
+        const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
+
+        if (!newCaseLookup.ok) {
+          return newCaseLookup
+        }
+
         // TODO: When auth is setup, use the user id from the token
         await this.commentService.create(
-          newCase.id,
+          newCaseLookup.value.id,
           {
             internal: true,
             type: CaseCommentType.Submit,
@@ -217,12 +260,6 @@ export class CaseService implements ICaseService {
           },
           t,
         )
-
-        const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
-
-        if (!newCaseLookup.ok) {
-          return newCaseLookup
-        }
 
         return Promise.resolve({
           ok: true,

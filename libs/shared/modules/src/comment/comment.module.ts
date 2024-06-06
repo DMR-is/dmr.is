@@ -5,6 +5,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
 import caseModels from '../case/models'
+import { UtilityModule } from '../utility/utility.module'
 import { CommentService } from './comment.service'
 import { ICommentService } from './comment.service.interface'
 import commentModels, {
@@ -31,6 +32,7 @@ export {
     SequelizeModule.forFeature([...caseModels, ...commentModels]),
     LoggingModule,
     forwardRef(() => ApplicationModule),
+    forwardRef(() => UtilityModule),
   ],
   providers: [
     {
