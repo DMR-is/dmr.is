@@ -307,18 +307,20 @@ export class CaseService implements ICaseService {
         statusLookup?.ok ? statusLookup.value.id : undefined,
       )
 
-      const cases = await this.caseModel.findAll({
+      const cases = await this.caseModel.findAndCountAll({
         offset: (page - 1) * pageSize,
         limit: pageSize,
         where: whereParams,
         include: CASE_RELATIONS,
       })
 
+      const mapped = cases.rows.map((c) => caseMigrate(c))
+
       return Promise.resolve({
         ok: true,
         value: {
-          cases: cases.map(caseMigrate),
-          paging: generatePaging(cases, page, pageSize),
+          cases: mapped,
+          paging: generatePaging(mapped, page, pageSize, cases.count),
         },
       })
     } catch (error) {

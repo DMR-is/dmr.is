@@ -106,15 +106,17 @@ export class UtilityService implements IUtilityService {
       const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
 
       if (!userLookup) {
-        return handleNotFoundLookup({
-          method: 'userLookup',
-          entity: 'user',
-          id: userId,
-          category: LOGGING_CATEGORY,
-          info: {
-            userId,
-          },
-        })
+        return Promise.resolve(
+          handleNotFoundLookup({
+            method: 'userLookup',
+            entity: 'user',
+            id: userId,
+            category: LOGGING_CATEGORY,
+            info: {
+              userId,
+            },
+          }),
+        )
       }
 
       return Promise.resolve({
@@ -122,15 +124,17 @@ export class UtilityService implements IUtilityService {
         value: userLookup,
       })
     } catch (error) {
-      return handleException({
-        method: 'userLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get user',
-        error,
-        info: {
-          userId,
-        },
-      })
+      return Promise.resolve(
+        handleException({
+          method: 'userLookup',
+          category: LOGGING_CATEGORY,
+          message: 'Could not get user',
+          error,
+          info: {
+            userId,
+          },
+        }),
+      )
     }
   }
   async departmentLookup(
