@@ -189,7 +189,7 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       application_id UUID NOT NULL,
       year INTEGER NOT NULL,
-      case_number INTEGER NOT NULL,
+      case_number VARCHAR NOT NULL,
       status_id UUID NOT NULL,
       tag_id UUID,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),

@@ -50,13 +50,13 @@ export class Case {
   year!: number
 
   @ApiProperty({
-    type: Number,
+    type: String,
     example: 190,
     description:
       'Case number (numeric string) gets generated automatically when a case is created.',
   })
-  @Type(() => Number)
-  readonly caseNumber!: number
+  @Type(() => String)
+  readonly caseNumber!: string
 
   @ApiProperty({
     enum: CaseStatus,

@@ -8,7 +8,10 @@ export function generatePaging(
   pageSize: number | undefined = DEFAULT_PAGE_SIZE,
   totalItems: number | undefined = data.length,
 ) {
-  const totalPages = Math.ceil(totalItems / pageSize)
+  const totalPages =
+    Math.ceil(totalItems / pageSize) === 0
+      ? 1
+      : Math.ceil(totalItems / pageSize)
   const nextPage = page + 1
   const previousPage = page - 1
 

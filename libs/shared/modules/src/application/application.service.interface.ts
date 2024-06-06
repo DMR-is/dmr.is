@@ -1,5 +1,6 @@
 import {
   Application,
+  CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
@@ -27,6 +28,8 @@ export interface IApplicationService {
     applicationId: string,
     commentBody: PostApplicationComment,
   ): Promise<Result<PostCaseCommentResponse>>
+
+  getPrice(applicationId: string): Promise<Result<CasePriceResponse>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
