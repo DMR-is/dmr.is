@@ -758,8 +758,6 @@ export class JournalService implements IJournalService {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const whereParams = typesParameters(params)
-
       let query = ''
 
       const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
@@ -771,14 +769,13 @@ export class JournalService implements IJournalService {
             model: AdvertDepartmentDTO,
             where: params?.department
               ? {
-                  slug: params?.department,
+                  id: params?.department,
                 }
               : undefined,
           },
         ],
         limit: pageSize,
         offset: (page - 1) * pageSize,
-        where: whereParams,
       })
 
       // we need more context on dev to understand what is happening
@@ -786,7 +783,6 @@ export class JournalService implements IJournalService {
         this.logger.warn('No types found', {
           category: LOGGING_CATEGORY,
           params: params,
-          typesWhereParams: whereParams,
           departmentsWhereParams: params?.department
             ? {
                 slug: params?.department,
