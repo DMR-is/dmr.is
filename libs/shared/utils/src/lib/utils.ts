@@ -12,7 +12,7 @@ export function generatePaging(
   const nextPage = page + 1
   const previousPage = page - 1
 
-  if (page > pageSize) {
+  if (Number(page) > Number(pageSize)) {
     throw new NotFoundException('Page out of range', {
       cause: 'Page out of range',
     })
