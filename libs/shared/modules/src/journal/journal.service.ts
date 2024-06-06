@@ -46,7 +46,7 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
-import { handleBadRequest, handleException } from '../lib/utils'
+import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
