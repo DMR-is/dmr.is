@@ -36,6 +36,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { Audit } from '../decorators/audit.decorator'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -43,7 +44,6 @@ import {
   advertMainCategoryMigrate,
   advertMigrate,
   advertTypesMigrate,
-  typesParameters,
 } from '../helpers'
 import { handleBadRequest, handleException } from '../lib/utils'
 import { Result } from '../types/result'
@@ -88,11 +88,8 @@ export class JournalService implements IJournalService {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
 
+  @Audit()
   async create(model: Advert): Promise<Result<GetAdvertResponse>> {
-    this.logger.info('create', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       this.logger.error('create, no model')
       return {
@@ -133,11 +130,9 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
-    this.logger.info('updateAdvert', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'updateAdvert',
@@ -178,13 +173,11 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async insertDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
-    this.logger.info('insertDepartment', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'insertDepartment',
@@ -211,13 +204,11 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async updateDepartment(
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
-    this.logger.info('updateDepartment', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model || !model.id) {
       return handleBadRequest({
         method: 'updateDepartment',
@@ -255,13 +246,11 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async insertInstitution(
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
-    this.logger.info('insertInstitution', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'insertInstitution',
@@ -289,13 +278,11 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async updateInstitution(
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
-    this.logger.info('updateInstitution', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model || !model.id) {
       return handleBadRequest({
         method: 'updateInstitution',
@@ -327,23 +314,21 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<Result<GetAdvertSignatureResponse>> {
-    this.logger.info('getSignatures', {
-      category: LOGGING_CATEGORY,
-      metadata: { params },
-    })
     throw new Error('Method not implemented.')
   }
+
+  @Audit()
   error(): void {
     throw new Error('Method not implemented.')
   }
+
+  @Audit()
   async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
-    this.logger.info('insertType', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'insertType',
@@ -371,11 +356,9 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
-    this.logger.info('updateType', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model || !model.id) {
       return handleBadRequest({
         method: 'updateType',
@@ -414,13 +397,11 @@ export class JournalService implements IJournalService {
       })
     }
   }
+
+  @Audit()
   async insertMainCategory(
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
-    this.logger.info('insertMainCategory', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'insertMainCategory',
@@ -451,13 +432,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async updateMainCategory(
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
-    this.logger.info('updateMainCategory', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model || !model.id) {
       return handleBadRequest({
         method: 'updateMainCategory',
@@ -500,11 +478,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
-    this.logger.info('insertCategory', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model) {
       return handleBadRequest({
         method: 'insertCategory',
@@ -532,11 +507,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
-    this.logger.info('updateCategory', {
-      category: LOGGING_CATEGORY,
-      model,
-    })
     if (!model || !model.id) {
       return handleBadRequest({
         method: 'updateCategory',
@@ -579,13 +551,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getMainCategories(
     params?: GetMainCategoriesQueryParams,
   ): Promise<Result<GetMainCategoriesResponse>> {
-    this.logger.info('getMainCategories', {
-      category: LOGGING_CATEGORY,
-      params,
-    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -625,11 +594,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
-    this.logger.info('getDepartment', {
-      category: LOGGING_CATEGORY,
-      id,
-    })
     try {
       if (!id) {
         return handleBadRequest({
@@ -668,13 +634,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getDepartments(
     params?: GetDepartmentsQueryParams,
   ): Promise<Result<GetDepartmentsResponse>> {
-    this.logger.info('getDepartments', {
-      category: LOGGING_CATEGORY,
-      metadata: { params },
-    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -713,11 +676,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getType(id: string): Promise<Result<GetAdvertTypeResponse>> {
-    this.logger.info('getType', {
-      category: LOGGING_CATEGORY,
-      id,
-    })
     try {
       const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
         include: AdvertDepartmentDTO,
@@ -747,13 +707,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<Result<GetAdvertTypesResponse>> {
-    this.logger.info('getTypes', {
-      category: LOGGING_CATEGORY,
-      params,
-    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -814,11 +771,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
-    this.logger.info('getInstitution', {
-      category: LOGGING_CATEGORY,
-      id,
-    })
     try {
       if (!id) {
         return handleBadRequest({
@@ -856,13 +810,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getInstitutions(
     params?: GetInstitutionsQueryParams,
   ): Promise<Result<GetInstitutionsResponse>> {
-    this.logger.info('getInstitutions', {
-      category: LOGGING_CATEGORY,
-      params,
-    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -901,11 +852,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
-    this.logger.info('getCategory', {
-      category: LOGGING_CATEGORY,
-      id,
-    })
     if (!id) {
       return handleBadRequest({
         method: 'getCategory',
@@ -942,13 +890,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getCategories(
     params?: GetCategoriesQueryParams,
   ): Promise<Result<GetCategoriesResponse>> {
-    this.logger.info('getCategories', {
-      category: LOGGING_CATEGORY,
-      metadata: { params },
-    })
     try {
       const page = params?.page ?? 1
       const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -986,11 +931,8 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
-    this.logger.info('getAdvert', {
-      category: LOGGING_CATEGORY,
-      metadata: { id },
-    })
     try {
       if (!id) {
         return handleBadRequest({
@@ -1046,14 +988,10 @@ export class JournalService implements IJournalService {
     }
   }
 
+  @Audit()
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<Result<GetAdvertsResponse>> {
-    this.logger.info('getAdverts', {
-      category: LOGGING_CATEGORY,
-      metadata: { params },
-    })
-
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
