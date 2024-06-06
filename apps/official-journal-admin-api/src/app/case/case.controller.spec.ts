@@ -45,7 +45,7 @@ describe('CaseController', () => {
     id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
     applicationId: '1c65e8fd-bd6a-4038-9678-202770a85e89',
     year: 2024,
-    caseNumber: 1234,
+    caseNumber: '1234',
     isLegacy: true,
     status: CaseStatus.Submitted,
     tag: CaseTag.NotStarted,
@@ -153,7 +153,10 @@ describe('CaseController', () => {
 
       jest.spyOn(commentService, 'create').mockImplementation(() =>
         Promise.resolve({
-          comment: comment,
+          ok: true,
+          value: {
+            comment: comment,
+          },
         }),
       )
 
@@ -183,7 +186,9 @@ describe('CaseController', () => {
     it('should delete a comment', async () => {
       jest
         .spyOn(commentService, 'delete')
-        .mockImplementation(() => Promise.resolve({ success: true }))
+        .mockImplementation(() =>
+          Promise.resolve({ ok: true, value: { success: true } }),
+        )
       const deleteSpy = jest.spyOn(commentService, 'delete')
 
       await caseController.deleteComment('caseId', 'commentId')
@@ -194,9 +199,12 @@ describe('CaseController', () => {
     it('should throw error if comment not found', async () => {
       const unknownId = 'fa81d7a9-934c-47c3-b45c-12f1014bd425'
 
-      jest
-        .spyOn(commentService, 'delete')
-        .mockImplementation(() => Promise.resolve(null))
+      jest.spyOn(commentService, 'delete').mockImplementation(() =>
+        Promise.resolve({
+          ok: false,
+          error: { code: 400, message: 'Error' },
+        }),
+      )
 
       try {
         expect(await caseController.deleteComment(unknownId, comment.id))

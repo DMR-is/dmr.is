@@ -193,26 +193,6 @@ export class CaseService implements ICaseService {
           fastTrack = true
         }
 
-        console.log({
-          applicationId: application.id,
-          year: now.getFullYear(),
-          caseNumber: nextCaseNumber.value,
-          statusId: caseStatusLookup.value.id,
-          tagId: caseTagLookup.value.id,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-          isLegacy: false,
-          assignedUserId: null,
-          communicationStatusId: caseCommunicationStatus.value.id,
-          publishedAt: null,
-          price: 0,
-          paid: false,
-          fastTrack: fastTrack,
-          advertTitle: application.answers.advert.title,
-          requestedPublicationDate: application.answers.publishing.date,
-          departmentId: departmentLookup.value.id,
-        })
-
         const caseNumber = nextCaseNumber.value
 
         const newCase = await this.caseModel.create(
