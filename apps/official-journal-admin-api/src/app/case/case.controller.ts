@@ -284,7 +284,12 @@ export class CaseController {
     @Param('id') id: string,
     @Query('params') params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
-    return this.caseCommentService.comments(id, params)
+    const results = await this.caseCommentService.comments(id, params)
+
+    if (!results.ok) {
+      throw new HttpException(results.error.message, results.error.code)
+    }
+    return results.value
   }
 
   @Get(':id/comments/:commentId')
@@ -301,7 +306,12 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    return this.caseCommentService.comment(id, commentId)
+    const results = await this.caseCommentService.comment(id, commentId)
+
+    if (!results.ok) {
+      throw new HttpException(results.error.message, results.error.code)
+    }
+    return results.value
   }
 
   @Post(':id/comments')
@@ -318,7 +328,12 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
-    return this.caseCommentService.create(id, body)
+    const results = await this.caseCommentService.create(id, body)
+
+    if (!results.ok) {
+      throw new HttpException(results.error.message, results.error.code)
+    }
+    return results.value
   }
 
   @Delete(':id/comments/:commentId')
