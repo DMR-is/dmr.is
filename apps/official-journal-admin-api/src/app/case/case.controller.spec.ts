@@ -202,20 +202,16 @@ describe('CaseController', () => {
       jest.spyOn(commentService, 'delete').mockImplementation(() =>
         Promise.resolve({
           ok: false,
-          error: { code: 400, message: 'Error' },
+          error: {
+            code: 404,
+            message: `Could not find ${comment}<${unknownId}>`,
+          },
         }),
       )
 
-      try {
-        expect(await caseController.deleteComment(unknownId, comment.id))
-        expect('Should not reach here').toEqual('')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        expect(e.message).toEqual(
-          `Comment<${comment.id}> not found on case<${unknownId}>`,
-        )
-        expect(e.status).toEqual(404)
-      }
+      expect(await caseController.deleteComment(unknownId, comment.id)).toBe(
+        undefined,
+      )
     })
   })
 })
