@@ -12,10 +12,8 @@ export function generatePaging(
   const nextPage = page + 1
   const previousPage = page - 1
 
-  if (Number(page) * Number(pageSize) > Number(totalItems)) {
-    throw new NotFoundException('Page out of range', {
-      cause: 'Page out of range',
-    })
+  if (page > totalPages) {
+    throw new NotFoundException('Page not found')
   }
 
   return {
