@@ -101,7 +101,7 @@ export const handleNotFoundLookup = <T>({
     ok: false,
     error: {
       code: code,
-      message: 'Could not find ${entity}<${id}>',
+      message: `Could not find ${entity}<${id}>`,
     },
   }
 }

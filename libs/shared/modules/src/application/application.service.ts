@@ -4,6 +4,7 @@ import {
   Application,
   CaseCommentPublicity,
   CaseCommentType,
+  CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
@@ -16,7 +17,12 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
+import { Audit } from '../decorators/audit.decorator'
+import { HandleException } from '../decorators/handle-exception.decorator'
+import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
+import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CATEGORY = 'application-service'
@@ -25,6 +31,8 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => IUtilityService))
+    private readonly utilityService: IUtilityService,
     @Inject(ICommentService)
     private readonly commentService: ICommentService,
     @Inject(forwardRef(() => ICaseService))
@@ -75,120 +83,94 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
+  @Audit()
+  @HandleException()
+  async getPrice(applicationId: string): Promise<Result<CasePriceResponse>> {
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+    )
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const activeCase = caseMigrate(caseLookup.value)
+
+    return {
+      ok: true,
+      value: { price: activeCase.price ?? 0 },
+    }
+  }
+
+  @Audit()
+  @HandleException()
   async getApplication(id: string): Promise<Result<GetApplicationResponse>> {
-    this.logger.info('getApplication', {
-      applicationId: id,
-      category: LOGGING_CATEGORY,
-    })
+    const res = await this.xroadFetch(
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      {
+        method: 'GET',
+      },
+    )
 
-    try {
-      const res = await this.xroadFetch(
-        `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
-        {
-          method: 'GET',
-        },
-      )
-
-      if (res.status != 200) {
-        this.logger.error(`getApplication, could not get application<${id}>`, {
-          applicationId: id,
-          status: res.status,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: res.status,
-            message: `Could not get application<${id}>`,
-          },
-        })
-      }
-
-      const application: Application = await res.json()
-
-      return Promise.resolve({
-        ok: true,
-        value: { application: application },
-      })
-    } catch (error) {
-      this.logger.error(`Error in getApplication`, {
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
+    if (res.status != 200) {
+      this.logger.error(`getApplication, could not get application<${id}>`, {
         applicationId: id,
+        status: res.status,
         category: LOGGING_CATEGORY,
       })
       return {
         ok: false,
         error: {
-          code: 500,
+          code: res.status,
           message: `Could not get application<${id}>`,
         },
       }
     }
-  }
 
-  async submitApplication(id: string): Promise<Result<undefined>> {
-    // This method handles state transitions of the application from admin system
-    this.logger.info('submitApplication', {
-      id,
-      category: LOGGING_CATEGORY,
-    })
+    const application: Application = await res.json()
 
-    try {
-      const res = await this.xroadFetch(
-        `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
-        {
-          method: 'PUT',
-          body: new URLSearchParams({
-            event: 'REJECT',
-          }),
-        },
-      )
-
-      if (res.status !== 200) {
-        this.logger.error('Error in submitApplication', {
-          status: res.status,
-          category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: res.status,
-            message: 'Could not submit application',
-          },
-        })
-      }
-
-      const newCase = await this.caseService.create({
-        applicationId: id,
-      })
-
-      return Promise.resolve({ ok: true, value: undefined })
-    } catch (error) {
-      this.logger.error('Error in submitAppication', {
-        error,
-        category: LOGGING_CATEGORY,
-        id: id,
-      })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: 'Could not submit application',
-        },
-      })
+    return {
+      ok: true,
+      value: { application: application },
     }
   }
 
-  async updateApplication(id: string, answers: UpdateApplicationBody) {
-    this.logger.info('updateApplication', {
-      id,
-      answers: { ...answers },
-      category: LOGGING_CATEGORY,
+  @Audit()
+  @HandleException()
+  async submitApplication(id: string): Promise<Result<undefined>> {
+    const res = await this.xroadFetch(
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
+      {
+        method: 'PUT',
+        body: new URLSearchParams({
+          event: 'REJECT',
+        }),
+      },
+    )
+
+    if (res.status !== 200) {
+      this.logger.error('Error in submitApplication', {
+        status: res.status,
+        category: LOGGING_CATEGORY,
+      })
+      return {
+        ok: false,
+        error: {
+          code: res.status,
+          message: 'Could not submit application',
+        },
+      }
+    }
+
+    const newCase = await this.caseService.create({
+      applicationId: id,
     })
 
+    return { ok: true, value: undefined }
+  }
+
+  @Audit()
+  async updateApplication(id: string, answers: UpdateApplicationBody) {
     try {
       const res = await this.xroadFetch(
         `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
@@ -223,272 +205,112 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async postApplication(applicationId: string): Promise<Result<undefined>> {
-    this.logger.info('postApplication', {
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
       applicationId,
-      category: LOGGING_CATEGORY,
+    )
+
+    // this means that the case does not exist, so we need to create it
+    if (!caseLookup.ok) {
+      const createResult = await this.caseService.create({
+        applicationId,
+      })
+
+      if (!createResult.ok) {
+        return createResult
+      }
+
+      return {
+        ok: true,
+        value: undefined,
+      }
+    }
+
+    const applicationLookup = await this.getApplication(applicationId)
+
+    if (!applicationLookup.ok) {
+      return applicationLookup
+    }
+
+    await this.commentService.create(caseLookup.value.id, {
+      internal: true,
+      type: CaseCommentType.Submit,
+      comment: null,
+      from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+      to: null,
     })
 
-    try {
-      const caseResponse = await this.caseService.cases({
-        applicationId,
-      })
-
-      if (!caseResponse.ok) {
-        this.logger.error('postApplication, could not get cases', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 500,
-            message: `Could not get cases for application<${applicationId}>`,
-          },
-        })
-      }
-
-      const found = caseResponse.value.cases.find(
-        (c) => c.applicationId === applicationId,
-      )
-
-      const application = await this.getApplication(applicationId)
-
-      if (!application.ok) {
-        this.logger.error(
-          `postApplication, application<${applicationId}> not found`,
-          {
-            applicationId: applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Application with id<${applicationId}> not found`,
-          },
-        })
-      }
-
-      if (found) {
-        await this.commentService.create(found.id, {
-          internal: true,
-          type: CaseCommentType.Submit,
-          comment: null,
-          from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-          to: null,
-        })
-
-        return Promise.resolve({
-          ok: true,
-          value: undefined,
-        })
-      } else {
-        await this.caseService.create({
-          applicationId,
-        })
-
-        return Promise.resolve({
-          ok: true,
-          value: undefined,
-        })
-      }
-    } catch (error) {
-      this.logger.error('Error in postApplication', {
-        error,
-        applicationId,
-        category: LOGGING_CATEGORY,
-      })
-
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: `Could not create case for application<${applicationId}>`,
-        },
-      })
+    return {
+      ok: true,
+      value: undefined,
     }
   }
 
+  @Audit()
+  @HandleException()
   async getComments(
     applicationId: string,
   ): Promise<Result<GetCaseCommentsResponse>> {
-    this.logger.info('getComments', {
-      applicationId: applicationId,
-      category: LOGGING_CATEGORY,
+    const caseResponse = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+    )
+
+    if (!caseResponse.ok) {
+      return caseResponse
+    }
+
+    const comments = await this.commentService.comments(caseResponse.value.id, {
+      type: CaseCommentPublicity.External,
     })
 
-    try {
-      const caseResponse = await this.caseService.cases({
-        applicationId,
-      })
-
-      if (!caseResponse.ok) {
-        this.logger.error(
-          `getComments, could not get case with applicationId<${applicationId}>`,
-          {
-            applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 500,
-            message: `Failed to get case with applicationId<${applicationId}>`,
-          },
-        })
-      }
-
-      const activeCase = caseResponse.value.cases.find(
-        (c) => c.applicationId === applicationId,
-      )
-
-      if (!activeCase) {
-        this.logger.error(
-          `getComments, could not find case with applicationId<${applicationId}>`,
-          {
-            applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Case with applicationId<${applicationId}> not found`,
-          },
-        })
-      }
-
-      const comments = await this.commentService.comments(activeCase.id, {
-        type: CaseCommentPublicity.External,
-      })
-
-      return Promise.resolve({
-        ok: true,
-        value: comments,
-      })
-    } catch (error) {
-      this.logger.error('Error in getComments', {
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
-        applicationId,
-        category: LOGGING_CATEGORY,
-      })
-
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: `Could not get comments for applicationId<${applicationId}>`,
-        },
-      })
+    return {
+      ok: true,
+      value: comments,
     }
   }
 
+  @Audit()
+  @HandleException()
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
   ): Promise<Result<PostCaseCommentResponse>> {
-    this.logger.info('postComment', {
-      applicationId: applicationId,
-      category: LOGGING_CATEGORY,
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+    )
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const created = await this.commentService.create(caseLookup.value.id, {
+      comment: commentBody.comment,
+      from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+      to: null,
+      internal: false,
+      type: CaseCommentType.Comment,
     })
 
-    try {
-      const caseResponse = await this.caseService.cases({
-        applicationId,
-      })
-
-      if (!caseResponse.ok) {
-        this.logger.error('postComment, could not get case', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 500,
-            message: `Could not get case with applicationId<${applicationId}>`,
-          },
-        })
-      }
-
-      const activeCase = caseResponse.value.cases.find(
-        (c) => c.applicationId === applicationId,
-      )
-
-      if (!activeCase) {
-        this.logger.error(
-          `postComment, could not find case with application<${applicationId}>`,
-          {
-            applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Case with applicationId<${applicationId}> not found`,
-          },
-        })
-      }
-
-      const created = await this.commentService.create(activeCase.id, {
-        comment: commentBody.comment,
-        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
-        internal: false,
-        type: CaseCommentType.Comment,
-      })
-
-      if (!created) {
-        this.logger.error('postComment, could not create comment', {
-          applicationId,
-          category: LOGGING_CATEGORY,
-        })
-
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 500,
-            message: `Could not create comment for applicationId<${applicationId}>`,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: created,
-      })
-    } catch (error) {
-      this.logger.error('Error in postComment', {
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
+    if (!created) {
+      this.logger.error('postComment, could not create comment', {
         applicationId,
         category: LOGGING_CATEGORY,
       })
 
-      return Promise.resolve({
+      return {
         ok: false,
         error: {
           code: 500,
           message: `Could not create comment for applicationId<${applicationId}>`,
         },
-      })
+      }
+    }
+
+    return {
+      ok: true,
+      value: created,
     }
   }
 }

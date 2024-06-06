@@ -351,6 +351,7 @@ export class UtilityService implements IUtilityService {
         where: {
           applicationId: applicationId,
         },
+        include: CASE_RELATIONS,
       })
 
       if (!found) {

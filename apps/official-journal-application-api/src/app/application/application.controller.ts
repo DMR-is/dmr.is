@@ -2,6 +2,7 @@ import { IApplicationService } from '@dmr.is/modules'
 import {
   Application,
   CaseComment,
+  CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
@@ -39,6 +40,33 @@ export class ApplicationController {
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
   ) {}
+
+  @Get(':id/price')
+  @ApiOperation({
+    operationId: 'getPrice',
+    summary: 'Get price of application by ID.',
+  })
+  @ApiParam({
+    type: String,
+    name: 'id',
+    description: 'Id of the application to get price.',
+    required: true,
+    allowEmptyValue: false,
+  })
+  @ApiOkResponse({
+    type: CasePriceResponse,
+  })
+  async getPrice(
+    @Param('id') applicationId: string,
+  ): Promise<CasePriceResponse> {
+    const result = await this.applicationService.getPrice(applicationId)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
+  }
 
   @Get(':id')
   @ApiOperation({

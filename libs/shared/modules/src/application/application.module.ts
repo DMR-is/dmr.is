@@ -5,6 +5,7 @@ import { forwardRef, Module } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
 import { CommentModule } from '../comment/comment.module'
+import { UtilityModule } from '../utility/utility.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
@@ -17,6 +18,7 @@ export { ApplicationService } from './application.service'
     AuthModule,
     forwardRef(() => SharedCaseModule),
     forwardRef(() => CommentModule),
+    forwardRef(() => UtilityModule),
   ],
   controllers: [],
   providers: [

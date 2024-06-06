@@ -23,11 +23,15 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { CaseDto, CaseStatusDto } from '../case/models'
+import { Audit } from '../decorators/audit.decorator'
+import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   caseCommentMigrate,
   caseCommentTitleMapper,
   caseCommentTypeMapper,
 } from '../helpers'
+import { handleNotFoundLookup } from '../lib/utils'
+import { Result } from '../types/result'
 import { CaseCommentDto } from './models/CaseComment'
 import { CaseCommentsDto } from './models/CaseComments'
 import { CaseCommentTaskDto } from './models/CaseCommentTask'
@@ -61,44 +65,43 @@ export class CommentService implements ICommentService {
   ) {
     this.logger.info('Using CaseCommentSerivce')
   }
+
+  @Audit()
+  @HandleException()
   async comment(
     caseId: string,
     commentId: string,
-  ): Promise<GetCaseCommentResponse> {
-    this.logger.info('Getting comment for case', {
-      caseId,
-      commentId,
-      category: LOGGING_CATEGORY,
+  ): Promise<Result<GetCaseCommentResponse>> {
+    const comment = await this.caseCommentModel.findOne({
+      where: { id: commentId },
+      nest: true,
+      include: [
+        CaseCommentTypeDto,
+        CaseStatusDto,
+        { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+      ],
     })
 
-    try {
-      const comment = await this.caseCommentModel.findOne({
-        where: { id: commentId },
-        nest: true,
-        include: [
-          CaseCommentTypeDto,
-          CaseStatusDto,
-          { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-        ],
-      })
-
-      if (!comment) {
-        throw new NotFoundException('Comment not found')
-      }
-
-      const migrated = caseCommentMigrate(comment)
-
-      return Promise.resolve({
-        comment: migrated,
-      })
-    } catch (error) {
-      this.logger.error('Error in getComment', {
-        caseId,
-        commentId,
+    if (!comment) {
+      return handleNotFoundLookup({
+        id: commentId,
         category: LOGGING_CATEGORY,
-        error,
+        entity: 'comment',
+        method: 'comment',
+        info: {
+          caseId,
+          commentId,
+        },
       })
-      throw new InternalServerErrorException('Failed to get comment')
+    }
+
+    const migrated = caseCommentMigrate(comment)
+
+    return {
+      ok: true,
+      value: {
+        comment: migrated,
+      },
     }
   }
 
