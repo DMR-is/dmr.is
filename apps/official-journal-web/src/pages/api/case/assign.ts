@@ -12,7 +12,7 @@ export default async function handler(
 
     const dmrClient = createDmrClient()
 
-    const { id, userId } = JSON.parse(req.body)
+    const { id, userId } = req.body
 
     if (!id || !userId) {
       return res.status(400).json({ error: 'Bad Request' })

@@ -857,7 +857,7 @@
             "description": "Year the case was created."
           },
           "caseNumber": {
-            "type": "number",
+            "type": "string",
             "example": 190,
             "description": "Case number (numeric string) gets generated automatically when a case is created."
           },
