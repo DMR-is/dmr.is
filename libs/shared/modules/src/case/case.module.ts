@@ -45,6 +45,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),
+    forwardRef(() => SharedJournalModule),
   ],
   providers: [
     {

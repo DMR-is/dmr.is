@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useSWRMutation from 'swr/mutation'
 
 import {
   Box,
@@ -20,7 +21,12 @@ import { useNotificationContext } from '../hooks/useNotificationContext'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseDepartmentTabs, Routes } from '../lib/constants'
+import {
+  APIRotues,
+  CaseDepartmentTabs,
+  publishCases,
+  Routes,
+} from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
 import { extractCaseProcessingFilters } from '../lib/utils'
@@ -75,6 +81,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
     })
   }
 
+  const { trigger } = useSWRMutation(APIRotues.PublishCases, publishCases)
+
   const backToOverview = () => {
     setScreen(CasePublishViews.Overview)
   }
@@ -91,7 +99,11 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
     })
   }
 
-  const publishCases = () => {
+  const handlePublishCases = () => {
+    trigger({
+      caseIds: casesToPublish.map((c) => c.id),
+    })
+
     clearNotifications()
     setNotifications({
       title: formatMessage(messages.notifications.success.title),
@@ -170,7 +182,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
                   <Button onClick={backToOverview} variant="ghost">
                     {formatMessage(messages.general.backToPublishing)}
                   </Button>
-                  <Button onClick={publishCases} icon="arrowForward">
+                  <Button onClick={handlePublishCases} icon="arrowForward">
                     {formatMessage(messages.general.publishAllCases)}
                   </Button>
                 </Box>

@@ -18,7 +18,7 @@ export const handleException = <T>({
   code?: number
 }): Result<T> => {
   if (error instanceof Error) {
-    logger.error(`Error in ${method}`, {
+    logger.error(`Error in ${category}.${method}`, {
       ...info,
       category,
       method,
@@ -29,7 +29,7 @@ export const handleException = <T>({
       },
     })
   } else {
-    logger.error(`Error in ${method}`, {
+    logger.error(`Error in ${category}.${method}`, {
       ...info,
       category,
       method,

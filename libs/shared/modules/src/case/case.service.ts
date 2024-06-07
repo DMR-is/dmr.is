@@ -5,6 +5,7 @@ import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
+  AdvertStatus,
   CaseCommentType,
   CaseCommunicationStatus,
   CaseEditorialOverview,
@@ -27,8 +28,13 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
+import { Audit } from '../decorators/audit.decorator'
+import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { IJournalService } from '../journal'
+import { AdvertDepartmentDTO } from '../journal/models'
+import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { ICaseService } from './case.service.interface'
@@ -41,6 +47,8 @@ const LOGGING_CATEGORY = 'CaseService'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => IJournalService))
+    private readonly journalService: IJournalService,
     @Inject(forwardRef(() => IApplicationService))
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
@@ -328,7 +336,17 @@ export class CaseService implements ICaseService {
         offset: (page - 1) * pageSize,
         limit: pageSize,
         where: whereParams,
-        include: CASE_RELATIONS,
+        include: [
+          ...CASE_RELATIONS,
+          {
+            model: AdvertDepartmentDTO,
+            where: params.department
+              ? {
+                  slug: params.department,
+                }
+              : undefined,
+          },
+        ],
       })
 
       const mapped = cases.rows.map((c) => caseMigrate(c))
@@ -358,31 +376,34 @@ export class CaseService implements ICaseService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async publish(body: PostCasePublishBody): Promise<Result<undefined>> {
-    this.logger.info('publish', {
-      caseIds: body.caseIds,
-      category: LOGGING_CATEGORY,
-    })
-
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
-      this.logger.warn('publish, missing body', {
+      return handleBadRequest({
         category: LOGGING_CATEGORY,
-      })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          message: 'Missing or invalid body',
-          code: 400,
-        },
+        method: 'publish',
+        reason: 'Missing or invalid body',
       })
     }
 
-    await this.sequelize.transaction(async (t) => {
-      this.caseModel.update(
+    const now = new Date().toISOString()
+
+    const publishedStatusLookup = await this.utilityService.caseStatusLookup(
+      CaseStatus.Published,
+    )
+
+    if (!publishedStatusLookup.ok) {
+      return publishedStatusLookup
+    }
+
+    await this.sequelize.transaction(async (transaction) => {
+      await this.caseModel.update(
         {
-          publishedAt: new Date().toISOString(),
+          publishedAt: now,
+          statusId: publishedStatusLookup.value.id,
         },
         {
           where: {
@@ -390,19 +411,75 @@ export class CaseService implements ICaseService {
               [Op.in]: caseIds,
             },
           },
-          transaction: t,
+          transaction: transaction,
         },
       )
+
+      // await Promise.all(
+      //   caseIds.map(async (caseId, index) => {
+      //     const caseLookup = await this.case(caseId)
+
+      //     if (!caseLookup.ok) {
+      //       return
+      //     }
+
+      //     if (caseLookup.value.case === null) {
+      //       return
+      //     }
+
+      //     const { activeCase, advert } = caseLookup.value.case
+
+      //     if (!advert.type) {
+      //       return
+      //     }
+
+      //     const now = new Date()
+      //     const year = now.getFullYear()
+      //     const number = index
+
+      //     const advertId = uuid()
+      //     await this.journalService.create({
+      //       id: advertId,
+      //       department: activeCase.advertDepartment,
+      //       type: advert.type,
+      //       subject: advert.type.title,
+      //       title: advert.title,
+      //       status: AdvertStatus.Published,
+      //       publicationNumber: {
+      //         year: year,
+      //         number: number, // TODO replace with count
+      //         full: `${number}/${year}`,
+      //       },
+      //       createdDate: now.toISOString(),
+      //       updatedDate: now.toISOString(),
+      //       signatureDate: advert.signatureDate,
+      //       publicationDate: now.toISOString(),
+      //       categories: advert.categories,
+      //       involvedParty: {
+      //         id: 'A2A33C95-45CE-4540-BD56-12D964B7699B',
+      //         title: 'Reykjavíkurborg',
+      //         slug: 'reykjavikurborg',
+      //       },
+      //       document: {
+      //         html: advert.documents.full,
+      //         isLegacy: false,
+      //         pdfUrl: null,
+      //       },
+      //       signature: null,
+      //       attachments: [],
+      //     })
+      //   }),
+      // )
 
       // for each case, create a comment
 
       // for each case insert advert
 
-      caseIds.forEach(async (caseId) => {
-        const application = await this.case(caseId)
+      // caseIds.forEach(async (caseId) => {
+      //   const application = await this.case(caseId)
 
-        // await this.journalService.insertAdvert({})
-      })
+      //    await this.journalService.insertAdvert({})
+      // })
     })
 
     this.logger.info('publish, successfully publised cases', {

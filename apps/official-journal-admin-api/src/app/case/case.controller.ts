@@ -258,8 +258,12 @@ export class CaseController {
 
   @Post('publish')
   @ApiOperation({
-    operationId: 'postPublish',
+    operationId: 'publish',
     summary: 'Publish cases',
+  })
+  @ApiBody({
+    type: PostCasePublishBody,
+    required: true,
   })
   @ApiNoContentResponse()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
