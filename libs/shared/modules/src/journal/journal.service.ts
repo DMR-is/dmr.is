@@ -102,6 +102,7 @@ export class JournalService implements IJournalService {
         },
       }
     }
+
     const ad = await this.advertModel.create({
       title: model.title,
       departmentId: model.department?.id,

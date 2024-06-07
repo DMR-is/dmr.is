@@ -150,11 +150,10 @@ export class GetCasesQuery {
   @ApiProperty({
     name: 'department',
     description:
-      'Department to filter cases on, takes into account `department` on `Advert`.',
+      'Department slug to filter cases on, takes into account `department` on `Advert`.',
     type: String,
     required: false,
   })
   @IsOptional()
-  @IsUUID()
   department?: string
 }

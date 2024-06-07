@@ -8,7 +8,5 @@ export class PostCasePublishBody {
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
     description: 'Id of the case to publish.',
   })
-  @IsString()
-  @IsUUID()
   readonly caseIds!: string[]
 }

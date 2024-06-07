@@ -12,18 +12,18 @@ export default async function handler(
 
     const dmrClient = createDmrClient()
 
-    const { id, userId } = req.body
+    const { caseIds } = req.body
 
-    if (!id || !userId) {
-      return res.status(400).json({ error: 'Bad Request' })
+    try {
+      await dmrClient.publish({
+        postCasePublishBody: {
+          caseIds,
+        },
+      })
+      return res.status(204).end()
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal Server Error' })
     }
-
-    await dmrClient.assignEmployee({
-      id: id,
-      userId: userId,
-    })
-
-    return res.status(204).end()
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: 'Internal Server Error' })

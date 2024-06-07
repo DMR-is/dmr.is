@@ -211,13 +211,13 @@ const CaseSingle: Screen<Props> = ({
             <Button icon="arrowForward" disabled>
               {formatMessage(messages.paging.nextStep)}
             </Button>
-          ) : (
+          ) : nextStep ? (
             <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
               <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
               </Button>
             </LinkV2>
-          )}
+          ) : null}
         </Box>
       </Stack>
     </FormShell>

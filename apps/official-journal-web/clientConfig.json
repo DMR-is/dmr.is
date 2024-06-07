@@ -168,7 +168,7 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
+            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],
@@ -379,7 +379,7 @@
             "name": "department",
             "required": false,
             "in": "query",
-            "description": "Department to filter cases on, takes into account `department` on `Advert`.",
+            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],
@@ -397,7 +397,7 @@
     },
     "/api/v1/cases/publish": {
       "post": {
-        "operationId": "postPublish",
+        "operationId": "publish",
         "summary": "Publish cases",
         "parameters": [],
         "requestBody": {
@@ -857,7 +857,7 @@
             "description": "Year the case was created."
           },
           "caseNumber": {
-            "type": "number",
+            "type": "string",
             "example": 190,
             "description": "Case number (numeric string) gets generated automatically when a case is created."
           },
