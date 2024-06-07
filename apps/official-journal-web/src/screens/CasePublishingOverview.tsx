@@ -104,14 +104,14 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
       caseIds: casesToPublish.map((c) => c.id),
     })
 
-    clearNotifications()
-    setNotifications({
-      title: formatMessage(messages.notifications.success.title),
-      message: formatMessage(messages.notifications.success.message),
-      type: 'success',
-    })
-    setRenderFilters(true)
-    setCasesToPublish([])
+    // clearNotifications()
+    // setNotifications({
+    //   title: formatMessage(messages.notifications.success.title),
+    //   message: formatMessage(messages.notifications.success.message),
+    //   type: 'success',
+    // })
+    // setRenderFilters(true)
+    // setCasesToPublish([])
   }
 
   useEffect(() => {

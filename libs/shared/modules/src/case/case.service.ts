@@ -415,61 +415,68 @@ export class CaseService implements ICaseService {
         },
       )
 
-      // await Promise.all(
-      //   caseIds.map(async (caseId, index) => {
-      //     const caseLookup = await this.case(caseId)
+      await Promise.all(
+        caseIds.map(async (caseId, index) => {
+          const caseLookup = await this.case(caseId)
 
-      //     if (!caseLookup.ok) {
-      //       return
-      //     }
+          if (!caseLookup.ok) {
+            return
+          }
 
-      //     if (caseLookup.value.case === null) {
-      //       return
-      //     }
+          if (caseLookup.value.case === null) {
+            return
+          }
 
-      //     const { activeCase, advert } = caseLookup.value.case
+          const { activeCase, advert } = caseLookup.value.case
 
-      //     if (!advert.type) {
-      //       return
-      //     }
+          if (!advert.type) {
+            return
+          }
 
-      //     const now = new Date()
-      //     const year = now.getFullYear()
-      //     const number = index
+          const now = new Date()
+          const year = now.getFullYear()
+          const number = await this.utilityService.getNextSerialNumber(
+            activeCase.advertDepartment.id,
+            year,
+          )
 
-      //     const advertId = uuid()
-      //     await this.journalService.create({
-      //       id: advertId,
-      //       department: activeCase.advertDepartment,
-      //       type: advert.type,
-      //       subject: advert.type.title,
-      //       title: advert.title,
-      //       status: AdvertStatus.Published,
-      //       publicationNumber: {
-      //         year: year,
-      //         number: number, // TODO replace with count
-      //         full: `${number}/${year}`,
-      //       },
-      //       createdDate: now.toISOString(),
-      //       updatedDate: now.toISOString(),
-      //       signatureDate: advert.signatureDate,
-      //       publicationDate: now.toISOString(),
-      //       categories: advert.categories,
-      //       involvedParty: {
-      //         id: 'A2A33C95-45CE-4540-BD56-12D964B7699B',
-      //         title: 'Reykjavíkurborg',
-      //         slug: 'reykjavikurborg',
-      //       },
-      //       document: {
-      //         html: advert.documents.full,
-      //         isLegacy: false,
-      //         pdfUrl: null,
-      //       },
-      //       signature: null,
-      //       attachments: [],
-      //     })
-      //   }),
-      // )
+          if (!number.ok) {
+            return
+          }
+
+          const advertId = uuid()
+          await this.journalService.create({
+            id: advertId,
+            department: activeCase.advertDepartment,
+            type: advert.type,
+            subject: advert.type.title,
+            title: activeCase.advertTitle,
+            status: '312F62ED-B47A-4A1A-87A4-42B70E8BE4CA' as AdvertStatus,
+            publicationNumber: {
+              year: year,
+              number: number.value, // TODO replace with count
+              full: `${number}/${year}`,
+            },
+            createdDate: now.toISOString(),
+            updatedDate: now.toISOString(),
+            signatureDate: advert.signatureDate,
+            publicationDate: now.toISOString(),
+            categories: advert.categories,
+            involvedParty: {
+              id: 'A2A33C95-45CE-4540-BD56-12D964B7699B',
+              title: 'Reykjavíkurborg',
+              slug: 'reykjavikurborg',
+            },
+            document: {
+              html: advert.documents.full,
+              isLegacy: false,
+              pdfUrl: null,
+            },
+            signature: null,
+            attachments: [],
+          })
+        }),
+      )
 
       // for each case, create a comment
 

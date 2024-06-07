@@ -92,7 +92,7 @@ export class JournalService implements IJournalService {
   @Audit()
   @HandleException()
   async create(model: Advert): Promise<Result<GetAdvertResponse>> {
-    if (!model) {
+    if (!model || !model.department) {
       this.logger.error('create, no model')
       return {
         ok: false,
@@ -103,23 +103,48 @@ export class JournalService implements IJournalService {
       }
     }
 
-    const ad = await this.advertModel.create({
-      title: model.title,
-      departmentId: model.department?.id,
-      typeId: model.type?.id,
-      subject: model.subject,
-      serialNumber: model.publicationNumber?.number,
-      publicationYear: model.publicationNumber?.year,
-      signatureDate: model.signatureDate,
-      publicationDate: model.publicationDate,
-      documentHtml: model.document.html,
-      documentPdfUrl: model.document.pdfUrl,
-      isLegacy: model.document.isLegacy,
-      attachments: model.attachments,
-      involvedPartyId: model.involvedParty?.id,
-      status: model.status,
+    const ad = await this.advertModel.create(
+      {
+        departmentId: model.department?.id,
+        typeId: model.type?.id,
+        subject: model.subject,
+        serialNumber: model.publicationNumber?.number,
+        publicationYear: model.publicationNumber?.year,
+        signatureDate: model.signatureDate,
+        publicationDate: model.publicationDate,
+        documentHtml: model.document.html,
+        documentPdfUrl: model.document.pdfUrl,
+        isLegacy: model.document.isLegacy,
+        involvedPartyId: model.involvedParty?.id,
+        statusId: model.status,
+      },
+      {
+        returning: ['id'],
+      },
+    )
+
+    const newlyCreatedAd = await this.advertModel.findByPk(ad.id, {
+      include: [
+        AdvertTypeDTO,
+        AdvertDepartmentDTO,
+        AdvertStatusDTO,
+        AdvertInvolvedPartyDTO,
+        AdvertAttachmentsDTO,
+        AdvertCategoryDTO,
+      ],
     })
-    return { ok: true, value: { advert: advertMigrate(ad) } }
+
+    if (!newlyCreatedAd) {
+      return {
+        ok: false,
+        error: {
+          code: 500,
+          message: 'Internal server error',
+        },
+      }
+    }
+
+    return { ok: true, value: { advert: advertMigrate(newlyCreatedAd) } }
   }
 
   @Audit()
