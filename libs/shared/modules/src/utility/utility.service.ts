@@ -15,6 +15,8 @@ import {
   CaseTagDto,
 } from '../case/models'
 import { CASE_RELATIONS } from '../case/relations'
+import { Audit } from '../decorators/audit.decorator'
+import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -24,6 +26,7 @@ import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import {
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
+  AdvertDTO,
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
@@ -39,6 +42,7 @@ export class UtilityService implements IUtilityService {
 
     @Inject(IApplicationService)
     private applicationService: IApplicationService,
+    @InjectModel(AdvertDTO) private advertModel: typeof AdvertDTO,
     @InjectModel(CaseDto) private caseModel: typeof CaseDto,
     @InjectModel(AdvertDepartmentDTO)
     private departmentModel: typeof AdvertDepartmentDTO,
@@ -137,6 +141,29 @@ export class UtilityService implements IUtilityService {
       )
     }
   }
+
+  @Audit()
+  @HandleException()
+  async getNextSerialNumber(
+    departmentId: string,
+    publicationYear: number,
+  ): Promise<Result<number>> {
+    const serialNumber: number | null = await this.advertModel.max(
+      'serialNumber',
+      {
+        where: {
+          departmentId,
+          publicationYear,
+        },
+      },
+    )
+
+    return {
+      ok: true,
+      value: serialNumber ? serialNumber + 1 : 1,
+    }
+  }
+
   async departmentLookup(
     departmentId: string,
   ): Promise<Result<AdvertDepartmentDTO>> {

@@ -22,6 +22,11 @@ export interface IUtilityService {
   caseLookupByApplicationId(advertId: string): Promise<Result<CaseDto>>
 
   userLookup(userId: string): Promise<Result<User>>
+
+  getNextSerialNumber(
+    departmentId: string,
+    year: number,
+  ): Promise<Result<number>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

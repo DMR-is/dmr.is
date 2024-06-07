@@ -84,7 +84,8 @@ module.exports = {
       CONSTRAINT fk_advert_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       CONSTRAINT fk_advert_type_id FOREIGN KEY (type_id) REFERENCES advert_type (id),
       CONSTRAINT fk_advert_status_id FOREIGN KEY (status_id) REFERENCES advert_status (id),
-      CONSTRAINT fk_advert_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),      CONSTRAINT advert_serial_number_publication_year_department_unique UNIQUE (serial_number, publication_year, department_id)
+      CONSTRAINT fk_advert_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),
+      CONSTRAINT advert_serial_number_publication_year_department_unique UNIQUE (serial_number, publication_year, department_id)
     );
 
     CREATE TABLE advert_status_history (
