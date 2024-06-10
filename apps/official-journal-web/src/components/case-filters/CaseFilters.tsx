@@ -7,12 +7,14 @@ import {
   Icon,
   Inline,
   Input,
+  SkeletonLoader,
   Tag,
   Text,
 } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useIsMounted } from '../../hooks/useIsMounted'
 import { useQueryParams } from '../../hooks/useQueryParams'
 import { handleFilterToggle } from '../../lib/utils'
 import { FilterGroup } from '../filter-group/FilterGroup'
@@ -70,39 +72,47 @@ export const CaseFilters = () => {
     qp.remove(keys)
   }
 
+  const isMounted = useIsMounted()
+
   return (
     <Box>
       <Box className={styles.caseFilters}>
-        <Input
-          size="sm"
-          icon={{ name: 'search', type: 'outline' }}
-          backgroundColor="blue"
-          name="filter"
-          placeholder={formatMessage(messages.general.searchPlaceholder)}
-          value={localSearch}
-          onChange={(e) => onStateUpdate(e.target.value)}
-        />
-        {filterGroups?.length && (
-          <Popover
-            label={formatMessage(messages.general.filters)}
-            disclosure={
-              <Button variant="utility" icon="filter">
-                {formatMessage(messages.general.openFilter)}
-              </Button>
-            }
-          >
-            <FilterPopover resetFilters={resetFilters}>
-              {filterGroups.map((filter, i) => (
-                <FilterGroup
-                  key={i}
-                  expanded={i === 0}
-                  label={filter.label}
-                  filters={filter.options}
-                  activeFilters={activeFilters}
-                />
-              ))}
-            </FilterPopover>
-          </Popover>
+        {isMounted ? (
+          <>
+            <Input
+              size="sm"
+              icon={{ name: 'search', type: 'outline' }}
+              backgroundColor="blue"
+              name="filter"
+              placeholder={formatMessage(messages.general.searchPlaceholder)}
+              value={localSearch}
+              onChange={(e) => onStateUpdate(e.target.value)}
+            />
+            {filterGroups?.length && (
+              <Popover
+                label={formatMessage(messages.general.filters)}
+                disclosure={
+                  <Button variant="utility" icon="filter">
+                    {formatMessage(messages.general.openFilter)}
+                  </Button>
+                }
+              >
+                <FilterPopover resetFilters={resetFilters}>
+                  {filterGroups.map((filter, i) => (
+                    <FilterGroup
+                      key={i}
+                      expanded={i === 0}
+                      label={filter.label}
+                      filters={filter.options}
+                      activeFilters={activeFilters}
+                    />
+                  ))}
+                </FilterPopover>
+              </Popover>
+            )}
+          </>
+        ) : (
+          <SkeletonLoader height={44} />
         )}
       </Box>
       {activeFilters.length ? (

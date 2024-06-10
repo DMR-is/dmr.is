@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
+import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   AdvertStatus,
   CaseCommentType,
@@ -312,68 +312,48 @@ export class CaseService implements ICaseService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async cases(params: GetCasesQuery): Promise<Result<GetCasesReponse>> {
-    try {
-      this.logger.info('cases', {
-        category: LOGGING_CATEGORY,
-        params,
-      })
+    const page = params?.page ?? 1
+    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-      const page = params?.page ?? 1
-      const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-      let statusLookup: Result<CaseStatusDto> | undefined = undefined
-      if (params.status) {
-        statusLookup = await this.utilityService.caseStatusLookup(params.status)
-      }
-
-      const whereParams = caseParameters(
-        params,
-        statusLookup?.ok ? statusLookup.value.id : undefined,
-      )
-
-      const cases = await this.caseModel.findAndCountAll({
-        offset: (page - 1) * pageSize,
-        limit: pageSize,
-        where: whereParams,
-        include: [
-          ...CASE_RELATIONS,
-          {
-            model: AdvertDepartmentDTO,
-            where: params.department
-              ? {
-                  slug: params.department,
-                }
-              : undefined,
-          },
-        ],
-      })
-
-      const mapped = cases.rows.map((c) => caseMigrate(c))
-
-      return Promise.resolve({
-        ok: true,
-        value: {
-          cases: mapped,
-          paging: generatePaging(mapped, page, pageSize, cases.count),
-        },
-      })
-    } catch (error) {
-      this.logger.error('Error in getCases', {
-        category: LOGGING_CATEGORY,
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
-      })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          message: 'Failed to get cases',
-          code: 500,
-        },
-      })
+    let statusLookup: Result<CaseStatusDto> | undefined = undefined
+    if (params.status) {
+      statusLookup = await this.utilityService.caseStatusLookup(params.status)
     }
+
+    const whereParams = caseParameters(
+      params,
+      statusLookup?.ok ? statusLookup.value.id : undefined,
+    )
+
+    const cases = await this.caseModel.findAndCountAll({
+      offset: (page - 1) * pageSize,
+      limit: pageSize,
+      where: whereParams,
+      include: [
+        ...CASE_RELATIONS,
+        {
+          model: AdvertDepartmentDTO,
+          where: params.department
+            ? {
+                slug: params.department,
+              }
+            : undefined,
+        },
+      ],
+    })
+
+    const mapped = cases.rows.map((c) => caseMigrate(c))
+
+    return Promise.resolve({
+      ok: true,
+      value: {
+        cases: mapped,
+        paging: generatePaging(mapped, page, pageSize, cases.count),
+      },
+    })
   }
 
   @Audit()

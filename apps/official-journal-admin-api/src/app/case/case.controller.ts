@@ -241,6 +241,12 @@ export class CaseController {
     operationId: 'getCases',
     summary: 'Get cases.',
   })
+  @ApiQuery({
+    type: GetCasesQuery,
+    required: false,
+    name: 'params',
+    description: 'Filter parameters.',
+  })
   @ApiResponse({
     status: 200,
     type: GetCasesReponse,
@@ -248,7 +254,6 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     const result = await this.caseService.cases(params)
-
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
     }
