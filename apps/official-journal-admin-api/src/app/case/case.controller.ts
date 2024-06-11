@@ -1,7 +1,7 @@
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
-  CaseEditorialOverview,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCaseCommentResponse,
@@ -108,12 +108,12 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: CaseEditorialOverview,
+    type: EditorialOverviewResponse,
     description: 'Cases overview.',
   })
   async editorialOverview(
     @Query() params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
+  ): Promise<EditorialOverviewResponse> {
     const result = await this.caseService.overview(params)
 
     if (!result.ok) {

@@ -3,9 +3,9 @@ import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
-  CaseEditorialOverview,
   CaseStatus,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
@@ -98,7 +98,7 @@ export class CaseServiceMock implements ICaseService {
 
   async overview(
     params?: GetCasesQuery,
-  ): Promise<Result<CaseEditorialOverview>> {
+  ): Promise<Result<EditorialOverviewResponse>> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -130,7 +130,7 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve({
       ok: true,
       value: {
-        data: cases as unknown as Case[],
+        cases: cases as unknown as Case[],
         totalItems: {
           submitted: submitted.length,
           inProgress: inProgress.length,

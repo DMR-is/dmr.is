@@ -2,6 +2,13 @@ import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
 import { NotFoundException } from '@nestjs/common'
+
+export const ICELANDIC_ALPHABET = 'AÁBDÐEÉFGHIÍJKLMNOÓPRSTUÚVXYÝÞÆÖ'
+
+export const sortAlphabetically = (a: string, b: string) => {
+  return a.localeCompare(b, 'is', { sensitivity: 'base' })
+}
+
 export function generatePaging(
   data: unknown[],
   page: number | undefined = 1,

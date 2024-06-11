@@ -178,7 +178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseEditorialOverview"
+                  "$ref": "#/components/schemas/EditorialOverviewResponse"
                 }
               }
             }
@@ -1012,10 +1012,10 @@
         },
         "required": ["submitted", "inProgress", "inReview", "ready"]
       },
-      "CaseEditorialOverview": {
+      "EditorialOverviewResponse": {
         "type": "object",
         "properties": {
-          "data": {
+          "cases": {
             "description": "Cases for selected tab",
             "type": "array",
             "items": { "$ref": "#/components/schemas/Case" }
@@ -1029,7 +1029,7 @@
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["data", "totalItems", "paging"]
+        "required": ["cases", "totalItems", "paging"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",

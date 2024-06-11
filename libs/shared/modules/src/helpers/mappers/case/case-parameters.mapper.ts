@@ -15,23 +15,23 @@ type WhereClause = {
   }
 }
 
-const caseParameters = (params: GetCasesQuery, caseStatusId?: string) => {
+const caseParameters = (params?: GetCasesQuery, caseStatusId?: string) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}
   // Check and add each parameter to the where clause
-  if (params.applicationId !== undefined) {
+  if (params?.applicationId !== undefined) {
     whereClause.applicationId = params.applicationId
   }
 
-  if (params.year !== undefined) {
+  if (params?.year !== undefined) {
     whereClause.year = params.year
   }
 
-  if (params.caseNumber !== undefined) {
+  if (params?.caseNumber !== undefined) {
     whereClause.caseNumber = params.caseNumber
   }
 
-  if (params.employeeId !== undefined) {
+  if (params?.employeeId !== undefined) {
     whereClause.assignedUserId = params.employeeId
   }
 
@@ -39,13 +39,13 @@ const caseParameters = (params: GetCasesQuery, caseStatusId?: string) => {
     whereClause.statusId = caseStatusId
   }
 
-  if (params.fastTrack !== undefined) {
+  if (params?.fastTrack !== undefined) {
     whereClause.fastTrack = params.fastTrack === 'true'
   }
 
-  if (params.published === 'true') {
+  if (params?.published === 'true') {
     whereClause.publishedAt = { [Op.not]: null }
-  } else if (params.published === 'false') {
+  } else if (params?.published === 'false') {
     whereClause.publishedAt = { [Op.is]: null }
   }
 

@@ -37,13 +37,13 @@ export class CaseOverviewTotalItems {
   ready!: number
 }
 
-export class CaseEditorialOverview {
+export class EditorialOverviewResponse {
   @ApiProperty({
     type: [Case],
     description: 'Cases for selected tab',
     required: true,
   })
-  data!: Case[]
+  cases!: Case[]
 
   @ApiProperty({
     type: CaseOverviewTotalItems,

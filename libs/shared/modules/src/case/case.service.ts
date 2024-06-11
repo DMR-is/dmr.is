@@ -8,10 +8,10 @@ import {
   AdvertStatus,
   CaseCommentType,
   CaseCommunicationStatus,
-  CaseEditorialOverview,
   CaseStatus,
   CaseTag,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -62,266 +62,210 @@ export class CaseService implements ICaseService {
     this.logger.info('Using CaseService')
   }
 
+  @Audit()
+  @HandleException()
   async overview(
     params?: GetCasesQuery | undefined,
-  ): Promise<Result<CaseEditorialOverview>> {
-    try {
-      const res = await this.cases(params ?? {})
+  ): Promise<Result<EditorialOverviewResponse>> {
+    const casesResponse = await this.cases(params)
 
-      const counter = await this.caseModel.findAll({
-        attributes: [
-          [Sequelize.literal(`status.value`), 'caseStatusValue'],
-          [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
-        ],
-        include: [
-          {
-            model: CaseStatusDto,
-            as: 'status',
-            attributes: [],
-          },
-        ],
-        group: ['status_id', `status.value`],
-      })
-
-      if (!res.ok) {
-        return res
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: {
-          data: res.value.cases,
-          paging: res.value.paging,
-          totalItems: counterResult(counter),
+    const counter = await this.caseModel.findAll({
+      attributes: [
+        [Sequelize.literal(`status.value`), 'caseStatusValue'],
+        [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
+      ],
+      include: [
+        {
+          model: CaseStatusDto,
+          as: 'status',
+          attributes: [],
         },
-      })
-    } catch (e) {
-      this.logger.error('Error in overview', {
-        category: LOGGING_CATEGORY,
-        error: e,
-      })
-
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: 'Failed to get overview',
-        },
-      })
-    }
-  }
-
-  async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
-    try {
-      this.logger.info('create', {
-        applicationId: body.applicationId,
-        category: LOGGING_CATEGORY,
-      })
-
-      const newCase = await this.sequelize.transaction<
-        Result<CreateCaseResponse>
-      >(async (t) => {
-        const existingCaseLookup =
-          await this.utilityService.caseLookupByApplicationId(
-            body.applicationId,
-          )
-
-        if (existingCaseLookup.ok) {
-          this.logger.warn('Case already exists for this application', {
-            applicationId: body.applicationId,
-            category: LOGGING_CATEGORY,
-          })
-
-          return {
-            ok: false,
-            error: {
-              code: 409,
-              message: 'Case already exists for this application',
-            },
-          }
-        }
-
-        const applicationLookup = await this.applicationService.getApplication(
-          body.applicationId,
-        )
-
-        if (!applicationLookup.ok) {
-          return applicationLookup
-        }
-
-        const caseStatusLookup = await this.utilityService.caseStatusLookup(
-          CaseStatus.Submitted,
-        )
-
-        if (!caseStatusLookup.ok) {
-          return caseStatusLookup
-        }
-
-        const caseTagLookup = await this.utilityService.caseTagLookup(
-          CaseTag.NotStarted,
-        )
-
-        if (!caseTagLookup.ok) {
-          return caseTagLookup
-        }
-
-        const caseCommunicationStatus =
-          await this.utilityService.caseCommunicationStatusLookup(
-            CaseCommunicationStatus.NotStarted,
-          )
-
-        if (!caseCommunicationStatus.ok) {
-          return caseCommunicationStatus
-        }
-
-        const now = new Date()
-        const application = applicationLookup.value.application
-        const nextCaseNumber = await this.utilityService.generateCaseNumber()
-
-        if (!nextCaseNumber.ok) {
-          return nextCaseNumber
-        }
-
-        const departmentLookup = await this.utilityService.departmentLookup(
-          application.answers.advert.department,
-        )
-
-        if (!departmentLookup.ok) {
-          return departmentLookup
-        }
-
-        const requestedPublicationDate = new Date(
-          application.answers.publishing.date,
-        )
-        const today = new Date()
-        const diff = requestedPublicationDate.getTime() - today.getTime()
-        const diffDays = diff / (1000 * 3600 * 24)
-        let fastTrack = false
-        if (diffDays > 10) {
-          fastTrack = true
-        }
-
-        const caseNumber = nextCaseNumber.value
-
-        const newCase = await this.caseModel.create(
-          {
-            id: uuid(),
-            applicationId: application.id,
-            year: now.getFullYear(),
-            caseNumber: caseNumber,
-            statusId: caseStatusLookup.value.id,
-            tagId: caseTagLookup.value.id,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            isLegacy: false,
-            assignedUserId: null,
-            communicationStatusId: caseCommunicationStatus.value.id,
-            publishedAt: null,
-            price: 0,
-            paid: false,
-            fastTrack: fastTrack,
-            advertTitle: application.answers.advert.title,
-            requestedPublicationDate: application.answers.publishing.date,
-            departmentId: departmentLookup.value.id,
-          },
-          {
-            returning: ['id'],
-            transaction: t,
-          },
-        )
-
-        const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
-
-        if (!newCaseLookup.ok) {
-          return newCaseLookup
-        }
-
-        // TODO: When auth is setup, use the user id from the token
-        await this.commentService.create(
-          newCaseLookup.value.id,
-          {
-            internal: true,
-            type: CaseCommentType.Submit,
-            comment: null,
-            from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-            to: null,
-          },
-          t,
-        )
-
-        return Promise.resolve({
-          ok: true,
-          value: {
-            case: caseMigrate(newCaseLookup.value),
-          },
-        })
-      })
-
-      return Promise.resolve(newCase)
-    } catch (error) {
-      this.logger.error('Error in createCase', {
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
-        category: LOGGING_CATEGORY,
-      })
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: 'Failed to create case',
-        },
-      })
-    }
-  }
-
-  async case(id: string): Promise<Result<GetCaseResponse>> {
-    this.logger.info(`case<${id}>`, {
-      caseId: id,
-      category: LOGGING_CATEGORY,
+      ],
+      group: ['status_id', `status.value`],
     })
-    try {
-      const result = await this.utilityService.getCaseWithAdvert(id)
 
-      if (!result.ok) {
-        return Promise.resolve(result)
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: { case: result.value },
-      })
-    } catch (error) {
-      this.logger.error(`Error in case<${id}>`, {
-        caseId: id,
-        category: LOGGING_CATEGORY,
-        error: {
-          message: (error as Error).message,
-          stack: (error as Error).stack,
-        },
-      })
-
-      return Promise.resolve({
-        ok: false,
-        error: {
-          code: 500,
-          message: `Failed to get case<${id}>`,
-        },
-      })
+    if (!casesResponse.ok) {
+      return casesResponse
     }
+
+    return Promise.resolve({
+      ok: true,
+      value: {
+        cases: casesResponse.value.cases,
+        paging: casesResponse.value.paging,
+        totalItems: counterResult(counter),
+      },
+    })
   }
 
   @Audit()
   @HandleException()
-  async cases(params: GetCasesQuery): Promise<Result<GetCasesReponse>> {
+  async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
+    const newCase = await this.sequelize.transaction<
+      Result<CreateCaseResponse>
+    >(async (t) => {
+      const existingCaseLookup =
+        await this.utilityService.caseLookupByApplicationId(body.applicationId)
+
+      if (existingCaseLookup.ok) {
+        this.logger.warn('Case already exists for this application', {
+          applicationId: body.applicationId,
+          category: LOGGING_CATEGORY,
+        })
+
+        return {
+          ok: false,
+          error: {
+            code: 409,
+            message: 'Case already exists for this application',
+          },
+        }
+      }
+
+      const applicationLookup = await this.applicationService.getApplication(
+        body.applicationId,
+      )
+
+      if (!applicationLookup.ok) {
+        return applicationLookup
+      }
+
+      const caseStatusLookup = await this.utilityService.caseStatusLookup(
+        CaseStatus.Submitted,
+      )
+
+      if (!caseStatusLookup.ok) {
+        return caseStatusLookup
+      }
+
+      const caseTagLookup = await this.utilityService.caseTagLookup(
+        CaseTag.NotStarted,
+      )
+
+      if (!caseTagLookup.ok) {
+        return caseTagLookup
+      }
+
+      const caseCommunicationStatus =
+        await this.utilityService.caseCommunicationStatusLookup(
+          CaseCommunicationStatus.NotStarted,
+        )
+
+      if (!caseCommunicationStatus.ok) {
+        return caseCommunicationStatus
+      }
+
+      const now = new Date()
+      const application = applicationLookup.value.application
+      const nextCaseNumber = await this.utilityService.generateCaseNumber()
+
+      if (!nextCaseNumber.ok) {
+        return nextCaseNumber
+      }
+
+      const departmentLookup = await this.utilityService.departmentLookup(
+        application.answers.advert.department,
+      )
+
+      if (!departmentLookup.ok) {
+        return departmentLookup
+      }
+
+      const requestedPublicationDate = new Date(
+        application.answers.publishing.date,
+      )
+      const today = new Date()
+      const diff = requestedPublicationDate.getTime() - today.getTime()
+      const diffDays = diff / (1000 * 3600 * 24)
+      let fastTrack = false
+      if (diffDays > 10) {
+        fastTrack = true
+      }
+
+      const caseNumber = nextCaseNumber.value
+
+      const newCase = await this.caseModel.create(
+        {
+          id: uuid(),
+          applicationId: application.id,
+          year: now.getFullYear(),
+          caseNumber: caseNumber,
+          statusId: caseStatusLookup.value.id,
+          tagId: caseTagLookup.value.id,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          isLegacy: false,
+          assignedUserId: null,
+          communicationStatusId: caseCommunicationStatus.value.id,
+          publishedAt: null,
+          price: 0,
+          paid: false,
+          fastTrack: fastTrack,
+          advertTitle: application.answers.advert.title,
+          requestedPublicationDate: application.answers.publishing.date,
+          departmentId: departmentLookup.value.id,
+        },
+        {
+          returning: ['id'],
+          transaction: t,
+        },
+      )
+
+      const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
+
+      if (!newCaseLookup.ok) {
+        return newCaseLookup
+      }
+
+      // TODO: When auth is setup, use the user id from the token
+      await this.commentService.create(
+        newCaseLookup.value.id,
+        {
+          internal: true,
+          type: CaseCommentType.Submit,
+          comment: null,
+          from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+          to: null,
+        },
+        t,
+      )
+
+      return Promise.resolve({
+        ok: true,
+        value: {
+          case: caseMigrate(newCaseLookup.value),
+        },
+      })
+    })
+
+    return Promise.resolve(newCase)
+  }
+
+  @Audit()
+  @HandleException()
+  async case(id: string): Promise<Result<GetCaseResponse>> {
+    const result = await this.utilityService.getCaseWithAdvert(id)
+
+    if (!result.ok) {
+      return Promise.resolve(result)
+    }
+
+    return Promise.resolve({
+      ok: true,
+      value: { case: result.value },
+    })
+  }
+
+  @Audit()
+  @HandleException()
+  async cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>> {
     const page = params?.page ? parseInt(params.page, 10) : 1
     const pageSize = params?.pageSize
       ? parseInt(params.pageSize, 10)
       : DEFAULT_PAGE_SIZE
 
     let statusLookup: Result<CaseStatusDto> | undefined = undefined
-    if (params.status) {
+    if (params?.status) {
       statusLookup = await this.utilityService.caseStatusLookup(params.status)
     }
 
@@ -338,7 +282,7 @@ export class CaseService implements ICaseService {
         ...CASE_RELATIONS,
         {
           model: AdvertDepartmentDTO,
-          where: params.department
+          where: params?.department
             ? {
                 slug: params.department,
               }

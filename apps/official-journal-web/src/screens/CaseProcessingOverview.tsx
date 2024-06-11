@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 
 import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
@@ -9,7 +9,7 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { Case, Paging } from '../gen/fetch'
+import { Case, EditorialOverviewResponse, Paging } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -52,9 +52,19 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     search: undefined,
     department: router.query.department,
     status: router.query.status,
-    page: undefined,
-    pageSize: undefined,
+    page: router.query.page,
+    pageSize: router.query.pageSize,
   })
+
+  useEffect(() => {
+    setSearchParams({
+      search: router.query.search,
+      department: router.query.department,
+      status: router.query.status,
+      page: router.query.page,
+      pageSize: router.query.pageSize,
+    })
+  }, [router.query])
 
   const qsp = useMemo(() => {
     const filters = Object.entries(searchParams).filter(
@@ -74,13 +84,18 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     data: casesResponse,
     isLoading,
     error,
-  } = useSWR([APIRotues.Cases, qsp], ([url, qsp]) => getCases(url, qsp), {
-    keepPreviousData: true,
-    fallback: {
-      cases: data,
-      paging: paging,
+  } = useSWR<EditorialOverviewResponse, Error>(
+    [APIRotues.EditorialOverview, qsp],
+    ([url, qsp]: [string, string | undefined]) => getCases(url, qsp),
+    {
+      keepPreviousData: true,
+      fallback: {
+        cases: data,
+        paging: paging,
+        totalItems,
+      },
     },
-  })
+  )
 
   const onTabChange = (id: string) => {
     const tabId = CaseProccessingOverviewTabIds.find((tab) => tab === id)
@@ -136,7 +151,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     {
       id: 'Innsent',
       label: formatMessage(caseProccessingMessages.tabs.submitted, {
-        count: totalItems.submitted,
+        count: casesResponse.totalItems.submitted,
       }),
       content: (
         <CaseTableSubmitted
@@ -148,7 +163,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     {
       id: 'Grunnvinnsla',
       label: formatMessage(caseProccessingMessages.tabs.inProgress, {
-        count: totalItems.inProgress,
+        count: casesResponse.totalItems.inProgress,
       }),
       content: (
         <CaseTableInProgress
@@ -160,7 +175,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     {
       id: 'Yfirlestur',
       label: formatMessage(caseProccessingMessages.tabs.inReview, {
-        count: totalItems.inReview,
+        count: casesResponse.totalItems.inReview,
       }),
       content: (
         <CaseTableInReview
@@ -172,7 +187,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     {
       id: 'Tilbúið',
       label: formatMessage(caseProccessingMessages.tabs.ready, {
-        count: totalItems.ready,
+        count: casesResponse.totalItems.ready,
       }),
       content: (
         <CaseTableInProgress
@@ -206,7 +221,7 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
   })
 
   return {
-    data: response.data,
+    data: response.cases,
     paging: response.paging,
     totalItems: response.totalItems,
     filters: [],

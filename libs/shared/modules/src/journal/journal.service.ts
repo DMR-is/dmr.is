@@ -28,7 +28,7 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -461,6 +461,7 @@ export class JournalService implements IJournalService {
     const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -521,6 +522,7 @@ export class JournalService implements IJournalService {
     const departments = await this.advertDepartmentModel.findAndCountAll({
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -567,12 +569,9 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-    let query = ''
+    const query = ''
 
     const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
-      logging(sql) {
-        query = sql
-      },
       include: [
         {
           model: AdvertDepartmentDTO,
@@ -583,6 +582,7 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
+      order: [['title', 'ASC']],
       limit: pageSize,
       offset: (page - 1) * pageSize,
     })
@@ -606,7 +606,7 @@ export class JournalService implements IJournalService {
     return {
       ok: true,
       value: {
-        types: mapped,
+        types: mapped.sort((a, b) => sortAlphabetically(a.title, b.title)),
         paging: generatePaging(mapped, page, pageSize, types.count),
       },
     }
@@ -651,6 +651,7 @@ export class JournalService implements IJournalService {
     const parties = await this.advertInvolvedPartyModel.findAndCountAll({
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -707,6 +708,7 @@ export class JournalService implements IJournalService {
     const categories = await this.advertCategoryModel.findAndCountAll({
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -783,6 +785,7 @@ export class JournalService implements IJournalService {
     const adverts = await this.advertModel.findAndCountAll({
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: {
         [Op.and]: [
           searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},

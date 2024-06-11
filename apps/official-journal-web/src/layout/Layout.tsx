@@ -62,9 +62,7 @@ const Layout: Screen<LayoutProps> = ({
       <SWRConfig
         value={{
           fetcher: fetcher,
-          onError: (error) => {
-            console.error('SWR Error', { error })
-          },
+          refreshInterval: 1000,
         }}
       >
         <Provider>

@@ -63,7 +63,9 @@ export async function updateCaseStatus(
     },
   })
     .then((res) => res)
-    .then((res) => res.json())
+    .catch((error) => {
+      throw error
+    })
 }
 
 export async function publishCases(
@@ -76,7 +78,11 @@ export async function publishCases(
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then((res) => res.json())
+  })
+    .then((res) => res.json())
+    .catch((error) => {
+      throw error
+    })
 }
 
 export async function getCases(url: string, qs?: string) {
@@ -102,6 +108,7 @@ export async function getCases(url: string, qs?: string) {
 
 export enum APIRotues {
   Cases = '/api/cases',
+  EditorialOverview = '/api/cases/editorialOverview',
   AssignEmployee = '/api/cases/assign',
   UpdateCaseStatus = '/api/cases/status',
   CreateComment = '/api/comments/create',
