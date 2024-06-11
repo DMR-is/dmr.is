@@ -5,6 +5,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '../gen/fetch'
+import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -75,13 +76,35 @@ export async function publishCases(
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then((res) => res)
+  }).then((res) => res.json())
+}
+
+export async function getCases(url: string, qs?: string) {
+  const fullUrl = `${url}${qs ? `?${qs}` : ''}`
+  return fetch(fullUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(async (res) => {
+    const error = new Error('Error occured while fetching data')
+    if (!res.ok) {
+      console.error('Error occured while fetching data')
+      error.message = await res.text()
+      error.name = res.statusText
+
+      throw error
+    }
+
+    return res.json()
+  })
 }
 
 export enum APIRotues {
-  AssignEmployee = '/api/case/assign',
-  UpdateCaseStatus = '/api/case/status',
+  Cases = '/api/cases',
+  AssignEmployee = '/api/cases/assign',
+  UpdateCaseStatus = '/api/cases/status',
   CreateComment = '/api/comments/create',
   DeleteComment = '/api/comments/delete',
-  PublishCases = '/api/case/publish',
+  PublishCases = '/api/cases/publish',
 }

@@ -32,44 +32,44 @@ export class GetCasesQuery {
 
   @ApiProperty({
     name: 'year',
-    type: Number,
+    type: String,
     description: 'Year',
     required: false,
   })
   @IsOptional()
   @IsNumberString()
-  year?: number
+  year?: string
 
   @ApiProperty({
     name: 'page',
-    type: Number,
+    type: String,
     description: 'Page number',
     required: false,
   })
   @IsOptional()
   @IsNumberString()
-  page?: number
+  page?: string
 
   @ApiProperty({
     name: 'pageSize',
-    type: Number,
+    type: String,
     description: 'Page size',
     required: false,
   })
   @IsOptional()
   @IsNumberString()
-  pageSize?: number
+  pageSize?: string
 
   @ApiProperty({
     name: 'caseNumber',
     description:
       'Case number to filter on, takes into account `caseNumber` on `Case`.',
-    type: Number,
+    type: String,
     required: false,
   })
   @IsOptional()
   @IsString()
-  caseNumber?: number
+  caseNumber?: string
 
   @ApiProperty({
     name: 'status',

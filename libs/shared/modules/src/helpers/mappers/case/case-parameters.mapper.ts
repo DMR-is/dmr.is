@@ -3,8 +3,8 @@ import { GetCasesQuery } from '@dmr.is/shared/dto'
 
 type WhereClause = {
   applicationId?: string
-  year?: number
-  caseNumber?: number
+  year?: string
+  caseNumber?: string
   assignedUserId?: string
   statusId?: string
   fastTrack?: boolean
@@ -15,10 +15,9 @@ type WhereClause = {
   }
 }
 
-// Initialize the where clause object
-const whereClause: WhereClause = {}
-
 const caseParameters = (params: GetCasesQuery, caseStatusId?: string) => {
+  // Initialize the where clause object must be declared inside the function to avoid side effects
+  const whereClause: WhereClause = {}
   // Check and add each parameter to the where clause
   if (params.applicationId !== undefined) {
     whereClause.applicationId = params.applicationId

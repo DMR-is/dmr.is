@@ -232,20 +232,18 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
   ]
 }
 
-export const extractCaseProcessingFilters = (
-  query: ParsedUrlQuery,
-): { filters: GetCasesRequest; tab: string } => {
-  const values = Object.entries({
-    ...query,
-  })
-    .filter((ent) => ent[0] !== 'tab')
-    .filter(isDefined)
+type CaseProccessingSearchParams = {
+  tab?: string
+}
 
-  return {
-    filters: values.reduce(
-      (acc, [key, value]) => ({ ...acc, [key]: value }),
-      {},
-    ),
-    tab: query.tab as string,
+export const getCaseProcessingSearchParams = (
+  query: ParsedUrlQuery,
+): CaseProccessingSearchParams => {
+  const params: CaseProccessingSearchParams = {}
+
+  if (query?.tab) {
+    params.tab = Array.isArray(query.tab) ? query.tab[0] : query.tab
   }
+
+  return params
 }

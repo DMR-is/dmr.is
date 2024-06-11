@@ -92,28 +92,28 @@
             "required": false,
             "in": "query",
             "description": "Year",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "page",
             "required": false,
             "in": "query",
             "description": "Page number",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
             "required": false,
             "in": "query",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
@@ -303,28 +303,28 @@
             "required": false,
             "in": "query",
             "description": "Year",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "page",
             "required": false,
             "in": "query",
             "description": "Page number",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
             "required": false,
             "in": "query",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
@@ -423,10 +423,10 @@
             "schema": { "type": "string" }
           },
           {
-            "description": "Type of the comment",
-            "required": false,
             "name": "type",
+            "required": false,
             "in": "query",
+            "description": "Type of the comment",
             "schema": {
               "enum": ["internal", "external", "all"],
               "type": "string"

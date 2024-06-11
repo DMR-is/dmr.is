@@ -315,8 +315,10 @@ export class CaseService implements ICaseService {
   @Audit()
   @HandleException()
   async cases(params: GetCasesQuery): Promise<Result<GetCasesReponse>> {
-    const page = params?.page ?? 1
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+    const page = params?.page ? parseInt(params.page, 10) : 1
+    const pageSize = params?.pageSize
+      ? parseInt(params.pageSize, 10)
+      : DEFAULT_PAGE_SIZE
 
     let statusLookup: Result<CaseStatusDto> | undefined = undefined
     if (params.status) {

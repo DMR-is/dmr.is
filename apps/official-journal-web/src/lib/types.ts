@@ -10,3 +10,11 @@ export type ScreenContext = {
 export type Screen<Props = {}> = React.ComponentType<Props> & {
   getProps?: (ctx: ScreenContext) => Promise<Props>
 }
+
+export type CaseOverviewSearchParams = {
+  search?: string | string[]
+  department?: string | string[]
+  status?: string | string[]
+  page?: string | string[]
+  pageSize?: string | string[]
+}

@@ -241,12 +241,6 @@ export class CaseController {
     operationId: 'getCases',
     summary: 'Get cases.',
   })
-  @ApiQuery({
-    type: GetCasesQuery,
-    required: false,
-    name: 'params',
-    description: 'Filter parameters.',
-  })
   @ApiResponse({
     status: 200,
     type: GetCasesReponse,
@@ -291,13 +285,14 @@ export class CaseController {
   })
   async getComments(
     @Param('id') id: string,
-    @Query('params') params?: GetCaseCommentsQuery,
+    @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     const results = await this.caseCommentService.comments(id, params)
 
     if (!results.ok) {
       throw new HttpException(results.error.message, results.error.code)
     }
+
     return results.value
   }
 

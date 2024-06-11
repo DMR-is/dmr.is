@@ -29,7 +29,7 @@ import {
 } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
-import { extractCaseProcessingFilters } from '../lib/utils'
+import { getCaseProcessingSearchParams } from '../lib/utils'
 
 type Props = {
   cases: Case[]
@@ -203,7 +203,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
 }
 
 CasePublishingOverview.getProps = async ({ query }) => {
-  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
+  const { filters: extractedFilters, tab } =
+    getCaseProcessingSearchParams(query)
 
   const dmrClient = createDmrClient()
 
