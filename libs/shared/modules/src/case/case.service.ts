@@ -278,6 +278,7 @@ export class CaseService implements ICaseService {
       offset: (page - 1) * pageSize,
       limit: pageSize,
       where: whereParams,
+      distinct: true,
       include: [
         ...CASE_RELATIONS,
         {

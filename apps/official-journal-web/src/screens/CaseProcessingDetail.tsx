@@ -26,7 +26,6 @@ import {
   CaseStatusEnum,
   CaseWithAdvert,
   Department,
-  PostCaseComment,
 } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'

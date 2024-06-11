@@ -459,6 +459,7 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
@@ -520,6 +521,7 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const departments = await this.advertDepartmentModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
@@ -572,6 +574,7 @@ export class JournalService implements IJournalService {
     const query = ''
 
     const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
+      distinct: true,
       include: [
         {
           model: AdvertDepartmentDTO,
@@ -649,6 +652,7 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const parties = await this.advertInvolvedPartyModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
@@ -706,6 +710,7 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const categories = await this.advertCategoryModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
@@ -783,6 +788,7 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
     const adverts = await this.advertModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
