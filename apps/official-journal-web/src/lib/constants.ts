@@ -107,6 +107,7 @@ export async function getCases(url: string, qs?: string) {
 }
 
 export enum APIRotues {
+  Case = '/api/cases/:id',
   Cases = '/api/cases',
   EditorialOverview = '/api/cases/editorialOverview',
   AssignEmployee = '/api/cases/assign',

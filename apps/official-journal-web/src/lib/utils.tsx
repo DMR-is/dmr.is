@@ -3,7 +3,6 @@ import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 
 import { StringOption } from '@island.is/island-ui/core'
-import { isDefined } from '@island.is/shared/utils'
 
 import {
   CaseComment,
@@ -12,7 +11,6 @@ import {
   CaseStatusEnum,
   CaseTagEnum,
   CaseWithAdvert,
-  GetCasesRequest,
 } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'

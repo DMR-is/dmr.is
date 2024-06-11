@@ -9,6 +9,7 @@ import {
   PostCaseCommentTypeEnum,
 } from '../../../gen/fetch'
 import { createDmrClient } from '../../../lib/api/createClient'
+import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
 
 const commentBodySchema = z.object({
   caseId: z.string(),
@@ -53,37 +54,34 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  auditAPIRoute({ req })
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
     commentBodySchema.parse(req.body)
-  } catch (e) {
-    return res.status(400).json({ error: 'Invalid request body' })
-  }
 
-  const dmrClient = createDmrClient()
+    const dmrClient = createDmrClient()
 
-  const theCase = await dmrClient.getCase({
-    id: req.body.caseId,
-  })
+    const theCase = await dmrClient.getCase({
+      id: req.body.caseId,
+    })
 
-  if (!theCase) {
-    return res.status(404).json({ error: 'Case not found' })
-  }
+    if (!theCase) {
+      return res.status(404).json({ error: 'Case not found' })
+    }
 
-  const caseCommentStatus = mapCaseCommentStatus(
-    theCase._case.activeCase.status,
-  )
+    const caseCommentStatus = mapCaseCommentStatus(
+      theCase._case.activeCase.status,
+    )
 
-  if (!caseCommentStatus) {
-    return res.status(400).json({ error: 'Invalid case status' })
-  }
+    if (!caseCommentStatus) {
+      return res.status(400).json({ error: 'Invalid case status' })
+    }
 
-  const body: z.infer<typeof commentBodySchema> = req.body
+    const body: z.infer<typeof commentBodySchema> = req.body
 
-  try {
     logger.info('Adding comment to application', {
       applicationId: req.body.applicationId,
       category: LOGGING_CATEGORY,
@@ -103,9 +101,6 @@ export default async function handler(
 
     return res.status(200).json(addCommentResponse)
   } catch (error) {
-    logger.error('Exception occured, could not add comment to application', {
-      error,
-      category: LOGGING_CATEGORY,
-    })
+    handleAPIException({ error, res })
   }
 }

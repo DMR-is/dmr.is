@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  auditAPIRoute({ req })
+
   try {
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' })
@@ -25,7 +28,6 @@ export default async function handler(
 
     return res.status(204).end()
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ error: 'Internal Server Error' })
+    handleAPIException({ error, res })
   }
 }

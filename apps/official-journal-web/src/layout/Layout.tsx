@@ -62,7 +62,7 @@ const Layout: Screen<LayoutProps> = ({
       <SWRConfig
         value={{
           fetcher: fetcher,
-          refreshInterval: 1000,
+          refreshInterval: 5000,
         }}
       >
         <Provider>
