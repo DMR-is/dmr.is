@@ -45,7 +45,7 @@ export const StepGrunnvinnsla = ({
 
   const [hasPaid, setHasPaid] = useState(activeCase.activeCase.paid)
 
-  const [price, setPrice] = useState(activeCase.activeCase.price)
+  const [price, setPrice] = useState(activeCase.activeCase.price ?? 0)
 
   const onDepartmentChange = (department?: Department) => {
     setSelectedDepartment(
@@ -80,6 +80,7 @@ export const StepGrunnvinnsla = ({
                 disabled
                 name="institution"
                 value={activeCase.advert.involvedParty.title}
+                onChange={() => console.log('change')}
                 label={formatMessage(messages.grunnvinnsla.institution)}
                 size="sm"
               />
@@ -140,6 +141,7 @@ export const StepGrunnvinnsla = ({
                 readOnly
                 name="subject"
                 value={activeCase.activeCase.advertTitle}
+                onChange={() => console.log('change')}
                 label={formatMessage(messages.grunnvinnsla.subject)}
                 size="sm"
                 textarea
@@ -221,6 +223,13 @@ export const StepGrunnvinnsla = ({
               <Input
                 name="price"
                 value={price}
+                onChange={(e) => {
+                  try {
+                    setPrice(parseInt(e.target.value))
+                  } catch (error) {
+                    return
+                  }
+                }}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="tel"

@@ -186,6 +186,21 @@
         }
       }
     },
+    "/api/v1/cases/{id}/status/next": {
+      "post": {
+        "operationId": "updateNextStatus",
+        "summary": "Update case status to next.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/assign/{userId}": {
       "post": {
         "operationId": "assignEmployee",

@@ -8,6 +8,7 @@ import {
 import { SWRAddCommentParams } from '../hooks/useAddComment'
 import { SWRAssignEmployeeParams } from '../hooks/useAssignEmployee'
 import { SWRUpdateCaseStatusParams } from '../hooks/useUpdateCaseStatus'
+import { SWRUpdateNextCaseStatusParams } from '../hooks/useUpdateNextStatus'
 import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
@@ -55,6 +56,23 @@ export async function assignEmployee(
 }
 
 export async function updateCaseStatus(
+  url: string,
+  { arg }: { arg: SWRUpdateNextCaseStatusParams },
+) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then((res) => res)
+    .catch((error) => {
+      throw error
+    })
+}
+
+export async function updateNextCaseStatus(
   url: string,
   { arg }: { arg: SWRUpdateCaseStatusParams },
 ) {
@@ -183,6 +201,7 @@ export enum APIRotues {
   EditorialOverview = '/api/cases/editorialOverview',
   AssignEmployee = '/api/cases/assign',
   UpdateCaseStatus = '/api/cases/status',
+  UpdateNextCaseStatus = '/api/cases/nextStatus',
   CreateComment = '/api/comments/create',
   DeleteComment = '/api/comments/delete',
   PublishCases = '/api/cases/publish',

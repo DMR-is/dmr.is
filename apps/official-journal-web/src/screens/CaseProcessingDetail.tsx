@@ -1,6 +1,3 @@
-import useSWR, { SWRConfig } from 'swr'
-import useSWRMutation from 'swr/mutation'
-
 import {
   AlertMessage,
   Box,
@@ -32,9 +29,9 @@ import { useAssignEmployee } from '../hooks/useAssignEmployee'
 import { useCase } from '../hooks/useCase'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useUpdateCaseStatus } from '../hooks/useUpdateCaseStatus'
+import { useUpdateNextCaseStatus } from '../hooks/useUpdateNextStatus'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
@@ -90,7 +87,7 @@ const CaseSingle: Screen<Props> = ({
     data: caseData,
     error,
     isLoading,
-    mutate: refetch,
+    mutate: refetchCase,
   } = useCase({
     caseId: data.activeCase.id,
     options: {
@@ -100,12 +97,17 @@ const CaseSingle: Screen<Props> = ({
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useAssignEmployee({
-      onSuccess: () => refetch(),
+      onSuccess: () => refetchCase(),
     })
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      onSuccess: () => refetch(),
+      onSuccess: () => refetchCase(),
+    })
+
+  const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
+    useUpdateNextCaseStatus({
+      onSuccess: () => refetchCase(),
     })
 
   if (isLoading) {
@@ -141,6 +143,12 @@ const CaseSingle: Screen<Props> = ({
   }
 
   const { advert, activeCase: activeCase } = caseData._case
+
+  const assignedCaseStatus = caseStatusOptions.find(
+    (c) => c.value === activeCase.status,
+  )
+
+  const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus
 
   return (
     <FormShell
@@ -204,19 +212,18 @@ const CaseSingle: Screen<Props> = ({
                 userId: e.value,
               })
             }}
-          ></Select>
+          />
           <Select
-            isDisabled={isUpdatingStatus}
-            isLoading={isUpdatingStatus}
+            isDisabled={isUpdatingCaseStatus}
+            isLoading={isUpdatingCaseStatus}
             name="status"
             options={caseStatusOptions.map((c) => ({
               label: c.label,
               value: c.value,
               disabled: c.value === activeCase.status,
             }))}
-            defaultValue={caseStatusOptions.find(
-              (c) => c.value === activeCase.status,
-            )}
+            defaultValue={assignedCaseStatus}
+            value={assignedCaseStatus}
             label={formatMessage(messages.actions.status)}
             size="sm"
             onChange={(e) => {
@@ -226,7 +233,7 @@ const CaseSingle: Screen<Props> = ({
                 statusId: e.value,
               })
             }}
-          ></Select>
+          />
         </Stack>
       }
     >
@@ -282,7 +289,15 @@ const CaseSingle: Screen<Props> = ({
             </Button>
           ) : nextStep ? (
             <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
-              <Button as="span" icon="arrowForward" unfocusable>
+              <Button
+                loading={isUpdatingNextStatus}
+                as="span"
+                icon="arrowForward"
+                onClick={() =>
+                  onUpdateNextCaseStatus({ caseId: activeCase.id })
+                }
+                unfocusable
+              >
                 {formatMessage(messages.paging.nextStep)}
               </Button>
             </LinkV2>

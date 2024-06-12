@@ -561,4 +561,47 @@ export class CaseService implements ICaseService {
       })
     }
   }
+
+  @Audit()
+  @HandleException()
+  async updateNextStatus(id: string): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(id)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const activeCase = caseLookup.value
+
+    const currentStatus = await this.utilityService.caseStatusLookup(
+      activeCase.status.value,
+    )
+
+    if (!currentStatus.ok) {
+      return currentStatus
+    }
+
+    const status = currentStatus.value
+
+    const nextStatus =
+      status.value === CaseStatus.Submitted
+        ? CaseStatus.InProgress
+        : status.value === CaseStatus.InProgress
+        ? CaseStatus.InReview
+        : status.value === CaseStatus.InReview
+        ? CaseStatus.ReadyForPublishing
+        : status.value === CaseStatus.ReadyForPublishing
+        ? CaseStatus.Published
+        : status.value
+
+    const nextStatusLookup = await this.utilityService.caseStatusLookup(
+      nextStatus,
+    )
+
+    if (!nextStatusLookup.ok) {
+      return nextStatusLookup
+    }
+
+    return this.updateStatus(id, { status: nextStatus })
+  }
 }

@@ -123,6 +123,25 @@ export class CaseController {
     return result.value
   }
 
+  @Post(':id/status/next')
+  @ApiOperation({
+    operationId: 'updateNextStatus',
+    summary: 'Update case status to next.',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  async updateNextStatus(@Param('id') id: string): Promise<void> {
+    const result = await this.caseService.updateNextStatus(id)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
   @Post(':id/assign/:userId')
   @ApiOperation({
     operationId: 'assignEmployee',
