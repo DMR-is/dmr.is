@@ -24,8 +24,9 @@ type Props = {
 
 export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
+
   const [expanded, setExpanded] = useState(
-    activeCase.activeCase.comments.length < 5,
+    activeCase.activeCase.comments.length < 6,
   )
   const [commentValue, setCommentValue] = useState('')
   const [isInternalComment, setIsInternalComment] = useState(true) // TODO: Not sure how this will be implemented (checkbox, tabs?)
@@ -92,7 +93,7 @@ export const Comments = ({ activeCase }: Props) => {
                 <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                 <Button
-                  loading={isDeletingComment}
+                  loading={isLoading}
                   variant="text"
                   as="button"
                   size="small"

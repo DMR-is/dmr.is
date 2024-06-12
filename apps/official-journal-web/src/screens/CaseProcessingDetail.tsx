@@ -56,33 +56,6 @@ const CaseSingle: Screen<Props> = ({
     return null
   }
 
-  const stepper = generateSteps(data)
-  const prevStep =
-    caseSteps.indexOf(step) > 0
-      ? caseSteps[caseSteps.indexOf(step) - 1]
-      : undefined
-
-  const nextStep =
-    caseSteps.indexOf(step) < 3
-      ? caseSteps[caseSteps.indexOf(step) + 1]
-      : undefined
-
-  const employeesMock = [
-    {
-      label: 'Ármann',
-      value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-    },
-    {
-      label: 'Pálína J',
-      value: '21140e6b-e272-4d78-b085-dbc3190b2a0a',
-    },
-  ]
-
-  const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
-    label: c,
-    value: c,
-  }))
-
   const {
     data: caseData,
     error,
@@ -143,6 +116,33 @@ const CaseSingle: Screen<Props> = ({
   }
 
   const { advert, activeCase: activeCase } = caseData._case
+
+  const stepper = generateSteps(caseData._case)
+  const prevStep =
+    caseSteps.indexOf(step) > 0
+      ? caseSteps[caseSteps.indexOf(step) - 1]
+      : undefined
+
+  const nextStep =
+    caseSteps.indexOf(step) < 3
+      ? caseSteps[caseSteps.indexOf(step) + 1]
+      : undefined
+
+  const employeesMock = [
+    {
+      label: 'Ármann',
+      value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+    },
+    {
+      label: 'Pálína J',
+      value: '21140e6b-e272-4d78-b085-dbc3190b2a0a',
+    },
+  ]
+
+  const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
+    label: c,
+    value: c,
+  }))
 
   const assignedCaseStatus = caseStatusOptions.find(
     (c) => c.value === activeCase.status,
