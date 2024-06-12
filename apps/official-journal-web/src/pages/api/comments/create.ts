@@ -16,7 +16,6 @@ const commentBodySchema = z.object({
   internal: z.boolean(),
   comment: z.string(),
   from: z.string(),
-  type: z.nativeEnum(PostCaseCommentTypeEnum),
   to: z.string().optional(),
 })
 
@@ -95,7 +94,9 @@ export default async function handler(
         internal: body.internal,
         to: body.to,
         from: body.from,
-        type: body.type,
+        type: body.internal
+          ? PostCaseCommentTypeEnum.Comment
+          : PostCaseCommentTypeEnum.Message,
       },
     })
 

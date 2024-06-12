@@ -1,6 +1,5 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 import { Fragment, useState } from 'react'
-import swrMutation from 'swr/mutation'
 
 import {
   Box,
@@ -12,6 +11,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
+import { useAddComment } from '../../hooks/useAddComment'
 import { useCase } from '../../hooks/useCase'
 import { useDeleteComment } from '../../hooks/useDeleteComment'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -28,13 +28,25 @@ export const Comments = ({ activeCase }: Props) => {
     activeCase.activeCase.comments.length < 5,
   )
   const [commentValue, setCommentValue] = useState('')
-  const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
+  const [isInternalComment, setIsInternalComment] = useState(true) // TODO: Not sure how this will be implemented (checkbox, tabs?)
   const now = new Date()
 
-  const { mutate: refetchCase } = useCase({ caseId: activeCase.activeCase.id })
-  const { trigger: onDeleteComment, isMutating } = useDeleteComment({
-    onSuccess: () => refetchCase(),
+  const { mutate: refetchCase, isLoading: isRefetchingCase } = useCase({
+    caseId: activeCase.activeCase.id,
   })
+  const { trigger: onDeleteComment, isMutating: isDeletingComment } =
+    useDeleteComment({
+      onSuccess: () => refetchCase(),
+    })
+  const { trigger: onAddComment, isMutating: isAddingComment } = useAddComment({
+    onSuccess: () => {
+      setCommentValue('')
+      setIsInternalComment(true)
+      refetchCase()
+    },
+  })
+
+  const isLoading = isRefetchingCase || isDeletingComment || isAddingComment
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
@@ -80,7 +92,7 @@ export const Comments = ({ activeCase }: Props) => {
                 <Text>{commentTaskToNode(c.task)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                 <Button
-                  loading={isMutating}
+                  loading={isDeletingComment}
                   variant="text"
                   as="button"
                   size="small"
@@ -138,8 +150,8 @@ export const Comments = ({ activeCase }: Props) => {
         <Box marginTop={2}>
           <Stack space={2}>
             <Input
-              disabled={isMutating}
-              loading={isMutating}
+              disabled={isLoading}
+              loading={isLoading}
               type="text"
               name="comment"
               label={formatMessage(messages.comments.label)}
@@ -150,7 +162,15 @@ export const Comments = ({ activeCase }: Props) => {
             />
             <Button
               disabled={!commentValue}
-              onClick={() => console.log('add comment')}
+              loading={isAddingComment}
+              onClick={() =>
+                onAddComment({
+                  caseId: activeCase.activeCase.id,
+                  internal: isInternalComment,
+                  comment: commentValue,
+                  from: activeCase.activeCase.assignedTo?.id ?? '',
+                })
+              }
             >
               {formatMessage(messages.comments.save)}
             </Button>

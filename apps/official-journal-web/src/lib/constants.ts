@@ -5,6 +5,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '../gen/fetch'
+import { SWRAddCommentParams } from '../hooks/useAddComment'
 import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
@@ -123,6 +124,30 @@ export async function getCase(url: string) {
     }
 
     return res.json()
+  })
+}
+
+export async function createComment(
+  url: string,
+  { arg }: { arg: SWRAddCommentParams },
+) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const error = new Error('Error occured while fetching data')
+      console.error('Error occured while fetching data')
+      error.message = await res.text()
+      error.name = res.statusText
+
+      throw error
+    }
+
+    return res
   })
 }
 
