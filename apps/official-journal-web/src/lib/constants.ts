@@ -60,9 +60,7 @@ export async function updateCaseStatus(
     headers: {
       'Content-Type': 'application/json',
     },
-  })
-    .then((res) => res)
-    .then((res) => res.json())
+  }).then((res) => res)
 }
 
 export async function publishCases(

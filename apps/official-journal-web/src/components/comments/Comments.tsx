@@ -58,7 +58,7 @@ export const Comments = ({ activeCase }: Props) => {
 
   const addComment = () => {
     const post = async () => {
-      const data = await fetch('/api/comments/post', {
+      const data = await fetch('/api/comments/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export const Comments = ({ activeCase }: Props) => {
           type: isInternalComment
             ? CaseCommentTypeEnum.Comment
             : CaseCommentTypeEnum.Message,
-          from: 'Ármann Árni', // TODO: Replace with actual user
+          from: '3d918322-8e60-44ad-be5e-7485d0e45cdd', // TODO: Replace with actual user ID
         }),
       })
 
@@ -126,7 +126,7 @@ export const Comments = ({ activeCase }: Props) => {
               />
 
               <div className={styles.text}>
-                <Text>{commentTaskToNode(c.task)}</Text>
+                <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                 <Button
                   variant="text"

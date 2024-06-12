@@ -230,15 +230,9 @@ export class CaseService implements ICaseService {
           },
         )
 
-        const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
-
-        if (!newCaseLookup.ok) {
-          return newCaseLookup
-        }
-
         // TODO: When auth is setup, use the user id from the token
         await this.commentService.create(
-          newCaseLookup.value.id,
+          newCase.id,
           {
             internal: true,
             type: CaseCommentType.Submit,
@@ -248,6 +242,15 @@ export class CaseService implements ICaseService {
           },
           t,
         )
+
+        const newCaseLookup = await this.utilityService.caseLookup(
+          newCase.id,
+          t,
+        )
+
+        if (!newCaseLookup.ok) {
+          return newCaseLookup
+        }
 
         return Promise.resolve({
           ok: true,
