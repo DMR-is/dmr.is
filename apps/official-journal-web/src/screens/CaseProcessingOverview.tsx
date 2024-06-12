@@ -49,7 +49,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   const [selectedTab, setSelectedTab] = useState<CaseStatus>('Innsent')
 
   const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
-    search: undefined,
+    search: router.query.search,
     department: router.query.department,
     status: router.query.status,
     page: router.query.page,

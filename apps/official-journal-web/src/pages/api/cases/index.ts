@@ -19,9 +19,14 @@ export default async function handler(
 
     const dmrClient = createDmrClient()
 
-    const { status, department } = req.query
+    const { status, department, search } = req.query
+
+    console.log('status', status)
+    console.log('department', department)
+    console.log('search', search)
 
     const cases = await dmrClient.getCases({
+      search: extract(search),
       status: extract(status),
       department: extract(department),
     })

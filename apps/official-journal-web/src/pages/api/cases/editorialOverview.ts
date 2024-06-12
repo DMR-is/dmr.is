@@ -19,7 +19,7 @@ export default async function handler(
 
     const dmrClient = createDmrClient()
 
-    const { status, department, page, pageSize } = req.query
+    const { status, department, page, pageSize, search } = req.query
 
     const currentPage = extract(page) ?? 1
     const currentPageSize = extract(pageSize)
@@ -27,6 +27,7 @@ export default async function handler(
       : 10
 
     const cases = await dmrClient.getEditorialOverview({
+      search: extract(search),
       status: extract(status),
       department: extract(department),
       page: `${currentPage}`,

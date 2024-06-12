@@ -2,6 +2,9 @@ import { Op } from 'sequelize'
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
 type WhereClause = {
+  advertTitle?: {
+    [Op.iLike]: string
+  }
   applicationId?: string
   year?: string
   caseNumber?: string
@@ -21,6 +24,12 @@ const caseParameters = (params?: GetCasesQuery, caseStatusId?: string) => {
   // Check and add each parameter to the where clause
   if (params?.applicationId !== undefined) {
     whereClause.applicationId = params.applicationId
+  }
+
+  if (params?.search !== undefined) {
+    whereClause.advertTitle = {
+      [Op.iLike]: `%${params.search}%`,
+    }
   }
 
   if (params?.year !== undefined) {
