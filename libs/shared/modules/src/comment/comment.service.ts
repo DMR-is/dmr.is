@@ -163,7 +163,7 @@ export class CommentService implements ICommentService {
   ): Promise<Result<PostCaseCommentResponse>> {
     const now = new Date().toISOString()
 
-    const caseLookup = await this.utilityService.caseLookup(caseId)
+    const caseLookup = await this.utilityService.caseLookup(caseId, transaction)
 
     if (!caseLookup.ok) {
       return caseLookup
