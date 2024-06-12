@@ -85,8 +85,6 @@ export const Comments = ({ activeCase }: Props) => {
     setCommentValue('')
   }
 
-  console.log('caseComments', caseComments)
-
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
