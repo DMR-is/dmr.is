@@ -6,11 +6,12 @@ type AuditAPIRouteParams = {
 }
 
 export const auditAPIRoute = ({ req }: AuditAPIRouteParams) => {
-  const { method, url } = req
+  const { method, url, query } = req
   logger.info(`API request method: ${method} url: ${url}`, {
     category: 'api',
     method,
     url,
+    query,
   })
 }
 

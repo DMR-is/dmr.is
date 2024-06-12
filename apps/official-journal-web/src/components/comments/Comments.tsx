@@ -1,5 +1,6 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 import { Fragment, useState } from 'react'
+import swrMutation from 'swr/mutation'
 
 import {
   Box,
@@ -12,10 +13,10 @@ import {
 
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { APIRotues, deleteComment } from '../../lib/constants'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
 import { messages } from './messages'
-
 type Props = {
   activeCase: CaseWithAdvert
 }
@@ -27,69 +28,18 @@ export const Comments = ({ activeCase }: Props) => {
   )
   const [commentValue, setCommentValue] = useState('')
   const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
-  const [caseComments, setCaseComments] = useState(
-    activeCase.activeCase.comments,
-  )
   const now = new Date()
 
-  const deleteComment = (id: string) => {
-    const deleteComment = async () => {
-      await fetch(
-        `/api/comments/delete?caseId=${activeCase.activeCase.id}&commentId=${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
-        .then((res) => {
-          if (res.ok) {
-            return res.json()
-          }
-          throw new Error('Failed to delete comment')
-        })
-        .then((data) => setCaseComments(data))
-        .catch((err) => console.error(err))
-    }
-
-    deleteComment()
-  }
-
-  const addComment = () => {
-    const post = async () => {
-      const data = await fetch('/api/comments/post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          caseId: activeCase.activeCase.id,
-          comment: commentValue,
-          internal: isInternalComment,
-          type: isInternalComment
-            ? CaseCommentTypeEnum.Comment
-            : CaseCommentTypeEnum.Message,
-          from: 'Ármann Árni', // TODO: Replace with actual user
-        }),
-      })
-
-      const json = await data.json()
-
-      if (Array.isArray(json)) {
-        setCaseComments([...json])
-      }
-    }
-
-    post()
-    setCommentValue('')
-  }
+  const { trigger: onDeleteComment } = swrMutation(
+    APIRotues.DeleteComment,
+    deleteComment,
+  )
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
 
-      {caseComments.map((c, i) => {
+      {activeCase.activeCase.comments.map((c, i) => {
         const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
         const suffix =
           String(daysAgo).slice(-1) === '1'
@@ -132,7 +82,9 @@ export const Comments = ({ activeCase }: Props) => {
                   variant="text"
                   as="button"
                   size="small"
-                  onClick={() => deleteComment(c.id)}
+                  onClick={() =>
+                    onDeleteComment({ caseId: c.id, commentId: c.id })
+                  }
                 >
                   <Box
                     display="flex"
@@ -189,7 +141,10 @@ export const Comments = ({ activeCase }: Props) => {
               onChange={(e) => setCommentValue(e.target.value)}
               textarea
             />
-            <Button disabled={!commentValue} onClick={addComment}>
+            <Button
+              disabled={!commentValue}
+              onClick={() => console.log('add comment')}
+            >
               {formatMessage(messages.comments.save)}
             </Button>
           </Stack>

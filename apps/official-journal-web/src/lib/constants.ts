@@ -106,6 +106,49 @@ export async function getCases(url: string, qs?: string) {
   })
 }
 
+export async function getCase(url: string, id: string) {
+  const fullUrl = url.replace(':id', id)
+  return fetch(fullUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(async (res) => {
+    const error = new Error('Error occured while fetching data')
+    if (!res.ok) {
+      console.error('Error occured while fetching data')
+      error.message = await res.text()
+      error.name = res.statusText
+
+      throw error
+    }
+
+    return res.json()
+  })
+}
+
+export async function deleteComment(
+  url: string,
+  { arg }: { arg: { caseId: string; commentId: string } },
+) {
+  const fullUrl = `${url}?caseId=${arg.caseId}&commentId=${arg.commentId}`
+  return fetch(fullUrl, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const error = new Error('Error occured while fetching data')
+      console.error('Error occured while fetching data')
+      error.message = await res.text()
+      error.name = res.statusText
+
+      throw error
+    }
+  })
+}
+
 export enum APIRotues {
   Case = '/api/cases/:id',
   Cases = '/api/cases',
