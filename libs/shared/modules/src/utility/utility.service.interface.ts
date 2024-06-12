@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
 
 import {
@@ -12,7 +13,10 @@ export interface IUtilityService {
   getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>>
   departmentLookup(departmentId: string): Promise<Result<AdvertDepartmentDTO>>
   typeLookup(type: string): Promise<Result<AdvertTypeDTO>>
-  caseLookup(caseId: string): Promise<Result<CaseDto>>
+  caseLookup(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<Result<CaseDto>>
   generateCaseNumber(): Promise<Result<string>>
   caseStatusLookup(status: string): Promise<Result<CaseStatusDto>>
   caseTagLookup(tag: string): Promise<Result<CaseStatusDto>>

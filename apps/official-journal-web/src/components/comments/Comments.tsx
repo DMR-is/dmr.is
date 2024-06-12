@@ -89,7 +89,7 @@ export const Comments = ({ activeCase }: Props) => {
               />
 
               <div className={styles.text}>
-                <Text>{commentTaskToNode(c.task)}</Text>
+                <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                 <Button
                   loading={isDeletingComment}

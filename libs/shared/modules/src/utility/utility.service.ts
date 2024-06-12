@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
@@ -409,7 +409,10 @@ export class UtilityService implements IUtilityService {
       })
     }
   }
-  async caseLookup(caseId: string): Promise<Result<CaseDto>> {
+  async caseLookup(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<Result<CaseDto>> {
     this.logger.info('caseLookup', {
       category: LOGGING_CATEGORY,
       caseId: caseId,
@@ -418,6 +421,7 @@ export class UtilityService implements IUtilityService {
     try {
       const found = await this.caseModel.findByPk(caseId, {
         include: CASE_RELATIONS,
+        transaction,
       })
 
       if (!found) {

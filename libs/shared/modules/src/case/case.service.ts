@@ -88,157 +88,160 @@ export class CaseService implements ICaseService {
       return casesResponse
     }
 
-    return Promise.resolve({
+    return {
       ok: true,
       value: {
         cases: casesResponse.value.cases,
         paging: casesResponse.value.paging,
         totalItems: counterResult(counter),
       },
-    })
+    }
   }
 
   @Audit()
   @HandleException()
   async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
-    const newCase = await this.sequelize.transaction<
-      Result<CreateCaseResponse>
-    >(async (t) => {
-      const existingCaseLookup =
-        await this.utilityService.caseLookupByApplicationId(body.applicationId)
+    return await this.sequelize.transaction<Result<CreateCaseResponse>>(
+      async (t) => {
+        const existingCaseLookup =
+          await this.utilityService.caseLookupByApplicationId(
+            body.applicationId,
+          )
 
-      if (existingCaseLookup.ok) {
-        this.logger.warn('Case already exists for this application', {
-          applicationId: body.applicationId,
-          category: LOGGING_CATEGORY,
-        })
+        if (existingCaseLookup.ok) {
+          this.logger.warn('Case already exists for this application', {
+            applicationId: body.applicationId,
+            category: LOGGING_CATEGORY,
+          })
 
-        return {
-          ok: false,
-          error: {
-            code: 409,
-            message: 'Case already exists for this application',
-          },
+          return {
+            ok: false,
+            error: {
+              code: 409,
+              message: 'Case already exists for this application',
+            },
+          }
         }
-      }
 
-      const applicationLookup = await this.applicationService.getApplication(
-        body.applicationId,
-      )
-
-      if (!applicationLookup.ok) {
-        return applicationLookup
-      }
-
-      const caseStatusLookup = await this.utilityService.caseStatusLookup(
-        CaseStatus.Submitted,
-      )
-
-      if (!caseStatusLookup.ok) {
-        return caseStatusLookup
-      }
-
-      const caseTagLookup = await this.utilityService.caseTagLookup(
-        CaseTag.NotStarted,
-      )
-
-      if (!caseTagLookup.ok) {
-        return caseTagLookup
-      }
-
-      const caseCommunicationStatus =
-        await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatus.NotStarted,
+        const applicationLookup = await this.applicationService.getApplication(
+          body.applicationId,
         )
 
-      if (!caseCommunicationStatus.ok) {
-        return caseCommunicationStatus
-      }
+        if (!applicationLookup.ok) {
+          return applicationLookup
+        }
 
-      const now = new Date()
-      const application = applicationLookup.value.application
-      const nextCaseNumber = await this.utilityService.generateCaseNumber()
+        const caseStatusLookup = await this.utilityService.caseStatusLookup(
+          CaseStatus.Submitted,
+        )
 
-      if (!nextCaseNumber.ok) {
-        return nextCaseNumber
-      }
+        if (!caseStatusLookup.ok) {
+          return caseStatusLookup
+        }
 
-      const departmentLookup = await this.utilityService.departmentLookup(
-        application.answers.advert.department,
-      )
+        const caseTagLookup = await this.utilityService.caseTagLookup(
+          CaseTag.NotStarted,
+        )
 
-      if (!departmentLookup.ok) {
-        return departmentLookup
-      }
+        if (!caseTagLookup.ok) {
+          return caseTagLookup
+        }
 
-      const requestedPublicationDate = new Date(
-        application.answers.publishing.date,
-      )
-      const today = new Date()
-      const diff = requestedPublicationDate.getTime() - today.getTime()
-      const diffDays = diff / (1000 * 3600 * 24)
-      let fastTrack = false
-      if (diffDays > 10) {
-        fastTrack = true
-      }
+        const caseCommunicationStatus =
+          await this.utilityService.caseCommunicationStatusLookup(
+            CaseCommunicationStatus.NotStarted,
+          )
 
-      const caseNumber = nextCaseNumber.value
+        if (!caseCommunicationStatus.ok) {
+          return caseCommunicationStatus
+        }
 
-      const newCase = await this.caseModel.create(
-        {
-          id: uuid(),
-          applicationId: application.id,
-          year: now.getFullYear(),
-          caseNumber: caseNumber,
-          statusId: caseStatusLookup.value.id,
-          tagId: caseTagLookup.value.id,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-          isLegacy: false,
-          assignedUserId: null,
-          communicationStatusId: caseCommunicationStatus.value.id,
-          publishedAt: null,
-          price: 0,
-          paid: false,
-          fastTrack: fastTrack,
-          advertTitle: application.answers.advert.title,
-          requestedPublicationDate: application.answers.publishing.date,
-          departmentId: departmentLookup.value.id,
-        },
-        {
-          returning: ['id'],
-          transaction: t,
-        },
-      )
+        const now = new Date()
+        const application = applicationLookup.value.application
+        const nextCaseNumber = await this.utilityService.generateCaseNumber()
 
-      const newCaseLookup = await this.utilityService.caseLookup(newCase.id)
+        if (!nextCaseNumber.ok) {
+          return nextCaseNumber
+        }
 
-      if (!newCaseLookup.ok) {
-        return newCaseLookup
-      }
+        const departmentLookup = await this.utilityService.departmentLookup(
+          application.answers.advert.department,
+        )
 
-      // TODO: When auth is setup, use the user id from the token
-      await this.commentService.create(
-        newCaseLookup.value.id,
-        {
-          internal: true,
-          type: CaseCommentType.Submit,
-          comment: null,
-          from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-          to: null,
-        },
-        t,
-      )
+        if (!departmentLookup.ok) {
+          return departmentLookup
+        }
 
-      return Promise.resolve({
-        ok: true,
-        value: {
-          case: caseMigrate(newCaseLookup.value),
-        },
-      })
-    })
+        const requestedPublicationDate = new Date(
+          application.answers.publishing.date,
+        )
+        const today = new Date()
+        const diff = requestedPublicationDate.getTime() - today.getTime()
+        const diffDays = diff / (1000 * 3600 * 24)
+        let fastTrack = false
+        if (diffDays > 10) {
+          fastTrack = true
+        }
 
-    return Promise.resolve(newCase)
+        const caseNumber = nextCaseNumber.value
+
+        const newCase = await this.caseModel.create(
+          {
+            id: uuid(),
+            applicationId: application.id,
+            year: now.getFullYear(),
+            caseNumber: caseNumber,
+            statusId: caseStatusLookup.value.id,
+            tagId: caseTagLookup.value.id,
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+            isLegacy: false,
+            assignedUserId: null,
+            communicationStatusId: caseCommunicationStatus.value.id,
+            publishedAt: null,
+            price: 0,
+            paid: false,
+            fastTrack: fastTrack,
+            advertTitle: application.answers.advert.title,
+            requestedPublicationDate: application.answers.publishing.date,
+            departmentId: departmentLookup.value.id,
+          },
+          {
+            returning: ['id'],
+            transaction: t,
+          },
+        )
+
+        // TODO: When auth is setup, use the user id from the token
+        await this.commentService.create(
+          newCase.id,
+          {
+            internal: true,
+            type: CaseCommentType.Submit,
+            comment: null,
+            from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+            to: null,
+          },
+          t,
+        )
+
+        const newCaseLookup = await this.utilityService.caseLookup(
+          newCase.id,
+          t,
+        )
+
+        if (!newCaseLookup.ok) {
+          return newCaseLookup
+        }
+
+        return {
+          ok: true,
+          value: {
+            case: caseMigrate(newCaseLookup.value),
+          },
+        }
+      },
+    )
   }
 
   @Audit()
@@ -247,13 +250,13 @@ export class CaseService implements ICaseService {
     const result = await this.utilityService.getCaseWithAdvert(id)
 
     if (!result.ok) {
-      return Promise.resolve(result)
+      return result
     }
 
-    return Promise.resolve({
+    return {
       ok: true,
       value: { case: result.value },
-    })
+    }
   }
 
   @Audit()
@@ -294,13 +297,13 @@ export class CaseService implements ICaseService {
 
     const mapped = cases.rows.map((c) => caseMigrate(c))
 
-    return Promise.resolve({
+    return {
       ok: true,
       value: {
         cases: mapped,
         paging: generatePaging(mapped, page, pageSize, cases.count),
       },
-    })
+    }
   }
 
   @Audit()
@@ -421,10 +424,10 @@ export class CaseService implements ICaseService {
       category: LOGGING_CATEGORY,
     })
 
-    return Promise.resolve({
+    return {
       ok: true,
       value: undefined,
-    })
+    }
   }
 
   async assign(id: string, userId: string): Promise<Result<undefined>> {
@@ -441,13 +444,13 @@ export class CaseService implements ICaseService {
           userId: userId,
           caseId: id,
         })
-        return Promise.resolve({
+        return {
           ok: false,
           error: {
             message: 'Missing or invalid body',
             code: 400,
           },
-        })
+        }
       }
 
       const caseRes = await this.utilityService.caseLookup(id)
@@ -483,22 +486,22 @@ export class CaseService implements ICaseService {
         to: employeeLookup.value.id, // TODO: REPLACE WITH ACTUAL USER
       })
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: undefined,
-      })
+      }
     } catch (e) {
       this.logger.error('Error in assign', {
         error: e,
         category: LOGGING_CATEGORY,
       })
-      return Promise.resolve({
+      return {
         ok: false,
         error: {
           message: 'Failed to assign user to the case',
           code: 500,
         },
-      })
+      }
     }
   }
 
@@ -543,22 +546,22 @@ export class CaseService implements ICaseService {
         to: null,
       })
 
-      return Promise.resolve({
+      return {
         ok: true,
         value: undefined,
-      })
+      }
     } catch (error) {
       this.logger.error('Error in updateStatus', {
         category: LOGGING_CATEGORY,
         error,
       })
-      return Promise.resolve({
+      return {
         ok: false,
         error: {
           message: 'Failed to update case status',
           code: 500,
         },
-      })
+      }
     }
   }
 
