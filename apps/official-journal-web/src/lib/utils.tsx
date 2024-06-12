@@ -8,6 +8,7 @@ import { isDefined } from '@island.is/shared/utils'
 import {
   CaseComment,
   CaseCommentCaseStatusEnum,
+  CaseCommentTaskTitleEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
   CaseTagEnum,
@@ -154,23 +155,61 @@ type StepsType = {
   isComplete: boolean
 }
 
-export const commentTaskToNode = (task: CaseComment['task']) => {
-  if (task.to && !task.from) {
-    return (
-      <>
-        {task.to ? <strong>{task.to}</strong> : null}{' '}
-        {task.title ? task.title : null}{' '}
-      </>
-    )
+export const commentTaskToNode = (
+  task: CaseComment['task'],
+  status: CaseComment['caseStatus'],
+) => {
+  switch (task.title) {
+    case CaseCommentTaskTitleEnum.InnsentAf: {
+      return (
+        <>
+          {task.title} <strong>{task.from}</strong>
+        </>
+      )
+    }
+    case CaseCommentTaskTitleEnum.MerkirSrMli: {
+      return (
+        <>
+          <strong>{task.to}</strong> {task.title}
+        </>
+      )
+    }
+    case CaseCommentTaskTitleEnum.FrirMl: {
+      return (
+        <>
+          <strong>{task.from}</strong> {task.title} <strong>{task.to}</strong>
+        </>
+      )
+    }
+    case CaseCommentTaskTitleEnum.FrirMlStuna: {
+      return (
+        <>
+          <strong>{task.from}</strong> {task.title} <strong>{status}</strong>
+        </>
+      )
+    }
+    case CaseCommentTaskTitleEnum.GerirAthugasemd: {
+      return (
+        <>
+          <strong>{task.from}</strong> {task.title}
+        </>
+      )
+    }
+    case CaseCommentTaskTitleEnum.SkrirSkilabo: {
+      return (
+        <>
+          <strong>{task.from}</strong> {task.title}
+        </>
+      )
+    }
+    default: {
+      return (
+        <>
+          <strong>{task.from ?? ''}</strong> {task.title ?? ''}
+        </>
+      )
+    }
   }
-
-  return (
-    <>
-      {task.from ? <strong>{task.from}</strong> : null}{' '}
-      {task.title ? task.title : null}{' '}
-      {task.to ? <strong>{task.to}</strong> : null}{' '}
-    </>
-  )
 }
 
 export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
@@ -188,7 +227,7 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
             c.caseStatus === CaseCommentCaseStatusEnum.Innsent &&
             displayTypes.includes(c.type),
         )
-        ?.map(({ task }) => commentTaskToNode(task)),
+        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
     },
     {
       step: 'grunnvinnsla',
@@ -201,7 +240,7 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
             c.caseStatus === CaseCommentCaseStatusEnum.Grunnvinnsla &&
             displayTypes.includes(c.type),
         )
-        ?.map(({ task }) => commentTaskToNode(task)),
+        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
     },
     {
       step: 'yfirlestur',
@@ -214,7 +253,7 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
             c.caseStatus === CaseCommentCaseStatusEnum.Yfirlestur &&
             displayTypes.includes(c.type),
         )
-        ?.map(({ task }) => commentTaskToNode(task)),
+        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
     },
     {
       step: 'tilbuid',
@@ -227,7 +266,7 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
             c.caseStatus === CaseCommentCaseStatusEnum.Tilbi &&
             displayTypes.includes(c.type),
         )
-        ?.map(({ task }) => commentTaskToNode(task)),
+        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
     },
   ]
 }
