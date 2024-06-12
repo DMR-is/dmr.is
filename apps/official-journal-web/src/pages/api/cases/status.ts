@@ -11,9 +11,9 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
   try {
-    const { caseId, status } = req.body
+    const { caseId, statusId } = req.body
 
-    if (!caseId || !status) {
+    if (!caseId || !statusId) {
       return res.status(400).json({ error: 'Missing required parameters' })
     }
 
@@ -22,7 +22,7 @@ export default async function handler(
     await client.updateCaseStatus({
       id: caseId,
       updateCaseStatusBody: {
-        status,
+        status: statusId,
       },
     })
 

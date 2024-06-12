@@ -31,6 +31,7 @@ import {
 import { useAssignEmployee } from '../hooks/useAssignEmployee'
 import { useCase } from '../hooks/useCase'
 import { useFormatMessage } from '../hooks/useFormatMessage'
+import { useUpdateCaseStatus } from '../hooks/useUpdateCaseStatus'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
@@ -85,11 +86,6 @@ const CaseSingle: Screen<Props> = ({
     value: c,
   }))
 
-  const { trigger: onUpdateCaseStatus } = useSWRMutation(
-    APIRotues.UpdateCaseStatus,
-    updateCaseStatus,
-  )
-
   const {
     data: caseData,
     error,
@@ -104,6 +100,11 @@ const CaseSingle: Screen<Props> = ({
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useAssignEmployee({
+      onSuccess: () => refetch(),
+    })
+
+  const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
+    useUpdateCaseStatus({
       onSuccess: () => refetch(),
     })
 
@@ -142,151 +143,153 @@ const CaseSingle: Screen<Props> = ({
   const { advert, activeCase: activeCase } = caseData._case
 
   return (
-    <SWRConfig value={{ refreshInterval: 1000 }}>
-      <FormShell
-        header={{
-          title: formatMessage(messages.banner.title),
-          description: formatMessage(messages.banner.description),
-          breadcrumbs: [
-            {
-              title: formatMessage(messages.breadcrumbs.dashboard),
-              href: '/',
-            },
-            {
-              title: formatMessage(messages.breadcrumbs.caseOverview),
-              href: '/ritstjorn',
-            },
-            {
-              title: formatMessage(messages.breadcrumbs.case),
-            },
-          ],
-        }}
-        steps={stepper.map((item, i) => (
-          <Section
-            key={item.step}
-            isActive={item.isActive}
-            section={item.title}
-            theme={FormStepperThemes.PURPLE}
-            sectionIndex={i}
-            subSections={item.notes?.map((note, i) => (
-              <Text key={i} variant="medium">
-                {note}
-              </Text>
-            ))}
-            isComplete={item.isComplete}
-          />
-        ))}
-        actions={
-          <Stack space={[2]}>
-            <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
-            <Select
-              isOptionDisabled={(option) =>
-                activeCase.assignedTo?.id === option.value
-              }
-              isDisabled={isAssigning}
-              isLoading={isAssigning}
-              name="assignedTo"
-              options={employeesMock.map((e) => ({
-                label: e.label,
-                value: e.value,
-                disabled: activeCase.assignedTo?.id === e.value,
-              }))}
-              defaultValue={employeesMock.find(
-                (e) => e.value === activeCase.assignedTo?.id,
-              )}
-              label={formatMessage(messages.actions.assignedTo)}
-              placeholder={formatMessage(
-                messages.actions.assignedToPlaceholder,
-              )}
-              size="sm"
-              onChange={(e) => {
-                if (!e) return
-                onAssignEmployee({
-                  caseId: activeCase.id,
-                  userId: e.value,
-                })
-              }}
-            ></Select>
-            <Select
-              name="status"
-              options={caseStatusOptions}
-              defaultValue={caseStatusOptions.find(
-                (c) => c.value === activeCase.status,
-              )}
-              label={formatMessage(messages.actions.status)}
-              size="sm"
-              onChange={(e) => {
-                if (!e) return
-                onUpdateCaseStatus({
-                  caseId: activeCase.id,
-                  status: e.value,
-                })
-              }}
-            ></Select>
-          </Stack>
-        }
-      >
-        <Stack space={[2, 3, 4]}>
-          {step === 'innsending' && (
-            <StepInnsending activeCase={caseData._case} />
-          )}
-          {step === 'grunnvinnsla' && (
-            <StepGrunnvinnsla
-              activeCase={caseData._case}
-              advertTypes={advertTypes.sort((a, b) =>
-                a.slug.localeCompare(b.slug),
-              )}
-              departments={departments.sort((a, b) =>
-                a.slug.localeCompare(b.slug),
-              )}
-            />
-          )}
-          {step === 'yfirlestur' && (
-            <StepYfirlestur activeCase={caseData._case} />
-          )}
-          {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
-
-          {advert.attachments.length > 0 && (
-            <Attachments activeCase={caseData._case} />
-          )}
-
-          <Comments activeCase={caseData._case} />
-
-          <Box
-            display="flex"
-            justifyContent="spaceBetween"
-            borderTopWidth="standard"
-            borderColor="purple200"
-            paddingTop={[2, 3, 4]}
-          >
-            {prevStep ? (
-              <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
-                <Button as="span" variant="ghost" unfocusable>
-                  {formatMessage(messages.paging.goBack)}
-                </Button>
-              </LinkV2>
-            ) : (
-              <LinkV2 href={`/ritstjorn`}>
-                <Button as="span" variant="ghost" unfocusable>
-                  {formatMessage(messages.paging.goBackOverview)}
-                </Button>
-              </LinkV2>
+    <FormShell
+      header={{
+        title: formatMessage(messages.banner.title),
+        description: formatMessage(messages.banner.description),
+        breadcrumbs: [
+          {
+            title: formatMessage(messages.breadcrumbs.dashboard),
+            href: '/',
+          },
+          {
+            title: formatMessage(messages.breadcrumbs.caseOverview),
+            href: '/ritstjorn',
+          },
+          {
+            title: formatMessage(messages.breadcrumbs.case),
+          },
+        ],
+      }}
+      steps={stepper.map((item, i) => (
+        <Section
+          key={item.step}
+          isActive={item.isActive}
+          section={item.title}
+          theme={FormStepperThemes.PURPLE}
+          sectionIndex={i}
+          subSections={item.notes?.map((note, i) => (
+            <Text key={i} variant="medium">
+              {note}
+            </Text>
+          ))}
+          isComplete={item.isComplete}
+        />
+      ))}
+      actions={
+        <Stack space={[2]}>
+          <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
+          <Select
+            isOptionDisabled={(option) =>
+              activeCase.assignedTo?.id === option.value
+            }
+            isDisabled={isAssigning}
+            isLoading={isAssigning}
+            name="assignedTo"
+            options={employeesMock.map((e) => ({
+              label: e.label,
+              value: e.value,
+              disabled: activeCase.assignedTo?.id === e.value,
+            }))}
+            defaultValue={employeesMock.find(
+              (e) => e.value === activeCase.assignedTo?.id,
             )}
-            {nextStep && activeCase.assignedTo === null ? (
-              <Button icon="arrowForward" disabled>
+            label={formatMessage(messages.actions.assignedTo)}
+            placeholder={formatMessage(messages.actions.assignedToPlaceholder)}
+            size="sm"
+            onChange={(e) => {
+              if (!e) return
+              onAssignEmployee({
+                caseId: activeCase.id,
+                userId: e.value,
+              })
+            }}
+          ></Select>
+          <Select
+            isDisabled={isUpdatingStatus}
+            isLoading={isUpdatingStatus}
+            name="status"
+            options={caseStatusOptions.map((c) => ({
+              label: c.label,
+              value: c.value,
+              disabled: c.value === activeCase.status,
+            }))}
+            defaultValue={caseStatusOptions.find(
+              (c) => c.value === activeCase.status,
+            )}
+            label={formatMessage(messages.actions.status)}
+            size="sm"
+            onChange={(e) => {
+              if (!e) return
+              onUpdateCaseStatus({
+                caseId: activeCase.id,
+                statusId: e.value,
+              })
+            }}
+          ></Select>
+        </Stack>
+      }
+    >
+      <Stack space={[2, 3, 4]}>
+        {step === 'innsending' && (
+          <StepInnsending activeCase={caseData._case} />
+        )}
+        {step === 'grunnvinnsla' && (
+          <StepGrunnvinnsla
+            activeCase={caseData._case}
+            advertTypes={advertTypes.sort((a, b) =>
+              a.slug.localeCompare(b.slug),
+            )}
+            departments={departments.sort((a, b) =>
+              a.slug.localeCompare(b.slug),
+            )}
+          />
+        )}
+        {step === 'yfirlestur' && (
+          <StepYfirlestur activeCase={caseData._case} />
+        )}
+        {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
+
+        {advert.attachments.length > 0 && (
+          <Attachments activeCase={caseData._case} />
+        )}
+
+        <Comments activeCase={caseData._case} />
+
+        <Box
+          display="flex"
+          justifyContent="spaceBetween"
+          borderTopWidth="standard"
+          borderColor="purple200"
+          paddingTop={[2, 3, 4]}
+        >
+          {prevStep ? (
+            <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
+              <Button as="span" variant="ghost" unfocusable>
+                {formatMessage(messages.paging.goBack)}
+              </Button>
+            </LinkV2>
+          ) : (
+            <LinkV2 href={`/ritstjorn`}>
+              <Button as="span" variant="ghost" unfocusable>
+                {formatMessage(messages.paging.goBackOverview)}
+              </Button>
+            </LinkV2>
+          )}
+          {nextStep && activeCase.assignedTo === null ? (
+            <Button icon="arrowForward" disabled>
+              {formatMessage(messages.paging.nextStep)}
+            </Button>
+          ) : nextStep ? (
+            <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
+              <Button as="span" icon="arrowForward" unfocusable>
                 {formatMessage(messages.paging.nextStep)}
               </Button>
-            ) : nextStep ? (
-              <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
-                <Button as="span" icon="arrowForward" unfocusable>
-                  {formatMessage(messages.paging.nextStep)}
-                </Button>
-              </LinkV2>
-            ) : null}
-          </Box>
-        </Stack>
-      </FormShell>
-    </SWRConfig>
+            </LinkV2>
+          ) : null}
+        </Box>
+      </Stack>
+    </FormShell>
   )
 }
 CaseSingle.getProps = async ({ query }): Promise<Props> => {
