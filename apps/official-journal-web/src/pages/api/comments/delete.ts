@@ -28,7 +28,6 @@ export default async function handler(
       id: body.caseId,
       commentId: body.commentId,
     })
-
     return res.status(204).end()
   } catch (error) {
     handleAPIException({ res, error })

@@ -106,9 +106,8 @@ export async function getCases(url: string, qs?: string) {
   })
 }
 
-export async function getCase(url: string, id: string) {
-  const fullUrl = url.replace(':id', id)
-  return fetch(fullUrl, {
+export async function getCase(url: string) {
+  return fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -146,6 +145,8 @@ export async function deleteComment(
 
       throw error
     }
+
+    return res
   })
 }
 

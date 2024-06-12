@@ -27,17 +27,12 @@ import {
   CaseStatusEnum,
   CaseWithAdvert,
   Department,
-  GetCaseResponse,
 } from '../gen/fetch'
+import { useCase } from '../hooks/useCase'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import {
-  APIRotues,
-  assignEmployee,
-  getCase,
-  updateCaseStatus,
-} from '../lib/constants'
+import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
@@ -103,13 +98,12 @@ const CaseSingle: Screen<Props> = ({
     data: caseData,
     error,
     isLoading,
-  } = useSWR<GetCaseResponse, Error>(
-    [APIRotues.Case, data.activeCase.id],
-    ([url, id]: [string, string]) => getCase(url, id),
-    {
+  } = useCase({
+    caseId: data.activeCase.id,
+    options: {
       fallback: data,
     },
-  )
+  })
 
   if (isLoading) {
     return (

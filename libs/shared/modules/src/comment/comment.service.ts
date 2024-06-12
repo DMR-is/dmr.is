@@ -11,14 +11,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { mapCaseCommentTypeToCaseCommentTitle } from '@dmr.is/utils'
 
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'

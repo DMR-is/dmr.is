@@ -12,8 +12,9 @@ import {
 } from '@island.is/island-ui/core'
 
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
+import { useCase } from '../../hooks/useCase'
+import { useDeleteComment } from '../../hooks/useDeleteComment'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { APIRotues, deleteComment } from '../../lib/constants'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
 import { messages } from './messages'
@@ -30,10 +31,10 @@ export const Comments = ({ activeCase }: Props) => {
   const [isInternalComment, setIsInternalComment] = useState(false) // TODO: Not sure how this will be implemented (checkbox, tabs?)
   const now = new Date()
 
-  const { trigger: onDeleteComment } = swrMutation(
-    APIRotues.DeleteComment,
-    deleteComment,
-  )
+  const { mutate: refetchCase } = useCase({ caseId: activeCase.activeCase.id })
+  const { trigger: onDeleteComment, isMutating } = useDeleteComment({
+    onSuccess: () => refetchCase(),
+  })
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
@@ -79,12 +80,16 @@ export const Comments = ({ activeCase }: Props) => {
                 <Text>{commentTaskToNode(c.task)}</Text>
                 {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                 <Button
+                  loading={isMutating}
                   variant="text"
                   as="button"
                   size="small"
-                  onClick={() =>
-                    onDeleteComment({ caseId: c.id, commentId: c.id })
-                  }
+                  onClick={() => {
+                    onDeleteComment({
+                      caseId: activeCase.activeCase.id,
+                      commentId: c.id,
+                    })
+                  }}
                 >
                   <Box
                     display="flex"
@@ -133,6 +138,8 @@ export const Comments = ({ activeCase }: Props) => {
         <Box marginTop={2}>
           <Stack space={2}>
             <Input
+              disabled={isMutating}
+              loading={isMutating}
               type="text"
               name="comment"
               label={formatMessage(messages.comments.label)}
