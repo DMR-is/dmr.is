@@ -28,6 +28,7 @@ import {
   CaseWithAdvert,
   Department,
 } from '../gen/fetch'
+import { useAssignEmployee } from '../hooks/useAssignEmployee'
 import { useCase } from '../hooks/useCase'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -84,11 +85,6 @@ const CaseSingle: Screen<Props> = ({
     value: c,
   }))
 
-  const { trigger: onAssignEmployee } = useSWRMutation(
-    APIRotues.AssignEmployee,
-    assignEmployee,
-  )
-
   const { trigger: onUpdateCaseStatus } = useSWRMutation(
     APIRotues.UpdateCaseStatus,
     updateCaseStatus,
@@ -98,12 +94,18 @@ const CaseSingle: Screen<Props> = ({
     data: caseData,
     error,
     isLoading,
+    mutate: refetch,
   } = useCase({
     caseId: data.activeCase.id,
     options: {
       fallback: data,
     },
   })
+
+  const { trigger: onAssignEmployee, isMutating: isAssigning } =
+    useAssignEmployee({
+      onSuccess: () => refetch(),
+    })
 
   if (isLoading) {
     return (
@@ -178,8 +180,17 @@ const CaseSingle: Screen<Props> = ({
           <Stack space={[2]}>
             <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
             <Select
+              isOptionDisabled={(option) =>
+                activeCase.assignedTo?.id === option.value
+              }
+              isDisabled={isAssigning}
+              isLoading={isAssigning}
               name="assignedTo"
-              options={employeesMock}
+              options={employeesMock.map((e) => ({
+                label: e.label,
+                value: e.value,
+                disabled: activeCase.assignedTo?.id === e.value,
+              }))}
               defaultValue={employeesMock.find(
                 (e) => e.value === activeCase.assignedTo?.id,
               )}
@@ -191,7 +202,7 @@ const CaseSingle: Screen<Props> = ({
               onChange={(e) => {
                 if (!e) return
                 onAssignEmployee({
-                  id: activeCase.id,
+                  caseId: activeCase.id,
                   userId: e.value,
                 })
               }}

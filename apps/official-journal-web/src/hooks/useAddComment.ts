@@ -28,6 +28,5 @@ export const useAddComment = (options?: SWRAddCommentOptions) => {
   return {
     trigger,
     isMutating,
-    options,
   }
 }

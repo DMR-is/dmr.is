@@ -15,14 +15,14 @@ export default async function handler(
 
     const dmrClient = createDmrClient()
 
-    const { id, userId } = req.body
+    const { caseId, userId } = req.body
 
-    if (!id || !userId) {
+    if (!caseId || !userId) {
       return res.status(400).json({ error: 'Bad Request' })
     }
 
     await dmrClient.assignEmployee({
-      id: id,
+      id: caseId,
       userId: userId,
     })
 

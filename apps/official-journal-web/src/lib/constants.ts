@@ -6,6 +6,7 @@ import {
   UpdateCaseStatusBody,
 } from '../gen/fetch'
 import { SWRAddCommentParams } from '../hooks/useAddComment'
+import { SWRAssignEmployeeParams } from '../hooks/useAssignEmployee'
 import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
@@ -41,7 +42,7 @@ export const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export async function assignEmployee(
   url: string,
-  { arg }: { arg: AssignEmployeeRequest },
+  { arg }: { arg: SWRAssignEmployeeParams },
 ) {
   return fetch(url, {
     method: 'POST',
