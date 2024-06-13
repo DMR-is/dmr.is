@@ -7,23 +7,20 @@ export type FilterOption = {
 
 export type FilterGroup = {
   label: string
-  key: string
+  queryKey: string
   options: FilterOption[]
 }
 
 type FilterContextProps = {
-  searchFilter: string
-  filterGroups?: FilterGroup[]
+  filterGroups: FilterGroup[]
   renderFilters: boolean
-  setSearchFilter: (search: string) => void
   setRenderFilters: (render: boolean) => void
   setFilterGroups: (filterGroups: FilterGroup[]) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
-  searchFilter: '',
+  filterGroups: [],
   renderFilters: true,
-  setSearchFilter: () => {},
   setRenderFilters: () => {},
   setFilterGroups: () => {},
 })
@@ -35,13 +32,6 @@ export const FilterContextProvider = ({
   children: React.ReactNode
   filterGroups?: FilterGroup[]
 }) => {
-  const setSearchFilter = (search: string) => {
-    setState((prev) => ({
-      ...prev,
-      searchFilter: search,
-    }))
-  }
-
   const setRenderFilters = (render: boolean) => {
     setState((prev) => ({
       ...prev,
@@ -58,9 +48,7 @@ export const FilterContextProvider = ({
 
   const initalState: FilterContextProps = {
     filterGroups: filterGroups,
-    searchFilter: '',
     renderFilters: true,
-    setSearchFilter,
     setRenderFilters,
     setFilterGroups,
   }

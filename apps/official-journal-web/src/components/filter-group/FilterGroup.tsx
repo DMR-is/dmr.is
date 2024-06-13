@@ -2,38 +2,26 @@ import { useId, useState } from 'react'
 
 import { Box, Button, Checkbox, Icon, Text } from '@island.is/island-ui/core'
 
-import { FilterOption } from '../../context/filterContext'
+import { FilterGroup as IFilterGroup } from '../../context/filterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
 import { handleFilterToggle } from '../../lib/utils'
-import { ActiveFilters } from '../case-filters/CaseFilters'
 import * as styles from '../filter-popover/FilterPopover.css'
 import { messages } from './messages'
 
-type Props = {
-  label: string
-  expanded?: boolean
-  filters: FilterOption[]
-  activeFilters: ActiveFilters
-}
+type Props = IFilterGroup
 
-export const FilterGroup = ({
-  label,
-  expanded,
-  filters = [],
-  activeFilters,
-}: Props) => {
+export const FilterGroup = ({ queryKey, label, options }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const [localToggle, setLocalToggle] = useState(expanded)
+  const [localToggle, setLocalToggle] = useState(false)
 
   const localId = useId()
 
   const qp = useQueryParams()
 
   const clearGroup = () => {
-    const groupfilters = filters.map((f) => f.key)
-    qp.remove(groupfilters)
+    qp.remove([queryKey])
   }
 
   return (
@@ -59,17 +47,11 @@ export const FilterGroup = ({
         id={localId}
         className={styles.filterGroup({ expanded: localToggle })}
       >
-        {filters.map((filter) => {
+        {options.map((filter) => {
           return (
             <Checkbox
-              checked={!!activeFilters.find((a) => a.value === filter.value)}
               onChange={(e) =>
-                handleFilterToggle(
-                  qp,
-                  e.target.checked,
-                  filter.key,
-                  filter.value,
-                )
+                handleFilterToggle(qp, e.target.checked, queryKey, filter.value)
               }
               name={filter.label}
               key={filter.value}

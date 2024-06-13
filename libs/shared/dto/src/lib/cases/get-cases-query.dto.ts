@@ -165,4 +165,14 @@ export class GetCasesQuery {
   })
   @IsOptional()
   type?: string
+
+  @ApiProperty({
+    name: 'category',
+    description:
+      'Category slug to filter cases on, takes into account `category` on `Advert`.',
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  category?: string
 }

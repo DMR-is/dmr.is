@@ -1,6 +1,5 @@
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
-import useSWR from 'swr'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -10,16 +9,16 @@ import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { FilterGroup } from '../context/filterContext'
-import { Case, EditorialOverviewResponse, Paging } from '../gen/fetch'
+import { Case, Paging } from '../gen/fetch'
 import { useCaseOverview } from '../hooks/useCaseOverview'
+import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { APIRotues, getCases, Routes } from '../lib/constants'
+import { Routes } from '../lib/constants'
 import { messages as caseProccessingMessages } from '../lib/messages/caseProcessingOverview'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { CaseOverviewSearchParams, Screen } from '../lib/types'
-import { mapTabIdToCaseStatus } from '../lib/utils'
 type Props = {
   data: Case[]
   paging: Paging
@@ -29,6 +28,7 @@ type Props = {
     inReview: number
     ready: number
   }
+  filters: FilterGroup[]
 }
 
 type CaseStatus = 'Innsent' | 'Grunnvinnsla' | 'Yfirlestur' | 'Tilbúið'
@@ -44,9 +44,15 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
   paging,
   totalItems,
+  filters,
 }) => {
   const { formatMessage } = useFormatMessage()
+  const { setFilterGroups } = useFilterContext()
   const router = useRouter()
+
+  useEffect(() => {
+    setFilterGroups(filters)
+  }, [])
 
   const [selectedTab, setSelectedTab] = useState<CaseStatus>('Innsent')
 
@@ -55,6 +61,8 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     department: router.query.department,
     status: router.query.status,
     page: router.query.page,
+    type: router.query.type,
+    category: router.query.category,
     pageSize: router.query.pageSize,
   })
 
@@ -64,6 +72,8 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       department: router.query.department,
       status: router.query.status,
       page: router.query.page,
+      type: router.query.type,
+      category: router.query.category,
       pageSize: router.query.pageSize,
     })
   }, [router.query])
@@ -212,15 +222,19 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
       status: Array.isArray(status) ? status[0] : status,
       search: Array.isArray(search) ? search[0] : search,
     }),
-    dmrClient.getTypes({}),
+    dmrClient.getTypes({
+      pageSize: 1000,
+    }),
     dmrClient.getDepartments(),
-    dmrClient.getCategories({}),
+    dmrClient.getCategories({
+      pageSize: 1000,
+    }),
   ])
 
   const filters: FilterGroup[] = [
     {
       label: 'Tegund',
-      key: 'type',
+      queryKey: 'type',
       options: types.types.map((type) => ({
         label: type.title,
         value: type.slug,
@@ -228,7 +242,7 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
     },
     {
       label: 'Deild',
-      key: 'department',
+      queryKey: 'department',
       options: departments.departments.map((department) => ({
         label: department.title,
         value: department.slug,
@@ -236,15 +250,13 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
     },
     {
       label: 'Flokkur',
-      key: 'category',
+      queryKey: 'category',
       options: categories.categories.map((category) => ({
         label: category.title,
         value: category.slug,
       })),
     },
   ]
-
-  console.log(filters)
 
   return {
     data: caseData.cases,

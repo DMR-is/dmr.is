@@ -5,9 +5,15 @@ import { theme } from '@island.is/island-ui/theme'
 
 const spacing = theme.spacing[3]
 
+const MAX_POPOVER_HEIGHT = 432
+const MAX_FILTER_GROUP_HEIGHT = 310
+
 export const filterPopover = style({
   display: 'flex',
   flexDirection: 'column',
+  height: '100%',
+  maxHeight: MAX_POPOVER_HEIGHT,
+  overflowY: 'auto',
   boxShadow: theme.shadows.medium,
   backgroundColor: theme.color.white,
   inlineSize: '100vw',
@@ -52,6 +58,9 @@ export const filterGroup = recipe({
     flexDirection: 'column',
     gap: 8,
     color: theme.color.dark400,
+    height: '100%',
+    maxHeight: MAX_FILTER_GROUP_HEIGHT,
+    overflowY: 'auto',
   },
 
   variants: {
