@@ -47,5 +47,6 @@ export const caseMigrate = (model: CaseDto): Case => {
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
     advertDepartment: model.department,
+    advertType: model.advertType,
   }
 }

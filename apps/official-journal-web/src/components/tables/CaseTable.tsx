@@ -52,6 +52,7 @@ export type Props = {
   paging?: Paging
   renderLink?: boolean
   modalLink?: boolean
+  loading?: boolean
 }
 
 export type CaseTableColumnSort = {
@@ -61,6 +62,7 @@ export type CaseTableColumnSort = {
 
 export const CaseTable = ({
   renderLink = true,
+  loading = true,
   modalLink,
   columns,
   rows,

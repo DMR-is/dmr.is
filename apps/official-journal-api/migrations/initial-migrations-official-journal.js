@@ -205,10 +205,12 @@ module.exports = {
       department_id UUID NOT NULL,
       advert_title VARCHAR NOT NULL,
       advert_requested_publication_date TIMESTAMP WITH TIME ZONE,
+      advert_type_id UUID NOT NULL,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
       CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
+      CONSTRAINT fk_case_case_advert_type_id FOREIGN KEY (advert_type_id) REFERENCES advert_type (id),
       PRIMARY KEY (id)
     );
 

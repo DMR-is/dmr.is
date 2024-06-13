@@ -10,6 +10,8 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
   GetDepartmentsResponse,
   PostApplicationBody,
   PostCaseComment,
@@ -36,7 +38,6 @@ import {
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -99,6 +100,29 @@ export class CaseController {
     return Promise.resolve({
       ...result.value,
     })
+  }
+
+  @Get('categories')
+  @ApiOperation({
+    operationId: 'getCategories',
+    summary: 'Get categories',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetCategoriesResponse,
+    description: 'Categories',
+  })
+  async categories(
+    @Query()
+    params?: GetCategoriesQueryParams,
+  ): Promise<GetCategoriesResponse> {
+    const result = await this.journalService.getCategories(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
   }
 
   @Get('overview')

@@ -2,14 +2,16 @@ import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 
-import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
+import { AlertMessage } from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
+import { FilterGroup } from '../context/filterContext'
 import { Case, EditorialOverviewResponse, Paging } from '../gen/fetch'
+import { useCaseOverview } from '../hooks/useCaseOverview'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -80,14 +82,9 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     return qs.toString()
   }, [searchParams])
 
-  const {
-    data: casesResponse,
-    isLoading,
-    error,
-  } = useSWR<EditorialOverviewResponse, Error>(
-    [APIRotues.EditorialOverview, qsp],
-    ([url, qsp]: [string, string | undefined]) => getCases(url, qsp),
-    {
+  const { data: casesResponse, error } = useCaseOverview({
+    qsp: qsp,
+    options: {
       keepPreviousData: true,
       fallback: {
         cases: data,
@@ -95,7 +92,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
         totalItems,
       },
     },
-  )
+  })
 
   const onTabChange = (id: string) => {
     const tabId = CaseProccessingOverviewTabIds.find((tab) => tab === id)
@@ -123,14 +120,6 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
           message={formatMessage(errorMessages.errorFetchingData)}
           title={formatMessage(errorMessages.internalServerError)}
         />
-      </CaseOverviewGrid>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <CaseOverviewGrid>
-        <SkeletonLoader repeat={5} height={44} space={1} />
       </CaseOverviewGrid>
     )
   }
@@ -213,18 +202,55 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
   const dmrClient = createDmrClient()
 
-  const selectedStatus = mapTabIdToCaseStatus('Innsent')
+  const { page, pageSize, department, status, search } = query
 
-  const response = await dmrClient.getEditorialOverview({
-    status: selectedStatus,
-    pageSize: '10',
-  })
+  const [caseData, types, departments, categories] = await Promise.all([
+    dmrClient.getEditorialOverview({
+      page: Array.isArray(page) ? page[0] : page,
+      pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
+      department: Array.isArray(department) ? department[0] : department,
+      status: Array.isArray(status) ? status[0] : status,
+      search: Array.isArray(search) ? search[0] : search,
+    }),
+    dmrClient.getTypes({}),
+    dmrClient.getDepartments(),
+    dmrClient.getCategories({}),
+  ])
+
+  const filters: FilterGroup[] = [
+    {
+      label: 'Tegund',
+      key: 'type',
+      options: types.types.map((type) => ({
+        label: type.title,
+        value: type.slug,
+      })),
+    },
+    {
+      label: 'Deild',
+      key: 'department',
+      options: departments.departments.map((department) => ({
+        label: department.title,
+        value: department.slug,
+      })),
+    },
+    {
+      label: 'Flokkur',
+      key: 'category',
+      options: categories.categories.map((category) => ({
+        label: category.title,
+        value: category.slug,
+      })),
+    },
+  ]
+
+  console.log(filters)
 
   return {
-    data: response.cases,
-    paging: response.paging,
-    totalItems: response.totalItems,
-    filters: [],
+    data: caseData.cases,
+    paging: caseData.paging,
+    totalItems: caseData.totalItems,
+    filters: filters,
   }
 }
 

@@ -4,7 +4,6 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -156,4 +155,14 @@ export class GetCasesQuery {
   })
   @IsOptional()
   department?: string
+
+  @ApiProperty({
+    name: 'type',
+    description:
+      'Type slug to filter cases on, takes into account `type` on `Advert`.',
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  type?: string
 }

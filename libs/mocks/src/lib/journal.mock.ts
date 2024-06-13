@@ -34,7 +34,7 @@ export const ALL_MOCK_JOURNAL_DEPARTMENTS = [
   JOURNAL_DEPARTMENT_C,
 ]
 
-const DEPT_A_AUGLYSING: AdvertType = {
+export const DEPT_A_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be0',
   title: 'AUGLÝSING',
   slug: 'auglysing',

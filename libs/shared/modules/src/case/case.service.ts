@@ -172,6 +172,14 @@ export class CaseService implements ICaseService {
           return departmentLookup
         }
 
+        const typeLookup = await this.utilityService.typeLookup(
+          application.answers.advert.type,
+        )
+
+        if (!typeLookup.ok) {
+          return typeLookup
+        }
+
         const requestedPublicationDate = new Date(
           application.answers.publishing.date,
         )
@@ -205,6 +213,7 @@ export class CaseService implements ICaseService {
             advertTitle: application.answers.advert.title,
             requestedPublicationDate: application.answers.publishing.date,
             departmentId: departmentLookup.value.id,
+            advertType: typeLookup.value.id,
           },
           {
             returning: ['id'],

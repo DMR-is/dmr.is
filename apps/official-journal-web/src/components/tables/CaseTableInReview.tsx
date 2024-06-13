@@ -43,6 +43,11 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       children: formatMessage(messages.tables.inReview.columns.department),
     },
     {
+      name: 'caseAdvertType',
+      sortable: true,
+      children: formatMessage(messages.tables.general.type),
+    },
+    {
       name: 'caseName',
       sortable: true,
       children: formatMessage(messages.tables.inReview.columns.title),
@@ -92,6 +97,17 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
           <Text truncate variant="medium">
             {row.advertDepartment.title}
           </Text>
+        ),
+      },
+      {
+        sortingKey: 'caseAdvertType',
+        sortingValue: row.advertType.title,
+        children: (
+          <div className={styles.nameTableCell}>
+            <Text truncate variant="medium">
+              {row.advertType.title}
+            </Text>
+          </div>
         ),
       },
       {

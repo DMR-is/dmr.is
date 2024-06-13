@@ -15,6 +15,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { AdvertType } from '../advert-types'
 import { Application } from '../application/application.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Department } from '../departments/department.dto'
@@ -160,6 +161,12 @@ export class Case {
   })
   @Type(() => Department)
   advertDepartment!: Department
+
+  @ApiProperty({
+    type: AdvertType,
+    description: 'The advert type',
+  })
+  advertType!: AdvertType
 
   @ApiProperty({
     type: Number,

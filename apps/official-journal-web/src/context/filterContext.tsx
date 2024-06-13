@@ -2,12 +2,12 @@ import { createContext, useState } from 'react'
 
 export type FilterOption = {
   label: string
-  key: string
   value: string
 }
 
 export type FilterGroup = {
   label: string
+  key: string
   options: FilterOption[]
 }
 
