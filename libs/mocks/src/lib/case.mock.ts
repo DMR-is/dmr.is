@@ -7,7 +7,11 @@ import {
   CaseCommunicationStatus,
 } from '@dmr.is/shared/dto'
 import { ARMANN, PALINA } from './users.mock'
-import { DEPT_A_AUGLYSING, JOURNAL_DEPARTMENT_B } from './journal.mock'
+import {
+  DEPT_A_AUGLYSING,
+  JOURNAL_DEPARTMENT_B,
+  MOCK_CATEGORY_GAELUDYR,
+} from './journal.mock'
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -28,6 +32,7 @@ export const CASE_SUBMITTED: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_NEW,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -67,6 +72,7 @@ export const CASE_IN_PROGRESS: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -149,6 +155,7 @@ export const CASE_IN_REVIEW: Case = {
   fastTrack: true,
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -315,6 +322,7 @@ export const CASE_READY: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_A,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -397,6 +405,7 @@ export const CASE_READY_2: Case = {
   fastTrack: false,
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -479,6 +488,7 @@ export const CASE_READY_3: Case = {
   fastTrack: true,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B_2,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -561,6 +571,7 @@ export const CASE_PUBLISHED: Case = {
   fastTrack: false,
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_B_866_2006,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -643,6 +654,7 @@ export const CASE_PUBLISHED_2: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: JOURNAL_DEPARTMENT_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -725,6 +737,7 @@ export const CASE_PUBLISHED_3: Case = {
   fastTrack: false,
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_B_1278_2023,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [

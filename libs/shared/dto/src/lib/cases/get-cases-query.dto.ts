@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer'
 import {
   IsBooleanString,
   IsDateString,
@@ -154,7 +155,13 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  department?: string
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  department?: string[]
 
   @ApiProperty({
     name: 'type',
@@ -164,7 +171,13 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  type?: string
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  type?: string[]
 
   @ApiProperty({
     name: 'category',
@@ -174,5 +187,11 @@ export class GetCasesQuery {
     required: false,
   })
   @IsOptional()
-  category?: string
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  category?: string[]
 }

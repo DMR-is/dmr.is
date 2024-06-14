@@ -218,6 +218,13 @@
             "in": "query",
             "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -450,6 +457,13 @@
             "required": false,
             "in": "query",
             "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],

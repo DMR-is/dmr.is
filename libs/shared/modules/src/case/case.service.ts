@@ -33,7 +33,11 @@ import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
-import { AdvertDepartmentDTO } from '../journal/models'
+import {
+  AdvertCategoryDTO,
+  AdvertDepartmentDTO,
+  AdvertTypeDTO,
+} from '../journal/models'
 import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -73,13 +77,6 @@ export class CaseService implements ICaseService {
       attributes: [
         [Sequelize.literal(`status.value`), 'caseStatusValue'],
         [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
-      ],
-      include: [
-        {
-          model: CaseStatusDto,
-          as: 'status',
-          attributes: [],
-        },
       ],
       group: ['status_id', `status.value`],
     })
@@ -297,7 +294,29 @@ export class CaseService implements ICaseService {
           model: AdvertDepartmentDTO,
           where: params?.department
             ? {
-                slug: params.department,
+                slug: {
+                  [Op.in]: params.department,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertTypeDTO,
+          where: params?.type
+            ? {
+                slug: {
+                  [Op.in]: params.type,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertCategoryDTO,
+          where: params?.category
+            ? {
+                slug: {
+                  [Op.in]: params.category,
+                },
               }
             : undefined,
         },

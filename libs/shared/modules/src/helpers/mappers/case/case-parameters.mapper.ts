@@ -12,15 +12,24 @@ type WhereClause = {
   statusId?: string
   fastTrack?: boolean
   publishedAt?: { [Op.not]: null } | { [Op.is]: null }
+  advertType?: {
+    slug: {
+      [Op.in]: string[]
+    }
+  }
   createdAt?: {
     [Op.gte]?: string
     [Op.lte]?: string
   }
 }
 
-const caseParameters = (params?: GetCasesQuery, caseStatusId?: string) => {
+export const caseParameters = (
+  params?: GetCasesQuery,
+  caseStatusId?: string,
+) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}
+
   // Check and add each parameter to the where clause
   if (params?.applicationId !== undefined) {
     whereClause.applicationId = params.applicationId
@@ -71,8 +80,5 @@ const caseParameters = (params?: GetCasesQuery, caseStatusId?: string) => {
       publishedAt: null,
     }
   }
-
   return whereClause
 }
-
-export { caseParameters }

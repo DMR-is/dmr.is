@@ -8,7 +8,12 @@ import {
 } from 'sequelize-typescript'
 
 import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
-import { AdvertDepartmentDTO, AdvertTypeDTO } from '../../journal/models'
+import {
+  AdvertCategoryDTO,
+  AdvertDepartmentDTO,
+  AdvertTypeDTO,
+} from '../../journal/models'
+import { CaseCategoriesDto } from './CaseCategories'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
@@ -146,6 +151,11 @@ export class CaseDto extends Model {
 
   @BelongsTo(() => AdvertTypeDTO, 'advert_type_id')
   advertType!: AdvertTypeDTO
+
+  @BelongsToMany(() => AdvertCategoryDTO, {
+    through: { model: () => CaseCategoriesDto },
+  })
+  categories!: AdvertCategoryDTO[]
 
   @BelongsToMany(() => CaseCommentDto, {
     through: { model: () => CaseCommentsDto },

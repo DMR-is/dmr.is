@@ -63,6 +63,9 @@ const Layout: Screen<LayoutProps> = ({
         value={{
           fetcher: fetcher,
           refreshInterval: 5000,
+          errorRetryCount: 3,
+          errorRetryInterval: 5000,
+          dedupingInterval: 5000,
         }}
       >
         <Provider>

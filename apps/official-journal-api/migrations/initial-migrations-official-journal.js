@@ -214,6 +214,14 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_categories (
+      case_case_id UUID NOT NULL,
+      category_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, category_id),
+      CONSTRAINT fk_case_categories_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_categories_category_id FOREIGN KEY (category_id) REFERENCES advert_category (id)
+    );
+
     CREATE TABLE case_comments (
       case_case_id UUID NOT NULL,
       case_comment_id UUID NOT NULL,
@@ -247,6 +255,7 @@ module.exports = {
     DROP TABLE case_comment_task CASCADE;
     DROP TABLE case_comment CASCADE;
     DROP TABLE case_case CASCADE;
+    DROP TABLE case_categories CASCADE;
     DROP TABLE case_comments CASCADE;
     `)
   },
