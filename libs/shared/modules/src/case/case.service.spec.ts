@@ -10,6 +10,7 @@ import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import { AdvertDepartmentDTO } from '../journal/models'
 import { IUtilityService } from '../utility/utility.service.interface'
+import { CaseCategoriesDto } from './models/CaseCategories'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
@@ -25,6 +26,7 @@ describe('CaseService', () => {
   let applicationService: IApplicationService
   let journalService: IJournalService
   let caseModel: CaseDto
+  let caseCategoriesModel: CaseCategoriesDto
   let sequelize: Sequelize
 
   beforeAll(async () => {
@@ -62,6 +64,10 @@ describe('CaseService', () => {
             findOne: () => ({}),
             count: () => ({}),
           })),
+        },
+        {
+          provide: getModelToken(CaseCategoriesDto),
+          useClass: jest.fn(() => ({})),
         },
         {
           provide: getModelToken(CaseStatusDto),
@@ -110,6 +116,9 @@ describe('CaseService', () => {
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
     caseModel = app.get<CaseDto>(getModelToken(CaseDto))
+    caseCategoriesModel = app.get<CaseCategoriesDto>(
+      getModelToken(CaseCategoriesDto),
+    )
     sequelize = app.get<Sequelize>(Sequelize)
   })
 
