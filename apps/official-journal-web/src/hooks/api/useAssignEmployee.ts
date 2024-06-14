@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, assignEmployee } from '../lib/constants'
+import { APIRotues, assignEmployee } from '../../lib/constants'
 
 export type SWRAssignEmployeeParams = {
   userId: string

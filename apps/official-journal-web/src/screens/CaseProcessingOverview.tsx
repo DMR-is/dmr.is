@@ -8,9 +8,17 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { FilterGroup } from '../context/filterContext'
-import { Case, Paging } from '../gen/fetch'
-import { useCaseOverview } from '../hooks/useCaseOverview'
+import {
+  Case,
+  GetAdvertTypesResponse,
+  GetCategoriesResponse,
+  GetDepartmentsResponse,
+  Paging,
+} from '../gen/fetch'
+import { useCaseOverview } from '../hooks/api/useCaseOverview'
+import { useCategories } from '../hooks/api/useCategories'
+import { useDepartments } from '../hooks/api/useDepartments'
+import { useTypes } from '../hooks/api/useTypes'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -28,7 +36,6 @@ type Props = {
     inReview: number
     ready: number
   }
-  filters: FilterGroup[]
 }
 
 type CaseStatus = 'Innsent' | 'Grunnvinnsla' | 'Yfirlestur' | 'Tilbúið'
@@ -44,14 +51,17 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
   paging,
   totalItems,
-  filters,
 }) => {
   const { formatMessage } = useFormatMessage()
-  const { setFilterGroups } = useFilterContext()
   const router = useRouter()
 
+  const { setEnableDepartments, setEnableCategories, setEnableTypes } =
+    useFilterContext()
+
   useEffect(() => {
-    setFilterGroups(filters)
+    setEnableDepartments(true)
+    setEnableCategories(true)
+    setEnableTypes(true)
   }, [])
 
   const [selectedTab, setSelectedTab] = useState<CaseStatus>('Innsent')
@@ -214,55 +224,18 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
 
   const { page, pageSize, department, status, search } = query
 
-  const [caseData, types, departments, categories] = await Promise.all([
-    dmrClient.getEditorialOverview({
-      page: Array.isArray(page) ? page[0] : page,
-      pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
-      department: Array.isArray(department) ? department[0] : department,
-      status: Array.isArray(status) ? status[0] : status,
-      search: Array.isArray(search) ? search[0] : search,
-    }),
-    dmrClient.getTypes({
-      pageSize: 1000,
-    }),
-    dmrClient.getDepartments(),
-    dmrClient.getCategories({
-      pageSize: 1000,
-    }),
-  ])
-
-  const filters: FilterGroup[] = [
-    {
-      label: 'Tegund',
-      queryKey: 'type',
-      options: types.types.map((type) => ({
-        label: type.title,
-        value: type.slug,
-      })),
-    },
-    {
-      label: 'Deild',
-      queryKey: 'department',
-      options: departments.departments.map((department) => ({
-        label: department.title,
-        value: department.slug,
-      })),
-    },
-    {
-      label: 'Flokkur',
-      queryKey: 'category',
-      options: categories.categories.map((category) => ({
-        label: category.title,
-        value: category.slug,
-      })),
-    },
-  ]
+  const caseData = await dmrClient.getEditorialOverview({
+    page: Array.isArray(page) ? page[0] : page,
+    pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
+    department: Array.isArray(department) ? department[0] : department,
+    status: Array.isArray(status) ? status[0] : status,
+    search: Array.isArray(search) ? search[0] : search,
+  })
 
   return {
     data: caseData.cases,
     paging: caseData.paging,
     totalItems: caseData.totalItems,
-    filters: filters,
   }
 }
 

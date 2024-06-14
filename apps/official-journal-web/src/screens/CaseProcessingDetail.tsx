@@ -25,11 +25,11 @@ import {
   CaseWithAdvert,
   Department,
 } from '../gen/fetch'
-import { useAssignEmployee } from '../hooks/useAssignEmployee'
-import { useCase } from '../hooks/useCase'
+import { useAssignEmployee } from '../hooks/api/useAssignEmployee'
+import { useCase } from '../hooks/api/useCase'
+import { useUpdateCaseStatus } from '../hooks/api/useUpdateCaseStatus'
+import { useUpdateNextCaseStatus } from '../hooks/api/useUpdateNextStatus'
 import { useFormatMessage } from '../hooks/useFormatMessage'
-import { useUpdateCaseStatus } from '../hooks/useUpdateCaseStatus'
-import { useUpdateNextCaseStatus } from '../hooks/useUpdateNextStatus'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { messages } from '../lib/messages/caseSingle'

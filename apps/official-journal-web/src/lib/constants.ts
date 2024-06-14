@@ -5,10 +5,10 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '../gen/fetch'
-import { SWRAddCommentParams } from '../hooks/useAddComment'
-import { SWRAssignEmployeeParams } from '../hooks/useAssignEmployee'
-import { SWRUpdateCaseStatusParams } from '../hooks/useUpdateCaseStatus'
-import { SWRUpdateNextCaseStatusParams } from '../hooks/useUpdateNextStatus'
+import { SWRAddCommentParams } from '../hooks/api/useAddComment'
+import { SWRAssignEmployeeParams } from '../hooks/api/useAssignEmployee'
+import { SWRUpdateCaseStatusParams } from '../hooks/api/useUpdateCaseStatus'
+import { SWRUpdateNextCaseStatusParams } from '../hooks/api/useUpdateNextStatus'
 import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
@@ -106,7 +106,7 @@ export async function publishCases(
     })
 }
 
-export async function getCases(url: string, qs?: string) {
+export async function fetchWithQueryString(url: string, qs?: string) {
   const fullUrl = `${url}${qs ? `?${qs}` : ''}`
   return fetch(fullUrl, {
     method: 'GET',
@@ -199,6 +199,9 @@ export enum APIRotues {
   Case = '/api/cases/:id',
   Cases = '/api/cases',
   EditorialOverview = '/api/cases/editorialOverview',
+  Departments = '/api/cases/departments',
+  Types = '/api/cases/types',
+  Categories = '/api/cases/categories',
   AssignEmployee = '/api/cases/assign',
   UpdateCaseStatus = '/api/cases/status',
   UpdateNextCaseStatus = '/api/cases/nextStatus',

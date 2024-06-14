@@ -11,9 +11,9 @@ import {
 } from '@island.is/island-ui/core'
 
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
-import { useAddComment } from '../../hooks/useAddComment'
-import { useCase } from '../../hooks/useCase'
-import { useDeleteComment } from '../../hooks/useDeleteComment'
+import { useAddComment } from '../../hooks/api/useAddComment'
+import { useCase } from '../../hooks/api/useCase'
+import { useDeleteComment } from '../../hooks/api/useDeleteComment'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'

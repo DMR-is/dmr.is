@@ -1,56 +1,47 @@
 import { createContext, useState } from 'react'
 
-export type FilterOption = {
-  label: string
-  value: string
-}
-
-export type FilterGroup = {
-  label: string
-  queryKey: string
-  options: FilterOption[]
-}
-
 type FilterContextProps = {
-  filterGroups: FilterGroup[]
-  renderFilters: boolean
-  setRenderFilters: (render: boolean) => void
-  setFilterGroups: (filterGroups: FilterGroup[]) => void
+  enableTypes: boolean
+  enableDepartments: boolean
+  enableCategories: boolean
+  setEnableTypes: (enableTypes: boolean) => void
+  setEnableDepartments: (enableDepartments: boolean) => void
+  setEnableCategories: (enableCategories: boolean) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
-  filterGroups: [],
-  renderFilters: true,
-  setRenderFilters: () => {},
-  setFilterGroups: () => {},
+  enableTypes: false,
+  enableDepartments: false,
+  enableCategories: false,
+  setEnableTypes: () => {},
+  setEnableDepartments: () => {},
+  setEnableCategories: () => {},
 })
 
 export const FilterContextProvider = ({
-  filterGroups = [],
   children,
 }: {
   children: React.ReactNode
-  filterGroups?: FilterGroup[]
 }) => {
-  const setRenderFilters = (render: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      renderFilters: render,
-    }))
+  const setEnableTypes = (enableTypes: boolean) => {
+    setState((prevState) => ({ ...prevState, enableTypes }))
   }
 
-  const setFilterGroups = (filterGroups: FilterGroup[]) => {
-    setState((prev) => ({
-      ...prev,
-      filterGroups: filterGroups,
-    }))
+  const setEnableDepartments = (enableDepartments: boolean) => {
+    setState((prevState) => ({ ...prevState, enableDepartments }))
+  }
+
+  const setEnableCategories = (enableCategories: boolean) => {
+    setState((prevState) => ({ ...prevState, enableCategories }))
   }
 
   const initalState: FilterContextProps = {
-    filterGroups: filterGroups,
-    renderFilters: true,
-    setRenderFilters,
-    setFilterGroups,
+    enableTypes: false,
+    enableDepartments: false,
+    enableCategories: false,
+    setEnableTypes,
+    setEnableDepartments,
+    setEnableCategories,
   }
 
   const [state, setState] = useState(initalState)

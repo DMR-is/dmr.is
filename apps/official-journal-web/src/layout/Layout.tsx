@@ -10,7 +10,7 @@ import { Footer, Page } from '@island.is/island-ui/core'
 import { Banner } from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
-import { FilterContextProvider, FilterGroup } from '../context/filterContext'
+import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { fetcher } from '../lib/constants'
@@ -70,7 +70,7 @@ const Layout: Screen<LayoutProps> = ({
       >
         <Provider>
           <NotificationContextProvider>
-            <FilterContextProvider filterGroups={filterGroups}>
+            <FilterContextProvider>
               <Page component="div">
                 <Head>
                   {preloadedFonts.map((href, index) => {

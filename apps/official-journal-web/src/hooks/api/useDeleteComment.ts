@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, deleteComment } from '../lib/constants'
+import { APIRotues, deleteComment } from '../../lib/constants'
 
 type SWRDeleteCommentOptions = SWRMutationConfiguration<
   Response,

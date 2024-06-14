@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { EditorialOverviewResponse } from '../gen/fetch'
-import { APIRotues, getCases } from '../lib/constants'
+import { EditorialOverviewResponse } from '../../gen/fetch'
+import { APIRotues, fetchWithQueryString } from '../../lib/constants'
 
 type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
 
@@ -19,7 +19,8 @@ export const useCaseOverview = ({
     Error
   >(
     [APIRotues.EditorialOverview, qsp],
-    ([url, qsp]: [string, string | undefined]) => getCases(url, qsp),
+    ([url, qsp]: [string, string | undefined]) =>
+      fetchWithQueryString(url, qsp),
     options,
   )
 

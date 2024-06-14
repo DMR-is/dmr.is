@@ -21,4 +21,19 @@ export const messages = defineMessages({
     defaultMessage: 'Innri kerfisvilla kom upp',
     description: 'Internal server error',
   },
+  errorFetchingDepartmentsMessage: {
+    id: 'web.page.errors.errorFetchingDepartmentsMessage',
+    defaultMessage: 'Ekki tókst að sækja deildir',
+    description: 'Error fetching departments',
+  },
+  errorFetchingTypesMessage: {
+    id: 'web.page.errors.errorFetchingTypesMessage',
+    defaultMessage: 'Ekki tókst að sækja tegundir mála',
+    description: 'Error fetching types',
+  },
+  errorFetchingCategoriesMessage: {
+    id: 'web.page.errors.errorFetchingCategoriesMessage',
+    defaultMessage: 'Ekki tókst að sækja flokka mála',
+    description: 'Error fetching categories',
+  },
 })

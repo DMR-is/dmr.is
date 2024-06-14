@@ -284,3 +284,26 @@ export const getCaseProcessingSearchParams = (
 
   return params
 }
+
+type GenerateOptionsParams = {
+  label: string
+  queryKey: string
+  options: { id: string; slug: string; title: string }[] | undefined
+}
+
+export const generateOptions = ({
+  label,
+  queryKey,
+  options,
+}: GenerateOptionsParams) => {
+  return {
+    label,
+    queryKey,
+    options: options
+      ? options.map((option) => ({
+          label: option.title,
+          value: option.slug,
+        }))
+      : [],
+  }
+}

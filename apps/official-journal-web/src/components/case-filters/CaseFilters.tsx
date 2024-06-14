@@ -1,39 +1,35 @@
 import debounce from 'lodash/debounce'
 import { useRouter } from 'next/router'
-import React from 'react'
 
-import {
-  Box,
-  Button,
-  Icon,
-  Inline,
-  Input,
-  SkeletonLoader,
-  Tag,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box, Button, Input, SkeletonLoader } from '@island.is/island-ui/core'
 
-import { useCaseOverview } from '../../hooks/useCaseOverview'
+import { useCaseOverview } from '../../hooks/api/useCaseOverview'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useIsMounted } from '../../hooks/useIsMounted'
-import { FilterGroup } from '../filter-group/FilterGroup'
 import { FilterPopover } from '../filter-popover/FilterPopover'
 import { Popover } from '../popover/Popover'
 import * as styles from './CaseFilters.css'
+import { CategoriesFilter } from './CategoriesFilter'
+import { DepartmentsFilter } from './DepartmentsFilter'
 import { messages } from './messages'
+import { TypesFilter } from './TypesFilter'
 
 export type ActiveFilters = Array<{ key: string; value: string }>
 
 export const CaseFilters = () => {
   const { formatMessage } = useFormatMessage()
-  const { filterGroups } = useFilterContext()
+
   const router = useRouter()
   const isMounted = useIsMounted()
+  const { isLoading } = useCaseOverview()
 
   const initialSearch = router.query.search as string | undefined
 
-  const { isLoading } = useCaseOverview()
+  const { enableCategories, enableDepartments, enableTypes } =
+    useFilterContext()
+
+  const shouldShowFilters = enableCategories || enableDepartments || enableTypes
 
   const onSearchChange = (value: string) => {
     router.push(
@@ -45,11 +41,18 @@ export const CaseFilters = () => {
     )
   }
 
-  const debouncedSearch = debounce(onSearchChange, 200)
-
-  const resetFilters = () => {
-    console.log('reset filters')
+  const clearFilters = () => {
+    const status = router.query.status
+    router.push(
+      {
+        query: { status },
+      },
+      undefined,
+      { shallow: true },
+    )
   }
+
+  const debouncedSearch = debounce(onSearchChange, 200)
 
   return (
     <Box>
@@ -68,7 +71,7 @@ export const CaseFilters = () => {
         ) : (
           <SkeletonLoader height={44} />
         )}
-        {filterGroups?.length && (
+        {shouldShowFilters && (
           <Popover
             label={formatMessage(messages.general.filters)}
             disclosure={
@@ -77,14 +80,10 @@ export const CaseFilters = () => {
               </Button>
             }
           >
-            <FilterPopover resetFilters={resetFilters}>
-              {filterGroups.map((filter, i) => {
-                return (
-                  <React.Fragment key={i}>
-                    <FilterGroup {...filter} />
-                  </React.Fragment>
-                )
-              })}
+            <FilterPopover resetFilters={clearFilters}>
+              {enableTypes && <TypesFilter />}
+              {enableDepartments && <DepartmentsFilter />}
+              {enableCategories && <CategoriesFilter />}
             </FilterPopover>
           </Popover>
         )}

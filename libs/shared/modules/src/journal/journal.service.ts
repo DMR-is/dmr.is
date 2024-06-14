@@ -549,6 +549,9 @@ export class JournalService implements IJournalService {
         },
       ],
       order: [['title', 'ASC']],
+      where: params?.search
+        ? { title: { [Op.iLike]: `%${params.search}%` } }
+        : {},
       limit: pageSize,
       offset: (page - 1) * pageSize,
     })

@@ -8,7 +8,7 @@ export type SWRAddCommentParams = {
   to?: string
 }
 
-import { APIRotues as APIRoutes, createComment } from '../lib/constants'
+import { APIRotues as APIRoutes, createComment } from '../../lib/constants'
 
 type SWRAddCommentOptions = SWRMutationConfiguration<
   Response,

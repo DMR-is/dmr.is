@@ -7,5 +7,10 @@ export const messages = {
       defaultMessage: 'Hreinsa val',
       description: 'Search placeholder for case filters',
     },
+    search: {
+      id: 'web.components.filterGroup:search',
+      defaultMessage: 'Leita',
+      description: 'Search placeholder for case filters',
+    },
   }),
 }

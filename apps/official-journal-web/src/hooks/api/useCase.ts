@@ -1,7 +1,7 @@
 import useSWR, { BareFetcher, SWRConfiguration } from 'swr'
 
-import { GetCaseResponse } from '../gen/fetch'
-import { APIRotues, getCase } from '../lib/constants'
+import { GetCaseResponse } from '../../gen/fetch'
+import { APIRotues, getCase } from '../../lib/constants'
 
 type Props = {
   caseId: string
