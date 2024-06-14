@@ -100,7 +100,7 @@ export async function publishCases(
       'Content-Type': 'application/json',
     },
   })
-    .then((res) => res.json())
+    .then((res) => res)
     .catch((error) => {
       throw error
     })

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import useSWRMutation from 'swr/mutation'
 
 import {
@@ -13,9 +13,7 @@ import { CasePublishingList } from '../components/case-publishing-list/CasePubli
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Section } from '../components/section/Section'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { FilterGroup } from '../context/filterContext'
-import { Case, CaseStatusEnum, CaseWithAdvert, Paging } from '../gen/fetch'
-import { useFilterContext } from '../hooks/useFilterContext'
+import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useNotificationContext } from '../hooks/useNotificationContext'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -29,12 +27,10 @@ import {
 } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { Screen } from '../lib/types'
-import { getCaseProcessingSearchParams } from '../lib/utils'
 
 type Props = {
   cases: Case[]
   paging: Paging
-  filters: FilterGroup[]
 }
 
 enum CasePublishViews {
@@ -42,12 +38,11 @@ enum CasePublishViews {
   Confirm = 'confirm',
 }
 
-const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
+const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
   const { add, get } = useQueryParams()
 
   const { formatMessage } = useFormatMessage()
 
-  const { setRenderFilters, setFilterGroups } = useFilterContext()
   const { setNotifications, clearNotifications } = useNotificationContext()
 
   const [selectedTab, setSelectedTab] = useState(get('tab'))
@@ -89,7 +84,6 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
 
   const proceedToPublishing = (selectedCases: Case[]) => {
     setCasesToPublish(selectedCases)
-    setRenderFilters(false)
     setScreen(CasePublishViews.Confirm)
     clearNotifications()
     setNotifications({
@@ -110,15 +104,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
       message: formatMessage(messages.notifications.success.message),
       type: 'success',
     })
-    setRenderFilters(true)
     setCasesToPublish([])
   }
-
-  useEffect(() => {
-    if (filters) {
-      setFilterGroups(filters)
-    }
-  }, [])
 
   const tabs: Tab[] = CaseDepartmentTabs.map((tab) => ({
     id: tab.value,
@@ -203,36 +190,26 @@ const CasePublishingOverview: Screen<Props> = ({ cases, filters, paging }) => {
 }
 
 CasePublishingOverview.getProps = async ({ query }) => {
-  const { filters: extractedFilters, tab } =
-    getCaseProcessingSearchParams(query)
-
   const dmrClient = createDmrClient()
 
-  const filters: FilterGroup[] = [
-    {
-      label: 'Birting',
-      options: [
-        {
-          label: 'Mín mál',
-          key: 'employeeId',
-          value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-        },
-        { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
-        { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
-      ],
-    },
-  ]
+  const { department } = query
+
+  const defaultDepartment = 'a-deild'
+
+  const activeDepartment = department
+    ? Array.isArray(department)
+      ? department[0]
+      : department
+    : defaultDepartment
 
   const { cases, paging } = await dmrClient.getCases({
-    ...extractedFilters,
-    department: tab,
+    department: activeDepartment,
     status: CaseStatusEnum.Tilbi,
   })
 
   return {
     cases: cases,
     paging,
-    filters,
   }
 }
 

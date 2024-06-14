@@ -8,17 +8,8 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import {
-  Case,
-  GetAdvertTypesResponse,
-  GetCategoriesResponse,
-  GetDepartmentsResponse,
-  Paging,
-} from '../gen/fetch'
+import { Case, Paging } from '../gen/fetch'
 import { useCaseOverview } from '../hooks/api/useCaseOverview'
-import { useCategories } from '../hooks/api/useCategories'
-import { useDepartments } from '../hooks/api/useDepartments'
-import { useTypes } from '../hooks/api/useTypes'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
