@@ -1,5 +1,7 @@
 import { logger } from '@dmr.is/logging'
 
+import { BadRequestException, NotFoundException } from '@nestjs/common'
+
 import { Result } from '../types/result'
 
 export const handleException = <T>({
@@ -17,6 +19,48 @@ export const handleException = <T>({
   info?: Record<string, unknown>
   code?: number
 }): Result<T> => {
+  if (error instanceof NotFoundException) {
+    logger.warn(`Not found exception in ${category}.${method}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return {
+      ok: false,
+      error: {
+        code: error.getStatus(),
+        message: error.message,
+      },
+    }
+  }
+
+  if (error instanceof BadRequestException) {
+    logger.warn(`Bad request exception in ${category}.${method}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return {
+      ok: false,
+      error: {
+        code: error.getStatus(),
+        message: error.message,
+      },
+    }
+  }
+
   if (error instanceof Error) {
     logger.error(`Error in ${category}.${method}`, {
       ...info,
@@ -28,80 +72,28 @@ export const handleException = <T>({
         stack: error.stack,
       },
     })
-  } else {
-    logger.error(`Error in ${category}.${method}`, {
-      ...info,
-      category,
-      method,
-      error,
-    })
+
+    return {
+      ok: false,
+      error: {
+        code: code,
+        message: message,
+      },
+    }
   }
+
+  logger.error(`Error in ${category}.${method}`, {
+    ...info,
+    category,
+    method,
+    error,
+  })
 
   return {
     ok: false,
     error: {
       code: code,
       message: message,
-    },
-  }
-}
-
-export const handleBadRequest = <T>({
-  method,
-  message = 'Bad request',
-  reason,
-  category,
-  info,
-  code = 400,
-}: {
-  method: string
-  message?: string
-  reason?: string
-  category: string
-  info?: Record<string, unknown>
-  code?: number
-}): Result<T> => {
-  logger.warn(`Bad request in ${method}${reason ? `, ${reason}` : ''}`, {
-    ...info,
-    category,
-    method,
-  })
-
-  return {
-    ok: false,
-    error: {
-      code: code,
-      message,
-    },
-  }
-}
-
-export const handleNotFoundLookup = <T>({
-  method,
-  entity,
-  id,
-  category,
-  info,
-  code = 404,
-}: {
-  method: string
-  entity: string
-  id: string
-  category: string
-  info?: Record<string, unknown>
-  code?: number
-}): Result<T> => {
-  logger.warn(`${method}, could not find ${entity}<${id}>`, {
-    ...info,
-    category,
-    method,
-  })
-
-  return {
-    ok: false,
-    error: {
-      code: code,
-      message: `Could not find ${entity}<${id}>`,
     },
   }
 }

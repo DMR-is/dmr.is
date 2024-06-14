@@ -30,7 +30,12 @@ import {
 } from '@dmr.is/shared/dto'
 import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
@@ -46,7 +51,6 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
-import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -151,11 +155,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'updateAdvert',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const ad = await this.advertModel.update(
@@ -186,11 +186,7 @@ export class JournalService implements IJournalService {
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertDepartment',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const dep = await this.advertDepartmentModel.create({
@@ -206,11 +202,7 @@ export class JournalService implements IJournalService {
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateDepartment',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const dep = await this.advertDepartmentModel.update(
       { title: model.title, slug: model.slug },
@@ -237,11 +229,7 @@ export class JournalService implements IJournalService {
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertInstitution',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const inst = await this.advertInvolvedPartyModel.create({
@@ -258,11 +246,7 @@ export class JournalService implements IJournalService {
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateInstitution',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const inst = await this.advertInvolvedPartyModel.update(
       { title: model.title, slug: model.slug },
@@ -295,11 +279,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertType',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const type = await this.advertTypeModel.create({
@@ -314,11 +294,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateType',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const type = await this.advertTypeModel.update(
@@ -347,11 +323,7 @@ export class JournalService implements IJournalService {
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertMainCategory',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const mainCategory = await this.advertMainCategoryModel.create({
       title: model.title,
@@ -370,11 +342,7 @@ export class JournalService implements IJournalService {
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateMainCategory',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const mainCat = await this.advertMainCategoryModel.update(
       {
@@ -403,11 +371,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertCategory',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const category = await this.advertCategoryModel.create({
@@ -422,11 +386,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateCategory',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const category = await this.advertCategoryModel.update(
       {
@@ -487,11 +447,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getDepartment',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const department = await this.advertDepartmentModel.findOne({
       where: { id },
@@ -626,11 +582,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getInstitution',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const party = await this.advertInvolvedPartyModel.findOne({
       where: { id },
@@ -685,11 +637,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getCategory',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const category = await this.advertCategoryModel.findOne({
       where: { id },
@@ -744,11 +692,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getAdvert',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const advert = await this.advertModel.findByPk(id, {
       include: [

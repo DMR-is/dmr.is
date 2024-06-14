@@ -4,7 +4,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
 
-import { Inject } from '@nestjs/common'
+import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
@@ -14,6 +14,7 @@ import {
   CaseStatusDto,
   CaseTagDto,
 } from '../case/models'
+import { CaseCategoriesDto } from '../case/models/CaseCategories'
 import { CASE_RELATIONS } from '../case/relations'
 import { Audit } from '../decorators/audit.decorator'
 import { HandleException } from '../decorators/handle-exception.decorator'
@@ -30,7 +31,6 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { handleException, handleNotFoundLookup } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from './utility.service.interface'
 
@@ -58,88 +58,57 @@ export class UtilityService implements IUtilityService {
     @InjectModel(CaseTagDto) private caseTagModel: typeof CaseTagDto,
     @InjectModel(CaseCommunicationStatusDto)
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
+    @InjectModel(CaseCategoriesDto)
+    private caseCategoriesModel: typeof CaseCategoriesDto,
   ) {
     this.logger.info('Using UtilityService')
   }
-  async typeLookup(type: string): Promise<Result<AdvertTypeDTO>> {
-    this.logger.info('typeLookup', {
-      category: LOGGING_CATEGORY,
-      type: type,
-    })
 
-    try {
-      const typeLookup = await this.typeDto.findByPk(type, {
-        include: [AdvertDepartmentDTO],
-      })
+  @Audit()
+  @HandleException()
+  async categoryLookup(categoryId: string): Promise<Result<AdvertCategoryDTO>> {
+    const categoryLookup = await this.categoryModel.findByPk(categoryId)
 
-      if (!typeLookup) {
-        return handleNotFoundLookup({
-          method: 'typeLookup',
-          entity: 'type',
-          id: type,
-          category: LOGGING_CATEGORY,
-          info: {
-            type,
-          },
-        })
-      }
+    if (!categoryLookup) {
+      throw new NotFoundException(`Category<${categoryId}> not found`)
+    }
 
-      return Promise.resolve({
-        ok: true,
-        value: typeLookup,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'typeLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get type',
-        error,
-        info: {
-          type,
-        },
-      })
+    return {
+      ok: true,
+      value: categoryLookup,
     }
   }
-  userLookup(userId: string): Promise<Result<User>> {
-    this.logger.info('userLookup', {
-      category: LOGGING_CATEGORY,
-      userId: userId,
+
+  @Audit()
+  @HandleException()
+  async typeLookup(type: string): Promise<Result<AdvertTypeDTO>> {
+    const typeLookup = await this.typeDto.findByPk(type, {
+      include: [AdvertDepartmentDTO],
     })
 
-    try {
-      const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
-
-      if (!userLookup) {
-        return Promise.resolve(
-          handleNotFoundLookup({
-            method: 'userLookup',
-            entity: 'user',
-            id: userId,
-            category: LOGGING_CATEGORY,
-            info: {
-              userId,
-            },
-          }),
-        )
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: userLookup,
-      })
-    } catch (error) {
-      return Promise.resolve(
-        handleException({
-          method: 'userLookup',
-          category: LOGGING_CATEGORY,
-          message: 'Could not get user',
-          error,
-          info: {
-            userId,
-          },
-        }),
-      )
+    if (!typeLookup) {
+      throw new NotFoundException(`Type<${type}> not found`)
     }
+
+    return {
+      ok: true,
+      value: typeLookup,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  userLookup(userId: string): Promise<Result<User>> {
+    const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
+
+    if (!userLookup) {
+      throw new NotFoundException(`User<${userId}> not found`)
+    }
+
+    return Promise.resolve({
+      ok: true,
+      value: userLookup,
+    })
   }
 
   @Audit()
@@ -164,461 +133,307 @@ export class UtilityService implements IUtilityService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async departmentLookup(
     departmentId: string,
   ): Promise<Result<AdvertDepartmentDTO>> {
-    this.logger.info('advertDepartmentLookup', {
-      category: LOGGING_CATEGORY,
-      departmentId: departmentId,
-    })
+    const departmentLookup = await this.departmentModel.findByPk(departmentId)
 
-    try {
-      const departmentLookup = await this.departmentModel.findByPk(departmentId)
+    if (!departmentLookup) {
+      throw new NotFoundException(`Department<${departmentId}> not found`)
+    }
 
-      if (!departmentLookup) {
-        return handleNotFoundLookup({
-          method: 'advertDepartmentLookup',
-          entity: 'department',
-          id: departmentId,
-          category: LOGGING_CATEGORY,
-          info: {
-            departmentId,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: departmentLookup,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'advertDepartmentLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get department',
-        error,
-        info: {
-          departmentId,
-        },
-      })
+    return {
+      ok: true,
+      value: departmentLookup,
     }
   }
+
+  @Audit()
+  @HandleException()
   async caseCommunicationStatusLookup(
     status: string,
   ): Promise<Result<CaseCommunicationStatusDto>> {
-    this.logger.info('caseCommunicationStatusLookup', {
-      category: LOGGING_CATEGORY,
-      status: status,
+    const statusLookup = await this.caseCommunicationStatusModel.findOne({
+      where: {
+        value: status,
+      },
     })
 
-    try {
-      const statusLookup = await this.caseCommunicationStatusModel.findOne({
-        where: {
-          value: status,
-        },
-      })
+    if (!statusLookup) {
+      throw new NotFoundException(`CommunicationStatus<${status}> not found`)
+    }
 
-      if (!statusLookup) {
-        return handleNotFoundLookup({
-          method: 'caseCommunicationStatusLookup',
-          entity: 'status',
-          id: status,
-          category: LOGGING_CATEGORY,
-          info: {
-            status,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: statusLookup,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'caseCommunicationStatusLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get case communication status',
-        error,
-        info: {
-          status,
-        },
-      })
+    return {
+      ok: true,
+      value: statusLookup,
     }
   }
+
+  @Audit()
+  @HandleException()
   async caseTagLookup(tag: string): Promise<Result<CaseStatusDto>> {
-    this.logger.info('caseTagLookup', {
-      category: LOGGING_CATEGORY,
-      tag: tag,
+    const tagLookup = await this.caseTagModel.findOne({
+      where: {
+        value: tag,
+      },
     })
 
-    try {
-      const tagLookup = await this.caseTagModel.findOne({
-        where: {
-          value: tag,
-        },
-      })
+    if (!tagLookup) {
+      throw new NotFoundException(`Tag<${tag}> not found`)
+    }
 
-      if (!tagLookup) {
-        return handleNotFoundLookup({
-          method: 'caseTagLookup',
-          entity: 'tag',
-          id: tag,
-          category: LOGGING_CATEGORY,
-          info: {
-            tag,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: tagLookup,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'caseTagLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get case tag',
-        error,
-        info: {
-          tag,
-        },
-      })
+    return {
+      ok: true,
+      value: tagLookup,
     }
   }
+
+  @Audit()
+  @HandleException()
   async caseStatusLookup(status: string): Promise<Result<CaseStatusDto>> {
-    this.logger.info('caseStatusLookup', {
-      category: LOGGING_CATEGORY,
-      status: status,
+    const statusLookup = await this.caseStatusModel.findOne({
+      where: {
+        value: status,
+      },
     })
 
-    try {
-      const statusLookup = await this.caseStatusModel.findOne({
-        where: {
-          value: status,
-        },
-      })
+    if (!statusLookup) {
+      throw new NotFoundException(`Status<${status}> not found`)
+    }
 
-      if (!statusLookup) {
-        return handleNotFoundLookup({
-          method: 'caseStatusLookup',
-          entity: 'status',
-          id: status,
-          category: LOGGING_CATEGORY,
-          info: {
-            status,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: statusLookup,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'caseStatusLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get case status',
-        error,
-        info: {
-          status,
-        },
-      })
+    return {
+      ok: true,
+      value: statusLookup,
     }
   }
+
+  @Audit()
+  @HandleException()
   async generateCaseNumber(): Promise<Result<string>> {
-    this.logger.info('generateCaseNumber', {
-      category: LOGGING_CATEGORY,
+    const now = new Date().toISOString()
+    const [year, month, date] = now.split('T')[0].split('-')
+
+    const caseCount = await this.caseModel.count({
+      where: {
+        createdAt: {
+          [Op.between]: [`${year}-${month}-${date} 00:00:00`, now],
+        },
+      },
     })
 
-    try {
-      const now = new Date().toISOString()
-      const [year, month, date] = now.split('T')[0].split('-')
+    const count = caseCount + 1
 
-      const caseCount = await this.caseModel.count({
-        where: {
-          createdAt: {
-            [Op.between]: [`${year}-${month}-${date} 00:00:00`, now],
-          },
-        },
-      })
+    const withLeadingZeros =
+      count < 10 ? `00${count}` : count < 100 ? `0${count}` : count
 
-      const count = caseCount + 1
+    const caseNumber = `${year}${month}${date}${withLeadingZeros}`
 
-      const withLeadingZeros =
-        count < 10 ? `00${count}` : count < 100 ? `0${count}` : count
-
-      const caseNumber = `${year}${month}${date}${withLeadingZeros}`
-
-      return Promise.resolve({
-        ok: true,
-        value: caseNumber,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'generateCaseNumber',
-        category: LOGGING_CATEGORY,
-        message: 'Could not generate case number',
-        error,
-      })
+    return {
+      ok: true,
+      value: caseNumber,
     }
   }
+
+  @Audit()
+  @HandleException()
   async caseLookupByApplicationId(
     applicationId: string,
   ): Promise<Result<CaseDto>> {
-    this.logger.info('caseLookupByApplicationId', {
-      category: LOGGING_CATEGORY,
-      applicationId: applicationId,
+    const found = await this.caseModel.findOne({
+      where: {
+        applicationId: applicationId,
+      },
+      include: CASE_RELATIONS,
     })
 
-    try {
-      const found = await this.caseModel.findOne({
-        where: {
-          applicationId: applicationId,
-        },
-        include: CASE_RELATIONS,
-      })
+    if (!found) {
+      throw new NotFoundException(
+        `Case with applicationId<${applicationId}> not found`,
+      )
+    }
 
-      if (!found) {
-        return handleNotFoundLookup({
-          method: 'caseLookupByApplicationId',
-          entity: 'case',
-          id: applicationId,
-          category: LOGGING_CATEGORY,
-          info: {
-            applicationId,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: found,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'caseLookupByApplicationId',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get case',
-        error,
-        info: {
-          applicationId,
-        },
-      })
+    return {
+      ok: true,
+      value: found,
     }
   }
+
+  @Audit()
+  @HandleException()
   async caseLookup(
     caseId: string,
     transaction?: Transaction,
   ): Promise<Result<CaseDto>> {
-    this.logger.info('caseLookup', {
-      category: LOGGING_CATEGORY,
-      caseId: caseId,
+    const found = await this.caseModel.findByPk(caseId, {
+      include: CASE_RELATIONS,
+      transaction,
     })
 
-    try {
-      const found = await this.caseModel.findByPk(caseId, {
-        include: CASE_RELATIONS,
-        transaction,
-      })
+    if (!found) {
+      throw new NotFoundException(`Case<${caseId}> not found`)
+    }
 
-      if (!found) {
-        return handleNotFoundLookup({
-          method: 'caseLookup',
-          entity: 'case',
-          id: caseId,
-          category: LOGGING_CATEGORY,
-          info: {
-            caseId,
-          },
-        })
-      }
-
-      return Promise.resolve({
-        ok: true,
-        value: found,
-      })
-    } catch (error) {
-      return handleException({
-        method: 'caseLookup',
-        category: LOGGING_CATEGORY,
-        message: 'Could not get case',
-        error,
-        info: {
-          caseId,
-        },
-      })
+    return {
+      ok: true,
+      value: found,
     }
   }
 
+  @Audit()
+  @HandleException()
   async getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>> {
-    this.logger.info('getCaseWithAdvert', {
-      category: LOGGING_CATEGORY,
-      caseId: caseId,
-    })
-    try {
-      const caseLookup = await this.caseLookup(caseId)
-      if (!caseLookup.ok) {
-        return caseLookup
-      }
-      const activeCase = caseMigrate(caseLookup.value)
+    const caseLookup = await this.caseLookup(caseId)
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
 
-      const applicationLookup = await this.applicationService.getApplication(
-        activeCase.applicationId,
-      )
+    const activeCase = caseMigrate(caseLookup.value)
 
-      if (!applicationLookup.ok) {
-        return applicationLookup
-      }
+    const applicationLookup = await this.applicationService.getApplication(
+      activeCase.applicationId,
+    )
 
-      const { application } = applicationLookup.value
+    if (!applicationLookup.ok) {
+      return applicationLookup
+    }
 
-      const departmentLookup = await this.departmentLookup(
-        application.answers.advert.department,
-      )
+    const { application } = applicationLookup.value
 
-      if (!departmentLookup.ok) {
-        return departmentLookup
-      }
+    const departmentLookup = await this.departmentLookup(
+      application.answers.advert.department,
+    )
 
-      const type = await this.typeLookup(application.answers.advert.type)
-      if (!type.ok) {
-        return type
-      }
+    if (!departmentLookup.ok) {
+      return departmentLookup
+    }
 
-      const categoryIds =
-        application.answers.publishing.contentCategories?.map((c) => c.value) ??
-        []
+    const type = await this.typeLookup(application.answers.advert.type)
+    if (!type.ok) {
+      return type
+    }
 
-      const categories = await this.categoryModel.findAll({
-        where: {
-          id: {
-            [Op.in]: categoryIds,
-          },
+    const categoryIds =
+      application.answers.publishing.contentCategories?.map((c) => c.value) ??
+      []
+
+    const categories = await this.categoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: categoryIds,
         },
-      })
+      },
+    })
 
-      // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
-      // TODO: Implement this when users are implemented
-      // if (!involvedParty) {
-      //   throw new NotFoundException(
-      //     `Involved party with id ${application.applicant} not found`,
-      //   )
-      // }
+    // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
+    // TODO: Implement this when users are implemented
+    // if (!involvedParty) {
+    //   throw new NotFoundException(
+    //     `Involved party with id ${application.applicant} not found`,
+    //   )
+    // }
 
-      const involvedParty = await this.involvedPartyModel.findByPk(
-        '195eccdc-baf3-4cec-97ac-ef1c5161b091',
-      )
+    const involvedParty = await this.involvedPartyModel.findByPk(
+      '195eccdc-baf3-4cec-97ac-ef1c5161b091',
+    )
 
-      if (!involvedParty) {
-        this.logger.warn(
-          `getCaseWithAdvert, could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
-          {
-            caseId: caseId,
-            applicationId: activeCase.applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
-          },
-        })
-      }
-
-      const activeDepartment = advertDepartmentMigrate(departmentLookup.value)
-      const activeType = advertTypesMigrate(type.value)
-      const activeCategories = categories.map((c) => advertCategoryMigrate(c))
-
-      let signatureDate = null
-      switch (application.answers.signature.type) {
-        case 'regular': {
-          const firstSignature = application.answers.signature.regular?.at(0)
-          signatureDate = firstSignature?.date
-          break
-        }
-        case 'committee':
-          signatureDate = application.answers.signature.committee?.date
-          break
-      }
-
-      if (!signatureDate) {
-        this.logger.warn(`getCaseWithAdvert, could not find signature date`, {
+    if (!involvedParty) {
+      this.logger.warn(
+        `getCaseWithAdvert, could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
+        {
           caseId: caseId,
           applicationId: activeCase.applicationId,
           category: LOGGING_CATEGORY,
-        })
-        return Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find signature date`,
-          },
-        })
+        },
+      )
+      return {
+        ok: false,
+        error: {
+          code: 404,
+          message: `Could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
+        },
       }
+    }
 
-      const attachments: { name: string; url: string }[] = []
+    const activeDepartment = advertDepartmentMigrate(departmentLookup.value)
+    const activeType = advertTypesMigrate(type.value)
+    const activeCategories = categories.map((c) => advertCategoryMigrate(c))
 
-      application.answers.original.files.forEach((file) => {
-        const url = application.attachments[file.key]
+    let signatureDate = null
+    switch (application.answers.signature.type) {
+      case 'regular': {
+        const firstSignature = application.answers.signature.regular?.at(0)
+        signatureDate = firstSignature?.date
+        break
+      }
+      case 'committee':
+        signatureDate = application.answers.signature.committee?.date
+        break
+    }
 
-        attachments.push({
-          name: file.name,
-          url: url,
-        })
-      })
-
-      const fileNamePrefix =
-        application.answers.additionsAndDocuments.fileNames === 'document'
-          ? Filenames.Documents
-          : Filenames.Appendix
-
-      application.answers.additionsAndDocuments.files.forEach((file, i) => {
-        const url = application.attachments[file.key]
-
-        const name = `${fileNamePrefix} ${i + 1}`
-
-        attachments.push({
-          name: name,
-          url: url,
-        })
-      })
-
-      return Promise.resolve({
-        ok: true,
-        value: {
-          activeCase: activeCase,
-          advert: {
-            title: application.answers.advert.title,
-            documents: {
-              advert: application.answers.advert.document,
-              signature: application.answers.signature.signature,
-              full: application.answers.preview.document,
-            },
-            publicationDate: application.answers.publishing.date,
-            signatureDate: signatureDate,
-            department: activeDepartment,
-            type: activeType,
-            categories: activeCategories,
-            involvedParty: involvedParty,
-            attachments: attachments,
-          },
-        },
-      })
-    } catch (error) {
-      return handleException({
-        method: 'getCaseWithAdvert',
+    if (!signatureDate) {
+      this.logger.warn(`getCaseWithAdvert, could not find signature date`, {
+        caseId: caseId,
+        applicationId: activeCase.applicationId,
         category: LOGGING_CATEGORY,
-        message: 'Could not get case with advert',
-        error,
-        info: {
-          caseId,
-        },
       })
+      return {
+        ok: false,
+        error: {
+          code: 404,
+          message: `Could not find signature date`,
+        },
+      }
+    }
+
+    const attachments: { name: string; url: string }[] = []
+
+    application.answers.original.files.forEach((file) => {
+      const url = application.attachments[file.key]
+
+      attachments.push({
+        name: file.name,
+        url: url,
+      })
+    })
+
+    const fileNamePrefix =
+      application.answers.additionsAndDocuments.fileNames === 'document'
+        ? Filenames.Documents
+        : Filenames.Appendix
+
+    application.answers.additionsAndDocuments.files.forEach((file, i) => {
+      const url = application.attachments[file.key]
+
+      const name = `${fileNamePrefix} ${i + 1}`
+
+      attachments.push({
+        name: name,
+        url: url,
+      })
+    })
+
+    return {
+      ok: true,
+      value: {
+        activeCase: activeCase,
+        advert: {
+          title: application.answers.advert.title,
+          documents: {
+            advert: application.answers.advert.document,
+            signature: application.answers.signature.signature,
+            full: application.answers.preview.document,
+          },
+          publicationDate: application.answers.publishing.date,
+          signatureDate: signatureDate,
+          department: activeDepartment,
+          type: activeType,
+          categories: activeCategories,
+          involvedParty: involvedParty,
+          attachments: attachments,
+        },
+      },
     }
   }
 }

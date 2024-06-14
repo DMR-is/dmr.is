@@ -251,7 +251,7 @@ export class ApplicationPublishing {
     type: [ApplicationContentCategories],
     description: 'List of selected categories',
   })
-  contentCategories?: ApplicationContentCategories[]
+  contentCategories!: ApplicationContentCategories[]
 
   @ApiProperty({
     type: [ApplicationCommunicationChannels],

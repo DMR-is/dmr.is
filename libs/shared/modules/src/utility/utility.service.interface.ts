@@ -6,13 +6,18 @@ import {
   CaseDto,
   CaseStatusDto,
 } from '../case/models'
-import { AdvertDepartmentDTO, AdvertTypeDTO } from '../journal/models'
+import {
+  AdvertCategoryDTO,
+  AdvertDepartmentDTO,
+  AdvertTypeDTO,
+} from '../journal/models'
 import { Result } from '../types/result'
 
 export interface IUtilityService {
   getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>>
   departmentLookup(departmentId: string): Promise<Result<AdvertDepartmentDTO>>
   typeLookup(type: string): Promise<Result<AdvertTypeDTO>>
+  categoryLookup(categoryId: string): Promise<Result<AdvertCategoryDTO>>
   caseLookup(
     caseId: string,
     transaction?: Transaction,

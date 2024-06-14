@@ -21,7 +21,12 @@ import {
 } from '@dmr.is/shared/dto'
 import { generatePaging } from '@dmr.is/utils'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
@@ -38,9 +43,9 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
+import { CaseCategoriesDto } from './models/CaseCategories'
 import { ICaseService } from './case.service.interface'
 import { CaseDto, CaseStatusDto } from './models'
 import { CASE_RELATIONS } from './relations'
@@ -57,10 +62,10 @@ export class CaseService implements ICaseService {
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
-
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
+    @InjectModel(CaseCategoriesDto)
+    private readonly caseCategoriesModel: typeof CaseCategoriesDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -77,6 +82,13 @@ export class CaseService implements ICaseService {
       attributes: [
         [Sequelize.literal(`status.value`), 'caseStatusValue'],
         [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
+      ],
+      include: [
+        {
+          model: CaseStatusDto,
+          as: 'status',
+          attributes: [],
+        },
       ],
       group: ['status_id', `status.value`],
     })
@@ -190,7 +202,7 @@ export class CaseService implements ICaseService {
 
         const caseNumber = nextCaseNumber.value
 
-        const newCase = await this.caseModel.create(
+        const newCase = await this.caseModel.create<CaseDto>(
           {
             id: uuid(),
             applicationId: application.id,
@@ -210,10 +222,32 @@ export class CaseService implements ICaseService {
             advertTitle: application.answers.advert.title,
             requestedPublicationDate: application.answers.publishing.date,
             departmentId: departmentLookup.value.id,
-            advertType: typeLookup.value.id,
+            advertTypeId: typeLookup.value.id,
           },
           {
             returning: ['id'],
+            transaction: t,
+          },
+        )
+
+        const categories = await Promise.all(
+          application.answers.publishing.contentCategories.map(
+            async (category) => {
+              return await this.utilityService.categoryLookup(category.value)
+            },
+          ),
+        )
+
+        const categoryIds = categories
+          .filter((c) => c.ok)
+          .map((c) => c.ok && c.value.id)
+
+        await this.caseCategoriesModel.bulkCreate(
+          categoryIds.map((categoryId) => ({
+            caseId: newCase.id,
+            categoryId: categoryId,
+          })),
+          {
             transaction: t,
           },
         )
@@ -340,11 +374,7 @@ export class CaseService implements ICaseService {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
-      return handleBadRequest({
-        category: LOGGING_CATEGORY,
-        method: 'publish',
-        reason: 'Missing or invalid body',
-      })
+      throw new BadRequestException()
     }
 
     const now = new Date().toISOString()
