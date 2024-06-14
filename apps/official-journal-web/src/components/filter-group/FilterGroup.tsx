@@ -86,9 +86,10 @@ export const FilterGroup = ({
           </Box>
         )}
         {options.map((filter, index) => {
+          const isChecked = qp.get(queryKey)?.includes(filter.value) || false
           return (
             <Checkbox
-              defaultChecked={qp.get(queryKey)?.includes(filter.value)}
+              checked={isChecked}
               onChange={(e) =>
                 handleFilterToggle(qp, e.target.checked, queryKey, filter.value)
               }
