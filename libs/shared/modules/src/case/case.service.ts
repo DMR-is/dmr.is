@@ -280,9 +280,6 @@ export class CaseService implements ICaseService {
               channelId: c.id,
             })),
             {
-              logging(sql, timing) {
-                console.log(sql)
-              },
               transaction: t,
             },
           )
