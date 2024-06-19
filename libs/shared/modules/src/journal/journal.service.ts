@@ -28,9 +28,14 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
@@ -46,7 +51,6 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
-import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -151,11 +155,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'updateAdvert',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const ad = await this.advertModel.update(
@@ -186,11 +186,7 @@ export class JournalService implements IJournalService {
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertDepartment',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const dep = await this.advertDepartmentModel.create({
@@ -206,11 +202,7 @@ export class JournalService implements IJournalService {
     model: Department,
   ): Promise<Result<GetDepartmentResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateDepartment',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const dep = await this.advertDepartmentModel.update(
       { title: model.title, slug: model.slug },
@@ -237,11 +229,7 @@ export class JournalService implements IJournalService {
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertInstitution',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const inst = await this.advertInvolvedPartyModel.create({
@@ -258,11 +246,7 @@ export class JournalService implements IJournalService {
     model: Institution,
   ): Promise<Result<GetInstitutionResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateInstitution',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const inst = await this.advertInvolvedPartyModel.update(
       { title: model.title, slug: model.slug },
@@ -295,11 +279,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertType',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const type = await this.advertTypeModel.create({
@@ -314,11 +294,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateType',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const type = await this.advertTypeModel.update(
@@ -347,11 +323,7 @@ export class JournalService implements IJournalService {
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertMainCategory',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const mainCategory = await this.advertMainCategoryModel.create({
       title: model.title,
@@ -370,11 +342,7 @@ export class JournalService implements IJournalService {
     model: MainCategory,
   ): Promise<Result<GetMainCategoryResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateMainCategory',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const mainCat = await this.advertMainCategoryModel.update(
       {
@@ -403,11 +371,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model) {
-      return handleBadRequest({
-        method: 'insertCategory',
-        reason: 'missing model',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
 
     const category = await this.advertCategoryModel.create({
@@ -422,11 +386,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
     if (!model || !model.id) {
-      return handleBadRequest({
-        method: 'updateCategory',
-        reason: 'missing model or id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const category = await this.advertCategoryModel.update(
       {
@@ -459,8 +419,10 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -485,11 +447,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getDepartment',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const department = await this.advertDepartmentModel.findOne({
       where: { id },
@@ -518,14 +476,23 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
+    const whereParams = {
+      slug: {
+        [Op.like]: '%deild%',
+      },
+    }
+    if (params?.search) {
+      Object.assign(whereParams, {
+        title: { [Op.iLike]: `%${params.search}%` },
+      })
+    }
+
     const departments = await this.advertDepartmentModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      where: params?.search
-        ? {
-            title: { [Op.iLike]: `%${params?.search}%` },
-          }
-        : undefined,
+      order: [['title', 'ASC']],
+      where: whereParams,
     })
 
     const mapped = departments.rows.map((item) => advertDepartmentMigrate(item))
@@ -567,12 +534,10 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-    let query = ''
+    const query = ''
 
     const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
-      logging(sql) {
-        query = sql
-      },
+      distinct: true,
       include: [
         {
           model: AdvertDepartmentDTO,
@@ -583,6 +548,10 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
+      order: [['title', 'ASC']],
+      where: params?.search
+        ? { title: { [Op.iLike]: `%${params.search}%` } }
+        : {},
       limit: pageSize,
       offset: (page - 1) * pageSize,
     })
@@ -606,7 +575,7 @@ export class JournalService implements IJournalService {
     return {
       ok: true,
       value: {
-        types: mapped,
+        types: mapped.sort((a, b) => sortAlphabetically(a.title, b.title)),
         paging: generatePaging(mapped, page, pageSize, types.count),
       },
     }
@@ -616,11 +585,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getInstitution',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const party = await this.advertInvolvedPartyModel.findOne({
       where: { id },
@@ -649,8 +614,10 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const parties = await this.advertInvolvedPartyModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -673,11 +640,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getCategory',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const category = await this.advertCategoryModel.findOne({
       where: { id },
@@ -705,8 +668,10 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const categories = await this.advertCategoryModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: params?.search
         ? {
             title: { [Op.iLike]: `%${params?.search}%` },
@@ -730,11 +695,7 @@ export class JournalService implements IJournalService {
   @HandleException()
   async getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
     if (!id) {
-      return handleBadRequest({
-        method: 'getAdvert',
-        reason: 'missing id',
-        category: LOGGING_CATEGORY,
-      })
+      throw new BadRequestException()
     }
     const advert = await this.advertModel.findByPk(id, {
       include: [
@@ -781,8 +742,10 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
     const adverts = await this.advertModel.findAndCountAll({
+      distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order: [['title', 'ASC']],
       where: {
         [Op.and]: [
           searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},

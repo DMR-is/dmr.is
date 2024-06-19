@@ -16,7 +16,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -31,7 +30,6 @@ import {
   caseCommentTypeMapper,
 } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { handleBadRequest, handleNotFoundLookup } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.module'
 import { CaseCommentDto } from './models/CaseComment'
@@ -87,16 +85,7 @@ export class CommentService implements ICommentService {
     })
 
     if (!comment) {
-      return handleNotFoundLookup({
-        id: commentId,
-        category: LOGGING_CATEGORY,
-        entity: 'comment',
-        method: 'comment',
-        info: {
-          caseId,
-          commentId,
-        },
-      })
+      throw new NotFoundException(`Comment<${commentId}> not found`)
     }
 
     const migrated = caseCommentMigrate(comment)
@@ -194,15 +183,7 @@ export class CommentService implements ICommentService {
     const newCommentType = caseCommentTypeMapper(body.type)
 
     if (!newCommentType) {
-      return handleBadRequest({
-        category: LOGGING_CATEGORY,
-        method: 'create',
-        reason: 'invalid comment type',
-        info: {
-          caseId,
-          body,
-        },
-      })
+      throw new BadRequestException(`Invalid comment type: ${body.type}`)
     }
 
     const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
@@ -314,16 +295,7 @@ export class CommentService implements ICommentService {
     })
 
     if (!exists) {
-      return handleNotFoundLookup({
-        id: commentId,
-        category: LOGGING_CATEGORY,
-        entity: 'comment',
-        method: 'delete',
-        info: {
-          caseId,
-          commentId,
-        },
-      })
+      throw new NotFoundException(`Comment<${commentId}> not found`)
     }
 
     // delete from relation table

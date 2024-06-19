@@ -1,4 +1,5 @@
 import { CaseDto } from './Case'
+import { CaseCategoriesDto } from './CaseCategories'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
@@ -10,6 +11,7 @@ export const models = [
   CaseTagDto,
   CaseStatusDto,
   CaseCommunicationStatusDto,
+  CaseCategoriesDto,
 ]
 
 export default models

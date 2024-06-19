@@ -205,11 +205,21 @@ module.exports = {
       department_id UUID NOT NULL,
       advert_title VARCHAR NOT NULL,
       advert_requested_publication_date TIMESTAMP WITH TIME ZONE,
+      advert_type_id UUID NOT NULL,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
       CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
+      CONSTRAINT fk_case_case_advert_type_id FOREIGN KEY (advert_type_id) REFERENCES advert_type (id),
       PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_categories (
+      case_case_id UUID NOT NULL,
+      category_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, category_id),
+      CONSTRAINT fk_case_categories_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_categories_category_id FOREIGN KEY (category_id) REFERENCES advert_category (id)
     );
 
     CREATE TABLE case_comments (
@@ -245,6 +255,7 @@ module.exports = {
     DROP TABLE case_comment_task CASCADE;
     DROP TABLE case_comment CASCADE;
     DROP TABLE case_case CASCADE;
+    DROP TABLE case_categories CASCADE;
     DROP TABLE case_comments CASCADE;
     `)
   },

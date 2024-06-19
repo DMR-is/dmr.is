@@ -1,12 +1,11 @@
 import { Box, Icon, Text } from '@island.is/island-ui/core'
 
-import { FilterGroup } from '../../context/filterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './FilterPopover.css'
 import { messages } from './messages'
 
 type Props = {
-  children?: React.ReactElement<FilterGroup>[]
+  children?: React.ReactNode
   resetFilters?: () => void
 }
 

@@ -68,6 +68,47 @@
         }
       }
     },
+    "/api/v1/cases/categories": {
+      "get": {
+        "operationId": "getCategories",
+        "summary": "Get categories",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for in categories.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number to return.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size number to return.",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/overview": {
       "get": {
         "operationId": "getEditorialOverview",
@@ -92,28 +133,28 @@
             "required": false,
             "in": "query",
             "description": "Year",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "page",
             "required": false,
             "in": "query",
             "description": "Page number",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
             "required": false,
             "in": "query",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
@@ -170,6 +211,20 @@
             "in": "query",
             "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -178,12 +233,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseEditorialOverview"
+                  "$ref": "#/components/schemas/EditorialOverviewResponse"
                 }
               }
             }
           }
         }
+      }
+    },
+    "/api/v1/cases/{id}/status/next": {
+      "post": {
+        "operationId": "updateNextStatus",
+        "summary": "Update case status to next.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/{id}/assign/{userId}": {
@@ -303,28 +373,28 @@
             "required": false,
             "in": "query",
             "description": "Year",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "page",
             "required": false,
             "in": "query",
             "description": "Page number",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
             "required": false,
             "in": "query",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "status",
@@ -381,6 +451,20 @@
             "in": "query",
             "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -423,10 +507,10 @@
             "schema": { "type": "string" }
           },
           {
-            "description": "Type of the comment",
-            "required": false,
             "name": "type",
+            "required": false,
             "in": "query",
+            "description": "Type of the comment",
             "schema": {
               "enum": ["internal", "external", "all"],
               "type": "string"
@@ -705,6 +789,76 @@
         },
         "required": ["types", "paging"]
       },
+      "MainCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the main category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the main category.",
+            "example": "Dómstólar og réttarfar"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the main category, used in URLs and API requests.",
+            "example": "domstolar-og-rettarfar"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category, used on front page.",
+            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
+          }
+        },
+        "required": ["id", "title", "slug", "description"]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert category.",
+            "example": "Evrópska efnahagssvæðið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert category, used in URLs and API requests.",
+            "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategory": {
+            "description": "The main category this category belongs to.",
+            "nullable": true,
+            "example": "Dómstólar og réttarfar",
+            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "description": "List of advert categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["categories", "paging"]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -937,6 +1091,10 @@
             "description": "Advert department",
             "allOf": [{ "$ref": "#/components/schemas/Department" }]
           },
+          "advertType": {
+            "description": "The advert type",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+          },
           "price": {
             "type": "number",
             "example": 23000,
@@ -981,6 +1139,7 @@
           "requestedPublicationDate",
           "advertTitle",
           "advertDepartment",
+          "advertType",
           "price",
           "paid",
           "comments"
@@ -1012,10 +1171,10 @@
         },
         "required": ["submitted", "inProgress", "inReview", "ready"]
       },
-      "CaseEditorialOverview": {
+      "EditorialOverviewResponse": {
         "type": "object",
         "properties": {
-          "data": {
+          "cases": {
             "description": "Cases for selected tab",
             "type": "array",
             "items": { "$ref": "#/components/schemas/Case" }
@@ -1029,7 +1188,7 @@
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["data", "totalItems", "paging"]
+        "required": ["cases", "totalItems", "paging"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",
@@ -1056,61 +1215,6 @@
           }
         },
         "required": ["advert", "signature", "full"]
-      },
-      "MainCategory": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the main category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the main category.",
-            "example": "Dómstólar og réttarfar"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the main category, used in URLs and API requests.",
-            "example": "domstolar-og-rettarfar"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the main category, used on front page.",
-            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
-          }
-        },
-        "required": ["id", "title", "slug", "description"]
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert category.",
-            "example": "Evrópska efnahagssvæðið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert category, used in URLs and API requests.",
-            "example": "evropska-efnahagssvaedid"
-          },
-          "mainCategory": {
-            "description": "The main category this category belongs to.",
-            "nullable": true,
-            "example": "Dómstólar og réttarfar",
-            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
-          }
-        },
-        "required": ["id", "title", "slug"]
       },
       "Institution": {
         "type": "object",

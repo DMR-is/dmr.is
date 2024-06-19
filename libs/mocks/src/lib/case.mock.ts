@@ -5,11 +5,13 @@ import {
   CaseTag,
   CaseCommentTitle,
   CaseCommunicationStatus,
-  Application,
-  ApplicationAnswerOption,
 } from '@dmr.is/shared/dto'
 import { ARMANN, PALINA } from './users.mock'
-import { JOURNAL_DEPARTMENT_B } from './journal.mock'
+import {
+  DEPT_A_AUGLYSING,
+  JOURNAL_DEPARTMENT_B,
+  MOCK_CATEGORY_GAELUDYR,
+} from './journal.mock'
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -29,6 +31,8 @@ export const CASE_SUBMITTED: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_NEW,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -67,6 +71,8 @@ export const CASE_IN_PROGRESS: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -148,6 +154,8 @@ export const CASE_IN_REVIEW: Case = {
   price: 23900,
   fastTrack: true,
   assignedTo: PALINA,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -313,6 +321,8 @@ export const CASE_READY: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_A,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -394,6 +404,8 @@ export const CASE_READY_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -475,6 +487,8 @@ export const CASE_READY_3: Case = {
   price: 23000,
   fastTrack: true,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_READY_B_2,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -556,6 +570,8 @@ export const CASE_PUBLISHED: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_B_866_2006,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -637,6 +653,8 @@ export const CASE_PUBLISHED_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: JOURNAL_DEPARTMENT_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -718,6 +736,8 @@ export const CASE_PUBLISHED_3: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  advertType: DEPT_A_AUGLYSING,
+  advertCategories: [MOCK_CATEGORY_GAELUDYR],
   // advert: ADVERT_B_1278_2023,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
