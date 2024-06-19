@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   AdvertStatus,
+  CaseChannel,
   CaseCommentType,
   CaseCommunicationStatus,
   CaseEditorialOverview,
@@ -38,8 +39,14 @@ import { handleBadRequest } from '../lib/utils'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { ICaseService } from './case.service.interface'
-import { CaseDto, CaseStatusDto } from './models'
+import {
+  CaseChannelDto,
+  CaseChannelsDto,
+  CaseDto,
+  CaseStatusDto,
+} from './models'
 import { CASE_RELATIONS } from './relations'
+import { isDefined } from '@island.is/shared/utils'
 
 const LOGGING_CATEGORY = 'CaseService'
 
@@ -53,6 +60,10 @@ export class CaseService implements ICaseService {
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
+    @InjectModel(CaseChannelDto)
+    private readonly caseChannelModel: typeof CaseChannelDto,
+    @InjectModel(CaseChannelsDto)
+    private readonly caseChannelsModel: typeof CaseChannelsDto,
 
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
 
@@ -205,12 +216,13 @@ export class CaseService implements ICaseService {
 
         const message = application.answers.publishing.message
 
+        const caseId = uuid()
         const msg =
           typeof message === 'string' && message.length > 0 ? message : null
 
         const newCase = await this.caseModel.create(
           {
-            id: uuid(),
+            id: caseId,
             applicationId: application.id,
             year: now.getFullYear(),
             caseNumber: caseNumber,
@@ -235,6 +247,46 @@ export class CaseService implements ICaseService {
             transaction: t,
           },
         )
+
+        const channels = application.answers.publishing.communicationChannels
+
+        if (channels && channels.length > 0) {
+          const caseChannels = channels
+            .map((channel) => {
+              if (!channel.email && !channel.phone) return null
+              return {
+                id: uuid(),
+                email: channel.email,
+                phone: channel.phone,
+              }
+            })
+            .filter(isDefined)
+
+          const newChannels = await this.caseChannelModel.bulkCreate(
+            caseChannels.map((c) => ({
+              id: c?.id,
+              email: c?.email,
+              phone: c?.phone,
+            })),
+            {
+              transaction: t,
+              returning: ['id'],
+            },
+          )
+
+          await this.caseChannelsModel.bulkCreate(
+            newChannels.map((c) => ({
+              caseId: caseId,
+              channelId: c.id,
+            })),
+            {
+              logging(sql, timing) {
+                console.log(sql)
+              },
+              transaction: t,
+            },
+          )
+        }
 
         // TODO: When auth is setup, use the user id from the token
         await this.commentService.create(
