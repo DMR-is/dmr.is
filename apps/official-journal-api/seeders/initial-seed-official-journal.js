@@ -68,6 +68,16 @@ module.exports = {
       'utf8',
     )
 
+    const caseChannelSeed = await readFile(
+      './seeders/sql/19_case_channel.sql',
+      'utf8',
+    )
+
+    const caseChannelsSeed = await readFile(
+      './seeders/sql/20_case_channels.sql',
+      'utf8',
+    )
+
     const seed = `
       BEGIN;
 
@@ -81,6 +91,8 @@ module.exports = {
       ${caseCommentSeed}
       ${caseSeed}
       ${caseCommentsSeed}
+      ${caseChannelSeed}
+      ${caseChannelsSeed}
 
 
       COMMIT;`
@@ -107,6 +119,8 @@ module.exports = {
         DELETE FROM case_comment_task;
         DELETE FROM case_comment;
         DELETE FROM case_comments;
+        DELETE FROM case_channel;
+        DELETE FROM case_channels;
         DELETE FROM case_case;
       COMMIT;
     `)

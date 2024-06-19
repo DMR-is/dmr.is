@@ -20,6 +20,7 @@ import { CaseComment } from '../case-comments/case-comment.dto'
 import { Department } from '../departments/department.dto'
 import { User } from '../users/user.dto'
 import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
+import { CaseChannel } from './case-channel.dto'
 
 export class Case {
   @ApiProperty({
@@ -177,6 +178,29 @@ export class Case {
   })
   @IsBoolean()
   paid!: boolean
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: 'Additional message from sender',
+  })
+  @IsString()
+  @ValidateIf((o) => o.message !== null)
+  message!: string | null
+
+  @ApiProperty({
+    type: [CaseChannel],
+    description: 'Channels for the case.',
+    example: {
+      id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+      email: 'dmr@dmr.is',
+      phone: '+354 123 4567',
+    },
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CaseChannel)
+  channels!: CaseChannel[]
 
   @ApiProperty({
     type: [CaseComment],

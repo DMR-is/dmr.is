@@ -29,6 +29,8 @@ export const CASE_SUBMITTED: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: ADVERT_NEW,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -67,6 +69,8 @@ export const CASE_IN_PROGRESS: Case = {
   price: null,
   fastTrack: false,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -148,6 +152,8 @@ export const CASE_IN_REVIEW: Case = {
   price: 23900,
   fastTrack: true,
   assignedTo: PALINA,
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -313,6 +319,8 @@ export const CASE_READY: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_A,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -394,6 +402,8 @@ export const CASE_READY_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -475,6 +485,8 @@ export const CASE_READY_3: Case = {
   price: 23000,
   fastTrack: true,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B_2,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -556,6 +568,8 @@ export const CASE_PUBLISHED: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: PALINA,
+  channels: [],
+  message: null,
   // advert: ADVERT_B_866_2006,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -637,6 +651,8 @@ export const CASE_PUBLISHED_2: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: JOURNAL_DEPARTMENT_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -718,6 +734,8 @@ export const CASE_PUBLISHED_3: Case = {
   price: 23000,
   fastTrack: false,
   assignedTo: ARMANN,
+  channels: [],
+  message: null,
   // advert: ADVERT_B_1278_2023,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [

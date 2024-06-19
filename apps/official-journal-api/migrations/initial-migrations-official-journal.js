@@ -186,6 +186,13 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
+    CREATE TABLE case_channel (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      email VARCHAR NOT NULL,
+      phone VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
     CREATE TABLE case_case (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       application_id UUID NOT NULL,
@@ -204,12 +211,21 @@ module.exports = {
       fast_track BOOLEAN DEFAULT FALSE,
       department_id UUID NOT NULL,
       advert_title VARCHAR NOT NULL,
+      message TEXT,
       advert_requested_publication_date TIMESTAMP WITH TIME ZONE,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_communication_status_id FOREIGN KEY (case_communication_status_id) REFERENCES case_communication_status (id),
       CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_channels (
+      case_case_id UUID NOT NULL,
+      case_channel_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, case_channel_id),
+      CONSTRAINT fk_case_channels_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_channels_channel_id FOREIGN KEY (case_channel_id) REFERENCES case_channel (id)
     );
 
     CREATE TABLE case_comments (

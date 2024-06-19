@@ -6,6 +6,7 @@ import { caseStatusMapper } from '../../mappers'
 import { caseCommunicationStatusMapper } from '../../mappers/case/communicationStatus.mapper'
 import { caseTagMapper } from '../../mappers/case/tag.mapper'
 import { caseCommentMigrate } from './case-comment-migrate'
+import { caseChannelMigrate } from './case-channel-migrate'
 
 export const caseMigrate = (model: CaseDto): Case => {
   const status = caseStatusMapper(model.status.value)
@@ -47,5 +48,7 @@ export const caseMigrate = (model: CaseDto): Case => {
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
     advertDepartment: model.department,
+    message: model.message,
+    channels: model.channels.map((c) => caseChannelMigrate(c)),
   }
 }

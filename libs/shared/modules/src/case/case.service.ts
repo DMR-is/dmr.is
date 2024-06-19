@@ -203,6 +203,11 @@ export class CaseService implements ICaseService {
 
         const caseNumber = nextCaseNumber.value
 
+        const message = application.answers.publishing.message
+
+        const msg =
+          typeof message === 'string' && message.length > 0 ? message : null
+
         const newCase = await this.caseModel.create(
           {
             id: uuid(),
@@ -223,6 +228,7 @@ export class CaseService implements ICaseService {
             advertTitle: application.answers.advert.title,
             requestedPublicationDate: application.answers.publishing.date,
             departmentId: departmentLookup.value.id,
+            message: msg,
           },
           {
             returning: ['id'],
