@@ -3,9 +3,9 @@ import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
-  CaseEditorialOverview,
   CaseStatus,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
@@ -30,6 +30,9 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updateNextStatus(id: string): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
   }
   updateStatus(
     id: string,
@@ -98,7 +101,7 @@ export class CaseServiceMock implements ICaseService {
 
   async overview(
     params?: GetCasesQuery,
-  ): Promise<Result<CaseEditorialOverview>> {
+  ): Promise<Result<EditorialOverviewResponse>> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -130,7 +133,7 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve({
       ok: true,
       value: {
-        data: cases as unknown as Case[],
+        cases: cases as unknown as Case[],
         totalItems: {
           submitted: submitted.length,
           inProgress: inProgress.length,

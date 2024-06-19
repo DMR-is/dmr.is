@@ -1,6 +1,6 @@
 import {
-  CaseEditorialOverview,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -20,8 +20,9 @@ export interface ICaseService {
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<Result<undefined>>
+  updateNextStatus(id: string): Promise<Result<undefined>>
   publish(body: PostCasePublishBody): Promise<Result<undefined>>
-  overview(params?: GetCasesQuery): Promise<Result<CaseEditorialOverview>>
+  overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

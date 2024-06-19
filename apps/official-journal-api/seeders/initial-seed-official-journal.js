@@ -67,6 +67,10 @@ module.exports = {
       './seeders/sql/18_case_comments.sql',
       'utf8',
     )
+    const caseCategoriesSeed = await readFile(
+      './seeders/sql/19_case_categories.sql',
+      'utf8',
+    )
 
     const caseChannelSeed = await readFile(
       './seeders/sql/19_case_channel.sql',
@@ -91,6 +95,7 @@ module.exports = {
       ${caseCommentSeed}
       ${caseSeed}
       ${caseCommentsSeed}
+      ${caseCategoriesSeed}
       ${caseChannelSeed}
       ${caseChannelsSeed}
 

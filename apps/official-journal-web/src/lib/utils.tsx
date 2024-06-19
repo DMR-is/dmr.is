@@ -3,7 +3,6 @@ import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 
 import { StringOption } from '@island.is/island-ui/core'
-import { isDefined } from '@island.is/shared/utils'
 
 import {
   CaseComment,
@@ -13,7 +12,6 @@ import {
   CaseStatusEnum,
   CaseTagEnum,
   CaseWithAdvert,
-  GetCasesRequest,
 } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
@@ -271,20 +269,41 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
   ]
 }
 
-export const extractCaseProcessingFilters = (
-  query: ParsedUrlQuery,
-): { filters: GetCasesRequest; tab: string } => {
-  const values = Object.entries({
-    ...query,
-  })
-    .filter((ent) => ent[0] !== 'tab')
-    .filter(isDefined)
+type CaseProccessingSearchParams = {
+  tab?: string
+}
 
+export const getCaseProcessingSearchParams = (
+  query: ParsedUrlQuery,
+): CaseProccessingSearchParams => {
+  const params: CaseProccessingSearchParams = {}
+
+  if (query?.tab) {
+    params.tab = Array.isArray(query.tab) ? query.tab[0] : query.tab
+  }
+
+  return params
+}
+
+type GenerateOptionsParams = {
+  label: string
+  queryKey: string
+  options: { id: string; slug: string; title: string }[] | undefined
+}
+
+export const generateOptions = ({
+  label,
+  queryKey,
+  options,
+}: GenerateOptionsParams) => {
   return {
-    filters: values.reduce(
-      (acc, [key, value]) => ({ ...acc, [key]: value }),
-      {},
-    ),
-    tab: query.tab as string,
+    label,
+    queryKey,
+    options: options
+      ? options.map((option) => ({
+          label: option.title,
+          value: option.slug,
+        }))
+      : [],
   }
 }

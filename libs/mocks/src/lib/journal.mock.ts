@@ -34,7 +34,7 @@ export const ALL_MOCK_JOURNAL_DEPARTMENTS = [
   JOURNAL_DEPARTMENT_C,
 ]
 
-const DEPT_A_AUGLYSING: AdvertType = {
+export const DEPT_A_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be0',
   title: 'AUGLÝSING',
   slug: 'auglysing',
@@ -207,7 +207,7 @@ export const ALL_MOCK_JOURNAL_MAIN_CATEGORIES = [
   MOCK_MAIN_CATEGORY_LANDBUNADUR,
 ]
 
-const MOCK_CATEGORY_GAELUDYR: Category = {
+export const MOCK_CATEGORY_GAELUDYR: Category = {
   id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
   title: 'Gæludýr',
   slug: 'gaeludyr',

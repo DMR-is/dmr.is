@@ -55,6 +55,11 @@ export const CaseTableReady = ({
       children: formatMessage(messages.tables.ready.columns.title),
     },
     {
+      name: 'caseAdvertType',
+      sortable: true,
+      children: formatMessage(messages.tables.general.type),
+    },
+    {
       name: 'caseName',
       sortable: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
@@ -96,6 +101,17 @@ export const CaseTableReady = ({
         children: row.fastTrack && (
           <div className={styles.iconWrapper}>
             {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
+          </div>
+        ),
+      },
+      {
+        sortingKey: 'caseAdvertType',
+        sortingValue: row.advertType.title,
+        children: (
+          <div className={styles.nameTableCell}>
+            <Text truncate variant="medium">
+              {row.advertType.title}
+            </Text>
           </div>
         ),
       },

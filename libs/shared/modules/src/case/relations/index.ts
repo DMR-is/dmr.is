@@ -4,7 +4,11 @@ import {
   CaseCommentTitleDto,
   CaseCommentTypeDto,
 } from '../../comment/models'
-import { AdvertDepartmentDTO } from '../../journal/models'
+import {
+  AdvertCategoryDTO,
+  AdvertDepartmentDTO,
+  AdvertTypeDTO,
+} from '../../journal/models'
 import {
   CaseChannelDto,
   CaseCommunicationStatusDto,
@@ -17,6 +21,8 @@ export const CASE_RELATIONS = [
   CaseStatusDto,
   CaseCommunicationStatusDto,
   AdvertDepartmentDTO,
+  AdvertTypeDTO,
+  AdvertCategoryDTO,
   CaseChannelDto,
   {
     model: CaseCommentDto,

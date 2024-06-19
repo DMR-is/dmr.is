@@ -21,6 +21,13 @@ export const messages = {
     },
   }),
   tables: {
+    general: defineMessages({
+      type: {
+        id: 'web.components.tables:general.type',
+        defaultMessage: 'Tegund',
+        description: 'Advert type column',
+      },
+    }),
     submitted: {
       columns: defineMessages({
         publicationDate: {

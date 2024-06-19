@@ -15,8 +15,10 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { AdvertType } from '../advert-types'
 import { Application } from '../application/application.dto'
 import { CaseComment } from '../case-comments/case-comment.dto'
+import { Category } from '../categories'
 import { Department } from '../departments/department.dto'
 import { User } from '../users/user.dto'
 import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
@@ -161,6 +163,20 @@ export class Case {
   })
   @Type(() => Department)
   advertDepartment!: Department
+
+  @ApiProperty({
+    type: AdvertType,
+    description: 'The advert type',
+  })
+  advertType!: AdvertType
+
+  @ApiProperty({
+    description: 'List of advert categories.',
+    required: true,
+    type: [Category],
+    nullable: false,
+  })
+  readonly advertCategories!: Category[]
 
   @ApiProperty({
     type: Number,

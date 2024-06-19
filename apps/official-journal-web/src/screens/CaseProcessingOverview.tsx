@@ -1,30 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
+import { useEffect, useMemo, useState } from 'react'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import { AlertMessage } from '@island.is/island-ui/core'
 
-import { Section } from '../components/section/Section'
+import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { FilterGroup } from '../context/filterContext'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { Case, Paging } from '../gen/fetch'
+import { useCaseOverview } from '../hooks/api/useCaseOverview'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
-import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseDepartmentTabs, Routes } from '../lib/constants'
-import { messages } from '../lib/messages/caseProcessingOverview'
-import { Screen } from '../lib/types'
-import {
-  extractCaseProcessingFilters,
-  mapTabIdToCaseStatus,
-} from '../lib/utils'
+import { Routes } from '../lib/constants'
+import { messages as caseProccessingMessages } from '../lib/messages/caseProcessingOverview'
+import { messages as errorMessages } from '../lib/messages/errors'
+import { CaseOverviewSearchParams, Screen } from '../lib/types'
 type Props = {
   data: Case[]
   paging: Paging
-  filters?: FilterGroup[]
   totalItems: {
     submitted: number
     inProgress: number
@@ -33,128 +29,204 @@ type Props = {
   }
 }
 
+type CaseStatus = 'Innsent' | 'Grunnvinnsla' | 'Yfirlestur' | 'Tilbúið'
+
+const CaseProccessingOverviewTabIds: CaseStatus[] = [
+  'Innsent',
+  'Grunnvinnsla',
+  'Yfirlestur',
+  'Tilbúið',
+]
+
 const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
   paging,
   totalItems,
-  filters,
 }) => {
-  const { add, get } = useQueryParams()
-  const { setFilterGroups } = useFilterContext()
-
   const { formatMessage } = useFormatMessage()
+  const router = useRouter()
 
-  const [selectedTab, setSelectedTab] = useState(get('tab'))
-
-  const onTabChange = (id: string) => {
-    setSelectedTab(id)
-    add({
-      tab: id,
-      page: 1,
-    })
-  }
+  const { setEnableDepartments, setEnableCategories, setEnableTypes } =
+    useFilterContext()
 
   useEffect(() => {
-    if (filters) {
-      setFilterGroups(filters)
-    }
+    setEnableDepartments(true)
+    setEnableCategories(true)
+    setEnableTypes(true)
   }, [])
 
-  const tabs: Tab[] = [
+  const [selectedTab, setSelectedTab] = useState<CaseStatus>('Innsent')
+
+  const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
+    search: router.query.search,
+    department: router.query.department,
+    status: router.query.status,
+    page: router.query.page,
+    type: router.query.type,
+    category: router.query.category,
+    pageSize: router.query.pageSize,
+  })
+
+  useEffect(() => {
+    setSearchParams({
+      search: router.query.search,
+      department: router.query.department,
+      status: router.query.status,
+      page: router.query.page,
+      type: router.query.type,
+      category: router.query.category,
+      pageSize: router.query.pageSize,
+    })
+  }, [router.query])
+
+  const qsp = useMemo(() => {
+    const filters = Object.entries(searchParams).filter(
+      ([key, value]) => value !== undefined,
+    )
+
+    const qs = new URLSearchParams()
+
+    filters.forEach(([key, value]) => {
+      qs.append(key, value as string)
+    })
+
+    return qs.toString()
+  }, [searchParams])
+
+  const { data: casesResponse, error } = useCaseOverview({
+    qsp: qsp,
+    options: {
+      keepPreviousData: true,
+      fallback: {
+        cases: data,
+        paging: paging,
+        totalItems,
+      },
+    },
+  })
+
+  const onTabChange = (id: string) => {
+    const tabId = CaseProccessingOverviewTabIds.find((tab) => tab === id)
+    if (tabId) {
+      setSelectedTab(tabId)
+      setSearchParams({
+        ...searchParams,
+        status: tabId,
+      })
+      router.push(
+        {
+          query: { ...router.query, status: tabId },
+        },
+        undefined,
+        { shallow: true },
+      )
+    }
+  }
+
+  if (error) {
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="error"
+          message={formatMessage(errorMessages.errorFetchingData)}
+          title={formatMessage(errorMessages.internalServerError)}
+        />
+      </CaseOverviewGrid>
+    )
+  }
+
+  if (!casesResponse) {
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="warning"
+          message={formatMessage(errorMessages.noDataText)}
+          title={formatMessage(errorMessages.noDataTitle)}
+        />
+      </CaseOverviewGrid>
+    )
+  }
+
+  const tabs: Tab<CaseStatus>[] = [
     {
-      id: CaseStatusEnum.Innsent,
-      label: formatMessage(messages.tabs.submitted, {
-        count: totalItems.submitted,
+      id: 'Innsent',
+      label: formatMessage(caseProccessingMessages.tabs.submitted, {
+        count: casesResponse.totalItems.submitted,
       }),
-      content: <CaseTableSubmitted paging={paging} data={data} />,
+      content: (
+        <CaseTableSubmitted
+          paging={casesResponse.paging}
+          data={casesResponse.cases}
+        />
+      ),
     },
     {
-      id: CaseStatusEnum.Grunnvinnsla,
-      label: formatMessage(messages.tabs.inProgress, {
-        count: totalItems.inProgress,
+      id: 'Grunnvinnsla',
+      label: formatMessage(caseProccessingMessages.tabs.inProgress, {
+        count: casesResponse.totalItems.inProgress,
       }),
-      content: <CaseTableInProgress paging={paging} data={data} />,
+      content: (
+        <CaseTableInProgress
+          paging={casesResponse.paging}
+          data={casesResponse.cases}
+        />
+      ),
     },
     {
-      id: CaseStatusEnum.Yfirlestur,
-      label: formatMessage(messages.tabs.inReview, {
-        count: totalItems.inReview,
+      id: 'Yfirlestur',
+      label: formatMessage(caseProccessingMessages.tabs.inReview, {
+        count: casesResponse.totalItems.inReview,
       }),
-      content: <CaseTableInReview paging={paging} data={data} />,
+      content: (
+        <CaseTableInReview
+          paging={casesResponse.paging}
+          data={casesResponse.cases}
+        />
+      ),
     },
     {
-      id: CaseStatusEnum.Tilbi,
-      label: formatMessage(messages.tabs.ready, {
-        count: totalItems.ready,
+      id: 'Tilbúið',
+      label: formatMessage(caseProccessingMessages.tabs.ready, {
+        count: casesResponse.totalItems.ready,
       }),
-      content: <CaseTableInProgress paging={paging} data={data} />,
+      content: (
+        <CaseTableInProgress
+          paging={casesResponse.paging}
+          data={casesResponse.cases}
+        />
+      ),
     },
   ]
 
   return (
-    <Section paddingTop="off">
-      <GridContainer>
-        <GridRow rowGap={['p2', 3]}>
-          <GridColumn
-            paddingTop={2}
-            offset={['0', '0', '0', '1/12']}
-            span={['12/12', '12/12', '12/12', '10/12']}
-          >
-            <Tabs
-              onlyRenderSelectedTab={true}
-              onTabChange={onTabChange}
-              selectedTab={selectedTab}
-              tabs={tabs}
-              label={formatMessage(messages.tabs.statuses)}
-            />
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+    <CaseOverviewGrid>
+      <Tabs
+        onTabChange={onTabChange}
+        selectedTab={selectedTab}
+        tabs={tabs}
+        label={formatMessage(caseProccessingMessages.tabs.statuses)}
+      />
+    </CaseOverviewGrid>
   )
 }
 
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
-  const { filters: extractedFilters, tab } = extractCaseProcessingFilters(query)
-
   const dmrClient = createDmrClient()
 
-  const selectedStatus = mapTabIdToCaseStatus(tab)
+  const { page, pageSize, department, status, search } = query
 
-  const params = {
-    ...extractedFilters,
-    status: selectedStatus,
-  }
-
-  const response = await dmrClient.getEditorialOverview({
-    ...params,
-    pageSize: 10,
+  const caseData = await dmrClient.getEditorialOverview({
+    page: Array.isArray(page) ? page[0] : page,
+    pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
+    department: Array.isArray(department) ? department[0] : department,
+    status: Array.isArray(status) ? status[0] : status,
+    search: Array.isArray(search) ? search[0] : search,
   })
 
-  const filters: FilterGroup[] = [
-    {
-      label: 'Birting',
-      options: [
-        {
-          label: 'Mín mál',
-          key: 'employeeId',
-          value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-        },
-        { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
-        { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
-      ],
-    },
-    {
-      label: 'Deildir',
-      options: CaseDepartmentTabs,
-    },
-  ]
-
   return {
-    data: response.data,
-    paging: response.paging,
-    totalItems: response.totalItems,
-    filters,
+    data: caseData.cases,
+    paging: caseData.paging,
+    totalItems: caseData.totalItems,
   }
 }
 
@@ -163,16 +235,16 @@ export default withMainLayout(CaseProccessingOverviewScreen, {
     showBanner: true,
     showFilters: true,
     imgSrc: '/assets/banner-small-image.svg',
-    title: messages.banner.title,
-    description: messages.banner.description,
+    title: caseProccessingMessages.banner.title,
+    description: caseProccessingMessages.banner.description,
     variant: 'small',
     breadcrumbs: [
       {
-        title: messages.breadcrumbs.home,
+        title: caseProccessingMessages.breadcrumbs.home,
         href: Routes.Dashboard,
       },
       {
-        title: messages.breadcrumbs.cases,
+        title: caseProccessingMessages.breadcrumbs.cases,
       },
     ],
   },

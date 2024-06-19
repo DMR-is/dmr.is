@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react'
-import { active } from 'submodules/island.is/libs/island-ui/core/src/lib/Tag/Tag.css'
-import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
-
 import {
+  AlertMessage,
   Box,
   Button,
   LinkV2,
   Select,
+  SkeletonLoader,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
 
 import { Attachments } from '../components/attachments/Attachments'
+import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { Comments } from '../components/comments/Comments'
 import { FormShell } from '../components/form/FormShell'
 import { Section } from '../components/form-stepper/Section'
@@ -26,13 +24,16 @@ import {
   CaseStatusEnum,
   CaseWithAdvert,
   Department,
-  PostCaseComment,
 } from '../gen/fetch'
+import { useAssignEmployee } from '../hooks/api/useAssignEmployee'
+import { useCase } from '../hooks/api/useCase'
+import { useUpdateCaseStatus } from '../hooks/api/useUpdateCaseStatus'
+import { useUpdateNextCaseStatus } from '../hooks/api/useUpdateNextStatus'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { APIRotues, assignEmployee, updateCaseStatus } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
+import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
@@ -44,18 +45,79 @@ type Props = {
 }
 
 const CaseSingle: Screen<Props> = ({
-  activeCase,
+  activeCase: data,
   advertTypes,
   departments,
   step,
 }) => {
   const { formatMessage } = useFormatMessage()
 
-  if (!activeCase || !step) {
+  if (!data || !step) {
     return null
   }
 
-  const stepper = generateSteps(activeCase)
+  const {
+    data: caseData,
+    error,
+    isLoading,
+    mutate: refetchCase,
+  } = useCase({
+    caseId: data.activeCase.id,
+    options: {
+      fallback: data,
+    },
+  })
+
+  const { trigger: onAssignEmployee, isMutating: isAssigning } =
+    useAssignEmployee({
+      onSuccess: () => refetchCase(),
+    })
+
+  const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
+    useUpdateCaseStatus({
+      onSuccess: () => refetchCase(),
+    })
+
+  const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
+    useUpdateNextCaseStatus({
+      onSuccess: () => refetchCase(),
+    })
+
+  if (isLoading) {
+    return (
+      <CaseOverviewGrid>
+        <SkeletonLoader space={2} repeat={5} height={44} />
+      </CaseOverviewGrid>
+    )
+  }
+
+  if (error) {
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="error"
+          title={formatMessage(errorMessages.errorFetchingData)}
+          message={formatMessage(errorMessages.internalServerError)}
+        />
+      </CaseOverviewGrid>
+    )
+  }
+
+  if (!caseData) {
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="warning"
+          title={formatMessage(errorMessages.noDataTitle)}
+          message={formatMessage(errorMessages.noDataText)}
+        />
+      </CaseOverviewGrid>
+    )
+  }
+
+  const { advert, activeCase: activeCase } = caseData._case
+
+  const stepper = generateSteps(caseData._case)
   const prevStep =
     caseSteps.indexOf(step) > 0
       ? caseSteps[caseSteps.indexOf(step) - 1]
@@ -82,15 +144,11 @@ const CaseSingle: Screen<Props> = ({
     value: c,
   }))
 
-  const { trigger: onAssignEmployee } = useSWRMutation(
-    APIRotues.AssignEmployee,
-    assignEmployee,
+  const assignedCaseStatus = caseStatusOptions.find(
+    (c) => c.value === activeCase.status,
   )
 
-  const { trigger: onUpdateCaseStatus } = useSWRMutation(
-    APIRotues.UpdateCaseStatus,
-    updateCaseStatus,
-  )
+  const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus
 
   return (
     <FormShell
@@ -130,10 +188,19 @@ const CaseSingle: Screen<Props> = ({
         <Stack space={[2]}>
           <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
           <Select
+            isOptionDisabled={(option) =>
+              activeCase.assignedTo?.id === option.value
+            }
+            isDisabled={isAssigning}
+            isLoading={isAssigning}
             name="assignedTo"
-            options={employeesMock}
+            options={employeesMock.map((e) => ({
+              label: e.label,
+              value: e.value,
+              disabled: activeCase.assignedTo?.id === e.value,
+            }))}
             defaultValue={employeesMock.find(
-              (e) => e.value === activeCase.activeCase.assignedTo?.id,
+              (e) => e.value === activeCase.assignedTo?.id,
             )}
             label={formatMessage(messages.actions.assignedTo)}
             placeholder={formatMessage(messages.actions.assignedToPlaceholder)}
@@ -141,35 +208,42 @@ const CaseSingle: Screen<Props> = ({
             onChange={(e) => {
               if (!e) return
               onAssignEmployee({
-                id: activeCase.activeCase.id,
+                caseId: activeCase.id,
                 userId: e.value,
               })
             }}
-          ></Select>
+          />
           <Select
+            isDisabled={isUpdatingCaseStatus}
+            isLoading={isUpdatingCaseStatus}
             name="status"
-            options={caseStatusOptions}
-            defaultValue={caseStatusOptions.find(
-              (c) => c.value === activeCase.activeCase.status,
-            )}
+            options={caseStatusOptions.map((c) => ({
+              label: c.label,
+              value: c.value,
+              disabled: c.value === activeCase.status,
+            }))}
+            defaultValue={assignedCaseStatus}
+            value={assignedCaseStatus}
             label={formatMessage(messages.actions.status)}
             size="sm"
             onChange={(e) => {
               if (!e) return
               onUpdateCaseStatus({
-                caseId: activeCase.activeCase.id,
-                status: e.value,
+                caseId: activeCase.id,
+                statusId: e.value,
               })
             }}
-          ></Select>
+          />
         </Stack>
       }
     >
       <Stack space={[2, 3, 4]}>
-        {step === 'innsending' && <StepInnsending activeCase={activeCase} />}
+        {step === 'innsending' && (
+          <StepInnsending activeCase={caseData._case} />
+        )}
         {step === 'grunnvinnsla' && (
           <StepGrunnvinnsla
-            activeCase={activeCase}
+            activeCase={caseData._case}
             advertTypes={advertTypes.sort((a, b) =>
               a.slug.localeCompare(b.slug),
             )}
@@ -178,14 +252,16 @@ const CaseSingle: Screen<Props> = ({
             )}
           />
         )}
-        {step === 'yfirlestur' && <StepYfirlestur activeCase={activeCase} />}
-        {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
+        {step === 'yfirlestur' && (
+          <StepYfirlestur activeCase={caseData._case} />
+        )}
+        {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
 
-        {activeCase.advert.attachments.length > 0 && (
-          <Attachments activeCase={activeCase} />
+        {advert.attachments.length > 0 && (
+          <Attachments activeCase={caseData._case} />
         )}
 
-        <Comments activeCase={activeCase} />
+        <Comments activeCase={caseData._case} />
 
         <Box
           display="flex"
@@ -195,7 +271,7 @@ const CaseSingle: Screen<Props> = ({
           paddingTop={[2, 3, 4]}
         >
           {prevStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${prevStep}`}>
+            <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
               <Button as="span" variant="ghost" unfocusable>
                 {formatMessage(messages.paging.goBack)}
               </Button>
@@ -207,13 +283,21 @@ const CaseSingle: Screen<Props> = ({
               </Button>
             </LinkV2>
           )}
-          {nextStep && activeCase.activeCase.assignedTo === null ? (
+          {nextStep && activeCase.assignedTo === null ? (
             <Button icon="arrowForward" disabled>
               {formatMessage(messages.paging.nextStep)}
             </Button>
           ) : nextStep ? (
-            <LinkV2 href={`/ritstjorn/${activeCase.activeCase.id}/${nextStep}`}>
-              <Button as="span" icon="arrowForward" unfocusable>
+            <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
+              <Button
+                loading={isUpdatingNextStatus}
+                as="span"
+                icon="arrowForward"
+                onClick={() =>
+                  onUpdateNextCaseStatus({ caseId: activeCase.id })
+                }
+                unfocusable
+              >
                 {formatMessage(messages.paging.nextStep)}
               </Button>
             </LinkV2>

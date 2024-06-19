@@ -1,68 +1,47 @@
 import { createContext, useState } from 'react'
 
-export type FilterOption = {
-  label: string
-  key: string
-  value: string
-}
-
-export type FilterGroup = {
-  label: string
-  options: FilterOption[]
-}
-
 type FilterContextProps = {
-  searchFilter: string
-  filterGroups?: FilterGroup[]
-  renderFilters: boolean
-  setSearchFilter: (search: string) => void
-  setRenderFilters: (render: boolean) => void
-  setFilterGroups: (filterGroups: FilterGroup[]) => void
+  enableTypes: boolean
+  enableDepartments: boolean
+  enableCategories: boolean
+  setEnableTypes: (enableTypes: boolean) => void
+  setEnableDepartments: (enableDepartments: boolean) => void
+  setEnableCategories: (enableCategories: boolean) => void
 }
 
 export const FilterContext = createContext<FilterContextProps>({
-  searchFilter: '',
-  renderFilters: true,
-  setSearchFilter: () => {},
-  setRenderFilters: () => {},
-  setFilterGroups: () => {},
+  enableTypes: false,
+  enableDepartments: false,
+  enableCategories: false,
+  setEnableTypes: () => {},
+  setEnableDepartments: () => {},
+  setEnableCategories: () => {},
 })
 
 export const FilterContextProvider = ({
-  filterGroups = [],
   children,
 }: {
   children: React.ReactNode
-  filterGroups?: FilterGroup[]
 }) => {
-  const setSearchFilter = (search: string) => {
-    setState((prev) => ({
-      ...prev,
-      searchFilter: search,
-    }))
+  const setEnableTypes = (enableTypes: boolean) => {
+    setState((prevState) => ({ ...prevState, enableTypes }))
   }
 
-  const setRenderFilters = (render: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      renderFilters: render,
-    }))
+  const setEnableDepartments = (enableDepartments: boolean) => {
+    setState((prevState) => ({ ...prevState, enableDepartments }))
   }
 
-  const setFilterGroups = (filterGroups: FilterGroup[]) => {
-    setState((prev) => ({
-      ...prev,
-      filterGroups: filterGroups,
-    }))
+  const setEnableCategories = (enableCategories: boolean) => {
+    setState((prevState) => ({ ...prevState, enableCategories }))
   }
 
   const initalState: FilterContextProps = {
-    filterGroups: filterGroups,
-    searchFilter: '',
-    renderFilters: true,
-    setSearchFilter,
-    setRenderFilters,
-    setFilterGroups,
+    enableTypes: false,
+    enableDepartments: false,
+    enableCategories: false,
+    setEnableTypes,
+    setEnableDepartments,
+    setEnableCategories,
   }
 
   const [state, setState] = useState(initalState)

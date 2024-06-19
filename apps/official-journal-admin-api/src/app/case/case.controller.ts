@@ -1,7 +1,7 @@
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
-  CaseEditorialOverview,
   CreateCaseResponse,
+  EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
   GetCaseCommentResponse,
@@ -10,6 +10,8 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCategoriesQueryParams,
+  GetCategoriesResponse,
   GetDepartmentsResponse,
   PostApplicationBody,
   PostCaseComment,
@@ -36,7 +38,6 @@ import {
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -101,6 +102,29 @@ export class CaseController {
     })
   }
 
+  @Get('categories')
+  @ApiOperation({
+    operationId: 'getCategories',
+    summary: 'Get categories',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetCategoriesResponse,
+    description: 'Categories',
+  })
+  async categories(
+    @Query()
+    params?: GetCategoriesQueryParams,
+  ): Promise<GetCategoriesResponse> {
+    const result = await this.journalService.getCategories(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
+  }
+
   @Get('overview')
   @ApiOperation({
     operationId: 'getEditorialOverview',
@@ -108,12 +132,12 @@ export class CaseController {
   })
   @ApiResponse({
     status: 200,
-    type: CaseEditorialOverview,
+    type: EditorialOverviewResponse,
     description: 'Cases overview.',
   })
   async editorialOverview(
     @Query() params?: GetCasesQuery,
-  ): Promise<CaseEditorialOverview> {
+  ): Promise<EditorialOverviewResponse> {
     const result = await this.caseService.overview(params)
 
     if (!result.ok) {
@@ -121,6 +145,25 @@ export class CaseController {
     }
 
     return result.value
+  }
+
+  @Post(':id/status/next')
+  @ApiOperation({
+    operationId: 'updateNextStatus',
+    summary: 'Update case status to next.',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  async updateNextStatus(@Param('id') id: string): Promise<void> {
+    const result = await this.caseService.updateNextStatus(id)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
   }
 
   @Post(':id/assign/:userId')
@@ -248,7 +291,6 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     const result = await this.caseService.cases(params)
-
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
     }
@@ -286,13 +328,14 @@ export class CaseController {
   })
   async getComments(
     @Param('id') id: string,
-    @Query('params') params?: GetCaseCommentsQuery,
+    @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     const results = await this.caseCommentService.comments(id, params)
 
     if (!results.ok) {
       throw new HttpException(results.error.message, results.error.code)
     }
+
     return results.value
   }
 
