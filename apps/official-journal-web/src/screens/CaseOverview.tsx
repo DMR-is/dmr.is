@@ -5,9 +5,7 @@ import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { FilterGroup } from '../context/filterContext'
 import { Case, Paging } from '../gen/fetch'
-import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
@@ -20,13 +18,11 @@ import { getCaseProcessingSearchParams } from '../lib/utils'
 type Props = {
   cases: Case[]
   paging: Paging
-  filters?: FilterGroup[]
 }
 
-const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
+const CaseOverview: Screen<Props> = ({ cases, paging }) => {
   const { formatMessage } = useFormatMessage()
   const { add, get } = useQueryParams()
-  const { setFilterGroups } = useFilterContext()
 
   const [selectedTab, setSelectedTab] = useState(get('tab'))
 
@@ -36,12 +32,6 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
       tab: id,
     })
   }
-
-  useEffect(() => {
-    if (filters) {
-      setFilterGroups(filters)
-    }
-  }, [])
 
   const tabs: Tab[] = CaseDepartmentTabs.map((tab) => ({
     id: tab.value,
@@ -72,32 +62,15 @@ const CaseOverview: Screen<Props> = ({ cases, paging, filters }) => {
 }
 
 CaseOverview.getProps = async ({ query }) => {
-  const { filters: ex, tab } = getCaseProcessingSearchParams(query)
+  const { tab } = getCaseProcessingSearchParams(query)
   const dmrClient = createDmrClient()
 
   const { cases, paging } = await dmrClient.getCases({
-    ...ex,
     department: tab,
   })
-
-  const filters: FilterGroup[] = [
-    {
-      label: 'Birting',
-      options: [
-        {
-          label: 'Mín mál',
-          key: 'employeeId',
-          value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-        },
-        { label: 'Mál í hraðbirtingu', key: 'fastTrack', value: 'true' },
-        { label: 'Mál sem bíða svara', key: 'status', value: 'Beðið svara' },
-      ],
-    },
-  ]
   return {
     cases,
     paging,
-    filters,
   }
 }
 
