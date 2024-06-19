@@ -266,7 +266,6 @@ export class CaseService implements ICaseService {
           })
           .filter((c) => c !== null) as { caseId: string; categoryId: string }[]
 
-        console.log('categoryIds', categoryIds)
         await this.caseCategoriesModel.bulkCreate(categoryIds, {
           transaction: t,
         })
