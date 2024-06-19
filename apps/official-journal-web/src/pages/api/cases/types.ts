@@ -21,10 +21,6 @@ export default async function handler(
 
     const { page, pageSize, search } = req.query
 
-    console.log('page', page)
-    console.log('pageSize', pageSize)
-    console.log('search', search)
-
     const currentPage = extract(page) ?? 1
     const currentPageSize = extract(pageSize)
       ? Math.min(Number(extract(pageSize)), 1000)
