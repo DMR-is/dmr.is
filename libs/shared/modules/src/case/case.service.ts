@@ -29,8 +29,6 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { isDefined } from '@island.is/shared/utils'
-
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
@@ -282,7 +280,7 @@ export class CaseService implements ICaseService {
                 phone: channel.phone,
               }
             })
-            .filter(isDefined)
+            .filter((c) => c !== null)
 
           const newChannels = await this.caseChannelModel.bulkCreate(
             caseChannels.map((c) => ({
@@ -459,7 +457,7 @@ export class CaseService implements ICaseService {
       )
 
       await Promise.all(
-        caseIds.map(async (caseId, index) => {
+        caseIds.map(async (caseId) => {
           const caseLookup = await this.case(caseId)
 
           if (!caseLookup.ok) {
