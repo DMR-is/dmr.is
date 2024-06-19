@@ -255,18 +255,21 @@ export class CaseService implements ICaseService {
         )
 
         const categoryIds = categories
-          .filter((c) => c.ok)
-          .map((c) => c.ok && c.value.id)
+          .map((c) => {
+            if (!c.ok) {
+              return null
+            }
+            return {
+              caseId: newCase.id,
+              categoryId: c.value.id,
+            }
+          })
+          .filter((c) => c !== null) as { caseId: string; categoryId: string }[]
 
-        await this.caseCategoriesModel.bulkCreate(
-          categoryIds.map((categoryId) => ({
-            caseId: newCase.id,
-            categoryId: categoryId,
-          })),
-          {
-            transaction: t,
-          },
-        )
+        console.log('categoryIds', categoryIds)
+        await this.caseCategoriesModel.bulkCreate(categoryIds, {
+          transaction: t,
+        })
 
         const channels = application.answers.publishing.communicationChannels
 
