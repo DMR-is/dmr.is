@@ -3,10 +3,9 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
+import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   AdvertStatus,
-  CaseChannel,
   CaseCommentType,
   CaseCommunicationStatus,
   CaseEditorialOverview,
@@ -24,6 +23,8 @@ import { generatePaging } from '@dmr.is/utils'
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+
+import { isDefined } from '@island.is/shared/utils'
 
 // import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 // import { HTMLText } from '@island.is/regulations-tools/types'
@@ -46,7 +47,6 @@ import {
   CaseStatusDto,
 } from './models'
 import { CASE_RELATIONS } from './relations'
-import { isDefined } from '@island.is/shared/utils'
 
 const LOGGING_CATEGORY = 'CaseService'
 

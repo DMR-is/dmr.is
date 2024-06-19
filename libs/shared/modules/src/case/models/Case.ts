@@ -9,11 +9,11 @@ import {
 
 import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
 import { AdvertDepartmentDTO } from '../../journal/models'
+import { CaseChannelDto } from './CaseChannel'
+import { CaseChannelsDto } from './CaseChannels'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
-import { CaseChannelDto } from './CaseChannel'
-import { CaseChannelsDto } from './CaseChannels'
 
 @Table({ tableName: 'case_case', timestamps: false })
 export class CaseDto extends Model {

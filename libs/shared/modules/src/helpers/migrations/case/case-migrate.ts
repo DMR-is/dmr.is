@@ -5,8 +5,8 @@ import { CaseDto } from '../../../case/models'
 import { caseStatusMapper } from '../../mappers'
 import { caseCommunicationStatusMapper } from '../../mappers/case/communicationStatus.mapper'
 import { caseTagMapper } from '../../mappers/case/tag.mapper'
-import { caseCommentMigrate } from './case-comment-migrate'
 import { caseChannelMigrate } from './case-channel-migrate'
+import { caseCommentMigrate } from './case-comment-migrate'
 
 export const caseMigrate = (model: CaseDto): Case => {
   const status = caseStatusMapper(model.status.value)

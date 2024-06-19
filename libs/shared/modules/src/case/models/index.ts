@@ -1,9 +1,9 @@
 import { CaseDto } from './Case'
 import { CaseChannelDto } from './CaseChannel'
+import { CaseChannelsDto } from './CaseChannels'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
-import { CaseChannelsDto } from './CaseChannels'
 
 export {
   CaseDto,
