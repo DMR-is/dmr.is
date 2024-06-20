@@ -1,5 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
@@ -16,8 +17,6 @@ import {
 } from '../case/models'
 import { CaseCategoriesDto } from '../case/models/CaseCategories'
 import { CASE_RELATIONS } from '../case/relations'
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,

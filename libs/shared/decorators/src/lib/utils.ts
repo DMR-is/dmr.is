@@ -1,8 +1,11 @@
 import { logger } from '@dmr.is/logging'
 
-import { BadRequestException, NotFoundException } from '@nestjs/common'
-
-import { Result } from '../types/result'
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  MethodNotAllowedException,
+  NotFoundException,
+} from '@nestjs/common'
 
 export const handleException = <T>({
   method,
@@ -42,6 +45,48 @@ export const handleException = <T>({
 
   if (error instanceof BadRequestException) {
     logger.warn(`Bad request exception in ${category}.${method}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return {
+      ok: false,
+      error: {
+        code: error.getStatus(),
+        message: error.message,
+      },
+    }
+  }
+
+  if (error instanceof MethodNotAllowedException) {
+    logger.warn(`Method not allowed exception in ${category}.${method}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return {
+      ok: false,
+      error: {
+        code: error.getStatus(),
+        message: error.message,
+      },
+    }
+  }
+
+  if (error instanceof InternalServerErrorException) {
+    logger.error(`Internal server error in ${category}.${method}`, {
       ...info,
       method,
       category,

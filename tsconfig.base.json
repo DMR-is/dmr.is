@@ -8,13 +8,14 @@
     "paths": {
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
+      "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
+      "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
-      "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],
@@ -38,7 +39,7 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
-      ],
+      ]
     },
     "sourceMap": true,
     "importHelpers": true,

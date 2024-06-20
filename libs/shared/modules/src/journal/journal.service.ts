@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
@@ -41,8 +42,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,

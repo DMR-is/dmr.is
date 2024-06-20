@@ -243,7 +243,7 @@ const CaseSingle: Screen<Props> = ({
         )}
         {step === 'grunnvinnsla' && (
           <StepGrunnvinnsla
-            activeCase={caseData._case}
+            data={caseData._case}
             advertTypes={advertTypes.sort((a, b) =>
               a.slug.localeCompare(b.slug),
             )}

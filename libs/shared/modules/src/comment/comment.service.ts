@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import { v4 as uuid } from 'uuid'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   DeleteCaseCommentResponse,
@@ -22,8 +23,6 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { CaseDto, CaseStatusDto } from '../case/models'
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   caseCommentMigrate,
   caseCommentTitleMapper,

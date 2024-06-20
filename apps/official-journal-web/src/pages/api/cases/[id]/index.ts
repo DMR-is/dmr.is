@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
-import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
+import { createDmrClient } from '../../../../lib/api/createClient'
+import { auditAPIRoute, handleAPIException } from '../../../../lib/api/utils'
 
 export default async function handler(
   req: NextApiRequest,

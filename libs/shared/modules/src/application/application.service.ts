@@ -1,3 +1,4 @@
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -17,8 +18,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'

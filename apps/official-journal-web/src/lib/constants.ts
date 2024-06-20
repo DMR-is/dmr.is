@@ -1,15 +1,10 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import {
-  AssignEmployeeRequest,
-  PostCasePublishBody,
-  UpdateCaseStatusBody,
-} from '../gen/fetch'
+import { PostCasePublishBody } from '../gen/fetch'
 import { SWRAddCommentParams } from '../hooks/api/useAddComment'
 import { SWRAssignEmployeeParams } from '../hooks/api/useAssignEmployee'
 import { SWRUpdateCaseStatusParams } from '../hooks/api/useUpdateCaseStatus'
 import { SWRUpdateNextCaseStatusParams } from '../hooks/api/useUpdateNextStatus'
-import { CaseOverviewSearchParams } from './types'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -195,6 +190,31 @@ export async function deleteComment(
   })
 }
 
+export async function updatePrice(
+  url: string,
+  { arg }: { arg: { caseId: string; price: string } },
+) {
+  const fullUrl = url.replace(':id', arg.caseId)
+  return fetch(fullUrl, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const error = new Error('Error occured while fetching data')
+      console.error('Error occured while fetching data')
+      error.message = await res.text()
+      error.name = res.statusText
+
+      throw error
+    }
+
+    return res
+  })
+}
+
 export enum APIRotues {
   Case = '/api/cases/:id',
   Cases = '/api/cases',
@@ -208,4 +228,5 @@ export enum APIRotues {
   CreateComment = '/api/comments/create',
   DeleteComment = '/api/comments/delete',
   PublishCases = '/api/cases/publish',
+  UpdatePrice = '/api/cases/:id/updatePrice',
 }
