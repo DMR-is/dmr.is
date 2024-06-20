@@ -1,11 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 class UpdatePriceHandler {
-  @Audit()
-  @HandleException()
+  @Audit({ logArgs: false })
+  @HandleApiException()
+  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    return res.status(200).json({ message: 'Hello' })
+    return res.status(200).json({
+      message: 'OK',
+    })
   }
 }
 

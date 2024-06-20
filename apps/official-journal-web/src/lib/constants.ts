@@ -196,8 +196,8 @@ export async function updatePrice(
 ) {
   const fullUrl = url.replace(':id', arg.caseId)
   return fetch(fullUrl, {
-    method: 'POST',
-    body: JSON.stringify(arg),
+    method: 'GET',
+    // body: JSON.stringify(arg),
     headers: {
       'Content-Type': 'application/json',
     },

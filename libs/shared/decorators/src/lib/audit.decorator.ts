@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
 
-export function Audit() {
+type AuditParams = {
+  logArgs: boolean
+}
+
+export function Audit({ logArgs }: AuditParams = { logArgs: true }) {
   return function (
     target: any,
     method: string,
@@ -11,12 +15,17 @@ export function Audit() {
     const originalMethod = descriptor.value
 
     descriptor.value = function (...args: any[]) {
-      logger.info(`${service}.${method}`, {
+      const logData = {
         method: method,
         category: service,
-        args: {
-          ...args,
-        },
+      }
+
+      if (logArgs) {
+        Object.assign(logData, args)
+      }
+
+      logger.info(`${service}.${method}`, {
+        ...logData,
       })
       return originalMethod.apply(this, args)
     }
