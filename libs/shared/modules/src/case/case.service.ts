@@ -20,6 +20,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
@@ -42,7 +43,6 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { ICaseService } from './case.service.interface'

@@ -4,6 +4,7 @@ import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -30,7 +31,6 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { Result } from '../types/result'
 import { IUtilityService } from './utility.service.interface'
 
 const LOGGING_CATEGORY = 'UtilityService'

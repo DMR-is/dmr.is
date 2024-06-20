@@ -10,6 +10,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { mapCaseCommentTypeToCaseCommentTitle } from '@dmr.is/utils'
 
 import {
@@ -29,7 +30,6 @@ import {
   caseCommentTypeMapper,
 } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.module'
 import { CaseCommentDto } from './models/CaseComment'
 import { CaseCommentsDto } from './models/CaseComments'

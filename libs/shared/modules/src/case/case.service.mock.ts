@@ -17,6 +17,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -24,7 +25,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { Result } from '../types/result'
 import { ICaseService } from './case.service.interface'
 
 export class CaseServiceMock implements ICaseService {

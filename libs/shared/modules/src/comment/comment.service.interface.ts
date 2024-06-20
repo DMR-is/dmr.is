@@ -7,8 +7,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
-
-import { Result } from '../types/result'
+import { Result } from '@dmr.is/types'
 
 export interface ICommentService {
   comment(

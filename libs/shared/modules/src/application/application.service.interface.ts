@@ -7,8 +7,7 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
-
-import { Result } from '../types/result'
+import { Result } from '@dmr.is/types'
 
 export interface IApplicationService {
   getApplication(id: string): Promise<Result<GetApplicationResponse>>

@@ -29,6 +29,7 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
 
 import {
@@ -50,7 +51,6 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
-import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,

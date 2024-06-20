@@ -1,4 +1,5 @@
 import { logger } from '@dmr.is/logging'
+import { Result } from '@dmr.is/types'
 
 import {
   BadRequestException,

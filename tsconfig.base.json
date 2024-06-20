@@ -15,6 +15,7 @@
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
+      "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"

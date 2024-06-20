@@ -12,6 +12,7 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 
@@ -19,7 +20,6 @@ import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 

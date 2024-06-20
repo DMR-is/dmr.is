@@ -8,8 +8,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
-
-import { Result } from '../types/result'
+import { Result } from '@dmr.is/types'
 
 export interface ICaseService {
   case(id: string): Promise<Result<GetCaseResponse>>
