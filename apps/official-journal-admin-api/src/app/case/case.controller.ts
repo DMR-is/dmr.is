@@ -17,6 +17,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
@@ -168,8 +169,36 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
-    console.log('updatePrice', id, body)
     const result = await this.caseService.updatePrice(id, body.price)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/department')
+  @ApiOperation({
+    operationId: 'updateDepartment',
+    summary: 'Update department of case and application',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCaseDepartmentBody,
+    required: true,
+  })
+  async updateDepartment(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseDepartmentBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateDepartment(
+      id,
+      body.departmentId,
+    )
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

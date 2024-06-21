@@ -644,4 +644,55 @@ export class CaseService implements ICaseService {
       value: undefined,
     }
   }
+
+  @Audit()
+  @HandleException()
+  async updateDepartment(
+    caseId: string,
+    departmentId: string,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const departmentLookup = await this.utilityService.departmentLookup(
+      departmentId,
+    )
+    if (!departmentLookup.ok) {
+      return departmentLookup
+    }
+
+    await this.caseModel.update(
+      {
+        departmentId: departmentLookup.value.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              department: departmentId,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
 }

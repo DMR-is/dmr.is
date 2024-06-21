@@ -15,7 +15,7 @@ export interface IApplicationService {
   updateApplication(
     id: string,
     answers?: UpdateApplicationBody,
-  ): Promise<Application | null>
+  ): Promise<Result<undefined>>
 
   submitApplication(id: string): Promise<Result<undefined>>
 

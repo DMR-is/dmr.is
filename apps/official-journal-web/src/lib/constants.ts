@@ -208,6 +208,27 @@ export async function updatePrice(
   return res
 }
 
+export async function updateDepartment(
+  url: string,
+  { arg }: { arg: { caseId: string; departmentId: string } },
+) {
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
+}
+
 export enum APIRotues {
   Case = '/api/cases/:id',
   Cases = '/api/cases',
@@ -222,4 +243,5 @@ export enum APIRotues {
   DeleteComment = '/api/comments/delete',
   PublishCases = '/api/cases/publish',
   UpdatePrice = '/api/cases/:id/updatePrice',
+  UpdateDepartment = '/api/cases/:id/updateDepartment',
 }

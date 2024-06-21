@@ -1,17 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Audit, HandleApiException } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-class UpdatePriceHandler {
+class UpdateDepartmentHandler {
   @Audit({ logArgs: false })
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query
-    const { caseId, price } = req.body
+    const { caseId, departmentId } = req.body
 
-    if (!caseId || !price) {
+    if (!caseId || !departmentId) {
       return res.status(400).end()
     }
 
@@ -21,10 +20,10 @@ class UpdatePriceHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updatePrice({
+    await dmrClient.updateDepartment({
       id: caseId,
-      updateCasePriceBody: {
-        price: price,
+      updateCaseDepartmentBody: {
+        departmentId: departmentId,
       },
     })
 
@@ -32,6 +31,6 @@ class UpdatePriceHandler {
   }
 }
 
-const instance = new UpdatePriceHandler()
+const instance = new UpdateDepartmentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

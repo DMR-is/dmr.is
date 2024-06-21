@@ -264,6 +264,31 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/department": {
+      "put": {
+        "operationId": "updateDepartment",
+        "summary": "Update department of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/status/next": {
       "post": {
         "operationId": "updateNextStatus",
@@ -1230,6 +1255,13 @@
           }
         },
         "required": ["price"]
+      },
+      "UpdateCaseDepartmentBody": {
+        "type": "object",
+        "properties": {
+          "departmentId": { "type": "string", "description": "Department id" }
+        },
+        "required": ["departmentId"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",

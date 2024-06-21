@@ -24,6 +24,10 @@ export interface ICaseService {
   overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
 
   updatePrice(caseId: string, price: string): Promise<Result<undefined>>
+  updateDepartment(
+    caseId: string,
+    departmentId: string,
+  ): Promise<Result<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')

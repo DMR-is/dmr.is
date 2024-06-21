@@ -17,7 +17,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { AdvertType, CaseWithAdvert, Department } from '../../gen/fetch'
-import { useCase, useUpdatePrice } from '../../hooks/api'
+import { useCase, useUpdateDepartment, useUpdatePrice } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
@@ -44,6 +44,15 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
   })
 
   const { trigger: updatePrice, isMutating: isUpdatingPrice } = useUpdatePrice({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const { trigger: updateDepartment } = useUpdateDepartment({
     caseId: data.activeCase.id,
     options: {
       onSuccess: () => {
@@ -125,7 +134,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
                 name="department"
-                value={{
+                defaultValue={{
                   label: activeCase.advertDepartment.title,
                   value: activeCase.advertDepartment.id,
                 }}
@@ -136,6 +145,13 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
                 label={formatMessage(messages.grunnvinnsla.department)}
                 size="sm"
                 isSearchable={false}
+                onChange={(option) => {
+                  if (!option) return
+                  updateDepartment({
+                    caseId: activeCase.id,
+                    departmentId: option.value,
+                  })
+                }}
               />
             </GridColumn>
           </GridRow>
