@@ -17,6 +17,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
   PostCasePublishBody,
+  UpdateCasePriceBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
 
@@ -31,6 +32,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common'
 import {
@@ -145,6 +147,33 @@ export class CaseController {
     }
 
     return result.value
+  }
+
+  @Put(':id/price')
+  @ApiOperation({
+    operationId: 'updatePrice',
+    summary: 'Update case price',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCasePriceBody,
+    required: true,
+  })
+  async updatePrice(
+    @Param('id') id: string,
+    @Body() body: UpdateCasePriceBody,
+  ): Promise<void> {
+    console.log('updatePrice', id, body)
+    const result = await this.caseService.updatePrice(id, body.price)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
   }
 
   @Post(':id/status/next')

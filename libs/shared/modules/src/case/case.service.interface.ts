@@ -22,6 +22,8 @@ export interface ICaseService {
   updateNextStatus(id: string): Promise<Result<undefined>>
   publish(body: PostCasePublishBody): Promise<Result<undefined>>
   overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
+
+  updatePrice(caseId: string, price: string): Promise<Result<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import debounce from 'lodash/debounce'
 
 import {
+  AlertMessage,
   Box,
   Button,
   Checkbox,
@@ -11,6 +12,7 @@ import {
   Inline,
   Input,
   Select,
+  SkeletonLoader,
   Tag,
   Text,
 } from '@island.is/island-ui/core'
@@ -19,8 +21,9 @@ import { AdvertType, CaseWithAdvert, Department } from '../../gen/fetch'
 import { useCase } from '../../hooks/api/useCase'
 import { useUpdatePrice } from '../../hooks/api/useUpdatePrice'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { messages as errorMessages } from '../../lib/messages/errors'
+import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
 import { messages } from './messages'
-
 type Props = {
   data: CaseWithAdvert
   departments: Array<Department>
@@ -42,28 +45,56 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
     },
   })
 
-  const { trigger: handleUpdatePrice } = useUpdatePrice({
-    caseId: data.activeCase.id,
-    options: {
-      onSuccess: () => {
-        refetchCase()
+  const { trigger: handleUpdatePrice, isMutating: isUpdatingPrice } =
+    useUpdatePrice({
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => {
+          refetchCase()
+        },
       },
-    },
-  })
+    })
 
   if (error) {
-    return <div>Error</div>
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="error"
+          title={formatMessage(errorMessages.errorFetchingData)}
+          message={formatMessage(errorMessages.internalServerError)}
+        />
+      </CaseOverviewGrid>
+    )
   }
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <CaseOverviewGrid>
+        <SkeletonLoader repeat={3} height={44} />
+      </CaseOverviewGrid>
+    )
   }
 
   if (!caseData) {
-    return <div>No data</div>
+    return (
+      <CaseOverviewGrid>
+        <AlertMessage
+          type="error"
+          title={formatMessage(errorMessages.noDataTitle)}
+          message={formatMessage(errorMessages.noDataText)}
+        />
+      </CaseOverviewGrid>
+    )
   }
 
   const { activeCase, advert } = caseData._case
+
+  const debouncedUpdatePrice = debounce((price: number) => {
+    handleUpdatePrice({
+      caseId: activeCase.id,
+      price: price.toString(),
+    })
+  })
 
   return (
     <>
@@ -74,16 +105,6 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
               <Text variant="h5">
                 {formatMessage(messages.grunnvinnsla.group1title)}
               </Text>
-              <Button
-                onClick={() =>
-                  handleUpdatePrice({
-                    caseId: activeCase.id,
-                    price: '1000',
-                  })
-                }
-              >
-                Uppfæra verð
-              </Button>
             </GridColumn>
           </GridRow>
 
@@ -225,18 +246,14 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Input
+                loading={isUpdatingPrice}
                 name="price"
-                value={activeCase.price}
+                defaultValue={activeCase.price}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="tel"
                 inputMode="numeric"
-                onChange={(e) => {
-                  handleUpdatePrice({
-                    caseId: activeCase.id,
-                    price: e.target.value,
-                  })
-                }}
+                onChange={(e) => debouncedUpdatePrice(Number(e.target.value))}
               />
             </GridColumn>
 

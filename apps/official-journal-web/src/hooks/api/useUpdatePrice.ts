@@ -19,16 +19,21 @@ type UseUpdatePriceParams = {
 }
 
 export const useUpdatePrice = ({ caseId, options }: UseUpdatePriceParams) => {
-  const { trigger, isMutating } = swrMutation<
+  const { trigger, isMutating, data, error, reset } = swrMutation<
     Response,
     Error,
     Key,
     { caseId: string; price: string }
-  >(APIRotues.UpdatePrice.replace(':id', caseId), updatePrice, options)
+  >(APIRotues.UpdatePrice.replace(':id', caseId), updatePrice, {
+    throwOnError: false,
+    ...options,
+  })
 
   return {
+    data,
+    error,
     trigger,
     isMutating,
-    options,
+    reset,
   }
 }

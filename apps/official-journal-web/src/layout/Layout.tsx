@@ -24,7 +24,6 @@ type LayoutProps = {
   headerWhite?: boolean
   showFooter?: boolean
   bannerProps?: BannerProps
-  filterGroups?: FilterGroup[]
 }
 
 const Layout: Screen<LayoutProps> = ({
@@ -32,7 +31,6 @@ const Layout: Screen<LayoutProps> = ({
   headerWhite,
   showFooter = false,
   bannerProps = { showBanner: true },
-  filterGroups = [],
 }) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
@@ -66,6 +64,7 @@ const Layout: Screen<LayoutProps> = ({
           errorRetryCount: 3,
           errorRetryInterval: 5000,
           dedupingInterval: 5000,
+          suspense: false,
         }}
       >
         <Provider>

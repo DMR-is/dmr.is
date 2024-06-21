@@ -178,12 +178,7 @@ export async function deleteComment(
     },
   }).then(async (res) => {
     if (!res.ok) {
-      const error = new Error('Error occured while fetching data')
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
+      throw new Error('Error occured while fetching data')
     }
 
     return res
@@ -194,25 +189,21 @@ export async function updatePrice(
   url: string,
   { arg }: { arg: { caseId: string; price: string } },
 ) {
-  const fullUrl = url.replace(':id', arg.caseId)
-  return fetch(fullUrl, {
-    method: 'GET',
-    // body: JSON.stringify(arg),
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
     headers: {
       'Content-Type': 'application/json',
     },
-  }).then(async (res) => {
-    if (!res.ok) {
-      const error = new Error('Error occured while fetching data')
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res
   })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
 }
 
 export enum APIRotues {

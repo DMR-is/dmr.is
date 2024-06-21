@@ -17,6 +17,7 @@ export function HandleApiException(
       try {
         return await originalMethod.apply(this, args)
       } catch (error) {
+        console.log(error)
         const req = args[0]
         const res = args[1]
         logger.error(`${service}.${method}`, {
