@@ -241,6 +241,54 @@
         }
       }
     },
+    "/api/v1/cases/{id}/price": {
+      "put": {
+        "operationId": "updatePrice",
+        "summary": "Update case price",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCasePriceBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/department": {
+      "put": {
+        "operationId": "updateDepartment",
+        "summary": "Update department of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/status/next": {
       "post": {
         "operationId": "updateNextStatus",
@@ -1095,6 +1143,12 @@
             "description": "The advert type",
             "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
           },
+          "advertCategories": {
+            "description": "List of advert categories.",
+            "nullable": false,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
           "price": {
             "type": "number",
             "example": 23000,
@@ -1140,6 +1194,7 @@
           "advertTitle",
           "advertDepartment",
           "advertType",
+          "advertCategories",
           "price",
           "paid",
           "comments"
@@ -1189,6 +1244,24 @@
           }
         },
         "required": ["cases", "totalItems", "paging"]
+      },
+      "UpdateCasePriceBody": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "string",
+            "description": "Price",
+            "example": "1000"
+          }
+        },
+        "required": ["price"]
+      },
+      "UpdateCaseDepartmentBody": {
+        "type": "object",
+        "properties": {
+          "departmentId": { "type": "string", "description": "Department id" }
+        },
+        "required": ["departmentId"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",

@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 
 import {
   CaseCommunicationStatusDto,
@@ -11,7 +12,6 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { Result } from '../types/result'
 
 export interface IUtilityService {
   getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>>

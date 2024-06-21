@@ -1,15 +1,12 @@
 import { StringOption } from '@island.is/island-ui/core'
 
+import { PostCasePublishBody } from '../gen/fetch'
 import {
-  AssignEmployeeRequest,
-  PostCasePublishBody,
-  UpdateCaseStatusBody,
-} from '../gen/fetch'
-import { SWRAddCommentParams } from '../hooks/api/useAddComment'
-import { SWRAssignEmployeeParams } from '../hooks/api/useAssignEmployee'
-import { SWRUpdateCaseStatusParams } from '../hooks/api/useUpdateCaseStatus'
-import { SWRUpdateNextCaseStatusParams } from '../hooks/api/useUpdateNextStatus'
-import { CaseOverviewSearchParams } from './types'
+  SWRAddCommentParams,
+  SWRUpdateCaseStatusParams,
+  SWRUpdateEmployeeParams,
+  SWRUpdateNextCaseStatusParams,
+} from '../hooks/api'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -44,7 +41,7 @@ export const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export async function assignEmployee(
   url: string,
-  { arg }: { arg: SWRAssignEmployeeParams },
+  { arg }: { arg: SWRUpdateEmployeeParams },
 ) {
   return fetch(url, {
     method: 'POST',
@@ -183,16 +180,53 @@ export async function deleteComment(
     },
   }).then(async (res) => {
     if (!res.ok) {
-      const error = new Error('Error occured while fetching data')
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
+      throw new Error('Error occured while fetching data')
     }
 
     return res
   })
+}
+
+export async function updatePrice(
+  url: string,
+  { arg }: { arg: { caseId: string; price: string } },
+) {
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
+}
+
+export async function updateDepartment(
+  url: string,
+  { arg }: { arg: { caseId: string; departmentId: string } },
+) {
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
 }
 
 export enum APIRotues {
@@ -208,4 +242,6 @@ export enum APIRotues {
   CreateComment = '/api/comments/create',
   DeleteComment = '/api/comments/delete',
   PublishCases = '/api/cases/publish',
+  UpdatePrice = '/api/cases/:id/updatePrice',
+  UpdateDepartment = '/api/cases/:id/updateDepartment',
 }

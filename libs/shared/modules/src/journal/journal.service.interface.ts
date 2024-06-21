@@ -26,8 +26,7 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-
-import { Result } from '../types/result'
+import { Result } from '@dmr.is/types'
 
 export interface IJournalService {
   getAdverts(
