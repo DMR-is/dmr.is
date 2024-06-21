@@ -47,7 +47,12 @@ import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { ICaseService } from './case.service.interface'
-import { CaseDto, CaseStatusDto } from './models'
+import {
+  CaseChannelDto,
+  CaseChannelsDto,
+  CaseDto,
+  CaseStatusDto,
+} from './models'
 import { CASE_RELATIONS } from './relations'
 
 const LOGGING_CATEGORY = 'CaseService'
@@ -62,6 +67,10 @@ export class CaseService implements ICaseService {
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
+    @InjectModel(CaseChannelDto)
+    private readonly caseChannelModel: typeof CaseChannelDto,
+    @InjectModel(CaseChannelsDto)
+    private readonly caseChannelsModel: typeof CaseChannelsDto,
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseCategoriesDto)
@@ -202,9 +211,15 @@ export class CaseService implements ICaseService {
 
         const caseNumber = nextCaseNumber.value
 
+        const message = application.answers.publishing.message
+
+        const caseId = uuid()
+        const msg =
+          typeof message === 'string' && message.length > 0 ? message : null
+
         const newCase = await this.caseModel.create<CaseDto>(
           {
-            id: uuid(),
+            id: caseId,
             applicationId: application.id,
             year: now.getFullYear(),
             caseNumber: caseNumber,
@@ -223,6 +238,7 @@ export class CaseService implements ICaseService {
             requestedPublicationDate: application.answers.publishing.date,
             departmentId: departmentLookup.value.id,
             advertTypeId: typeLookup.value.id,
+            message: msg,
           },
           {
             returning: ['id'],
@@ -239,18 +255,57 @@ export class CaseService implements ICaseService {
         )
 
         const categoryIds = categories
-          .filter((c) => c.ok)
-          .map((c) => c.ok && c.value.id)
+          .map((c) => {
+            if (!c.ok) {
+              return null
+            }
+            return {
+              caseId: newCase.id,
+              categoryId: c.value.id,
+            }
+          })
+          .filter((c) => c !== null) as { caseId: string; categoryId: string }[]
 
-        await this.caseCategoriesModel.bulkCreate(
-          categoryIds.map((categoryId) => ({
-            caseId: newCase.id,
-            categoryId: categoryId,
-          })),
-          {
-            transaction: t,
-          },
-        )
+        await this.caseCategoriesModel.bulkCreate(categoryIds, {
+          transaction: t,
+        })
+
+        const channels = application.answers.publishing.communicationChannels
+
+        if (channels && channels.length > 0) {
+          const caseChannels = channels
+            .map((channel) => {
+              if (!channel.email && !channel.phone) return null
+              return {
+                id: uuid(),
+                email: channel.email,
+                phone: channel.phone,
+              }
+            })
+            .filter((c) => c !== null)
+
+          const newChannels = await this.caseChannelModel.bulkCreate(
+            caseChannels.map((c) => ({
+              id: c?.id,
+              email: c?.email,
+              phone: c?.phone,
+            })),
+            {
+              transaction: t,
+              returning: ['id'],
+            },
+          )
+
+          await this.caseChannelsModel.bulkCreate(
+            newChannels.map((c) => ({
+              caseId: caseId,
+              channelId: c.id,
+            })),
+            {
+              transaction: t,
+            },
+          )
+        }
 
         // TODO: When auth is setup, use the user id from the token
         await this.commentService.create(
@@ -404,7 +459,7 @@ export class CaseService implements ICaseService {
       )
 
       await Promise.all(
-        caseIds.map(async (caseId, index) => {
+        caseIds.map(async (caseId) => {
           const caseLookup = await this.case(caseId)
 
           if (!caseLookup.ok) {

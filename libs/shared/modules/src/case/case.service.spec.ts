@@ -14,6 +14,8 @@ import { CaseCategoriesDto } from './models/CaseCategories'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseChannelDto,
+  CaseChannelsDto,
   CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
@@ -27,6 +29,8 @@ describe('CaseService', () => {
   let journalService: IJournalService
   let caseModel: CaseDto
   let caseCategoriesModel: CaseCategoriesDto
+  let caseChannelModel: CaseChannelDto
+  let caseChannelsModel: CaseChannelsDto
   let sequelize: Sequelize
 
   beforeAll(async () => {
@@ -94,6 +98,14 @@ describe('CaseService', () => {
           })),
         },
         {
+          provide: getModelToken(CaseChannelDto),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CaseChannelsDto),
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: LOGGER_PROVIDER,
           useClass: jest.fn(() => ({
             info: jest.fn(),
@@ -119,6 +131,8 @@ describe('CaseService', () => {
     caseCategoriesModel = app.get<CaseCategoriesDto>(
       getModelToken(CaseCategoriesDto),
     )
+    caseChannelModel = app.get<CaseChannelDto>(getModelToken(CaseChannelDto))
+    caseChannelsModel = app.get<CaseChannelsDto>(getModelToken(CaseChannelsDto))
     sequelize = app.get<Sequelize>(Sequelize)
   })
 

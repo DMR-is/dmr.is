@@ -29,7 +29,7 @@ export class CaseCategoriesDto extends Model {
     allowNull: false,
     field: 'category_id',
   })
-  category_id!: string
+  categoryId!: string
 
   @BelongsTo(() => CaseDto)
   case?: CaseDto

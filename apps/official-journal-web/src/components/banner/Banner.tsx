@@ -49,7 +49,7 @@ export const Banner = ({
   contentColumnSpan = ['12/12', '12/12', '5/12'],
 }: Props) => {
   const { notifications } = useNotificationContext()
-  const { renderFilters } = useFilterContext()
+  // const { renderFilters } = useFilterContext()
 
   const { formatMessage } = useFormatMessage()
 
@@ -87,7 +87,8 @@ export const Banner = ({
                     : description}
                 </Text>
                 {notifications.length > 0 && (
-                  <Box marginBottom={renderFilters ? 3 : 1}>
+                  // <Box marginBottom={renderFilters ? 3 : 1}>
+                  <Box marginBottom={3}>
                     <Stack space={3}>
                       {notifications.map((notification, index) => (
                         <AlertMessage
@@ -99,6 +100,7 @@ export const Banner = ({
                       ))}
                     </Stack>
                   </Box>
+                  // </Box>
                 )}
                 {showFilters && <CaseFilters />}
               </GridColumn>

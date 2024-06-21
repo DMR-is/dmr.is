@@ -14,6 +14,8 @@ import {
   AdvertTypeDTO,
 } from '../../journal/models'
 import { CaseCategoriesDto } from './CaseCategories'
+import { CaseChannelDto } from './CaseChannel'
+import { CaseChannelsDto } from './CaseChannels'
 import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
 import { CaseStatusDto } from './CaseStatus'
 import { CaseTagDto } from './CaseTag'
@@ -135,6 +137,13 @@ export class CaseDto extends Model {
   requestedPublicationDate!: string
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'message',
+  })
+  message!: string | null
+
+  @Column({
     type: DataType.UUID,
     field: 'department_id',
   })
@@ -156,6 +165,11 @@ export class CaseDto extends Model {
     through: { model: () => CaseCategoriesDto },
   })
   categories!: AdvertCategoryDTO[]
+
+  @BelongsToMany(() => CaseChannelDto, {
+    through: { model: () => CaseChannelsDto },
+  })
+  channels!: CaseChannelDto[]
 
   @BelongsToMany(() => CaseCommentDto, {
     through: { model: () => CaseCommentsDto },

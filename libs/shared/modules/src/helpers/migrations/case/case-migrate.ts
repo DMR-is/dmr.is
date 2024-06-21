@@ -6,6 +6,7 @@ import { caseStatusMapper } from '../../mappers'
 import { caseCommunicationStatusMapper } from '../../mappers/case/communicationStatus.mapper'
 import { caseTagMapper } from '../../mappers/case/tag.mapper'
 import { advertCategoryMigrate } from '../advert/advert-category-migrate'
+import { caseChannelMigrate } from './case-channel-migrate'
 import { caseCommentMigrate } from './case-comment-migrate'
 
 export const caseMigrate = (model: CaseDto): Case => {
@@ -50,5 +51,7 @@ export const caseMigrate = (model: CaseDto): Case => {
     advertDepartment: model.department,
     advertType: model.advertType,
     advertCategories: model.categories.map((c) => advertCategoryMigrate(c)),
+    message: model.message,
+    channels: model.channels.map((c) => caseChannelMigrate(c)),
   }
 }
