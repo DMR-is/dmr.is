@@ -38,6 +38,7 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
@@ -45,7 +46,6 @@ import { Inject, Injectable } from '@nestjs/common'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Result } from '@dmr.is/types'
 import { IJournalService } from './journal.service.interface'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
