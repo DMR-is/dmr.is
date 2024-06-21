@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateCaseStatus } from '../../lib/constants'
+import { APIRotues, updateCaseStatus } from '../../../lib/constants'
 
 export type SWRUpdateCaseStatusParams = {
   statusId: string

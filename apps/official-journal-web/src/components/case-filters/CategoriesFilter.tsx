@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
-import { useCategories } from '../../hooks/api/useCategories'
+import { useCategories } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'

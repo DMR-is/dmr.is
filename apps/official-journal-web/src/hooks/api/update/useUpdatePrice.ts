@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updatePrice } from '../../lib/constants'
+import { APIRotues, updatePrice } from '../../../lib/constants'
 
 type SWRUpdatePriceOptions = SWRMutationConfiguration<
   Response,

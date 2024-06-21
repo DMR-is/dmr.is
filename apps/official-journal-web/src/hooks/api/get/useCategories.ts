@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { GetCategoriesResponse } from '../../gen/fetch'
-import { APIRotues, fetchWithQueryString } from '../../lib/constants'
+import { GetCategoriesResponse } from '../../../gen/fetch'
+import { APIRotues, fetchWithQueryString } from '../../../lib/constants'
 
 type SWRCategoriesOptions = SWRConfiguration<GetCategoriesResponse, Error>
 

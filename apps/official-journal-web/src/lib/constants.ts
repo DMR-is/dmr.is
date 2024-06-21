@@ -1,10 +1,12 @@
 import { StringOption } from '@island.is/island-ui/core'
 
 import { PostCasePublishBody } from '../gen/fetch'
-import { SWRAddCommentParams } from '../hooks/api/useAddComment'
-import { SWRAssignEmployeeParams } from '../hooks/api/useAssignEmployee'
-import { SWRUpdateCaseStatusParams } from '../hooks/api/useUpdateCaseStatus'
-import { SWRUpdateNextCaseStatusParams } from '../hooks/api/useUpdateNextStatus'
+import {
+  SWRAddCommentParams,
+  SWRUpdateCaseStatusParams,
+  SWRUpdateEmployeeParams,
+  SWRUpdateNextCaseStatusParams,
+} from '../hooks/api'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -39,7 +41,7 @@ export const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export async function assignEmployee(
   url: string,
-  { arg }: { arg: SWRAssignEmployeeParams },
+  { arg }: { arg: SWRUpdateEmployeeParams },
 ) {
   return fetch(url, {
     method: 'POST',

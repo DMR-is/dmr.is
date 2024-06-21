@@ -25,10 +25,12 @@ import {
   CaseWithAdvert,
   Department,
 } from '../gen/fetch'
-import { useAssignEmployee } from '../hooks/api/useAssignEmployee'
-import { useCase } from '../hooks/api/useCase'
-import { useUpdateCaseStatus } from '../hooks/api/useUpdateCaseStatus'
-import { useUpdateNextCaseStatus } from '../hooks/api/useUpdateNextStatus'
+import {
+  useCase,
+  useUpdateCaseStatus,
+  useUpdateEmployee,
+  useUpdateNextCaseStatus,
+} from '../hooks/api'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -69,7 +71,7 @@ const CaseSingle: Screen<Props> = ({
   })
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
-    useAssignEmployee({
+    useUpdateEmployee({
       onSuccess: () => refetchCase(),
     })
 

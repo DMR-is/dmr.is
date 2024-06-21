@@ -3,7 +3,6 @@ import debounce from 'lodash/debounce'
 import {
   AlertMessage,
   Box,
-  Button,
   Checkbox,
   DatePicker,
   GridColumn,
@@ -18,8 +17,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { AdvertType, CaseWithAdvert, Department } from '../../gen/fetch'
-import { useCase } from '../../hooks/api/useCase'
-import { useUpdatePrice } from '../../hooks/api/useUpdatePrice'
+import { useCase, useUpdatePrice } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
@@ -45,15 +43,14 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
     },
   })
 
-  const { trigger: handleUpdatePrice, isMutating: isUpdatingPrice } =
-    useUpdatePrice({
-      caseId: data.activeCase.id,
-      options: {
-        onSuccess: () => {
-          refetchCase()
-        },
+  const { trigger: updatePrice, isMutating: isUpdatingPrice } = useUpdatePrice({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
       },
-    })
+    },
+  })
 
   if (error) {
     return (
@@ -89,12 +86,14 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
 
   const { activeCase, advert } = caseData._case
 
-  const debouncedUpdatePrice = debounce((price: number) => {
-    handleUpdatePrice({
+  const handleUpdatePrice = (newPrice: string) => {
+    updatePrice({
       caseId: activeCase.id,
-      price: price.toString(),
+      price: newPrice,
     })
-  })
+  }
+
+  const debouncedUpdatePrice = debounce(handleUpdatePrice, 300)
 
   return (
     <>
@@ -221,11 +220,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <DatePicker
                 name="publicationDate"
-                selected={
-                  activeCase.publishedAt
-                    ? new Date(activeCase.publishedAt)
-                    : undefined
-                }
+                selected={new Date(activeCase.requestedPublicationDate)}
                 label={formatMessage(messages.grunnvinnsla.publicationDate)}
                 size="sm"
                 placeholderText=""
@@ -253,7 +248,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
                 size="sm"
                 type="tel"
                 inputMode="numeric"
-                onChange={(e) => debouncedUpdatePrice(Number(e.target.value))}
+                onChange={(e) => debouncedUpdatePrice(e.target.value)}
               />
             </GridColumn>
 

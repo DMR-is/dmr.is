@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { GetAdvertTypesResponse } from '../../gen/fetch'
-import { APIRotues, fetchWithQueryString } from '../../lib/constants'
+import { GetAdvertTypesResponse } from '../../../gen/fetch'
+import { APIRotues, fetchWithQueryString } from '../../../lib/constants'
 
 type SWRTypesOptions = SWRConfiguration<GetAdvertTypesResponse, Error>
 

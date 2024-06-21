@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { EditorialOverviewResponse } from '../../gen/fetch'
-import { APIRotues, fetchWithQueryString } from '../../lib/constants'
+import { EditorialOverviewResponse } from '../../../gen/fetch'
+import { APIRotues, fetchWithQueryString } from '../../../lib/constants'
 
 type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
 
