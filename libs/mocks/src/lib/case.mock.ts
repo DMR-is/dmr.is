@@ -33,6 +33,8 @@ export const CASE_SUBMITTED: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_NEW,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -73,6 +75,8 @@ export const CASE_IN_PROGRESS: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -156,6 +160,8 @@ export const CASE_IN_REVIEW: Case = {
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -323,6 +329,8 @@ export const CASE_READY: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_A,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -406,6 +414,8 @@ export const CASE_READY_2: Case = {
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -489,6 +499,8 @@ export const CASE_READY_3: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_READY_B_2,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -572,6 +584,8 @@ export const CASE_PUBLISHED: Case = {
   assignedTo: PALINA,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_B_866_2006,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -655,6 +669,8 @@ export const CASE_PUBLISHED_2: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: JOURNAL_DEPARTMENT_B,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [
@@ -738,6 +754,8 @@ export const CASE_PUBLISHED_3: Case = {
   assignedTo: ARMANN,
   advertType: DEPT_A_AUGLYSING,
   advertCategories: [MOCK_CATEGORY_GAELUDYR],
+  channels: [],
+  message: null,
   // advert: ADVERT_B_1278_2023,
   communicationStatus: CaseCommunicationStatus.NotStarted,
   comments: [

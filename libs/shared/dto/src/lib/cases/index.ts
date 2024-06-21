@@ -1,3 +1,4 @@
+export * from './case-channel.dto'
 export * from './case-constants'
 export * from './case-editorial-overview.dto'
 export * from './case-with-advert.dto'

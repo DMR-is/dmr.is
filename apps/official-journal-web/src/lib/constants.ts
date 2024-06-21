@@ -71,7 +71,7 @@ export async function updateCaseStatus(
 
 export async function updateNextCaseStatus(
   url: string,
-  { arg }: { arg: SWRUpdateCaseStatusParams },
+  { arg }: { arg: SWRUpdateNextCaseStatusParams },
 ) {
   return fetch(url, {
     method: 'POST',
