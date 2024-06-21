@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -88,6 +89,7 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertStatusDTO)
     private advertStatusModel: typeof AdvertStatusDTO /* @InjectModel(AdvertStatusHistoryDTO)
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
+    private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
@@ -744,7 +746,6 @@ export class JournalService implements IJournalService {
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
       where: {
         [Op.and]: [
           searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
@@ -753,6 +754,7 @@ export class JournalService implements IJournalService {
       include: [
         {
           model: AdvertTypeDTO,
+          as: 'type',
           where: params?.type
             ? {
                 slug: params?.type,
@@ -787,6 +789,7 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
+      order: [[{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC']],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))
