@@ -8,8 +8,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
-
-import { Result } from '../types/result'
+import { Result } from '@dmr.is/types'
 
 export interface ICaseService {
   case(id: string): Promise<Result<GetCaseResponse>>
@@ -23,6 +22,12 @@ export interface ICaseService {
   updateNextStatus(id: string): Promise<Result<undefined>>
   publish(body: PostCasePublishBody): Promise<Result<undefined>>
   overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
+
+  updatePrice(caseId: string, price: string): Promise<Result<undefined>>
+  updateDepartment(
+    caseId: string,
+    departmentId: string,
+  ): Promise<Result<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')

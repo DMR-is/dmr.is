@@ -64,6 +64,7 @@ const Layout: Screen<LayoutProps> = ({
           errorRetryCount: 3,
           errorRetryInterval: 5000,
           dedupingInterval: 5000,
+          suspense: false,
         }}
       >
         <Provider>

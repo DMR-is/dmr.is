@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationAnswers } from './application-answers.dto'
+import { UpdateApplicationAnswersBody } from './update-application.answers.dto'
 
 export class UpdateApplicationBody {
   @ApiProperty({
-    type: ApplicationAnswers,
+    type: UpdateApplicationAnswersBody,
     example: {},
     description: 'Answers to the application questions.',
   })
-  answers!: ApplicationAnswers
+  answers!: UpdateApplicationAnswersBody
 }

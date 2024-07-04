@@ -1,3 +1,4 @@
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -11,16 +12,21 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -169,38 +175,47 @@ export class ApplicationService implements IApplicationService {
   }
 
   @Audit()
-  async updateApplication(id: string, answers: UpdateApplicationBody) {
-    try {
-      const res = await this.xroadFetch(
-        `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
-        {
-          method: 'POST',
-          body: new URLSearchParams({
-            id: id,
-            answers: JSON.stringify(answers),
-          }),
+  @HandleException()
+  async updateApplication(
+    id: string,
+    answers: UpdateApplicationBody,
+  ): Promise<Result<undefined>> {
+    const res = await this.xroadFetch(
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+        body: JSON.stringify(answers),
+      },
+    )
 
-      if (res.status !== 200) {
-        this.logger.error('updateApplicaton, could not update application', {
-          status: res.status,
-          category: LOGGING_CATEGORY,
-        })
-        return null
-      } else {
-        this.logger.info('Application updated', {
-          id,
-          category: LOGGING_CATEGORY,
-        })
-        return await res.json()
-      }
-    } catch (error) {
-      this.logger.error('Exception occured, could not update application', {
-        error,
+    if (!res.ok) {
+      const { status, statusText } = res
+      this.logger.warn(`Could not update application<${id}>`, {
         category: LOGGING_CATEGORY,
+        status,
+        statusText,
       })
-      return null
+      switch (res.status) {
+        case 400: {
+          throw new BadRequestException()
+        }
+        case 404: {
+          throw new NotFoundException(`Application<${id}> not found`)
+        }
+        default: {
+          throw new InternalServerErrorException(
+            `Could not update application<${id}>`,
+          )
+        }
+      }
+    }
+
+    return {
+      ok: true,
+      value: undefined,
     }
   }
 

@@ -1,4 +1,6 @@
-import { GetServerSidePropsContext } from 'next'
+import { GetServerSidePropsContext, NextApiHandler } from 'next'
+
+export type HandlerDecorator = (handler: NextApiHandler) => NextApiHandler
 
 export type ScreenContext = {
   query: GetServerSidePropsContext['query']

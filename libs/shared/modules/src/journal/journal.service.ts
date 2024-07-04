@@ -1,4 +1,6 @@
 import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
@@ -28,6 +30,7 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
 
 import {
@@ -41,8 +44,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -51,7 +52,6 @@ import {
   advertMigrate,
   advertTypesMigrate,
 } from '../helpers'
-import { Result } from '../types/result'
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,
@@ -89,6 +89,7 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertStatusDTO)
     private advertStatusModel: typeof AdvertStatusDTO /* @InjectModel(AdvertStatusHistoryDTO)
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
+    private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
@@ -745,7 +746,6 @@ export class JournalService implements IJournalService {
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
       where: {
         [Op.and]: [
           searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
@@ -754,6 +754,7 @@ export class JournalService implements IJournalService {
       include: [
         {
           model: AdvertTypeDTO,
+          as: 'type',
           where: params?.type
             ? {
                 slug: params?.type,
@@ -788,6 +789,7 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
+      order: [[{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC']],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))

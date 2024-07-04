@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -19,6 +20,7 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
+import { Result } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
@@ -33,8 +35,6 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { Audit } from '../decorators/audit.decorator'
-import { HandleException } from '../decorators/handle-exception.decorator'
 import { caseParameters, counterResult } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
@@ -43,7 +43,6 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { Result } from '../types/result'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { ICaseService } from './case.service.interface'
@@ -543,138 +542,92 @@ export class CaseService implements ICaseService {
     }
   }
 
+  @Audit()
+  @HandleException()
   async assign(id: string, userId: string): Promise<Result<undefined>> {
-    this.logger.info(`assign, case<${id}>`, {
-      caseId: id,
-      userId: userId,
-      category: LOGGING_CATEGORY,
+    if (!id || !userId) {
+      throw new BadRequestException()
+    }
+
+    const caseRes = await this.utilityService.caseLookup(id)
+
+    if (!caseRes.ok) {
+      return caseRes
+    }
+
+    const employeeLookup = await this.utilityService.userLookup(userId)
+
+    if (!employeeLookup.ok) {
+      return employeeLookup
+    }
+
+    await this.caseModel.update(
+      {
+        assignedUserId: userId,
+      },
+      {
+        where: {
+          id,
+        },
+      },
+    )
+
+    await this.commentService.create(id, {
+      internal: true,
+      type: caseRes.value.assignedUserId
+        ? CaseCommentType.Assign
+        : CaseCommentType.AssignSelf,
+      comment: null,
+      from: caseRes.value.assignedUserId,
+      to: employeeLookup.value.id, // TODO: REPLACE WITH ACTUAL USER
     })
 
-    try {
-      if (!id || !userId) {
-        this.logger.warn('assign, missing id or userId', {
-          category: LOGGING_CATEGORY,
-          userId: userId,
-          caseId: id,
-        })
-        return {
-          ok: false,
-          error: {
-            message: 'Missing or invalid body',
-            code: 400,
-          },
-        }
-      }
-
-      const caseRes = await this.utilityService.caseLookup(id)
-
-      if (!caseRes.ok) {
-        return caseRes
-      }
-
-      const employeeLookup = await this.utilityService.userLookup(userId)
-
-      if (!employeeLookup.ok) {
-        return employeeLookup
-      }
-
-      await this.caseModel.update(
-        {
-          assignedUserId: userId,
-        },
-        {
-          where: {
-            id,
-          },
-        },
-      )
-
-      await this.commentService.create(id, {
-        internal: true,
-        type: caseRes.value.assignedUserId
-          ? CaseCommentType.Assign
-          : CaseCommentType.AssignSelf,
-        comment: null,
-        from: caseRes.value.assignedUserId,
-        to: employeeLookup.value.id, // TODO: REPLACE WITH ACTUAL USER
-      })
-
-      return {
-        ok: true,
-        value: undefined,
-      }
-    } catch (e) {
-      this.logger.error('Error in assign', {
-        error: e,
-        category: LOGGING_CATEGORY,
-      })
-      return {
-        ok: false,
-        error: {
-          message: 'Failed to assign user to the case',
-          code: 500,
-        },
-      }
+    return {
+      ok: true,
+      value: undefined,
     }
   }
 
+  @Audit()
+  @HandleException()
   async updateStatus(
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<Result<undefined>> {
-    try {
-      this.logger.info(`updateStatus, case<${id}>`, {
-        caseId: id,
-        category: LOGGING_CATEGORY,
-      })
+    const caseLookup = await this.utilityService.caseLookup(id)
 
-      const caseLookup = await this.utilityService.caseLookup(id)
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
 
-      if (!caseLookup.ok) {
-        return caseLookup
-      }
+    const status = await this.utilityService.caseStatusLookup(body.status)
 
-      const status = await this.utilityService.caseStatusLookup(body.status)
+    if (!status.ok) {
+      return status
+    }
 
-      if (!status.ok) {
-        return status
-      }
-
-      await this.caseModel.update(
-        {
-          statusId: status.value.id,
+    await this.caseModel.update(
+      {
+        statusId: status.value.id,
+      },
+      {
+        where: {
+          id,
         },
-        {
-          where: {
-            id,
-          },
-        },
-      )
+      },
+    )
 
-      await this.commentService.create(id, {
-        internal: true,
-        type: CaseCommentType.Update,
-        comment: null,
-        from: caseLookup.value.assignedUserId,
-        to: null,
-      })
+    await this.commentService.create(id, {
+      internal: true,
+      type: CaseCommentType.Update,
+      comment: null,
+      from: caseLookup.value.assignedUserId,
+      to: null,
+    })
 
-      return {
-        ok: true,
-        value: undefined,
-      }
-    } catch (error) {
-      this.logger.error('Error in updateStatus', {
-        category: LOGGING_CATEGORY,
-        error,
-      })
-      return {
-        ok: false,
-        error: {
-          message: 'Failed to update case status',
-          code: 500,
-        },
-      }
+    return {
+      ok: true,
+      value: undefined,
     }
   }
 
@@ -719,5 +672,82 @@ export class CaseService implements ICaseService {
     }
 
     return this.updateStatus(id, { status: nextStatus })
+  }
+
+  @Audit()
+  @HandleException()
+  async updatePrice(caseId: string, price: string): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    await this.caseModel.update(
+      {
+        price: parseFloat(price),
+      },
+      {
+        where: {
+          id: caseId,
+        },
+      },
+    )
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  async updateDepartment(
+    caseId: string,
+    departmentId: string,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const departmentLookup = await this.utilityService.departmentLookup(
+      departmentId,
+    )
+    if (!departmentLookup.ok) {
+      return departmentLookup
+    }
+
+    await this.caseModel.update(
+      {
+        departmentId: departmentLookup.value.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              department: departmentId,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
   }
 }
