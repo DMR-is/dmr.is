@@ -7,6 +7,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   UpdateCaseStatusBody,
+  UpdateCategoriesBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 
@@ -27,6 +28,11 @@ export interface ICaseService {
   updateDepartment(
     caseId: string,
     departmentId: string,
+  ): Promise<Result<undefined>>
+
+  updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
   ): Promise<Result<undefined>>
 }
 

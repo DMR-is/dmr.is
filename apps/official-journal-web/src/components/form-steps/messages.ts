@@ -27,7 +27,11 @@ export const messages = {
       defaultMessage: 'Tegund',
       description: '',
     },
-
+    categories: {
+      id: 'web.components.steps.grunnvinnsla:categories',
+      defaultMessage: 'Efnisflokkar',
+      description: '',
+    },
     group2title: {
       id: 'web.components.steps.grunnvinnsla:group2title',
       defaultMessage: 'Birting',

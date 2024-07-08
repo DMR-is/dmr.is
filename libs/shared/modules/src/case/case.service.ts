@@ -19,6 +19,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   UpdateCaseStatusBody,
+  UpdateCategoriesBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -35,7 +36,11 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseParameters, counterResult } from '../helpers'
+import {
+  advertCategoryMigrate,
+  caseParameters,
+  counterResult,
+} from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -74,6 +79,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseCategoriesDto)
     private readonly caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertCategoryDTO)
+    private readonly advertCategoryModel: typeof AdvertCategoryDTO,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -736,6 +743,118 @@ export class CaseService implements ICaseService {
           answers: {
             advert: {
               department: departmentId,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  async updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const currentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const incomingCategories = await Promise.all(
+      body.categoryIds.map(async (categoryId) => {
+        const categoryLookup = await this.utilityService.categoryLookup(
+          categoryId,
+        )
+
+        if (!categoryLookup.ok) {
+          throw new BadRequestException('Invalid category id')
+        }
+
+        return {
+          caseId,
+          categoryId,
+        }
+      }),
+    )
+
+    const newCategories = incomingCategories.filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    const newCategoryIds = newCategories.map((c) => c.categoryId)
+
+    const toRemove = currentCategories.filter((c) =>
+      newCategoryIds.includes(c.categoryId),
+    )
+
+    await this.caseCategoriesModel.bulkCreate(newCategories, {
+      ignoreDuplicates: true,
+    })
+
+    await Promise.all(
+      toRemove.map(async (c) => {
+        await c.destroy()
+      }),
+    )
+
+    const newCurrentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const ids = newCurrentCategories.map((c) => c.categoryId)
+
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: ids,
+        },
+      },
+    })
+
+    const migrated = categories.map((c) => advertCategoryMigrate(c))
+
+    const mapped = migrated.map((c) => ({
+      label: c.title,
+      value: c.id,
+    }))
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      return applicationLookup
+    }
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            publishing: {
+              contentCategories: mapped,
+              communicationChannels:
+                applicationLookup.value.application.answers.publishing
+                  .communicationChannels,
             },
           },
         },

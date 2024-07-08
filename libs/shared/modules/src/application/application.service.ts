@@ -180,6 +180,8 @@ export class ApplicationService implements IApplicationService {
     id: string,
     answers: UpdateApplicationBody,
   ): Promise<Result<undefined>> {
+    console.log('updateApplication', id, answers)
+
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
