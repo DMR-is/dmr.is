@@ -124,9 +124,7 @@ export class ApplicationController {
     operationId: 'updateApplication',
     summary: 'Update answers of an application.',
   })
-  @ApiOkResponse({
-    type: Application,
-  })
+  @ApiNoContentResponse()
   @ApiParam({
     type: String,
     name: 'id',
@@ -143,8 +141,12 @@ export class ApplicationController {
   async updateApplication(
     @Param('id') id: string,
     @Body() body: UpdateApplicationBody,
-  ): Promise<Application | null> {
-    return await this.applicationService.updateApplication(id, body)
+  ) {
+    const result = await this.applicationService.updateApplication(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
   }
 
   @Post(':id/post')
