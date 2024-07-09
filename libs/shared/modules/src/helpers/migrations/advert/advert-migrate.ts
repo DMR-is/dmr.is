@@ -24,7 +24,7 @@ export function advertMigrate(model: AdvertDTO): Advert {
 
   const advert: Advert = {
     id: model.id,
-    title: `${model.type.title} fyrir ${model.subject}`,
+    title: `${model.type.title} ${model.subject}`,
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
