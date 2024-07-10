@@ -1,8 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { DEFAULT_PAGE_SIZE, FAST_TRACK_DAYS } from '@dmr.is/constants'
+import { Audit, HandleException, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -20,6 +20,8 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
   UpdateCategoriesBody,
+  UpdatePublishDateBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -27,6 +29,7 @@ import { generatePaging } from '@dmr.is/utils'
 import {
   BadRequestException,
   forwardRef,
+  HttpException,
   Inject,
   Injectable,
 } from '@nestjs/common'
@@ -211,7 +214,7 @@ export class CaseService implements ICaseService {
         const diff = requestedPublicationDate.getTime() - today.getTime()
         const diffDays = diff / (1000 * 3600 * 24)
         let fastTrack = false
-        if (diffDays > 10) {
+        if (diffDays > FAST_TRACK_DAYS) {
           fastTrack = true
         }
 
@@ -862,6 +865,141 @@ export class CaseService implements ICaseService {
 
     if (!updateApplicationResult.ok) {
       return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const requestedPublicationDate = new Date(body.date)
+    const createdAt = new Date(caseLookup.value.createdAt)
+    const timeDiff = Math.abs(
+      requestedPublicationDate.getTime() - createdAt.getTime(),
+    )
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+    await this.caseModel.update(
+      {
+        requestedPublicationDate: body.date,
+        fastTrack: daysDiff <= FAST_TRACK_DAYS,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      // we must throw error to rollback transaction using the @Transactional decorator
+      throw new HttpException(
+        applicationLookup.error.message,
+        applicationLookup.error.code,
+      )
+    }
+
+    const didUpdateApplication =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            publishing: {
+              date: body.date,
+              contentCategories:
+                applicationLookup.value.application.answers.publishing
+                  .contentCategories,
+              communicationChannels:
+                applicationLookup.value.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      )
+
+    if (!didUpdateApplication.ok) {
+      return didUpdateApplication
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    await this.caseModel.update(
+      {
+        advertTitle: body.title,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      // we must throw error to rollback transaction using the @Transactional decorator
+      throw new HttpException(
+        applicationLookup.error.message,
+        applicationLookup.error.code,
+      )
+    }
+
+    const didUpdateApplication =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              title: body.title,
+            },
+          },
+        },
+      )
+
+    if (!didUpdateApplication.ok) {
+      return didUpdateApplication
     }
 
     return {

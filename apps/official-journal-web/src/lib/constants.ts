@@ -250,6 +250,45 @@ export async function updateCategories(
   return res
 }
 
+export async function updateTitle(
+  url: string,
+  { arg }: { arg: { caseId: string; title: string } },
+) {
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
+}
+
+export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+
+    throw new Error(message)
+  }
+
+  return res
+}
+
 export enum APIRotues {
   Case = '/api/cases/:id',
   Cases = '/api/cases',
@@ -266,4 +305,6 @@ export enum APIRotues {
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateCategories = '/api/cases/:id/updateCategories',
+  UpdateTitle = '/api/cases/:id/updateTitle',
+  UpdatePublishDate = '/api/cases/:id/updatePublishDate',
 }

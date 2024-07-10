@@ -17,6 +17,8 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
   UpdateCategoriesBody,
+  UpdatePublishDateBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 
@@ -35,6 +37,18 @@ export class CaseServiceMock implements ICaseService {
   updateCategories(
     caseId: string,
     body: UpdateCategoriesBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
   ): Promise<Result<undefined>> {
     throw new Error('Method not implemented.')
   }

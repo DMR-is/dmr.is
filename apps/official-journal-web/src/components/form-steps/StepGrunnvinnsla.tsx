@@ -23,6 +23,8 @@ import {
   useUpdateCategories,
   useUpdateDepartment,
   useUpdatePrice,
+  useUpdatePublishDate,
+  useUpdateTitle,
 } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
@@ -41,7 +43,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
     data: caseData,
     error,
     isLoading,
-    isValidating,
+    isValidating: isRefetchingCase,
     mutate: refetchCase,
   } = useCase({
     caseId: data.activeCase.id,
@@ -77,6 +79,44 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
         },
       },
     })
+
+  const { trigger: updateTitle } = useUpdateTitle({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const { trigger: updatePublishDate } = useUpdatePublishDate({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const handleUpdatePrice = (newPrice: string) => {
+    updatePrice({
+      caseId: data.activeCase.id,
+      price: newPrice,
+    })
+  }
+
+  const handleCategoryUpdate = (option: { label: string; value: string }) => {
+    updateCategories({
+      caseId: data.activeCase.id,
+      categoryIds: [option.value],
+    })
+  }
+
+  const handleUpdateTitle = (newTitle: string) => {
+    updateTitle({
+      title: newTitle,
+    })
+  }
 
   const { data: categoriesData } = useCategories({
     search: 'pageSize=1000',
@@ -116,21 +156,9 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
 
   const { activeCase, advert } = caseData._case
 
-  const handleUpdatePrice = (newPrice: string) => {
-    updatePrice({
-      caseId: activeCase.id,
-      price: newPrice,
-    })
-  }
-
   const debouncedUpdatePrice = debounce(handleUpdatePrice, 300)
 
-  const handleCategoryUpdate = (option: { label: string; value: string }) => {
-    updateCategories({
-      caseId: activeCase.id,
-      categoryIds: [option.value],
-    })
-  }
+  const debouncedUpdateTitle = debounce(handleUpdateTitle, 300)
 
   return (
     <>
@@ -211,8 +239,8 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
               <Input
                 backgroundColor="blue"
                 name="subject"
-                value={activeCase.advertTitle}
-                onChange={() => console.log('change')}
+                defaultValue={activeCase.advertTitle}
+                onChange={(e) => debouncedUpdateTitle(e.target.value)}
                 label={formatMessage(messages.grunnvinnsla.subject)}
                 size="sm"
                 textarea
@@ -223,7 +251,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
-                isDisabled={isUpdatingCategories || isValidating}
+                isDisabled={isUpdatingCategories}
                 size="sm"
                 label={formatMessage(messages.grunnvinnsla.categories)}
                 backgroundColor="blue"
@@ -249,7 +277,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
               <Inline space={1}>
                 {activeCase.advertCategories.map((cat, i) => (
                   <Tag
-                    disabled={isUpdatingCategories || isValidating}
+                    disabled={isUpdatingCategories}
                     onClick={() =>
                       handleCategoryUpdate({
                         label: cat.title,
@@ -308,6 +336,11 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
                 size="sm"
                 placeholderText=""
                 locale="is"
+                handleChange={(e) => {
+                  updatePublishDate({
+                    date: e.toISOString(),
+                  })
+                }}
               />
             </GridColumn>
 

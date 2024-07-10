@@ -289,6 +289,52 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/publishDate": {
+      "put": {
+        "operationId": "updatePublishDate",
+        "summary": "Update publish date of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePublishDateBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/title": {
+      "put": {
+        "operationId": "updateTitle",
+        "summary": "Update publish date of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTitleBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/categories": {
       "put": {
         "operationId": "updateCategories",
@@ -1323,6 +1369,16 @@
           "departmentId": { "type": "string", "description": "Department id" }
         },
         "required": ["departmentId"]
+      },
+      "UpdatePublishDateBody": {
+        "type": "object",
+        "properties": { "date": { "type": "string" } },
+        "required": ["date"]
+      },
+      "UpdateTitleBody": {
+        "type": "object",
+        "properties": { "title": { "type": "string" } },
+        "required": ["title"]
       },
       "UpdateCategoriesBody": {
         "type": "object",

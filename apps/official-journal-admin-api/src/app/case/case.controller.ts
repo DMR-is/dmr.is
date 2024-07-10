@@ -21,6 +21,8 @@ import {
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCategoriesBody,
+  UpdatePublishDateBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 
 import {
@@ -200,6 +202,58 @@ export class CaseController {
       id,
       body.departmentId,
     )
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/publishDate')
+  @ApiOperation({
+    operationId: 'updatePublishDate',
+    summary: 'Update publish date of case and application',
+  })
+  @ApiBody({
+    type: UpdatePublishDateBody,
+    required: true,
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiNoContentResponse()
+  async updatePublishDate(
+    @Param('id') id: string,
+    @Body() body: UpdatePublishDateBody,
+  ): Promise<void> {
+    const result = await this.caseService.updatePublishDate(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/title')
+  @ApiOperation({
+    operationId: 'updateTitle',
+    summary: 'Update publish date of case and application',
+  })
+  @ApiBody({
+    type: UpdateTitleBody,
+    required: true,
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiNoContentResponse()
+  async updateTitle(
+    @Param('id') id: string,
+    @Body() body: UpdateTitleBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateTitle(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
