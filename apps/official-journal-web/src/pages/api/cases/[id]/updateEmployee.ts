@@ -3,35 +3,28 @@ import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-class UpdatePriceHandler {
+class UpdateEmployeeHandler {
   @Audit({ logArgs: false })
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query
-    const { caseId, price } = req.body
-
-    if (!caseId || !price) {
-      return res.status(400).end()
-    }
-
-    if (!id || id !== caseId) {
-      return res.status(400).end()
-    }
-
     const dmrClient = createDmrClient()
 
-    await dmrClient.updatePrice({
+    const { caseId, userId } = req.body
+
+    if (!caseId || !userId) {
+      return res.status(400).json({ error: 'Bad Request' })
+    }
+
+    await dmrClient.assignEmployee({
       id: caseId,
-      updateCasePriceBody: {
-        price: price,
-      },
+      userId: userId,
     })
 
-    return res.status(200).end()
+    return res.status(204).end()
   }
 }
 
-const instance = new UpdatePriceHandler()
+const instance = new UpdateEmployeeHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

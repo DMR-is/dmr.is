@@ -1,6 +1,7 @@
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
+  DefaultSearchParams,
   EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
@@ -10,7 +11,6 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentsResponse,
   PostApplicationBody,
@@ -73,8 +73,10 @@ export class CaseController {
     status: 200,
     description: 'Departments',
   })
-  async departments(): Promise<GetDepartmentsResponse> {
-    const result = await this.journalService.getDepartments()
+  async departments(
+    @Query() params: DefaultSearchParams,
+  ): Promise<GetDepartmentsResponse> {
+    const result = await this.journalService.getDepartments(params)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
@@ -120,7 +122,7 @@ export class CaseController {
   })
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     const result = await this.journalService.getCategories(params)
 

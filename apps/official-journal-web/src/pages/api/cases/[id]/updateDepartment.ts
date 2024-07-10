@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
 class UpdateDepartmentHandler {
   @Audit({ logArgs: false })
   @HandleApiException()
+  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query
     const { caseId, departmentId } = req.body

@@ -1,27 +1,37 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateCaseStatus } from '../../../lib/constants'
+import { APIRotues, updateFetcher } from '../../../lib/constants'
 
-export type SWRUpdateCaseStatusParams = {
-  statusId: string
+export type UpdateCaseStatusParams = {
   caseId: string
+  options?: SWRUpdateCaseStatusOptions
+}
+
+type UpdateCaseStatusTriggerArgs = {
+  statusId: string
 }
 
 type SWRUpdateCaseStatusOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  SWRUpdateCaseStatusParams
+  UpdateCaseStatusTriggerArgs
 >
 
-export const useUpdateCaseStatus = (options?: SWRUpdateCaseStatusOptions) => {
+export const useUpdateCaseStatus = ({
+  caseId,
+  options,
+}: UpdateCaseStatusParams) => {
   const { trigger, isMutating } = swrMutation<
     Response,
     Error,
     Key,
-    SWRUpdateCaseStatusParams
-  >(APIRotues.UpdateCaseStatus, updateCaseStatus, options)
+    UpdateCaseStatusTriggerArgs
+  >(APIRotues.UpdateCaseStatus, updateFetcher, {
+    throwOnError: false,
+    ...options,
+  })
 
   return {
     trigger,

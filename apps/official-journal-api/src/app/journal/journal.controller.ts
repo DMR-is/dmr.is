@@ -3,6 +3,7 @@ import { IJournalService } from '@dmr.is/modules'
 import {
   Advert,
   AdvertNotFound,
+  DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
@@ -215,7 +216,7 @@ export class JournalController {
   })
   async mainCategories(
     @Query()
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetMainCategoriesResponse> {
     const result = await this.journalService.getMainCategories(params)
 
@@ -241,7 +242,7 @@ export class JournalController {
   })
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     const result = await this.journalService.getCategories(params)
 
@@ -267,7 +268,7 @@ export class JournalController {
   })
   async institutions(
     @Query()
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetInstitutionsResponse> {
     const result = await this.journalService.getInstitutions(params)
 

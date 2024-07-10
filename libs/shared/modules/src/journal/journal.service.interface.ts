@@ -2,6 +2,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  DefaultSearchParams,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -11,16 +12,12 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
-  GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionResponse,
-  GetInstitutionsQueryParams,
   GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
@@ -38,7 +35,7 @@ export interface IJournalService {
 
   getDepartment(id: string): Promise<Result<GetDepartmentResponse>>
   getDepartments(
-    params?: GetDepartmentsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<Result<GetDepartmentsResponse>>
   insertDepartment(model: Department): Promise<Result<GetDepartmentResponse>>
   updateDepartment(model: Department): Promise<Result<GetDepartmentResponse>>
@@ -52,7 +49,7 @@ export interface IJournalService {
   insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>>
   updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>>
   getMainCategories(
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<Result<GetMainCategoriesResponse>>
   insertMainCategory(
     model: MainCategory,
@@ -64,14 +61,14 @@ export interface IJournalService {
   getCategory(id: string): Promise<Result<GetCategoryResponse>>
 
   getCategories(
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<Result<GetCategoriesResponse>>
   insertCategory(model: Category): Promise<Result<GetCategoryResponse>>
   updateCategory(model: Category): Promise<Result<GetCategoryResponse>>
 
   getInstitution(id: string): Promise<Result<GetInstitutionResponse>>
   getInstitutions(
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<Result<GetInstitutionsResponse>>
   insertInstitution(model: Institution): Promise<Result<GetInstitutionResponse>>
   updateInstitution(model: Institution): Promise<Result<GetInstitutionResponse>>

@@ -1,16 +1,17 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateCategories } from '../../../lib/constants'
+import { APIRotues, updateFetcher } from '../../../lib/constants'
+
+type UpdateCategoriesTriggerArgs = {
+  categoryIds: string[]
+}
 
 type SWRUpdateCategoryOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  {
-    caseId: string
-    categoryIds: string[]
-  }
+  UpdateCategoriesTriggerArgs
 >
 
 type UseUpdateCategoryParams = {
@@ -25,8 +26,8 @@ export const useUpdateCategories = ({
     Response,
     Error,
     Key,
-    { caseId: string; categoryIds: string[] }
-  >(APIRotues.UpdateCategories.replace(':id', caseId), updateCategories, {
+    UpdateCategoriesTriggerArgs
+  >(APIRotues.UpdateCategories.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

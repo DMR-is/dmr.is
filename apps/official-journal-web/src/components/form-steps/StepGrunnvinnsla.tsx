@@ -98,17 +98,15 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
     },
   })
 
-  const handleUpdatePrice = (newPrice: string) => {
-    updatePrice({
-      caseId: data.activeCase.id,
-      price: newPrice,
+  const handleCategoryUpdate = (option: { label: string; value: string }) => {
+    updateCategories({
+      categoryIds: [option.value],
     })
   }
 
-  const handleCategoryUpdate = (option: { label: string; value: string }) => {
-    updateCategories({
-      caseId: data.activeCase.id,
-      categoryIds: [option.value],
+  const handleUpdatePrice = (newPrice: string) => {
+    updatePrice({
+      price: newPrice,
     })
   }
 
@@ -117,6 +115,10 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
       title: newTitle,
     })
   }
+
+  const debouncedUpdatePrice = debounce(handleUpdatePrice, 300)
+
+  const debouncedUpdateTitle = debounce(handleUpdateTitle, 300)
 
   const { data: categoriesData } = useCategories({
     search: 'pageSize=1000',
@@ -155,10 +157,6 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
   }
 
   const { activeCase, advert } = caseData._case
-
-  const debouncedUpdatePrice = debounce(handleUpdatePrice, 300)
-
-  const debouncedUpdateTitle = debounce(handleUpdateTitle, 300)
 
   return (
     <>
@@ -206,7 +204,6 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
                 onChange={(option) => {
                   if (!option) return
                   updateDepartment({
-                    caseId: activeCase.id,
                     departmentId: option.value,
                   })
                 }}

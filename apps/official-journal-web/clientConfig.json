@@ -5,7 +5,29 @@
       "get": {
         "operationId": "getDepartments",
         "summary": "Get departments",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number to return.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size number to return.",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Departments",
@@ -77,7 +99,7 @@
             "name": "search",
             "required": false,
             "in": "query",
-            "description": "String to search for in categories.",
+            "description": "String to search for",
             "schema": { "type": "string" }
           },
           {
@@ -85,14 +107,14 @@
             "required": false,
             "in": "query",
             "description": "Page number to return.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size number to return.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {

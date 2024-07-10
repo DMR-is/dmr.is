@@ -1,16 +1,17 @@
 import { Transform } from 'class-transformer'
-import { IsNumberString, IsOptional, IsString } from 'class-validator'
+import { IsOptional, IsString, MaxLength, Min } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-export class GetCategoriesQueryParams {
+export class DefaultSearchParams {
   @ApiProperty({
     name: 'search',
-    description: 'String to search for in categories.',
+    description: 'String to search for',
     type: String,
     required: false,
   })
   @IsOptional()
+  @MaxLength(1024)
   @IsString()
   search?: string
 
@@ -21,8 +22,8 @@ export class GetCategoriesQueryParams {
     required: false,
   })
   @IsOptional()
-  @IsNumberString()
   @Transform(({ value }) => Number.parseInt(value, 10))
+  @Min(1)
   page?: number
 
   @ApiProperty({
@@ -32,7 +33,7 @@ export class GetCategoriesQueryParams {
     required: false,
   })
   @IsOptional()
-  @IsNumberString()
   @Transform(({ value }) => Number.parseInt(value, 10))
+  @Min(1)
   pageSize?: number
 }

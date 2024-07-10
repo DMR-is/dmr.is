@@ -6,6 +6,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  DefaultSearchParams,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -19,7 +20,6 @@ import {
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
-  GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionResponse,
   GetInstitutionsQueryParams,
@@ -472,7 +472,7 @@ export class JournalService implements IJournalService {
   @Audit()
   @HandleException()
   async getDepartments(
-    params?: GetDepartmentsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<Result<GetDepartmentsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
