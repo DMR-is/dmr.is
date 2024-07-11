@@ -19,12 +19,7 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import {
-  AdvertType,
-  CaseStatusEnum,
-  CaseWithAdvert,
-  Department,
-} from '../gen/fetch'
+import { CaseStatusEnum, CaseWithAdvert } from '../gen/fetch'
 import {
   useCase,
   useUpdateCaseStatus,
@@ -212,7 +207,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
             onChange={(e) => {
               if (!e) return
               onAssignEmployee({
-                employeeId: e.value,
+                userId: e.value,
               })
             }}
           />
@@ -230,6 +225,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
             label={formatMessage(messages.actions.status)}
             size="sm"
             onChange={(e) => {
+              console.log('e', e)
               if (!e) return
               onUpdateCaseStatus({
                 statusId: e.value,

@@ -95,7 +95,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     },
   })
 
-  const { trigger: updateType, isMutating: isUpdatingType } = useUpdateType({
+  const { trigger: updateType, isMutating: isUpdatingTypes } = useUpdateType({
     caseId: data.activeCase.id,
     options: {
       onSuccess: () => {
@@ -150,9 +150,10 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     })
   }
 
-  const debouncedUpdatePrice = debounce(handleUpdatePrice, 300)
-
-  const debouncedUpdateTitle = debounce(handleUpdateTitle, 300)
+  // TODO: Think this just queues up the updates, but doesn't cancel the previous one
+  const debouncedUpdatePrice = debounce(handleUpdatePrice, 1000)
+  // same here
+  const debouncedUpdateTitle = debounce(handleUpdateTitle, 1000)
 
   const { data: categoriesData } = useCategories({
     query: {
@@ -254,7 +255,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 backgroundColor="blue"
                 label={formatMessage(messages.grunnvinnsla.type)}
                 size="sm"
-                isDisabled={isLoadingTypes}
+                isDisabled={isLoadingTypes || isUpdatingTypes}
                 defaultValue={{
                   label: activeCase.advertType.title,
                   value: activeCase.advertType.id,

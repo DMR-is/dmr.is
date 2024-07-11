@@ -1,6 +1,6 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { PostCasePublishBody } from '../gen/fetch'
+import { HTTPMethod, PostCasePublishBody } from '../gen/fetch'
 import { SWRAddCommentParams } from '../hooks/api'
 
 export const HEADER_HEIGHT = 112
@@ -72,30 +72,6 @@ export async function getCase(url: string) {
   })
 }
 
-export async function createComment(
-  url: string,
-  { arg }: { arg: SWRAddCommentParams },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    if (!res.ok) {
-      const error = new Error('Error occured while fetching data')
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res
-  })
-}
-
 export async function deleteComment(
   url: string,
   { arg }: { arg: { caseId: string; commentId: string } },
@@ -115,10 +91,14 @@ export async function deleteComment(
   })
 }
 
-export async function fetcher(url: string) {
-  console.log(url)
+export async function fetcher(
+  url: string,
+  { arg }: { arg: { method: 'GET' | 'DELETE' | undefined } } = {
+    arg: { method: 'GET' },
+  },
+) {
   const res = await fetch(url, {
-    method: 'GET',
+    method: arg.method,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -130,7 +110,11 @@ export async function fetcher(url: string) {
     throw new Error(message)
   }
 
-  return res.json()
+  try {
+    return await res.json()
+  } catch (error) {
+    return res
+  }
 }
 
 export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
@@ -159,7 +143,7 @@ export enum APIRotues {
   GetTypes = '/api/cases/types',
   GetCategories = '/api/cases/categories',
   UpdateEmployee = '/api/cases/:id/updateEmployee',
-  UpdateCaseStatus = '/api/cases/:id/status',
+  UpdateCaseStatus = '/api/cases/:id/updateStatus',
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
@@ -167,6 +151,7 @@ export enum APIRotues {
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
-  Comments = '/api/cases/:id/comments',
+  CreateComment = '/api/cases/:id/comments/create',
+  DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
 }

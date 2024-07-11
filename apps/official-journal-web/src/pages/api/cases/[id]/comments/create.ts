@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { Audit, Delete, HandleApiException } from '@dmr.is/decorators'
+import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { PostCaseCommentTypeEnum } from '../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../lib/api/createClient'
@@ -13,11 +13,17 @@ const commentBodySchema = z.object({
   to: z.string().optional(),
 })
 
-class DeleteCommentHandler {
+class CreateCommentHandler {
   @Audit({ logArgs: false })
   @HandleApiException()
-  @Delete()
+  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
+    const { id } = req.query as { id?: string }
+
+    if (!id) {
+      return res.status(400).end()
+    }
+
     commentBodySchema.parse(req.body)
 
     const dmrClient = createDmrClient()
@@ -25,7 +31,7 @@ class DeleteCommentHandler {
     const body: z.infer<typeof commentBodySchema> = req.body
 
     const addCommentResponse = await dmrClient.createComment({
-      id: body.caseId,
+      id: id,
       postCaseComment: {
         comment: body.comment,
         internal: body.internal,
@@ -41,6 +47,6 @@ class DeleteCommentHandler {
   }
 }
 
-const instance = new DeleteCommentHandler()
+const instance = new CreateCommentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

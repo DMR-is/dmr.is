@@ -13,6 +13,7 @@ import {
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
 import { useAddComment, useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { APIRotues } from '../../lib/constants'
 import { commentTaskToNode } from '../../lib/utils'
 import * as styles from './Comments.css'
 import { messages } from './messages'
@@ -35,13 +36,25 @@ export const Comments = ({ activeCase }: Props) => {
   })
   const { trigger: onDeleteComment, isMutating: isDeletingComment } =
     useDeleteComment({
-      onSuccess: () => refetchCase(),
+      basePath: APIRotues.DeleteComment.replace(
+        ':id',
+        activeCase.activeCase.id,
+      ),
+      options: {
+        onSuccess: () => {
+          refetchCase()
+        },
+      },
     })
+
   const { trigger: onAddComment, isMutating: isAddingComment } = useAddComment({
-    onSuccess: () => {
-      setCommentValue('')
-      setIsInternalComment(true)
-      refetchCase()
+    caseId: activeCase.activeCase.id,
+    options: {
+      onSuccess: () => {
+        setCommentValue('')
+        setIsInternalComment(true)
+        refetchCase()
+      },
     },
   })
 
@@ -95,12 +108,11 @@ export const Comments = ({ activeCase }: Props) => {
                   variant="text"
                   as="button"
                   size="small"
-                  onClick={() => {
+                  onClick={() =>
                     onDeleteComment({
-                      caseId: activeCase.activeCase.id,
                       commentId: c.id,
                     })
-                  }}
+                  }
                 >
                   <Box
                     display="flex"

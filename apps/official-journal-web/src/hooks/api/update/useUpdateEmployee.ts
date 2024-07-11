@@ -9,7 +9,7 @@ export type UpdateEmployeeParams = {
 }
 
 type UpdateEmployeeTriggerArgs = {
-  employeeId: string
+  userId: string
 }
 
 type SWRUpdateEmployeeOptions = SWRMutationConfiguration<
