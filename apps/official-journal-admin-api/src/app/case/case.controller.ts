@@ -22,6 +22,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
@@ -229,6 +230,33 @@ export class CaseController {
     @Body() body: UpdateCaseTypeBody,
   ): Promise<void> {
     const result = await this.caseService.updateType(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/paid')
+  @ApiOperation({
+    operationId: 'updatePaid',
+    summary: 'Update paid status of case',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdatePaidBody,
+    required: true,
+  })
+  async updatePaid(
+    @Param('id') id: string,
+    @Body() body: UpdatePaidBody,
+  ): Promise<void> {
+    console.log(body)
+    const result = await this.caseService.updatePaid(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

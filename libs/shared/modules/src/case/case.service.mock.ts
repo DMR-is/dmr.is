@@ -19,6 +19,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
@@ -35,6 +36,9 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
   }
   updateType(
     caseId: string,

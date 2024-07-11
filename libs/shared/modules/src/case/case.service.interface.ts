@@ -10,6 +10,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
@@ -49,6 +50,7 @@ export interface ICaseService {
   ): Promise<Result<undefined>>
 
   updateTitle(caseId: string, body: UpdateTitleBody): Promise<Result<undefined>>
+  updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')

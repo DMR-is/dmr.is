@@ -22,6 +22,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
@@ -769,6 +770,7 @@ export class CaseService implements ICaseService {
   async updateType(
     caseId: string,
     body: UpdateCaseTypeBody,
+    transaction?: Transaction,
   ): Promise<Result<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
 
@@ -790,6 +792,7 @@ export class CaseService implements ICaseService {
         where: {
           id: caseId,
         },
+        transaction,
       },
     )
 
@@ -933,7 +936,6 @@ export class CaseService implements ICaseService {
   async updatePublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
-
     transaction?: Transaction,
   ): Promise<Result<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
@@ -1055,6 +1057,40 @@ export class CaseService implements ICaseService {
     if (!didUpdateApplication.ok) {
       return didUpdateApplication
     }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    console.log(body)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        paid: body.paid,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
 
     return {
       ok: true,

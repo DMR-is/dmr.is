@@ -334,6 +334,29 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/paid": {
+      "put": {
+        "operationId": "updatePaid",
+        "summary": "Update paid status of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePaidBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/publishDate": {
       "put": {
         "operationId": "updatePublishDate",
@@ -1421,6 +1444,11 @@
           "typeId": { "type": "string", "description": "Type id" }
         },
         "required": ["typeId"]
+      },
+      "UpdatePaidBody": {
+        "type": "object",
+        "properties": { "paid": { "type": "boolean" } },
+        "required": ["paid"]
       },
       "UpdatePublishDateBody": {
         "type": "object",

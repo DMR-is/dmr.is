@@ -29,6 +29,7 @@ import {
   useUpdateTitle,
   useUpdateType,
 } from '../../hooks/api'
+import { useUpdatePaid } from '../../hooks/api/update/useUpdatePaid'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
@@ -124,6 +125,15 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
   })
 
   const { trigger: updatePublishDate } = useUpdatePublishDate({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const { trigger: updatePaid, isMutating: isUpdatingPaid } = useUpdatePaid({
     caseId: data.activeCase.id,
     options: {
       onSuccess: () => {
@@ -412,7 +422,12 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
                 name="paid"
-                checked={activeCase.paid}
+                defaultChecked={activeCase.paid}
+                onChange={(e) => {
+                  updatePaid({
+                    paid: e.target.checked,
+                  })
+                }}
                 label={formatMessage(messages.grunnvinnsla.paid)}
               />
             </GridColumn>
