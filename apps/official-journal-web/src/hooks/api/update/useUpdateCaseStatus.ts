@@ -28,7 +28,7 @@ export const useUpdateCaseStatus = ({
     Error,
     Key,
     UpdateCaseStatusTriggerArgs
-  >(APIRotues.UpdateCaseStatus, updateFetcher, {
+  >(APIRotues.UpdateCaseStatus.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

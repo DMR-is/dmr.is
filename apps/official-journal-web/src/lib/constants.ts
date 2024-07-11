@@ -116,6 +116,7 @@ export async function deleteComment(
 }
 
 export async function fetcher(url: string) {
+  console.log(url)
   const res = await fetch(url, {
     method: 'GET',
     headers: {

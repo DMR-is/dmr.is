@@ -20,7 +20,7 @@ export const useUpdateNextCaseStatus = ({
   options,
 }: UpdateNextCaseStatusParams) => {
   const { trigger, isMutating } = swrMutation<Response, Error, Key, undefined>(
-    APIRotues.UpdateNextCaseStatus,
+    APIRotues.UpdateNextCaseStatus.replace(':id', caseId),
     updateFetcher,
     {
       throwOnError: false,

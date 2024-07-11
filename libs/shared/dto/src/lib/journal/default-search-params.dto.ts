@@ -2,7 +2,6 @@ import { Transform } from 'class-transformer'
 import { IsOptional, IsString, MaxLength, Min } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
-
 export class DefaultSearchParams {
   @ApiProperty({
     name: 'search',

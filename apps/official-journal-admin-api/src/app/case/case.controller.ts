@@ -44,6 +44,7 @@ import {
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -74,7 +75,7 @@ export class CaseController {
     description: 'Departments',
   })
   async departments(
-    @Query() params: DefaultSearchParams,
+    @Query() params?: DefaultSearchParams,
   ): Promise<GetDepartmentsResponse> {
     const result = await this.journalService.getDepartments(params)
 

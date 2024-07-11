@@ -28,7 +28,7 @@ export const useUpdateEmployee = ({
     Error,
     Key,
     UpdateEmployeeTriggerArgs
-  >(APIRotues.UpdateEmployee, updateFetcher, {
+  >(APIRotues.UpdateEmployee.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

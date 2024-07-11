@@ -9,14 +9,14 @@ class GetCaseHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { caseId } = req.query as { caseId?: string }
+    const { id } = req.query as { id?: string }
 
-    if (!caseId) {
+    if (!id) {
       return res.status(400).json({ message: 'Case ID is required' })
     }
 
     const caseResponse = await dmrClient.getCase({
-      id: caseId as string,
+      id,
     })
 
     return res.status(200).json(caseResponse)

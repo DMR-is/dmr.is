@@ -1,17 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+
+const bodySchema = z.object({
+  title: z.string(),
+})
 
 class UpdateTitleHandler {
   @Audit({ logArgs: false })
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query as { id: string }
-    const { title } = req.body
+    const { id } = req.query as { id?: string }
 
-    if (!id || !title) {
+    if (!id) {
+      return res.status(400).end()
+    }
+
+    const parsed = bodySchema.safeParse(req.body)
+
+    if (!parsed.success) {
       return res.status(400).end()
     }
 
@@ -20,7 +30,7 @@ class UpdateTitleHandler {
     await dmrClient.updateTitle({
       id,
       updateTitleBody: {
-        title,
+        title: parsed.data.title,
       },
     })
 

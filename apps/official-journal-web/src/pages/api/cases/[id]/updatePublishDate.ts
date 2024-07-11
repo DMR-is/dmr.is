@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+
+const bodySchema = z.object({
+  date: z.string(),
+})
 
 class UpdatePublishDateHandler {
   @Audit({ logArgs: false })
@@ -9,9 +14,14 @@ class UpdatePublishDateHandler {
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id: string }
-    const { date } = req.body
 
-    if (!id || !date) {
+    if (!id) {
+      return res.status(400).end()
+    }
+
+    const parsed = bodySchema.safeParse(req.body)
+
+    if (!parsed.success) {
       return res.status(400).end()
     }
 
@@ -20,7 +30,7 @@ class UpdatePublishDateHandler {
     await dmrClient.updatePublishDate({
       id: id,
       updatePublishDateBody: {
-        date,
+        date: parsed.data.date,
       },
     })
 

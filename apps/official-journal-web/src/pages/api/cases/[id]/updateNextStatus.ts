@@ -8,16 +8,16 @@ class UpdateNextStatusHandler {
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { caseId } = req.body
+    const { id } = req.query as { id?: string }
 
-    if (!caseId) {
-      return res.status(400).json({ error: 'Missing required parameters' })
+    if (!id) {
+      return res.status(400).end()
     }
 
     const client = createDmrClient()
 
     await client.updateNextStatus({
-      id: caseId,
+      id: id,
     })
 
     return res.status(204).end()

@@ -72,17 +72,26 @@ const CaseSingle: Screen<Props> = ({
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   if (isLoading) {
@@ -210,8 +219,7 @@ const CaseSingle: Screen<Props> = ({
             onChange={(e) => {
               if (!e) return
               onAssignEmployee({
-                caseId: activeCase.id,
-                userId: e.value,
+                employeeId: e.value,
               })
             }}
           />
@@ -231,7 +239,6 @@ const CaseSingle: Screen<Props> = ({
             onChange={(e) => {
               if (!e) return
               onUpdateCaseStatus({
-                caseId: activeCase.id,
                 statusId: e.value,
               })
             }}
@@ -295,9 +302,7 @@ const CaseSingle: Screen<Props> = ({
                 loading={isUpdatingNextStatus}
                 as="span"
                 icon="arrowForward"
-                onClick={() =>
-                  onUpdateNextCaseStatus({ caseId: activeCase.id })
-                }
+                onClick={() => onUpdateNextCaseStatus()}
                 unfocusable
               >
                 {formatMessage(messages.paging.nextStep)}
@@ -322,7 +327,9 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     id: caseId,
   })
 
-  const departments = await dmrClient.getDepartments()
+  const departments = await dmrClient.getDepartments({})
+
+  await dmrClient.getCategories({})
 
   const selectedDepartment =
     (query.department as string) ?? activeCase._case.advert.department.id
