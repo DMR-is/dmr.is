@@ -16,15 +16,18 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertType, CaseWithAdvert, Department } from '../../gen/fetch'
+import { CaseWithAdvert } from '../../gen/fetch'
 import {
   useCase,
   useCategories,
+  useDepartments,
+  useTypes,
   useUpdateCategories,
   useUpdateDepartment,
   useUpdatePrice,
   useUpdatePublishDate,
   useUpdateTitle,
+  useUpdateType,
 } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
@@ -32,23 +35,45 @@ import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
 import { messages } from './messages'
 type Props = {
   data: CaseWithAdvert
-  departments: Array<Department>
-  advertTypes: Array<AdvertType>
 }
 
-export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
+export const StepGrunnvinnsla = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const {
     data: caseData,
-    error,
-    isLoading,
-    isValidating: isRefetchingCase,
+    error: caseError,
+    isLoading: isLoadingCase,
     mutate: refetchCase,
   } = useCase({
     caseId: data.activeCase.id,
     options: {
       fallback: data,
+    },
+  })
+
+  const {
+    data: typesData,
+    isLoading: isLoadingTypes,
+    mutate: refetchTypes,
+  } = useTypes({
+    query: `pageSize=1000&department=${
+      caseData
+        ? caseData._case.activeCase.advertDepartment.id
+        : data.activeCase.advertDepartment.id
+    }`,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const { data: departmentsData } = useDepartments({
+    options: {
+      onSuccess: () => {
+        refetchTypes()
+      },
     },
   })
 
@@ -62,6 +87,15 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
   })
 
   const { trigger: updateDepartment } = useUpdateDepartment({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
+  const { trigger: updateType, isMutating: isUpdatingType } = useUpdateType({
     caseId: data.activeCase.id,
     options: {
       onSuccess: () => {
@@ -121,10 +155,12 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
   const debouncedUpdateTitle = debounce(handleUpdateTitle, 300)
 
   const { data: categoriesData } = useCategories({
-    search: 'pageSize=1000',
+    query: {
+      pageSize: '1000',
+    },
   })
 
-  if (error) {
+  if (caseError) {
     return (
       <CaseOverviewGrid>
         <AlertMessage
@@ -136,7 +172,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
     )
   }
 
-  if (isLoading) {
+  if (isLoadingCase) {
     return (
       <CaseOverviewGrid>
         <SkeletonLoader repeat={3} height={44} />
@@ -194,7 +230,7 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
                   label: activeCase.advertDepartment.title,
                   value: activeCase.advertDepartment.id,
                 }}
-                options={departments.map((d) => ({
+                options={departmentsData?.departments.map((d) => ({
                   label: d.title,
                   value: d.id,
                 }))}
@@ -214,19 +250,25 @@ export const StepGrunnvinnsla = ({ data, advertTypes, departments }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Select
-                backgroundColor="blue"
                 name="type"
-                value={{
+                backgroundColor="blue"
+                label={formatMessage(messages.grunnvinnsla.type)}
+                size="sm"
+                isDisabled={isLoadingTypes}
+                defaultValue={{
                   label: activeCase.advertType.title,
                   value: activeCase.advertType.id,
                 }}
-                options={advertTypes.map((t) => ({
+                options={typesData?.types.map((t) => ({
                   label: t.title,
                   value: t.id,
                 }))}
-                label={formatMessage(messages.grunnvinnsla.type)}
-                size="sm"
-                isSearchable={false}
+                onChange={(option) => {
+                  if (!option) return
+                  updateType({
+                    typeId: option.value,
+                  })
+                }}
               />
             </GridColumn>
           </GridRow>

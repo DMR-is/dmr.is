@@ -20,6 +20,7 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
@@ -201,10 +202,33 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
-    const result = await this.caseService.updateDepartment(
-      id,
-      body.departmentId,
-    )
+    const result = await this.caseService.updateDepartment(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/type')
+  @ApiOperation({
+    operationId: 'updateType',
+    summary: 'Update type of case and application',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCaseTypeBody,
+    required: true,
+  })
+  async updateType(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateType(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

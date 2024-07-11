@@ -18,7 +18,9 @@ import {
   GetCasesReponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
@@ -714,7 +716,7 @@ export class CaseService implements ICaseService {
   @HandleException()
   async updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<Result<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
     if (!caseLookup.ok) {
@@ -722,7 +724,7 @@ export class CaseService implements ICaseService {
     }
 
     const departmentLookup = await this.utilityService.departmentLookup(
-      departmentId,
+      body.departmentId,
     )
     if (!departmentLookup.ok) {
       return departmentLookup
@@ -745,7 +747,59 @@ export class CaseService implements ICaseService {
         {
           answers: {
             advert: {
-              department: departmentId,
+              department: body.departmentId,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    const typeLookup = await this.utilityService.typeLookup(body.typeId)
+
+    if (!typeLookup.ok) {
+      throw new HttpException(typeLookup.error.message, typeLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        advertTypeId: typeLookup.value.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              type: body.typeId,
             },
           },
         },

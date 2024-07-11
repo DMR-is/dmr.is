@@ -15,7 +15,9 @@ import {
   PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
@@ -33,6 +35,12 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
   }
   updateCategories(
     caseId: string,
@@ -54,7 +62,7 @@ export class CaseServiceMock implements ICaseService {
   }
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<Result<undefined>> {
     throw new Error('Method not implemented.')
   }

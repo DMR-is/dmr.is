@@ -163,6 +163,7 @@ export enum APIRotues {
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
+  UpdateType = '/api/cases/:id/updateType',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',

@@ -41,17 +41,10 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: CaseWithAdvert | null
-  advertTypes: Array<AdvertType>
-  departments: Array<Department>
   step: CaseStep | null
 }
 
-const CaseSingle: Screen<Props> = ({
-  activeCase: data,
-  advertTypes,
-  departments,
-  step,
-}) => {
+const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
   const { formatMessage } = useFormatMessage()
 
   if (!data || !step) {
@@ -250,17 +243,7 @@ const CaseSingle: Screen<Props> = ({
         {step === 'innsending' && (
           <StepInnsending activeCase={caseData._case} />
         )}
-        {step === 'grunnvinnsla' && (
-          <StepGrunnvinnsla
-            data={caseData._case}
-            advertTypes={advertTypes.sort((a, b) =>
-              a.slug.localeCompare(b.slug),
-            )}
-            departments={departments.sort((a, b) =>
-              a.slug.localeCompare(b.slug),
-            )}
-          />
-        )}
+        {step === 'grunnvinnsla' && <StepGrunnvinnsla data={caseData._case} />}
         {step === 'yfirlestur' && (
           <StepYfirlestur activeCase={caseData._case} />
         )}
@@ -320,29 +303,15 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const step = query.uid?.[1] as CaseStep | undefined
 
   if (!caseId || !step || !caseSteps.includes(step)) {
-    return { activeCase: null, advertTypes: [], step: null, departments: [] }
+    return { activeCase: null, step: null }
   }
 
   const activeCase = await dmrClient.getCase({
     id: caseId,
   })
 
-  const departments = await dmrClient.getDepartments({})
-
-  await dmrClient.getCategories({})
-
-  const selectedDepartment =
-    (query.department as string) ?? activeCase._case.advert.department.id
-
-  const activeTypes = await dmrClient.getTypes({
-    department: selectedDepartment,
-    pageSize: 100,
-  })
-
   return {
     activeCase: activeCase._case,
-    departments: departments.departments,
-    advertTypes: activeTypes.types,
     step,
   }
 }

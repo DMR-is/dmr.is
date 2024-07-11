@@ -6,7 +6,9 @@ import {
   GetCasesReponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdatePublishDateBody,
   UpdateTitleBody,
@@ -29,7 +31,11 @@ export interface ICaseService {
   updatePrice(caseId: string, price: string): Promise<Result<undefined>>
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    departmentId: UpdateCaseDepartmentBody,
+  ): Promise<Result<undefined>>
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
   ): Promise<Result<undefined>>
 
   updateCategories(
