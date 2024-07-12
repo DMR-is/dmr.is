@@ -167,6 +167,7 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const newCase = await this.caseService.create({
       applicationId: id,
     })
