@@ -1,6 +1,5 @@
 import reverse from 'lodash/reverse'
 import { useEffect, useMemo, useRef, useState } from 'react'
-// eslint-disable-next-line @typescript-eslint/naming-convention
 import ReactDOM from 'react-dom'
 
 import {
