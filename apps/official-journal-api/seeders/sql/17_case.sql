@@ -38,7 +38,7 @@ VALUES
 		FALSE,
 		'69cd3e90-106e-4b9c-8419-148c29e1738a',
     '9a5ca55f-66c5-4c63-8e69-da8f58c829c4',
-		'fyrir um meðferð forsetavalds í fjarveru forseta Íslands',
+		'um meðferð forsetavalds í fjarveru forseta Íslands',
 		'2024-05-22T09:44:54.089Z',
     'Hér eru skilaboð sem bárust frá innsendanda.'
 	);
