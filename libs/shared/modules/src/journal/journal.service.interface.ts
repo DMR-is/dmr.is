@@ -29,10 +29,10 @@ import {
 import { Result } from '@dmr.is/types'
 
 export interface IJournalService {
+  getAdvert(id: string): Promise<Result<GetAdvertResponse>>
   getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<Result<GetAdvertsResponse>>
-  getAdvert(id: string): Promise<Result<GetAdvertResponse>>
   create(model: Advert): Promise<Result<GetAdvertResponse>>
   updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>>
 
@@ -44,13 +44,12 @@ export interface IJournalService {
   updateDepartment(model: Department): Promise<Result<GetDepartmentResponse>>
 
   getType(id: string): Promise<Result<GetAdvertTypeResponse>>
-
   getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<Result<GetAdvertTypesResponse>>
-  getType(id: string): Promise<Result<GetAdvertTypeResponse>>
   insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>>
   updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>>
+
   getMainCategories(
     params?: GetMainCategoriesQueryParams,
   ): Promise<Result<GetMainCategoriesResponse>>
@@ -62,7 +61,6 @@ export interface IJournalService {
   ): Promise<Result<GetMainCategoryResponse>>
 
   getCategory(id: string): Promise<Result<GetCategoryResponse>>
-
   getCategories(
     params?: GetCategoriesQueryParams,
   ): Promise<Result<GetCategoriesResponse>>
