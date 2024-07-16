@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 
-import { AlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
@@ -81,7 +81,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
 
   const qsp = useMemo(() => {
     const filters = Object.entries(searchParams).filter(
-      ([key, value]) => value !== undefined,
+      ([_, value]) => value !== undefined,
     )
 
     const qs = new URLSearchParams()
@@ -93,7 +93,11 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     return qs.toString()
   }, [searchParams])
 
-  const { data: casesResponse, error } = useCaseOverview({
+  const {
+    data: casesResponse,
+    error,
+    isLoading,
+  } = useCaseOverview({
     qsp: qsp,
     options: {
       keepPreviousData: true,
@@ -121,6 +125,14 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
         { shallow: true },
       )
     }
+  }
+
+  if (isLoading) {
+    return (
+      <CaseOverviewGrid>
+        <SkeletonLoader repeat={3} height={44} />
+      </CaseOverviewGrid>
+    )
   }
 
   if (error) {

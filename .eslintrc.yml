@@ -103,6 +103,11 @@ overrides:
             - camelCase
             - UPPER_CASE
             - PascalCase
+        - selector: import
+          leadingUnderscore: allow
+          format:
+            - camelCase
+            - PascalCase
       '@typescript-eslint/no-empty-interface':
         - error
         - allowSingleExtends: true
