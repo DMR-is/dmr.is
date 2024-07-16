@@ -411,6 +411,7 @@ export class CaseService implements ICaseService {
       limit: pageSize,
       where: whereParams,
       distinct: true,
+      order: [['createdAt', 'DESC']],
       include: [
         ...CASE_RELATIONS,
         {

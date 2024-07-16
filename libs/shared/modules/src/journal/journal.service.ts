@@ -789,7 +789,10 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
-      order: [[{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC']],
+      order: [
+        // [{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC'],
+        ['publicationDate', 'DESC'],
+      ],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))

@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/naming-convention
 import Head from 'next/head'
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
