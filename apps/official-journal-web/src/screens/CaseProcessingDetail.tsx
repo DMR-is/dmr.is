@@ -225,7 +225,6 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
             label={formatMessage(messages.actions.status)}
             size="sm"
             onChange={(e) => {
-              console.log('e', e)
               if (!e) return
               onUpdateCaseStatus({
                 statusId: e.value,

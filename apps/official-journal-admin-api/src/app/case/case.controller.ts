@@ -100,8 +100,6 @@ export class CaseController {
     description: 'Tags',
   })
   async tags(): Promise<GetTagsResponse> {
-    console.log('tags')
-
     const result = await this.caseService.tags()
 
     if (!result.ok) {

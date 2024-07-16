@@ -225,7 +225,6 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 disabled
                 name="institution"
                 value={advert.involvedParty.title}
-                onChange={() => console.log('change')}
                 label={formatMessage(messages.grunnvinnsla.institution)}
                 size="sm"
               />
