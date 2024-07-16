@@ -1,6 +1,7 @@
 import { LoggingModule } from '@dmr.is/logging'
 import {
   CommentModule,
+  PdfModule,
   SharedCaseModule,
   SharedJournalModule,
 } from '@dmr.is/modules'
@@ -15,6 +16,7 @@ import { CaseController } from './case.controller'
     SharedCaseModule,
     SharedJournalModule,
     CommentModule,
+    PdfModule,
   ],
   controllers: [CaseController],
 })

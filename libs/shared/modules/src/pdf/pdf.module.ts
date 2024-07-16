@@ -1,13 +1,15 @@
 import { LoggingModule } from '@dmr.is/logging'
 
-import { forwardRef, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 
-import { SharedCaseModule } from '../case/case.module'
+import { UtilityModule } from '../utility/utility.module'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
 
+export { IPdfService }
+
 @Module({
-  imports: [LoggingModule, forwardRef(() => SharedCaseModule)],
+  imports: [LoggingModule, UtilityModule],
   providers: [
     {
       provide: IPdfService,

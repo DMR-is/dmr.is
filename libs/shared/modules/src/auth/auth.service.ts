@@ -18,10 +18,6 @@ export class AuthService implements IAuthService {
   }
 
   async getAccessToken() {
-    this.logger.info('Getting access token', {
-      category: LOGGING_CATEGORY,
-    })
-
     if (!this.idsToken) {
       this.logger.debug('Access token is missing, fetching a new one', {
         category: LOGGING_CATEGORY,
@@ -67,8 +63,6 @@ export class AuthService implements IAuthService {
         'Missing required environment variables',
       )
     }
-
-    this.logger.info('Refreshing access token', { category: LOGGING_CATEGORY })
 
     const body = {
       client_id: clientId,
