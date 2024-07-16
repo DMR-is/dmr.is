@@ -6,20 +6,56 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseTagEnum, CaseWithAdvert } from '../../gen/fetch'
+import { CaseWithAdvert } from '../../gen/fetch'
+import { useCase, useTags, useUpdateTag } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { enumToOptions, formatDate } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: CaseWithAdvert
+  data: CaseWithAdvert
 }
 
-export const StepYfirlestur = ({ activeCase }: Props) => {
+export const StepYfirlestur = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const tagOptions = enumToOptions(CaseTagEnum)
+  const {
+    data: caseData,
+    error: caseError,
+    isLoading: isLoadingCase,
+    mutate: refetchCase,
+  } = useCase({
+    caseId: data.activeCase.id,
+    options: {
+      fallback: data,
+    },
+  })
+
+  const { data: tagsData } = useTags({
+    options: {},
+  })
+
+  const { trigger: updateTag } = useUpdateTag({
+    caseId: data.activeCase.id,
+    options: {
+      onSuccess: () => refetchCase(),
+    },
+  })
+
+  if (isLoadingCase) {
+    return <div>Loading...</div>
+  }
+
+  if (caseError) {
+    return <div>Error: {caseError.message}</div>
+  }
+
+  if (!caseData) {
+    return <div>No data</div>
+  }
+
+  const { activeCase, advert } = caseData._case
 
   return (
     <GridContainer>
@@ -34,34 +70,46 @@ export const StepYfirlestur = ({ activeCase }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <AdvertDisplay
-            advertNumber={`${activeCase.activeCase.caseNumber}`}
+            advertNumber={`${activeCase.caseNumber}`}
             signatureDate={
-              activeCase.advert.signatureDate
-                ? formatDate(activeCase.advert.signatureDate, 'dd. MMMM yyyy')
+              advert.signatureDate
+                ? formatDate(advert.signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.activeCase.advertTitle}
-            advertSubject={activeCase.advert.title}
-            advertText={activeCase.advert.documents.advert}
-            isLegacy={activeCase.activeCase.isLegacy}
+            advertType={activeCase.advertTitle}
+            advertSubject={advert.title}
+            advertText={advert.documents.advert}
+            isLegacy={activeCase.isLegacy}
           />
         </GridColumn>
       </GridRow>
 
-      <GridRow marginBottom={2} rowGap={2} alignItems="center">
-        <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
-          <Select
-            name="tag"
-            value={tagOptions.find(
-              (o) => o.value === activeCase?.activeCase.tag,
-            )}
-            options={tagOptions}
-            label={formatMessage(messages.yfirlestur.tag)}
-            size="sm"
-            isSearchable={false}
-          />
-        </GridColumn>
-      </GridRow>
+      {tagsData && (
+        <GridRow marginBottom={2} rowGap={2} alignItems="center">
+          <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+            <Select
+              name="tag"
+              defaultValue={{
+                label: activeCase.tag.value,
+                value: activeCase.tag.id,
+              }}
+              options={tagsData.tags.map((tag) => ({
+                label: tag.value,
+                value: tag.id,
+              }))}
+              label={formatMessage(messages.yfirlestur.tag)}
+              size="sm"
+              isSearchable={false}
+              onChange={(option) => {
+                if (!option) return
+                updateTag({
+                  tagId: option.value,
+                })
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+      )}
     </GridContainer>
   )
 }

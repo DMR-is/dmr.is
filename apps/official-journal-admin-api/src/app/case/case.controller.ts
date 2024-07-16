@@ -13,6 +13,7 @@ import {
   GetCasesReponse,
   GetCategoriesResponse,
   GetDepartmentsResponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -24,6 +25,7 @@ import {
   UpdateCategoriesBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
+  UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 
@@ -46,7 +48,6 @@ import {
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -80,6 +81,28 @@ export class CaseController {
     @Query() params?: DefaultSearchParams,
   ): Promise<GetDepartmentsResponse> {
     const result = await this.journalService.getDepartments(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
+  }
+
+  @Get('tags')
+  @ApiOperation({
+    operationId: 'getTags',
+    summary: 'Get tags',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetTagsResponse,
+    description: 'Tags',
+  })
+  async tags(): Promise<GetTagsResponse> {
+    console.log('tags')
+
+    const result = await this.caseService.tags()
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
@@ -255,8 +278,33 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdatePaidBody,
   ): Promise<void> {
-    console.log(body)
     const result = await this.caseService.updatePaid(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/tag')
+  @ApiOperation({
+    operationId: 'updateTag',
+    summary: 'Update tag value of case',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateTagBody,
+    required: true,
+  })
+  async updateTag(
+    @Param('id') id: string,
+    @Body() body: UpdateTagBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateTag(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

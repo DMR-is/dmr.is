@@ -10,6 +10,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
@@ -21,6 +22,7 @@ import {
   UpdateCategoriesBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
+  UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
@@ -36,6 +38,12 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  tags(): Promise<Result<GetTagsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTag(caseId: string, body: UpdateTagBody): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
   }
   updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>> {
     throw new Error('Method not implemented.')

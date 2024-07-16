@@ -42,6 +42,23 @@
         }
       }
     },
+    "/api/v1/cases/tags": {
+      "get": {
+        "operationId": "getTags",
+        "summary": "Get tags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tags",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetTagsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/types": {
       "get": {
         "operationId": "getTypes",
@@ -351,6 +368,29 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdatePaidBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/tag": {
+      "put": {
+        "operationId": "updateTag",
+        "summary": "Update tag value of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTagBody" }
             }
           }
         },
@@ -932,6 +972,39 @@
         },
         "required": ["departments", "paging"]
       },
+      "CaseTag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the case tag",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the case tag",
+            "example": "InReview"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value of the case tag",
+            "example": "Í yfirlestri"
+          }
+        },
+        "required": ["id", "key", "value"]
+      },
+      "GetTagsResponse": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "description": "List of advert categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseTag" }
+          }
+        },
+        "required": ["tags"]
+      },
       "AdvertType": {
         "type": "object",
         "properties": {
@@ -1236,10 +1309,8 @@
             "description": "Status of the case, default to \"Innsent\""
           },
           "tag": {
-            "type": "string",
-            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
-            "example": "Ekki hafið",
-            "description": "Internal tag for the case, default to null"
+            "description": "Internal tag for the case, default to null",
+            "allOf": [{ "$ref": "#/components/schemas/CaseTag" }]
           },
           "createdAt": {
             "type": "string",
@@ -1449,6 +1520,11 @@
         "type": "object",
         "properties": { "paid": { "type": "boolean" } },
         "required": ["paid"]
+      },
+      "UpdateTagBody": {
+        "type": "object",
+        "properties": { "tagId": { "type": "string" } },
+        "required": ["tagId"]
       },
       "UpdatePublishDateBody": {
         "type": "object",

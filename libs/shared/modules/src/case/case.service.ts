@@ -11,11 +11,13 @@ import {
   CaseCommunicationStatus,
   CaseStatus,
   CaseTag,
+  CaseTagEnum,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
   UpdateCaseDepartmentBody,
@@ -24,6 +26,7 @@ import {
   UpdateCategoriesBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
+  UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
@@ -62,6 +65,7 @@ import {
   CaseChannelsDto,
   CaseDto,
   CaseStatusDto,
+  CaseTagDto,
 } from './models'
 import { CASE_RELATIONS } from './relations'
 
@@ -87,9 +91,27 @@ export class CaseService implements ICaseService {
     private readonly caseCategoriesModel: typeof CaseCategoriesDto,
     @InjectModel(AdvertCategoryDTO)
     private readonly advertCategoryModel: typeof AdvertCategoryDTO,
+    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @Audit()
+  @HandleException()
+  async tags(): Promise<Result<GetTagsResponse>> {
+    const tags = await this.caseTagModel.findAll()
+
+    const migrated: CaseTag[] = tags.map((t) => ({
+      id: t.id,
+      key: t.key,
+      value: t.value,
+    }))
+
+    return {
+      ok: true,
+      value: { tags: migrated },
+    }
   }
 
   @Audit()
@@ -170,7 +192,7 @@ export class CaseService implements ICaseService {
         }
 
         const caseTagLookup = await this.utilityService.caseTagLookup(
-          CaseTag.NotStarted,
+          CaseTagEnum.NotStarted,
         )
 
         if (!caseTagLookup.ok) {
@@ -1074,8 +1096,6 @@ export class CaseService implements ICaseService {
   ): Promise<Result<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
 
-    console.log(body)
-
     if (!caseLookup.ok) {
       throw new HttpException(caseLookup.error.message, caseLookup.error.code)
     }
@@ -1083,6 +1103,38 @@ export class CaseService implements ICaseService {
     await this.caseModel.update(
       {
         paid: body.paid,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateTag(
+    caseId: string,
+    body: UpdateTagBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        tagId: body.tagId,
       },
       {
         where: {

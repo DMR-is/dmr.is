@@ -19,6 +19,9 @@ export function HandleApiException(
       } catch (error) {
         const req = args[0]
         const res = args[1]
+
+        console.log(error)
+
         logger.error(`${service}.${method}`, {
           error,
           method,

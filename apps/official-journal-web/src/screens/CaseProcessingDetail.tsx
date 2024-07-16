@@ -240,9 +240,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
           <StepInnsending activeCase={caseData._case} />
         )}
         {step === 'grunnvinnsla' && <StepGrunnvinnsla data={caseData._case} />}
-        {step === 'yfirlestur' && (
-          <StepYfirlestur activeCase={caseData._case} />
-        )}
+        {step === 'yfirlestur' && <StepYfirlestur data={caseData._case} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
 
         {advert.attachments.length > 0 && (
