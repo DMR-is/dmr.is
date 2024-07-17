@@ -12,7 +12,7 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { Result, ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -90,26 +90,25 @@ export class ApplicationService implements IApplicationService {
 
   @Audit()
   @HandleException()
-  async getPrice(applicationId: string): Promise<Result<CasePriceResponse>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+  async getPrice(
+    applicationId: string,
+  ): Promise<ResultWrapper<CasePriceResponse>> {
+    const caseLookup = (
+      await this.utilityService.caseLookupByApplicationId(applicationId)
+    ).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+    const activeCase = caseMigrate(caseLookup)
 
-    const activeCase = caseMigrate(caseLookup.value)
-
-    return {
-      ok: true,
-      value: { price: activeCase.price ?? 0 },
-    }
+    return ResultWrapper.ok({
+      price: activeCase.price || 0,
+    })
   }
 
   @Audit()
   @HandleException()
-  async getApplication(id: string): Promise<Result<GetApplicationResponse>> {
+  async getApplication(
+    id: string,
+  ): Promise<ResultWrapper<GetApplicationResponse>> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -123,26 +122,22 @@ export class ApplicationService implements IApplicationService {
         status: res.status,
         category: LOGGING_CATEGORY,
       })
-      return {
-        ok: false,
-        error: {
-          code: res.status,
-          message: `Could not get application<${id}>`,
-        },
-      }
+      return ResultWrapper.err({
+        code: res.status,
+        message: `Could not get application<${id}>`,
+      })
     }
 
     const application: Application = await res.json()
 
-    return {
-      ok: true,
-      value: { application: application },
-    }
+    return ResultWrapper.ok({
+      application,
+    })
   }
 
   @Audit()
   @HandleException()
-  async submitApplication(id: string): Promise<Result<undefined>> {
+  async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
@@ -153,26 +148,12 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    if (res.status !== 200) {
-      this.logger.error('Error in submitApplication', {
-        status: res.status,
-        category: LOGGING_CATEGORY,
-      })
-      return {
-        ok: false,
-        error: {
-          code: res.status,
-          message: 'Could not submit application',
-        },
-      }
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const newCase = await this.caseService.create({
       applicationId: id,
     })
 
-    return { ok: true, value: undefined }
+    return ResultWrapper.ok(undefined)
   }
 
   @Audit()
@@ -180,7 +161,7 @@ export class ApplicationService implements IApplicationService {
   async updateApplication(
     id: string,
     answers: UpdateApplicationBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -214,83 +195,63 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    return {
-      ok: true,
-      value: undefined,
-    }
+    return ResultWrapper.ok(undefined)
   }
 
   @Audit()
   @HandleException()
-  async postApplication(applicationId: string): Promise<Result<undefined>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+  async postApplication(
+    applicationId: string,
+  ): Promise<ResultWrapper<undefined>> {
+    try {
+      const caseLookup = (
+        await this.utilityService.caseLookupByApplicationId(applicationId)
+      ).unwrap()
 
-    // this means that the case does not exist, so we need to create it
-    if (!caseLookup.ok) {
-      const createResult = await this.caseService.create({
-        applicationId,
+      await this.commentService.create(caseLookup.id, {
+        internal: true,
+        type: CaseCommentType.Submit,
+        comment: null,
+        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        to: null,
       })
 
-      if (!createResult.ok) {
-        return createResult
+      return ResultWrapper.ok(undefined)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        const createResult = (
+          await this.caseService.create({
+            applicationId,
+          })
+        ).unwrap()
+
+        return ResultWrapper.ok(undefined)
       }
-
-      return {
-        ok: true,
-        value: undefined,
-      }
     }
 
-    const applicationLookup = await this.getApplication(applicationId)
-
-    if (!applicationLookup.ok) {
-      return applicationLookup
-    }
-
-    await this.commentService.create(caseLookup.value.id, {
-      internal: true,
-      type: CaseCommentType.Submit,
-      comment: null,
-      from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-      to: null,
-    })
-
-    return {
-      ok: true,
-      value: undefined,
-    }
+    throw new InternalServerErrorException(
+      `Could not post application<${applicationId}>`,
+    )
   }
 
   @Audit()
   @HandleException()
   async getComments(
     applicationId: string,
-  ): Promise<Result<GetCaseCommentsResponse>> {
-    const caseResponse = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+  ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
+    const caseResponse = (
+      await this.utilityService.caseLookupByApplicationId(applicationId)
+    ).unwrap()
 
-    if (!caseResponse.ok) {
-      return caseResponse
-    }
-
-    const commentsResult = await this.commentService.comments(
-      caseResponse.value.id,
-      {
+    const commentsResult = (
+      await this.commentService.comments(caseResponse.id, {
         type: CaseCommentPublicity.External,
-      },
-    )
+      })
+    ).unwrap()
 
-    if (!commentsResult.ok) {
-      return commentsResult
-    }
-
-    return {
-      ok: true,
-      value: commentsResult.value,
-    }
+    return ResultWrapper.ok({
+      comments: commentsResult.comments,
+    })
   }
 
   @Audit()
@@ -298,33 +259,23 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<Result<PostCaseCommentResponse>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+  ): Promise<ResultWrapper<PostCaseCommentResponse>> {
+    const caseLookup = (
+      await this.utilityService.caseLookupByApplicationId(applicationId)
+    ).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
-
-    const createdResult = await this.commentService.create(
-      caseLookup.value.id,
-      {
+    const createdResult = (
+      await this.commentService.create(caseLookup.id, {
         comment: commentBody.comment,
         from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
         to: null,
         internal: false,
         type: CaseCommentType.Comment,
-      },
-    )
+      })
+    ).unwrap()
 
-    if (!createdResult.ok) {
-      return createdResult
-    }
-
-    return {
-      ok: true,
-      value: createdResult.value,
-    }
+    return ResultWrapper.ok({
+      comment: createdResult.comment,
+    })
   }
 }

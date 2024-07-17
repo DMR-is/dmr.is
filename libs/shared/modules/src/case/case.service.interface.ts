@@ -8,26 +8,28 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICaseService {
-  case(id: string): Promise<Result<GetCaseResponse>>
-  cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>>
-  create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>>
-  assign(id: string, userId: string): Promise<Result<undefined>>
+  case(id: string): Promise<ResultWrapper<GetCaseResponse>>
+  cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
+  create(body: PostApplicationBody): Promise<ResultWrapper<CreateCaseResponse>>
+  assign(id: string, userId: string): Promise<ResultWrapper<undefined>>
   updateStatus(
     id: string,
     body: UpdateCaseStatusBody,
-  ): Promise<Result<undefined>>
-  updateNextStatus(id: string): Promise<Result<undefined>>
-  publish(body: PostCasePublishBody): Promise<Result<undefined>>
-  overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
+  ): Promise<ResultWrapper<undefined>>
+  updateNextStatus(id: string): Promise<ResultWrapper<undefined>>
+  publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>>
+  overview(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<EditorialOverviewResponse>>
 
-  updatePrice(caseId: string, price: string): Promise<Result<undefined>>
+  updatePrice(caseId: string, price: string): Promise<ResultWrapper<undefined>>
   updateDepartment(
     caseId: string,
     departmentId: string,
-  ): Promise<Result<undefined>>
+  ): Promise<ResultWrapper<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')
