@@ -4,13 +4,12 @@ import { GetPdfUrlResponse } from '@dmr.is/shared/dto'
 import {
   Controller,
   Get,
-  Header,
   HttpException,
   Inject,
   Param,
   StreamableFile,
 } from '@nestjs/common'
-import { ApiHeader, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
 
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -39,14 +38,6 @@ export class PdfController {
   @ApiResponse({
     status: 200,
     description: 'Case PDF.',
-    content: {
-      'application/pdf': {},
-    },
-  })
-  @Header('Content-Type', 'application/pdf')
-  @ApiHeader({
-    name: 'Content-Type',
-    description: 'application/pdf',
   })
   @Audit()
   async getPdfByCaseId(@Param('id') id: string): Promise<StreamableFile> {
@@ -77,14 +68,6 @@ export class PdfController {
   @ApiResponse({
     status: 200,
     description: 'Case PDF.',
-    content: {
-      'application/pdf': {},
-    },
-  })
-  @Header('Content-Type', 'application/pdf')
-  @ApiHeader({
-    name: 'Content-Type',
-    description: 'application/pdf',
   })
   @Audit()
   async getPdfByApplicationId(

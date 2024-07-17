@@ -1,37 +1,30 @@
-import type { Browser } from 'puppeteer'
 import puppeteer from 'puppeteer'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
 import { Audit, HandleException } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Result } from '@dmr.is/types'
 
 import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  ServiceUnavailableException,
 } from '@nestjs/common'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
-import { IUtilityService } from '../utility/utility.service.interface'
+import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
 
 @Injectable()
 export class PdfService implements IPdfService {
-  private browser: Browser | null = null
   private s3: S3Client | null = null
 
   constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
-  ) {
-    this.initialize()
-  }
+  ) {}
 
   async getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>> {
     const caseLookup = await this.utilityService.caseLookupByApplicationId(
@@ -83,11 +76,11 @@ export class PdfService implements IPdfService {
   @Audit({ logArgs: false })
   @HandleException()
   private async generatePdfFromHtml(html: string): Promise<Result<Buffer>> {
-    if (!this.browser) {
-      throw new ServiceUnavailableException()
-    }
+    const browser = await puppeteer.launch({
+      headless: true,
+    })
 
-    const page = await this.browser.newPage()
+    const page = await browser.newPage()
 
     const htmlTemplate = `
     <!DOCTYPE html>
@@ -107,7 +100,7 @@ export class PdfService implements IPdfService {
 
     const pdf = await page.pdf()
 
-    await this.browser.close()
+    await browser.close()
 
     return {
       ok: true,
@@ -189,12 +182,11 @@ export class PdfService implements IPdfService {
 
   @Audit()
   private async initialize() {
-    this.browser = await puppeteer.launch()
-
     const accessKey = process.env.AWS_ACCESS_KEY_ID ?? ''
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? ''
 
     if (!accessKey || !secretAccessKey) {
+      console.log('Missing environment variables')
       throw new InternalServerErrorException('Missing environment variables')
     }
 
