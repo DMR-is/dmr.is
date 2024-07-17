@@ -90,7 +90,7 @@ export class PdfController {
   async getPdfByApplicationId(
     @Param('id') id: string,
   ): Promise<StreamableFile> {
-    const result = await this.pdfService.getPdfByCaseId(id)
+    const result = await this.pdfService.getPdfByApplicationId(id)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

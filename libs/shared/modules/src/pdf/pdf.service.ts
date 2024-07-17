@@ -15,6 +15,7 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
@@ -31,8 +32,52 @@ export class PdfService implements IPdfService {
   ) {
     this.initialize()
   }
-  getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>> {
-    throw new Error('Method not implemented.')
+
+  async getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>> {
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+    )
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const migrated = caseMigrate(caseLookup.value)
+
+    const theCase = await this.utilityService.getCaseWithAdvert(migrated.id)
+    if (!theCase.ok) {
+      return theCase
+    }
+
+    const { activeCase, advert } = theCase.value
+
+    if (!activeCase.publishedAt) {
+      const pdf = await this.generatePdfFromHtml(advert.documents.full)
+
+      if (!pdf.ok) {
+        return pdf
+      }
+
+      return {
+        ok: true,
+        value: pdf.value,
+      }
+    }
+
+    const pdf = await this.generatePdfFromHtml(
+      activeCase.isLegacy
+        ? dirtyClean(advert.documents.full as HTMLText)
+        : advert.documents.full,
+    )
+
+    if (!pdf.ok) {
+      return pdf
+    }
+
+    return {
+      ok: true,
+      value: pdf.value,
+    }
   }
 
   @Audit({ logArgs: false })
