@@ -1,9 +1,4 @@
-import {
-  ICaseService,
-  ICommentService,
-  IJournalService,
-  IPdfService,
-} from '@dmr.is/modules'
+import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
   EditorialOverviewResponse,
@@ -12,7 +7,6 @@ import {
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
-  GetCasePdfResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -64,34 +58,7 @@ export class CaseController {
 
     @Inject(ICommentService)
     private readonly caseCommentService: ICommentService,
-
-    @Inject(IPdfService) private readonly pdfService: IPdfService,
   ) {}
-
-  @Get(':id/pdf')
-  @ApiOperation({
-    operationId: 'getCasePdf',
-    summary: 'Get case PDF.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCasePdfResponse,
-    description: 'Case PDF.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  async pdf(@Param('id') id: string): Promise<GetCasePdfResponse> {
-    const result = await this.pdfService.getCasePdf(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
-  }
 
   @Get('departments')
   @ApiOperation({

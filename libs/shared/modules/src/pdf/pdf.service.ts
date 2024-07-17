@@ -3,7 +3,6 @@ import puppeteer from 'puppeteer'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
 import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { GetCasePdfResponse } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 
 import {
@@ -32,6 +31,9 @@ export class PdfService implements IPdfService {
   ) {
     this.initialize()
   }
+  getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>> {
+    throw new Error('Method not implemented.')
+  }
 
   @Audit({ logArgs: false })
   @HandleException()
@@ -44,7 +46,7 @@ export class PdfService implements IPdfService {
 
     const htmlTemplate = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="is">
     <head>
       <meta charset="UTF-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -102,7 +104,7 @@ export class PdfService implements IPdfService {
 
   @Audit()
   @HandleException()
-  async getCasePdf(caseId: string): Promise<Result<GetCasePdfResponse>> {
+  async getPdfByCaseId(caseId: string): Promise<Result<Buffer>> {
     const caseLookup = await this.utilityService.getCaseWithAdvert(caseId)
 
     if (!caseLookup.ok) {
@@ -120,10 +122,7 @@ export class PdfService implements IPdfService {
 
       return {
         ok: true,
-        value: {
-          url: `data:application/pdf;base64,${pdf.value.toString('base64')}`,
-          pdf: pdf.value,
-        },
+        value: pdf.value,
       }
     }
 
@@ -139,7 +138,7 @@ export class PdfService implements IPdfService {
 
     return {
       ok: true,
-      value: { pdf: pdf.value, url: '' },
+      value: pdf.value,
     }
   }
 

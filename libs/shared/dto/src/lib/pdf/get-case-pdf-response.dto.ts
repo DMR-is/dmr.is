@@ -1,16 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class GetCasePdfResponse {
+export class GetPdfUrlResponse {
   @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: 'The PDF file',
-  })
-  pdf!: Buffer
-
-  @ApiProperty({
-    type: 'string',
-    description: 'The URL to the PDF file',
+    type: String,
   })
   url!: string
 }
