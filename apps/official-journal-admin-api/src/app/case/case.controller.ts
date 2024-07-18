@@ -21,6 +21,7 @@ import {
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Body,
@@ -28,7 +29,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   Inject,
   NotFoundException,
   Param,
@@ -71,13 +71,7 @@ export class CaseController {
     description: 'Departments',
   })
   async departments(): Promise<GetDepartmentsResponse> {
-    const result = await this.journalService.getDepartments()
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.journalService.getDepartments())
   }
 
   @Get('types')
@@ -94,15 +88,7 @@ export class CaseController {
     @Query()
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    const result = await this.journalService.getTypes(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
   @Get('categories')
@@ -119,13 +105,7 @@ export class CaseController {
     @Query()
     params?: GetCategoriesQueryParams,
   ): Promise<GetCategoriesResponse> {
-    const result = await this.journalService.getCategories(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
 
   @Get('overview')
@@ -141,13 +121,7 @@ export class CaseController {
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
-    const result = await this.caseService.overview(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.overview(params))
   }
 
   @Put(':id/price')
@@ -169,11 +143,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
-    const result = await this.caseService.updatePrice(id, body.price)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updatePrice(id, body.price))
   }
 
   @Put(':id/department')
@@ -195,14 +165,9 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
-    const result = await this.caseService.updateDepartment(
-      id,
-      body.departmentId,
+    ResultWrapper.unwrap(
+      await this.caseService.updateDepartment(id, body.departmentId),
     )
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
   }
 
   @Post(':id/status/next')
@@ -217,11 +182,7 @@ export class CaseController {
     required: true,
   })
   async updateNextStatus(@Param('id') id: string): Promise<void> {
-    const result = await this.caseService.updateNextStatus(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateNextStatus(id))
   }
 
   @Post(':id/assign/:userId')
@@ -244,11 +205,7 @@ export class CaseController {
     @Param('id') id: string,
     @Param('userId') userId: string,
   ): Promise<void> {
-    const result = await this.caseService.assign(id, userId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.assign(id, userId))
   }
 
   @Post(':id/status')
@@ -270,11 +227,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseStatusBody,
   ): Promise<void> {
-    const result = await this.caseService.updateStatus(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateStatus(id, body))
   }
 
   @Get(':id')
@@ -302,13 +255,7 @@ export class CaseController {
     required: true,
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
-    const result = await this.caseService.case(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.case(id))
   }
 
   @Post('')
@@ -328,13 +275,7 @@ export class CaseController {
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
-    const result = await this.caseService.create(body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.create(body))
   }
 
   @Get('')
@@ -348,12 +289,7 @@ export class CaseController {
     description: 'All cases.',
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    const result = await this.caseService.cases(params)
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.cases(params))
   }
 
   @Post('publish')
@@ -367,11 +303,7 @@ export class CaseController {
   })
   @ApiNoContentResponse()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
-    const result = await this.caseService.publish(body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.publish(body))
   }
 
   @Get(':id/comments')
@@ -388,13 +320,9 @@ export class CaseController {
     @Param('id') id: string,
     @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
-    const results = await this.caseCommentService.comments(id, params)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-
-    return results.value
+    return ResultWrapper.unwrap(
+      await this.caseCommentService.comments(id, params),
+    )
   }
 
   @Get(':id/comments/:commentId')
@@ -411,12 +339,9 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    const results = await this.caseCommentService.comment(id, commentId)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-    return results.value
+    return ResultWrapper.unwrap(
+      await this.caseCommentService.comment(id, commentId),
+    )
   }
 
   @Post(':id/comments')
@@ -433,12 +358,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
-    const results = await this.caseCommentService.create(id, body)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-    return results.value
+    return ResultWrapper.unwrap(await this.caseCommentService.create(id, body))
   }
 
   @Delete(':id/comments/:commentId')

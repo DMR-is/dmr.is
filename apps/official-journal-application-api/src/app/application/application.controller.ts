@@ -1,7 +1,5 @@
 import { IApplicationService } from '@dmr.is/modules'
 import {
-  Application,
-  CaseComment,
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
@@ -9,13 +7,13 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Body,
   Controller,
   Get,
   HttpCode,
-  HttpException,
   Inject,
   Param,
   Post,
@@ -59,13 +57,9 @@ export class ApplicationController {
   async getPrice(
     @Param('id') applicationId: string,
   ): Promise<CasePriceResponse> {
-    const result = await this.applicationService.getPrice(applicationId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(
+      await this.applicationService.getPrice(applicationId),
+    )
   }
 
   @Get(':id')
@@ -87,15 +81,9 @@ export class ApplicationController {
   async getApplication(
     @Param('id') id: string,
   ): Promise<GetApplicationResponse> {
-    const result = await this.applicationService.getApplication(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      application: result.value.application,
-    })
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplication(id),
+    )
   }
 
   @Post(':id/submit')
@@ -114,9 +102,7 @@ export class ApplicationController {
   @HttpCode(204)
   @ApiExcludeEndpoint()
   async submitApplication(@Param('id') id: string) {
-    const results = await this.applicationService.submitApplication(id)
-
-    return Promise.resolve()
+    ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
   }
 
   @Put(':id')
@@ -142,11 +128,9 @@ export class ApplicationController {
     @Param('id') id: string,
     @Body() body: UpdateApplicationBody,
   ) {
-    const result = await this.applicationService.updateApplication(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(id, body),
+    )
   }
 
   @Post(':id/post')
@@ -164,13 +148,9 @@ export class ApplicationController {
   @ApiNoContentResponse()
   @HttpCode(204)
   async postApplication(@Param('id') applicationId: string) {
-    const results = await this.applicationService.postApplication(applicationId)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-
-    return Promise.resolve()
+    return ResultWrapper.unwrap(
+      await this.applicationService.postApplication(applicationId),
+    )
   }
 
   @Get(':id/comments')
@@ -184,15 +164,9 @@ export class ApplicationController {
   async getComments(
     @Param('id') applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
-    const result = await this.applicationService.getComments(applicationId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      comments: result.value.comments,
-    })
+    return ResultWrapper.unwrap(
+      await this.applicationService.getComments(applicationId),
+    )
   }
 
   @Post(':id/comments')
@@ -207,17 +181,8 @@ export class ApplicationController {
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,
   ): Promise<PostCaseCommentResponse> {
-    const result = await this.applicationService.postComment(
-      applicationId,
-      commentBody,
+    return ResultWrapper.unwrap(
+      await this.applicationService.postComment(applicationId, commentBody),
     )
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      comment: result.value.comment,
-    })
   }
 }

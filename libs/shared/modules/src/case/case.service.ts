@@ -463,11 +463,6 @@ export class CaseService implements ICaseService {
       // })
     })
 
-    this.logger.info('publish, successfully publised cases', {
-      caseIds: body.caseIds,
-      category: LOGGING_CATEGORY,
-    })
-
     return ResultWrapper.ok(undefined)
   }
 

@@ -38,6 +38,12 @@ export class ResultWrapper<
     return result.ok
   }
 
+  static unwrap<OkType, ErrType extends GenericError = GenericError>(
+    result: ResultWrapper<OkType, ErrType>,
+  ): OkType {
+    return result.unwrap()
+  }
+
   isOk(): boolean {
     return this.result.ok
   }
