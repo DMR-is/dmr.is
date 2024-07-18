@@ -6,7 +6,7 @@ import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Inject, NotFoundException, Res } from '@nestjs/common'
+import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
@@ -32,8 +32,6 @@ import {
   AdvertTypeDTO,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
-
-const LOGGING_CATEGORY = 'UtilityService'
 
 export class UtilityService implements IUtilityService {
   constructor(

@@ -12,7 +12,7 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
-import { Result, ResultWrapper } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -219,11 +219,11 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok(undefined)
     } catch (error) {
       if (error instanceof NotFoundException) {
-        const createResult = (
-          await this.caseService.create({
-            applicationId,
-          })
-        ).unwrap()
+        const createResult = await this.caseService.create({
+          applicationId,
+        })
+
+        createResult.unwrap()
 
         return ResultWrapper.ok(undefined)
       }

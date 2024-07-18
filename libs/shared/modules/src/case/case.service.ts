@@ -115,11 +115,16 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<CreateCaseResponse>> {
     return await this.sequelize.transaction<ResultWrapper<CreateCaseResponse>>(
       async (t) => {
-        const existingCase = (
+        const existingCase =
           await this.utilityService.caseLookupByApplicationId(
             body.applicationId,
           )
-        ).unwrap()
+
+        if (existingCase.isOk()) {
+          throw new BadRequestException(
+            'Case already exists for this application',
+          )
+        }
 
         const { application } = (
           await this.applicationService.getApplication(body.applicationId)
@@ -557,9 +562,13 @@ export class CaseService implements ICaseService {
         ? CaseStatus.Published
         : status.value
 
-    const nextStatusLookup = (
-      await this.utilityService.caseStatusLookup(nextStatus)
-    ).unwrap()
+    const nextStatusLookup = await this.utilityService.caseStatusLookup(
+      nextStatus,
+    )
+
+    if (!nextStatusLookup.isOk()) {
+      throw new BadRequestException('Invalid status')
+    }
 
     return this.updateStatus(id, { status: nextStatus })
   }
@@ -570,7 +579,9 @@ export class CaseService implements ICaseService {
     caseId: string,
     price: string,
   ): Promise<ResultWrapper<undefined>> {
-    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    caseLookup.unwrap()
 
     await this.caseModel.update(
       {
@@ -609,7 +620,7 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const updateApplicationResult = (
+    const updateApplicationResult =
       await this.applicationService.updateApplication(
         caseLookup.applicationId,
         {
@@ -620,7 +631,10 @@ export class CaseService implements ICaseService {
           },
         },
       )
-    ).unwrap()
+
+    if (!updateApplicationResult.isOk()) {
+      throw new BadRequestException('Failed to update application')
+    }
 
     return ResultWrapper.ok(undefined)
   }

@@ -1,9 +1,8 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
-  CaseStatus,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
@@ -17,13 +16,9 @@ import {
   PostCasePublishBody,
   UpdateCaseStatusBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { GenericError, ResultWrapper } from '@dmr.is/types'
 
-import {
-  BadRequestException,
-  Inject,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 
 import { ICaseService } from './case.service.interface'
 
@@ -31,32 +26,42 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  overview(
+    params?: GetCasesQuery | undefined,
+  ): Promise<ResultWrapper<EditorialOverviewResponse, GenericError>> {
+    throw new Error('Method not implemented.')
+  }
   updateDepartment(
     caseId: string,
     departmentId: string,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePrice(caseId: string, price: string): Promise<Result<undefined>> {
+  updatePrice(
+    caseId: string,
+    price: string,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateNextStatus(id: string): Promise<Result<undefined>> {
+  updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateStatus(
     id: string,
     body: UpdateCaseStatusBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  assign(id: string, userId: string): Promise<Result<undefined>> {
+  assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+  publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
 
-  create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
+  create(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper<CreateCaseResponse>> {
     this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
@@ -81,12 +86,12 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  case(id: string): Promise<Result<GetCaseResponse>> {
+  case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
 
-  cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>> {
+  cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
     throw new Error('Method not implemented.')
   }
 
@@ -105,52 +110,6 @@ export class CaseServiceMock implements ICaseService {
 
     return Promise.resolve({
       users: filtered,
-    })
-  }
-
-  async overview(
-    params?: GetCasesQuery,
-  ): Promise<Result<EditorialOverviewResponse>> {
-    const submitted: Case[] = []
-    const inProgress: Case[] = []
-    const inReview: Case[] = []
-    const ready: Case[] = []
-
-    if (!params?.status) {
-      throw new BadRequestException('Missing status')
-    }
-
-    ALL_MOCK_CASES.forEach((c) => {
-      if (c.status === CaseStatus.Submitted) {
-        submitted.push(c)
-      } else if (c.status === CaseStatus.InProgress) {
-        inProgress.push(c)
-      } else if (c.status === CaseStatus.InReview) {
-        inReview.push(c)
-      } else if (c.status === CaseStatus.ReadyForPublishing) {
-        ready.push(c)
-      }
-    })
-
-    const response = await this.cases(params)
-    if (!response.ok) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
-
-    const { cases, paging } = response.value
-
-    return Promise.resolve({
-      ok: true,
-      value: {
-        cases: cases as unknown as Case[],
-        totalItems: {
-          submitted: submitted.length,
-          inProgress: inProgress.length,
-          inReview: inReview.length,
-          ready: ready.length,
-        },
-        paging,
-      },
     })
   }
 }

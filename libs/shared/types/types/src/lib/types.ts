@@ -38,6 +38,10 @@ export class ResultWrapper<
     return result.ok
   }
 
+  isOk(): boolean {
+    return this.result.ok
+  }
+
   unwrap(): OkType {
     if (this.result.ok) {
       return this.result.value

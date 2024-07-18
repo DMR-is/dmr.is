@@ -10,7 +10,7 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
-import { Result, ResultWrapper } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 import { mapCaseCommentTypeToCaseCommentTitle } from '@dmr.is/utils'
 
 import {
@@ -23,7 +23,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
-import { CaseDto, CaseStatusDto } from '../case/models'
+import { CaseStatusDto } from '../case/models'
 import {
   caseCommentMigrate,
   caseCommentTitleMapper,
