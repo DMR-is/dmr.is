@@ -1,3 +1,4 @@
+import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IJournalService } from '@dmr.is/modules'
 import {
@@ -53,6 +54,7 @@ export class JournalController {
     required: true,
     description: 'Advert ID.',
   })
+  @LogMethod()
   async advert(@Param('id') id: string): Promise<GetAdvertResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
@@ -68,6 +70,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async adverts(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
@@ -86,6 +89,7 @@ export class JournalController {
     required: true,
     description: 'Department ID.',
   })
+  @LogMethod()
   async department(@Param('id') id: string): Promise<GetDepartmentResponse> {
     return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
   }
@@ -101,6 +105,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
@@ -122,6 +127,7 @@ export class JournalController {
     required: true,
     description: 'Advert type ID.',
   })
+  @LogMethod()
   async type(@Param('id') id: string): Promise<GetAdvertTypeResponse> {
     return ResultWrapper.unwrap(await this.journalService.getType(id))
   }
@@ -137,6 +143,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
@@ -155,6 +162,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async mainCategories(
     @Query()
     params?: GetMainCategoriesQueryParams,
@@ -175,6 +183,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async categories(
     @Query()
     params?: GetCategoriesQueryParams,
@@ -193,6 +202,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async institutions(
     @Query()
     params?: GetInstitutionsQueryParams,
@@ -213,6 +223,7 @@ export class JournalController {
     type: ValidationResponse,
     description: 'Query string validation failed.',
   })
+  @LogMethod()
   async signatures(
     @Query() params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {

@@ -1,3 +1,4 @@
+import { LogMethod } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
@@ -54,6 +55,7 @@ export class ApplicationController {
   @ApiOkResponse({
     type: CasePriceResponse,
   })
+  @LogMethod()
   async getPrice(
     @Param('id') applicationId: string,
   ): Promise<CasePriceResponse> {
@@ -78,6 +80,7 @@ export class ApplicationController {
     required: true,
     allowEmptyValue: false,
   })
+  @LogMethod()
   async getApplication(
     @Param('id') id: string,
   ): Promise<GetApplicationResponse> {
@@ -101,6 +104,7 @@ export class ApplicationController {
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiExcludeEndpoint()
+  @LogMethod()
   async submitApplication(@Param('id') id: string) {
     ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
   }
@@ -124,6 +128,7 @@ export class ApplicationController {
     description: 'Update application body, answers to update.',
   })
   @ApiExcludeEndpoint()
+  @LogMethod()
   async updateApplication(
     @Param('id') id: string,
     @Body() body: UpdateApplicationBody,
@@ -147,6 +152,7 @@ export class ApplicationController {
   })
   @ApiNoContentResponse()
   @HttpCode(204)
+  @LogMethod()
   async postApplication(@Param('id') applicationId: string) {
     return ResultWrapper.unwrap(
       await this.applicationService.postApplication(applicationId),
@@ -161,6 +167,7 @@ export class ApplicationController {
   @ApiOkResponse({
     type: GetCaseCommentsResponse,
   })
+  @LogMethod()
   async getComments(
     @Param('id') applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
@@ -177,6 +184,7 @@ export class ApplicationController {
     operationId: 'postComment',
     summary: 'Add comment to application.',
   })
+  @LogMethod()
   async postComment(
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,

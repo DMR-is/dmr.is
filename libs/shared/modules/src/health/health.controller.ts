@@ -1,3 +1,5 @@
+import { LogMethod } from '@dmr.is/decorators'
+
 import { Controller, Get } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 
@@ -13,6 +15,7 @@ export class HealthController {
     status: 200,
     description: 'Health check endpoint.',
   })
+  @LogMethod()
   health(): Promise<string> {
     return Promise.resolve('OK')
   }

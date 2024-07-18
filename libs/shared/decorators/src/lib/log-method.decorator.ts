@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
 
-type AuditParams = {
-  logArgs: boolean
-}
-
-export function Audit({ logArgs }: AuditParams = { logArgs: true }) {
+export function LogMethod(logArgs: boolean | undefined = true) {
   return function (
     target: any,
     method: string,

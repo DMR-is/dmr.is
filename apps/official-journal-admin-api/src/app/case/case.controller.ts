@@ -1,3 +1,4 @@
+import { LogMethod } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
@@ -70,6 +71,7 @@ export class CaseController {
     status: 200,
     description: 'Departments',
   })
+  @LogMethod()
   async departments(): Promise<GetDepartmentsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getDepartments())
   }
@@ -84,6 +86,7 @@ export class CaseController {
     operationId: 'getTypes',
     summary: 'Get advert types.',
   })
+  @LogMethod()
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
@@ -101,6 +104,7 @@ export class CaseController {
     type: GetCategoriesResponse,
     description: 'Categories',
   })
+  @LogMethod()
   async categories(
     @Query()
     params?: GetCategoriesQueryParams,
@@ -118,6 +122,7 @@ export class CaseController {
     type: EditorialOverviewResponse,
     description: 'Cases overview.',
   })
+  @LogMethod()
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
@@ -139,6 +144,7 @@ export class CaseController {
     type: UpdateCasePriceBody,
     required: true,
   })
+  @LogMethod()
   async updatePrice(
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
@@ -161,6 +167,7 @@ export class CaseController {
     type: UpdateCaseDepartmentBody,
     required: true,
   })
+  @LogMethod()
   async updateDepartment(
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
@@ -181,6 +188,7 @@ export class CaseController {
     type: 'string',
     required: true,
   })
+  @LogMethod()
   async updateNextStatus(@Param('id') id: string): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateNextStatus(id))
   }
@@ -201,6 +209,7 @@ export class CaseController {
     type: 'string',
     required: true,
   })
+  @LogMethod()
   async assign(
     @Param('id') id: string,
     @Param('userId') userId: string,
@@ -223,6 +232,7 @@ export class CaseController {
     type: UpdateCaseStatusBody,
     required: true,
   })
+  @LogMethod()
   async updateStatus(
     @Param('id') id: string,
     @Body() body: UpdateCaseStatusBody,
@@ -254,6 +264,7 @@ export class CaseController {
     type: 'string',
     required: true,
   })
+  @LogMethod()
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
     return ResultWrapper.unwrap(await this.caseService.case(id))
   }
@@ -272,6 +283,7 @@ export class CaseController {
     type: PostApplicationBody,
     required: true,
   })
+  @LogMethod()
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
@@ -288,6 +300,7 @@ export class CaseController {
     type: GetCasesReponse,
     description: 'All cases.',
   })
+  @LogMethod()
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.cases(params))
   }
@@ -302,6 +315,7 @@ export class CaseController {
     required: true,
   })
   @ApiNoContentResponse()
+  @LogMethod()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.publish(body))
   }
@@ -316,6 +330,7 @@ export class CaseController {
     type: GetCaseCommentsResponse,
     description: 'Comments for case',
   })
+  @LogMethod()
   async getComments(
     @Param('id') id: string,
     @Query() params?: GetCaseCommentsQuery,
@@ -335,6 +350,7 @@ export class CaseController {
     type: GetCaseCommentResponse,
     description: 'Comment for case',
   })
+  @LogMethod()
   async getComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,
@@ -354,6 +370,7 @@ export class CaseController {
     status: 200,
     description: 'Comment created',
   })
+  @LogMethod()
   async createComment(
     @Param('id') id: string,
     @Body() body: PostCaseComment,
@@ -367,6 +384,7 @@ export class CaseController {
     summary: 'Delete comment from case',
   })
   @ApiNoContentResponse()
+  @LogMethod()
   async deleteComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,

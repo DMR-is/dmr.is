@@ -1,4 +1,4 @@
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { HandleException, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -88,7 +88,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getPrice(
     applicationId: string,
@@ -104,7 +104,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getApplication(
     id: string,
@@ -135,7 +135,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
     const res = await this.xroadFetch(
@@ -156,7 +156,7 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok()
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateApplication(
     id: string,
@@ -198,7 +198,7 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok()
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async postApplication(
     applicationId: string,
@@ -234,7 +234,7 @@ export class ApplicationService implements IApplicationService {
     )
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getComments(
     applicationId: string,
@@ -254,7 +254,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async postComment(
     applicationId: string,

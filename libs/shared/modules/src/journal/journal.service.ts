@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { LogMethod, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
@@ -96,7 +96,7 @@ export class JournalService implements IJournalService {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async create(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!model || !model.department) {
@@ -141,7 +141,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ advert: advertMigrate(newlyCreatedAd) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!model) {
@@ -171,7 +171,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ advert: advertMigrate(ad[1][0]) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async insertDepartment(
     model: Department,
@@ -188,7 +188,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ department: advertDepartmentMigrate(dep) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateDepartment(
     model: Department,
@@ -211,7 +211,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async insertInstitution(
     model: Institution,
@@ -228,7 +228,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(inst) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateInstitution(
     model: Institution,
@@ -251,7 +251,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getSignatures(
     params?: GetAdvertSignatureQuery,
@@ -259,13 +259,13 @@ export class JournalService implements IJournalService {
     throw new NotImplementedException()
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   error(): void {
     throw new NotImplementedException()
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async insertType(
     model: AdvertType,
@@ -283,7 +283,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateType(
     model: AdvertType,
@@ -308,7 +308,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type[1][0]) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async insertMainCategory(
     model: MainCategory,
@@ -328,7 +328,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateMainCategory(
     model: MainCategory,
@@ -355,7 +355,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async insertCategory(
     model: Category,
@@ -373,7 +373,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async updateCategory(
     model: Category,
@@ -398,7 +398,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category[1][0]) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getMainCategories(
     params?: GetMainCategoriesQueryParams,
@@ -428,7 +428,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getDepartment(
     id: string,
@@ -448,7 +448,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ department: advertDepartmentMigrate(department) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getDepartments(
     params?: GetDepartmentsQueryParams,
@@ -484,7 +484,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
@@ -501,7 +501,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getTypes(
     params?: GetAdvertTypesQueryParams,
@@ -538,7 +538,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getInstitution(
     id: string,
@@ -556,7 +556,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(party) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getInstitutions(
     params?: GetInstitutionsQueryParams,
@@ -585,7 +585,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!id) {
@@ -604,7 +604,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getCategories(
     params?: GetCategoriesQueryParams,
@@ -634,7 +634,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
@@ -670,7 +670,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getAdverts(
     params?: GetAdvertsQueryParams,

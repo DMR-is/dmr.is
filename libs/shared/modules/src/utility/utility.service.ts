@@ -1,6 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { LogMethod, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
@@ -61,7 +61,7 @@ export class UtilityService implements IUtilityService {
     this.logger.info('Using UtilityService')
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async categoryLookup(
     categoryId: string,
@@ -75,7 +75,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(categoryLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async typeLookup(type: string): Promise<ResultWrapper<AdvertTypeDTO>> {
     const typeLookup = await this.typeDto.findByPk(type, {
@@ -89,7 +89,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(typeLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async userLookup(userId: string): Promise<ResultWrapper<User>> {
     const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
@@ -101,7 +101,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(userLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getNextSerialNumber(
     departmentId: string,
@@ -120,7 +120,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(serialNumber ? serialNumber + 1 : 1)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async departmentLookup(
     departmentId: string,
@@ -134,7 +134,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(departmentLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async caseCommunicationStatusLookup(
     status: string,
@@ -152,7 +152,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(statusLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async caseTagLookup(tag: string): Promise<ResultWrapper<CaseStatusDto>> {
     const tagLookup = await this.caseTagModel.findOne({
@@ -168,7 +168,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(tagLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async caseStatusLookup(
     status: string,
@@ -186,7 +186,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(statusLookup)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async generateCaseNumber(): Promise<ResultWrapper<string>> {
     const now = new Date().toISOString()
@@ -210,7 +210,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(caseNumber)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async caseLookupByApplicationId(
     applicationId: string,
@@ -231,7 +231,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(found)
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async caseLookup(
     caseId: string,
@@ -252,7 +252,7 @@ export class UtilityService implements IUtilityService {
     })
   }
 
-  @Audit()
+  @LogMethod()
   @HandleException()
   async getCaseWithAdvert(
     caseId: string,
