@@ -153,7 +153,7 @@ export class ApplicationService implements IApplicationService {
       applicationId: id,
     })
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -195,7 +195,7 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -216,7 +216,7 @@ export class ApplicationService implements IApplicationService {
         to: null,
       })
 
-      return ResultWrapper.ok(undefined)
+      return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
         const createResult = await this.caseService.create({
@@ -225,7 +225,7 @@ export class ApplicationService implements IApplicationService {
 
         createResult.unwrap()
 
-        return ResultWrapper.ok(undefined)
+        return ResultWrapper.ok()
       }
     }
 

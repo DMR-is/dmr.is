@@ -463,7 +463,7 @@ export class CaseService implements ICaseService {
       // })
     })
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -500,7 +500,7 @@ export class CaseService implements ICaseService {
       to: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
     })
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -534,7 +534,7 @@ export class CaseService implements ICaseService {
       to: null,
     })
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -589,7 +589,7 @@ export class CaseService implements ICaseService {
       },
     )
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 
   @Audit()
@@ -631,6 +631,6 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Failed to update application')
     }
 
-    return ResultWrapper.ok(undefined)
+    return ResultWrapper.ok()
   }
 }

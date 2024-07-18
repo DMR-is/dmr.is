@@ -21,9 +21,12 @@ export class ResultWrapper<
   }
 
   static ok = <OkType, ErrType extends GenericError>(
-    value: OkType,
+    value?: OkType,
   ): ResultWrapper<OkType, ErrType> => {
-    return new ResultWrapper<OkType, ErrType>({ ok: true, value })
+    return new ResultWrapper<OkType, ErrType>({
+      ok: true,
+      value: value ? value : (undefined as unknown as OkType),
+    })
   }
 
   static err = <OkType, ErrType extends GenericError>(
