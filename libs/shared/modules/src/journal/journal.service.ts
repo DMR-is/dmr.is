@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { LogMethod, HandleException } from '@dmr.is/decorators'
+import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
@@ -30,8 +30,8 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-import { GenericError, ResultWrapper } from '@dmr.is/types'
-import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
+import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -66,7 +66,6 @@ import {
   AdvertTypeDTO,
 } from './models'
 
-const LOGGING_CATEGORY = 'JournalService'
 const DEFAULT_PAGE_SIZE = 20
 @Injectable()
 export class JournalService implements IJournalService {
@@ -96,8 +95,7 @@ export class JournalService implements IJournalService {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async create(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!model || !model.department) {
       throw new BadRequestException()
@@ -141,8 +139,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ advert: advertMigrate(newlyCreatedAd) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!model) {
       throw new BadRequestException()
@@ -171,8 +168,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ advert: advertMigrate(ad[1][0]) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async insertDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
@@ -188,8 +184,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ department: advertDepartmentMigrate(dep) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
@@ -211,8 +206,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async insertInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>> {
@@ -228,8 +222,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(inst) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>> {
@@ -251,22 +244,19 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
     throw new NotImplementedException()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   error(): void {
     throw new NotImplementedException()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async insertType(
     model: AdvertType,
   ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
@@ -283,8 +273,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateType(
     model: AdvertType,
   ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
@@ -308,8 +297,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type[1][0]) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async insertMainCategory(
     model: MainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
@@ -328,8 +316,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateMainCategory(
     model: MainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
@@ -355,8 +342,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async insertCategory(
     model: Category,
   ): Promise<ResultWrapper<GetCategoryResponse>> {
@@ -373,8 +359,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateCategory(
     model: Category,
   ): Promise<ResultWrapper<GetCategoryResponse>> {
@@ -398,8 +383,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category[1][0]) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getMainCategories(
     params?: GetMainCategoriesQueryParams,
   ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
@@ -428,8 +412,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getDepartment(
     id: string,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
@@ -448,8 +431,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ department: advertDepartmentMigrate(department) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getDepartments(
     params?: GetDepartmentsQueryParams,
   ): Promise<ResultWrapper<GetDepartmentsResponse>> {
@@ -484,8 +466,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
       include: AdvertDepartmentDTO,
@@ -501,8 +482,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getTypes(
     params?: GetAdvertTypesQueryParams,
   ): Promise<ResultWrapper<GetAdvertTypesResponse>> {
@@ -538,8 +518,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getInstitution(
     id: string,
   ): Promise<ResultWrapper<GetInstitutionResponse>> {
@@ -556,8 +535,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(party) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getInstitutions(
     params?: GetInstitutionsQueryParams,
   ): Promise<ResultWrapper<GetInstitutionsResponse>> {
@@ -585,8 +563,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!id) {
       throw new BadRequestException()
@@ -604,8 +581,7 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getCategories(
     params?: GetCategoriesQueryParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
@@ -634,8 +610,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
       throw new BadRequestException()
@@ -670,8 +645,7 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {

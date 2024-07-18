@@ -2,7 +2,7 @@ import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { LogMethod, HandleException } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -54,8 +54,6 @@ import {
 } from './models'
 import { CASE_RELATIONS } from './relations'
 
-const LOGGING_CATEGORY = 'CaseService'
-
 @Injectable()
 export class CaseService implements ICaseService {
   constructor(
@@ -79,8 +77,7 @@ export class CaseService implements ICaseService {
     this.logger.info('Using CaseService')
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async overview(
     params?: GetCasesQuery | undefined,
   ): Promise<ResultWrapper<EditorialOverviewResponse>> {
@@ -108,8 +105,7 @@ export class CaseService implements ICaseService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async create(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
@@ -292,8 +288,7 @@ export class CaseService implements ICaseService {
     )
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const caseWithAdvert = (
       await this.utilityService.getCaseWithAdvert(id)
@@ -304,8 +299,7 @@ export class CaseService implements ICaseService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
     const page = params?.page ? parseInt(params.page, 10) : 1
     const pageSize = params?.pageSize
@@ -367,8 +361,7 @@ export class CaseService implements ICaseService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
@@ -466,8 +459,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
     if (!id || !userId) {
       throw new BadRequestException()
@@ -503,8 +495,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateStatus(
     id: string,
     body: UpdateCaseStatusBody,
@@ -537,8 +528,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     const activeCase = (await this.utilityService.caseLookup(id)).unwrap()
 
@@ -568,8 +558,7 @@ export class CaseService implements ICaseService {
     return this.updateStatus(id, { status: nextStatus })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updatePrice(
     caseId: string,
     price: string,
@@ -592,8 +581,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateDepartment(
     caseId: string,
     departmentId: string,

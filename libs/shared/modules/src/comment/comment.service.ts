@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { v4 as uuid } from 'uuid'
-import { LogMethod, HandleException } from '@dmr.is/decorators'
+import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   DeleteCaseCommentResponse,
@@ -64,8 +64,7 @@ export class CommentService implements ICommentService {
     this.logger.info('Using CaseCommentSerivce')
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async comment(
     caseId: string,
     commentId: string,
@@ -91,8 +90,7 @@ export class CommentService implements ICommentService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
@@ -133,8 +131,7 @@ export class CommentService implements ICommentService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async create(
     caseId: string,
     body: PostCaseComment,
@@ -251,8 +248,7 @@ export class CommentService implements ICommentService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async delete(
     caseId: string,
     commentId: string,

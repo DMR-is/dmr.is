@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
 class UpdateDepartmentHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query

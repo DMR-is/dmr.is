@@ -1,4 +1,4 @@
-import { HandleException, LogMethod } from '@dmr.is/decorators'
+import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -88,8 +88,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
@@ -104,8 +103,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getApplication(
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
@@ -135,8 +133,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
@@ -156,8 +153,7 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async updateApplication(
     id: string,
     answers: UpdateApplicationBody,
@@ -198,8 +194,7 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok()
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async postApplication(
     applicationId: string,
   ): Promise<ResultWrapper<undefined>> {
@@ -234,8 +229,7 @@ export class ApplicationService implements IApplicationService {
     )
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async getComments(
     applicationId: string,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
@@ -254,8 +248,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  @HandleException()
+  @LogAndHandle()
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
