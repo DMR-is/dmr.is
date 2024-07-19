@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,

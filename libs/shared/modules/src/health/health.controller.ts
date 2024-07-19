@@ -1,7 +1,7 @@
 import { LogMethod } from '@dmr.is/decorators'
 
 import { Controller, Get } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiResponse, ApiTags } from '@nestjs/swagger'
 
 @Controller({
   version: '1',
@@ -11,6 +11,7 @@ export class HealthController {
   constructor() {}
 
   @Get()
+  @ApiTags('health')
   @ApiResponse({
     status: 200,
     description: 'Health check endpoint.',
