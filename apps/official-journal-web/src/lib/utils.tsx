@@ -10,7 +10,7 @@ import {
   CaseCommentTaskTitleEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
-  CaseTagEnum,
+  CaseTagValueEnum,
   CaseWithAdvert,
 } from '../gen/fetch'
 import { useQueryParams } from '../hooks/useQueryParams'
@@ -91,7 +91,7 @@ export const mapTabIdToCaseStatus = (param?: string) => {
 }
 
 export const enumToOptions = (
-  obj: typeof CaseStatusEnum | typeof CaseTagEnum,
+  obj: typeof CaseStatusEnum | typeof CaseTagValueEnum,
 ): StringOption[] => {
   return Object.entries(obj).map(([_, value]) => ({
     label: value,

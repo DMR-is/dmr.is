@@ -4,6 +4,7 @@ import {
   CaseCommentType,
   CaseCommentTitle,
   CaseCommunicationStatus,
+  CaseTagEnum,
 } from '@dmr.is/shared/dto'
 import { ARMANN, PALINA } from './users.mock'
 import {
@@ -15,7 +16,7 @@ import {
 const caseTag = {
   id: '08f2c487-2407-470b-bef3-72c9e0afb328',
   key: 'NotStarted',
-  value: 'EKki hafið',
+  value: CaseTagEnum.NotStarted,
 }
 
 export const CASE_SUBMITTED: Case = {

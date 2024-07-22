@@ -105,7 +105,7 @@ export class CaseService implements ICaseService {
     const migrated: CaseTag[] = tags.map((t) => ({
       id: t.id,
       key: t.key,
-      value: t.value,
+      value: t.value as unknown as CaseTagEnum,
     }))
 
     return {

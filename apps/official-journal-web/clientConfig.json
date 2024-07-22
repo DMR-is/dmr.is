@@ -989,7 +989,8 @@
           "value": {
             "type": "string",
             "description": "Value of the case tag",
-            "example": "Í yfirlestri"
+            "example": "Í yfirlestri",
+            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"]
           }
         },
         "required": ["id", "key", "value"]
