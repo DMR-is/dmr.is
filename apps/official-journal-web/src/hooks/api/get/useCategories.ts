@@ -2,18 +2,22 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCategoriesResponse } from '../../../gen/fetch'
 import { APIRotues, fetcher } from '../../../lib/constants'
-import { SearchParams } from '../../../lib/types'
+import { generateQueryFromParams, SearchParams } from '../../../lib/types'
 
 type SWRCategoriesOptions = SWRConfiguration<GetCategoriesResponse, Error>
 
 type UseCategoriesParams = {
   options?: SWRCategoriesOptions
-  query?: SearchParams
+  params?: SearchParams
 }
 
-export const useCategories = ({ options, query }: UseCategoriesParams = {}) => {
+export const useCategories = ({
+  options,
+  params,
+}: UseCategoriesParams = {}) => {
+  const query = generateQueryFromParams(params)
   const url = query
-    ? `${APIRotues.GetCategories}?${new URLSearchParams(query)}`
+    ? `${APIRotues.GetCategories}?${query}`
     : APIRotues.GetCategories
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCategoriesResponse,

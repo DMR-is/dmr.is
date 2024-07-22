@@ -1,4 +1,4 @@
-import { Audit, HandleException, Transactional } from '@dmr.is/decorators'
+import { Audit, HandleException } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {

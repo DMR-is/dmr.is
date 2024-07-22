@@ -58,11 +58,13 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     isLoading: isLoadingTypes,
     mutate: refetchTypes,
   } = useTypes({
-    query: `pageSize=1000&department=${
-      caseData
+    params: {
+      page: 1,
+      pageSize: 1000,
+      department: caseData
         ? caseData._case.activeCase.advertDepartment.id
-        : data.activeCase.advertDepartment.id
-    }`,
+        : data.activeCase.advertDepartment.id,
+    },
     options: {
       onSuccess: () => {
         refetchCase()
@@ -166,9 +168,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
   const debouncedUpdateTitle = debounce(handleUpdateTitle, 1000)
 
   const { data: categoriesData } = useCategories({
-    query: {
-      pageSize: '1000',
-    },
+    params: { page: 1, pageSize: 1000 },
   })
 
   if (caseError) {
