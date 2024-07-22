@@ -13,7 +13,7 @@ export const TypesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
   const { data, error, isLoading } = useTypes({
-    search: `page=1&pageSize=1000${search ? `&search=${search}` : ''}`,
+    query: `page=1&pageSize=1000${search ? `&search=${search}` : ''}`,
     options: {
       keepPreviousData: true,
     },

@@ -13,7 +13,7 @@ export const CategoriesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
   const { data, error, isLoading } = useCategories({
-    search: `page=1&pageSize=1000${search ? `&search=${search}` : ''}`,
+    query: `page=1&pageSize=1000${search ? `&search=${search}` : ''}`,
     options: {
       keepPreviousData: true,
     },
