@@ -1,4 +1,4 @@
-import { ApplicationModule, HealthModule } from '@dmr.is/modules'
+import { ApplicationModule, HealthModule, PdfModule } from '@dmr.is/modules'
 import { Module } from '@nestjs/common'
 import { ApplicationController } from './application/application.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -11,6 +11,7 @@ import { SequelizeConfigService } from '@dmr.is/db'
     }),
     ApplicationModule,
     HealthModule,
+    PdfModule,
   ],
   controllers: [ApplicationController],
   providers: [],

@@ -61,8 +61,6 @@ export class AuthService implements IAuthService {
       )
     }
 
-    this.logger.info('Refreshing access token', { category: LOGGING_CATEGORY })
-
     const body = {
       client_id: clientId,
       client_secret: clientSecret,
