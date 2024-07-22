@@ -200,7 +200,7 @@ CasePublishingOverview.getProps = async ({ query }) => {
   })
 
   return {
-    cases: cases,
+    cases,
     paging,
   }
 }
