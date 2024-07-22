@@ -50,6 +50,7 @@ import {
   caseParameters,
   counterResult,
 } from '../helpers'
+import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -105,7 +106,7 @@ export class CaseService implements ICaseService {
     const migrated: CaseTag[] = tags.map((t) => ({
       id: t.id,
       key: t.key,
-      value: t.value as unknown as CaseTagEnum,
+      value: caseTagMapper(t.value)!,
     }))
 
     return {
