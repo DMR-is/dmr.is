@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { handleException } from '../lib/utils'
 
-export function HandleException(
-  message: string | undefined = 'Internal server error',
-) {
+export function HandleException(message?: string | undefined) {
   return function (
     target: any,
     method: string,
@@ -15,12 +13,18 @@ export function HandleException(
     descriptor.value = async function (...args: any[]) {
       try {
         return await originalMethod.apply(this, args)
-      } catch (error) {
+      } catch (err: any) {
+        const msg = message ? message : 'Internal server error'
+
+        if (process.env.NODE_ENV === 'development') {
+          console.error(err.message)
+        }
+
         return handleException({
           category: service,
           method: method,
-          error: error,
-          message: message,
+          error: err,
+          message: msg,
           info: {
             args: {
               ...args,

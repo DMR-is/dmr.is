@@ -2,6 +2,7 @@ import { Route } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
+  DefaultSearchParams,
   EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
@@ -11,9 +12,9 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentsResponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -21,6 +22,12 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -80,7 +87,7 @@ export class CaseController {
   })
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }

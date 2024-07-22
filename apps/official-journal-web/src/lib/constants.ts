@@ -1,12 +1,7 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { PostCasePublishBody } from '../gen/fetch'
-import {
-  SWRAddCommentParams,
-  SWRUpdateCaseStatusParams,
-  SWRUpdateEmployeeParams,
-  SWRUpdateNextCaseStatusParams,
-} from '../hooks/api'
+import { HTTPMethod, PostCasePublishBody } from '../gen/fetch'
+import { SWRAddCommentParams } from '../hooks/api'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -37,54 +32,8 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'C deild', value: 'c-deild', key: 'department' },
 ]
 
-export const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
-export async function assignEmployee(
-  url: string,
-  { arg }: { arg: SWRUpdateEmployeeParams },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then((res) => res)
-}
-
-export async function updateCaseStatus(
-  url: string,
-  { arg }: { arg: SWRUpdateNextCaseStatusParams },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((res) => res)
-    .catch((error) => {
-      throw error
-    })
-}
-
-export async function updateNextCaseStatus(
-  url: string,
-  { arg }: { arg: SWRUpdateNextCaseStatusParams },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((res) => res)
-    .catch((error) => {
-      throw error
-    })
-}
+export const defaultFetcher = (url: string) =>
+  fetch(url).then((res) => res.json())
 
 export async function publishCases(
   url: string,
@@ -101,27 +50,6 @@ export async function publishCases(
     .catch((error) => {
       throw error
     })
-}
-
-export async function fetchWithQueryString(url: string, qs?: string) {
-  const fullUrl = `${url}${qs ? `?${qs}` : ''}`
-  return fetch(fullUrl, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    const error = new Error('Error occured while fetching data')
-    if (!res.ok) {
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res.json()
-  })
 }
 
 export async function getCase(url: string) {
@@ -144,30 +72,6 @@ export async function getCase(url: string) {
   })
 }
 
-export async function createComment(
-  url: string,
-  { arg }: { arg: SWRAddCommentParams },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    if (!res.ok) {
-      const error = new Error('Error occured while fetching data')
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res
-  })
-}
-
 export async function deleteComment(
   url: string,
   { arg }: { arg: { caseId: string; commentId: string } },
@@ -187,13 +91,14 @@ export async function deleteComment(
   })
 }
 
-export async function updatePrice(
+export async function fetcher(
   url: string,
-  { arg }: { arg: { caseId: string; price: string } },
+  { arg }: { arg: { method: 'GET' | 'DELETE' | undefined } } = {
+    arg: { method: 'GET' },
+  },
 ) {
   const res = await fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
+    method: arg.method,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -205,13 +110,14 @@ export async function updatePrice(
     throw new Error(message)
   }
 
-  return res
+  try {
+    return await res.json()
+  } catch (error) {
+    return res
+  }
 }
 
-export async function updateDepartment(
-  url: string,
-  { arg }: { arg: { caseId: string; departmentId: string } },
-) {
+export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
   const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(arg),
@@ -230,18 +136,25 @@ export async function updateDepartment(
 }
 
 export enum APIRotues {
-  Case = '/api/cases/:id',
-  Cases = '/api/cases',
-  EditorialOverview = '/api/cases/editorialOverview',
-  Departments = '/api/cases/departments',
-  Types = '/api/cases/types',
-  Categories = '/api/cases/categories',
-  AssignEmployee = '/api/cases/assign',
-  UpdateCaseStatus = '/api/cases/status',
-  UpdateNextCaseStatus = '/api/cases/nextStatus',
-  CreateComment = '/api/comments/create',
-  DeleteComment = '/api/comments/delete',
-  PublishCases = '/api/cases/publish',
+  GetCase = '/api/cases/:id',
+  GetCases = '/api/cases',
+  GetEditorialOverview = '/api/cases/editorialOverview',
+  GetDepartments = '/api/cases/departments',
+  GetTypes = '/api/cases/types',
+  GetCategories = '/api/cases/categories',
+  GetTags = '/api/cases/tags',
+  UpdateEmployee = '/api/cases/:id/updateEmployee',
+  UpdateCaseStatus = '/api/cases/:id/updateStatus',
+  UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
+  UpdateType = '/api/cases/:id/updateType',
+  UpdateCategories = '/api/cases/:id/updateCategories',
+  UpdateTitle = '/api/cases/:id/updateTitle',
+  UpdatePublishDate = '/api/cases/:id/updatePublishDate',
+  UpdatePaid = '/api/cases/:id/updatePaid',
+  UpdateTag = '/api/cases/:id/updateTag',
+  CreateComment = '/api/cases/:id/comments/create',
+  DeleteComment = '/api/cases/:id/comments/:cid/delete',
+  PublishCases = '/api/cases/publish',
 }

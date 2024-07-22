@@ -3,6 +3,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IJournalService } from '@dmr.is/modules'
 import {
   AdvertNotFound,
+  DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
@@ -165,7 +166,7 @@ export class JournalController {
   @LogMethod()
   async mainCategories(
     @Query()
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetMainCategoriesResponse> {
     return ResultWrapper.unwrap(
       await this.journalService.getMainCategories(params),
@@ -186,7 +187,7 @@ export class JournalController {
   @LogMethod()
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
@@ -205,7 +206,7 @@ export class JournalController {
   @LogMethod()
   async institutions(
     @Query()
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetInstitutionsResponse> {
     return ResultWrapper.unwrap(
       await this.journalService.getInstitutions(params),

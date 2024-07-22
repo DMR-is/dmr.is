@@ -2,6 +2,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  DefaultSearchParams,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -38,7 +39,7 @@ export interface IJournalService {
 
   getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>>
   getDepartments(
-    params?: GetDepartmentsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetDepartmentsResponse>>
   insertDepartment(
     model: Department,
@@ -55,7 +56,7 @@ export interface IJournalService {
   updateType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>>
 
   getMainCategories(
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetMainCategoriesResponse>>
   insertMainCategory(
     model: MainCategory,
@@ -66,14 +67,14 @@ export interface IJournalService {
 
   getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>>
   getCategories(
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>>
   insertCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>>
   updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>>
 
   getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>>
   getInstitutions(
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetInstitutionsResponse>>
   insertInstitution(
     model: Institution,

@@ -12,7 +12,7 @@ import { Main } from '../components/main/Main'
 import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
-import { fetcher } from '../lib/constants'
+import { defaultFetcher } from '../lib/constants'
 import type { Screen } from '../lib/types'
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
@@ -58,7 +58,7 @@ const Layout: Screen<LayoutProps> = ({
     >
       <SWRConfig
         value={{
-          fetcher: fetcher,
+          fetcher: defaultFetcher,
           refreshInterval: 5000,
           errorRetryCount: 3,
           errorRetryInterval: 5000,

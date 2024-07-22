@@ -1,19 +1,26 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
+import { Audit, HandleApiException } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  auditAPIRoute({ req })
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-  try {
+
+const schema = z.object({
+  caseIds: z.array(z.string()),
+})
+
+class PublishCasesHandler {
+  @Audit({ logArgs: false })
+  @HandleApiException()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { caseIds } = req.body
+    const parsed = schema.safeParse(req.body)
+
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error)
+    }
+
+    const { caseIds } = parsed.data
 
     await dmrClient.publish({
       postCasePublishBody: {
@@ -21,7 +28,9 @@ export default async function handler(
       },
     })
     return res.status(204).end()
-  } catch (error) {
-    handleAPIException({ error, res })
   }
 }
+
+const instance = new PublishCasesHandler()
+export default (req: NextApiRequest, res: NextApiResponse) =>
+  instance.handler(req, res)

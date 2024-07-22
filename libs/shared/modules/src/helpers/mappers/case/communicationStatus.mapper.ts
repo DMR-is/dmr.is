@@ -1,4 +1,4 @@
-import { CaseCommunicationStatus, CaseTag } from '@dmr.is/shared/dto'
+import { CaseCommunicationStatus } from '@dmr.is/shared/dto'
 
 export const caseCommunicationStatusMapper = (status?: string | null) => {
   if (!status) return null

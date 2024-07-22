@@ -1,16 +1,17 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updatePrice } from '../../../lib/constants'
+import { APIRotues, updateFetcher } from '../../../lib/constants'
+
+type UpdatePriceTriggerArgs = {
+  price: string
+}
 
 type SWRUpdatePriceOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  {
-    caseId: string
-    price: string
-  }
+  UpdatePriceTriggerArgs
 >
 
 type UseUpdatePriceParams = {
@@ -23,8 +24,8 @@ export const useUpdatePrice = ({ caseId, options }: UseUpdatePriceParams) => {
     Response,
     Error,
     Key,
-    { caseId: string; price: string }
-  >(APIRotues.UpdatePrice.replace(':id', caseId), updatePrice, {
+    UpdatePriceTriggerArgs
+  >(APIRotues.UpdatePrice.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

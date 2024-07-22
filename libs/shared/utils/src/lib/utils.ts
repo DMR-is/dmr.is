@@ -24,7 +24,7 @@ export function generatePaging(
 
   if (page > totalPages) {
     throw new BadRequestException(
-      'Requested page is larger than total number pages',
+      `Invalid page<${page}> number is larger than totalPages<${totalPages}>`,
     )
   }
 

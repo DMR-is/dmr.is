@@ -6,6 +6,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  DefaultSearchParams,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -385,7 +386,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getMainCategories(
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -433,7 +434,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getDepartments(
-    params?: GetDepartmentsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetDepartmentsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -537,7 +538,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getInstitutions(
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetInstitutionsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
@@ -583,7 +584,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getCategories(
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE

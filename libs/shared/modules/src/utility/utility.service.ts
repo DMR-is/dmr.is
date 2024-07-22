@@ -1,6 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
-import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
@@ -147,7 +147,7 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
-  async caseTagLookup(tag: string): Promise<ResultWrapper<CaseStatusDto>> {
+  async caseTagLookup(tag: string): Promise<ResultWrapper<CaseTagDto>> {
     const tagLookup = await this.caseTagModel.findOne({
       where: {
         value: tag,

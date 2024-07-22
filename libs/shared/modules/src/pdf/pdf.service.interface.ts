@@ -1,5 +1,9 @@
+import { Result } from '@dmr.is/types'
+
 export interface IPdfService {
-  getCasePdf(caseId: string): Promise<Buffer>
+  getPdfByCaseId(caseId: string): Promise<Result<Buffer>>
+
+  getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>>
 }
 
 export const IPdfService = Symbol('IPdfService')

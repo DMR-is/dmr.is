@@ -1,8 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { DEFAULT_PAGE_SIZE, FAST_TRACK_DAYS } from '@dmr.is/constants'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -11,14 +11,22 @@ import {
   CaseCommunicationStatus,
   CaseStatus,
   CaseTag,
+  CaseTagEnum,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -35,7 +43,12 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseParameters, counterResult } from '../helpers'
+import {
+  advertCategoryMigrate,
+  caseParameters,
+  counterResult,
+} from '../helpers'
+import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -51,6 +64,7 @@ import {
   CaseChannelsDto,
   CaseDto,
   CaseStatusDto,
+  CaseTagDto,
 } from './models'
 import { CASE_RELATIONS } from './relations'
 
@@ -72,9 +86,27 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseCategoriesDto)
     private readonly caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertCategoryDTO)
+    private readonly advertCategoryModel: typeof AdvertCategoryDTO,
+    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @LogAndHandle()
+  async tags(): Promise<ResultWrapper<GetTagsResponse>> {
+    const tags = await this.caseTagModel.findAll()
+
+    const migrated: CaseTag[] = tags.map((t) => ({
+      id: t.id,
+      key: t.key,
+      value: caseTagMapper(t.value)!,
+    }))
+
+    return ResultWrapper.ok({
+      tags: migrated,
+    })
   }
 
   @LogAndHandle()
@@ -131,7 +163,7 @@ export class CaseService implements ICaseService {
         ).unwrap()
 
         const caseTag = (
-          await this.utilityService.caseTagLookup(CaseTag.NotStarted)
+          await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted)
         ).unwrap()
 
         const caseCommunicationStatus = (
@@ -162,7 +194,7 @@ export class CaseService implements ICaseService {
         const diff = requestedPublicationDate.getTime() - today.getTime()
         const diffDays = diff / (1000 * 3600 * 24)
         let fastTrack = false
-        if (diffDays > 10) {
+        if (diffDays > FAST_TRACK_DAYS) {
           fastTrack = true
         }
 
@@ -603,7 +635,7 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const updateApplicationResult =
+    ResultWrapper.unwrap(
       await this.applicationService.updateApplication(
         caseLookup.applicationId,
         {
@@ -613,11 +645,285 @@ export class CaseService implements ICaseService {
             },
           },
         },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const typeLookup = (
+      await this.utilityService.typeLookup(body.typeId)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        advertTypeId: typeLookup.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              type: body.typeId,
+            },
+          },
+        },
       )
 
     if (!updateApplicationResult.isOk()) {
       throw new BadRequestException('Failed to update application')
     }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const currentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const incomingCategories = await Promise.all(
+      body.categoryIds.map(async (categoryId) => {
+        ResultWrapper.unwrap(
+          await this.utilityService.categoryLookup(categoryId),
+        )
+
+        return {
+          caseId,
+          categoryId,
+        }
+      }),
+    )
+
+    const newCategories = incomingCategories.filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    const newCategoryIds = newCategories.map((c) => c.categoryId)
+
+    const toRemove = currentCategories.filter((c) =>
+      newCategoryIds.includes(c.categoryId),
+    )
+
+    await this.caseCategoriesModel.bulkCreate(newCategories, {
+      ignoreDuplicates: true,
+    })
+
+    await Promise.all(
+      toRemove.map(async (c) => {
+        await c.destroy()
+      }),
+    )
+
+    const newCurrentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const ids = newCurrentCategories.map((c) => c.categoryId)
+
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: ids,
+        },
+      },
+    })
+
+    const migrated = categories.map((c) => advertCategoryMigrate(c))
+
+    const mapped = migrated.map((c) => ({
+      label: c.title,
+      value: c.id,
+    }))
+
+    const applicationLookup = (
+      await this.applicationService.getApplication(caseLookup.applicationId)
+    ).unwrap()
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            publishing: {
+              contentCategories: mapped,
+              communicationChannels:
+                applicationLookup.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const requestedPublicationDate = new Date(body.date)
+    const createdAt = new Date(caseLookup.createdAt)
+    const timeDiff = Math.abs(
+      requestedPublicationDate.getTime() - createdAt.getTime(),
+    )
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+    await this.caseModel.update(
+      {
+        requestedPublicationDate: body.date,
+        fastTrack: daysDiff <= FAST_TRACK_DAYS,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = (
+      await this.applicationService.getApplication(caseLookup.applicationId)
+    ).unwrap()
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            publishing: {
+              date: body.date,
+              contentCategories:
+                applicationLookup.application.answers.publishing
+                  .contentCategories,
+              communicationChannels:
+                applicationLookup.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    await this.caseModel.update(
+      {
+        advertTitle: body.title,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              title: body.title,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    ResultWrapper.unwrap(await this.utilityService.caseLookup(caseId))
+
+    await this.caseModel.update(
+      {
+        paid: body.paid,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateTag(
+    caseId: string,
+    body: UpdateTagBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    ResultWrapper.unwrap(await this.utilityService.caseLookup(caseId))
+
+    await this.caseModel.update(
+      {
+        tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
 
     return ResultWrapper.ok()
   }

@@ -9,12 +9,20 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
