@@ -1,25 +1,27 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { Audit, HandleApiException } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
+import { SearchParams } from '../../../lib/types'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  auditAPIRoute({ req })
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  try {
+class GetDepartmentsHandler {
+  @Audit({ logArgs: false })
+  @HandleApiException()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const departments = await dmrClient.getDepartments()
+    const { page, pageSize, search } = req.query as SearchParams
+
+    const departments = await dmrClient.getDepartments({
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    })
 
     return res.status(200).json(departments)
-  } catch (error) {
-    handleAPIException({ error, res })
   }
 }
+
+const instance = new GetDepartmentsHandler()
+export default (req: NextApiRequest, res: NextApiResponse) =>
+  instance.handler(req, res)

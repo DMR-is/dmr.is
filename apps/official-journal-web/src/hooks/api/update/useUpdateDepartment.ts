@@ -1,16 +1,17 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateDepartment } from '../../../lib/constants'
+import { APIRotues, updateFetcher } from '../../../lib/constants'
+
+type UpdateDepartmentTriggerArgs = {
+  departmentId: string
+}
 
 type SWRUpdateDepartmentOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  {
-    caseId: string
-    departmentId: string
-  }
+  UpdateDepartmentTriggerArgs
 >
 
 type UseUpdateDepartmentParams = {
@@ -26,8 +27,8 @@ export const useUpdateDepartment = ({
     Response,
     Error,
     Key,
-    { caseId: string; departmentId: string }
-  >(APIRotues.UpdateDepartment.replace(':id', caseId), updateDepartment, {
+    UpdateDepartmentTriggerArgs
+  >(APIRotues.UpdateDepartment.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

@@ -8,16 +8,16 @@ export enum CaseStatus {
   Rejected = 'Birtingu hafnað',
 }
 
-export enum CaseTag {
-  NotStarted = 'Ekki hafið',
-  InReview = 'Í yfirlestri',
-  MultipleReviewers = 'Samlesin',
-  RequiresReview = 'Þarf skoðun',
-}
-
 export enum CaseCommunicationStatus {
   NotStarted = 'Ekki hafin',
   WaitingForAnswers = 'Beðið eftir svörum',
   HasAnswers = 'Svör hafa borist',
   Done = 'Lokið',
+}
+
+export enum CaseTagEnum {
+  NotStarted = 'Ekki hafið',
+  InReview = 'Í yfirlestri',
+  MultipleReviewers = 'Samlesin',
+  RequiresReview = 'Þarf skoðun',
 }

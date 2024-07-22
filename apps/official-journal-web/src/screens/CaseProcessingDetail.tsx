@@ -19,12 +19,7 @@ import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
-import {
-  AdvertType,
-  CaseStatusEnum,
-  CaseWithAdvert,
-  Department,
-} from '../gen/fetch'
+import { CaseStatusEnum, CaseWithAdvert } from '../gen/fetch'
 import {
   useCase,
   useUpdateCaseStatus,
@@ -41,17 +36,10 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 
 type Props = {
   activeCase: CaseWithAdvert | null
-  advertTypes: Array<AdvertType>
-  departments: Array<Department>
   step: CaseStep | null
 }
 
-const CaseSingle: Screen<Props> = ({
-  activeCase: data,
-  advertTypes,
-  departments,
-  step,
-}) => {
+const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
   const { formatMessage } = useFormatMessage()
 
   if (!data || !step) {
@@ -72,17 +60,26 @@ const CaseSingle: Screen<Props> = ({
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
-      onSuccess: () => refetchCase(),
+      caseId: data.activeCase.id,
+      options: {
+        onSuccess: () => refetchCase(),
+      },
     })
 
   if (isLoading) {
@@ -210,7 +207,6 @@ const CaseSingle: Screen<Props> = ({
             onChange={(e) => {
               if (!e) return
               onAssignEmployee({
-                caseId: activeCase.id,
                 userId: e.value,
               })
             }}
@@ -231,7 +227,6 @@ const CaseSingle: Screen<Props> = ({
             onChange={(e) => {
               if (!e) return
               onUpdateCaseStatus({
-                caseId: activeCase.id,
                 statusId: e.value,
               })
             }}
@@ -243,20 +238,8 @@ const CaseSingle: Screen<Props> = ({
         {step === 'innsending' && (
           <StepInnsending activeCase={caseData._case} />
         )}
-        {step === 'grunnvinnsla' && (
-          <StepGrunnvinnsla
-            data={caseData._case}
-            advertTypes={advertTypes.sort((a, b) =>
-              a.slug.localeCompare(b.slug),
-            )}
-            departments={departments.sort((a, b) =>
-              a.slug.localeCompare(b.slug),
-            )}
-          />
-        )}
-        {step === 'yfirlestur' && (
-          <StepYfirlestur activeCase={caseData._case} />
-        )}
+        {step === 'grunnvinnsla' && <StepGrunnvinnsla data={caseData._case} />}
+        {step === 'yfirlestur' && <StepYfirlestur data={caseData._case} />}
         {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
 
         {advert.attachments.length > 0 && (
@@ -295,9 +278,7 @@ const CaseSingle: Screen<Props> = ({
                 loading={isUpdatingNextStatus}
                 as="span"
                 icon="arrowForward"
-                onClick={() =>
-                  onUpdateNextCaseStatus({ caseId: activeCase.id })
-                }
+                onClick={() => onUpdateNextCaseStatus()}
                 unfocusable
               >
                 {formatMessage(messages.paging.nextStep)}
@@ -315,27 +296,15 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const step = query.uid?.[1] as CaseStep | undefined
 
   if (!caseId || !step || !caseSteps.includes(step)) {
-    return { activeCase: null, advertTypes: [], step: null, departments: [] }
+    return { activeCase: null, step: null }
   }
 
   const activeCase = await dmrClient.getCase({
     id: caseId,
   })
 
-  const departments = await dmrClient.getDepartments()
-
-  const selectedDepartment =
-    (query.department as string) ?? activeCase._case.advert.department.id
-
-  const activeTypes = await dmrClient.getTypes({
-    department: selectedDepartment,
-    pageSize: 100,
-  })
-
   return {
     activeCase: activeCase._case,
-    departments: departments.departments,
-    advertTypes: activeTypes.types,
     step,
   }
 }

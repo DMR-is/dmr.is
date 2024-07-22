@@ -8,7 +8,7 @@ export type SWRAddCommentParams = {
   to?: string
 }
 
-import { APIRotues as APIRoutes, createComment } from '../../../lib/constants'
+import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
 
 type SWRAddCommentOptions = SWRMutationConfiguration<
   Response,
@@ -17,13 +17,18 @@ type SWRAddCommentOptions = SWRMutationConfiguration<
   SWRAddCommentParams
 >
 
-export const useAddComment = (options?: SWRAddCommentOptions) => {
+type UseAddCommentParams = {
+  caseId: string
+  options?: SWRAddCommentOptions
+}
+
+export const useAddComment = ({ caseId, options }: UseAddCommentParams) => {
   const { trigger, isMutating } = swrMutation<
     Response,
     Error,
     Key,
     SWRAddCommentParams
-  >(APIRoutes.CreateComment, createComment, options)
+  >(APIRoutes.CreateComment.replace(':id', caseId), updateFetcher, options)
 
   return {
     trigger,

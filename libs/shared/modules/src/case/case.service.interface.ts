@@ -4,9 +4,17 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 
@@ -22,12 +30,32 @@ export interface ICaseService {
   updateNextStatus(id: string): Promise<Result<undefined>>
   publish(body: PostCasePublishBody): Promise<Result<undefined>>
   overview(params?: GetCasesQuery): Promise<Result<EditorialOverviewResponse>>
+  tags(): Promise<Result<GetTagsResponse>>
 
   updatePrice(caseId: string, price: string): Promise<Result<undefined>>
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    departmentId: UpdateCaseDepartmentBody,
   ): Promise<Result<undefined>>
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<Result<undefined>>
+
+  updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<Result<undefined>>
+
+  updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+  ): Promise<Result<undefined>>
+
+  updateTitle(caseId: string, body: UpdateTitleBody): Promise<Result<undefined>>
+  updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>>
+
+  updateTag(caseId: string, body: UpdateTagBody): Promise<Result<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')

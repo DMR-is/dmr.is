@@ -7,7 +7,6 @@ export const handleAPIException: HandlerDecorator =
     try {
       await handler(req, res)
     } catch (error) {
-      console.log(error)
       const { method, url, query } = req
       logger.error(`Exception occurred, ${method}: ${url}`, {
         category: 'api',

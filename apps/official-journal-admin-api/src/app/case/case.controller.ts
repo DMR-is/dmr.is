@@ -1,6 +1,7 @@
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
+  DefaultSearchParams,
   EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
@@ -10,9 +11,9 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentsResponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -20,6 +21,12 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 
 import {
@@ -70,8 +77,30 @@ export class CaseController {
     status: 200,
     description: 'Departments',
   })
-  async departments(): Promise<GetDepartmentsResponse> {
-    const result = await this.journalService.getDepartments()
+  async departments(
+    @Query() params?: DefaultSearchParams,
+  ): Promise<GetDepartmentsResponse> {
+    const result = await this.journalService.getDepartments(params)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+
+    return result.value
+  }
+
+  @Get('tags')
+  @ApiOperation({
+    operationId: 'getTags',
+    summary: 'Get tags',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GetTagsResponse,
+    description: 'Tags',
+  })
+  async tags(): Promise<GetTagsResponse> {
+    const result = await this.caseService.tags()
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)
@@ -117,7 +146,7 @@ export class CaseController {
   })
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     const result = await this.journalService.getCategories(params)
 
@@ -195,10 +224,163 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
-    const result = await this.caseService.updateDepartment(
-      id,
-      body.departmentId,
-    )
+    const result = await this.caseService.updateDepartment(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/type')
+  @ApiOperation({
+    operationId: 'updateType',
+    summary: 'Update type of case and application',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCaseTypeBody,
+    required: true,
+  })
+  async updateType(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateType(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/paid')
+  @ApiOperation({
+    operationId: 'updatePaid',
+    summary: 'Update paid status of case',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdatePaidBody,
+    required: true,
+  })
+  async updatePaid(
+    @Param('id') id: string,
+    @Body() body: UpdatePaidBody,
+  ): Promise<void> {
+    const result = await this.caseService.updatePaid(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/tag')
+  @ApiOperation({
+    operationId: 'updateTag',
+    summary: 'Update tag value of case',
+  })
+  @ApiNoContentResponse()
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateTagBody,
+    required: true,
+  })
+  async updateTag(
+    @Param('id') id: string,
+    @Body() body: UpdateTagBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateTag(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/publishDate')
+  @ApiOperation({
+    operationId: 'updatePublishDate',
+    summary: 'Update publish date of case and application',
+  })
+  @ApiBody({
+    type: UpdatePublishDateBody,
+    required: true,
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiNoContentResponse()
+  async updatePublishDate(
+    @Param('id') id: string,
+    @Body() body: UpdatePublishDateBody,
+  ): Promise<void> {
+    const result = await this.caseService.updatePublishDate(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/title')
+  @ApiOperation({
+    operationId: 'updateTitle',
+    summary: 'Update publish date of case and application',
+  })
+  @ApiBody({
+    type: UpdateTitleBody,
+    required: true,
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiNoContentResponse()
+  async updateTitle(
+    @Param('id') id: string,
+    @Body() body: UpdateTitleBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateTitle(id, body)
+
+    if (!result.ok) {
+      throw new HttpException(result.error.message, result.error.code)
+    }
+  }
+
+  @Put(':id/categories')
+  @ApiOperation({
+    operationId: 'updateCategories',
+    summary: 'Update categories of case and application',
+  })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    type: UpdateCategoriesBody,
+    required: true,
+  })
+  @ApiNoContentResponse()
+  async updateCategories(
+    @Param('id') id: string,
+    @Body() body: UpdateCategoriesBody,
+  ): Promise<void> {
+    const result = await this.caseService.updateCategories(id, body)
 
     if (!result.ok) {
       throw new HttpException(result.error.message, result.error.code)

@@ -8,7 +8,7 @@ import { Test } from '@nestjs/testing'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
-import { AdvertDepartmentDTO } from '../journal/models'
+import { AdvertCategoryDTO, AdvertDepartmentDTO } from '../journal/models'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { CaseService } from './case.service'
@@ -28,6 +28,8 @@ describe('CaseService', () => {
   let applicationService: IApplicationService
   let journalService: IJournalService
   let caseModel: CaseDto
+  let categoriesModel: CaseCategoriesDto
+  let advertCategoryModel: AdvertCategoryDTO
   let caseCategoriesModel: CaseCategoriesDto
   let caseChannelModel: CaseChannelDto
   let caseChannelsModel: CaseChannelsDto
@@ -74,6 +76,10 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
+          provide: getModelToken(AdvertCategoryDTO),
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: getModelToken(CaseStatusDto),
           useClass: jest.fn(() => ({
             create: () => ({}),
@@ -106,6 +112,18 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
+          provide: getModelToken(CaseTagDto),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CaseCategoriesDto),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: AdvertCategoryDTO,
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: LOGGER_PROVIDER,
           useClass: jest.fn(() => ({
             info: jest.fn(),
@@ -133,6 +151,9 @@ describe('CaseService', () => {
     )
     caseChannelModel = app.get<CaseChannelDto>(getModelToken(CaseChannelDto))
     caseChannelsModel = app.get<CaseChannelsDto>(getModelToken(CaseChannelsDto))
+    categoriesModel = app.get<CaseCategoriesDto>(
+      getModelToken(CaseCategoriesDto),
+    )
     sequelize = app.get<Sequelize>(Sequelize)
   })
 

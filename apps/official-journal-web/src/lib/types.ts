@@ -22,3 +22,9 @@ export type CaseOverviewSearchParams = {
   page?: string | string[]
   pageSize?: string | string[]
 }
+
+export type SearchParams = {
+  search?: string
+  page?: string
+  pageSize?: string
+}

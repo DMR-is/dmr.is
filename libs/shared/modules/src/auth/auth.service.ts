@@ -39,9 +39,6 @@ export class AuthService implements IAuthService {
       return null
     }
 
-    this.logger.info('Successfully fetched access token', {
-      category: LOGGING_CATEGORY,
-    })
     return this.idsToken
   }
 
@@ -72,6 +69,9 @@ export class AuthService implements IAuthService {
     }
 
     try {
+      this.logger.info('Fetching access token from ids', {
+        category: LOGGING_CATEGORY,
+      })
       const tokenResponse = await fetch(idsUrl, {
         method: 'POST',
         headers: {

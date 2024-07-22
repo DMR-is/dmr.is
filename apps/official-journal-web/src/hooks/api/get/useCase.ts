@@ -1,22 +1,18 @@
-import useSWR, { BareFetcher, SWRConfiguration } from 'swr'
+import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCaseResponse } from '../../../gen/fetch'
-import { APIRotues, getCase } from '../../../lib/constants'
+import { APIRotues, fetcher } from '../../../lib/constants'
 
-type Props = {
+type UseCaseParams = {
   caseId: string
-  options?: SWRConfiguration<
-    GetCaseResponse,
-    Error,
-    BareFetcher<GetCaseResponse>
-  >
+  options?: SWRConfiguration<GetCaseResponse, Error>
 }
 
-export const useCase = ({ caseId, options }: Props) => {
+export const useCase = ({ caseId, options }: UseCaseParams) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     GetCaseResponse,
     Error
-  >(APIRotues.Case.replace(':id', caseId), getCase, options)
+  >(APIRotues.GetCase.replace(':id', caseId), fetcher, options)
 
   return {
     data,
