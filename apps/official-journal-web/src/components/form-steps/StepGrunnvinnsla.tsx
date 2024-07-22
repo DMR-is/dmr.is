@@ -166,9 +166,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
   const debouncedUpdateTitle = debounce(handleUpdateTitle, 1000)
 
   const { data: categoriesData } = useCategories({
-    query: {
-      pageSize: '1000',
-    },
+    query: `pageSize=1000`,
   })
 
   if (caseError) {
