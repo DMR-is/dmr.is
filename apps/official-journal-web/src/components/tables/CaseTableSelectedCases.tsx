@@ -1,20 +1,35 @@
-import { Case } from '../../gen/fetch'
+import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
+
+import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { usePublishContext } from '../../hooks/usePublishContext'
+import { messages as errorMessages } from '../../lib/messages/errors'
 import { CasePublishingTable } from './CasePublishingTable'
 import { CaseTableHeadCellProps } from './CaseTable'
 import { CaseTableSelectedCasesEmpty } from './CaseTableSelectedCasesEmpty'
 import { messages } from './messages'
 
-type Props = {
-  data: Case[]
-  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
-}
-
-export const CaseTableSelectedCases = ({
-  data,
-  setCasesReadyForPublication,
-}: Props) => {
+export const CaseTableSelectedCases = () => {
   const { formatMessage } = useFormatMessage()
+
+  const { selectedCaseIds } = usePublishContext()
+
+  const qsp = selectedCaseIds.length ? `id=${selectedCaseIds.join(',')}` : ''
+
+  const { data, error, isLoading } = useCases({
+    qsp: qsp,
+  })
+
+  if (isLoading) return <SkeletonLoader repeat={3} height={44} />
+
+  if (error)
+    return (
+      <AlertMessage
+        type="error"
+        title={formatMessage(errorMessages.errorFetchingData)}
+        message={formatMessage(errorMessages.errorFetchingCategoriesMessage)}
+      />
+    )
 
   const columns: CaseTableHeadCellProps[] = [
     {
@@ -22,6 +37,11 @@ export const CaseTableSelectedCases = ({
       fixed: true,
       size: 'small',
       children: formatMessage(messages.tables.selectedCases.columns.number),
+    },
+    {
+      name: 'caseType',
+      fixed: false,
+      children: formatMessage(messages.tables.selectedCases.columns.type),
     },
     {
       name: 'caseTitle',
@@ -43,13 +63,8 @@ export const CaseTableSelectedCases = ({
     },
   ]
 
-  if (!data.length) return <CaseTableSelectedCasesEmpty columns={columns} />
+  if (!data?.cases.length || !selectedCaseIds.length)
+    return <CaseTableSelectedCasesEmpty columns={columns} />
 
-  return (
-    <CasePublishingTable
-      updateRows={setCasesReadyForPublication}
-      columns={columns}
-      rows={data}
-    />
-  )
+  return <CasePublishingTable columns={columns} rows={data.cases} />
 }

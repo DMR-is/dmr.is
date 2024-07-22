@@ -26,9 +26,6 @@ const CasePublishingTableRow = ({
   const controls = useDragControls()
   const [isDragging, setIsDragging] = useState<boolean>(false)
 
-  // TODO: FIND CORRECT CASE NUMBER
-  const randomNumber = Math.floor((Math.random() + 100) * 500)
-
   return (
     <Reorder.Item
       as="tr"
@@ -45,8 +42,11 @@ const CasePublishingTableRow = ({
     >
       <TableCell fixed>
         <Text variant="medium" whiteSpace="nowrap">
-          {`${randomNumber}/${new Date().getFullYear()}`}
+          {`${number}/${new Date().getFullYear()}`}
         </Text>
+      </TableCell>
+      <TableCell>
+        <Text>{row.advertType.title}</Text>
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
@@ -56,7 +56,6 @@ const CasePublishingTableRow = ({
       <TableCell>
         <Text variant="medium" truncate>
           Reykjavíkurborg
-          {/* TODO: Add invovled party to case */}
         </Text>
       </TableCell>
       <TableCell>
@@ -76,12 +75,12 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  updateRows: React.Dispatch<React.SetStateAction<Case[]>>
+  updateRows?: React.Dispatch<React.SetStateAction<string[]>>
   columns: CaseTableHeadCellProps[]
   rows: Case[]
 }
 
-export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
+export const CasePublishingTable = ({ columns, rows }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
   const [reorderableItems, setReorderableItems] = useState<Case[]>(rows)
 
@@ -93,7 +92,7 @@ export const CasePublishingTable = ({ columns, rows, updateRows }: Props) => {
   }, [rows])
 
   const reOrder = () => {
-    updateRows(reorderableItems)
+    // updateRows(reorderableItems)
   }
 
   return (

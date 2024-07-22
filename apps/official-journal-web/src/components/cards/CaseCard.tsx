@@ -71,6 +71,7 @@ export const CaseCard = ({
         )}
         {link && (
           <LinkV2
+            newTab
             href={link}
             color="blue400"
             underline="normal"

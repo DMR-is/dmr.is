@@ -366,6 +366,12 @@ export class CaseService implements ICaseService {
       statusLookup = await this.utilityService.caseStatusLookup(params.status)
     }
 
+    if (statusLookup !== undefined && !statusLookup.ok) {
+      throw new BadRequestException(
+        `Invalid query parameter status: ${params?.status}`,
+      )
+    }
+
     const whereParams = caseParameters(
       params,
       statusLookup?.ok ? statusLookup.value.id : undefined,

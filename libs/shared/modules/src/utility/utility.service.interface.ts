@@ -36,6 +36,8 @@ export interface IUtilityService {
     departmentId: string,
     year: number,
   ): Promise<Result<number>>
+
+  getNextPublicationNumber(caseIds: string[]): Promise<Result<number>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

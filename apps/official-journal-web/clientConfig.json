@@ -115,17 +115,17 @@
         "summary": "Get overview for cases in progress.",
         "parameters": [
           {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "ID of the case to get.",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
             "description": "String to search for in cases.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Application ID",
             "schema": { "type": "string" }
           },
           {
@@ -403,17 +403,17 @@
         "summary": "Get cases.",
         "parameters": [
           {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "ID of the case to get.",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
             "description": "String to search for in cases.",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Application ID",
             "schema": { "type": "string" }
           },
           {
@@ -934,6 +934,27 @@
         },
         "required": ["id", "name", "lastName", "active"]
       },
+      "CaseChannel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the case channel."
+          },
+          "email": {
+            "type": "string",
+            "example": "hjalp@dmr.is",
+            "description": "Email of the case channel."
+          },
+          "phone": {
+            "type": "string",
+            "example": "+354 123 4567",
+            "description": "Phone of the case channel."
+          }
+        },
+        "required": ["id", "email", "phone"]
+      },
       "CaseCommentTask": {
         "type": "object",
         "properties": {
@@ -1159,6 +1180,21 @@
             "example": false,
             "description": "Is the case paid for."
           },
+          "message": {
+            "type": "string",
+            "nullable": true,
+            "example": "Additional message from sender"
+          },
+          "channels": {
+            "description": "Channels for the case.",
+            "example": {
+              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "email": "dmr@dmr.is",
+              "phone": "+354 123 4567"
+            },
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseChannel" }
+          },
           "comments": {
             "description": "Comments on the case.",
             "example": {
@@ -1197,6 +1233,8 @@
           "advertCategories",
           "price",
           "paid",
+          "message",
+          "channels",
           "comments"
         ]
       },
