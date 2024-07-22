@@ -135,7 +135,6 @@ export class CaseService implements ICaseService {
         },
         {
           model: AdvertDepartmentDTO,
-          as: 'department',
           where: params?.department
             ? {
                 slug: {
@@ -146,7 +145,6 @@ export class CaseService implements ICaseService {
         },
         {
           model: AdvertTypeDTO,
-          as: 'advertType',
           where: params?.type
             ? {
                 slug: {
@@ -155,8 +153,25 @@ export class CaseService implements ICaseService {
               }
             : undefined,
         },
+        {
+          model: AdvertCategoryDTO,
+          where: params?.category
+            ? {
+                slug: params?.category,
+              }
+            : undefined,
+        },
       ],
-      group: ['status_id', `status.value`, 'department.id', 'advertType.id'],
+      group: [
+        'status_id',
+        `status.value`,
+        'department.id',
+        'advertType.id',
+        'categories.id',
+        'CaseDto.id',
+        'categories->CaseCategoriesDto.case_case_id',
+        'categories->CaseCategoriesDto.category_id',
+      ],
     })
 
     if (!casesResponse.ok) {
