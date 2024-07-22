@@ -17,7 +17,7 @@ export class DefaultSearchParams {
   @ApiProperty({
     name: 'page',
     description: 'Page number to return.',
-    type: String,
+    type: Number,
     required: false,
   })
   @IsOptional()
@@ -28,7 +28,7 @@ export class DefaultSearchParams {
   @ApiProperty({
     name: 'pageSize',
     description: 'Page size number to return.',
-    type: String,
+    type: Number,
     required: false,
   })
   @IsOptional()

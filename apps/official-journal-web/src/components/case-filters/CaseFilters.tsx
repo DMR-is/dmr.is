@@ -7,6 +7,7 @@ import { useCaseOverview } from '../../hooks/api'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useIsMounted } from '../../hooks/useIsMounted'
+import { getStringFromQueryString } from '../../lib/types'
 import { FilterPopover } from '../filter-popover/FilterPopover'
 import { Popover } from '../popover/Popover'
 import * as styles from './CaseFilters.css'
@@ -24,7 +25,7 @@ export const CaseFilters = () => {
   const isMounted = useIsMounted()
   const { isLoading } = useCaseOverview()
 
-  const initialSearch = router.query.search as string | undefined
+  const initialSearch = getStringFromQueryString(router.query.search)
 
   const { enableCategories, enableDepartments, enableTypes } =
     useFilterContext()
@@ -42,7 +43,7 @@ export const CaseFilters = () => {
   }
 
   const clearFilters = () => {
-    const status = router.query.status
+    const status = getStringFromQueryString(router.query.status)
     router.push(
       {
         query: { status },

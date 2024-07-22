@@ -2,18 +2,23 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { EditorialOverviewResponse } from '../../../gen/fetch'
 import { APIRotues, fetcher } from '../../../lib/constants'
+import {
+  CaseOverviewSearchParams,
+  generateQueryFromParams,
+} from '../../../lib/types'
 
 type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
 
 type UseCaseOverviewParams = {
   options?: SWRCaseOverviewOptions
-  query?: string
+  params?: CaseOverviewSearchParams
 }
 
 export const useCaseOverview = ({
   options,
-  query,
+  params,
 }: UseCaseOverviewParams = {}) => {
+  const query = generateQueryFromParams(params)
   const url = query
     ? `${APIRotues.GetEditorialOverview}?${query}`
     : APIRotues.GetEditorialOverview

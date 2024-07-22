@@ -18,14 +18,14 @@
             "required": false,
             "in": "query",
             "description": "Page number to return.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size number to return.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
@@ -124,14 +124,14 @@
             "required": false,
             "in": "query",
             "description": "Page number to return.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size number to return.",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
