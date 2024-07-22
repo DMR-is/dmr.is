@@ -13,7 +13,6 @@ import {
   CaseCommentType,
   CaseCommunicationStatus,
   CaseStatus,
-  CaseTag,
 } from '@dmr.is/shared/dto'
 
 import { Test } from '@nestjs/testing'
@@ -48,7 +47,7 @@ describe('CaseController', () => {
     caseNumber: '1234',
     isLegacy: true,
     status: CaseStatus.Submitted,
-    tag: CaseTag.NotStarted,
+    tag: null,
     createdAt: '2024-03-12T12:45:48.21Z',
     modifiedAt: '2024-03-12T12:45:48.21Z',
     publishedAt: null,

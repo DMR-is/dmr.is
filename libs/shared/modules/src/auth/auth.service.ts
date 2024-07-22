@@ -18,10 +18,6 @@ export class AuthService implements IAuthService {
   }
 
   async getAccessToken() {
-    this.logger.info('Getting access token', {
-      category: LOGGING_CATEGORY,
-    })
-
     if (!this.idsToken) {
       this.logger.debug('Access token is missing, fetching a new one', {
         category: LOGGING_CATEGORY,
@@ -43,9 +39,6 @@ export class AuthService implements IAuthService {
       return null
     }
 
-    this.logger.info('Successfully fetched access token', {
-      category: LOGGING_CATEGORY,
-    })
     return this.idsToken
   }
 
@@ -78,6 +71,9 @@ export class AuthService implements IAuthService {
     }
 
     try {
+      this.logger.info('Fetching access token from ids', {
+        category: LOGGING_CATEGORY,
+      })
       const tokenResponse = await fetch(idsUrl, {
         method: 'POST',
         headers: {

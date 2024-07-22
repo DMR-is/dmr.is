@@ -1,4 +1,4 @@
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { Audit, HandleException, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -47,7 +47,8 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Using ApplicationService')
   }
 
-  private xroadFetch = async (url: string, options: RequestInit) => {
+  @Audit()
+  private async xroadFetch(url: string, options: RequestInit) {
     const idsToken = await this.authService.getAccessToken()
 
     if (!idsToken) {
@@ -79,13 +80,26 @@ export class ApplicationService implements IApplicationService {
       },
     }
 
-    return await fetch(url, {
-      ...requestOption,
-      headers: {
-        ...requestOption.headers,
-        Authorization: `Bearer ${idsToken.access_token}`,
-      },
-    })
+    try {
+      return await fetch(url, {
+        ...requestOption,
+        headers: {
+          ...requestOption.headers,
+          Authorization: `Bearer ${idsToken.access_token}`,
+        },
+      })
+    } catch (error) {
+      this.logger.error('Fetch failed in ApplicationService.xroadFetch', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      if (error instanceof TypeError) {
+        throw new InternalServerErrorException(
+          `${error.name}, ${error.message}`,
+        )
+      }
+      throw new InternalServerErrorException()
+    }
   }
 
   @Audit()
@@ -193,12 +207,15 @@ export class ApplicationService implements IApplicationService {
     )
 
     if (!res.ok) {
+      const info = await res.json()
       const { status, statusText } = res
       this.logger.warn(`Could not update application<${id}>`, {
         category: LOGGING_CATEGORY,
+        details: info,
         status,
         statusText,
       })
+
       switch (res.status) {
         case 400: {
           throw new BadRequestException()
@@ -207,8 +224,9 @@ export class ApplicationService implements IApplicationService {
           throw new NotFoundException(`Application<${id}> not found`)
         }
         default: {
+          const resInfo = await res.text()
           throw new InternalServerErrorException(
-            `Could not update application<${id}>`,
+            `Could not update application<${id}>, ${resInfo}`,
           )
         }
       }

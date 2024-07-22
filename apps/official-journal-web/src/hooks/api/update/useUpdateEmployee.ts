@@ -1,27 +1,37 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, assignEmployee } from '../../../lib/constants'
+import { APIRotues, updateFetcher } from '../../../lib/constants'
 
-export type SWRUpdateEmployeeParams = {
-  userId: string
+export type UpdateEmployeeParams = {
   caseId: string
+  options?: SWRUpdateEmployeeOptions
+}
+
+type UpdateEmployeeTriggerArgs = {
+  userId: string
 }
 
 type SWRUpdateEmployeeOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  SWRUpdateEmployeeParams
+  UpdateEmployeeTriggerArgs
 >
 
-export const useUpdateEmployee = (options?: SWRUpdateEmployeeOptions) => {
+export const useUpdateEmployee = ({
+  caseId,
+  options,
+}: UpdateEmployeeParams) => {
   const { trigger, isMutating } = swrMutation<
     Response,
     Error,
     Key,
-    SWRUpdateEmployeeParams
-  >(APIRotues.AssignEmployee, assignEmployee, options)
+    UpdateEmployeeTriggerArgs
+  >(APIRotues.UpdateEmployee.replace(':id', caseId), updateFetcher, {
+    throwOnError: false,
+    ...options,
+  })
 
   return {
     trigger,

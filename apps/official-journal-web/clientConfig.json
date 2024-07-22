@@ -5,7 +5,29 @@
       "get": {
         "operationId": "getDepartments",
         "summary": "Get departments",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "String to search for",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number to return.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size number to return.",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Departments",
@@ -14,6 +36,23 @@
                 "schema": {
                   "$ref": "#/components/schemas/GetDepartmentsResponse"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cases/tags": {
+      "get": {
+        "operationId": "getTags",
+        "summary": "Get tags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tags",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetTagsResponse" }
               }
             }
           }
@@ -77,7 +116,7 @@
             "name": "search",
             "required": false,
             "in": "query",
-            "description": "String to search for in categories.",
+            "description": "String to search for",
             "schema": { "type": "string" }
           },
           {
@@ -85,14 +124,14 @@
             "required": false,
             "in": "query",
             "description": "Page number to return.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "description": "Page size number to return.",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -283,6 +322,144 @@
               "schema": {
                 "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
               }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/type": {
+      "put": {
+        "operationId": "updateType",
+        "summary": "Update type of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCaseTypeBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/paid": {
+      "put": {
+        "operationId": "updatePaid",
+        "summary": "Update paid status of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePaidBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/tag": {
+      "put": {
+        "operationId": "updateTag",
+        "summary": "Update tag value of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTagBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/publishDate": {
+      "put": {
+        "operationId": "updatePublishDate",
+        "summary": "Update publish date of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePublishDateBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/title": {
+      "put": {
+        "operationId": "updateTitle",
+        "summary": "Update publish date of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTitleBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/categories": {
+      "put": {
+        "operationId": "updateCategories",
+        "summary": "Update categories of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCategoriesBody" }
             }
           }
         },
@@ -795,6 +972,39 @@
         },
         "required": ["departments", "paging"]
       },
+      "CaseTag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the case tag",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the case tag",
+            "example": "InReview"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value of the case tag",
+            "example": "Í yfirlestri"
+          }
+        },
+        "required": ["id", "key", "value"]
+      },
+      "GetTagsResponse": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "description": "List of advert categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseTag" }
+          }
+        },
+        "required": ["tags"]
+      },
       "AdvertType": {
         "type": "object",
         "properties": {
@@ -933,6 +1143,27 @@
           }
         },
         "required": ["id", "name", "lastName", "active"]
+      },
+      "CaseChannel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the case channel."
+          },
+          "email": {
+            "type": "string",
+            "example": "hjalp@dmr.is",
+            "description": "Email of the case channel."
+          },
+          "phone": {
+            "type": "string",
+            "example": "+354 123 4567",
+            "description": "Phone of the case channel."
+          }
+        },
+        "required": ["id", "email", "phone"]
       },
       "CaseCommentTask": {
         "type": "object",
@@ -1078,10 +1309,8 @@
             "description": "Status of the case, default to \"Innsent\""
           },
           "tag": {
-            "type": "string",
-            "enum": ["Ekki hafið", "Í yfirlestri", "Samlesin", "Þarf skoðun"],
-            "example": "Ekki hafið",
-            "description": "Internal tag for the case, default to null"
+            "description": "Internal tag for the case, default to null",
+            "allOf": [{ "$ref": "#/components/schemas/CaseTag" }]
           },
           "createdAt": {
             "type": "string",
@@ -1159,6 +1388,21 @@
             "example": false,
             "description": "Is the case paid for."
           },
+          "message": {
+            "type": "string",
+            "nullable": true,
+            "example": "Additional message from sender"
+          },
+          "channels": {
+            "description": "Channels for the case.",
+            "example": {
+              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "email": "dmr@dmr.is",
+              "phone": "+354 123 4567"
+            },
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseChannel" }
+          },
           "comments": {
             "description": "Comments on the case.",
             "example": {
@@ -1197,6 +1441,8 @@
           "advertCategories",
           "price",
           "paid",
+          "message",
+          "channels",
           "comments"
         ]
       },
@@ -1262,6 +1508,40 @@
           "departmentId": { "type": "string", "description": "Department id" }
         },
         "required": ["departmentId"]
+      },
+      "UpdateCaseTypeBody": {
+        "type": "object",
+        "properties": {
+          "typeId": { "type": "string", "description": "Type id" }
+        },
+        "required": ["typeId"]
+      },
+      "UpdatePaidBody": {
+        "type": "object",
+        "properties": { "paid": { "type": "boolean" } },
+        "required": ["paid"]
+      },
+      "UpdateTagBody": {
+        "type": "object",
+        "properties": { "tagId": { "type": "string" } },
+        "required": ["tagId"]
+      },
+      "UpdatePublishDateBody": {
+        "type": "object",
+        "properties": { "date": { "type": "string" } },
+        "required": ["date"]
+      },
+      "UpdateTitleBody": {
+        "type": "object",
+        "properties": { "title": { "type": "string" } },
+        "required": ["title"]
+      },
+      "UpdateCategoriesBody": {
+        "type": "object",
+        "properties": {
+          "categoryIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["categoryIds"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",

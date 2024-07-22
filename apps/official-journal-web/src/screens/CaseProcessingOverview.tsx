@@ -93,12 +93,8 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     return qs.toString()
   }, [searchParams])
 
-  const {
-    data: casesResponse,
-    error,
-    isLoading,
-  } = useCaseOverview({
-    qsp: qsp,
+  const { data: casesResponse, error } = useCaseOverview({
+    query: qsp,
     options: {
       keepPreviousData: true,
       fallback: {

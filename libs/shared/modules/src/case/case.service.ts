@@ -1,8 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { DEFAULT_PAGE_SIZE, FAST_TRACK_DAYS } from '@dmr.is/constants'
+import { Audit, HandleException, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -11,14 +11,23 @@ import {
   CaseCommunicationStatus,
   CaseStatus,
   CaseTag,
+  CaseTagEnum,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -26,6 +35,7 @@ import { generatePaging } from '@dmr.is/utils'
 import {
   BadRequestException,
   forwardRef,
+  HttpException,
   Inject,
   Injectable,
 } from '@nestjs/common'
@@ -35,7 +45,11 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseParameters, counterResult } from '../helpers'
+import {
+  advertCategoryMigrate,
+  caseParameters,
+  counterResult,
+} from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -51,6 +65,7 @@ import {
   CaseChannelsDto,
   CaseDto,
   CaseStatusDto,
+  CaseTagDto,
 } from './models'
 import { CASE_RELATIONS } from './relations'
 
@@ -74,9 +89,29 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseCategoriesDto)
     private readonly caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertCategoryDTO)
+    private readonly advertCategoryModel: typeof AdvertCategoryDTO,
+    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @Audit()
+  @HandleException()
+  async tags(): Promise<Result<GetTagsResponse>> {
+    const tags = await this.caseTagModel.findAll()
+
+    const migrated: CaseTag[] = tags.map((t) => ({
+      id: t.id,
+      key: t.key,
+      value: t.value,
+    }))
+
+    return {
+      ok: true,
+      value: { tags: migrated },
+    }
   }
 
   @Audit()
@@ -157,7 +192,7 @@ export class CaseService implements ICaseService {
         }
 
         const caseTagLookup = await this.utilityService.caseTagLookup(
-          CaseTag.NotStarted,
+          CaseTagEnum.NotStarted,
         )
 
         if (!caseTagLookup.ok) {
@@ -204,7 +239,7 @@ export class CaseService implements ICaseService {
         const diff = requestedPublicationDate.getTime() - today.getTime()
         const diffDays = diff / (1000 * 3600 * 24)
         let fastTrack = false
-        if (diffDays > 10) {
+        if (diffDays > FAST_TRACK_DAYS) {
           fastTrack = true
         }
 
@@ -705,7 +740,7 @@ export class CaseService implements ICaseService {
   @HandleException()
   async updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<Result<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
     if (!caseLookup.ok) {
@@ -713,7 +748,7 @@ export class CaseService implements ICaseService {
     }
 
     const departmentLookup = await this.utilityService.departmentLookup(
-      departmentId,
+      body.departmentId,
     )
     if (!departmentLookup.ok) {
       return departmentLookup
@@ -736,7 +771,7 @@ export class CaseService implements ICaseService {
         {
           answers: {
             advert: {
-              department: departmentId,
+              department: body.departmentId,
             },
           },
         },
@@ -745,6 +780,370 @@ export class CaseService implements ICaseService {
     if (!updateApplicationResult.ok) {
       return updateApplicationResult
     }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    const typeLookup = await this.utilityService.typeLookup(body.typeId)
+
+    if (!typeLookup.ok) {
+      throw new HttpException(typeLookup.error.message, typeLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        advertTypeId: typeLookup.value.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              type: body.typeId,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  async updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const currentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const incomingCategories = await Promise.all(
+      body.categoryIds.map(async (categoryId) => {
+        const categoryLookup = await this.utilityService.categoryLookup(
+          categoryId,
+        )
+
+        if (!categoryLookup.ok) {
+          throw new BadRequestException('Invalid category id')
+        }
+
+        return {
+          caseId,
+          categoryId,
+        }
+      }),
+    )
+
+    const newCategories = incomingCategories.filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    const newCategoryIds = newCategories.map((c) => c.categoryId)
+
+    const toRemove = currentCategories.filter((c) =>
+      newCategoryIds.includes(c.categoryId),
+    )
+
+    await this.caseCategoriesModel.bulkCreate(newCategories, {
+      ignoreDuplicates: true,
+    })
+
+    await Promise.all(
+      toRemove.map(async (c) => {
+        await c.destroy()
+      }),
+    )
+
+    const newCurrentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const ids = newCurrentCategories.map((c) => c.categoryId)
+
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: ids,
+        },
+      },
+    })
+
+    const migrated = categories.map((c) => advertCategoryMigrate(c))
+
+    const mapped = migrated.map((c) => ({
+      label: c.title,
+      value: c.id,
+    }))
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      return applicationLookup
+    }
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            publishing: {
+              contentCategories: mapped,
+              communicationChannels:
+                applicationLookup.value.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      )
+
+    if (!updateApplicationResult.ok) {
+      return updateApplicationResult
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    const requestedPublicationDate = new Date(body.date)
+    const createdAt = new Date(caseLookup.value.createdAt)
+    const timeDiff = Math.abs(
+      requestedPublicationDate.getTime() - createdAt.getTime(),
+    )
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+    await this.caseModel.update(
+      {
+        requestedPublicationDate: body.date,
+        fastTrack: daysDiff <= FAST_TRACK_DAYS,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      // we must throw error to rollback transaction using the @Transactional decorator
+      throw new HttpException(
+        applicationLookup.error.message,
+        applicationLookup.error.code,
+      )
+    }
+
+    const didUpdateApplication =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            publishing: {
+              date: body.date,
+              contentCategories:
+                applicationLookup.value.application.answers.publishing
+                  .contentCategories,
+              communicationChannels:
+                applicationLookup.value.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      )
+
+    if (!didUpdateApplication.ok) {
+      return didUpdateApplication
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      return caseLookup
+    }
+
+    await this.caseModel.update(
+      {
+        advertTitle: body.title,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = await this.applicationService.getApplication(
+      caseLookup.value.applicationId,
+    )
+
+    if (!applicationLookup.ok) {
+      // we must throw error to rollback transaction using the @Transactional decorator
+      throw new HttpException(
+        applicationLookup.error.message,
+        applicationLookup.error.code,
+      )
+    }
+
+    const didUpdateApplication =
+      await this.applicationService.updateApplication(
+        caseLookup.value.applicationId,
+        {
+          answers: {
+            advert: {
+              title: body.title,
+            },
+          },
+        },
+      )
+
+    if (!didUpdateApplication.ok) {
+      return didUpdateApplication
+    }
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        paid: body.paid,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return {
+      ok: true,
+      value: undefined,
+    }
+  }
+
+  @Audit()
+  @HandleException()
+  @Transactional()
+  async updateTag(
+    caseId: string,
+    body: UpdateTagBody,
+    transaction?: Transaction,
+  ): Promise<Result<undefined>> {
+    const caseLookup = await this.utilityService.caseLookup(caseId)
+
+    if (!caseLookup.ok) {
+      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
+    }
+
+    await this.caseModel.update(
+      {
+        tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
 
     return {
       ok: true,

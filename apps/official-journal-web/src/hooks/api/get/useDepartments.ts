@@ -1,28 +1,27 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetDepartmentsResponse } from '../../../gen/fetch'
-import { APIRotues, fetchWithQueryString } from '../../../lib/constants'
+import { APIRotues, fetcher } from '../../../lib/constants'
 
 type SWRDepartmentsOptions = SWRConfiguration<GetDepartmentsResponse, Error>
 
 type UseDepartmentsParams = {
   options?: SWRDepartmentsOptions
-  search?: string
+  query?: string
 }
 
 export const useDepartments = ({
   options,
-  search,
+  query,
 }: UseDepartmentsParams = {}) => {
+  const url = query
+    ? `${APIRotues.GetDepartments}?${query}`
+    : APIRotues.GetDepartments
+
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetDepartmentsResponse,
     Error
-  >(
-    [APIRotues.Departments, search],
-    ([url, search]: [string, string | undefined]) =>
-      fetchWithQueryString(url, search),
-    options,
-  )
+  >(url, fetcher, options)
 
   return {
     data,

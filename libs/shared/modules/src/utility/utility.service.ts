@@ -172,7 +172,7 @@ export class UtilityService implements IUtilityService {
 
   @Audit()
   @HandleException()
-  async caseTagLookup(tag: string): Promise<Result<CaseStatusDto>> {
+  async caseTagLookup(tag: string): Promise<Result<CaseTagDto>> {
     const tagLookup = await this.caseTagModel.findOne({
       where: {
         value: tag,

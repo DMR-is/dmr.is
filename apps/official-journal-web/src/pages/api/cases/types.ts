@@ -1,39 +1,33 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { Audit, HandleApiException } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
+import { SearchParams } from '../../../lib/types'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  auditAPIRoute({ req })
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  try {
+class GetTypesHandler {
+  @Audit({ logArgs: false })
+  @HandleApiException()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const extract = (key: string | string[] | undefined) =>
-      Array.isArray(key) ? key[0] : key
+    const { page, pageSize, search, department } = req.query as SearchParams & {
+      department?: string
+    }
 
-    const { page, pageSize, search } = req.query
-
-    const currentPage = extract(page) ?? 1
-    const currentPageSize = extract(pageSize)
-      ? Math.min(Number(extract(pageSize)), 1000)
-      : 10
+    const currentPage = page ?? 1
+    const currentPageSize = pageSize ? Math.min(Number(pageSize), 1000) : 10
 
     const types = await dmrClient.getTypes({
+      department: department,
       page: Number(currentPage),
       pageSize: currentPageSize,
-      search: extract(search),
+      search: search,
     })
 
     return res.status(200).json(types)
-  } catch (error) {
-    handleAPIException({ error, res })
   }
 }
+
+const instance = new GetTypesHandler()
+export default (req: NextApiRequest, res: NextApiResponse) =>
+  instance.handler(req, res)

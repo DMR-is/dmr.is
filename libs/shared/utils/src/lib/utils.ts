@@ -1,7 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common'
 
 export const ICELANDIC_ALPHABET = 'AÁBDÐEÉFGHIÍJKLMNOÓPRSTUÚVXYÝÞÆÖ'
 
@@ -23,7 +23,9 @@ export function generatePaging(
   const previousPage = page - 1
 
   if (page > totalPages) {
-    throw new NotFoundException('Page not found')
+    throw new BadRequestException(
+      `Invalid page<${page}> number is larger than totalPages<${totalPages}>`,
+    )
   }
 
   return {

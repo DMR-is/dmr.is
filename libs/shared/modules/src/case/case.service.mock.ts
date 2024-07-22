@@ -10,12 +10,20 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { Result } from '@dmr.is/types'
 
@@ -31,9 +39,42 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  tags(): Promise<Result<GetTagsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTag(caseId: string, body: UpdateTagBody): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+  ): Promise<Result<undefined>> {
+    throw new Error('Method not implemented.')
+  }
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<Result<undefined>> {
     throw new Error('Method not implemented.')
   }
