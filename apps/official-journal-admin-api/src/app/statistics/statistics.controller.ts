@@ -1,11 +1,10 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService } from '@dmr.is/modules'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
 } from '@dmr.is/shared/dto'
 
-import { Controller, forwardRef, Get, Inject, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { IStatisticsService } from './statistics.service.interface'
