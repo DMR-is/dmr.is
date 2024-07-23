@@ -13,7 +13,7 @@ export const CategoriesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
   const { data, error, isLoading } = useCategories({
-    search: `page=1&pageSize=1000${search ? `&search=${search}` : ''}`,
+    params: { page: 1, pageSize: 1000, search },
     options: {
       keepPreviousData: true,
     },
@@ -40,8 +40,8 @@ export const CategoriesFilter = () => {
   }
 
   const options = generateOptions({
-    label: 'Tegund',
-    queryKey: 'type',
+    label: 'Flokkur',
+    queryKey: 'category',
     options: data?.categories,
   })
 

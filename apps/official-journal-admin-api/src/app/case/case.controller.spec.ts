@@ -13,8 +13,8 @@ import {
   CaseCommentType,
   CaseCommunicationStatus,
   CaseStatus,
-  CaseTag,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { Test } from '@nestjs/testing'
 
@@ -48,7 +48,7 @@ describe('CaseController', () => {
     caseNumber: '1234',
     isLegacy: true,
     status: CaseStatus.Submitted,
-    tag: CaseTag.NotStarted,
+    tag: null,
     createdAt: '2024-03-12T12:45:48.21Z',
     modifiedAt: '2024-03-12T12:45:48.21Z',
     publishedAt: null,
@@ -110,14 +110,11 @@ describe('CaseController', () => {
     it('should create a case', async () => {
       const createSpy = jest.spyOn(caseService, 'create')
 
-      jest.spyOn(caseService, 'create').mockImplementation(() =>
-        Promise.resolve({
-          ok: true,
-          value: {
-            case: activeCase,
-          },
-        }),
-      )
+      jest
+        .spyOn(caseService, 'create')
+        .mockImplementation(() =>
+          Promise.resolve(ResultWrapper.ok({ case: activeCase })),
+        )
 
       const result = await caseController.createCase({
         applicationId: activeCase.applicationId,
@@ -151,14 +148,11 @@ describe('CaseController', () => {
     it('should return correct comment', async () => {
       const createSpy = jest.spyOn(commentService, 'create')
 
-      jest.spyOn(commentService, 'create').mockImplementation(() =>
-        Promise.resolve({
-          ok: true,
-          value: {
-            comment: comment,
-          },
-        }),
-      )
+      jest
+        .spyOn(commentService, 'create')
+        .mockImplementation(() =>
+          Promise.resolve(ResultWrapper.ok({ comment })),
+        )
 
       const results = await caseController.createComment(activeCase.id, {
         comment: comment.task.comment,
@@ -187,7 +181,7 @@ describe('CaseController', () => {
       jest
         .spyOn(commentService, 'delete')
         .mockImplementation(() =>
-          Promise.resolve({ ok: true, value: { success: true } }),
+          Promise.resolve(ResultWrapper.ok({ success: true })),
         )
       const deleteSpy = jest.spyOn(commentService, 'delete')
 
@@ -199,15 +193,16 @@ describe('CaseController', () => {
     it('should throw error if comment not found', async () => {
       const unknownId = 'fa81d7a9-934c-47c3-b45c-12f1014bd425'
 
-      jest.spyOn(commentService, 'delete').mockImplementation(() =>
-        Promise.resolve({
-          ok: false,
-          error: {
-            code: 404,
-            message: `Could not find ${comment}<${unknownId}>`,
-          },
-        }),
-      )
+      jest
+        .spyOn(commentService, 'delete')
+        .mockImplementation(() =>
+          Promise.resolve(
+            ResultWrapper.err({
+              code: 404,
+              message: `Could not find ${comment}<${unknownId}>`,
+            }),
+          ),
+        )
 
       expect(await caseController.deleteComment(unknownId, comment.id)).toBe(
         undefined,

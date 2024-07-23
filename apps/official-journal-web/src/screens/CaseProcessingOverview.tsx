@@ -17,7 +17,11 @@ import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages as caseProccessingMessages } from '../lib/messages/caseProcessingOverview'
 import { messages as errorMessages } from '../lib/messages/errors'
-import { CaseOverviewSearchParams, Screen } from '../lib/types'
+import {
+  CaseOverviewSearchParams,
+  getStringFromQueryString,
+  Screen,
+} from '../lib/types'
 type Props = {
   data: Case[]
   paging: Paging
@@ -60,39 +64,31 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   )
 
   const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
-    search: router.query.search,
-    department: router.query.department,
-    status: router.query.status,
-    page: router.query.page,
-    type: router.query.type,
-    category: router.query.category,
-    pageSize: router.query.pageSize,
+    search: getStringFromQueryString(router.query.search),
+    department: getStringFromQueryString(router.query.department),
+    status: getStringFromQueryString(router.query.status),
+    page: Number(getStringFromQueryString(router.query.page)) || undefined,
+    type: getStringFromQueryString(router.query.type),
+    category: getStringFromQueryString(router.query.category),
+    pageSize:
+      Number(getStringFromQueryString(router.query.pageSize)) || undefined,
   })
 
   useEffect(() => {
     setSearchParams({
-      search: router.query.search,
-      department: router.query.department,
-      status: router.query.status,
-      page: router.query.page,
-      type: router.query.type,
-      category: router.query.category,
-      pageSize: router.query.pageSize,
+      search: getStringFromQueryString(router.query.search),
+      department: getStringFromQueryString(router.query.department),
+      status: getStringFromQueryString(router.query.status),
+      page: Number(getStringFromQueryString(router.query.page)) || undefined,
+      type: getStringFromQueryString(router.query.type),
+      category: getStringFromQueryString(router.query.category),
+      pageSize:
+        Number(getStringFromQueryString(router.query.pageSize)) || undefined,
     })
   }, [router.query])
 
   const qsp = useMemo(() => {
-    const filters = Object.entries(searchParams).filter(
-      ([_, value]) => value !== undefined,
-    )
-
-    const qs = new URLSearchParams()
-
-    filters.forEach(([key, value]) => {
-      qs.append(key, value as string)
-    })
-
-    return qs.toString()
+    return searchParams
   }, [searchParams])
 
   const {
@@ -100,7 +96,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     error,
     isLoading,
   } = useCaseOverview({
-    qsp: qsp,
+    params: qsp,
     options: {
       keepPreviousData: true,
       fallback: {
@@ -227,14 +223,12 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
   const dmrClient = createDmrClient()
 
-  const { page, pageSize, department, status, search } = query
-
-  const caseData = await dmrClient.getEditorialOverview({
-    page: Array.isArray(page) ? page[0] : page,
-    pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
-    department: Array.isArray(department) ? department[0] : department,
-    status: Array.isArray(status) ? status[0] : status,
-    search: Array.isArray(search) ? search[0] : search,
+  const caseData = await dmrClient.editorialOverview({
+    page: getStringFromQueryString(query.page),
+    pageSize: getStringFromQueryString(query.pageSize),
+    department: getStringFromQueryString(query.department),
+    status: getStringFromQueryString(query.status),
+    search: getStringFromQueryString(query.search),
   })
 
   return {

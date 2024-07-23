@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
 
-type AuditParams = {
-  logArgs: boolean
-}
-
-export function Audit({ logArgs }: AuditParams = { logArgs: true }) {
+export function LogMethod(logArgs: boolean | undefined = true) {
   return function (
     target: any,
-    method: string,
+    method: string | symbol,
     descriptor: PropertyDescriptor,
   ) {
     const service = target.constructor.name
@@ -24,11 +20,15 @@ export function Audit({ logArgs }: AuditParams = { logArgs: true }) {
         Object.assign(logData, args)
       }
 
-      logger.info(`${service}.${method}`, {
+      logger.info(`${service}.${String(method)}`, {
         ...logData,
       })
       return originalMethod.apply(this, args)
     }
     return descriptor
   }
+}
+
+export function TestLogMethod(logArgs: boolean = true): MethodDecorator {
+  return LogMethod(logArgs)
 }

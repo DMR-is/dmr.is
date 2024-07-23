@@ -7,28 +7,28 @@ import {
   PostCaseComment,
   PostCaseCommentResponse,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentService {
   comment(
     caseId: string,
     commentId: string,
-  ): Promise<Result<GetCaseCommentResponse>>
+  ): Promise<ResultWrapper<GetCaseCommentResponse>>
   comments(
     caseId: string,
     params?: GetCaseCommentsQuery,
-  ): Promise<Result<GetCaseCommentsResponse>>
+  ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 
   create(
     caseId: string,
     body: PostCaseComment,
     transaction?: Transaction,
-  ): Promise<Result<PostCaseCommentResponse>>
+  ): Promise<ResultWrapper<PostCaseCommentResponse>>
 
   delete(
     caseId: string,
     commentId: string,
-  ): Promise<Result<DeleteCaseCommentResponse>>
+  ): Promise<ResultWrapper<DeleteCaseCommentResponse>>
 }
 
 export const ICommentService = Symbol('ICommentService')

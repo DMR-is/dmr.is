@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   CaseCommunicationStatusDto,
@@ -14,30 +14,32 @@ import {
 } from '../journal/models'
 
 export interface IUtilityService {
-  getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>>
-  departmentLookup(departmentId: string): Promise<Result<AdvertDepartmentDTO>>
-  typeLookup(type: string): Promise<Result<AdvertTypeDTO>>
-  categoryLookup(categoryId: string): Promise<Result<AdvertCategoryDTO>>
+  getCaseWithAdvert(caseId: string): Promise<ResultWrapper<CaseWithAdvert>>
+  departmentLookup(
+    departmentId: string,
+  ): Promise<ResultWrapper<AdvertDepartmentDTO>>
+  typeLookup(type: string): Promise<ResultWrapper<AdvertTypeDTO>>
+  categoryLookup(categoryId: string): Promise<ResultWrapper<AdvertCategoryDTO>>
   caseLookup(
     caseId: string,
     transaction?: Transaction,
-  ): Promise<Result<CaseDto>>
-  generateCaseNumber(): Promise<Result<string>>
-  caseStatusLookup(status: string): Promise<Result<CaseStatusDto>>
-  caseTagLookup(tag: string): Promise<Result<CaseStatusDto>>
+  ): Promise<ResultWrapper<CaseDto>>
+  generateCaseNumber(): Promise<ResultWrapper<string>>
+  caseStatusLookup(status: string): Promise<ResultWrapper<CaseStatusDto>>
+  caseTagLookup(tag: string): Promise<ResultWrapper<CaseStatusDto>>
   caseCommunicationStatusLookup(
     status: string,
-  ): Promise<Result<CaseCommunicationStatusDto>>
-  caseLookupByApplicationId(advertId: string): Promise<Result<CaseDto>>
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
+  caseLookupByApplicationId(advertId: string): Promise<ResultWrapper<CaseDto>>
 
-  userLookup(userId: string): Promise<Result<User>>
+  userLookup(userId: string): Promise<ResultWrapper<User>>
 
   getNextSerialNumber(
     departmentId: string,
     year: number,
-  ): Promise<Result<number>>
+  ): Promise<ResultWrapper<number>>
 
-  getNextPublicationNumber(caseIds: string[]): Promise<Result<number>>
+  getNextPublicationNumber(caseIds: string[]): Promise<ResultWrapper<number>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

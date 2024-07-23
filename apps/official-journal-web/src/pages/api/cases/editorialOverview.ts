@@ -1,44 +1,31 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  auditAPIRoute({ req })
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  try {
-    const extract = (key: string | string[] | undefined) =>
-      Array.isArray(key) ? key[0] : key
-
+class GetEditorialOverviewHandler {
+  @LogMethod(false)
+  @HandleApiException()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { status, department, category, type, page, pageSize, search } =
-      req.query
+    const { search, category, type, status, department, page, pageSize } =
+      req.query as Record<string, string>
 
-    const currentPage = extract(page) ?? 1
-    const currentPageSize = extract(pageSize)
-      ? Math.min(Number(extract(pageSize)), 100)
-      : 10
-
-    const cases = await dmrClient.getEditorialOverview({
-      search: extract(search),
-      category: extract(category),
-      type: extract(type),
-      status: extract(status),
-      department: extract(department),
-      page: `${currentPage}`,
-      pageSize: `${currentPageSize}`,
+    const cases = await dmrClient.editorialOverview({
+      search: search,
+      category: category,
+      type: type,
+      status: status,
+      department: department,
+      page: page,
+      pageSize: pageSize,
     })
 
     return res.status(200).json(cases)
-  } catch (error) {
-    handleAPIException({ error, res })
   }
 }
+
+const instance = new GetEditorialOverviewHandler()
+export default (req: NextApiRequest, res: NextApiResponse) =>
+  instance.handler(req, res)

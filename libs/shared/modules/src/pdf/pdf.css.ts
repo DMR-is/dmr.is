@@ -1,4 +1,4 @@
-:root {
+export const pdfCss = `:root {
   --font-family: 'Times New Roman', serif;
   --font-family--monospaced: 'Courier New', monospace;
   --font-weight--normal: 400;
@@ -511,3 +511,4 @@ ins {
 }
 .disclaimer__text {
 }
+`

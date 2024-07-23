@@ -4,10 +4,10 @@ import { Case } from '@dmr.is/shared/dto'
 import { CaseDto } from '../../../case/models'
 import { caseStatusMapper } from '../../mappers'
 import { caseCommunicationStatusMapper } from '../../mappers/case/communicationStatus.mapper'
-import { caseTagMapper } from '../../mappers/case/tag.mapper'
 import { advertCategoryMigrate } from '../advert/advert-category-migrate'
 import { caseChannelMigrate } from './case-channel-migrate'
 import { caseCommentMigrate } from './case-comment-migrate'
+import { caseTagMigrate } from './case-tag-migrate'
 
 export const caseMigrate = (model: CaseDto): Case => {
   const status = caseStatusMapper(model.status.value)
@@ -15,8 +15,6 @@ export const caseMigrate = (model: CaseDto): Case => {
   if (!status) {
     throw new Error(`Unknown case status: ${model.status.value}`)
   }
-
-  const caseTag = caseTagMapper(model?.tag?.value)
 
   const communicationStatus = caseCommunicationStatusMapper(
     model.communicationStatus.value,
@@ -34,7 +32,7 @@ export const caseMigrate = (model: CaseDto): Case => {
     year: model.year,
     caseNumber: model.caseNumber,
     status: status,
-    tag: caseTag,
+    tag: model.tag ? caseTagMigrate(model.tag) : null,
     createdAt: model.createdAt,
     assignedTo:
       ALL_MOCK_USERS.find((u) => u.id === model.assignedUserId) ?? null, // TODO: Implement this when auth is ready

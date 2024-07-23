@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator'
+import {
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -11,7 +17,7 @@ export class GetAdvertTypesQueryParams {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   department?: string
 
   @ApiProperty({

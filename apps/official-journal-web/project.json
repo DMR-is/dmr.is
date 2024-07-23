@@ -81,6 +81,17 @@
         "sourceRoot": "apps/official-journal-web"
       },
       "dependsOn": ["generate", "build"]
+    },
+    "update-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run official-journal-web:update-openapi-schema",
+          "yarn nx run official-journal-web:codegen"
+        ],
+        "parallel": false,
+        "cwd": "apps/official-journal-web"
+      }
     }
   },
   "tags": []

@@ -1,9 +1,8 @@
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { CASE_READY } from '@dmr.is/mocks'
 
 import { Test } from '@nestjs/testing'
 
-import { ICaseService } from '../case/case.service.interface'
+import { IUtilityService } from '../utility/utility.service.interface'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
 
@@ -27,13 +26,8 @@ describe('PdfService', () => {
           },
         },
         {
-          provide: ICaseService,
-          useValue: {
-            getCase: jest.fn(() => ({
-              ...CASE_READY,
-            })),
-            initialize: jest.fn(() => {}),
-          },
+          provide: IUtilityService,
+          useValue: () => ({}),
         },
       ],
     }).compile()

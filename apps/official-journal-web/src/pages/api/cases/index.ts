@@ -1,34 +1,31 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { auditAPIRoute, handleAPIException } from '../../../lib/api/utils'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  auditAPIRoute({ req })
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  try {
-    const extract = (key: string | string[] | undefined) =>
-      Array.isArray(key) ? key[0] : key
-
+class GetCasesHandler {
+  @LogMethod(false)
+  @HandleApiException()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { status, department, search, id } = req.query
+    const { search, category, type, status, department, page, pageSize } =
+      req.query as Record<string, string>
 
     const cases = await dmrClient.getCases({
-      id: extract(id),
-      search: extract(search),
-      status: extract(status),
-      department: extract(department),
+      search: search,
+      category: category,
+      type: type,
+      status: status,
+      department: department,
+      page: page,
+      pageSize: pageSize,
     })
+
     return res.status(200).json(cases)
-  } catch (error) {
-    handleAPIException({ error, res })
   }
 }
+
+const instance = new GetCasesHandler()
+export default (req: NextApiRequest, res: NextApiResponse) =>
+  instance.handler(req, res)

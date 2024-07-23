@@ -14,7 +14,7 @@ import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartments, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
-import { Screen } from '../lib/types'
+import { getStringFromQueryString, Screen } from '../lib/types'
 
 type Props = {
   cases: Case[]
@@ -126,19 +126,15 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 CasePublishingOverview.getProps = async ({ query }) => {
   const dmrClient = createDmrClient()
 
-  const { department } = query
-
-  const dep = Array.isArray(department) ? department[0] : department
-
-  const defaultDepartment = dep ? dep : CaseDepartments.a.slug
+  const department = getStringFromQueryString(query.tab) || 'a-deild'
 
   const { cases, paging } = await dmrClient.getCases({
-    department: defaultDepartment,
+    department,
     status: CaseStatusEnum.Tilbi,
   })
 
   return {
-    cases: cases,
+    cases,
     paging,
   }
 }
