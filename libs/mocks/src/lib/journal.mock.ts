@@ -237,7 +237,7 @@ export const ALL_MOCK_JOURNAL_CATEGORIES = [
   MOCK_CATEGORY_REYKJAVIK,
 ]
 
-const MOCK_INVOLVEDPARTY_USR: Institution = {
+export const MOCK_INVOLVEDPARTY_USR: Institution = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',

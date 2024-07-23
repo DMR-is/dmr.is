@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
+import { Meta } from '../components/meta/Meta'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
@@ -209,14 +210,21 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   ]
 
   return (
-    <CaseOverviewGrid>
-      <Tabs
-        onTabChange={onTabChange}
-        selectedTab={selectedTab}
-        tabs={tabs}
-        label={formatMessage(caseProccessingMessages.tabs.statuses)}
+    <>
+      <Meta
+        title={`${formatMessage(
+          caseProccessingMessages.breadcrumbs.cases,
+        )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
       />
-    </CaseOverviewGrid>
+      <CaseOverviewGrid>
+        <Tabs
+          onTabChange={onTabChange}
+          selectedTab={selectedTab}
+          tabs={tabs}
+          label={formatMessage(caseProccessingMessages.tabs.statuses)}
+        />
+      </CaseOverviewGrid>
+    </>
   )
 }
 

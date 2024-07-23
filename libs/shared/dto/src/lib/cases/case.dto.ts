@@ -19,6 +19,7 @@ import { AdvertType } from '../advert-types'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
 import { Department } from '../departments/department.dto'
+import { Institution } from '../institutions'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
 import { CaseChannel } from './case-channel.dto'
@@ -74,6 +75,13 @@ export class Case {
     description: 'Internal tag for the case, default to null',
   })
   tag!: CaseTag | null
+
+  @ApiProperty({
+    type: Institution,
+    description: 'Involved party of the case.',
+  })
+  @Type(() => Institution)
+  involvedParty!: Institution
 
   @ApiProperty({
     type: String,

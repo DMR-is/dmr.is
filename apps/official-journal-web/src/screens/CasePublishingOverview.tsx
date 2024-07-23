@@ -6,10 +6,12 @@ import { Box } from '@island.is/island-ui/core'
 import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
+import { Meta } from '../components/meta/Meta'
 import { Tabs } from '../components/tabs/Tabs'
 import { PublishingContextProvider } from '../context/publishingContext'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
+import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { CaseDepartments, Routes } from '../lib/constants'
@@ -23,6 +25,8 @@ type Props = {
 
 const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
   const router = useRouter()
+  const { formatMessage } = useFormatMessage()
+
   const initalDepartment = router.query.department
     ? (router.query.department as string)
     : 'a-deild'
@@ -102,6 +106,12 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 
   return (
     <>
+      <Meta
+        title={`${formatMessage(
+          messages.breadcrumbs.casePublishing,
+        )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
+      />
+
       {casesToPublish.length > 0 && (
         <CasePublishingList
           onPublish={() => console.log('pubkishing')}

@@ -60,10 +60,9 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
         ),
       },
       {
-        // TODO: Add institution (involved party) name to case
         children: (
           <Text truncate variant="medium">
-            {'Reykjavík'}
+            {row.involvedParty.title}
           </Text>
         ),
       },

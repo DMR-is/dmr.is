@@ -29,7 +29,9 @@ export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
   const { formatMessage: f } = useFormatMessage()
 
   const { data, isLoading, error } = useCases({
-    qsp: `id=${caseIds.join(',')}`,
+    params: {
+      id: caseIds.join(','),
+    },
     options: {
       refreshInterval: 0,
     },

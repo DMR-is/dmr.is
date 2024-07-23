@@ -55,7 +55,7 @@ const CasePublishingTableRow = ({
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
-          Reykjavíkurborg
+          {row.involvedParty.title}
         </Text>
       </TableCell>
       <TableCell>
