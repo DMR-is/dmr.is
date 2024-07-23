@@ -11,7 +11,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
@@ -49,8 +48,6 @@ export const Banner = ({
   contentColumnSpan = ['12/12', '12/12', '5/12'],
 }: Props) => {
   const { notifications } = useNotificationContext()
-  // const { renderFilters } = useFilterContext()
-
   const { formatMessage } = useFormatMessage()
 
   return (
@@ -87,7 +84,6 @@ export const Banner = ({
                     : description}
                 </Text>
                 {notifications.length > 0 && (
-                  // <Box marginBottom={renderFilters ? 3 : 1}>
                   <Box marginBottom={3}>
                     <Stack space={3}>
                       {notifications.map((notification, index) => (
@@ -100,7 +96,6 @@ export const Banner = ({
                       ))}
                     </Stack>
                   </Box>
-                  // </Box>
                 )}
                 {showFilters && <CaseFilters />}
               </GridColumn>
