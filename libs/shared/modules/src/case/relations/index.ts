@@ -7,6 +7,7 @@ import {
 import {
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
+  AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../../journal/models'
 import {
@@ -24,6 +25,7 @@ export const CASE_RELATIONS = [
   AdvertTypeDTO,
   AdvertCategoryDTO,
   CaseChannelDto,
+  AdvertInvolvedPartyDTO,
   {
     model: CaseCommentDto,
     include: [

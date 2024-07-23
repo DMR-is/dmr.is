@@ -11,6 +11,7 @@ import {
   DEPT_A_AUGLYSING,
   JOURNAL_DEPARTMENT_B,
   MOCK_CATEGORY_GAELUDYR,
+  MOCK_INVOLVEDPARTY_USR,
 } from './journal.mock'
 
 const caseTag = {
@@ -18,6 +19,8 @@ const caseTag = {
   key: 'NotStarted',
   value: CaseTagEnum.NotStarted,
 }
+
+const involvedParty = MOCK_INVOLVEDPARTY_USR
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -30,6 +33,7 @@ export const CASE_SUBMITTED: Case = {
   isLegacy: true,
   status: CaseStatus.Submitted,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -72,6 +76,7 @@ export const CASE_IN_PROGRESS: Case = {
   isLegacy: true,
   status: CaseStatus.InProgress,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -157,6 +162,7 @@ export const CASE_IN_REVIEW: Case = {
   isLegacy: true,
   status: CaseStatus.InReview,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -326,6 +332,7 @@ export const CASE_READY: Case = {
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -411,6 +418,7 @@ export const CASE_READY_2: Case = {
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
   modifiedAt: '2024-04-01T12:45:48.21Z',
   publishedAt: null,
@@ -496,6 +504,7 @@ export const CASE_READY_3: Case = {
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
   modifiedAt: '2024-04-01T12:45:48.21Z',
   publishedAt: null,
@@ -581,6 +590,7 @@ export const CASE_PUBLISHED: Case = {
   isLegacy: true,
   status: CaseStatus.Published,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',
@@ -666,6 +676,7 @@ export const CASE_PUBLISHED_2: Case = {
   isLegacy: true,
   status: CaseStatus.Published,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',
@@ -751,6 +762,7 @@ export const CASE_PUBLISHED_3: Case = {
   isLegacy: true,
   status: CaseStatus.Published,
   tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',

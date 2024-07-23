@@ -16,7 +16,7 @@ export const CasePublishingList = ({ cases }: Props) => {
           key={c.id}
           department={c.advertDepartment.title}
           publicationDate={c.requestedPublicationDate}
-          insitiution={'Reykjavíkurborg'} // TODO: ADd involved party to case
+          insitiution={c.involvedParty.title}
           publicationNumber={`${c.caseNumber}`}
           title={c.advertTitle}
           // categories={c.advert.categories.map((cat) => cat.title)} TODO: add categories with case with application, and status

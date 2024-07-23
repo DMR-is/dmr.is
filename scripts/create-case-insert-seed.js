@@ -4,7 +4,6 @@ const path = require('path')
 
 const DEPARTMENT_IDS = [
   '69CD3E90-106E-4B9C-8419-148C29E1738A',
-  'AA408EAE-A76A-4ED8-9AA3-388DC0C8FF05',
   '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
   '637291F2-F7F4-405D-8586-EF88B59CAB00',
 ]
@@ -930,8 +929,6 @@ const STATUS_IDS = [
   '22b038c1-1d8b-4a01-b061-02f22358d17e',
   'a90d65b7-905f-4ebb-aa1d-7fa115d91d56',
   'cd1536de-4481-492f-8db1-1ea0e3e38880',
-  'c2b24d63-e5d9-417f-8ec1-ef5150e1a17f',
-  'a8668645-ef72-4f2d-8e75-7bfe65b0123c',
 ]
 
 const INVOLVED_PARTY_IDS = [
@@ -1998,6 +1995,10 @@ const SUBMITTED_STATUS = '799722be-5530-439a-91dc-606e129b030d'
 
 const APPLICATION_ID = '8fb627ec-fe9c-4f59-b3df-2c33b8f47597'
 
+const generateCaseCategories = ({ caseId, categoryId }) => {
+  return `INSERT INTO case_categories(case_case_id,category_id) VALUES ('${caseId}','${categoryId}');`
+}
+
 const generateCaseInsertSeed = ({
   id,
   applicationId,
@@ -2005,6 +2006,7 @@ const generateCaseInsertSeed = ({
   caseNumber,
   statusId,
   tagId,
+  involvedPartyId,
   createdAt,
   updatedAt,
   isLegacy,
@@ -2026,6 +2028,7 @@ INSERT INTO
     CASE_NUMBER,
     STATUS_ID,
     TAG_ID,
+    INVOLVED_PARTY_ID,
     CREATED_AT,
     UPDATED_AT,
     IS_LEGACY,
@@ -2047,6 +2050,7 @@ INSERT INTO
     '${caseNumber}',
     '${statusId}',
     '${tagId}',
+    '${involvedPartyId}',
     '${createdAt}',
     '${updatedAt}',
     ${isLegacy},
@@ -2140,6 +2144,7 @@ function main() {
       const statusId = pickRandom(STATUS_IDS)
       const tagId = pickRandom(TAG_IDS)
       const isLegacy = Math.random() > 0.5
+      const involvedPartyId = pickRandom(INVOLVED_PARTY_IDS)
 
       const communicationStatusId = pickRandom(COMMUNICATION_STATUS_IDS)
       const paid = Math.random() > 0.5
@@ -2153,15 +2158,16 @@ function main() {
       const title = pickRandom(ADVERT_TITLES)
 
       const assignedUserId =
-        statusId === SUBMITTED_STATUS ? pickRandom(EMPLOYEE_IDS) : undefined
+        statusId === SUBMITTED_STATUS ? undefined : pickRandom(EMPLOYEE_IDS)
 
-      const template = generateCaseInsertSeed({
+      const caseDump = generateCaseInsertSeed({
         id,
         applicationId: APPLICATION_ID,
         year,
         caseNumber,
         statusId,
         tagId,
+        involvedPartyId,
         createdAt: created.toISOString(),
         updatedAt: created.toISOString(),
         isLegacy,
@@ -2175,7 +2181,19 @@ function main() {
         advertRequestedPublicationDate: requestPublicationDate.toISOString(),
       })
 
-      insertSeed += template
+      const categoryCount = Math.floor(Math.random() * 6)
+      const categoryIds = Array.from({ length: categoryCount }, () =>
+        pickRandom(CATEGORY_IDS),
+      )
+
+      const uniqueCategories = Array.from(new Set(categoryIds))
+
+      const categoryDump = uniqueCategories
+        .map((categoryId) => generateCaseCategories({ caseId: id, categoryId }))
+        .join('\n')
+
+      insertSeed += caseDump
+      insertSeed += categoryDump
     }
 
     const filePath = path.join(__dirname, '../tmp/case-insert-dump.sql')

@@ -55,8 +55,7 @@ const CasePublishingTableRow = ({
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
-          Reykjavíkurborg
-          {/* TODO: Add invovled party to case */}
+          {row.involvedParty.title}
         </Text>
       </TableCell>
       <TableCell>
