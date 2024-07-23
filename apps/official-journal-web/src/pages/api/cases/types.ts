@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { SearchParams } from '../../../lib/types'
 
 class GetTypesHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()

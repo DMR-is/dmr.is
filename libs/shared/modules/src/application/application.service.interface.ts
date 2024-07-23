@@ -6,28 +6,30 @@ import {
   PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface IApplicationService {
-  getApplication(id: string): Promise<Result<GetApplicationResponse>>
+  getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>
 
   updateApplication(
     id: string,
     answers?: UpdateApplicationBody,
-  ): Promise<Result<undefined>>
+  ): Promise<ResultWrapper<undefined>>
 
-  submitApplication(id: string): Promise<Result<undefined>>
+  submitApplication(id: string): Promise<ResultWrapper<undefined>>
 
-  postApplication(id: string): Promise<Result<undefined>>
+  postApplication(id: string): Promise<ResultWrapper<undefined>>
 
-  getComments(applicationId: string): Promise<Result<GetCaseCommentsResponse>>
+  getComments(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 
   postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<Result<PostCaseCommentResponse>>
+  ): Promise<ResultWrapper<PostCaseCommentResponse>>
 
-  getPrice(applicationId: string): Promise<Result<CasePriceResponse>>
+  getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

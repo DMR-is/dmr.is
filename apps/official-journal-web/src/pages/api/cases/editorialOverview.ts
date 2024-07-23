@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 
 class GetEditorialOverviewHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
@@ -12,7 +12,7 @@ class GetEditorialOverviewHandler {
     const { search, category, type, status, department, page, pageSize } =
       req.query as Record<string, string>
 
-    const cases = await dmrClient.getEditorialOverview({
+    const cases = await dmrClient.editorialOverview({
       search: search,
       category: category,
       type: type,

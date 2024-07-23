@@ -1,3 +1,4 @@
+import { Route } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
   CreateCaseResponse,
@@ -28,28 +29,16 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Body,
   Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpException,
   Inject,
   NotFoundException,
   Param,
-  Post,
-  Put,
   Query,
 } from '@nestjs/common'
-import {
-  ApiBody,
-  ApiNoContentResponse,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-} from '@nestjs/swagger'
 
 @Controller({
   version: '1',
@@ -67,568 +56,342 @@ export class CaseController {
     private readonly caseCommentService: ICommentService,
   ) {}
 
-  @Get('departments')
-  @ApiOperation({
+  @Route({
+    path: 'departments',
     operationId: 'getDepartments',
-    summary: 'Get departments',
-  })
-  @ApiResponse({
-    type: GetDepartmentsResponse,
-    status: 200,
-    description: 'Departments',
+    summary: 'Return all departments',
+    responseType: GetDepartmentsResponse,
+    query: [{ type: DefaultSearchParams }],
   })
   async departments(
-    @Query() params?: DefaultSearchParams,
+    @Query() params: DefaultSearchParams,
   ): Promise<GetDepartmentsResponse> {
-    const result = await this.journalService.getDepartments(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(
+      await this.journalService.getDepartments(params),
+    )
   }
 
-  @Get('tags')
-  @ApiOperation({
+  @Route({
+    path: 'tags',
     operationId: 'getTags',
     summary: 'Get tags',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetTagsResponse,
-    description: 'Tags',
+    responseType: GetTagsResponse,
   })
   async tags(): Promise<GetTagsResponse> {
-    const result = await this.caseService.tags()
+    const result = (await this.caseService.tags()).unwrap()
 
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return result
   }
 
-  @Get('types')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertTypesResponse,
-    description: 'List of advert types.',
-  })
-  @ApiOperation({
+  @Route({
+    path: 'types',
     operationId: 'getTypes',
-    summary: 'Get advert types.',
+    summary: 'Get advert types',
+    responseType: GetAdvertTypesResponse,
+    query: [{ type: GetAdvertTypesQueryParams }],
   })
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    const result = await this.journalService.getTypes(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
-  @Get('categories')
-  @ApiOperation({
+  @Route({
+    path: 'categories',
     operationId: 'getCategories',
     summary: 'Get categories',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCategoriesResponse,
-    description: 'Categories',
+    responseType: GetCategoriesResponse,
+    query: [{ type: DefaultSearchParams }],
   })
   async categories(
     @Query()
     params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
-    const result = await this.journalService.getCategories(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
 
-  @Get('overview')
-  @ApiOperation({
-    operationId: 'getEditorialOverview',
-    summary: 'Get overview for cases in progress.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: EditorialOverviewResponse,
-    description: 'Cases overview.',
+  @Route({
+    path: 'overview',
+    operationId: 'editorialOverview',
+    summary: 'Get editorial overview',
+    responseType: EditorialOverviewResponse,
+    query: [{ type: GetCasesQuery }],
   })
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
-    const result = await this.caseService.overview(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.overview(params))
   }
 
-  @Put(':id/price')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/price',
     operationId: 'updatePrice',
     summary: 'Update case price',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateCasePriceBody,
-    required: true,
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCasePriceBody,
   })
   async updatePrice(
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
-    const result = await this.caseService.updatePrice(id, body.price)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updatePrice(id, body.price))
   }
 
-  @Put(':id/department')
-  @ApiOperation({
-    operationId: 'updateDepartment',
-    summary: 'Update department of case and application',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateCaseDepartmentBody,
-    required: true,
-  })
-  async updateDepartment(
-    @Param('id') id: string,
-    @Body() body: UpdateCaseDepartmentBody,
-  ): Promise<void> {
-    const result = await this.caseService.updateDepartment(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-  }
-
-  @Put(':id/type')
-  @ApiOperation({
-    operationId: 'updateType',
-    summary: 'Update type of case and application',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateCaseTypeBody,
-    required: true,
-  })
-  async updateType(
-    @Param('id') id: string,
-    @Body() body: UpdateCaseTypeBody,
-  ): Promise<void> {
-    const result = await this.caseService.updateType(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-  }
-
-  @Put(':id/paid')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/paid',
     operationId: 'updatePaid',
     summary: 'Update paid status of case',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdatePaidBody,
-    required: true,
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdatePaidBody,
   })
   async updatePaid(
     @Param('id') id: string,
     @Body() body: UpdatePaidBody,
   ): Promise<void> {
-    const result = await this.caseService.updatePaid(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updatePaid(id, body))
   }
 
-  @Put(':id/tag')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/tag',
     operationId: 'updateTag',
     summary: 'Update tag value of case',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateTagBody,
-    required: true,
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateTagBody,
   })
   async updateTag(
     @Param('id') id: string,
     @Body() body: UpdateTagBody,
   ): Promise<void> {
-    const result = await this.caseService.updateTag(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateTag(id, body))
   }
 
-  @Put(':id/publishDate')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/department',
+    operationId: 'updateDepartment',
+    summary: 'Update department of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCaseDepartmentBody,
+  })
+  async updateDepartment(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseDepartmentBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateDepartment(id, body))
+  }
+
+  @Route({
+    path: ':id/type',
+    operationId: 'updateType',
+    summary: 'Update type of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCaseTypeBody,
+  })
+  async updateType(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateType(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/publishDate',
     operationId: 'updatePublishDate',
     summary: 'Update publish date of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdatePublishDateBody,
   })
-  @ApiBody({
-    type: UpdatePublishDateBody,
-    required: true,
-  })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiNoContentResponse()
   async updatePublishDate(
     @Param('id') id: string,
     @Body() body: UpdatePublishDateBody,
   ): Promise<void> {
-    const result = await this.caseService.updatePublishDate(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updatePublishDate(id, body))
   }
 
-  @Put(':id/title')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/title',
     operationId: 'updateTitle',
-    summary: 'Update publish date of case and application',
+    summary: 'Update title of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateTitleBody,
   })
-  @ApiBody({
-    type: UpdateTitleBody,
-    required: true,
-  })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiNoContentResponse()
   async updateTitle(
     @Param('id') id: string,
     @Body() body: UpdateTitleBody,
   ): Promise<void> {
-    const result = await this.caseService.updateTitle(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateTitle(id, body))
   }
 
-  @Put(':id/categories')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/categories',
     operationId: 'updateCategories',
     summary: 'Update categories of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCategoriesBody,
   })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateCategoriesBody,
-    required: true,
-  })
-  @ApiNoContentResponse()
   async updateCategories(
     @Param('id') id: string,
     @Body() body: UpdateCategoriesBody,
   ): Promise<void> {
-    const result = await this.caseService.updateCategories(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateCategories(id, body))
   }
 
-  @Post(':id/status/next')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/status/next',
     operationId: 'updateNextStatus',
     summary: 'Update case status to next.',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
+    params: [{ name: 'id', type: 'string', required: true }],
   })
   async updateNextStatus(@Param('id') id: string): Promise<void> {
-    const result = await this.caseService.updateNextStatus(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateNextStatus(id))
   }
 
-  @Post(':id/assign/:userId')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/assign/:userId',
     operationId: 'assignEmployee',
-    summary: 'Assign case to user.',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiParam({
-    name: 'userId',
-    type: 'string',
-    required: true,
+    summary: 'Updates assigned user on the case.',
+    params: [
+      { name: 'id', type: 'string', required: true },
+      { name: 'userId', type: 'string', required: true },
+    ],
   })
   async assign(
     @Param('id') id: string,
     @Param('userId') userId: string,
   ): Promise<void> {
-    const result = await this.caseService.assign(id, userId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.assign(id, userId))
   }
 
-  @Post(':id/status')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id/status',
     operationId: 'updateCaseStatus',
+    params: [{ name: 'id', type: 'string', required: true }],
     summary: 'Update case status.',
-  })
-  @ApiNoContentResponse()
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateCaseStatusBody,
-    required: true,
+    bodyType: UpdateCaseStatusBody,
   })
   async updateStatus(
     @Param('id') id: string,
     @Body() body: UpdateCaseStatusBody,
   ): Promise<void> {
-    const result = await this.caseService.updateStatus(id, body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.updateStatus(id, body))
   }
 
-  @Get(':id')
-  @ApiOperation({
+  @Route({
+    path: ':id',
     operationId: 'getCase',
     summary: 'Get case by ID.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCaseResponse,
-    description: 'Case by ID.',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Case not found.',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error.',
-  })
-  @HttpCode(200)
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetCaseResponse,
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
-    const result = await this.caseService.case(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.case(id))
   }
 
-  @Post('')
-  @ApiOperation({
+  @Route({
+    method: 'post',
     operationId: 'createCase',
     summary: 'Create case.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: CreateCaseResponse,
-    description: 'Case created.',
-  })
-  @ApiBody({
-    type: PostApplicationBody,
-    required: true,
+    bodyType: PostApplicationBody,
+    responseType: CreateCaseResponse,
   })
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
-    const result = await this.caseService.create(body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.create(body))
   }
 
-  @Get('')
-  @ApiOperation({
+  @Route({
+    path: '',
     operationId: 'getCases',
-    summary: 'Get cases.',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCasesReponse,
-    description: 'All cases.',
+    summary: 'Get cases',
+    responseType: GetCasesReponse,
+    query: [{ type: GetCasesQuery }],
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    const result = await this.caseService.cases(params)
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(await this.caseService.cases(params))
   }
 
-  @Post('publish')
-  @ApiOperation({
+  @Route({
+    method: 'post',
+    path: 'publish',
     operationId: 'publish',
     summary: 'Publish cases',
+    bodyType: PostCasePublishBody,
   })
-  @ApiBody({
-    type: PostCasePublishBody,
-    required: true,
-  })
-  @ApiNoContentResponse()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
-    const result = await this.caseService.publish(body)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
+    ResultWrapper.unwrap(await this.caseService.publish(body))
   }
 
-  @Get(':id/comments')
-  @ApiOperation({
+  @Route({
+    path: ':id/comments',
     operationId: 'getComments',
     summary: 'Get case comments',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCaseCommentsResponse,
-    description: 'Comments for case',
+    responseType: GetCaseCommentsResponse,
+    params: [{ name: 'id', type: 'string', required: true }],
+    query: [{ type: GetCaseCommentsQuery }],
   })
   async getComments(
     @Param('id') id: string,
     @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
-    const results = await this.caseCommentService.comments(id, params)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-
-    return results.value
+    return ResultWrapper.unwrap(
+      await this.caseCommentService.comments(id, params),
+    )
   }
 
-  @Get(':id/comments/:commentId')
-  @ApiOperation({
+  @Route({
+    path: ':id/comments/:commentId',
     operationId: 'getComment',
     summary: 'Get case comment',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetCaseCommentResponse,
-    description: 'Comment for case',
+    responseType: GetCaseCommentResponse,
+    params: [
+      { name: 'id', type: 'string', required: true },
+      { name: 'commentId', type: 'string', required: true },
+    ],
   })
   async getComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
-    const results = await this.caseCommentService.comment(id, commentId)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-    return results.value
+    return ResultWrapper.unwrap(
+      await this.caseCommentService.comment(id, commentId),
+    )
   }
 
-  @Post(':id/comments')
-  @ApiOperation({
+  @Route({
+    path: ':id/comments',
     operationId: 'createComment',
     summary: 'Add comment to case',
-  })
-  @ApiResponse({
-    type: PostCaseCommentResponse,
-    status: 200,
-    description: 'Comment created',
+    bodyType: PostCaseComment,
+    responseType: PostCaseCommentResponse,
+    params: [{ name: 'id', type: 'string', required: true }],
   })
   async createComment(
     @Param('id') id: string,
     @Body() body: PostCaseComment,
   ): Promise<PostCaseCommentResponse> {
-    const results = await this.caseCommentService.create(id, body)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-    return results.value
+    return ResultWrapper.unwrap(await this.caseCommentService.create(id, body))
   }
 
-  @Delete(':id/comments/:commentId')
-  @ApiOperation({
+  @Route({
+    method: 'delete',
     operationId: 'deleteComment',
     summary: 'Delete comment from case',
+    params: [
+      { name: 'id', type: 'string', required: true },
+      { name: 'commentId', type: 'string', required: true },
+    ],
   })
-  @ApiNoContentResponse()
   async deleteComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,

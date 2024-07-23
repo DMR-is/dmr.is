@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, Delete, HandleApiException } from '@dmr.is/decorators'
+import { Delete, HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../../../lib/api/createClient'
 
 class DeleteCommentHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   @Delete()
   public async handler(req: NextApiRequest, res: NextApiResponse) {

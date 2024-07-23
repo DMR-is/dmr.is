@@ -25,7 +25,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -39,65 +39,76 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
-  tags(): Promise<Result<GetTagsResponse>> {
+  tags(): Promise<ResultWrapper<GetTagsResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateTag(caseId: string, body: UpdateTagBody): Promise<Result<undefined>> {
+  updateTag(
+    caseId: string,
+    body: UpdateTagBody,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePaid(caseId: string, body: UpdatePaidBody): Promise<Result<undefined>> {
+  updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateType(
     caseId: string,
     body: UpdateCaseTypeBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateCategories(
     caseId: string,
     body: UpdateCategoriesBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updatePublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateTitle(
     caseId: string,
     body: UpdateTitleBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePrice(caseId: string, price: string): Promise<Result<undefined>> {
+  updatePrice(
+    caseId: string,
+    price: string,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateNextStatus(id: string): Promise<Result<undefined>> {
+  updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateStatus(
     id: string,
     body: UpdateCaseStatusBody,
-  ): Promise<Result<undefined>> {
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  assign(id: string, userId: string): Promise<Result<undefined>> {
+  assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+  publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
 
-  create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
+  create(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper<CreateCaseResponse>> {
     this.logger.info('createCase', body)
     throw new Error('Method not implemented.')
   }
@@ -122,12 +133,12 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  case(id: string): Promise<Result<GetCaseResponse>> {
+  case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
 
-  cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>> {
+  cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
     throw new Error('Method not implemented.')
   }
 
@@ -151,7 +162,7 @@ export class CaseServiceMock implements ICaseService {
 
   async overview(
     params?: GetCasesQuery,
-  ): Promise<Result<EditorialOverviewResponse>> {
+  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
     const submitted: Case[] = []
     const inProgress: Case[] = []
     const inReview: Case[] = []
@@ -173,16 +184,12 @@ export class CaseServiceMock implements ICaseService {
       }
     })
 
-    const response = await this.cases(params)
-    if (!response.ok) {
-      throw new InternalServerErrorException('Internal server error.')
-    }
+    const response = (await this.cases(params)).unwrap()
 
-    const { cases, paging } = response.value
+    const { cases, paging } = response
 
-    return Promise.resolve({
-      ok: true,
-      value: {
+    return Promise.resolve(
+      ResultWrapper.ok({
         cases,
         totalItems: {
           submitted: submitted.length,
@@ -191,7 +198,7 @@ export class CaseServiceMock implements ICaseService {
           ready: ready.length,
         },
         paging,
-      },
-    })
+      }),
+    )
   }
 }

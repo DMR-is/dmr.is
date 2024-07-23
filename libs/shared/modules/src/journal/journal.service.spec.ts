@@ -1,4 +1,5 @@
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { Test } from '@nestjs/testing'
 
@@ -32,8 +33,8 @@ describe('JournalService', () => {
 
   describe('getAdverts', () => {
     it('should return two mock adverts', async () => {
-      const results = await service.getAdverts()
-      expect(results.ok && results?.value.adverts.length).toEqual(2)
+      const results = ResultWrapper.unwrap(await service.getAdverts())
+      expect(results.adverts.length).toEqual(2)
     })
   })
 })

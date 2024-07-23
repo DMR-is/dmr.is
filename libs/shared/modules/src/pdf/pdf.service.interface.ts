@@ -1,9 +1,9 @@
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface IPdfService {
-  getPdfByCaseId(caseId: string): Promise<Result<Buffer>>
+  getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>>
 
-  getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>>
+  getPdfByApplicationId(applicationId: string): Promise<ResultWrapper<Buffer>>
 }
 
 export const IPdfService = Symbol('IPdfService')

@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
-import { Audit, HandleException } from '@dmr.is/decorators'
-import { Result } from '@dmr.is/types'
+import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { Result, ResultWrapper } from '@dmr.is/types'
 
 import {
   Inject,
@@ -26,56 +26,44 @@ export class PdfService implements IPdfService {
     private readonly utilityService: IUtilityService,
   ) {}
 
-  async getPdfByApplicationId(applicationId: string): Promise<Result<Buffer>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+  async getPdfByApplicationId(
+    applicationId: string,
+  ): Promise<ResultWrapper<Buffer>> {
+    const caseLookup = (
+      await this.utilityService.caseLookupByApplicationId(applicationId)
+    ).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+    const migrated = caseMigrate(caseLookup)
 
-    const migrated = caseMigrate(caseLookup.value)
+    const theCase = (
+      await this.utilityService.getCaseWithAdvert(migrated.id)
+    ).unwrap()
 
-    const theCase = await this.utilityService.getCaseWithAdvert(migrated.id)
-    if (!theCase.ok) {
-      return theCase
-    }
-
-    const { activeCase, advert } = theCase.value
+    const { activeCase, advert } = theCase
 
     if (!activeCase.publishedAt) {
-      const pdf = await this.generatePdfFromHtml(advert.documents.full)
+      const pdf = (
+        await this.generatePdfFromHtml(advert.documents.full)
+      ).unwrap()
 
-      if (!pdf.ok) {
-        return pdf
-      }
-
-      return {
-        ok: true,
-        value: pdf.value,
-      }
+      return ResultWrapper.ok(pdf)
     }
 
-    const pdf = await this.generatePdfFromHtml(
-      activeCase.isLegacy
-        ? dirtyClean(advert.documents.full as HTMLText)
-        : advert.documents.full,
-    )
+    const pdf = (
+      await this.generatePdfFromHtml(
+        activeCase.isLegacy
+          ? dirtyClean(advert.documents.full as HTMLText)
+          : advert.documents.full,
+      )
+    ).unwrap()
 
-    if (!pdf.ok) {
-      return pdf
-    }
-
-    return {
-      ok: true,
-      value: pdf.value,
-    }
+    return ResultWrapper.ok(pdf)
   }
 
-  @Audit({ logArgs: false })
-  @HandleException()
-  private async generatePdfFromHtml(html: string): Promise<Result<Buffer>> {
+  @LogAndHandle({ logArgs: false })
+  private async generatePdfFromHtml(
+    html: string,
+  ): Promise<ResultWrapper<Buffer>> {
     const browser = await puppeteer.launch({
       headless: true,
     })
@@ -102,14 +90,10 @@ export class PdfService implements IPdfService {
 
     await browser.close()
 
-    return {
-      ok: true,
-      value: pdf,
-    }
+    return ResultWrapper.ok(pdf)
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   private async uploadPdfToS3(
     pdf: Buffer,
     caseId: string,
@@ -140,47 +124,34 @@ export class PdfService implements IPdfService {
     }
   }
 
-  @Audit()
-  @HandleException()
-  async getPdfByCaseId(caseId: string): Promise<Result<Buffer>> {
-    const caseLookup = await this.utilityService.getCaseWithAdvert(caseId)
+  @LogAndHandle()
+  async getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
+    const caseLookup = (
+      await this.utilityService.getCaseWithAdvert(caseId)
+    ).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+    const { activeCase, advert } = caseLookup
 
-    const { activeCase, advert } = caseLookup.value
+    const document = advert.documents.full
 
     if (!activeCase.publishedAt) {
-      const pdf = await this.generatePdfFromHtml(advert.documents.full)
+      const pdf = (await this.generatePdfFromHtml(document)).unwrap()
 
-      if (!pdf.ok) {
-        return pdf
-      }
-
-      return {
-        ok: true,
-        value: pdf.value,
-      }
+      return ResultWrapper.ok(pdf)
     }
 
-    const pdf = await this.generatePdfFromHtml(
-      activeCase.isLegacy
-        ? dirtyClean(advert.documents.full as HTMLText)
-        : advert.documents.full,
-    )
+    const pdf = (
+      await this.generatePdfFromHtml(
+        activeCase.isLegacy
+          ? dirtyClean(advert.documents.full as HTMLText)
+          : advert.documents.full,
+      )
+    ).unwrap()
 
-    if (!pdf.ok) {
-      return pdf
-    }
-
-    return {
-      ok: true,
-      value: pdf.value,
-    }
+    return ResultWrapper.ok(pdf)
   }
 
-  @Audit()
+  @LogMethod()
   private async initialize() {
     const accessKey = process.env.AWS_ACCESS_KEY_ID ?? ''
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? ''

@@ -4,33 +4,33 @@
     "/api/v1/cases/departments": {
       "get": {
         "operationId": "getDepartments",
-        "summary": "Get departments",
+        "summary": "Return all departments",
         "parameters": [
           {
             "name": "search",
+            "description": "String to search for",
             "required": false,
             "in": "query",
-            "description": "String to search for",
             "schema": { "type": "string" }
           },
           {
             "name": "page",
+            "description": "Page number to return.",
             "required": false,
             "in": "query",
-            "description": "Page number to return.",
             "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
+            "description": "Page size number to return.",
             "required": false,
             "in": "query",
-            "description": "Page size number to return.",
             "schema": { "type": "number" }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Departments",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -48,8 +48,8 @@
         "summary": "Get tags",
         "parameters": [],
         "responses": {
-          "200": {
-            "description": "Tags",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetTagsResponse" }
@@ -62,40 +62,40 @@
     "/api/v1/cases/types": {
       "get": {
         "operationId": "getTypes",
-        "summary": "Get advert types.",
+        "summary": "Get advert types",
         "parameters": [
           {
             "name": "department",
+            "description": "Department slug to get categories for.",
             "required": false,
             "in": "query",
-            "description": "Department slug to get categories for.",
             "schema": { "type": "string" }
           },
           {
             "name": "search",
+            "description": "String to search for in types.",
             "required": false,
             "in": "query",
-            "description": "String to search for in types.",
             "schema": { "type": "string" }
           },
           {
             "name": "page",
+            "description": "Page number to return.",
             "required": false,
             "in": "query",
-            "description": "Page number to return.",
             "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
+            "description": "Number of items per page.",
             "required": false,
             "in": "query",
-            "description": "Number of items per page.",
             "schema": { "type": "number" }
           }
         ],
         "responses": {
-          "200": {
-            "description": "List of advert types.",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -114,29 +114,29 @@
         "parameters": [
           {
             "name": "search",
+            "description": "String to search for",
             "required": false,
             "in": "query",
-            "description": "String to search for",
             "schema": { "type": "string" }
           },
           {
             "name": "page",
+            "description": "Page number to return.",
             "required": false,
             "in": "query",
-            "description": "Page number to return.",
             "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
+            "description": "Page size number to return.",
             "required": false,
             "in": "query",
-            "description": "Page size number to return.",
             "schema": { "type": "number" }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Categories",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -150,125 +150,125 @@
     },
     "/api/v1/cases/overview": {
       "get": {
-        "operationId": "getEditorialOverview",
-        "summary": "Get overview for cases in progress.",
+        "operationId": "editorialOverview",
+        "summary": "Get editorial overview",
         "parameters": [
           {
             "name": "search",
+            "description": "String to search for in cases.",
             "required": false,
             "in": "query",
-            "description": "String to search for in cases.",
             "schema": { "type": "string" }
           },
           {
             "name": "id",
+            "description": "Application ID",
             "required": false,
             "in": "query",
-            "description": "Application ID",
             "schema": { "type": "string" }
           },
           {
             "name": "year",
+            "description": "Year",
             "required": false,
             "in": "query",
-            "description": "Year",
             "schema": { "type": "string" }
           },
           {
             "name": "page",
+            "description": "Page number",
             "required": false,
             "in": "query",
-            "description": "Page number",
             "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
+            "description": "Page size",
             "required": false,
             "in": "query",
-            "description": "Page size",
             "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "status",
+            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "employeeId",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "required": false,
             "in": "query",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "schema": { "type": "string" }
           },
           {
             "name": "published",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "fastTrack",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "institution",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "dateFrom",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "required": false,
             "in": "query",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
           },
           {
             "name": "dateTo",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "required": false,
             "in": "query",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
           },
           {
             "name": "department",
+            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
           },
           {
             "name": "type",
+            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
             "schema": { "type": "string" }
           },
           {
             "name": "category",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Cases overview.",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -297,54 +297,6 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateCasePriceBody" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } }
-      }
-    },
-    "/api/v1/cases/{id}/department": {
-      "put": {
-        "operationId": "updateDepartment",
-        "summary": "Update department of case and application",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
-              }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } }
-      }
-    },
-    "/api/v1/cases/{id}/type": {
-      "put": {
-        "operationId": "updateType",
-        "summary": "Update type of case and application",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateCaseTypeBody" }
             }
           }
         },
@@ -397,6 +349,54 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/department": {
+      "put": {
+        "operationId": "updateDepartment",
+        "summary": "Update department of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/type": {
+      "get": {
+        "operationId": "updateType",
+        "summary": "Update type of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCaseTypeBody" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/publishDate": {
       "put": {
         "operationId": "updatePublishDate",
@@ -423,7 +423,7 @@
     "/api/v1/cases/{id}/title": {
       "put": {
         "operationId": "updateTitle",
-        "summary": "Update publish date of case and application",
+        "summary": "Update title of case and application",
         "parameters": [
           {
             "name": "id",
@@ -467,7 +467,7 @@
       }
     },
     "/api/v1/cases/{id}/status/next": {
-      "post": {
+      "put": {
         "operationId": "updateNextStatus",
         "summary": "Update case status to next.",
         "parameters": [
@@ -482,9 +482,9 @@
       }
     },
     "/api/v1/cases/{id}/assign/{userId}": {
-      "post": {
+      "put": {
         "operationId": "assignEmployee",
-        "summary": "Assign case to user.",
+        "summary": "Updates assigned user on the case.",
         "parameters": [
           {
             "name": "id",
@@ -503,7 +503,7 @@
       }
     },
     "/api/v1/cases/{id}/status": {
-      "post": {
+      "put": {
         "operationId": "updateCaseStatus",
         "summary": "Update case status.",
         "parameters": [
@@ -538,16 +538,14 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Case by ID.",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetCaseResponse" }
               }
             }
-          },
-          "404": { "description": "Case not found." },
-          "500": { "description": "Internal server error." }
+          }
         }
       }
     },
@@ -565,8 +563,8 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Case created.",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CreateCaseResponse" }
@@ -577,124 +575,124 @@
       },
       "get": {
         "operationId": "getCases",
-        "summary": "Get cases.",
+        "summary": "Get cases",
         "parameters": [
           {
             "name": "search",
+            "description": "String to search for in cases.",
             "required": false,
             "in": "query",
-            "description": "String to search for in cases.",
             "schema": { "type": "string" }
           },
           {
             "name": "id",
+            "description": "Application ID",
             "required": false,
             "in": "query",
-            "description": "Application ID",
             "schema": { "type": "string" }
           },
           {
             "name": "year",
+            "description": "Year",
             "required": false,
             "in": "query",
-            "description": "Year",
             "schema": { "type": "string" }
           },
           {
             "name": "page",
+            "description": "Page number",
             "required": false,
             "in": "query",
-            "description": "Page number",
             "schema": { "type": "string" }
           },
           {
             "name": "pageSize",
+            "description": "Page size",
             "required": false,
             "in": "query",
-            "description": "Page size",
             "schema": { "type": "string" }
           },
           {
             "name": "caseNumber",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "status",
+            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "employeeId",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "required": false,
             "in": "query",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "schema": { "type": "string" }
           },
           {
             "name": "published",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "fastTrack",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "institution",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
             "required": false,
             "in": "query",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
             "schema": { "type": "string" }
           },
           {
             "name": "dateFrom",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "required": false,
             "in": "query",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
           },
           {
             "name": "dateTo",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "required": false,
             "in": "query",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
             "schema": { "type": "string" }
           },
           {
             "name": "department",
+            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
             "schema": { "type": "string" }
           },
           {
             "name": "type",
+            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
             "schema": { "type": "string" }
           },
           {
             "name": "category",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "required": false,
             "in": "query",
-            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
-          "200": {
-            "description": "All cases.",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
@@ -702,6 +700,25 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "deleteComment",
+        "summary": "Delete comment from case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/publish": {
@@ -717,45 +734,11 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/cases/{id}/comments": {
       "get": {
-        "operationId": "getComments",
-        "summary": "Get case comments",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Type of the comment",
-            "schema": {
-              "enum": ["internal", "external", "all"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Comments for case",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCaseCommentsResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
         "operationId": "createComment",
         "summary": "Add comment to case",
         "parameters": [
@@ -775,8 +758,8 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Comment created",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -807,8 +790,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Comment for case",
+          "default": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -818,25 +801,6 @@
             }
           }
         }
-      },
-      "delete": {
-        "operationId": "deleteComment",
-        "summary": "Delete comment from case",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "commentId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {
@@ -891,9 +855,10 @@
     },
     "/api/v1/health": {
       "get": {
-        "operationId": "HealthController_health",
+        "operationId": "HealthController_",
         "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } }
+        "responses": { "200": { "description": "Health check endpoint." } },
+        "tags": ["health"]
       }
     }
   },
@@ -1503,6 +1468,16 @@
         },
         "required": ["price"]
       },
+      "UpdatePaidBody": {
+        "type": "object",
+        "properties": { "paid": { "type": "boolean" } },
+        "required": ["paid"]
+      },
+      "UpdateTagBody": {
+        "type": "object",
+        "properties": { "tagId": { "type": "string" } },
+        "required": ["tagId"]
+      },
       "UpdateCaseDepartmentBody": {
         "type": "object",
         "properties": {
@@ -1516,16 +1491,6 @@
           "typeId": { "type": "string", "description": "Type id" }
         },
         "required": ["typeId"]
-      },
-      "UpdatePaidBody": {
-        "type": "object",
-        "properties": { "paid": { "type": "boolean" } },
-        "required": ["paid"]
-      },
-      "UpdateTagBody": {
-        "type": "object",
-        "properties": { "tagId": { "type": "string" } },
-        "required": ["tagId"]
       },
       "UpdatePublishDateBody": {
         "type": "object",
