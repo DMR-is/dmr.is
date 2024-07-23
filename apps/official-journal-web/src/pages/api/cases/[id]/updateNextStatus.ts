@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { LogMethod, HandleApiException, Post } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 

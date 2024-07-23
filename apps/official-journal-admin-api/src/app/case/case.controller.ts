@@ -14,6 +14,7 @@ import {
   GetCasesReponse,
   GetCategoriesResponse,
   GetDepartmentsResponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -21,6 +22,12 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -54,9 +61,26 @@ export class CaseController {
     operationId: 'getDepartments',
     summary: 'Return all departments',
     responseType: GetDepartmentsResponse,
+    query: [{ type: DefaultSearchParams }],
   })
-  async departments(): Promise<GetDepartmentsResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getDepartments())
+  async departments(
+    @Query() params: DefaultSearchParams,
+  ): Promise<GetDepartmentsResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getDepartments(params),
+    )
+  }
+
+  @Route({
+    path: 'tags',
+    operationId: 'getTags',
+    summary: 'Get tags',
+    responseType: GetTagsResponse,
+  })
+  async tags(): Promise<GetTagsResponse> {
+    const result = (await this.caseService.tags()).unwrap()
+
+    return result
   }
 
   @Route({
@@ -64,6 +88,7 @@ export class CaseController {
     operationId: 'getTypes',
     summary: 'Get advert types',
     responseType: GetAdvertTypesResponse,
+    query: [{ type: GetAdvertTypesQueryParams }],
   })
   async types(
     @Query()
@@ -77,6 +102,7 @@ export class CaseController {
     operationId: 'getCategories',
     summary: 'Get categories',
     responseType: GetCategoriesResponse,
+    query: [{ type: DefaultSearchParams }],
   })
   async categories(
     @Query()
@@ -90,6 +116,7 @@ export class CaseController {
     operationId: 'editorialOverview',
     summary: 'Get editorial overview',
     responseType: EditorialOverviewResponse,
+    query: [{ type: GetCasesQuery }],
   })
   async editorialOverview(
     @Query() params?: GetCasesQuery,
@@ -114,6 +141,36 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/paid',
+    operationId: 'updatePaid',
+    summary: 'Update paid status of case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdatePaidBody,
+  })
+  async updatePaid(
+    @Param('id') id: string,
+    @Body() body: UpdatePaidBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updatePaid(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/tag',
+    operationId: 'updateTag',
+    summary: 'Update tag value of case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateTagBody,
+  })
+  async updateTag(
+    @Param('id') id: string,
+    @Body() body: UpdateTagBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateTag(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/department',
     operationId: 'updateDepartment',
     summary: 'Update department of case and application',
@@ -124,9 +181,66 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseService.updateDepartment(id, body.departmentId),
-    )
+    ResultWrapper.unwrap(await this.caseService.updateDepartment(id, body))
+  }
+
+  @Route({
+    path: ':id/type',
+    operationId: 'updateType',
+    summary: 'Update type of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCaseTypeBody,
+  })
+  async updateType(
+    @Param('id') id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateType(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/publishDate',
+    operationId: 'updatePublishDate',
+    summary: 'Update publish date of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdatePublishDateBody,
+  })
+  async updatePublishDate(
+    @Param('id') id: string,
+    @Body() body: UpdatePublishDateBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updatePublishDate(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/title',
+    operationId: 'updateTitle',
+    summary: 'Update title of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateTitleBody,
+  })
+  async updateTitle(
+    @Param('id') id: string,
+    @Body() body: UpdateTitleBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateTitle(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/categories',
+    operationId: 'updateCategories',
+    summary: 'Update categories of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCategoriesBody,
+  })
+  async updateCategories(
+    @Param('id') id: string,
+    @Body() body: UpdateCategoriesBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCategories(id, body))
   }
 
   @Route({
@@ -201,6 +315,7 @@ export class CaseController {
     operationId: 'getCases',
     summary: 'Get cases',
     responseType: GetCasesReponse,
+    query: [{ type: GetCasesQuery }],
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.cases(params))
@@ -223,11 +338,7 @@ export class CaseController {
     summary: 'Get case comments',
     responseType: GetCaseCommentsResponse,
     params: [{ name: 'id', type: 'string', required: true }],
-    query: [
-      {
-        type: GetCaseCommentsQuery,
-      },
-    ],
+    query: [{ type: GetCaseCommentsQuery }],
   })
   async getComments(
     @Param('id') id: string,

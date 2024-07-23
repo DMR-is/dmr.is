@@ -3,14 +3,14 @@ import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-class UpdateDepartmentHandler {
+class UpdatePriceHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query
-    const { caseId, departmentId } = req.body
+    const { caseId, price } = req.body
 
-    if (!caseId || !departmentId) {
+    if (!caseId || !price) {
       return res.status(400).end()
     }
 
@@ -20,10 +20,10 @@ class UpdateDepartmentHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateDepartment({
+    await dmrClient.updatePrice({
       id: caseId,
-      updateCaseDepartmentBody: {
-        departmentId: departmentId,
+      updateCasePriceBody: {
+        price: price,
       },
     })
 
@@ -31,6 +31,6 @@ class UpdateDepartmentHandler {
   }
 }
 
-const instance = new UpdateDepartmentHandler()
+const instance = new UpdatePriceHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

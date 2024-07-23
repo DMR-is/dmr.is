@@ -32,11 +32,40 @@ export interface ICaseService {
   overview(
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<EditorialOverviewResponse>>
+  tags(): Promise<ResultWrapper<GetTagsResponse>>
 
   updatePrice(caseId: string, price: string): Promise<ResultWrapper<undefined>>
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
+  ): Promise<ResultWrapper<undefined>>
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<ResultWrapper<undefined>>
+
+  updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<ResultWrapper<undefined>>
+
+  updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+  ): Promise<ResultWrapper<undefined>>
+
+  updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+  ): Promise<ResultWrapper<undefined>>
+  updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+  ): Promise<ResultWrapper<undefined>>
+
+  updateTag(
+    caseId: string,
+    body: UpdateTagBody,
   ): Promise<ResultWrapper<undefined>>
 }
 

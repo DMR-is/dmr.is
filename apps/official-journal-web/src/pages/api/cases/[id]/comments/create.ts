@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { LogMethod, HandleApiException, Post } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
 import { PostCaseCommentTypeEnum } from '../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../lib/api/createClient'

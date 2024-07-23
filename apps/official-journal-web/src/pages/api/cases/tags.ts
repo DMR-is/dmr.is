@@ -9,7 +9,7 @@ class GetTagsHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const tags = await dmrClient
+    const tags = await dmrClient.getTags()
 
     return res.status(200).json(tags)
   }

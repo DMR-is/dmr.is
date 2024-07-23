@@ -20,6 +20,7 @@ import {
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
@@ -653,12 +654,12 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   async updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
     const department = (
-      await this.utilityService.departmentLookup(departmentId)
+      await this.utilityService.departmentLookup(body.departmentId)
     ).unwrap()
 
     await this.caseModel.update(
@@ -678,7 +679,7 @@ export class CaseService implements ICaseService {
         {
           answers: {
             advert: {
-              department: departmentId,
+              department: body.departmentId,
             },
           },
         },

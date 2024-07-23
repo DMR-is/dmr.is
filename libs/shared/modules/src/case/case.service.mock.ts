@@ -1,8 +1,9 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
+  CaseStatus,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
@@ -24,9 +25,13 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { GenericError, ResultWrapper } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
-import { Inject } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
 import { ICaseService } from './case.service.interface'
 
@@ -34,14 +39,48 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
-  overview(
-    params?: GetCasesQuery | undefined,
-  ): Promise<ResultWrapper<EditorialOverviewResponse, GenericError>> {
+  tags(): Promise<ResultWrapper<GetTagsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTag(
+    caseId: string,
+    body: UpdateTagBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updatePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updatePublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   updateDepartment(
     caseId: string,
-    departmentId: string,
+    body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
@@ -119,5 +158,47 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve({
       users: filtered,
     })
+  }
+
+  async overview(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
+    const submitted: Case[] = []
+    const inProgress: Case[] = []
+    const inReview: Case[] = []
+    const ready: Case[] = []
+
+    if (!params?.status) {
+      throw new BadRequestException('Missing status')
+    }
+
+    ALL_MOCK_CASES.forEach((c) => {
+      if (c.status === CaseStatus.Submitted) {
+        submitted.push(c)
+      } else if (c.status === CaseStatus.InProgress) {
+        inProgress.push(c)
+      } else if (c.status === CaseStatus.InReview) {
+        inReview.push(c)
+      } else if (c.status === CaseStatus.ReadyForPublishing) {
+        ready.push(c)
+      }
+    })
+
+    const response = (await this.cases(params)).unwrap()
+
+    const { cases, paging } = response
+
+    return Promise.resolve(
+      ResultWrapper.ok({
+        cases,
+        totalItems: {
+          submitted: submitted.length,
+          inProgress: inProgress.length,
+          inReview: inReview.length,
+          ready: ready.length,
+        },
+        paging,
+      }),
+    )
   }
 }

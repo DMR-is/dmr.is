@@ -43,11 +43,11 @@ export function Route({
 
   decorators.push(LogMethod())
 
-  if (tags.length) {
-    decorators.push(ApiTags(...tags))
-  } else {
-    decorators.push(ApiTags(method))
-  }
+  // if (tags.length) {
+  //   decorators.push(ApiTags(...tags, 'api'))
+  // } else {
+  //   decorators.push(ApiTags(method, 'default'))
+  // }
 
   if (operationId) {
     decorators.push(
