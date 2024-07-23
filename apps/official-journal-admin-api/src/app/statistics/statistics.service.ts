@@ -1,28 +1,35 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { ICaseService } from '@dmr.is/modules'
+import { AdvertStatus, CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
+import { isSingular } from '@dmr.is/utils'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
-  NotImplementedException,
 } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => ICaseService))
+    private readonly casesService: ICaseService,
+  ) {
     this.logger.info('Using StatisticsService')
   }
-  getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
+
+  async getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
     if (!id) {
       throw new BadRequestException('Missing parameters')
     }
@@ -95,7 +102,10 @@ export class StatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(type: string): Promise<GetStatisticsOverviewResponse> {
+  async getOverview(
+    type: string,
+    userId?: string,
+  ): Promise<GetStatisticsOverviewResponse> {
     if (!type) {
       throw new BadRequestException('Missing parameters')
     }
@@ -105,82 +115,182 @@ export class StatisticsService implements IStatisticsService {
       throw new BadRequestException('Invalid type')
     }
 
-    let categories: StatisticsOverviewCategory[] = []
+    const casesRes = (
+      await this.casesService.cases({ published: 'false', pageSize: '1000' })
+    ).unwrap()
+    const cases = casesRes.cases
+
+    const categories: StatisticsOverviewCategory[] = []
     let totalAdverts = 0
 
+    if (!cases.length) {
+      return Promise.resolve({
+        categories,
+        totalAdverts,
+      })
+    }
+
     if (type === StatisticsOverviewQueryType.General) {
-      let submitted = 0
-      let inProgress = 0
-      // let submittedFastTrack = 0
-      // let inReviewFastTrack = 0
+      let submittedCount = 0
+      let inProgressCount = 0
+      let submittedFastTrack = 0
+      let inReviewFastTrack = 0
 
       // fast track functionality is not implemented yet
 
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.Submitted) {
-          submitted++
-        }
-
-        if (advert.status === AdvertStatus.InProgress) {
-          inProgress++
-        }
-
-        // if(advert.status === JournalAdvertStatus.Active) {
-        //   submittedFastTrack++
-        // }
-
-        // if(advert.status === JournalAdvertStatus.ReadyForPublication) {
-        //   inReviewFastTrack++
-        // }
-      })
-
-      categories = [
-        {
-          text: `${adverts.length} innsend mál bíða úthlutunar`,
-          totalAdverts: submitted,
-        },
-        {
-          text: `Borist hafa ný svör í ${inProgress} málum`,
-          totalAdverts: inProgress,
-        },
-      ]
-      totalAdverts = adverts.length
-    } else if (type === StatisticsOverviewQueryType.Personal) {
-      throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Inactive) {
-      throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Publishing) {
-      let today = 0
-      let pastDue = 0
-
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.ReadyForPublication) {
-          today++
+      cases.forEach((thisCase) => {
+        if (thisCase.status === CaseStatus.Submitted) {
+          submittedCount++
         }
 
         if (
-          advert.publicationDate &&
-          new Date(advert.publicationDate) < new Date() &&
-          advert.status === AdvertStatus.ReadyForPublication
+          [CaseStatus.InProgress, CaseStatus.InReview].includes(thisCase.status)
         ) {
-          pastDue++
+          inProgressCount++
+        }
+
+        if (
+          thisCase.fastTrack &&
+          thisCase.status !== CaseStatus.ReadyForPublishing
+        ) {
+          submittedFastTrack++
+        }
+
+        if (
+          thisCase.fastTrack &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          inReviewFastTrack++
         }
       })
 
-      categories = [
-        {
-          text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: today,
-        },
-        {
-          text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDue,
-        },
-      ]
-      totalAdverts = adverts.length
-    } else {
-      throw new BadRequestException('Invalid type')
+      if (submittedCount) {
+        categories.push({
+          text: isSingular(submittedCount)
+            ? `${submittedCount} innsent mál bíður úthlutunar.`
+            : `${submittedCount} innsend mál bíða úthlutunar.`,
+          totalAdverts: submittedCount,
+        })
+      }
+
+      if (inProgressCount) {
+        categories.push({
+          text: isSingular(inProgressCount)
+            ? `${inProgressCount} mál er í vinnslu.`
+            : `${inProgressCount} mál eru í vinnslu.`,
+          totalAdverts: inProgressCount,
+        })
+      }
+
+      if (submittedFastTrack) {
+        categories.push({
+          text: isSingular(submittedFastTrack)
+            ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
+            : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
+          totalAdverts: submittedFastTrack,
+        })
+      }
+
+      if (inReviewFastTrack) {
+        categories.push({
+          text: isSingular(inReviewFastTrack)
+            ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
+            : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
+          totalAdverts: inReviewFastTrack,
+        })
+      }
+
+      totalAdverts =
+        submittedCount +
+        inProgressCount +
+        submittedFastTrack +
+        inReviewFastTrack
     }
+
+    if (type === StatisticsOverviewQueryType.Personal && userId) {
+      const myCases = cases.filter((c) => c.assignedTo?.id === userId)
+      const myCasesCount = myCases.length
+
+      if (myCasesCount) {
+        categories.push({
+          text: isSingular(myCasesCount)
+            ? `${myCasesCount} mál er skráð á mig.`
+            : `${myCasesCount} mál eru skráð á mig.`,
+          totalAdverts: myCasesCount,
+        })
+      }
+
+      totalAdverts = myCasesCount
+    }
+
+    if (type === StatisticsOverviewQueryType.Inactive) {
+      const limit = new Date()
+      limit.setDate(-6)
+
+      const inactiveCases = cases.filter(
+        (c) =>
+          [
+            CaseStatus.Submitted,
+            CaseStatus.InProgress,
+            CaseStatus.InReview,
+          ].includes(c.status) && new Date(c.modifiedAt) < limit,
+      )
+      const inactiveCasesCount = inactiveCases.length
+
+      if (inactiveCasesCount) {
+        categories.push({
+          text: isSingular(inactiveCasesCount)
+            ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
+            : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
+          totalAdverts: inactiveCasesCount,
+        })
+      }
+      totalAdverts = inactiveCasesCount
+    }
+
+    if (type === StatisticsOverviewQueryType.Publishing) {
+      const today = new Date()
+      let todayCount = 0
+      let pastDueCount = 0
+
+      cases.forEach((thisCase) => {
+        if (
+          thisCase.requestedPublicationDate &&
+          new Date(thisCase.requestedPublicationDate) === today &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          todayCount++
+        }
+
+        if (
+          thisCase.requestedPublicationDate &&
+          new Date(thisCase.requestedPublicationDate) < today &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          pastDueCount++
+        }
+      })
+
+      if (todayCount) {
+        categories.push({
+          text: isSingular(todayCount)
+            ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
+            : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
+          totalAdverts: todayCount,
+        })
+      }
+
+      if (pastDueCount) {
+        categories.push({
+          text: isSingular(pastDueCount)
+            ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
+            : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
+          totalAdverts: pastDueCount,
+        })
+      }
+      totalAdverts = todayCount + pastDueCount
+    }
+
     return Promise.resolve({
       categories: categories,
       totalAdverts: totalAdverts,

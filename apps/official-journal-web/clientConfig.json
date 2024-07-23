@@ -837,6 +837,12 @@
             "required": true,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {

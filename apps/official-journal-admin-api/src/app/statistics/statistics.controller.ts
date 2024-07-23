@@ -1,10 +1,11 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ICaseService } from '@dmr.is/modules'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
 } from '@dmr.is/shared/dto'
 
-import { Controller, Get, Inject, Query } from '@nestjs/common'
+import { Controller, forwardRef, Get, Inject, Query } from '@nestjs/common'
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { IStatisticsService } from './statistics.service.interface'
@@ -34,6 +35,7 @@ export class StatisticsController {
 
   @Get('overview')
   @ApiQuery({ name: 'type', type: String, required: true })
+  @ApiQuery({ name: 'userId', type: String, required: false })
   @ApiResponse({
     status: 200,
     type: GetStatisticsOverviewResponse,
@@ -41,7 +43,8 @@ export class StatisticsController {
   })
   async overview(
     @Query('type') type: string,
+    @Query('userId') userId?: string,
   ): Promise<GetStatisticsOverviewResponse> {
-    return this.statisticsService.getOverview(type)
+    return this.statisticsService.getOverview(type, userId)
   }
 }

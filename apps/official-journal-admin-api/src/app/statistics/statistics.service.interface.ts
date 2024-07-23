@@ -6,7 +6,10 @@ import {
 export interface IStatisticsService {
   getDepartment(type: string): Promise<GetStatisticsDepartmentResponse>
 
-  getOverview(id: string): Promise<GetStatisticsOverviewResponse>
+  getOverview(
+    id: string,
+    userId?: string,
+  ): Promise<GetStatisticsOverviewResponse>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

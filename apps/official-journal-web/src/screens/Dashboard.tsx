@@ -20,6 +20,7 @@ import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 import { Screen } from '../lib/types'
+import { ARMANN } from '../lib/userMock'
 
 type StatisticsData = {
   totalAdverts: number
@@ -192,6 +193,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
 
 Dashboard.getProps = async () => {
   const dmrClient = createDmrClient()
+  const user = ARMANN
 
   const [general, personal, inactive, publishing] = await Promise.all(
     [
@@ -200,6 +202,7 @@ Dashboard.getProps = async () => {
       }),
       dmrClient.statisticsControllerOverview({
         type: 'personal',
+        userId: user.id,
       }),
       dmrClient.statisticsControllerOverview({
         type: 'inactive',
@@ -207,7 +210,12 @@ Dashboard.getProps = async () => {
       dmrClient.statisticsControllerOverview({
         type: 'publishing',
       }),
-    ].map((promise) => promise.catch(() => null)),
+    ].map((promise) =>
+      promise.catch((err) => {
+        console.error(err)
+        return null
+      }),
+    ),
   )
 
   return {
