@@ -14,7 +14,6 @@ import {
   GetCasesReponse,
   GetCategoriesResponse,
   GetDepartmentsResponse,
-  GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
   PostCaseCommentResponse,
@@ -22,12 +21,6 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdatePaidBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 

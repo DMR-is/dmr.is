@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { LogMethod, HandleApiException } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 
@@ -9,7 +9,7 @@ const schema = z.object({
 })
 
 class PublishCasesHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()

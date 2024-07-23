@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { Audit, HandleApiException, Post } from '@dmr.is/decorators'
+import { LogMethod, HandleApiException, Post } from '@dmr.is/decorators'
 
 import { PostCaseCommentTypeEnum } from '../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../lib/api/createClient'
@@ -14,7 +14,7 @@ const commentBodySchema = z.object({
 })
 
 class CreateCommentHandler {
-  @Audit({ logArgs: false })
+  @LogMethod(false)
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {

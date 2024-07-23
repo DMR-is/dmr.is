@@ -47,7 +47,7 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Using ApplicationService')
   }
 
-  @Audit()
+  @LogMethod()
   private async xroadFetch(url: string, options: RequestInit) {
     const idsToken = await this.authService.getAccessToken()
 

@@ -1,5 +1,6 @@
-import { Audit } from '@dmr.is/decorators'
+import { LogMethod, Route } from '@dmr.is/decorators'
 import { GetPdfUrlResponse } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Controller,
@@ -25,29 +26,20 @@ export class PdfController {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
   ) {}
 
-  @Get('case/:id')
-  @ApiOperation({
+  @Route({
+    path: 'pdf/case/:id',
     operationId: 'getPdfByCaseId',
-    summary: 'Get case PDF.',
+    params: [
+      {
+        name: 'id',
+        type: 'string',
+        required: true,
+      },
+    ],
+    responseType: StreamableFile,
   })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Case PDF.',
-  })
-  @Audit()
   async getPdfByCaseId(@Param('id') id: string): Promise<StreamableFile> {
-    const result = await this.pdfService.getPdfByCaseId(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    const pdf = result.value
+    const pdf = (await this.pdfService.getPdfByCaseId(id)).unwrap()
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',
@@ -55,31 +47,22 @@ export class PdfController {
     })
   }
 
-  @Get('application/:id')
-  @ApiOperation({
+  @Route({
+    path: 'pdf/application/:id',
     operationId: 'getPdfByApplicationId',
-    summary: 'Get case PDF.',
+    params: [
+      {
+        name: 'id',
+        type: 'string',
+        required: true,
+      },
+    ],
+    responseType: StreamableFile,
   })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Case PDF.',
-  })
-  @Audit()
   async getPdfByApplicationId(
     @Param('id') id: string,
   ): Promise<StreamableFile> {
-    const result = await this.pdfService.getPdfByApplicationId(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    const pdf = result.value
+    const pdf = (await this.pdfService.getPdfByApplicationId(id)).unwrap()
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',
@@ -87,28 +70,20 @@ export class PdfController {
     })
   }
 
-  @Get('case/:id/url')
-  @ApiOperation({
+  @Route({
+    path: 'case/:id/url',
     operationId: 'getPdfUrlByCaseId',
-    summary: 'Get case PDF URL.',
+    params: [
+      {
+        name: 'id',
+        type: 'string',
+        required: true,
+      },
+    ],
+    responseType: GetPdfUrlResponse,
   })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Case PDF URL.',
-    type: String,
-  })
-  @Audit()
   async getPdfUrlByCaseId(@Param('id') id: string): Promise<GetPdfUrlResponse> {
-    const caseLookup = await this.utilityService.caseLookup(id)
-
-    if (!caseLookup.ok) {
-      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
-    }
+    ResultWrapper.unwrap(await this.utilityService.caseLookup(id))
 
     const url =
       process.env.NODE_ENV === 'development'
@@ -122,38 +97,31 @@ export class PdfController {
     }
   }
 
-  @Get('application/:id/url')
-  @ApiOperation({
+  @Route({
+    path: 'application/:id/url',
     operationId: 'getPdfUrlByApplicationId',
-    summary: 'Get case PDF URL.',
+    params: [
+      {
+        name: 'id',
+        type: 'string',
+        required: true,
+      },
+    ],
+    responseType: GetPdfUrlResponse,
   })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Case PDF URL.',
-    type: String,
-  })
-  @Audit()
   async getPdfUrlByApplicationId(
     @Param('id') id: string,
   ): Promise<GetPdfUrlResponse> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(id)
-
-    if (!caseLookup.ok) {
-      throw new HttpException(caseLookup.error.message, caseLookup.error.code)
-    }
-    const migrated = caseMigrate(caseLookup.value)
+    const caseLookup = (
+      await this.utilityService.caseLookupByApplicationId(id)
+    ).unwrap()
 
     const url =
       process.env.NODE_ENV === 'development'
         ? `http://localhost:${
             process.env.APPLICATION_PORT || 4000
           }/api/v1/pdf/case/${id}`
-        : `${process.env.DMR_APPLICATION_API_BASE_PATH}/api/v1/pdf/case/${migrated.id}`
+        : `${process.env.DMR_APPLICATION_API_BASE_PATH}/api/v1/pdf/case/${caseLookup.id}`
 
     return {
       url: url,
