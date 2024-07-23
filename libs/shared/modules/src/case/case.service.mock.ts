@@ -183,7 +183,7 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve({
       ok: true,
       value: {
-        cases: cases as unknown as Case[],
+        cases,
         totalItems: {
           submitted: submitted.length,
           inProgress: inProgress.length,

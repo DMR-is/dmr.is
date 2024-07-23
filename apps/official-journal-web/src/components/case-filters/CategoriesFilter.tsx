@@ -40,8 +40,8 @@ export const CategoriesFilter = () => {
   }
 
   const options = generateOptions({
-    label: 'Tegund',
-    queryKey: 'type',
+    label: 'Flokkur',
+    queryKey: 'category',
     options: data?.categories,
   })
 
