@@ -126,8 +126,45 @@ export class CaseService implements ICaseService {
           as: 'status',
           attributes: [],
         },
+        {
+          model: AdvertDepartmentDTO,
+          where: params?.department
+            ? {
+                slug: {
+                  [Op.in]: params.department,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertTypeDTO,
+          where: params?.type
+            ? {
+                slug: {
+                  [Op.in]: params.type,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertCategoryDTO,
+          where: params?.category
+            ? {
+                slug: params?.category,
+              }
+            : undefined,
+        },
       ],
-      group: ['status_id', `status.value`],
+      group: [
+        'status_id',
+        `status.value`,
+        'department.id',
+        'advertType.id',
+        'categories.id',
+        'CaseDto.id',
+        'categories->CaseCategoriesDto.case_case_id',
+        'categories->CaseCategoriesDto.category_id',
+      ],
     })
 
     return ResultWrapper.ok({

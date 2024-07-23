@@ -221,14 +221,12 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
   const dmrClient = createDmrClient()
 
-  const { page, pageSize, department, status, search } = query
-
   const caseData = await dmrClient.getEditorialOverview({
-    page: Array.isArray(page) ? page[0] : page,
-    pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
-    department: Array.isArray(department) ? department[0] : department,
-    status: Array.isArray(status) ? status[0] : status,
-    search: Array.isArray(search) ? search[0] : search,
+    page: getStringFromQueryString(query.page),
+    pageSize: getStringFromQueryString(query.pageSize),
+    department: getStringFromQueryString(query.department),
+    status: getStringFromQueryString(query.status),
+    search: getStringFromQueryString(query.search),
   })
 
   return {

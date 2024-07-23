@@ -26,7 +26,7 @@ import {
   Routes,
 } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
-import { Screen } from '../lib/types'
+import { getStringFromQueryString, Screen } from '../lib/types'
 
 type Props = {
   cases: Case[]
@@ -192,23 +192,15 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 CasePublishingOverview.getProps = async ({ query }) => {
   const dmrClient = createDmrClient()
 
-  const { department } = query
-
-  const defaultDepartment = 'a-deild'
-
-  const activeDepartment = department
-    ? Array.isArray(department)
-      ? department[0]
-      : department
-    : defaultDepartment
+  const department = getStringFromQueryString(query.tab) || 'a-deild'
 
   const { cases, paging } = await dmrClient.getCases({
-    department: activeDepartment,
+    department,
     status: CaseStatusEnum.Tilbi,
   })
 
   return {
-    cases: cases,
+    cases,
     paging,
   }
 }
