@@ -1,5 +1,6 @@
 const { v4 } = require('uuid')
 const fs = require('fs')
+const path = require('path')
 
 const DEPARTMENT_IDS = [
   '69CD3E90-106E-4B9C-8419-148C29E1738A',
@@ -502,7 +503,7 @@ const TYPE_IDS = [
     departmentId: '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
   },
   {
-    typeId: '59CAE054-4DEF-49C4-A642-7BF83F32F9BB  ',
+    typeId: '59CAE054-4DEF-49C4-A642-7BF83F32F9BB',
     departmentId: 'AA408EAE-A76A-4ED8-9AA3-388DC0C8FF05',
   },
 ]
@@ -1988,6 +1989,13 @@ const ADVERT_TITLES = [
   'um breytingu á aðalskipulagi Austur-Héraðs 2002-2017, lega ljósleiðara frá Gilsá um Hallsteinsdal að sveitarfélagsmörkum, Fljóstdalshéraði.',
 ]
 
+const EMPLOYEE_IDS = [
+  '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+  '21140e6b-e272-4d78-b085-dbc3190b2a0a',
+]
+
+const SUBMITTED_STATUS = '799722be-5530-439a-91dc-606e129b030d'
+
 const APPLICATION_ID = '8fb627ec-fe9c-4f59-b3df-2c33b8f47597'
 
 const generateCaseInsertSeed = ({
@@ -2000,6 +2008,7 @@ const generateCaseInsertSeed = ({
   createdAt,
   updatedAt,
   isLegacy,
+  assignedUserId,
   caseCommunicationStatusId,
   paid,
   fastTrack,
@@ -2041,7 +2050,7 @@ INSERT INTO
     '${createdAt}',
     '${updatedAt}',
     ${isLegacy},
-    NULL,
+    ${assignedUserId ? `'${assignedUserId}'` : `${'NULL'}`},
     '${caseCommunicationStatusId}',
     NULL,
     ${paid},
@@ -2102,60 +2111,82 @@ const pickRandom = (arr) => {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-async function main(totalItems) {
-  const iterations = totalItems || 10
+/**
+ * Generates random case seed dump under root/tmp/case-insert-dump.sql
+ * accepts number of iterations as argument
+ */
+function main() {
+  try {
+    const iterations =
+      typeof process.argv[2] === 'string' ? parseInt(process.argv[2]) : 20
 
-  let insertSeed = ``
+    if (isNaN(iterations)) {
+      throw new Error('Invalid argument, please provide a number')
+    }
 
-  for (let index = 0; index < iterations; index++) {
-    const id = v4()
+    let insertSeed = ``
 
-    const departmentId = pickRandom(DEPARTMENT_IDS)
+    for (let index = 0; index < iterations; index++) {
+      const id = v4()
 
-    const typeId = findTypeFromDepartmentId(departmentId)
+      const departmentId = pickRandom(DEPARTMENT_IDS)
 
-    const year = Math.floor(Math.random() * 2) + 2022
-    const created = getRandomDate(year)
+      const typeId = findTypeFromDepartmentId(departmentId)
 
-    const caseNumber = getCaseNumber(created)
-    const statusId = pickRandom(STATUS_IDS)
-    const tagId = pickRandom(TAG_IDS)
-    const isLegacy = Math.random() > 0.5
+      const year = Math.floor(Math.random() * 2) + 2022
+      const created = getRandomDate(year)
 
-    const communicationStatusId = pickRandom(COMMUNICATION_STATUS_IDS)
-    const paid = Math.random() > 0.5
+      const caseNumber = getCaseNumber(created)
+      const statusId = pickRandom(STATUS_IDS)
+      const tagId = pickRandom(TAG_IDS)
+      const isLegacy = Math.random() > 0.5
 
-    const requestPublicationDate = getRequestedPublicationDate(created)
+      const communicationStatusId = pickRandom(COMMUNICATION_STATUS_IDS)
+      const paid = Math.random() > 0.5
 
-    // if requested publication date is in next 10 days from created date
-    const fastTrack =
-      requestPublicationDate.getTime() - created.getTime() < 10 * 24 * 60 * 60
+      const requestPublicationDate = getRequestedPublicationDate(created)
 
-    const title = pickRandom(ADVERT_TITLES)
+      // if requested publication date is in next 10 days from created date
+      const fastTrack =
+        requestPublicationDate.getTime() - created.getTime() < 10 * 24 * 60 * 60
 
-    const template = generateCaseInsertSeed({
-      id,
-      applicationId: APPLICATION_ID,
-      year,
-      caseNumber,
-      statusId,
-      tagId,
-      createdAt: created.toISOString(),
-      updatedAt: created.toISOString(),
-      isLegacy,
-      caseCommunicationStatusId: communicationStatusId,
-      paid,
-      fastTrack,
-      departmentId,
-      advertTypeId: typeId,
-      advertTitle: title,
-      advertRequestedPublicationDate: requestPublicationDate.toISOString(),
-    })
+      const title = pickRandom(ADVERT_TITLES)
 
-    insertSeed += template
+      const assignedUserId =
+        statusId === SUBMITTED_STATUS ? pickRandom(EMPLOYEE_IDS) : undefined
+
+      const template = generateCaseInsertSeed({
+        id,
+        applicationId: APPLICATION_ID,
+        year,
+        caseNumber,
+        statusId,
+        tagId,
+        createdAt: created.toISOString(),
+        updatedAt: created.toISOString(),
+        isLegacy,
+        assignedUserId: assignedUserId,
+        caseCommunicationStatusId: communicationStatusId,
+        paid,
+        fastTrack,
+        departmentId,
+        advertTypeId: typeId.typeId,
+        advertTitle: title,
+        advertRequestedPublicationDate: requestPublicationDate.toISOString(),
+      })
+
+      insertSeed += template
+    }
+
+    const filePath = path.join(__dirname, '../tmp/case-insert-dump.sql')
+    fs.writeFileSync(filePath, insertSeed)
+    console.log(
+      `Generated ${iterations} case insert seeds, stored at ${filePath}`,
+    )
+  } catch (error) {
+    console.error(error)
+    console.log('Error generating case insert seed')
   }
-
-  fs.writeFileSync('../tmp/case-insert-dump.sql', insertSeed)
 }
 
 main()
