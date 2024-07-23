@@ -1,3 +1,4 @@
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import { ICaseService } from '@dmr.is/modules'
@@ -8,6 +9,7 @@ import {
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 import { isSingular } from '@dmr.is/utils'
 
 import {
@@ -29,11 +31,10 @@ export class StatisticsService implements IStatisticsService {
     this.logger.info('Using StatisticsService')
   }
 
-  async getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
-    if (!id) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  @LogAndHandle()
+  async getDepartment(
+    id: string,
+  ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const statuses = [
       AdvertStatus.Submitted,
       AdvertStatus.InProgress,
@@ -76,7 +77,7 @@ export class StatisticsService implements IStatisticsService {
     const inReviewPercentage = total ? (inReview / total) * 100 : 0
     const readyPercentage = total ? (ready / total) * 100 : 0
 
-    return Promise.resolve({
+    return ResultWrapper.ok({
       submitted: {
         name: 'Innsendingar',
         count: submitted,
@@ -102,14 +103,11 @@ export class StatisticsService implements IStatisticsService {
     })
   }
 
+  @LogAndHandle()
   async getOverview(
     type: string,
     userId?: string,
-  ): Promise<GetStatisticsOverviewResponse> {
-    if (!type) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
     // check if type is in enum
     if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
       throw new BadRequestException('Invalid type')
@@ -122,13 +120,6 @@ export class StatisticsService implements IStatisticsService {
 
     const categories: StatisticsOverviewCategory[] = []
     let totalAdverts = 0
-
-    if (!cases.length) {
-      return Promise.resolve({
-        categories,
-        totalAdverts,
-      })
-    }
 
     if (type === StatisticsOverviewQueryType.General) {
       let submittedCount = 0
@@ -291,7 +282,7 @@ export class StatisticsService implements IStatisticsService {
       totalAdverts = todayCount + pastDueCount
     }
 
-    return Promise.resolve({
+    return ResultWrapper.ok({
       categories: categories,
       totalAdverts: totalAdverts,
     })

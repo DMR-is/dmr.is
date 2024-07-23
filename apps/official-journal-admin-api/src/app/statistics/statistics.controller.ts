@@ -29,7 +29,7 @@ export class StatisticsController {
   async department(
     @Query('id') id: string,
   ): Promise<GetStatisticsDepartmentResponse> {
-    return this.statisticsService.getDepartment(id)
+    return (await this.statisticsService.getDepartment(id)).unwrap()
   }
 
   @Get('overview')
@@ -44,6 +44,6 @@ export class StatisticsController {
     @Query('type') type: string,
     @Query('userId') userId?: string,
   ): Promise<GetStatisticsOverviewResponse> {
-    return this.statisticsService.getOverview(type, userId)
+    return (await this.statisticsService.getOverview(type, userId)).unwrap()
   }
 }
