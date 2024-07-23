@@ -28,7 +28,7 @@ describe('StatisticsService', () => {
   describe('getStatistics', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
-        const results = await service.getDepartment(department.id)
+        const results = (await service.getDepartment(department.id)).unwrap()
         expect(results.totalAdverts).toBeGreaterThanOrEqual(0)
       })
     })
@@ -36,9 +36,9 @@ describe('StatisticsService', () => {
 
   describe('getOverview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await service.getOverview(
-        StatisticsOverviewQueryType.General,
-      )
+      const results = (
+        await service.getOverview(StatisticsOverviewQueryType.General)
+      ).unwrap()
       expect(results.totalAdverts).toEqual(0)
     })
 

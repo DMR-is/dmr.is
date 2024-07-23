@@ -7,6 +7,7 @@ import {
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -22,11 +23,9 @@ export class MockStatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using StatisticsServiceMock')
   }
-  getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
-    if (!id) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  getDepartment(
+    id: string,
+  ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const statuses = [
       AdvertStatus.Submitted,
       AdvertStatus.InProgress,
@@ -69,7 +68,8 @@ export class MockStatisticsService implements IStatisticsService {
     const inReviewPercentage = total ? (inReview / total) * 100 : 0
     const readyPercentage = total ? (ready / total) * 100 : 0
 
-    return Promise.resolve({
+    // @ts-expect-error FIXME: weird error
+    return ResultWrapper.ok({
       submitted: {
         name: 'Innsendingar',
         count: submitted,
@@ -95,11 +95,9 @@ export class MockStatisticsService implements IStatisticsService {
     })
   }
 
-  getOverview(type: string): Promise<GetStatisticsOverviewResponse> {
-    if (!type) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  getOverview(
+    type: string,
+  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
     // check if type is in enum
     if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
       throw new BadRequestException('Invalid type')
@@ -145,11 +143,17 @@ export class MockStatisticsService implements IStatisticsService {
         },
       ]
       totalAdverts = adverts.length
-    } else if (type === StatisticsOverviewQueryType.Personal) {
+    }
+
+    if (type === StatisticsOverviewQueryType.Personal) {
       throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Inactive) {
+    }
+
+    if (type === StatisticsOverviewQueryType.Inactive) {
       throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Publishing) {
+    }
+
+    if (type === StatisticsOverviewQueryType.Publishing) {
       let today = 0
       let pastDue = 0
 
@@ -178,10 +182,10 @@ export class MockStatisticsService implements IStatisticsService {
         },
       ]
       totalAdverts = adverts.length
-    } else {
-      throw new BadRequestException('Invalid type')
     }
-    return Promise.resolve({
+
+    // @ts-expect-error FIXME: weird error
+    return ResultWrapper.ok({
       categories: categories,
       totalAdverts: totalAdverts,
     })

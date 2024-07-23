@@ -29,11 +29,12 @@ export class StatisticsController {
   async department(
     @Query('id') id: string,
   ): Promise<GetStatisticsDepartmentResponse> {
-    return this.statisticsService.getDepartment(id)
+    return (await this.statisticsService.getDepartment(id)).unwrap()
   }
 
   @Get('overview')
   @ApiQuery({ name: 'type', type: String, required: true })
+  @ApiQuery({ name: 'userId', type: String, required: false })
   @ApiResponse({
     status: 200,
     type: GetStatisticsOverviewResponse,
@@ -41,7 +42,8 @@ export class StatisticsController {
   })
   async overview(
     @Query('type') type: string,
+    @Query('userId') userId?: string,
   ): Promise<GetStatisticsOverviewResponse> {
-    return this.statisticsService.getOverview(type)
+    return (await this.statisticsService.getOverview(type, userId)).unwrap()
   }
 }

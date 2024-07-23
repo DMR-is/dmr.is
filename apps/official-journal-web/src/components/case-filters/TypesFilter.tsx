@@ -20,6 +20,7 @@ export const TypesFilter = () => {
     },
     options: {
       keepPreviousData: true,
+      refreshInterval: 0,
     },
   })
 
