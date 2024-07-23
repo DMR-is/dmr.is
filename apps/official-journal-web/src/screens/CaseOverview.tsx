@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
+import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../components/tabs/Tabs'
@@ -40,24 +41,31 @@ const CaseOverview: Screen<Props> = ({ cases, paging }) => {
   }))
 
   return (
-    <Section key={selectedTab} paddingTop="off">
-      <GridContainer>
-        <GridRow rowGap={['p2', 3]}>
-          <GridColumn
-            paddingTop={2}
-            offset={['0', '0', '0', '1/12']}
-            span={['12/12', '12/12', '12/12', '10/12']}
-          >
-            <Tabs
-              onTabChange={onTabChange}
-              selectedTab={selectedTab}
-              tabs={tabs}
-              label={formatMessage(messages.general.departments)}
-            />
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+    <>
+      <Meta
+        title={`${formatMessage(
+          messages.breadcrumbs.casePublishing,
+        )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
+      />
+      <Section key={selectedTab} paddingTop="off">
+        <GridContainer>
+          <GridRow rowGap={['p2', 3]}>
+            <GridColumn
+              paddingTop={2}
+              offset={['0', '0', '0', '1/12']}
+              span={['12/12', '12/12', '12/12', '10/12']}
+            >
+              <Tabs
+                onTabChange={onTabChange}
+                selectedTab={selectedTab}
+                tabs={tabs}
+                label={formatMessage(messages.general.departments)}
+              />
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Section>
+    </>
   )
 }
 
