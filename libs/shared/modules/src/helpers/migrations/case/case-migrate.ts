@@ -4,6 +4,7 @@ import { Case } from '@dmr.is/shared/dto'
 import { CaseDto } from '../../../case/models'
 import { caseStatusMapper } from '../../mappers'
 import { caseCommunicationStatusMapper } from '../../mappers/case/communicationStatus.mapper'
+import { advertInvolvedPartyMigrate } from '../advert'
 import { advertCategoryMigrate } from '../advert/advert-category-migrate'
 import { caseChannelMigrate } from './case-channel-migrate'
 import { caseCommentMigrate } from './case-comment-migrate'
@@ -33,6 +34,7 @@ export const caseMigrate = (model: CaseDto): Case => {
     caseNumber: model.caseNumber,
     status: status,
     tag: model.tag ? caseTagMigrate(model.tag) : null,
+    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     createdAt: model.createdAt,
     assignedTo:
       ALL_MOCK_USERS.find((u) => u.id === model.assignedUserId) ?? null, // TODO: Implement this when auth is ready

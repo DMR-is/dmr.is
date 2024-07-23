@@ -136,9 +136,7 @@ export const CaseTableReady = ({
       {
         children: (
           <Text whiteSpace="nowrap" variant="medium">
-            Reykjavíkurborg
-            {/* TODO: Add involved party to case */}
-            {/* {row.institution.title} */}
+            {row.involvedParty.title}
           </Text>
         ),
       },
