@@ -1,25 +1,26 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCasesReponse } from '../../../gen/fetch'
-import { APIRotues, fetchWithQueryString } from '../../../lib/constants'
+import { APIRotues, fetcher } from '../../../lib/constants'
+import {
+  CaseOverviewSearchParams,
+  generateQueryFromParams,
+} from '../../../lib/types'
 
 type SWRCasesOptions = SWRConfiguration<GetCasesReponse, Error>
 
 type UseCasesParams = {
   options?: SWRCasesOptions
-  qsp?: string
+  params?: CaseOverviewSearchParams
 }
 
-export const useCases = ({ options, qsp }: UseCasesParams = {}) => {
+export const useCases = ({ options, params }: UseCasesParams = {}) => {
+  const query = generateQueryFromParams(params)
+  const url = query ? `${APIRotues.GetCases}?${query}` : APIRotues.GetCases
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCasesReponse,
     Error
-  >(
-    [APIRotues.Cases, qsp],
-    ([url, qsp]: [string, string | undefined]) =>
-      fetchWithQueryString(url, qsp),
-    options,
-  )
+  >(url, fetcher, options)
 
   return {
     data,

@@ -4,7 +4,7 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -59,6 +59,11 @@ export class UtilityService implements IUtilityService {
     private caseCategoriesModel: typeof CaseCategoriesDto,
   ) {
     this.logger.info('Using UtilityService')
+  }
+  getNextPublicationNumber(
+    caseIds: string[],
+  ): Promise<ResultWrapper<number, GenericError>> {
+    throw new Error('Method not implemented.')
   }
 
   @LogAndHandle()

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   AlertMessage,
@@ -14,7 +14,6 @@ import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
 import { messages as errorMessages } from '../../lib/messages/errors'
-import { CaseOverviewSearchParams } from '../../lib/types'
 import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
 import { CaseTableReady } from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
@@ -38,7 +37,9 @@ export const CasePublishingTab = ({
 
   const selectedTab = router.query.department
 
-  const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
+  const [searchParams, setSearchParams] = useState<
+    Record<string, string | string[] | number | undefined>
+  >({
     search: router.query.search,
     department: selectedTab,
     status: CaseStatusEnum.Tilbi,
@@ -60,26 +61,12 @@ export const CasePublishingTab = ({
     })
   }, [router.query])
 
-  const qsp = useMemo(() => {
-    const filters = Object.entries(searchParams).filter(
-      ([_, value]) => value !== undefined,
-    )
-
-    const qs = new URLSearchParams()
-
-    filters.forEach(([key, value]) => {
-      qs.append(key, value as string)
-    })
-
-    return qs.toString()
-  }, [searchParams])
-
   const {
     data: caseData,
     error,
     isLoading,
   } = useCases({
-    qsp: qsp,
+    params: searchParams,
     options: {
       keepPreviousData: true,
       fallback: {
