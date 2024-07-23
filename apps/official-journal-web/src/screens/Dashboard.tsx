@@ -11,6 +11,7 @@ import {
 import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
+import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { StatisticsNotPublished } from '../components/statistics/NotPublished'
 import { useFormatMessage } from '../hooks/useFormatMessage'
@@ -102,6 +103,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
 
   return (
     <>
+      <Meta title={formatMessage(messages.banner.content.title)} />
       <Section bleed={true} variant="blue">
         <GridContainer>
           <GridRow>
@@ -121,7 +123,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
               >
                 <ContentWrapper
                   title={messages.general.admin}
-                  link="#"
+                  link={Routes.ProcessingOverview}
                   linkText={messages.general.openAdmin}
                 >
                   <Tabs
@@ -133,7 +135,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                 </ContentWrapper>
                 <ContentWrapper
                   title={messages.general.publishing}
-                  link="#"
+                  link={Routes.PublishingOverview}
                   linkText={messages.general.openPublishing}
                 >
                   <AdvertsOverviewList

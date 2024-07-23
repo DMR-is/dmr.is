@@ -11,6 +11,7 @@ import {
 
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
+import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { Tab, Tabs } from '../components/tabs/Tabs'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
@@ -145,47 +146,58 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
   }))
 
   return (
-    <Section paddingTop="off">
-      <GridContainer>
-        <GridRow rowGap={['p2', 3]}>
-          <GridColumn
-            paddingTop={2}
-            offset={['0', '0', '0', '1/12']}
-            span={[
-              '12/12',
-              '12/12',
-              '12/12',
-              screen === CasePublishViews.Confirm ? '7/12' : '10/12',
-            ]}
-          >
-            {screen === CasePublishViews.Confirm ? (
-              <>
-                <CasePublishingList
-                  cases={cases.filter((cs) =>
-                    casesToPublish.find((c) => c.id === cs.id),
-                  )}
+    <>
+      <Meta
+        title={`${formatMessage(
+          messages.breadcrumbs.casePublishing,
+        )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
+      />
+      <Section paddingTop="off">
+        <GridContainer>
+          <GridRow rowGap={['p2', 3]}>
+            <GridColumn
+              paddingTop={2}
+              offset={['0', '0', '0', '1/12']}
+              span={[
+                '12/12',
+                '12/12',
+                '12/12',
+                screen === CasePublishViews.Confirm ? '7/12' : '10/12',
+              ]}
+            >
+              {screen === CasePublishViews.Confirm ? (
+                <>
+                  <CasePublishingList
+                    cases={cases.filter((cs) =>
+                      casesToPublish.find((c) => c.id === cs.id),
+                    )}
+                  />
+                  <Box
+                    marginTop={3}
+                    display="flex"
+                    justifyContent="spaceBetween"
+                  >
+                    <Button onClick={backToOverview} variant="ghost">
+                      {formatMessage(messages.general.backToPublishing)}
+                    </Button>
+                    <Button onClick={handlePublishCases} icon="arrowForward">
+                      {formatMessage(messages.general.publishAllCases)}
+                    </Button>
+                  </Box>
+                </>
+              ) : (
+                <Tabs
+                  onTabChange={onTabChange}
+                  selectedTab={selectedTab}
+                  tabs={tabs}
+                  label={formatMessage(messages.general.departments)}
                 />
-                <Box marginTop={3} display="flex" justifyContent="spaceBetween">
-                  <Button onClick={backToOverview} variant="ghost">
-                    {formatMessage(messages.general.backToPublishing)}
-                  </Button>
-                  <Button onClick={handlePublishCases} icon="arrowForward">
-                    {formatMessage(messages.general.publishAllCases)}
-                  </Button>
-                </Box>
-              </>
-            ) : (
-              <Tabs
-                onTabChange={onTabChange}
-                selectedTab={selectedTab}
-                tabs={tabs}
-                label={formatMessage(messages.general.departments)}
-              />
-            )}
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+              )}
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Section>
+    </>
   )
 }
 
