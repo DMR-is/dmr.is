@@ -121,7 +121,7 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
   }
 
   return (
-    <T.Table box={{ overflow: 'visible' }}>
+    <T.Table>
       <T.Head>
         <T.Row>
           {columns.map((column, index) => (

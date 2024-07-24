@@ -1,20 +1,8 @@
-import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { Box, Button, Text } from '@island.is/island-ui/core'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  SkeletonLoader,
-  Text,
-} from '@island.is/island-ui/core'
-
-import { Case, CaseStatusEnum, Paging } from '../../gen/fetch'
-import { useCases } from '../../hooks/api'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
-import { messages as errorMessages } from '../../lib/messages/errors'
-import { CaseOverviewGrid } from '../case-overview-grid/CaseOverviewGrid'
 import { CaseTableReady } from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
@@ -25,97 +13,19 @@ type Props = {
   proceedToPublishing: (casesToPublish: string[]) => void
 }
 
-export const CasePublishingTab = ({
-  cases,
-  paging,
-  proceedToPublishing,
-}: Props) => {
+export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const router = useRouter()
 
   const { publishingState } = usePublishContext()
   const { selectedCaseIds } = publishingState
 
-  const selectedTab = router.query.department
-
-  const [searchParams, setSearchParams] = useState<
-    Record<string, string | string[] | number | undefined>
-  >({
-    search: router.query.search,
-    department: selectedTab,
-    status: CaseStatusEnum.Tilbi,
-    page: router.query.page,
-    type: router.query.type,
-    category: router.query.category,
-    pageSize: router.query.pageSize,
-  })
-
-  useEffect(() => {
-    setSearchParams({
-      search: router.query.search,
-      department: selectedTab,
-      status: CaseStatusEnum.Tilbi,
-      page: router.query.page,
-      type: router.query.type,
-      category: router.query.category,
-      pageSize: router.query.pageSize,
-    })
-  }, [router.query])
-
-  const {
-    data: caseData,
-    error,
-    isLoading,
-  } = useCases({
-    params: searchParams,
-    options: {
-      keepPreviousData: true,
-      fallback: {
-        cases: cases,
-        paging: paging,
-      },
-    },
-  })
-
-  if (isLoading) {
-    return (
-      <CaseOverviewGrid>
-        <SkeletonLoader repeat={3} height={44} />
-      </CaseOverviewGrid>
-    )
-  }
-
-  if (error) {
-    return (
-      <CaseOverviewGrid>
-        <AlertMessage
-          type="error"
-          message={formatMessage(errorMessages.errorFetchingData)}
-          title={formatMessage(errorMessages.internalServerError)}
-        />
-      </CaseOverviewGrid>
-    )
-  }
-
-  if (!caseData) {
-    return (
-      <CaseOverviewGrid>
-        <AlertMessage
-          type="warning"
-          message={formatMessage(errorMessages.noDataText)}
-          title={formatMessage(errorMessages.noDataTitle)}
-        />
-      </CaseOverviewGrid>
-    )
-  }
-
   return (
-    <>
+    <Box display="flex" flexDirection="column" rowGap={4}>
       <Box>
-        <CaseTableReady data={caseData.cases} paging={caseData.paging} />
+        <CaseTableReady />
       </Box>
 
-      <Box marginTop={[3, 4]}>
+      <Box>
         <Text as="h3" fontWeight="semiBold" marginBottom={2}>
           {formatMessage(messages.general.selectedCasesForPublishing)}
         </Text>
@@ -130,6 +40,6 @@ export const CasePublishingTab = ({
           </Button>
         </Box>
       </Box>
-    </>
+    </Box>
   )
 }

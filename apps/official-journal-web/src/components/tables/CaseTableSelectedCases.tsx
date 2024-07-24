@@ -16,7 +16,6 @@ export const CaseTableSelectedCases = () => {
   const { selectedCaseIds } = publishingState
 
   const { data, error, isLoading } = useCases({
-    shouldFetch: !!selectedCaseIds.length,
     params: {
       id: selectedCaseIds.join(','),
     },

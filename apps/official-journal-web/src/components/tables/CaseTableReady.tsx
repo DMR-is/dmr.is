@@ -1,10 +1,19 @@
+import { useRouter } from 'next/router'
 import { ChangeEvent } from 'react'
 
-import { Checkbox, Text } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  Checkbox,
+  SkeletonLoader,
+  Text,
+} from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
+import { CaseStatusEnum } from '../../gen/fetch'
+import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
+import { messages as errorMessages } from '../../lib/messages/errors'
+import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
@@ -15,12 +24,7 @@ import {
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
-type Props = {
-  data: Case[]
-  paging: Paging
-}
-
-export const CaseTableReady = ({ data }: Props) => {
+export const CaseTableReady = () => {
   const { formatMessage } = useFormatMessage()
   const {
     publishingState,
@@ -30,10 +34,49 @@ export const CaseTableReady = ({ data }: Props) => {
     removeAllCasesFromSelectedList,
   } = usePublishContext()
   const { selectedCaseIds } = publishingState
+  const router = useRouter()
+  const department = getStringFromQueryString(router.query.department)
+
+  const {
+    data: caseData,
+    isLoading,
+    error,
+  } = useCases({
+    params: {
+      department: department,
+      status: CaseStatusEnum.Tilbi,
+    },
+  })
+
+  if (isLoading) {
+    return <SkeletonLoader repeat={3} height={44} space={2} />
+  }
+
+  if (error) {
+    return (
+      <AlertMessage
+        type="error"
+        title={formatMessage(errorMessages.error)}
+        message={formatMessage(errorMessages.error)}
+      />
+    )
+  }
+
+  if (!caseData) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Engin mál fundust"
+        message="Mál birtast þegar þau eru færð í stöðuna 'Tilbúið'"
+      />
+    )
+  }
+
+  const { cases } = caseData
 
   const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      addManyCasesToSelectedList(data.map((row) => row.id))
+      addManyCasesToSelectedList(cases.map((row) => row.id))
     } else {
       removeAllCasesFromSelectedList()
     }
@@ -85,7 +128,7 @@ export const CaseTableReady = ({ data }: Props) => {
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => {
+  const rows: CaseTableRowProps[] = cases.map((row) => {
     return {
       case: row,
       cells: [

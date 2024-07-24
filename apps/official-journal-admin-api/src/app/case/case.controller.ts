@@ -132,7 +132,7 @@ export class CaseController {
     operationId: 'editorialOverview',
     summary: 'Get editorial overview',
     responseType: EditorialOverviewResponse,
-    // query: [{ type: GetCasesQuery }],
+    query: [{ type: GetCasesQuery }],
   })
   async editorialOverview(
     @Query() params?: GetCasesQuery,
@@ -331,7 +331,7 @@ export class CaseController {
     operationId: 'getCases',
     summary: 'Get cases',
     responseType: GetCasesReponse,
-    // query: [{ type: GetCasesQuery }],
+    query: [{ type: GetCasesQuery }],
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.cases(params))
