@@ -376,11 +376,16 @@ export class CaseService implements ICaseService {
       ? parseInt(params.pageSize, 10)
       : DEFAULT_PAGE_SIZE
 
-    const withStatus = params?.status
-      ? (await this.utilityService.caseStatusLookup(params.status)).unwrap()
+    const statusLookups = params?.status?.split(',').map((s) => {
+      return this.utilityService.caseStatusLookup(s)
+    })
+    const statusesRes = statusLookups
+      ? await Promise.all(statusLookups).then((s) => s.map((ss) => ss.unwrap()))
       : undefined
 
-    const whereParams = caseParameters(params, withStatus?.id)
+    const statuses = statusesRes?.map((s) => s.id)
+
+    const whereParams = caseParameters(params, statuses)
 
     const cases = await this.caseModel.findAndCountAll({
       offset: (page - 1) * pageSize,

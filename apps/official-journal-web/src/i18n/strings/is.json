@@ -143,6 +143,10 @@
     "defaultMessage": "Hreinsa val",
     "description": "Search placeholder for case filters"
   },
+  "web.components.filterGroup:search": {
+    "defaultMessage": "Leita",
+    "description": "Search placeholder for case filters"
+  },
   "web.components.filterPopover:clearAllFilters": {
     "defaultMessage": "Hreinsa allar síur",
     "description": "Clear all filters button label"
@@ -174,6 +178,10 @@
   "web.components.statistics:notPublished.total": {
     "defaultMessage": "Alls",
     "description": "Total label for the dashboard"
+  },
+  "web.components.steps.grunnvinnsla:categories": {
+    "defaultMessage": "Efnisflokkar",
+    "description": ""
   },
   "web.components.steps.grunnvinnsla:createdDate": {
     "defaultMessage": "Dagsetning innsendingar",
@@ -235,6 +243,10 @@
     "defaultMessage": "Engin mál finnast, líklega þarf að breyta síun.",
     "description": "Empty table message"
   },
+  "web.components.tables:general.type": {
+    "defaultMessage": "Tegund",
+    "description": "Advert type column"
+  },
   "web.components.tables:inProgress.columns.department": {
     "defaultMessage": "Deild",
     "description": "Department column"
@@ -283,6 +295,10 @@
     "defaultMessage": "Sjá nánar",
     "description": "See more link"
   },
+  "web.components.tables:overview.columns.caseNumber": {
+    "defaultMessage": "Nr.",
+    "description": ""
+  },
   "web.components.tables:overview.columns.institution": {
     "defaultMessage": "Stofnun",
     "description": "Institution column"
@@ -292,7 +308,7 @@
     "description": "Publish date column"
   },
   "web.components.tables:overview.columns.status": {
-    "defaultMessage": "Staða/Nr.",
+    "defaultMessage": "Staða",
     "description": "Status column"
   },
   "web.components.tables:overview.columns.title": {
@@ -622,5 +638,33 @@
   "web.page.dashboard:tabs.statistics.c": {
     "defaultMessage": "C deild",
     "description": "Department c tab for the dashboard statistics"
+  },
+  "web.page.errors.errorFetchingCategoriesMessage": {
+    "defaultMessage": "Ekki tókst að sækja flokka mála",
+    "description": "Error fetching categories"
+  },
+  "web.page.errors.errorFetchingData": {
+    "defaultMessage": "Villa kom upp við að sækja gögn",
+    "description": "Error fetching data"
+  },
+  "web.page.errors.errorFetchingDepartmentsMessage": {
+    "defaultMessage": "Ekki tókst að sækja deildir",
+    "description": "Error fetching departments"
+  },
+  "web.page.errors.errorFetchingTypesMessage": {
+    "defaultMessage": "Ekki tókst að sækja tegundir mála",
+    "description": "Error fetching types"
+  },
+  "web.page.errors.internalServerError": {
+    "defaultMessage": "Innri kerfisvilla kom upp",
+    "description": "Internal server error"
+  },
+  "web.page.errors.noDataText": {
+    "defaultMessage": "Villa kom upp við að sækja gögn",
+    "description": "No data text"
+  },
+  "web.page.errors.noDataTitle": {
+    "defaultMessage": "Villa kom upp",
+    "description": "No data title"
   }
 }

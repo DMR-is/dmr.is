@@ -19,7 +19,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       name: 'casePublishDate',
       sortable: false,
       size: 'tiny',
-      children: formatMessage(messages.tables.overview.columns.publishDate),
+      children: formatMessage(messages.tables.overview.columns.caseNumber),
     },
 
     {
@@ -45,16 +45,17 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
     case: row,
     cells: [
       {
-        children: <Text variant="medium">{formatDate(row.publishedAt)}</Text>,
+        // children: <Text variant="medium">{formatDate(row.publishedAt)}</Text>,
+        children: <Text variant="medium">{row.caseNumber}</Text>,
       },
       {
-        children: <Text variant="medium">{row.caseNumber}</Text>, // TODO: Add publication number to case
+        children: <Text variant="medium">{row.status}</Text>, // TODO: Add publication number to case
       },
       {
         children: (
           <div className={styles.nameTableCell}>
             <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertType.title} {row.advertTitle}
             </Text>
           </div>
         ),

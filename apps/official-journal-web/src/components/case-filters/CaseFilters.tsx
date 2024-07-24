@@ -31,7 +31,6 @@ export const CaseFilters = () => {
   const { formatMessage } = useFormatMessage()
   const router = useRouter()
   const isMounted = useIsMounted()
-  const { isLoading } = useCaseOverview()
   const qp = useQueryParams()
 
   const initialSearch = getStringFromQueryString(router.query.search)
@@ -80,7 +79,6 @@ export const CaseFilters = () => {
       <Box className={styles.caseFilters}>
         {isMounted ? (
           <Input
-            loading={isLoading}
             size="sm"
             icon={{ name: 'search', type: 'outline' }}
             backgroundColor="blue"

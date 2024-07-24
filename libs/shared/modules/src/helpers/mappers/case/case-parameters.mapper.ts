@@ -9,7 +9,7 @@ type WhereClause = {
   year?: string
   caseNumber?: string
   assignedUserId?: string
-  statusId?: string
+  statusId?: { [Op.in]: string[] }
   fastTrack?: boolean
   publishedAt?: { [Op.not]: null } | { [Op.is]: null }
   advertType?: {
@@ -25,7 +25,7 @@ type WhereClause = {
 
 export const caseParameters = (
   params?: GetCasesQuery,
-  caseStatusId?: string,
+  caseStatusIds?: string[],
 ) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}
@@ -53,8 +53,8 @@ export const caseParameters = (
     whereClause.assignedUserId = params.employeeId
   }
 
-  if (caseStatusId) {
-    whereClause.statusId = caseStatusId
+  if (caseStatusIds) {
+    whereClause.statusId = { [Op.in]: caseStatusIds }
   }
 
   if (params?.fastTrack !== undefined) {
