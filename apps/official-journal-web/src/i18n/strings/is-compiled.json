@@ -215,6 +215,12 @@
       "value": "Hreinsa val"
     }
   ],
+  "web.components.filterGroup:search": [
+    {
+      "type": 0,
+      "value": "Leita"
+    }
+  ],
   "web.components.filterPopover:clearAllFilters": [
     {
       "type": 0,
@@ -261,6 +267,12 @@
     {
       "type": 0,
       "value": "Alls"
+    }
+  ],
+  "web.components.steps.grunnvinnsla:categories": [
+    {
+      "type": 0,
+      "value": "Efnisflokkar"
     }
   ],
   "web.components.steps.grunnvinnsla:createdDate": [
@@ -353,6 +365,12 @@
       "value": "Engin mál finnast, líklega þarf að breyta síun."
     }
   ],
+  "web.components.tables:general.type": [
+    {
+      "type": 0,
+      "value": "Tegund"
+    }
+  ],
   "web.components.tables:inProgress.columns.department": [
     {
       "type": 0,
@@ -425,6 +443,12 @@
       "value": "Sjá nánar"
     }
   ],
+  "web.components.tables:overview.columns.caseNumber": [
+    {
+      "type": 0,
+      "value": "Nr."
+    }
+  ],
   "web.components.tables:overview.columns.institution": [
     {
       "type": 0,
@@ -440,7 +464,7 @@
   "web.components.tables:overview.columns.status": [
     {
       "type": 0,
-      "value": "Staða/Nr."
+      "value": "Staða"
     }
   ],
   "web.components.tables:overview.columns.title": [
@@ -965,6 +989,48 @@
     {
       "type": 0,
       "value": "C deild"
+    }
+  ],
+  "web.page.errors.errorFetchingCategoriesMessage": [
+    {
+      "type": 0,
+      "value": "Ekki tókst að sækja flokka mála"
+    }
+  ],
+  "web.page.errors.errorFetchingData": [
+    {
+      "type": 0,
+      "value": "Villa kom upp við að sækja gögn"
+    }
+  ],
+  "web.page.errors.errorFetchingDepartmentsMessage": [
+    {
+      "type": 0,
+      "value": "Ekki tókst að sækja deildir"
+    }
+  ],
+  "web.page.errors.errorFetchingTypesMessage": [
+    {
+      "type": 0,
+      "value": "Ekki tókst að sækja tegundir mála"
+    }
+  ],
+  "web.page.errors.internalServerError": [
+    {
+      "type": 0,
+      "value": "Innri kerfisvilla kom upp"
+    }
+  ],
+  "web.page.errors.noDataText": [
+    {
+      "type": 0,
+      "value": "Villa kom upp við að sækja gögn"
+    }
+  ],
+  "web.page.errors.noDataTitle": [
+    {
+      "type": 0,
+      "value": "Villa kom upp"
     }
   ]
 }

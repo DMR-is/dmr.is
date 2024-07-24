@@ -13,7 +13,6 @@ import {
   CaseTagValueEnum,
   CaseWithAdvert,
 } from '../gen/fetch'
-import { useQueryParams } from '../hooks/useQueryParams'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
