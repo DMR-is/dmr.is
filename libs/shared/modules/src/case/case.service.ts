@@ -376,7 +376,7 @@ export class CaseService implements ICaseService {
       ? parseInt(params.pageSize, 10)
       : DEFAULT_PAGE_SIZE
 
-    const statusLookups = params?.status?.split(',').map((s) => {
+    const statusLookups = params?.status?.map((s) => {
       return this.utilityService.caseStatusLookup(s)
     })
     const statusesRes = statusLookups

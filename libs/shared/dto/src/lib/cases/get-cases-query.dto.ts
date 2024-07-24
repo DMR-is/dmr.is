@@ -73,13 +73,19 @@ export class GetCasesQuery {
 
   @ApiProperty({
     name: 'status',
+    type: String,
     description:
       'Case status id to filter cases on, takes into account `status` on `Case`.',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  status?: string
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  status?: string[]
 
   @ApiProperty({
     name: 'employeeId',
