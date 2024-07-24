@@ -61,7 +61,7 @@ export type CaseTableColumnSort = {
 
 export const CaseTable = ({
   renderLink = true,
-  loading = true,
+  // loading = true,
   modalLink,
   columns,
   rows,
@@ -198,15 +198,19 @@ export const CaseTable = ({
                           : undefined
                       }
                     >
-                      <Text variant="eyebrow" color={'blue400'}>
-                        {breakpoints.xl &&
-                          formatMessage(messages.general.openCaseLinkText)}{' '}
-                        <Icon
-                          icon="arrowForward"
-                          color="blue400"
-                          className={styles.seeMoreTableCellLinkIcon}
-                        />
-                      </Text>
+                      <Box className={styles.seeMoreTableCellLinkText}>
+                        <Text variant="eyebrow" color={'blue400'}>
+                          {breakpoints.xl &&
+                            formatMessage(
+                              messages.general.openCaseLinkText,
+                            )}{' '}
+                          <Icon
+                            icon="arrowForward"
+                            color="blue400"
+                            className={styles.seeMoreTableCellLinkIcon}
+                          />
+                        </Text>
+                      </Box>
                     </Box>
                   </td>
                 )}
