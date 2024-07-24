@@ -6,7 +6,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 export interface IStatisticsService {
   getDepartment(
-    type: string,
+    slug: string,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>>
 
   getOverview(

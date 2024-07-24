@@ -1,6 +1,6 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { AdvertStatus, CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -71,27 +71,26 @@ export class MockStatisticsService implements IStatisticsService {
     // @ts-expect-error FIXME: weird error
     return ResultWrapper.ok({
       submitted: {
-        name: 'Innsendingar',
+        name: CaseStatus.Submitted,
         count: submitted,
         percentage: Math.round(submittedPercentage),
       },
       inProgress: {
-        name: 'Grunnvinnsla',
+        name: CaseStatus.InProgress,
         count: inProgress,
         percentage: Math.round(inProgressPercentage),
       },
       inReview: {
-        name: 'Yfirlestur',
+        name: CaseStatus.InReview,
         count: inReview,
         percentage: Math.round(inReviewPercentage),
       },
       ready: {
-        name: 'Tilbúið',
+        name: CaseStatus.ReadyForPublishing,
         count: ready,
         percentage: Math.round(readyPercentage),
       },
       totalAdverts: total,
-      totalPercentage: 100,
     })
   }
 

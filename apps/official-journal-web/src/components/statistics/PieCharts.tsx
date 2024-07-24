@@ -4,14 +4,17 @@ import { Pie } from 'recharts'
 import { Box, Table as T, Text } from '@island.is/island-ui/core'
 import { theme } from '@island.is/island-ui/theme'
 
+import {
+  CaseStatusEnum,
+  GetStatisticsDepartmentResponse,
+} from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useMockStatisticsNotPublished } from '../../hooks/useMockStatisticsNotPublished'
 import { PIE_CHART_DIMENSION } from '../../lib/constants'
 import { messages } from './messages'
 import * as styles from './Statistics.css'
 
 type Props = {
-  department: 'a' | 'b' | 'c'
+  data: GetStatisticsDepartmentResponse | null
 }
 
 const PieChart = dynamic(
@@ -19,26 +22,25 @@ const PieChart = dynamic(
   { ssr: false },
 )
 
-export const StatisticsNotPublished = ({ department }: Props) => {
+export const StatisticsPieCharts = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const { data, total } = useMockStatisticsNotPublished(department)
 
-  const mapTitleToColor = (title: string) => {
-    switch (title) {
-      case 'Innsendingar':
+  const mapTitleToColor = (name: string) => {
+    switch (name) {
+      case CaseStatusEnum.Innsent:
         return theme.color.dark400
-      case 'Grunnvinnsla':
+      case CaseStatusEnum.Grunnvinnsla:
         return theme.color.blue400
-      case 'Yfirlestur':
+      case CaseStatusEnum.Yfirlestur:
         return theme.color.mint600
-      case 'Tilbúið':
+      case CaseStatusEnum.Tilbi:
         return theme.color.roseTinted400
       default:
         return theme.color.black
     }
   }
 
-  if (!total.count)
+  if (!data?.totalCases)
     return (
       <Box className={styles.statisticsEmpty}>
         <Box
@@ -53,11 +55,11 @@ export const StatisticsNotPublished = ({ department }: Props) => {
       </Box>
     )
 
-  const pieData = Object.entries(data).map((item) => ({
-    name: item[1].title,
-    value: item[1].count,
-    percentage: item[1].percentage,
-    fill: mapTitleToColor(item[1].title),
+  const pieData = Object.entries(data.data).map(([_, value]) => ({
+    name: value.name,
+    value: value.count,
+    percentage: value.percentage,
+    fill: mapTitleToColor(value.name),
   }))
 
   return (
@@ -120,7 +122,7 @@ export const StatisticsNotPublished = ({ department }: Props) => {
             </T.Data>
             <T.Data align="center" style={{ paddingBlock: theme.spacing[1] }}>
               <Text fontWeight="medium" variant="medium">
-                {total.count}
+                {data.totalCases}
               </Text>
             </T.Data>
             <T.Data align="center" style={{ paddingBlock: theme.spacing[1] }}>
