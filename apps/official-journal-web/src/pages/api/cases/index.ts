@@ -9,10 +9,11 @@ class GetCasesHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { search, category, type, status, department, page, pageSize } =
+    const { id, search, category, type, status, department, page, pageSize } =
       req.query as Record<string, string>
 
     const cases = await dmrClient.getCases({
+      id: id,
       search: search,
       category: category,
       type: type,

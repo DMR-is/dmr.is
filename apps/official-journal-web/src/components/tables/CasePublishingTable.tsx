@@ -1,9 +1,12 @@
 import { Reorder, useDragControls } from 'framer-motion'
+import { useRouter } from 'next/router'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
 import { Icon, Table as T, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
+import { useDepartments, useNextPublicationNumber } from '../../hooks/api'
+import { getStringFromQueryString } from '../../lib/types'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -84,8 +87,30 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
   const [reorderableItems, setReorderableItems] = useState<Case[]>(rows)
 
-  // TODO: figure out how we get this number from the DB
-  const latestPublicationNumber = 123
+  const router = useRouter()
+
+  const department = getStringFromQueryString(router.query.department)
+
+  const { data: departmentsData } = useDepartments({
+    options: {
+      refreshInterval: 0,
+    },
+  })
+
+  const departmentId = departmentsData?.departments.find(
+    (d) => d.slug === department,
+  )?.id as string
+
+  const { data } = useNextPublicationNumber({
+    options: {
+      refreshInterval: 0,
+    },
+    params: {
+      departmentId: departmentId,
+    },
+  })
+
+  const latestPublicationNumber = data?.publicationNumber ?? 1
 
   useEffect(() => {
     setReorderableItems(rows)
@@ -126,7 +151,7 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
               key={row.id}
               row={row}
               container={dragContainerRef}
-              number={latestPublicationNumber + (i + 1)}
+              number={latestPublicationNumber + i}
               onReorder={reOrder}
             />
           ))}

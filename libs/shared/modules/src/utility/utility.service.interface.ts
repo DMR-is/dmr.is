@@ -34,12 +34,12 @@ export interface IUtilityService {
 
   userLookup(userId: string): Promise<ResultWrapper<User>>
 
-  getNextSerialNumber(
+  getNextCaseNumber(
     departmentId: string,
     year: number,
   ): Promise<ResultWrapper<number>>
 
-  getNextPublicationNumber(caseIds: string[]): Promise<ResultWrapper<number>>
+  getNextPublicationNumber(departmentId: string): Promise<ResultWrapper<number>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

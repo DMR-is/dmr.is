@@ -1,15 +1,23 @@
-import { createContext, useState } from 'react'
+import { createContext, useCallback, useState } from 'react'
 
-type PublishingContextProps = {
+type PublishingStateProps = {
   selectedCaseIds: string[]
-  addCaseToSelectedList: (caseId: string) => void
-  removeCaseFromSelectedList: (caseId: string) => void
-  removeAllCasesFromSelectedList: () => void
-  addManyCasesToSelectedList: (caseIds: string[]) => void
 }
 
-export const PublishingContext = createContext<PublishingContextProps>({
+const publishingStateDefaults: PublishingStateProps = {
   selectedCaseIds: [],
+}
+
+type PublishingStateContext = {
+  publishingState: PublishingStateProps
+  addCaseToSelectedList: (id: string) => void
+  removeCaseFromSelectedList: (id: string) => void
+  removeAllCasesFromSelectedList: () => void
+  addManyCasesToSelectedList: (ids: string[]) => void
+}
+
+export const PublishingContext = createContext<PublishingStateContext>({
+  publishingState: publishingStateDefaults,
   addCaseToSelectedList: () => {},
   removeCaseFromSelectedList: () => {},
   removeAllCasesFromSelectedList: () => {},
@@ -21,48 +29,59 @@ export const PublishingContextProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  const onAddCase = (id: string) => {
-    if (!state.selectedCaseIds.includes(id)) {
+  const [state, setState] = useState<PublishingStateProps>(
+    publishingStateDefaults,
+  )
+
+  const onAddCase = useCallback(
+    (id: string) => {
+      if (!state.selectedCaseIds.includes(id)) {
+        setState((prevState) => ({
+          ...prevState,
+          selectedCaseIds: [...prevState.selectedCaseIds, id],
+        }))
+      }
+    },
+    [state],
+  )
+
+  const onRemoveCase = useCallback(
+    (id: string) => {
       setState((prevState) => ({
         ...prevState,
-        selectedCaseIds: [...prevState.selectedCaseIds, id],
+        selectedCaseIds: prevState.selectedCaseIds.filter(
+          (caseId) => caseId !== id,
+        ),
       }))
-    }
-  }
+    },
+    [state],
+  )
 
-  const onRemoveCase = (id: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      selectedCaseIds: prevState.selectedCaseIds.filter(
-        (caseId) => caseId !== id,
-      ),
-    }))
-  }
-
-  const onRemoveAllCases = () => {
+  const onRemoveAllCases = useCallback(() => {
     setState((prevState) => ({ ...prevState, selectedCaseIds: [] }))
-  }
+  }, [state])
 
-  const onAddManyCases = (ids: string[]) => {
-    const uniqueIds = ids.filter((id) => !state.selectedCaseIds.includes(id))
-    setState((prevState) => ({
-      ...prevState,
-      selectedCaseIds: [...state.selectedCaseIds, ...uniqueIds],
-    }))
-  }
-
-  const initalState = {
-    selectedCaseIds: [],
-    addCaseToSelectedList: onAddCase,
-    removeCaseFromSelectedList: onRemoveCase,
-    removeAllCasesFromSelectedList: onRemoveAllCases,
-    addManyCasesToSelectedList: onAddManyCases,
-  } as PublishingContextProps
-
-  const [state, setState] = useState(initalState)
+  const onAddManyCases = useCallback(
+    (ids: string[]) => {
+      const uniqueIds = ids.filter((id) => !state.selectedCaseIds.includes(id))
+      setState((prevState) => ({
+        ...prevState,
+        selectedCaseIds: [...state.selectedCaseIds, ...uniqueIds],
+      }))
+    },
+    [state],
+  )
 
   return (
-    <PublishingContext.Provider value={state}>
+    <PublishingContext.Provider
+      value={{
+        publishingState: state,
+        addCaseToSelectedList: onAddCase,
+        removeCaseFromSelectedList: onRemoveCase,
+        removeAllCasesFromSelectedList: onRemoveAllCases,
+        addManyCasesToSelectedList: onAddManyCases,
+      }}
+    >
       {children}
     </PublishingContext.Provider>
   )

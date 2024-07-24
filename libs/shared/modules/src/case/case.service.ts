@@ -17,6 +17,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
@@ -432,6 +433,23 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  async getNextPublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
+    const doesDepartmentExist = (
+      await this.utilityService.departmentLookup(departmentId)
+    ).unwrap()
+
+    const publicationNumber = (
+      await this.utilityService.getNextPublicationNumber(doesDepartmentExist.id)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      publicationNumber,
+    })
+  }
+
+  @LogAndHandle()
   async publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
@@ -475,7 +493,7 @@ export class CaseService implements ICaseService {
           const now = new Date()
           const year = now.getFullYear()
           const number = (
-            await this.utilityService.getNextSerialNumber(
+            await this.utilityService.getNextCaseNumber(
               activeCase.advertDepartment.id,
               year,
             )

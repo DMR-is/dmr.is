@@ -12,12 +12,14 @@ import { messages } from './messages'
 export const CaseTableSelectedCases = () => {
   const { formatMessage } = useFormatMessage()
 
-  const { selectedCaseIds } = usePublishContext()
-
-  const qsp = selectedCaseIds.length ? `id=${selectedCaseIds.join(',')}` : ''
+  const { publishingState } = usePublishContext()
+  const { selectedCaseIds } = publishingState
 
   const { data, error, isLoading } = useCases({
-    qsp: qsp,
+    shouldFetch: !!selectedCaseIds.length,
+    params: {
+      id: selectedCaseIds.join(','),
+    },
   })
 
   if (isLoading) return <SkeletonLoader repeat={3} height={44} />

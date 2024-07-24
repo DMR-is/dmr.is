@@ -3,7 +3,7 @@ import { Filenames } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import { CaseStatus, CaseWithAdvert, User } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
@@ -61,10 +61,31 @@ export class UtilityService implements IUtilityService {
   ) {
     this.logger.info('Using UtilityService')
   }
-  getNextPublicationNumber(
-    caseIds: string[],
-  ): Promise<ResultWrapper<number, GenericError>> {
-    throw new Error('Method not implemented.')
+
+  @LogAndHandle()
+  async getNextPublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<number>> {
+    const year = new Date().getFullYear()
+
+    const caseStatusId = (
+      await this.caseStatusLookup(CaseStatus.ReadyForPublishing)
+    ).unwrap().id
+
+    const nextPublicationNumber = await this.caseModel.count({
+      distinct: true,
+      where: {
+        statusId: caseStatusId,
+        departmentId: {
+          [Op.eq]: departmentId,
+        },
+        year: {
+          [Op.eq]: year,
+        },
+      },
+    })
+
+    return ResultWrapper.ok(nextPublicationNumber + 1)
   }
 
   @LogAndHandle()
@@ -105,7 +126,7 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
-  async getNextSerialNumber(
+  async getNextCaseNumber(
     departmentId: string,
     publicationYear: number,
   ): Promise<ResultWrapper<number>> {

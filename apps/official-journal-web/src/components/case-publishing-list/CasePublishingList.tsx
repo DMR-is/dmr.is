@@ -75,7 +75,7 @@ export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
                 key={c.id}
                 department={c.advertDepartment.title}
                 publicationDate={c.requestedPublicationDate}
-                insitiution={'Reykjavíkurborg'} // TODO: ADd involved party to case
+                insitiution={c.involvedParty.title}
                 publicationNumber={`${c.caseNumber}`}
                 title={c.advertTitle}
                 categories={c.advertCategories.map((cat) => cat.title)}

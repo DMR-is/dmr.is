@@ -33,7 +33,8 @@ export const CasePublishingTab = ({
   const { formatMessage } = useFormatMessage()
   const router = useRouter()
 
-  const { selectedCaseIds } = usePublishContext()
+  const { publishingState } = usePublishContext()
+  const { selectedCaseIds } = publishingState
 
   const selectedTab = router.query.department
 

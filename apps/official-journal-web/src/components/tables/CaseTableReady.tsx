@@ -22,16 +22,16 @@ type Props = {
 
 export const CaseTableReady = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
-
   const {
+    publishingState,
     addCaseToSelectedList,
     removeCaseFromSelectedList,
     addManyCasesToSelectedList,
     removeAllCasesFromSelectedList,
-    selectedCaseIds,
   } = usePublishContext()
+  const { selectedCaseIds } = publishingState
 
-  const handleToggle = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       addManyCasesToSelectedList(data.map((row) => row.id))
     } else {
@@ -39,7 +39,7 @@ export const CaseTableReady = ({ data }: Props) => {
     }
   }
 
-  const handleRowToggle = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleToggleRow = (e: ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target
 
     if (checked) {
@@ -54,7 +54,7 @@ export const CaseTableReady = ({ data }: Props) => {
       name: 'select',
       sortable: false,
       size: 'tiny',
-      children: <Checkbox defaultChecked={false} onChange={handleToggle} />,
+      children: <Checkbox defaultChecked={false} onChange={handleToggleAll} />,
     },
     {
       name: 'caseLabels',
@@ -95,7 +95,7 @@ export const CaseTableReady = ({ data }: Props) => {
               id={row.id}
               name={`case-checkbox-${row.id}`}
               defaultChecked={false}
-              onChange={handleRowToggle}
+              onChange={handleToggleRow}
               checked={selectedCaseIds.includes(row.id)}
               value={row.id}
             />
@@ -140,9 +140,7 @@ export const CaseTableReady = ({ data }: Props) => {
         {
           children: (
             <Text whiteSpace="nowrap" variant="medium">
-              Reykjavíkurborg
-              {/* TODO: Add involved party to case */}
-              {/* {row.institution.title} */}
+              {row.involvedParty.title}
             </Text>
           ),
         },
