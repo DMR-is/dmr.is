@@ -130,7 +130,7 @@ export class StatisticsService implements IStatisticsService {
     const cases = casesRes.cases
 
     const categories: StatisticsOverviewCategory[] = []
-    let totalAdverts = 0
+    let totalCases = 0
 
     if (type === StatisticsOverviewQueryType.General) {
       let submittedCount = 0
@@ -171,7 +171,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(submittedCount)
             ? `${submittedCount} innsent mál bíður úthlutunar.`
             : `${submittedCount} innsend mál bíða úthlutunar.`,
-          totalAdverts: submittedCount,
+          totalCases: submittedCount,
         })
       }
 
@@ -180,7 +180,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inProgressCount)
             ? `${inProgressCount} mál er í vinnslu.`
             : `${inProgressCount} mál eru í vinnslu.`,
-          totalAdverts: inProgressCount,
+          totalCases: inProgressCount,
         })
       }
 
@@ -189,7 +189,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(submittedFastTrack)
             ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
             : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
-          totalAdverts: submittedFastTrack,
+          totalCases: submittedFastTrack,
         })
       }
 
@@ -198,11 +198,11 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inReviewFastTrack)
             ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
             : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
-          totalAdverts: inReviewFastTrack,
+          totalCases: inReviewFastTrack,
         })
       }
 
-      totalAdverts =
+      totalCases =
         submittedCount +
         inProgressCount +
         submittedFastTrack +
@@ -218,11 +218,11 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(myCasesCount)
             ? `${myCasesCount} mál er skráð á mig.`
             : `${myCasesCount} mál eru skráð á mig.`,
-          totalAdverts: myCasesCount,
+          totalCases: myCasesCount,
         })
       }
 
-      totalAdverts = myCasesCount
+      totalCases = myCasesCount
     }
 
     if (type === StatisticsOverviewQueryType.Inactive) {
@@ -244,10 +244,10 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inactiveCasesCount)
             ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
             : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
-          totalAdverts: inactiveCasesCount,
+          totalCases: inactiveCasesCount,
         })
       }
-      totalAdverts = inactiveCasesCount
+      totalCases = inactiveCasesCount
     }
 
     if (type === StatisticsOverviewQueryType.Publishing) {
@@ -278,7 +278,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(todayCount)
             ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
             : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: todayCount,
+          totalCases: todayCount,
         })
       }
 
@@ -287,15 +287,15 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(pastDueCount)
             ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
             : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDueCount,
+          totalCases: pastDueCount,
         })
       }
-      totalAdverts = todayCount + pastDueCount
+      totalCases = todayCount + pastDueCount
     }
 
     return ResultWrapper.ok({
-      categories: categories,
-      totalAdverts: totalAdverts,
+      categories,
+      totalCases,
     })
   }
 }

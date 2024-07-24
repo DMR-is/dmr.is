@@ -1808,10 +1808,10 @@
       "StatisticsOverviewCategory": {
         "type": "object",
         "properties": {
-          "totalAdverts": { "type": "number" },
+          "totalCases": { "type": "number" },
           "text": { "type": "string" }
         },
-        "required": ["totalAdverts", "text"]
+        "required": ["totalCases", "text"]
       },
       "GetStatisticsOverviewResponse": {
         "type": "object",
@@ -1822,9 +1822,9 @@
               "$ref": "#/components/schemas/StatisticsOverviewCategory"
             }
           },
-          "totalAdverts": { "type": "number" }
+          "totalCases": { "type": "number" }
         },
-        "required": ["categories", "totalAdverts"]
+        "required": ["categories", "totalCases"]
       }
     }
   }

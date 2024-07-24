@@ -8,7 +8,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
+import { CasesOverviewList } from '../components/cases-overview-list/CasesOverviewList'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { Meta } from '../components/meta/Meta'
@@ -52,7 +52,7 @@ const Dashboard: Screen<Props> = ({
       label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList
+          <CasesOverviewList
             data={statisticsOverview.general}
             variant="default"
           />
@@ -64,7 +64,7 @@ const Dashboard: Screen<Props> = ({
       label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList
+          <CasesOverviewList
             data={statisticsOverview.personal}
             variant="assigned"
           />
@@ -76,7 +76,7 @@ const Dashboard: Screen<Props> = ({
       label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList
+          <CasesOverviewList
             data={statisticsOverview.inactive}
             variant="inactive"
           />
@@ -152,7 +152,7 @@ const Dashboard: Screen<Props> = ({
                   link={Routes.PublishingOverview}
                   linkText={messages.general.openPublishing}
                 >
-                  <AdvertsOverviewList
+                  <CasesOverviewList
                     data={statisticsOverview.publishing}
                     variant="readyForPublishing"
                   />
