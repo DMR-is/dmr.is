@@ -22,15 +22,15 @@ export const TableCell = ({ children, fixed }: Props) => {
     <T.Data
       style={tableStyles}
       box={{
-        paddingLeft: [2, 3],
-        paddingRight: [2, 3],
+        paddingLeft: [1, 2, 3],
+        paddingRight: [1, 2, 3],
         paddingTop: [1, 2],
         paddingBottom: [1, 2],
       }}
     >
       {fixed && (
         <Box
-          paddingX={[2, 3]}
+          paddingX={[1, 2, 3]}
           paddingY={[1, 2]}
           className={styles.fixedCellWrapper}
         />
