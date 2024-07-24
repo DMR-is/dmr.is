@@ -7,7 +7,7 @@ type FilterStateProps = {
   activeFilters: Array<{
     key: string
     slug: string
-    label: string
+    label?: string
   }>
 }
 
@@ -27,7 +27,7 @@ type FilterStateContext = {
     toggle: boolean,
     key: string,
     slug: string,
-    label: string,
+    label?: string,
   ) => void
   clearFilter: (key?: string, slug?: string) => void
 }
@@ -66,14 +66,12 @@ export const FilterContextProvider = ({
   }
 
   const toggleFilter = useCallback(
-    (toggle: boolean, key: string, slug: string, label: string) => {
+    (toggle: boolean, key: string, slug: string, label?: string) => {
       console.log({ toggle, key, slug })
 
       if (toggle) {
         const newFilters = [...state.activeFilters]
         newFilters.push({ key, slug, label })
-        console.log({ newFilters })
-
         updateState((prevState) => ({
           ...prevState,
           activeFilters: newFilters,

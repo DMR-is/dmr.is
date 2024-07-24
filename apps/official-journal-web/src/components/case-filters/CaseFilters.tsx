@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Box,
@@ -35,6 +35,7 @@ export const CaseFilters = () => {
   const qp = useQueryParams()
 
   const initialSearch = getStringFromQueryString(router.query.search)
+  const [search, setSearch] = useState(initialSearch)
 
   const { filterState, clearFilter } = useFilterContext()
 
@@ -43,22 +44,15 @@ export const CaseFilters = () => {
     filterState.enableDepartments ||
     filterState.enableTypes
 
-  const onSearchChange = (value: string) => {
-    router.push(
-      {
-        query: { ...router.query, search: value },
-      },
-      undefined,
-      { shallow: true },
-    )
-  }
-
-  const debouncedSearch = debounce(onSearchChange, 200)
+  const debouncedSearch = debounce(setSearch, 200)
 
   useEffect(() => {
-    const status = qp.get('status')
-
     const filterParams: Record<string, string> = {}
+
+    const status = qp.get('status')
+    status && (filterParams['status'] = status)
+    search && (filterParams['search'] = search)
+
     filterState.activeFilters.forEach((f) => {
       if (!filterParams[f.key]) {
         filterParams[f.key] = f.slug
@@ -69,12 +63,17 @@ export const CaseFilters = () => {
 
     router.push(
       {
-        query: { status, ...filterParams },
+        query: { ...filterParams },
       },
       undefined,
       { shallow: true },
     )
-  }, [filterState.activeFilters])
+  }, [filterState.activeFilters, search])
+
+  const clearFilters = () => {
+    setSearch('')
+    clearFilter()
+  }
 
   return (
     <Box>
@@ -86,7 +85,7 @@ export const CaseFilters = () => {
             icon={{ name: 'search', type: 'outline' }}
             backgroundColor="blue"
             name="filter"
-            defaultValue={initialSearch}
+            defaultValue={search}
             onChange={(e) => debouncedSearch(e.target.value)}
             placeholder={formatMessage(messages.general.searchPlaceholder)}
           />
@@ -102,7 +101,7 @@ export const CaseFilters = () => {
               </Button>
             }
           >
-            <FilterPopover resetFilters={clearFilter}>
+            <FilterPopover resetFilters={clearFilters}>
               {filterState.enableTypes && <TypesFilter />}
               {filterState.enableDepartments && <DepartmentsFilter />}
               {filterState.enableCategories && <CategoriesFilter />}
@@ -114,19 +113,24 @@ export const CaseFilters = () => {
         <Box display="flex" marginTop={[2]} columnGap={1}>
           <Text whiteSpace="nowrap">Síun á lista:</Text>
           <Inline space={1}>
-            {filterState.activeFilters.map((a) => {
-              return (
-                <Tag
-                  key={a.slug}
-                  outlined
-                  onClick={() => clearFilter(a.key, a.slug)}
-                >
-                  <Box display="flex" alignItems="center" columnGap={1}>
-                    {a.label} <Icon icon="close" size="small" />
-                  </Box>
-                </Tag>
-              )
-            })}
+            {filterState.activeFilters
+              .map((a) => {
+                if (!a.label) {
+                  return null
+                }
+                return (
+                  <Tag
+                    key={a.slug}
+                    outlined
+                    onClick={() => clearFilter(a.key, a.slug)}
+                  >
+                    <Box display="flex" alignItems="center" columnGap={1}>
+                      {a.label} <Icon icon="close" size="small" />
+                    </Box>
+                  </Tag>
+                )
+              })
+              .filter(Boolean)}
           </Inline>
           {filterState.activeFilters.length > 1 ? (
             <Text whiteSpace="nowrap">
@@ -135,7 +139,7 @@ export const CaseFilters = () => {
                 size="small"
                 icon="reload"
                 onClick={() => {
-                  clearFilter()
+                  clearFilters()
                 }}
               >
                 Hreinsa allar síur
