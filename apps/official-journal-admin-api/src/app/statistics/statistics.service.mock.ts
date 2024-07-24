@@ -1,6 +1,6 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { AdvertStatus, CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -71,27 +71,26 @@ export class MockStatisticsService implements IStatisticsService {
     // @ts-expect-error FIXME: weird error
     return ResultWrapper.ok({
       submitted: {
-        name: 'Innsendingar',
+        name: CaseStatus.Submitted,
         count: submitted,
         percentage: Math.round(submittedPercentage),
       },
       inProgress: {
-        name: 'Grunnvinnsla',
+        name: CaseStatus.InProgress,
         count: inProgress,
         percentage: Math.round(inProgressPercentage),
       },
       inReview: {
-        name: 'Yfirlestur',
+        name: CaseStatus.InReview,
         count: inReview,
         percentage: Math.round(inReviewPercentage),
       },
       ready: {
-        name: 'Tilbúið',
+        name: CaseStatus.ReadyForPublishing,
         count: ready,
         percentage: Math.round(readyPercentage),
       },
-      totalAdverts: total,
-      totalPercentage: 100,
+      totalCases: total,
     })
   }
 
@@ -104,7 +103,7 @@ export class MockStatisticsService implements IStatisticsService {
     }
 
     let categories: StatisticsOverviewCategory[] = []
-    let totalAdverts = 0
+    let totalCases = 0
 
     if (type === StatisticsOverviewQueryType.General) {
       let submitted = 0
@@ -135,14 +134,14 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${adverts.length} innsend mál bíða úthlutunar`,
-          totalAdverts: submitted,
+          totalCases: submitted,
         },
         {
           text: `Borist hafa ný svör í ${inProgress} málum`,
-          totalAdverts: inProgress,
+          totalCases: inProgress,
         },
       ]
-      totalAdverts = adverts.length
+      totalCases = adverts.length
     }
 
     if (type === StatisticsOverviewQueryType.Personal) {
@@ -174,20 +173,20 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: today,
+          totalCases: today,
         },
         {
           text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDue,
+          totalCases: pastDue,
         },
       ]
-      totalAdverts = adverts.length
+      totalCases = adverts.length
     }
 
     // @ts-expect-error FIXME: weird error
     return ResultWrapper.ok({
       categories: categories,
-      totalAdverts: totalAdverts,
+      totalCases: totalCases,
     })
   }
 }

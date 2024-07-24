@@ -8,12 +8,16 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertsOverviewList } from '../components/adverts-overview-list/AdvertsOverviewList'
+import { CasesOverviewList } from '../components/cases-overview-list/CasesOverviewList'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'
 import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
-import { StatisticsNotPublished } from '../components/statistics/NotPublished'
+import { StatisticsPieCharts } from '../components/statistics/PieCharts'
+import {
+  GetStatisticsDepartmentResponse,
+  GetStatisticsOverviewResponse,
+} from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
@@ -22,24 +26,24 @@ import { messages } from '../lib/messages/dashboard'
 import { Screen } from '../lib/types'
 import { ARMANN } from '../lib/userMock'
 
-type StatisticsData = {
-  totalAdverts: number
-  categories: {
-    text: string
-    totalAdverts: number
-  }[]
-}
-
 type Props = {
-  statistics: {
-    general: StatisticsData | null
-    personal: StatisticsData | null
-    inactive: StatisticsData | null
-    publishing: StatisticsData | null
+  statisticsOverview: {
+    general: GetStatisticsOverviewResponse | null
+    personal: GetStatisticsOverviewResponse | null
+    inactive: GetStatisticsOverviewResponse | null
+    publishing: GetStatisticsOverviewResponse | null
+  }
+  statisticsByDepartment: {
+    a: GetStatisticsDepartmentResponse | null
+    b: GetStatisticsDepartmentResponse | null
+    c: GetStatisticsDepartmentResponse | null
   }
 }
 
-const Dashboard: Screen<Props> = ({ statistics }) => {
+const Dashboard: Screen<Props> = ({
+  statisticsOverview,
+  statisticsByDepartment,
+}) => {
   const { formatMessage } = useFormatMessage()
 
   const ritstjornTabs: TabType[] = [
@@ -48,7 +52,10 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList data={statistics.general} variant="default" />
+          <CasesOverviewList
+            data={statisticsOverview.general}
+            variant="default"
+          />
         </Box>
       ),
     },
@@ -57,7 +64,10 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList data={statistics.personal} variant="assigned" />
+          <CasesOverviewList
+            data={statisticsOverview.personal}
+            variant="assigned"
+          />
         </Box>
       ),
     },
@@ -66,7 +76,10 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
-          <AdvertsOverviewList data={statistics.inactive} variant="inactive" />
+          <CasesOverviewList
+            data={statisticsOverview.inactive}
+            variant="inactive"
+          />
         </Box>
       ),
     },
@@ -78,7 +91,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.statistics.a),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsNotPublished department="a" />
+          <StatisticsPieCharts data={statisticsByDepartment.a} />
         </Box>
       ),
     },
@@ -87,7 +100,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.statistics.b),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsNotPublished department="b" />
+          <StatisticsPieCharts data={statisticsByDepartment.b} />
         </Box>
       ),
     },
@@ -96,7 +109,7 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
       label: formatMessage(messages.tabs.statistics.c),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsNotPublished department="c" />
+          <StatisticsPieCharts data={statisticsByDepartment.c} />
         </Box>
       ),
     },
@@ -139,8 +152,8 @@ const Dashboard: Screen<Props> = ({ statistics }) => {
                   link={Routes.PublishingOverview}
                   linkText={messages.general.openPublishing}
                 >
-                  <AdvertsOverviewList
-                    data={statistics.publishing}
+                  <CasesOverviewList
+                    data={statisticsOverview.publishing}
                     variant="readyForPublishing"
                   />
                 </ContentWrapper>
@@ -218,12 +231,36 @@ Dashboard.getProps = async () => {
     ),
   )
 
+  const [aStatistics, bStatistics, cStatistics] = await Promise.all(
+    [
+      dmrClient.statisticsControllerDepartment({
+        slug: 'a-deild',
+      }),
+      dmrClient.statisticsControllerDepartment({
+        slug: 'b-deild',
+      }),
+      dmrClient.statisticsControllerDepartment({
+        slug: 'c-deild',
+      }),
+    ].map((promise) =>
+      promise.catch((err) => {
+        console.error(err)
+        return null
+      }),
+    ),
+  )
+
   return {
-    statistics: {
+    statisticsOverview: {
       general,
       personal,
       inactive,
       publishing,
+    },
+    statisticsByDepartment: {
+      a: aStatistics,
+      b: bStatistics,
+      c: cStatistics,
     },
   }
 }

@@ -20,16 +20,16 @@ export class StatisticsController {
   ) {}
 
   @Get('department')
-  @ApiQuery({ name: 'id', type: String, required: true })
+  @ApiQuery({ name: 'slug', type: String, required: true })
   @ApiResponse({
     status: 200,
     type: GetStatisticsDepartmentResponse,
     description: 'Gets statistics for individual department (a, b or c)',
   })
   async department(
-    @Query('id') id: string,
+    @Query('slug') slug: string,
   ): Promise<GetStatisticsDepartmentResponse> {
-    return (await this.statisticsService.getDepartment(id)).unwrap()
+    return (await this.statisticsService.getDepartment(slug)).unwrap()
   }
 
   @Get('overview')

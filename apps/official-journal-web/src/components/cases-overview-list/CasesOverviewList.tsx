@@ -1,38 +1,28 @@
 import { Box, Text } from '@island.is/island-ui/core'
 
+import { GetStatisticsOverviewResponse } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import type { AdvertCategory } from '../../hooks/useMockAdvertOverview'
-import * as styles from './AdvertsOverviewList.css'
+import * as styles from './CasesOverviewList.css'
 import { messages } from './messages'
 
-type Category = {
-  text: string
-  totalAdverts: number
-}
-
-type AdvertOverviewData = {
-  categories: Category[]
-  totalAdverts: number
-}
-
 type Props = {
-  variant?: AdvertCategory
-  data: AdvertOverviewData | null
+  variant?: 'default' | 'assigned' | 'inactive' | 'readyForPublishing'
+  data: GetStatisticsOverviewResponse | null
 }
 
 type ItemProps = {
   children: React.ReactNode
 }
-const AdvertsOverviewListItem = ({ children }: ItemProps) => {
-  return <li className={styles.advertsOverviewListItem}>{children}</li>
+const CasesOverviewListItem = ({ children }: ItemProps) => {
+  return <li className={styles.casesOverviewListItem}>{children}</li>
 }
 
-export const AdvertsOverviewList = ({ variant = 'default', data }: Props) => {
+export const CasesOverviewList = ({ variant = 'default', data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  if (!data || data?.totalAdverts === 0) {
+  if (!data || data?.totalCases === 0) {
     return (
-      <Box className={styles.advertsOverviewListEmpty}>
+      <Box className={styles.casesOverviewListEmpty}>
         <div>
           <Text variant="h3">{formatMessage(messages.empty.title)}</Text>
           <Text>
@@ -51,12 +41,12 @@ export const AdvertsOverviewList = ({ variant = 'default', data }: Props) => {
   }
 
   return (
-    <ul className={styles.advertsListOverview}>
-      {data?.totalAdverts &&
+    <ul className={styles.casesListOverview}>
+      {data?.totalCases &&
         data?.categories.map((category, index) => (
-          <AdvertsOverviewListItem key={index}>
+          <CasesOverviewListItem key={index}>
             {category.text}
-          </AdvertsOverviewListItem>
+          </CasesOverviewListItem>
         ))}
     </ul>
   )

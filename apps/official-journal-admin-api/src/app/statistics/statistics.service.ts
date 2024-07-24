@@ -1,8 +1,7 @@
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { ICaseService } from '@dmr.is/modules'
-import { AdvertStatus, CaseStatus } from '@dmr.is/shared/dto'
+import { ICaseService, IUtilityService } from '@dmr.is/modules'
+import { CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -27,45 +26,48 @@ export class StatisticsService implements IStatisticsService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(forwardRef(() => ICaseService))
     private readonly casesService: ICaseService,
+    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
   ) {
     this.logger.info('Using StatisticsService')
   }
 
   @LogAndHandle()
   async getDepartment(
-    id: string,
+    slug: string,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
-    const statuses = [
-      AdvertStatus.Submitted,
-      AdvertStatus.InProgress,
-      AdvertStatus.Active,
-      AdvertStatus.ReadyForPublication,
-    ]
+    const casesRes = (
+      await this.casesService.cases({
+        pageSize: '1000',
+        department: [slug],
+        status: [
+          CaseStatus.Submitted,
+          CaseStatus.InProgress,
+          CaseStatus.InReview,
+          CaseStatus.ReadyForPublishing,
+        ],
+      })
+    ).unwrap()
+    const cases = casesRes.cases
 
-    const adverts = ALL_MOCK_ADVERTS.filter(
-      (advert) =>
-        advert?.department?.id === id &&
-        advert.status &&
-        statuses.includes(advert.status),
-    )
+    console.log({ cases })
 
     let submitted = 0
     let inProgress = 0
     let inReview = 0
     let ready = 0
 
-    adverts.forEach((advert) => {
-      switch (advert.status) {
-        case AdvertStatus.Submitted:
+    cases.forEach((thisCase) => {
+      switch (thisCase.status) {
+        case CaseStatus.Submitted:
           submitted++
           break
-        case AdvertStatus.InProgress:
+        case CaseStatus.InProgress:
           inProgress++
           break
-        case AdvertStatus.Active:
+        case CaseStatus.InReview:
           inReview++
           break
-        case AdvertStatus.ReadyForPublication:
+        case CaseStatus.ReadyForPublishing:
           ready++
           break
       }
@@ -78,28 +80,29 @@ export class StatisticsService implements IStatisticsService {
     const readyPercentage = total ? (ready / total) * 100 : 0
 
     return ResultWrapper.ok({
-      submitted: {
-        name: 'Innsendingar',
-        count: submitted,
-        percentage: Math.round(submittedPercentage),
+      data: {
+        submitted: {
+          name: CaseStatus.Submitted,
+          count: submitted,
+          percentage: Math.round(submittedPercentage),
+        },
+        inProgress: {
+          name: CaseStatus.InProgress,
+          count: inProgress,
+          percentage: Math.round(inProgressPercentage),
+        },
+        inReview: {
+          name: CaseStatus.InReview,
+          count: inReview,
+          percentage: Math.round(inReviewPercentage),
+        },
+        ready: {
+          name: CaseStatus.ReadyForPublishing,
+          count: ready,
+          percentage: Math.round(readyPercentage),
+        },
       },
-      inProgress: {
-        name: 'Grunnvinnsla',
-        count: inProgress,
-        percentage: Math.round(inProgressPercentage),
-      },
-      inReview: {
-        name: 'Yfirlestur',
-        count: inReview,
-        percentage: Math.round(inReviewPercentage),
-      },
-      ready: {
-        name: 'Tilbúið',
-        count: ready,
-        percentage: Math.round(readyPercentage),
-      },
-      totalAdverts: total,
-      totalPercentage: 100,
+      totalCases: total,
     })
   }
 
@@ -114,12 +117,20 @@ export class StatisticsService implements IStatisticsService {
     }
 
     const casesRes = (
-      await this.casesService.cases({ published: 'false', pageSize: '1000' })
+      await this.casesService.cases({
+        pageSize: '1000',
+        status: [
+          CaseStatus.Submitted,
+          CaseStatus.InProgress,
+          CaseStatus.InReview,
+          CaseStatus.ReadyForPublishing,
+        ],
+      })
     ).unwrap()
     const cases = casesRes.cases
 
     const categories: StatisticsOverviewCategory[] = []
-    let totalAdverts = 0
+    let totalCases = 0
 
     if (type === StatisticsOverviewQueryType.General) {
       let submittedCount = 0
@@ -160,7 +171,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(submittedCount)
             ? `${submittedCount} innsent mál bíður úthlutunar.`
             : `${submittedCount} innsend mál bíða úthlutunar.`,
-          totalAdverts: submittedCount,
+          totalCases: submittedCount,
         })
       }
 
@@ -169,7 +180,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inProgressCount)
             ? `${inProgressCount} mál er í vinnslu.`
             : `${inProgressCount} mál eru í vinnslu.`,
-          totalAdverts: inProgressCount,
+          totalCases: inProgressCount,
         })
       }
 
@@ -178,7 +189,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(submittedFastTrack)
             ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
             : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
-          totalAdverts: submittedFastTrack,
+          totalCases: submittedFastTrack,
         })
       }
 
@@ -187,11 +198,11 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inReviewFastTrack)
             ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
             : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
-          totalAdverts: inReviewFastTrack,
+          totalCases: inReviewFastTrack,
         })
       }
 
-      totalAdverts =
+      totalCases =
         submittedCount +
         inProgressCount +
         submittedFastTrack +
@@ -207,11 +218,11 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(myCasesCount)
             ? `${myCasesCount} mál er skráð á mig.`
             : `${myCasesCount} mál eru skráð á mig.`,
-          totalAdverts: myCasesCount,
+          totalCases: myCasesCount,
         })
       }
 
-      totalAdverts = myCasesCount
+      totalCases = myCasesCount
     }
 
     if (type === StatisticsOverviewQueryType.Inactive) {
@@ -233,10 +244,10 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(inactiveCasesCount)
             ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
             : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
-          totalAdverts: inactiveCasesCount,
+          totalCases: inactiveCasesCount,
         })
       }
-      totalAdverts = inactiveCasesCount
+      totalCases = inactiveCasesCount
     }
 
     if (type === StatisticsOverviewQueryType.Publishing) {
@@ -267,7 +278,7 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(todayCount)
             ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
             : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: todayCount,
+          totalCases: todayCount,
         })
       }
 
@@ -276,15 +287,15 @@ export class StatisticsService implements IStatisticsService {
           text: isSingular(pastDueCount)
             ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
             : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDueCount,
+          totalCases: pastDueCount,
         })
       }
-      totalAdverts = todayCount + pastDueCount
+      totalCases = todayCount + pastDueCount
     }
 
     return ResultWrapper.ok({
-      categories: categories,
-      totalAdverts: totalAdverts,
+      categories,
+      totalCases,
     })
   }
 }

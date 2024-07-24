@@ -8,7 +8,7 @@ export class StatisticsOverviewCategory {
     type: Number,
     required: true,
   })
-  totalAdverts!: number
+  totalCases!: number
 
   @ApiProperty({
     type: String,
@@ -31,5 +31,5 @@ export class GetStatisticsOverviewResponse {
     required: true,
   })
   @IsNumber()
-  totalAdverts!: number
+  totalCases!: number
 }
