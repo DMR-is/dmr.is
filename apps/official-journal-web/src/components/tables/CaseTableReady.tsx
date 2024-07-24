@@ -108,7 +108,7 @@ export const CaseTableReady = ({
         sortingKey: 'caseAdvertType',
         sortingValue: row.advertType.title,
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.typeTableCell}>
             <Text truncate variant="medium">
               {row.advertType.title}
             </Text>
@@ -117,7 +117,7 @@ export const CaseTableReady = ({
       },
       {
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
               {row.advertTitle}
             </Text>
@@ -135,9 +135,11 @@ export const CaseTableReady = ({
       },
       {
         children: (
-          <Text whiteSpace="nowrap" variant="medium">
-            {row.involvedParty.title}
-          </Text>
+          <div className={styles.typeTableCell}>
+            <Text whiteSpace="nowrap" variant="medium">
+              {row.involvedParty.title}
+            </Text>
+          </div>
         ),
       },
     ],

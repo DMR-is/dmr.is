@@ -93,7 +93,7 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
         sortingKey: 'caseAdvertType',
         sortingValue: row.advertType.title,
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.typeTableCell}>
             <Text truncate variant="medium">
               {row.advertType.title}
             </Text>
@@ -104,7 +104,7 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
         sortingKey: 'caseName',
         sortingValue: row.advertTitle,
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
               {row.advertTitle}
             </Text>

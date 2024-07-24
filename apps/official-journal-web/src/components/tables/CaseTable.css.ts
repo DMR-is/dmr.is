@@ -26,13 +26,18 @@ export const iconWrapper = style({
   alignItems: 'center',
   justifyContent: 'center',
 })
-export const nameTableCell = style({
+export const typeTableCell = style({
   overflow: 'hidden',
-  maxWidth: '66ch',
+  maxWidth: '20ch',
+})
+export const titleTableCell = style({
+  overflow: 'hidden',
+  maxWidth: '50ch',
 
   '@media': {
-    [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
-      maxWidth: '50ch',
+    [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
+      width: '30vw',
+      maxWidth: '66ch',
     },
   },
 })

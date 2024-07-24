@@ -53,7 +53,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       },
       {
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.typeTableCell}>
             <Text truncate variant="medium">
               {row.advertType.title} {row.advertTitle}
             </Text>
@@ -62,9 +62,11 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       },
       {
         children: (
-          <Text truncate variant="medium">
-            {row.involvedParty.title}
-          </Text>
+          <div className={styles.typeTableCell}>
+            <Text truncate variant="medium">
+              {row.involvedParty.title}
+            </Text>
+          </div>
         ),
       },
     ],
