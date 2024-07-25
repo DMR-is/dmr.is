@@ -2,7 +2,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "search.exclude": {
     ".githooks": true,
-    ".github": true,
     ".yarn": true,
     ".cache": true,
     "node_modules": true,

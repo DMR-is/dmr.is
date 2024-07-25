@@ -2,6 +2,7 @@
 
 import { MethodNotAllowedException } from '@nestjs/common'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Delete(message: string | undefined = 'Internal server error') {
   return function (
     target: any,

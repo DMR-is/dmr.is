@@ -16,16 +16,12 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
-  GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionResponse,
-  GetInstitutionsQueryParams,
   GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
@@ -247,6 +243,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getSignatures(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
     throw new NotImplementedException()

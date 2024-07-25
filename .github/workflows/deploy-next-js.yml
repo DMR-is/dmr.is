@@ -53,7 +53,7 @@ jobs:
 
       - name: Cache for NodeJS dependencies - host OS
         id: node-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
@@ -95,7 +95,7 @@ jobs:
 
       - name: Cache Homebrew Bundler RubyGems
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ubuntu-latest-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}

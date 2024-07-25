@@ -11,7 +11,6 @@ import {
   ApiQueryOptions,
   ApiResponse,
   ApiResponseMetadata,
-  ApiTags,
 } from '@nestjs/swagger'
 import { LogMethod } from './log-method.decorator'
 
@@ -35,6 +34,7 @@ export function Route({
   bodyType,
   responseType,
   summary,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   tags = [],
   params = [],
   query = [],
