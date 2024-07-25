@@ -13,7 +13,6 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useCaseOverview } from '../../hooks/api'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useIsMounted } from '../../hooks/useIsMounted'

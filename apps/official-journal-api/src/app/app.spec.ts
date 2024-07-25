@@ -42,6 +42,7 @@ describe('Swagger documentation', () => {
 
   it('should generate swagger spec', async () => {
     if (!process.env.TEST_CODEGEN) {
+      // eslint-disable-next-line no-console
       console.log('Skipping codegen tests')
       return
     }

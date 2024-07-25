@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'official-journal-admin-api',
   preset: '../../jest.preset.js',

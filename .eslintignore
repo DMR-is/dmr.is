@@ -4,3 +4,5 @@ node_modules
 submodules/**
 tmp/**
 .nx/**
+**/dist/**
+**/gen/fetch/**
