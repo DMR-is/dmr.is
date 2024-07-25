@@ -102,7 +102,7 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
       paging={paging}
       columns={columns}
       rows={rows}
-      defaultSort={{ direction: 'desc', key: 'caseRegistrationDate' }}
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
     />
   )
 }
