@@ -69,6 +69,7 @@ export const Header = ({ headerWhite, user }: HeaderType) => {
                             onClick: (e) => {
                               e.preventDefault()
                               // TODO: implement logout
+                              // eslint-disable-next-line no-console
                               console.log('not implemented!')
                             },
                           },

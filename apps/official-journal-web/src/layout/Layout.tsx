@@ -55,6 +55,7 @@ const Layout: Screen<LayoutProps> = ({
           return null
         }
 
+        // eslint-disable-next-line no-console
         console.error('Error in IntlProvider', { exception: err })
       }}
     >

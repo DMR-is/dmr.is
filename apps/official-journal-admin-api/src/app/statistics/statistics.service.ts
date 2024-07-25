@@ -49,8 +49,6 @@ export class StatisticsService implements IStatisticsService {
     ).unwrap()
     const cases = casesRes.cases
 
-    console.log({ cases })
-
     let submitted = 0
     let inProgress = 0
     let inReview = 0
