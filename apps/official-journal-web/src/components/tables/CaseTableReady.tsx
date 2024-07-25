@@ -50,17 +50,12 @@ export const CaseTableReady = ({
     },
     {
       name: 'casePublicationDate',
-      sortable: false,
+      sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
     },
     {
-      name: 'caseAdvertType',
-      sortable: true,
-      children: formatMessage(messages.tables.general.type),
-    },
-    {
-      name: 'caseName',
+      name: 'caseTitle',
       sortable: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
@@ -71,6 +66,8 @@ export const CaseTableReady = ({
       children: formatMessage(messages.tables.ready.columns.institution),
     },
   ]
+
+  console.log({ g: data[0] })
 
   const rows: CaseTableRowProps[] = data.map((row) => ({
     case: row,
@@ -105,21 +102,12 @@ export const CaseTableReady = ({
         ),
       },
       {
-        sortingKey: 'caseAdvertType',
-        sortingValue: row.advertType.title,
-        children: (
-          <div className={styles.typeTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title}
-            </Text>
-          </div>
-        ),
-      },
-      {
+        sortingKey: 'caseTitle',
+        sortingValue: row.advertTitle,
         children: (
           <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertType.title} {row.advertTitle}
             </Text>
           </div>
         ),
@@ -145,5 +133,12 @@ export const CaseTableReady = ({
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} modalLink />
+  return (
+    <CaseTable
+      columns={columns}
+      rows={rows}
+      modalLink
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

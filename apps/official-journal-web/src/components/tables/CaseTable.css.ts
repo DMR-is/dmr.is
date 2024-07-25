@@ -28,7 +28,7 @@ export const iconWrapper = style({
 })
 export const typeTableCell = style({
   overflow: 'hidden',
-  maxWidth: '20ch',
+  maxWidth: '25ch',
 })
 export const titleTableCell = style({
   overflow: 'hidden',

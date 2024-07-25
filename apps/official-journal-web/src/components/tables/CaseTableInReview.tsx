@@ -35,13 +35,8 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       children: formatMessage(messages.tables.inReview.columns.department),
     },
     {
-      name: 'caseAdvertType',
-      sortable: true,
-      children: formatMessage(messages.tables.general.type),
-    },
-    {
-      name: 'caseName',
-      sortable: true,
+      name: 'caseTitle',
+      sortable: false,
       children: formatMessage(messages.tables.inReview.columns.title),
     },
     {
@@ -52,7 +47,7 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
     },
     {
       name: 'caseTag',
-      sortable: true,
+      sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.inReview.columns.tags),
     },
@@ -87,23 +82,12 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
         ),
       },
       {
-        sortingKey: 'caseAdvertType',
-        sortingValue: row.advertType.title,
-        children: (
-          <div className={styles.typeTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title}
-            </Text>
-          </div>
-        ),
-      },
-      {
-        sortingKey: 'caseName',
-        sortingValue: row.advertTitle,
+        sortingKey: 'caseTitle',
+        // sortingValue: row.advertTitle,
         children: (
           <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertType.title} {row.advertTitle}
             </Text>
           </div>
         ),
