@@ -29,14 +29,6 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       children: formatMessage(messages.tables.inReview.columns.publishDate),
     },
     {
-      name: 'caseRegistrationDate',
-      sortable: true,
-      size: 'tiny',
-      children: formatMessage(
-        messages.tables.inReview.columns.registrationDate,
-      ),
-    },
-    {
       name: 'caseDepartment',
       sortable: true,
       size: 'tiny',
@@ -86,11 +78,6 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
         ),
       },
       {
-        sortingKey: 'caseRegistrationDate',
-        sortingValue: row.createdAt,
-        children: <Text variant="medium">{formatDate(row.createdAt)}</Text>,
-      },
-      {
         sortingKey: 'caseDepartment',
         sortingValue: row.advertDepartment.title,
         children: (
@@ -138,5 +125,12 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} paging={paging} />
+  return (
+    <CaseTable
+      columns={columns}
+      rows={rows}
+      paging={paging}
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

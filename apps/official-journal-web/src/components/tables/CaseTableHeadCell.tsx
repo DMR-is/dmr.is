@@ -52,8 +52,8 @@ export const TableHeadCell = ({
     <T.HeadData
       style={tableStyles}
       box={{
-        paddingLeft: [1, 2, 3],
-        paddingRight: [1, 2, 3],
+        paddingLeft: [1, 2],
+        paddingRight: [1, 2],
         paddingTop: [1, 2],
         paddingBottom: [1, 2],
       }}
@@ -64,7 +64,7 @@ export const TableHeadCell = ({
       >
         {fixed && (
           <Box
-            paddingX={[1, 2, 3]}
+            paddingX={[1, 2]}
             paddingY={[1, 2]}
             className={styles.fixedCellWrapper}
           />

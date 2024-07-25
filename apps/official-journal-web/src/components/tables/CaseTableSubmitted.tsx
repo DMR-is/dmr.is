@@ -114,5 +114,12 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
     ],
   }))
 
-  return <CaseTable paging={paging} columns={columns} rows={rows} />
+  return (
+    <CaseTable
+      paging={paging}
+      columns={columns}
+      rows={rows}
+      defaultSort={{ direction: 'desc', key: 'caseRegistrationDate' }}
+    />
+  )
 }
