@@ -10,6 +10,7 @@ import { Meta } from '../components/meta/Meta'
 import { Tabs } from '../components/tabs/Tabs'
 import { PublishingContextProvider } from '../context/publishingContext'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { useCases } from '../hooks/api'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -46,6 +47,18 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 
   const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
   const [casesToPublish, setCasesToPublish] = useState<string[]>([])
+
+  const { data: casesToPublishData } = useCases({
+    shouldFetch: casesToPublish.length > 0,
+    options: {
+      refreshInterval: 0,
+    },
+    params: {
+      department: selectedTab,
+      status: CaseStatusEnum.Tilbi,
+      id: casesToPublish.map((c) => c).join(','),
+    },
+  })
 
   const onTabChange = (id: string) => {
     setSelectedTab(id)
@@ -112,11 +125,11 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
       />
 
-      {casesToPublish.length > 0 && (
+      {casesToPublishData && casesToPublishData.cases.length > 0 && (
         <CasePublishingList
           onPublish={() => console.log('pubkishing')}
           onCancel={() => setCasesToPublish([])}
-          caseIds={casesToPublish}
+          casesToPublish={casesToPublishData?.cases}
         />
       )}
       <Box hidden={casesToPublish.length > 0}>

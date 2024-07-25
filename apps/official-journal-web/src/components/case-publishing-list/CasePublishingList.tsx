@@ -1,66 +1,27 @@
 import {
-  AlertMessage,
   Box,
   Button,
   GridColumn,
   GridContainer,
   GridRow,
-  SkeletonLoader,
   Stack,
 } from '@island.is/island-ui/core'
 
-import { useCases } from '../../hooks/api'
-import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { messages as errorMessages } from '../../lib/messages/errors'
+import { Case } from '../../gen/fetch'
 import { generateCaseLink } from '../../lib/utils'
 import { CaseCard } from '../cards/CaseCard'
 
 type Props = {
-  caseIds: string[]
+  casesToPublish: Case[]
   onPublish: (caseIds: string[]) => void
   onCancel: () => void
 }
 
-export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
-  if (caseIds.length === 0) {
-    throw new Error('No case ids provided')
-  }
-
-  const { formatMessage: f } = useFormatMessage()
-
-  const { data, isLoading, error } = useCases({
-    params: {
-      id: caseIds.join(','),
-    },
-    options: {
-      refreshInterval: 0,
-    },
-  })
-
-  if (isLoading) {
-    return <SkeletonLoader height={120} repeat={3} />
-  }
-
-  if (error) {
-    return (
-      <AlertMessage
-        type="error"
-        title={f(errorMessages.error)}
-        message={f(errorMessages.errorFetchingData)}
-      />
-    )
-  }
-
-  if (!data) {
-    return (
-      <AlertMessage
-        type="error"
-        title={f(errorMessages.noDataTitle)}
-        message={f(errorMessages.noDataText)}
-      />
-    )
-  }
-
+export const CasePublishingList = ({
+  casesToPublish,
+  onCancel,
+  onPublish,
+}: Props) => {
   return (
     <GridContainer>
       <GridRow>
@@ -70,7 +31,7 @@ export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
           span={['12/12', '12/12', '8/12', '8/12']}
         >
           <Stack space={3} component="ul">
-            {data.cases.map((c) => (
+            {casesToPublish.map((c) => (
               <CaseCard
                 key={c.id}
                 department={c.advertDepartment.title}
@@ -78,7 +39,7 @@ export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
                 insitiution={c.involvedParty.title}
                 publicationNumber={`${c.caseNumber}`}
                 title={c.advertTitle}
-                categories={c.advertCategories.map((cat) => cat.title)}
+                categories={c.advertCategories.map((c) => c.title)}
                 link={generateCaseLink(c.status, c.id)}
               />
             ))}
@@ -92,7 +53,10 @@ export const CasePublishingList = ({ caseIds, onCancel, onPublish }: Props) => {
             <Button variant="ghost" onClick={onCancel}>
               Tilbaka í útgáfu mála
             </Button>
-            <Button icon="arrowForward" onClick={() => onPublish(caseIds)}>
+            <Button
+              icon="arrowForward"
+              onClick={() => onPublish(casesToPublish.map((c) => c.id))}
+            >
               Gefa út öll mál
             </Button>
           </Box>

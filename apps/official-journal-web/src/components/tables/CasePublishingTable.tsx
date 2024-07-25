@@ -2,10 +2,21 @@ import { Reorder, useDragControls } from 'framer-motion'
 import { useRouter } from 'next/router'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
-import { Icon, Table as T, Text } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  Icon,
+  SkeletonLoader,
+  Table as T,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
-import { useDepartments, useNextPublicationNumber } from '../../hooks/api'
+import {
+  useCases,
+  useDepartments,
+  useNextPublicationNumber,
+} from '../../hooks/api'
+import { usePublishContext } from '../../hooks/usePublishContext'
 import { getStringFromQueryString } from '../../lib/types'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
@@ -17,7 +28,7 @@ type RowProps = {
   row: Case
   container: RefObject<HTMLElement>
   number: number
-  onReorder: () => void
+  onReorder?: () => void
 }
 
 const CasePublishingTableRow = ({
@@ -32,7 +43,6 @@ const CasePublishingTableRow = ({
   return (
     <Reorder.Item
       as="tr"
-      key={row.id}
       value={row}
       dragListener={false}
       className={styles.tableRow}
@@ -40,7 +50,7 @@ const CasePublishingTableRow = ({
       dragConstraints={container}
       onPointerUp={() => {
         setIsDragging(false)
-        onReorder()
+        onReorder && onReorder()
       }}
     >
       <TableCell fixed>
@@ -49,7 +59,9 @@ const CasePublishingTableRow = ({
         </Text>
       </TableCell>
       <TableCell>
-        <Text>{row.advertType.title}</Text>
+        <Text variant="medium" truncate>
+          {row.advertType.title}
+        </Text>
       </TableCell>
       <TableCell>
         <Text variant="medium" truncate>
@@ -78,18 +90,31 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  updateRows?: React.Dispatch<React.SetStateAction<string[]>>
   columns: CaseTableHeadCellProps[]
-  rows: Case[]
 }
 
-export const CasePublishingTable = ({ columns, rows }: Props) => {
+export const CasePublishingTable = ({ columns }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
-  const [reorderableItems, setReorderableItems] = useState<Case[]>(rows)
-
   const router = useRouter()
 
   const department = getStringFromQueryString(router.query.department)
+  const { publishingState, setCasesWithPublicationNumber } = usePublishContext()
+  const { selectedCaseIds } = publishingState
+
+  const {
+    data: caseData,
+    error,
+    isLoading,
+  } = useCases({
+    options: {
+      refreshInterval: 0,
+    },
+    params: {
+      department: department,
+      pageSize: 100,
+    },
+  })
+  const [selectedCases, setSelectedCases] = useState<Case[]>([])
 
   const { data: departmentsData } = useDepartments({
     options: {
@@ -101,7 +126,7 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
     (d) => d.slug === department,
   )?.id as string
 
-  const { data } = useNextPublicationNumber({
+  const { data: nextPublicationNumber } = useNextPublicationNumber({
     options: {
       refreshInterval: 0,
     },
@@ -110,14 +135,42 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
     },
   })
 
-  const latestPublicationNumber = data?.publicationNumber ?? 1
+  const startingNumber = nextPublicationNumber?.publicationNumber
+    ? nextPublicationNumber.publicationNumber
+    : 1
 
   useEffect(() => {
-    setReorderableItems(rows)
-  }, [rows])
+    if (caseData) {
+      const selectedCases = caseData.cases.filter((c) =>
+        selectedCaseIds.includes(c.id),
+      )
+      const ordered = selectedCaseIds.map((id) =>
+        selectedCases.find((c) => c.id === id),
+      ) as Case[]
 
-  const reOrder = () => {
-    // updateRows(reorderableItems)
+      setSelectedCases(ordered)
+    }
+  }, [selectedCaseIds, caseData])
+
+  if (isLoading) return <SkeletonLoader repeat={3} height={44} />
+
+  if (error)
+    return (
+      <AlertMessage
+        type="error"
+        title="Villa kom upp!"
+        message="Villa kom upp við að sækja mál"
+      />
+    )
+
+  if (!caseData) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Engin mál fundust"
+        message="Engin mál fundust með þessum skilyrðum"
+      />
+    )
   }
 
   return (
@@ -136,25 +189,34 @@ export const CasePublishingTable = ({ columns, rows }: Props) => {
           ))}
         </T.Row>
       </T.Head>
-      {reorderableItems.length === 0 ? (
+      {selectedCases.length === 0 ? (
         <CaseTableEmpty columns={columns.length} />
       ) : (
         <Reorder.Group
           as="tbody"
           axis="y"
-          values={rows}
-          onReorder={setReorderableItems}
+          values={selectedCases}
+          onReorder={(newOrder) => {
+            setSelectedCases(newOrder)
+            setCasesWithPublicationNumber(
+              newOrder.map((c, i) => ({
+                id: c.id,
+                publishingNumber: startingNumber + i,
+              })),
+            )
+          }}
           ref={dragContainerRef}
         >
-          {reorderableItems.map((row, i) => (
-            <CasePublishingTableRow
-              key={row.id}
-              row={row}
-              container={dragContainerRef}
-              number={latestPublicationNumber + i}
-              onReorder={reOrder}
-            />
-          ))}
+          {selectedCases.map((row, i) => {
+            return (
+              <CasePublishingTableRow
+                key={i}
+                row={row}
+                container={dragContainerRef}
+                number={startingNumber + i}
+              />
+            )
+          })}
         </Reorder.Group>
       )}
     </T.Table>

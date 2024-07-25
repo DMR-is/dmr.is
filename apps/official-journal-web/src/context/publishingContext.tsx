@@ -1,11 +1,18 @@
 import { createContext, useCallback, useState } from 'react'
 
+type CaseWithPublishingNumber = {
+  id: string
+  publishingNumber: number
+}
+
 type PublishingStateProps = {
   selectedCaseIds: string[]
+  casesWithPublishingNumber: CaseWithPublishingNumber[]
 }
 
 const publishingStateDefaults: PublishingStateProps = {
   selectedCaseIds: [],
+  casesWithPublishingNumber: [],
 }
 
 type PublishingStateContext = {
@@ -14,6 +21,7 @@ type PublishingStateContext = {
   removeCaseFromSelectedList: (id: string) => void
   removeAllCasesFromSelectedList: () => void
   addManyCasesToSelectedList: (ids: string[]) => void
+  setCasesWithPublicationNumber: (ids: CaseWithPublishingNumber[]) => void
 }
 
 export const PublishingContext = createContext<PublishingStateContext>({
@@ -22,6 +30,7 @@ export const PublishingContext = createContext<PublishingStateContext>({
   removeCaseFromSelectedList: () => {},
   removeAllCasesFromSelectedList: () => {},
   addManyCasesToSelectedList: () => {},
+  setCasesWithPublicationNumber: () => {},
 })
 
 export const PublishingContextProvider = ({
@@ -38,7 +47,7 @@ export const PublishingContextProvider = ({
       if (!state.selectedCaseIds.includes(id)) {
         setState((prevState) => ({
           ...prevState,
-          selectedCaseIds: [...prevState.selectedCaseIds, id],
+          selectedCaseIds: [...state.selectedCaseIds, id],
         }))
       }
     },
@@ -49,9 +58,9 @@ export const PublishingContextProvider = ({
     (id: string) => {
       setState((prevState) => ({
         ...prevState,
-        selectedCaseIds: prevState.selectedCaseIds.filter(
-          (caseId) => caseId !== id,
-        ),
+        selectedCaseIds: [
+          ...prevState.selectedCaseIds.filter((caseId) => caseId !== id),
+        ],
       }))
     },
     [state],
@@ -72,6 +81,16 @@ export const PublishingContextProvider = ({
     [state],
   )
 
+  const onSetCasesWithPublicationNumber = useCallback(
+    (casesWithPublishingNumber: CaseWithPublishingNumber[]) => {
+      setState((prevState) => ({
+        ...prevState,
+        casesWithPublishingNumber,
+      }))
+    },
+    [],
+  )
+
   return (
     <PublishingContext.Provider
       value={{
@@ -80,6 +99,7 @@ export const PublishingContextProvider = ({
         removeCaseFromSelectedList: onRemoveCase,
         removeAllCasesFromSelectedList: onRemoveAllCases,
         addManyCasesToSelectedList: onAddManyCases,
+        setCasesWithPublicationNumber: onSetCasesWithPublicationNumber,
       }}
     >
       {children}

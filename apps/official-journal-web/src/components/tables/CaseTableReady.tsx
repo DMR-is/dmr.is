@@ -105,6 +105,11 @@ export const CaseTableReady = () => {
       size: 'tiny',
     },
     {
+      name: 'caseAdvertType',
+      sortable: true,
+      children: formatMessage(messages.tables.general.type),
+    },
+    {
       name: 'casePublicationDate',
       sortable: false,
       size: 'tiny',
@@ -114,11 +119,6 @@ export const CaseTableReady = () => {
       name: 'caseName',
       sortable: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
-    },
-    {
-      name: 'caseAdvertType',
-      sortable: true,
-      children: formatMessage(messages.tables.general.type),
     },
     {
       name: 'caseInstitution',
