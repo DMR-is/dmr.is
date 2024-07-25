@@ -147,7 +147,11 @@ export const CasePublishingTable = ({ columns }: Props) => {
       const ordered = selectedCaseIds.map((id) =>
         selectedCases.find((c) => c.id === id),
       ) as Case[]
-
+      const casesWithPublicationNumber = ordered.map((c, i) => ({
+        id: c.id,
+        publishingNumber: startingNumber + i,
+      }))
+      setCasesWithPublicationNumber(casesWithPublicationNumber)
       setSelectedCases(ordered)
     }
   }, [selectedCaseIds, caseData])
@@ -210,7 +214,7 @@ export const CasePublishingTable = ({ columns }: Props) => {
           {selectedCases.map((row, i) => {
             return (
               <CasePublishingTableRow
-                key={i}
+                key={row.id}
                 row={row}
                 container={dragContainerRef}
                 number={startingNumber + i}

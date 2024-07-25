@@ -58,17 +58,16 @@ export const CaseCard = ({
         </Box>
       )}
       <Box display="flex" justifyContent="spaceBetween" marginTop={2}>
-        {categories && categories.length && (
-          <Box display="flex" rowGap={1} columnGap={1}>
-            {categories.map((cat) => {
+        <Box display="flex" rowGap={1} columnGap={1}>
+          {!!categories?.length &&
+            categories.map((cat) => {
               return (
                 <Tag key={cat} variant="blue" outlined disabled>
                   {cat}
                 </Tag>
               )
             })}
-          </Box>
-        )}
+        </Box>
         {link && (
           <LinkV2
             newTab

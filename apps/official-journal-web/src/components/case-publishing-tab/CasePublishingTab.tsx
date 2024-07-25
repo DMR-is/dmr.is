@@ -10,14 +10,14 @@ import { messages } from './messages'
 type Props = {
   cases: Case[]
   paging: Paging
-  proceedToPublishing: (casesToPublish: string[]) => void
+  proceedToPublishing: (toggle: boolean) => void
 }
 
 export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const { publishingState } = usePublishContext()
-  const { selectedCaseIds } = publishingState
+  const { casesWithPublishingNumber } = publishingState
 
   return (
     <Box display="flex" flexDirection="column" rowGap={4}>
@@ -33,8 +33,8 @@ export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
 
         <Box marginTop={3} display="flex" justifyContent="flexEnd">
           <Button
-            disabled={selectedCaseIds.length === 0}
-            onClick={() => proceedToPublishing(selectedCaseIds)}
+            disabled={casesWithPublishingNumber.length === 0}
+            onClick={() => proceedToPublishing(true)}
           >
             {formatMessage(messages.general.publishCases)}
           </Button>

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useState } from 'react'
 
-type CaseWithPublishingNumber = {
+export type CaseWithPublishingNumber = {
   id: string
   publishingNumber: number
 }

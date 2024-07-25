@@ -15,7 +15,7 @@ type SWRPublishCasesOptions = SWRMutationConfiguration<
 >
 
 export const usePublishCases = (options?: SWRPublishCasesOptions) => {
-  const { trigger, isMutating } = swrMutation<
+  const { trigger, isMutating, error } = swrMutation<
     Response,
     Error,
     Key,
@@ -28,5 +28,6 @@ export const usePublishCases = (options?: SWRPublishCasesOptions) => {
   return {
     trigger,
     isMutating,
+    error,
   }
 }
