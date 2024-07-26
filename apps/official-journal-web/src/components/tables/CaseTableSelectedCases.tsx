@@ -20,12 +20,6 @@ export const CaseTableSelectedCases = () => {
       children: formatMessage(messages.tables.selectedCases.columns.number),
     },
     {
-      name: 'caseType',
-      sortable: false,
-      fixed: false,
-      children: formatMessage(messages.tables.selectedCases.columns.type),
-    },
-    {
       name: 'caseTitle',
       sortable: false,
       fixed: false,

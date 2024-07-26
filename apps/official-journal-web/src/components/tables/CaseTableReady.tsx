@@ -108,15 +108,15 @@ export const CaseTableReady = () => {
       size: 'tiny',
     },
     {
-      name: 'caseTitle',
-      sortable: false,
-      children: formatMessage(messages.tables.ready.columns.publicationDate),
-    },
-    {
       name: 'casePublishDate',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
+    },
+    {
+      name: 'caseTitle',
+      sortable: false,
+      children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
       name: 'caseInstitution',

@@ -59,14 +59,9 @@ const CasePublishingTableRow = ({
         </Text>
       </TableCell>
       <TableCell>
-        <Text variant="medium" truncate>
-          {row.advertType.title}
-        </Text>
-      </TableCell>
-      <TableCell>
         <div className={styles.titleTableCell}>
           <Text variant="medium" truncate>
-            {row.advertTitle}
+            {row.advertType.title} {row.advertTitle}
           </Text>
         </div>
       </TableCell>
