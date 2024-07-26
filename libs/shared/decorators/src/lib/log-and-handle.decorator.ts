@@ -37,7 +37,6 @@ export function LogAndHandle(
         })
         return originalMethod.apply(this, args)
       } catch (error) {
-        console.log(error)
         return handleException({
           category: service,
           method: method,

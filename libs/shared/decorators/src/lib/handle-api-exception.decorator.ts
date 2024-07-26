@@ -17,10 +17,6 @@ export function HandleApiException(
       try {
         return await originalMethod.apply(this, args)
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(error)
-        }
-
         const req = args[0]
         const res = args[1]
 
