@@ -20,7 +20,7 @@ type RowProps = {
 const CasePublishingTableRow = ({
   row,
   container,
-  number,
+  // number,
   onReorder,
 }: RowProps) => {
   const controls = useDragControls()

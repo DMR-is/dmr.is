@@ -135,6 +135,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { trigger: updatePaid, isMutating: isUpdatingPaid } = useUpdatePaid({
     caseId: data.activeCase.id,
     options: {

@@ -1,18 +1,9 @@
-import { LogMethod, Route } from '@dmr.is/decorators'
+import { Route } from '@dmr.is/decorators'
 import { GetPdfUrlResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  Controller,
-  Get,
-  HttpException,
-  Inject,
-  Param,
-  StreamableFile,
-} from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
+import { Controller, Inject, Param, StreamableFile } from '@nestjs/common'
 
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IPdfService } from './pdf.service.interface'
 

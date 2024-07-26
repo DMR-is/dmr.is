@@ -157,6 +157,7 @@ export class PdfService implements IPdfService {
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? ''
 
     if (!accessKey || !secretAccessKey) {
+      // eslint-disable-next-line no-console
       console.log('Missing environment variables')
       throw new InternalServerErrorException('Missing environment variables')
     }

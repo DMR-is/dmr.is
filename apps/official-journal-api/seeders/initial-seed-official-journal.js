@@ -6,6 +6,7 @@ const { cwd } = require('process')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
+    // eslint-disable-next-line no-console
     console.log(cwd())
     const allSeed = await readFile('./seeders/sql/all.sql', 'utf8')
     /*const departmentsSeed = await readFile(

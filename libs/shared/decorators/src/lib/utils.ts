@@ -1,13 +1,7 @@
 import { logger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  BadRequestException,
-  HttpException,
-  InternalServerErrorException,
-  MethodNotAllowedException,
-  NotFoundException,
-} from '@nestjs/common'
+import { HttpException } from '@nestjs/common'
 
 export const handleException = <T>({
   method,

@@ -1,3 +1,8 @@
 node_modules
 **/*.generated.ts
 **/.next/**
+submodules/**
+tmp/**
+.nx/**
+**/dist/**
+**/gen/fetch/**

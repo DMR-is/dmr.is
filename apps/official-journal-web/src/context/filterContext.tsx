@@ -67,8 +67,6 @@ export const FilterContextProvider = ({
 
   const toggleFilter = useCallback(
     (toggle: boolean, key: string, slug: string, label?: string) => {
-      console.log({ toggle, key, slug })
-
       if (toggle) {
         const newFilters = [...state.activeFilters]
         newFilters.push({ key, slug, label })

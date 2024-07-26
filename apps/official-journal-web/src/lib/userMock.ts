@@ -21,7 +21,7 @@ export const PALINA: User = {
   active: true,
 }
 
-const INACTIVE: User = {
+export const INACTIVE: User = {
   id: 'e9a3c901-5130-4006-99bb-de647c2076e9',
   name: 'Jón',
   lastName: 'Jónsson',

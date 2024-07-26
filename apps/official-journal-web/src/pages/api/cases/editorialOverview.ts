@@ -10,8 +10,6 @@ class GetEditorialOverviewHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    console.log({ dep: getStringFromQueryString(req.query.department) })
-
     const cases = await dmrClient.editorialOverview({
       search: getStringFromQueryString(req.query.search),
       category: getStringFromQueryString(req.query.category),

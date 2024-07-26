@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { Application, PostApplicationBody } from '@dmr.is/shared/dto'
@@ -163,6 +164,7 @@ describe('CaseService', () => {
     const application = {
       id: '1c65e8fd-bd6a-4038-9678-202770a85e89',
       applicant: '0101307789',
+      // eslint-disable-next-line local-rules/disallow-kennitalas
       assignees: ['5804170510'],
       state: 'submitted',
       status: 'completed',

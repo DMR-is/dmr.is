@@ -6,7 +6,6 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
-import { Institution } from '@dmr.is/shared/dto'
 
 import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
 import {

@@ -1,7 +1,6 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { HTTPMethod, PostCasePublishBody } from '../gen/fetch'
-import { SWRAddCommentParams } from '../hooks/api'
+import { PostCasePublishBody } from '../gen/fetch'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -61,6 +60,7 @@ export async function getCase(url: string) {
   }).then(async (res) => {
     const error = new Error('Error occured while fetching data')
     if (!res.ok) {
+      // eslint-disable-next-line no-console
       console.error('Error occured while fetching data')
       error.message = await res.text()
       error.name = res.statusText

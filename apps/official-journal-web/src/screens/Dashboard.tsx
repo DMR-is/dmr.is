@@ -225,6 +225,7 @@ Dashboard.getProps = async () => {
       }),
     ].map((promise) =>
       promise.catch((err) => {
+        // eslint-disable-next-line no-console
         console.error(err)
         return null
       }),
@@ -244,6 +245,7 @@ Dashboard.getProps = async () => {
       }),
     ].map((promise) =>
       promise.catch((err) => {
+        // eslint-disable-next-line no-console
         console.error(err)
         return null
       }),

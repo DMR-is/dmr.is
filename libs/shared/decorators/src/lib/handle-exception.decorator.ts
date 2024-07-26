@@ -17,6 +17,7 @@ export function HandleException(message?: string | undefined) {
         const msg = message ? message : 'Internal server error'
 
         if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
           console.error(err.message)
         }
 

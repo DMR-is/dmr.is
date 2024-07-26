@@ -7,7 +7,6 @@ import {
 } from '@island.is/island-ui/core'
 
 import { CaseWithAdvert } from '../../gen/fetch'
-import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 type Props = {
@@ -15,8 +14,6 @@ type Props = {
 }
 
 export const StepInnsending = ({ activeCase }: Props) => {
-  const { formatMessage } = useFormatMessage()
-
   return (
     <GridContainer>
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
