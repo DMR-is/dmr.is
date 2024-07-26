@@ -28,18 +28,18 @@ describe('StatisticsService', () => {
   describe('getStatistics', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
-        const results = await service.getDepartment(department.id)
-        expect(results.totalAdverts).toBeGreaterThanOrEqual(0)
+        const results = (await service.getDepartment(department.id)).unwrap()
+        expect(results.totalCases).toBeGreaterThanOrEqual(0)
       })
     })
   })
 
   describe('getOverview', () => {
     it('Should return total count larger than 0', async () => {
-      const results = await service.getOverview(
-        StatisticsOverviewQueryType.General,
-      )
-      expect(results.totalAdverts).toEqual(0)
+      const results = (
+        await service.getOverview(StatisticsOverviewQueryType.General)
+      ).unwrap()
+      expect(results.totalCases).toEqual(0)
     })
 
     it('Should throw not implemented error', async () => {

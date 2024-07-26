@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { v4 as uuid } from 'uuid'
-import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   DeleteCaseCommentResponse,

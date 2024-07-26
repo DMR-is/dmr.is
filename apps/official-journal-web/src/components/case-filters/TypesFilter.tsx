@@ -12,6 +12,7 @@ import { FilterGroup } from '../filter-group/FilterGroup'
 export const TypesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
+
   const { data, error, isLoading } = useTypes({
     params: {
       page: 1,
@@ -20,6 +21,7 @@ export const TypesFilter = () => {
     },
     options: {
       keepPreviousData: true,
+      refreshInterval: 0,
     },
   })
 

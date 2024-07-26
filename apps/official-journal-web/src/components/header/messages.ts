@@ -14,6 +14,11 @@ export const messages = {
     },
   }),
   auth: defineMessages({
+    user: {
+      id: 'web.components.auth:user',
+      defaultMessage: 'Notandi',
+      description: '',
+    },
     logout: {
       id: 'web.components.auth:logout',
       defaultMessage: 'Útskrá',

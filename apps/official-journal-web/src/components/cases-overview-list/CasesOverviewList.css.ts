@@ -2,7 +2,7 @@ import { style } from '@vanilla-extract/css'
 
 import { theme } from '@island.is/island-ui/theme'
 
-export const advertsOverviewListEmpty = style({
+export const casesOverviewListEmpty = style({
   display: 'flex',
   justifyContent: 'space-around',
   alignItems: 'center',
@@ -19,11 +19,11 @@ export const advertsOverviewListEmpty = style({
   },
 })
 
-export const advertsListOverview = style({
+export const casesListOverview = style({
   backgroundColor: theme.color.white,
 })
 
-export const advertsOverviewListItem = style({
+export const casesOverviewListItem = style({
   padding: theme.spacing[1],
   borderBottom: `1px solid ${theme.color.blue200}`,
   fontWeight: theme.typography.light,

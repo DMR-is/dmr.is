@@ -16,6 +16,7 @@ export const CategoriesFilter = () => {
     params: { page: 1, pageSize: 1000, search },
     options: {
       keepPreviousData: true,
+      refreshInterval: 0,
     },
   })
 

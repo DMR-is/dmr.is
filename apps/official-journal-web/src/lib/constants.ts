@@ -75,6 +75,7 @@ export async function getCase(url: string) {
   }).then(async (res) => {
     const error = new Error('Error occured while fetching data')
     if (!res.ok) {
+      // eslint-disable-next-line no-console
       console.error('Error occured while fetching data')
       error.message = await res.text()
       error.name = res.statusText

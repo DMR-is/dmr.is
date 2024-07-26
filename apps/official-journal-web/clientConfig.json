@@ -848,7 +848,7 @@
         "operationId": "StatisticsController_department",
         "parameters": [
           {
-            "name": "id",
+            "name": "slug",
             "required": true,
             "in": "query",
             "schema": { "type": "string" }
@@ -875,6 +875,12 @@
           {
             "name": "type",
             "required": true,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "userId",
+            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           }
@@ -1805,12 +1811,12 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Department name",
-            "example": "Department of Justice"
+            "description": "Item title",
+            "example": "Tilbúið"
           },
           "count": {
             "type": "number",
-            "description": "Number of adverts",
+            "description": "Number of cases",
             "example": 10
           },
           "percentage": {
@@ -1821,7 +1827,7 @@
         },
         "required": ["name", "count", "percentage"]
       },
-      "GetStatisticsDepartmentResponse": {
+      "StatisticsDepartmentData": {
         "type": "object",
         "properties": {
           "submitted": {
@@ -1833,34 +1839,29 @@
           "inReview": {
             "$ref": "#/components/schemas/StatisticsDepartmentItem"
           },
-          "ready": { "$ref": "#/components/schemas/StatisticsDepartmentItem" },
-          "totalAdverts": {
+          "ready": { "$ref": "#/components/schemas/StatisticsDepartmentItem" }
+        },
+        "required": ["submitted", "inProgress", "inReview", "ready"]
+      },
+      "GetStatisticsDepartmentResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/StatisticsDepartmentData" },
+          "totalCases": {
             "type": "number",
-            "description": "Total number of adverts",
+            "description": "Total number of cases",
             "example": 100
-          },
-          "totalPercentage": {
-            "type": "number",
-            "description": "Total number of departments",
-            "example": 10
           }
         },
-        "required": [
-          "submitted",
-          "inProgress",
-          "inReview",
-          "ready",
-          "totalAdverts",
-          "totalPercentage"
-        ]
+        "required": ["data", "totalCases"]
       },
       "StatisticsOverviewCategory": {
         "type": "object",
         "properties": {
-          "totalAdverts": { "type": "number" },
+          "totalCases": { "type": "number" },
           "text": { "type": "string" }
         },
-        "required": ["totalAdverts", "text"]
+        "required": ["totalCases", "text"]
       },
       "GetStatisticsOverviewResponse": {
         "type": "object",
@@ -1871,9 +1872,9 @@
               "$ref": "#/components/schemas/StatisticsOverviewCategory"
             }
           },
-          "totalAdverts": { "type": "number" }
+          "totalCases": { "type": "number" }
         },
-        "required": ["categories", "totalAdverts"]
+        "required": ["categories", "totalCases"]
       }
     }
   }

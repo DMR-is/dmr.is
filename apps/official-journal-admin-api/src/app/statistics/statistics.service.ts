@@ -1,63 +1,71 @@
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { ICaseService, IUtilityService } from '@dmr.is/modules'
+import { CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
+import { isSingular } from '@dmr.is/utils'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
-  NotImplementedException,
 } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(forwardRef(() => ICaseService))
+    private readonly casesService: ICaseService,
+    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
+  ) {
     this.logger.info('Using StatisticsService')
   }
-  getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
-    if (!id) {
-      throw new BadRequestException('Missing parameters')
-    }
 
-    const statuses = [
-      AdvertStatus.Submitted,
-      AdvertStatus.InProgress,
-      AdvertStatus.Active,
-      AdvertStatus.ReadyForPublication,
-    ]
-
-    const adverts = ALL_MOCK_ADVERTS.filter(
-      (advert) =>
-        advert?.department?.id === id &&
-        advert.status &&
-        statuses.includes(advert.status),
-    )
+  @LogAndHandle()
+  async getDepartment(
+    slug: string,
+  ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
+    const casesRes = (
+      await this.casesService.cases({
+        pageSize: '1000',
+        department: [slug],
+        status: [
+          CaseStatus.Submitted,
+          CaseStatus.InProgress,
+          CaseStatus.InReview,
+          CaseStatus.ReadyForPublishing,
+        ],
+      })
+    ).unwrap()
+    const cases = casesRes.cases
 
     let submitted = 0
     let inProgress = 0
     let inReview = 0
     let ready = 0
 
-    adverts.forEach((advert) => {
-      switch (advert.status) {
-        case AdvertStatus.Submitted:
+    cases.forEach((thisCase) => {
+      switch (thisCase.status) {
+        case CaseStatus.Submitted:
           submitted++
           break
-        case AdvertStatus.InProgress:
+        case CaseStatus.InProgress:
           inProgress++
           break
-        case AdvertStatus.Active:
+        case CaseStatus.InReview:
           inReview++
           break
-        case AdvertStatus.ReadyForPublication:
+        case CaseStatus.ReadyForPublishing:
           ready++
           break
       }
@@ -69,121 +77,223 @@ export class StatisticsService implements IStatisticsService {
     const inReviewPercentage = total ? (inReview / total) * 100 : 0
     const readyPercentage = total ? (ready / total) * 100 : 0
 
-    return Promise.resolve({
-      submitted: {
-        name: 'Innsendingar',
-        count: submitted,
-        percentage: Math.round(submittedPercentage),
+    return ResultWrapper.ok({
+      data: {
+        submitted: {
+          name: CaseStatus.Submitted,
+          count: submitted,
+          percentage: Math.round(submittedPercentage),
+        },
+        inProgress: {
+          name: CaseStatus.InProgress,
+          count: inProgress,
+          percentage: Math.round(inProgressPercentage),
+        },
+        inReview: {
+          name: CaseStatus.InReview,
+          count: inReview,
+          percentage: Math.round(inReviewPercentage),
+        },
+        ready: {
+          name: CaseStatus.ReadyForPublishing,
+          count: ready,
+          percentage: Math.round(readyPercentage),
+        },
       },
-      inProgress: {
-        name: 'Grunnvinnsla',
-        count: inProgress,
-        percentage: Math.round(inProgressPercentage),
-      },
-      inReview: {
-        name: 'Yfirlestur',
-        count: inReview,
-        percentage: Math.round(inReviewPercentage),
-      },
-      ready: {
-        name: 'Tilbúið',
-        count: ready,
-        percentage: Math.round(readyPercentage),
-      },
-      totalAdverts: total,
-      totalPercentage: 100,
+      totalCases: total,
     })
   }
 
-  getOverview(type: string): Promise<GetStatisticsOverviewResponse> {
-    if (!type) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  @LogAndHandle()
+  async getOverview(
+    type: string,
+    userId?: string,
+  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
     // check if type is in enum
     if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
       throw new BadRequestException('Invalid type')
     }
 
-    let categories: StatisticsOverviewCategory[] = []
-    let totalAdverts = 0
+    const casesRes = (
+      await this.casesService.cases({
+        pageSize: '1000',
+        status: [
+          CaseStatus.Submitted,
+          CaseStatus.InProgress,
+          CaseStatus.InReview,
+          CaseStatus.ReadyForPublishing,
+        ],
+      })
+    ).unwrap()
+    const cases = casesRes.cases
+
+    const categories: StatisticsOverviewCategory[] = []
+    let totalCases = 0
 
     if (type === StatisticsOverviewQueryType.General) {
-      let submitted = 0
-      let inProgress = 0
-      // let submittedFastTrack = 0
-      // let inReviewFastTrack = 0
+      let submittedCount = 0
+      let inProgressCount = 0
+      let submittedFastTrack = 0
+      let inReviewFastTrack = 0
 
       // fast track functionality is not implemented yet
 
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.Submitted) {
-          submitted++
-        }
-
-        if (advert.status === AdvertStatus.InProgress) {
-          inProgress++
-        }
-
-        // if(advert.status === JournalAdvertStatus.Active) {
-        //   submittedFastTrack++
-        // }
-
-        // if(advert.status === JournalAdvertStatus.ReadyForPublication) {
-        //   inReviewFastTrack++
-        // }
-      })
-
-      categories = [
-        {
-          text: `${adverts.length} innsend mál bíða úthlutunar`,
-          totalAdverts: submitted,
-        },
-        {
-          text: `Borist hafa ný svör í ${inProgress} málum`,
-          totalAdverts: inProgress,
-        },
-      ]
-      totalAdverts = adverts.length
-    } else if (type === StatisticsOverviewQueryType.Personal) {
-      throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Inactive) {
-      throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Publishing) {
-      let today = 0
-      let pastDue = 0
-
-      const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.ReadyForPublication) {
-          today++
+      cases.forEach((thisCase) => {
+        if (thisCase.status === CaseStatus.Submitted) {
+          submittedCount++
         }
 
         if (
-          advert.publicationDate &&
-          new Date(advert.publicationDate) < new Date() &&
-          advert.status === AdvertStatus.ReadyForPublication
+          [CaseStatus.InProgress, CaseStatus.InReview].includes(thisCase.status)
         ) {
-          pastDue++
+          inProgressCount++
+        }
+
+        if (
+          thisCase.fastTrack &&
+          thisCase.status !== CaseStatus.ReadyForPublishing
+        ) {
+          submittedFastTrack++
+        }
+
+        if (
+          thisCase.fastTrack &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          inReviewFastTrack++
         }
       })
 
-      categories = [
-        {
-          text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: today,
-        },
-        {
-          text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDue,
-        },
-      ]
-      totalAdverts = adverts.length
-    } else {
-      throw new BadRequestException('Invalid type')
+      if (submittedCount) {
+        categories.push({
+          text: isSingular(submittedCount)
+            ? `${submittedCount} innsent mál bíður úthlutunar.`
+            : `${submittedCount} innsend mál bíða úthlutunar.`,
+          totalCases: submittedCount,
+        })
+      }
+
+      if (inProgressCount) {
+        categories.push({
+          text: isSingular(inProgressCount)
+            ? `${inProgressCount} mál er í vinnslu.`
+            : `${inProgressCount} mál eru í vinnslu.`,
+          totalCases: inProgressCount,
+        })
+      }
+
+      if (submittedFastTrack) {
+        categories.push({
+          text: isSingular(submittedFastTrack)
+            ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
+            : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
+          totalCases: submittedFastTrack,
+        })
+      }
+
+      if (inReviewFastTrack) {
+        categories.push({
+          text: isSingular(inReviewFastTrack)
+            ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
+            : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
+          totalCases: inReviewFastTrack,
+        })
+      }
+
+      totalCases =
+        submittedCount +
+        inProgressCount +
+        submittedFastTrack +
+        inReviewFastTrack
     }
-    return Promise.resolve({
-      categories: categories,
-      totalAdverts: totalAdverts,
+
+    if (type === StatisticsOverviewQueryType.Personal && userId) {
+      const myCases = cases.filter((c) => c.assignedTo?.id === userId)
+      const myCasesCount = myCases.length
+
+      if (myCasesCount) {
+        categories.push({
+          text: isSingular(myCasesCount)
+            ? `${myCasesCount} mál er skráð á mig.`
+            : `${myCasesCount} mál eru skráð á mig.`,
+          totalCases: myCasesCount,
+        })
+      }
+
+      totalCases = myCasesCount
+    }
+
+    if (type === StatisticsOverviewQueryType.Inactive) {
+      const limit = new Date()
+      limit.setDate(-6)
+
+      const inactiveCases = cases.filter(
+        (c) =>
+          [
+            CaseStatus.Submitted,
+            CaseStatus.InProgress,
+            CaseStatus.InReview,
+          ].includes(c.status) && new Date(c.modifiedAt) < limit,
+      )
+      const inactiveCasesCount = inactiveCases.length
+
+      if (inactiveCasesCount) {
+        categories.push({
+          text: isSingular(inactiveCasesCount)
+            ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
+            : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
+          totalCases: inactiveCasesCount,
+        })
+      }
+      totalCases = inactiveCasesCount
+    }
+
+    if (type === StatisticsOverviewQueryType.Publishing) {
+      const today = new Date()
+      let todayCount = 0
+      let pastDueCount = 0
+
+      cases.forEach((thisCase) => {
+        if (
+          thisCase.requestedPublicationDate &&
+          new Date(thisCase.requestedPublicationDate) === today &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          todayCount++
+        }
+
+        if (
+          thisCase.requestedPublicationDate &&
+          new Date(thisCase.requestedPublicationDate) < today &&
+          thisCase.status === CaseStatus.ReadyForPublishing
+        ) {
+          pastDueCount++
+        }
+      })
+
+      if (todayCount) {
+        categories.push({
+          text: isSingular(todayCount)
+            ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
+            : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
+          totalCases: todayCount,
+        })
+      }
+
+      if (pastDueCount) {
+        categories.push({
+          text: isSingular(pastDueCount)
+            ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
+            : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
+          totalCases: pastDueCount,
+        })
+      }
+      totalCases = todayCount + pastDueCount
+    }
+
+    return ResultWrapper.ok({
+      categories,
+      totalCases,
     })
   }
 }

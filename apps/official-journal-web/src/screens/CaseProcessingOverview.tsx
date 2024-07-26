@@ -9,7 +9,7 @@ import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { Case, Paging } from '../gen/fetch'
+import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useCaseOverview } from '../hooks/api'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
@@ -34,15 +34,6 @@ type Props = {
   }
 }
 
-type CaseStatus = 'Innsent' | 'Grunnvinnsla' | 'Yfirlestur' | 'Tilbúið'
-
-const CaseProccessingOverviewTabIds: CaseStatus[] = [
-  'Innsent',
-  'Grunnvinnsla',
-  'Yfirlestur',
-  'Tilbúið',
-]
-
 const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
   paging,
@@ -60,8 +51,8 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     setEnableTypes(true)
   }, [])
 
-  const [selectedTab, setSelectedTab] = useState<CaseStatus>(
-    (router.query.status as CaseStatus) ?? 'Innsent',
+  const [selectedTab, setSelectedTab] = useState<CaseStatusEnum>(
+    (router.query.status as CaseStatusEnum) ?? CaseStatusEnum.Innsent,
   )
 
   const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
@@ -109,7 +100,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   })
 
   const onTabChange = (id: string) => {
-    const tabId = CaseProccessingOverviewTabIds.find((tab) => tab === id)
+    const tabId = id as CaseStatusEnum
     if (tabId) {
       setSelectedTab(tabId)
       setSearchParams({
@@ -158,9 +149,9 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     )
   }
 
-  const tabs: Tab<CaseStatus>[] = [
+  const tabs: Tab<CaseStatusEnum>[] = [
     {
-      id: 'Innsent',
+      id: CaseStatusEnum.Innsent,
       label: formatMessage(caseProccessingMessages.tabs.submitted, {
         count: casesResponse.totalItems.submitted,
       }),
@@ -172,7 +163,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Grunnvinnsla',
+      id: CaseStatusEnum.Grunnvinnsla,
       label: formatMessage(caseProccessingMessages.tabs.inProgress, {
         count: casesResponse.totalItems.inProgress,
       }),
@@ -184,7 +175,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Yfirlestur',
+      id: CaseStatusEnum.Yfirlestur,
       label: formatMessage(caseProccessingMessages.tabs.inReview, {
         count: casesResponse.totalItems.inReview,
       }),
@@ -196,7 +187,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Tilbúið',
+      id: CaseStatusEnum.Tilbi,
       label: formatMessage(caseProccessingMessages.tabs.ready, {
         count: casesResponse.totalItems.ready,
       }),

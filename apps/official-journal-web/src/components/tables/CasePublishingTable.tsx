@@ -34,7 +34,7 @@ type RowProps = {
 const CasePublishingTableRow = ({
   row,
   container,
-  number,
+  // number,
   onReorder,
 }: RowProps) => {
   const controls = useDragControls()
@@ -64,14 +64,18 @@ const CasePublishingTableRow = ({
         </Text>
       </TableCell>
       <TableCell>
-        <Text variant="medium" truncate>
-          {row.advertTitle}
-        </Text>
+        <div className={styles.titleTableCell}>
+          <Text variant="medium" truncate>
+            {row.advertTitle}
+          </Text>
+        </div>
       </TableCell>
       <TableCell>
-        <Text variant="medium" truncate>
-          {row.involvedParty.title}
-        </Text>
+        <div className={styles.typeTableCell}>
+          <Text variant="medium" truncate>
+            {row.involvedParty.title}
+          </Text>
+        </div>
       </TableCell>
       <TableCell>
         <button

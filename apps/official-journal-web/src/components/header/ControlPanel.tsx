@@ -15,6 +15,7 @@ export const ControlPanel = () => {
           <Text>{formatMessage(messages.general.controlPanelProject)}</Text>
         </div>
         <button
+          // eslint-disable-next-line no-console
           onClick={() => console.log('not implemented!')}
           className={styles.controlPanelButton}
         >

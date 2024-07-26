@@ -22,7 +22,6 @@ import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
   advertTypesMigrate,
-  caseStatusMapper,
 } from '../helpers'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import {

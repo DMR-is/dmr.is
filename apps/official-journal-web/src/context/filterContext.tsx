@@ -1,21 +1,49 @@
-import { createContext, useState } from 'react'
+import { createContext, useCallback, useState } from 'react'
 
-type FilterContextProps = {
+type FilterStateProps = {
   enableTypes: boolean
   enableDepartments: boolean
   enableCategories: boolean
-  setEnableTypes: (enableTypes: boolean) => void
-  setEnableDepartments: (enableDepartments: boolean) => void
-  setEnableCategories: (enableCategories: boolean) => void
+  activeFilters: Array<{
+    key: string
+    slug: string
+    label?: string
+  }>
 }
 
-export const FilterContext = createContext<FilterContextProps>({
+const filterStateDefaults: FilterStateProps = {
   enableTypes: false,
   enableDepartments: false,
   enableCategories: false,
+  activeFilters: [],
+}
+
+type FilterStateContext = {
+  filterState: FilterStateProps
+  setEnableTypes: (enableTypes: boolean) => void
+  setEnableDepartments: (enableDepartments: boolean) => void
+  setEnableCategories: (enableCategories: boolean) => void
+  toggleFilter: (
+    toggle: boolean,
+    key: string,
+    slug: string,
+    label?: string,
+  ) => void
+  clearFilter: (key?: string, slug?: string) => void
+}
+
+export const FilterContext = createContext<FilterStateContext>({
+  filterState: {
+    enableTypes: false,
+    enableDepartments: false,
+    enableCategories: false,
+    activeFilters: [],
+  },
   setEnableTypes: () => {},
   setEnableDepartments: () => {},
   setEnableCategories: () => {},
+  toggleFilter: () => {},
+  clearFilter: () => {},
 })
 
 export const FilterContextProvider = ({
@@ -23,30 +51,77 @@ export const FilterContextProvider = ({
 }: {
   children: React.ReactNode
 }) => {
+  const [state, updateState] = useState<FilterStateProps>(filterStateDefaults)
+
   const setEnableTypes = (enableTypes: boolean) => {
-    setState((prevState) => ({ ...prevState, enableTypes }))
+    updateState((prevState) => ({ ...prevState, enableTypes }))
   }
 
   const setEnableDepartments = (enableDepartments: boolean) => {
-    setState((prevState) => ({ ...prevState, enableDepartments }))
+    updateState((prevState) => ({ ...prevState, enableDepartments }))
   }
 
   const setEnableCategories = (enableCategories: boolean) => {
-    setState((prevState) => ({ ...prevState, enableCategories }))
+    updateState((prevState) => ({ ...prevState, enableCategories }))
   }
 
-  const initalState: FilterContextProps = {
-    enableTypes: false,
-    enableDepartments: false,
-    enableCategories: false,
-    setEnableTypes,
-    setEnableDepartments,
-    setEnableCategories,
-  }
+  const toggleFilter = useCallback(
+    (toggle: boolean, key: string, slug: string, label?: string) => {
+      if (toggle) {
+        const newFilters = [...state.activeFilters]
+        newFilters.push({ key, slug, label })
+        updateState((prevState) => ({
+          ...prevState,
+          activeFilters: newFilters,
+        }))
+      } else {
+        const newFilters = [...state.activeFilters].filter(
+          (f) => !(f.key === key && f.slug === slug),
+        )
+        updateState((prevState) => ({
+          ...prevState,
+          activeFilters: newFilters,
+        }))
+      }
+    },
+    [state.activeFilters],
+  )
 
-  const [state, setState] = useState(initalState)
+  const clearFilter = useCallback(
+    (key?: string, slug?: string) => {
+      if (key && slug) {
+        const newFilters = [...state.activeFilters].filter(
+          (f) => !(f.key === key && f.slug === slug),
+        )
+        updateState((prevState) => ({
+          ...prevState,
+          activeFilters: newFilters,
+        }))
+      } else if (key) {
+        const newFilters = [...state.activeFilters].filter((f) => f.key !== key)
+        updateState((prevState) => ({
+          ...prevState,
+          activeFilters: newFilters,
+        }))
+      } else {
+        updateState((prevState) => ({ ...prevState, activeFilters: [] }))
+      }
+    },
+    [state.activeFilters],
+  )
 
   return (
-    <FilterContext.Provider value={state}>{children}</FilterContext.Provider>
+    <FilterContext.Provider
+      value={{
+        filterState: state,
+        setEnableTypes,
+        setEnableDepartments,
+        setEnableCategories,
+        toggleFilter,
+        clearFilter,
+      }}
+    >
+      {children}
+    </FilterContext.Provider>
   )
 }

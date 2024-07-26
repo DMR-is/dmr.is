@@ -2,15 +2,15 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class StatisticsDepartmentItem {
   @ApiProperty({
-    description: 'Department name',
-    example: 'Department of Justice',
+    description: 'Item title',
+    example: 'Tilbúið',
     required: true,
     type: String,
   })
   name!: string
 
   @ApiProperty({
-    description: 'Number of adverts',
+    description: 'Number of cases',
     example: 10,
     required: true,
     type: Number,
@@ -26,7 +26,7 @@ export class StatisticsDepartmentItem {
   percentage!: number
 }
 
-export class GetStatisticsDepartmentResponse {
+export class StatisticsDepartmentData {
   @ApiProperty({
     type: StatisticsDepartmentItem,
     required: true,
@@ -50,20 +50,20 @@ export class GetStatisticsDepartmentResponse {
     required: true,
   })
   ready!: StatisticsDepartmentItem
+}
+
+export class GetStatisticsDepartmentResponse {
+  @ApiProperty({
+    type: StatisticsDepartmentData,
+    required: true,
+  })
+  data!: StatisticsDepartmentData
 
   @ApiProperty({
-    description: 'Total number of adverts',
+    description: 'Total number of cases',
     example: 100,
     required: true,
     type: Number,
   })
-  totalAdverts!: number
-
-  @ApiProperty({
-    description: 'Total number of departments',
-    example: 10,
-    required: true,
-    type: Number,
-  })
-  totalPercentage!: number
+  totalCases!: number
 }

@@ -13,15 +13,18 @@ import {
   Logo,
 } from '@island.is/island-ui/core'
 
+import { User } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 import { messages } from './messages'
+
 type HeaderType = {
   headerWhite?: boolean
+  user?: User
 }
 
-export const Header = ({ headerWhite }: HeaderType) => {
+export const Header = ({ headerWhite, user }: HeaderType) => {
   const { formatMessage } = useFormatMessage()
 
   return (
@@ -55,21 +58,25 @@ export const Header = ({ headerWhite }: HeaderType) => {
                     justifyContent="flexEnd"
                     width="full"
                   >
-                    <DropdownMenu
-                      title={'Ármann Árni'}
-                      icon="chevronDown"
-                      items={[
-                        {
-                          // href: '#',
-                          title: formatMessage(messages.auth.logout),
-                          onClick: (e) => {
-                            e.preventDefault()
-                            // TODO: implement logout
-                            console.log('not implemented!')
+                    {user ? (
+                      <DropdownMenu
+                        title={user?.name}
+                        icon="chevronDown"
+                        menuLabel={formatMessage(messages.auth.user)}
+                        items={[
+                          {
+                            // href: '#',
+                            title: formatMessage(messages.auth.logout),
+                            onClick: (e) => {
+                              e.preventDefault()
+                              // TODO: implement logout
+                              // eslint-disable-next-line no-console
+                              console.log('not implemented!')
+                            },
                           },
-                        },
-                      ]}
-                    />
+                        ]}
+                      />
+                    ) : null}
                   </Box>
                 </Column>
               </Columns>

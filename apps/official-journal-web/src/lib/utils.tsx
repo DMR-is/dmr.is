@@ -13,7 +13,6 @@ import {
   CaseTagValueEnum,
   CaseWithAdvert,
 } from '../gen/fetch'
-import { useQueryParams } from '../hooks/useQueryParams'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
 export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
@@ -45,32 +44,6 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
   }
 
   return pathname
-}
-
-export const handleFilterToggle = (
-  qp: ReturnType<typeof useQueryParams>,
-  toggle: boolean,
-  key: string,
-  value: string,
-) => {
-  const existingValue = qp.get(key)
-  if (existingValue && toggle) {
-    qp.add({ [key]: `${existingValue},${value}` })
-  } else if (existingValue && !toggle) {
-    const newValue = existingValue
-      .split(',')
-      .filter((v) => v !== value)
-      .join(',')
-    if (newValue) {
-      qp.add({ [key]: newValue })
-    } else {
-      qp.remove([key])
-    }
-  } else if (toggle) {
-    qp.add({ [key]: value })
-  } else {
-    qp.remove([key])
-  }
 }
 
 export const mapTabIdToCaseStatus = (param?: string) => {

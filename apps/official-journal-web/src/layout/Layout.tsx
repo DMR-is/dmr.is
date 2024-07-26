@@ -18,6 +18,8 @@ import {
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
 import type { Screen } from '../lib/types'
+import { ARMANN } from '../lib/userMock'
+
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }
@@ -57,6 +59,7 @@ const Layout: Screen<LayoutProps> = ({
           return null
         }
 
+        // eslint-disable-next-line no-console
         console.error('Error in IntlProvider', { exception: err })
       }}
     >
@@ -88,7 +91,7 @@ const Layout: Screen<LayoutProps> = ({
                     )
                   })}
                 </Head>
-                <Header headerWhite={headerWhite} />
+                <Header headerWhite={headerWhite} user={ARMANN} />
                 <Main>
                   {bannerProps.showBanner && (
                     <Banner

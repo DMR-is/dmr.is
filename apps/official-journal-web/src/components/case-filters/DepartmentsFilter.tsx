@@ -11,6 +11,7 @@ export const DepartmentsFilter = () => {
   const { data, error, isLoading } = useDepartments({
     options: {
       keepPreviousData: true,
+      refreshInterval: 0,
     },
   })
 

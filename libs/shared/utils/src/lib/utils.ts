@@ -3,6 +3,11 @@ import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
 import { BadRequestException } from '@nestjs/common'
 
+export const isSingular = (n: number | string): boolean => {
+  const c = '' + Number(n)
+  return c.slice(-1) === '1' && c.slice(-2) !== '11'
+}
+
 export const ICELANDIC_ALPHABET = 'AÁBDÐEÉFGHIÍJKLMNOÓPRSTUÚVXYÝÞÆÖ'
 
 export const sortAlphabetically = (a: string, b: string) => {

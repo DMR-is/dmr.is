@@ -1,4 +1,4 @@
-import { HandleException, LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -149,6 +149,7 @@ export class ApplicationService implements IApplicationService {
 
   @LogAndHandle()
   async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
