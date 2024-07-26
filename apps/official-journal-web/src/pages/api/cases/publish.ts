@@ -1,12 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-
-const schema = z.object({
-  caseIds: z.array(z.string()),
-})
 
 class PublishCasesHandler {
   @LogMethod(false)
@@ -14,17 +9,23 @@ class PublishCasesHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const parsed = schema.safeParse(req.body)
+    const { caseIds } = req.body
 
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error)
+    if (!caseIds) {
+      return res.status(400).end()
     }
 
-    const { caseIds } = parsed.data
+    if (!Array.isArray(caseIds)) {
+      return res.status(400).end()
+    }
+
+    if (!caseIds.length) {
+      return res.status(400).end()
+    }
 
     await dmrClient.publish({
       postCasePublishBody: {
-        caseIds,
+        caseIds: req.body.caseIds.join(','),
       },
     })
     return res.status(204).end()

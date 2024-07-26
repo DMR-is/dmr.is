@@ -1,7 +1,9 @@
+import { Transaction } from 'sequelize'
 import {
   Advert,
   AdvertType,
   Category,
+  CreateAdvert,
   DefaultSearchParams,
   Department,
   GetAdvertResponse,
@@ -12,16 +14,12 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
-  GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionResponse,
-  GetInstitutionsQueryParams,
   GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
@@ -34,7 +32,10 @@ export interface IJournalService {
   getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>>
-  create(model: Advert): Promise<ResultWrapper<GetAdvertResponse>>
+  create(
+    model: CreateAdvert,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertResponse>>
   updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>>
 
   getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>>

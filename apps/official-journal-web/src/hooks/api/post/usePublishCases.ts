@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues as APIRoutes, publishCases } from '../../../lib/constants'
+import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
 
 export type SWRAddCommentParams = {
   caseIds: string[]
@@ -20,7 +20,7 @@ export const usePublishCases = (options?: SWRPublishCasesOptions) => {
     Error,
     Key,
     SWRAddCommentParams
-  >(APIRoutes.PublishCases, publishCases, {
+  >(APIRoutes.PublishCases, updateFetcher, {
     throwOnError: false,
     ...options,
   })

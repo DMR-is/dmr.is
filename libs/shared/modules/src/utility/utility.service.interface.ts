@@ -10,11 +10,13 @@ import {
 import {
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
+  AdvertStatusDTO,
   AdvertTypeDTO,
 } from '../journal/models'
 
 export interface IUtilityService {
   getCaseWithAdvert(caseId: string): Promise<ResultWrapper<CaseWithAdvert>>
+  advertStatusLookup(status: string): Promise<ResultWrapper<AdvertStatusDTO>>
   departmentLookup(
     departmentId: string,
   ): Promise<ResultWrapper<AdvertDepartmentDTO>>
@@ -39,7 +41,10 @@ export interface IUtilityService {
     year: number,
   ): Promise<ResultWrapper<number>>
 
-  getNextPublicationNumber(departmentId: string): Promise<ResultWrapper<number>>
+  getNextPublicationNumber(
+    departmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<number>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

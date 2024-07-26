@@ -16,12 +16,14 @@ import { CaseCard } from '../cards/CaseCard'
 type Props = {
   onPublish?: (caseIds: string[]) => void
   onPublishSuccess?: () => void
+  onError?: (error: unknown) => void
   onCancel: () => void
 }
 
 export const CasePublishingList = ({
   onCancel,
   onPublish,
+  onError,
   onPublishSuccess,
 }: Props) => {
   const {
@@ -31,13 +33,20 @@ export const CasePublishingList = ({
   } = usePublishContext()
   const { casesWithPublishingNumber } = publishingState
 
-  const { trigger: publishCases, error: publishError } = usePublishCases({
+  const {
+    trigger: publishCases,
+    error: publishError,
+    isMutating: isPublishing,
+  } = usePublishCases({
     onSuccess: () => {
       removeAllCasesFromSelectedList()
       setCasesWithPublicationNumber([])
       if (onPublishSuccess) {
         onPublishSuccess()
       }
+    },
+    onError: (error) => {
+      onError && onError(error)
     },
   })
 
@@ -77,16 +86,6 @@ export const CasePublishingList = ({
     )
   }
 
-  if (publishError) {
-    return (
-      <AlertMessage
-        type="error"
-        title="Villa kom upp!"
-        message="Ekki tókst að útgefa mál"
-      />
-    )
-  }
-
   const withPublicationNumber = data.cases
     .map((c) => ({
       ...c,
@@ -98,6 +97,15 @@ export const CasePublishingList = ({
 
   return (
     <>
+      {publishError && (
+        <Box marginBottom={3}>
+          <AlertMessage
+            type="error"
+            title="Villa kom upp!"
+            message="Ekki tókst að gefa út mál"
+          />
+        </Box>
+      )}
       <Stack space={3} component="ul">
         {withPublicationNumber.map((c) => (
           <CaseCard
@@ -122,6 +130,7 @@ export const CasePublishingList = ({
           Tilbaka í útgáfu mála
         </Button>
         <Button
+          loading={isPublishing}
           icon="arrowForward"
           onClick={() => {
             if (onPublish) {

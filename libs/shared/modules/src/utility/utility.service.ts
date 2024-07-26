@@ -30,6 +30,7 @@ import {
   AdvertDepartmentDTO,
   AdvertDTO,
   AdvertInvolvedPartyDTO,
+  AdvertStatusDTO,
   AdvertTypeDTO,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
@@ -58,31 +59,33 @@ export class UtilityService implements IUtilityService {
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     @InjectModel(CaseCategoriesDto)
     private caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertStatusDTO)
+    private advertStatusModel: typeof AdvertStatusDTO,
   ) {
     this.logger.info('Using UtilityService')
   }
 
-  @LogAndHandle()
+  @LogAndHandle({ logArgs: false })
   async getNextPublicationNumber(
     departmentId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<number>> {
-    const year = new Date().getFullYear()
+    const now = new Date()
 
-    const caseStatusId = (
-      await this.caseStatusLookup(CaseStatus.ReadyForPublishing)
-    ).unwrap().id
+    const year = now.getFullYear()
+    const janFirst = new Date(year, 0, 1)
 
-    const nextPublicationNumber = await this.caseModel.count({
+    const nextPublicationNumber = await this.advertModel.count({
       distinct: true,
       where: {
-        statusId: caseStatusId,
         departmentId: {
           [Op.eq]: departmentId,
         },
-        year: {
-          [Op.eq]: year,
+        publicationDate: {
+          [Op.gte]: janFirst,
         },
       },
+      transaction,
     })
 
     return ResultWrapper.ok(nextPublicationNumber + 1)
@@ -99,6 +102,23 @@ export class UtilityService implements IUtilityService {
     }
 
     return ResultWrapper.ok(categoryLookup)
+  }
+
+  @LogAndHandle()
+  async advertStatusLookup(
+    status: string,
+  ): Promise<ResultWrapper<AdvertStatusDTO, GenericError>> {
+    const statusLookup = await this.advertStatusModel.findOne({
+      where: {
+        title: status,
+      },
+    })
+
+    if (!statusLookup) {
+      throw new NotFoundException(`Status<${status}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
   }
 
   @LogAndHandle()

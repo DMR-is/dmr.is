@@ -46,6 +46,9 @@ export const CaseTableReady = () => {
       department: department,
       status: CaseStatusEnum.Tilbi,
     },
+    options: {
+      refreshInterval: 1000 * 60,
+    },
   })
 
   if (isLoading) {

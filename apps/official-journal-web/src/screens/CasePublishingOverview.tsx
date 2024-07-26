@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { mutate } from 'swr'
 
 import { Box } from '@island.is/island-ui/core'
 
@@ -14,7 +15,7 @@ import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { CaseDepartments, Routes } from '../lib/constants'
+import { APIRotues, CaseDepartments, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { getStringFromQueryString, Screen } from '../lib/types'
 
@@ -44,6 +45,16 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 
   const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
 
+  const onPublishSuccess = () => {
+    setPublishing(false)
+    const revalidate = `${
+      APIRotues.GetCases
+    }?department=${selectedTab}&status=${encodeURIComponent(
+      CaseStatusEnum.Tilbi,
+    )}`
+    mutate(revalidate)
+  }
+
   const onTabChange = (id: string) => {
     setSelectedTab(id)
 
@@ -67,7 +78,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
         <PublishingContextProvider>
           {publishing && (
             <CasePublishingList
-              onPublishSuccess={() => setPublishing(false)}
+              onPublishSuccess={onPublishSuccess}
               onCancel={() => setPublishing(false)}
             />
           )}
@@ -88,7 +99,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
         <PublishingContextProvider>
           {publishing && (
             <CasePublishingList
-              onPublishSuccess={() => setPublishing(false)}
+              onPublishSuccess={onPublishSuccess}
               onCancel={() => setPublishing(false)}
             />
           )}
@@ -109,7 +120,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
         <PublishingContextProvider>
           {publishing && (
             <CasePublishingList
-              onPublishSuccess={() => setPublishing(false)}
+              onPublishSuccess={onPublishSuccess}
               onCancel={() => setPublishing(false)}
             />
           )}
