@@ -15,7 +15,7 @@ import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import { APIRotues, CaseDepartments, Routes } from '../lib/constants'
+import { APIRotues, CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { getStringFromQueryString, Screen } from '../lib/types'
 
@@ -72,8 +72,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 
   const tabs = [
     {
-      id: CaseDepartments.a.slug,
-      label: CaseDepartments.a.title,
+      id: CaseDepartmentTabs[0].value,
+      label: CaseDepartmentTabs[0].label,
       content: (
         <PublishingContextProvider>
           {publishing && (
@@ -93,8 +93,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
       ),
     },
     {
-      id: CaseDepartments.b.slug,
-      label: CaseDepartments.b.title,
+      id: CaseDepartmentTabs[1].value,
+      label: CaseDepartmentTabs[1].label,
       content: (
         <PublishingContextProvider>
           {publishing && (
@@ -114,8 +114,8 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
       ),
     },
     {
-      id: CaseDepartments.c.slug,
-      label: CaseDepartments.c.title,
+      id: CaseDepartmentTabs[2].value,
+      label: CaseDepartmentTabs[2].label,
       content: (
         <PublishingContextProvider>
           {publishing && (

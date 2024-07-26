@@ -31,21 +31,6 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'C deild', value: 'c-deild', key: 'department' },
 ]
 
-export const CaseDepartments = {
-  a: {
-    title: 'A deild',
-    slug: 'a-deild',
-  },
-  b: {
-    title: 'B deild',
-    slug: 'b-deild',
-  },
-  c: {
-    title: 'C deild',
-    slug: 'c-deild',
-  },
-}
-
 export const defaultFetcher = (url: string) =>
   fetch(url).then((res) => res.json())
 
