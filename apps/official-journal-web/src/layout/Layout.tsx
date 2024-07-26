@@ -11,10 +11,6 @@ import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
 import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
-import {
-  PublishingContext,
-  PublishingContextProvider,
-} from '../context/publishingContext'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
 import type { Screen } from '../lib/types'
