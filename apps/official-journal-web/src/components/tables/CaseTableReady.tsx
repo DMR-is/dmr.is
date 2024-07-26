@@ -67,8 +67,6 @@ export const CaseTableReady = ({
     },
   ]
 
-  console.log({ g: data[0] })
-
   const rows: CaseTableRowProps[] = data.map((row) => ({
     case: row,
     cells: [
