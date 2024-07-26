@@ -34,7 +34,7 @@ type RowProps = {
 const CasePublishingTableRow = ({
   row,
   container,
-  // number,
+  number,
   onReorder,
 }: RowProps) => {
   const controls = useDragControls()
@@ -148,13 +148,19 @@ export const CasePublishingTable = ({ columns }: Props) => {
       const selectedCases = caseData.cases.filter((c) =>
         selectedCaseIds.includes(c.id),
       )
-      const ordered = selectedCaseIds.map((id) =>
-        selectedCases.find((c) => c.id === id),
-      ) as Case[]
-      const casesWithPublicationNumber = ordered.map((c, i) => ({
-        id: c.id,
-        publishingNumber: startingNumber + i,
-      }))
+
+      const ordered = selectedCases.length
+        ? (selectedCaseIds.map((id) =>
+            selectedCases.find((c) => c.id === id),
+          ) as Case[])
+        : []
+
+      const casesWithPublicationNumber = ordered
+        ? ordered.map((c, i) => ({
+            id: c.id,
+            publishingNumber: startingNumber + i,
+          }))
+        : []
       setCasesWithPublicationNumber(casesWithPublicationNumber)
       setSelectedCases(ordered)
     }
