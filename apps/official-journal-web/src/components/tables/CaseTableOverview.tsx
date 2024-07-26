@@ -16,9 +16,9 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'casePublishDate',
-      sortable: false,
+      sortable: true,
       size: 'tiny',
-      children: formatMessage(messages.tables.overview.columns.caseNumber),
+      children: formatMessage(messages.tables.overview.columns.publishDate),
     },
 
     {
@@ -44,15 +44,20 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
     case: row,
     cells: [
       {
-        // children: <Text variant="medium">{formatDate(row.publishedAt)}</Text>,
-        children: <Text variant="medium">{row.caseNumber}</Text>,
+        sortingKey: 'casePublishDate',
+        sortingValue: row.requestedPublicationDate,
+        children: (
+          <Text variant="medium">
+            {formatDate(row.publishedAt || row.requestedPublicationDate)}
+          </Text>
+        ),
       },
       {
         children: <Text variant="medium">{row.status}</Text>, // TODO: Add publication number to case
       },
       {
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.titleTableCell}>
             <Text truncate variant="medium">
               {row.advertType.title} {row.advertTitle}
             </Text>
@@ -61,13 +66,22 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       },
       {
         children: (
-          <Text truncate variant="medium">
-            {row.involvedParty.title}
-          </Text>
+          <div className={styles.typeTableCell}>
+            <Text truncate variant="medium">
+              {row.involvedParty.title}
+            </Text>
+          </div>
         ),
       },
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} paging={paging} />
+  return (
+    <CaseTable
+      columns={columns}
+      rows={rows}
+      paging={paging}
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

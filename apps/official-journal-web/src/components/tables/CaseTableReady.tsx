@@ -50,17 +50,12 @@ export const CaseTableReady = ({
     },
     {
       name: 'casePublicationDate',
-      sortable: false,
+      sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
     },
     {
-      name: 'caseAdvertType',
-      sortable: true,
-      children: formatMessage(messages.tables.general.type),
-    },
-    {
-      name: 'caseName',
+      name: 'caseTitle',
       sortable: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
@@ -105,21 +100,12 @@ export const CaseTableReady = ({
         ),
       },
       {
-        sortingKey: 'caseAdvertType',
-        sortingValue: row.advertType.title,
+        sortingKey: 'caseTitle',
+        sortingValue: row.advertTitle,
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
-              {row.advertType.title}
-            </Text>
-          </div>
-        ),
-      },
-      {
-        children: (
-          <div className={styles.nameTableCell}>
-            <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertType.title} {row.advertTitle}
             </Text>
           </div>
         ),
@@ -135,13 +121,22 @@ export const CaseTableReady = ({
       },
       {
         children: (
-          <Text whiteSpace="nowrap" variant="medium">
-            {row.involvedParty.title}
-          </Text>
+          <div className={styles.typeTableCell}>
+            <Text whiteSpace="nowrap" variant="medium">
+              {row.involvedParty.title}
+            </Text>
+          </div>
         ),
       },
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} modalLink />
+  return (
+    <CaseTable
+      columns={columns}
+      rows={rows}
+      modalLink
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

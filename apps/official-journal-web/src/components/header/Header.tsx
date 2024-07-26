@@ -62,6 +62,7 @@ export const Header = ({ headerWhite, user }: HeaderType) => {
                       <DropdownMenu
                         title={user?.name}
                         icon="chevronDown"
+                        menuLabel={formatMessage(messages.auth.user)}
                         items={[
                           {
                             // href: '#',

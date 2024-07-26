@@ -45,7 +45,7 @@ export type CaseTableRowProps = {
 }
 
 export type Props = {
-  defaultSort?: CaseTableColumnSort
+  defaultSort: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
   paging?: Paging
@@ -65,10 +65,7 @@ export const CaseTable = ({
   modalLink,
   columns,
   rows,
-  defaultSort = {
-    direction: 'asc',
-    key: columns.find((column) => column.sortable)?.name || '',
-  },
+  defaultSort,
   paging,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
