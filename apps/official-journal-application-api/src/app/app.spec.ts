@@ -1,12 +1,10 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
-import { ApplicationModule, HealthModule, PdfModule } from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/modules'
 
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
-import { SequelizeModule } from '@nestjs/sequelize'
-import { SequelizeConfigService } from '@dmr.is/db'
 
 const FILE_NAME = 'client-config.json'
 const TMP_DIR = 'tmp/swagger'
@@ -30,14 +28,7 @@ describe('Swagger documentation', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [
-        SequelizeModule.forRootAsync({
-          useClass: SequelizeConfigService,
-        }),
-        ApplicationModule,
-        HealthModule,
-        PdfModule,
-      ],
+      imports: [HealthModule],
     }).compile()
     app = module.createNestApplication()
   })
