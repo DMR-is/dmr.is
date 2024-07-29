@@ -20,6 +20,7 @@ export type SearchParams = {
 }
 
 export type CaseOverviewSearchParams = SearchParams & {
+  id?: string
   department?: string
   status?: string
   type?: string

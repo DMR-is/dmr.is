@@ -1,7 +1,19 @@
-import { Checkbox, Text } from '@island.is/island-ui/core'
+import { useRouter } from 'next/router'
+import { ChangeEvent } from 'react'
 
-import { Case, Paging } from '../../gen/fetch'
+import {
+  AlertMessage,
+  Checkbox,
+  SkeletonLoader,
+  Text,
+} from '@island.is/island-ui/core'
+
+import { CaseStatusEnum } from '../../gen/fetch'
+import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { usePublishContext } from '../../hooks/usePublishContext'
+import { messages as errorMessages } from '../../lib/messages/errors'
+import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
@@ -12,36 +24,83 @@ import {
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
-type Props = {
-  data: Case[]
-  paging: Paging
-  selectedCases: Case[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
-  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
-}
-
-export const CaseTableReady = ({
-  data,
-  setSelectedCases,
-  selectedCases,
-  setCasesReadyForPublication,
-}: Props) => {
+export const CaseTableReady = () => {
   const { formatMessage } = useFormatMessage()
+  const {
+    publishingState,
+    addCaseToSelectedList,
+    removeCaseFromSelectedList,
+    addManyCasesToSelectedList,
+    removeAllCasesFromSelectedList,
+  } = usePublishContext()
+  const { selectedCaseIds } = publishingState
+  const router = useRouter()
+  const department = getStringFromQueryString(router.query.department)
+
+  const {
+    data: caseData,
+    isLoading,
+    error,
+  } = useCases({
+    params: {
+      department: department,
+      status: CaseStatusEnum.Tilbi,
+    },
+    options: {
+      refreshInterval: 1000 * 60,
+    },
+  })
+
+  if (isLoading) {
+    return <SkeletonLoader repeat={3} height={44} space={2} />
+  }
+
+  if (error) {
+    return (
+      <AlertMessage
+        type="error"
+        title={formatMessage(errorMessages.error)}
+        message={formatMessage(errorMessages.error)}
+      />
+    )
+  }
+
+  if (!caseData) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Engin mál fundust"
+        message="Mál birtast þegar þau eru færð í stöðuna 'Tilbúið'"
+      />
+    )
+  }
+
+  const { cases } = caseData
+
+  const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      addManyCasesToSelectedList(cases.map((row) => row.id))
+    } else {
+      removeAllCasesFromSelectedList()
+    }
+  }
+
+  const handleToggleRow = (e: ChangeEvent<HTMLInputElement>) => {
+    const { checked } = e.target
+
+    if (checked) {
+      addCaseToSelectedList(e.target.value)
+    } else {
+      removeCaseFromSelectedList(e.target.value)
+    }
+  }
 
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
       sortable: false,
       size: 'tiny',
-      children: (
-        <Checkbox
-          onChange={(e) => {
-            setSelectedCases(e.target.checked ? data : [])
-
-            setCasesReadyForPublication(e.target.checked ? data : [])
-          }}
-        />
-      ),
+      children: <Checkbox defaultChecked={false} onChange={handleToggleAll} />,
     },
     {
       name: 'caseLabels',
@@ -49,8 +108,8 @@ export const CaseTableReady = ({
       size: 'tiny',
     },
     {
-      name: 'casePublicationDate',
-      sortable: true,
+      name: 'casePublishDate',
+      sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
     },
@@ -67,75 +126,66 @@ export const CaseTableReady = ({
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => ({
-    case: row,
-    cells: [
-      {
-        children: (
-          <Checkbox
-            checked={selectedCases.some((c) => c.id === row.id)}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setSelectedCases((prev) => {
-                  const cases = prev.concat(row)
-                  setCasesReadyForPublication(cases)
-                  return cases
-                })
-              } else {
-                setSelectedCases((prev) => {
-                  const cases = prev.filter((c) => c.id !== row.id)
-                  setCasesReadyForPublication(cases)
-                  return cases
-                })
-              }
-            }}
-          />
-        ),
-      },
-      {
-        children: row.fastTrack && (
-          <div className={styles.iconWrapper}>
-            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
-          </div>
-        ),
-      },
-      {
-        sortingKey: 'caseTitle',
-        sortingValue: row.advertTitle,
-        children: (
-          <div className={styles.titleTableCell} title={row.advertTitle}>
-            <Text truncate variant="medium">
-              {row.advertType.title} {row.advertTitle}
+  const rows: CaseTableRowProps[] = cases.map((row) => {
+    return {
+      case: row,
+      cells: [
+        {
+          children: (
+            <Checkbox
+              id={row.id}
+              name={`case-checkbox-${row.id}`}
+              defaultChecked={false}
+              onChange={handleToggleRow}
+              checked={selectedCaseIds.includes(row.id)}
+              value={row.id}
+            />
+          ),
+        },
+        {
+          children: row.fastTrack && (
+            <div className={styles.iconWrapper}>
+              {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
+            </div>
+          ),
+        },
+        {
+          sortingKey: 'caseAdvertType',
+          sortingValue: row.advertType.title,
+          children: (
+            <div className={styles.titleTableCell}>
+              <Text truncate variant="medium">
+                {row.advertType.title} {row.advertTitle}
+              </Text>
+            </div>
+          ),
+        },
+        {
+          sortingKey: 'casePublishDate',
+          sortingValue: row.requestedPublicationDate,
+          children: (
+            <Text variant="medium">
+              {row.requestedPublicationDate
+                ? formatDate(row.requestedPublicationDate)
+                : null}
             </Text>
-          </div>
-        ),
-      },
-      {
-        children: (
-          <Text variant="medium">
-            {row.requestedPublicationDate
-              ? formatDate(row.requestedPublicationDate)
-              : null}
-          </Text>
-        ),
-      },
-      {
-        children: (
-          <div className={styles.typeTableCell}>
+          ),
+        },
+        {
+          children: (
             <Text whiteSpace="nowrap" variant="medium">
               {row.involvedParty.title}
             </Text>
-          </div>
-        ),
-      },
-    ],
-  }))
+          ),
+        },
+      ],
+    }
+  })
 
   return (
     <CaseTable
       columns={columns}
       rows={rows}
-      modalLink
       defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
     />
   )

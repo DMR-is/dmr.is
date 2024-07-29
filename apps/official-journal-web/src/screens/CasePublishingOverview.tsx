@@ -1,31 +1,21 @@
-import { useState } from 'react'
-import useSWRMutation from 'swr/mutation'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { mutate } from 'swr'
 
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-} from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core'
 
+import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
 import { CasePublishingList } from '../components/case-publishing-list/CasePublishingList'
 import { CasePublishingTab } from '../components/case-publishing-tab/CasePublishingTab'
 import { Meta } from '../components/meta/Meta'
-import { Section } from '../components/section/Section'
-import { Tab, Tabs } from '../components/tabs/Tabs'
+import { Tabs } from '../components/tabs/Tabs'
+import { PublishingContextProvider } from '../context/publishingContext'
 import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
-import { useNotificationContext } from '../hooks/useNotificationContext'
-import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
-import {
-  APIRotues,
-  CaseDepartmentTabs,
-  publishCases,
-  Routes,
-} from '../lib/constants'
+import { APIRotues, CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { getStringFromQueryString, Screen } from '../lib/types'
 
@@ -34,116 +24,117 @@ type Props = {
   paging: Paging
 }
 
-enum CasePublishViews {
-  Overview = 'overview',
-  Confirm = 'confirm',
-}
-
 const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
-  const { add, get } = useQueryParams()
-
+  const router = useRouter()
   const { formatMessage } = useFormatMessage()
 
-  const { setNotifications, clearNotifications } = useNotificationContext()
+  const initalDepartment = router.query.department
+    ? (router.query.department as string)
+    : 'a-deild'
 
-  const [selectedTab, setSelectedTab] = useState(get('tab'))
+  const { setEnableDepartments, setEnableCategories, setEnableTypes } =
+    useFilterContext()
 
-  const [screen, setScreen] = useState(CasePublishViews.Overview)
+  const [publishing, setPublishing] = useState<boolean>(false)
 
-  const [casesToPublish, setCasesToPublish] = useState<Case[]>([])
+  useEffect(() => {
+    setEnableDepartments(true)
+    setEnableCategories(true)
+    setEnableTypes(true)
+  }, [])
 
-  const [departmentACases, setDepartmentACases] = useState<Case[]>([])
-  const [
-    departmentACasesReadyForPublication,
-    setDepartmentACasesReadyForPublication,
-  ] = useState<Case[]>([])
+  const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
 
-  const [departmentBCases, setDepartmentBCases] = useState<Case[]>([])
-  const [
-    departmentBCasesReadyForPublication,
-    setDepartmentBCasesReadyForPublication,
-  ] = useState<Case[]>([])
-
-  const [departmentCCases, setDepartmentCCases] = useState<Case[]>([])
-  const [
-    departmentCCasesReadyForPublication,
-    setDepartmentCCasesReadyForPublication,
-  ] = useState<Case[]>([])
+  const onPublishSuccess = () => {
+    setPublishing(false)
+    const revalidate = `${
+      APIRotues.GetCases
+    }?department=${selectedTab}&status=${encodeURIComponent(
+      CaseStatusEnum.Tilbi,
+    )}`
+    mutate(revalidate)
+  }
 
   const onTabChange = (id: string) => {
     setSelectedTab(id)
-    add({
-      tab: id,
-    })
+
+    router.push(
+      {
+        query: {
+          ...router.query,
+          department: id,
+        },
+      },
+      undefined,
+      { shallow: true },
+    )
   }
 
-  const { trigger } = useSWRMutation(APIRotues.PublishCases, publishCases)
-
-  const backToOverview = () => {
-    setScreen(CasePublishViews.Overview)
-  }
-
-  const proceedToPublishing = (selectedCases: Case[]) => {
-    setCasesToPublish(selectedCases)
-    setScreen(CasePublishViews.Confirm)
-    clearNotifications()
-    setNotifications({
-      title: formatMessage(messages.notifications.warning.title),
-      message: formatMessage(messages.notifications.warning.message),
-      type: 'warning',
-    })
-  }
-
-  const handlePublishCases = () => {
-    trigger({
-      caseIds: casesToPublish.map((c) => c.id),
-    })
-
-    clearNotifications()
-    setNotifications({
-      title: formatMessage(messages.notifications.success.title),
-      message: formatMessage(messages.notifications.success.message),
-      type: 'success',
-    })
-    setCasesToPublish([])
-  }
-
-  const tabs: Tab[] = CaseDepartmentTabs.map((tab) => ({
-    id: tab.value,
-    label: tab.label,
-    content:
-      tab.value === 'a-deild' ? (
-        <CasePublishingTab
-          casesReadyForPublication={departmentACasesReadyForPublication}
-          setCasesReadyForPublication={setDepartmentACasesReadyForPublication}
-          selectedCases={departmentACases}
-          setSelectedCases={setDepartmentACases}
-          onContinue={proceedToPublishing}
-          cases={cases}
-          paging={paging}
-        />
-      ) : tab.value === 'b-deild' ? (
-        <CasePublishingTab
-          casesReadyForPublication={departmentBCasesReadyForPublication}
-          setCasesReadyForPublication={setDepartmentBCasesReadyForPublication}
-          selectedCases={departmentBCases}
-          setSelectedCases={setDepartmentBCases}
-          onContinue={proceedToPublishing}
-          cases={cases}
-          paging={paging}
-        />
-      ) : tab.value === 'c-deild' ? (
-        <CasePublishingTab
-          casesReadyForPublication={departmentCCasesReadyForPublication}
-          setCasesReadyForPublication={setDepartmentCCasesReadyForPublication}
-          selectedCases={departmentCCases}
-          setSelectedCases={setDepartmentCCases}
-          onContinue={proceedToPublishing}
-          cases={cases}
-          paging={paging}
-        />
-      ) : null,
-  }))
+  const tabs = [
+    {
+      id: CaseDepartmentTabs[0].value,
+      label: CaseDepartmentTabs[0].label,
+      content: (
+        <PublishingContextProvider>
+          {publishing && (
+            <CasePublishingList
+              onPublishSuccess={onPublishSuccess}
+              onCancel={() => setPublishing(false)}
+            />
+          )}
+          <Box hidden={publishing}>
+            <CasePublishingTab
+              proceedToPublishing={setPublishing}
+              cases={cases}
+              paging={paging}
+            />
+          </Box>
+        </PublishingContextProvider>
+      ),
+    },
+    {
+      id: CaseDepartmentTabs[1].value,
+      label: CaseDepartmentTabs[1].label,
+      content: (
+        <PublishingContextProvider>
+          {publishing && (
+            <CasePublishingList
+              onPublishSuccess={onPublishSuccess}
+              onCancel={() => setPublishing(false)}
+            />
+          )}
+          <Box hidden={publishing}>
+            <CasePublishingTab
+              proceedToPublishing={setPublishing}
+              cases={cases}
+              paging={paging}
+            />
+          </Box>
+        </PublishingContextProvider>
+      ),
+    },
+    {
+      id: CaseDepartmentTabs[2].value,
+      label: CaseDepartmentTabs[2].label,
+      content: (
+        <PublishingContextProvider>
+          {publishing && (
+            <CasePublishingList
+              onPublishSuccess={onPublishSuccess}
+              onCancel={() => setPublishing(false)}
+            />
+          )}
+          <Box hidden={publishing}>
+            <CasePublishingTab
+              proceedToPublishing={setPublishing}
+              cases={cases}
+              paging={paging}
+            />
+          </Box>
+        </PublishingContextProvider>
+      ),
+    },
+  ]
 
   return (
     <>
@@ -152,51 +143,16 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
           messages.breadcrumbs.casePublishing,
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
       />
-      <Section paddingTop="off">
-        <GridContainer>
-          <GridRow rowGap={['p2', 3]}>
-            <GridColumn
-              paddingTop={2}
-              offset={['0', '0', '0', '1/12']}
-              span={[
-                '12/12',
-                '12/12',
-                '12/12',
-                screen === CasePublishViews.Confirm ? '7/12' : '10/12',
-              ]}
-            >
-              {screen === CasePublishViews.Confirm ? (
-                <>
-                  <CasePublishingList
-                    cases={cases.filter((cs) =>
-                      casesToPublish.find((c) => c.id === cs.id),
-                    )}
-                  />
-                  <Box
-                    marginTop={3}
-                    display="flex"
-                    justifyContent="spaceBetween"
-                  >
-                    <Button onClick={backToOverview} variant="ghost">
-                      {formatMessage(messages.general.backToPublishing)}
-                    </Button>
-                    <Button onClick={handlePublishCases} icon="arrowForward">
-                      {formatMessage(messages.general.publishAllCases)}
-                    </Button>
-                  </Box>
-                </>
-              ) : (
-                <Tabs
-                  onTabChange={onTabChange}
-                  selectedTab={selectedTab}
-                  tabs={tabs}
-                  label={formatMessage(messages.general.departments)}
-                />
-              )}
-            </GridColumn>
-          </GridRow>
-        </GridContainer>
-      </Section>
+
+      <CaseOverviewGrid>
+        <Tabs
+          hideTablist={publishing}
+          label="Veldu deild"
+          selectedTab={selectedTab}
+          tabs={tabs}
+          onTabChange={(id) => onTabChange(id)}
+        />
+      </CaseOverviewGrid>
     </>
   )
 }

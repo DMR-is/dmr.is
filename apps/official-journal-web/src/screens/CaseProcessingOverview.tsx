@@ -52,7 +52,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   }, [])
 
   const [selectedTab, setSelectedTab] = useState<CaseStatusEnum>(
-    CaseStatusEnum.Innsent,
+    (router.query.status as CaseStatusEnum) ?? CaseStatusEnum.Innsent,
   )
 
   const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({

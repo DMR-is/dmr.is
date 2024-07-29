@@ -11,6 +11,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetNextPublicationNumberResponse,
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
@@ -26,7 +27,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -39,6 +40,11 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getNextPublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<GetNextPublicationNumberResponse, GenericError>> {
+    throw new Error('Method not implemented.')
   }
   tags(): Promise<ResultWrapper<GetTagsResponse>> {
     throw new Error('Method not implemented.')

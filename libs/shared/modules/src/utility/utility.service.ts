@@ -3,8 +3,8 @@ import { Filenames } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+import { CaseStatus, CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -29,6 +29,7 @@ import {
   AdvertDepartmentDTO,
   AdvertDTO,
   AdvertInvolvedPartyDTO,
+  AdvertStatusDTO,
   AdvertTypeDTO,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
@@ -57,8 +58,36 @@ export class UtilityService implements IUtilityService {
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     @InjectModel(CaseCategoriesDto)
     private caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertStatusDTO)
+    private advertStatusModel: typeof AdvertStatusDTO,
   ) {
     this.logger.info('Using UtilityService')
+  }
+
+  @LogAndHandle({ logArgs: false })
+  async getNextPublicationNumber(
+    departmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<number>> {
+    const now = new Date()
+
+    const year = now.getFullYear()
+    const janFirst = new Date(year, 0, 1)
+
+    const nextPublicationNumber = await this.advertModel.count({
+      distinct: true,
+      where: {
+        departmentId: {
+          [Op.eq]: departmentId,
+        },
+        publicationDate: {
+          [Op.gte]: janFirst,
+        },
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok(nextPublicationNumber + 1)
   }
 
   @LogAndHandle()
@@ -72,6 +101,23 @@ export class UtilityService implements IUtilityService {
     }
 
     return ResultWrapper.ok(categoryLookup)
+  }
+
+  @LogAndHandle()
+  async advertStatusLookup(
+    status: string,
+  ): Promise<ResultWrapper<AdvertStatusDTO, GenericError>> {
+    const statusLookup = await this.advertStatusModel.findOne({
+      where: {
+        title: status,
+      },
+    })
+
+    if (!statusLookup) {
+      throw new NotFoundException(`Status<${status}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
   }
 
   @LogAndHandle()
@@ -99,7 +145,7 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
-  async getNextSerialNumber(
+  async getNextCaseNumber(
     departmentId: string,
     publicationYear: number,
   ): Promise<ResultWrapper<number>> {

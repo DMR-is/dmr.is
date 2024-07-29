@@ -2,6 +2,9 @@ import { Op } from 'sequelize'
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
 type WhereClause = {
+  id?: {
+    [Op.in]: string[]
+  }
   advertTitle?: {
     [Op.iLike]: string
   }
@@ -31,6 +34,12 @@ export const caseParameters = (
   const whereClause: WhereClause = {}
 
   // Check and add each parameter to the where clause
+  if (params?.id !== undefined) {
+    whereClause.id = {
+      [Op.in]: params.id,
+    }
+  }
+
   if (params?.applicationId !== undefined) {
     whereClause.applicationId = params.applicationId
   }

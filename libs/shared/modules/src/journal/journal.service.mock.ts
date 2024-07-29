@@ -15,6 +15,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  CreateAdvert,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -54,7 +55,7 @@ export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
   }
-  create(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
+  create(model: CreateAdvert): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
   updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {

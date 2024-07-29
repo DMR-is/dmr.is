@@ -23,6 +23,7 @@ type Props = {
   selectedTab: string
   onTabChange: (id: string) => void
   onlyRenderSelectedTab?: boolean
+  hideTablist?: boolean
   label: string
 }
 
@@ -31,6 +32,7 @@ export const Tabs = ({
   selectedTab,
   onTabChange,
   onlyRenderSelectedTab,
+  hideTablist = false,
   label,
 }: Props) => {
   if (onlyRenderSelectedTab && !tabs.every(({ id }) => isDefined(id))) {
@@ -52,23 +54,25 @@ export const Tabs = ({
     <GridContainer position="relative">
       <GridRow>
         <GridColumn span={['12/12', '12/12', '12/12', '12/12', '9/12']}>
-          <TabList {...tab} className={styles.tabsTablist} aria-label={label}>
-            {tabs.map(({ label, id }, index) => {
-              const isActive = tab.currentId === id
-              return (
-                <Tab
-                  {...tab}
-                  key={id ?? index}
-                  id={`${id ?? index}`}
-                  className={styles.tabsTab({ active: isActive })}
-                >
-                  <Text fontWeight={isActive ? 'medium' : 'regular'}>
-                    {label}
-                  </Text>
-                </Tab>
-              )
-            })}
-          </TabList>
+          <Box hidden={hideTablist}>
+            <TabList {...tab} className={styles.tabsTablist} aria-label={label}>
+              {tabs.map(({ label, id }, index) => {
+                const isActive = tab.currentId === id
+                return (
+                  <Tab
+                    {...tab}
+                    key={id ?? index}
+                    id={`${id ?? index}`}
+                    className={styles.tabsTab({ active: isActive })}
+                  >
+                    <Text fontWeight={isActive ? 'medium' : 'regular'}>
+                      {label}
+                    </Text>
+                  </Tab>
+                )
+              })}
+            </TabList>
+          </Box>
         </GridColumn>
       </GridRow>
       <GridColumn>

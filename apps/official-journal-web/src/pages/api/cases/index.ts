@@ -10,6 +10,7 @@ class GetCasesHandler {
     const dmrClient = createDmrClient()
 
     const cases = await dmrClient.getCases({
+      id: getStringFromQueryString(req.query.id),
       search: getStringFromQueryString(req.query.search),
       category: getStringFromQueryString(req.query.category),
       type: getStringFromQueryString(req.query.type),

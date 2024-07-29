@@ -2,36 +2,28 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { getStringFromQueryString } from '../../../lib/types'
 
-class PublishCasesHandler {
+class GetNextPublicationNumberHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const { caseIds } = req.body
+    const departmentId = getStringFromQueryString(req.query.departmentId)
 
-    if (!caseIds) {
-      return res.status(400).end()
+    if (!departmentId) {
+      return res.status(400).json({ error: 'departmentId is required' })
     }
 
-    if (!Array.isArray(caseIds)) {
-      return res.status(400).end()
-    }
-
-    if (!caseIds.length) {
-      return res.status(400).end()
-    }
-
-    await dmrClient.publish({
-      postCasePublishBody: {
-        caseIds: req.body.caseIds.join(','),
-      },
+    const response = await dmrClient.getNextPublicationNumber({
+      departmentId,
     })
-    return res.status(204).end()
+
+    return res.status(200).json(response)
   }
 }
 
-const instance = new PublishCasesHandler()
+const instance = new GetNextPublicationNumberHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)
