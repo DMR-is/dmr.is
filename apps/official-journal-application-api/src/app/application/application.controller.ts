@@ -167,6 +167,12 @@ export class ApplicationController {
   @ApiOkResponse({
     type: GetCaseCommentsResponse,
   })
+  @ApiParam({
+    type: String,
+    name: 'id',
+    description: 'Id of the application to get comments.',
+    required: true,
+  })
   @LogMethod()
   async getComments(
     @Param('id') applicationId: string,
@@ -183,6 +189,12 @@ export class ApplicationController {
   @ApiOperation({
     operationId: 'postComment',
     summary: 'Add comment to application.',
+  })
+  @ApiParam({
+    type: String,
+    name: 'id',
+    description: 'Id of the application to post comment.',
+    required: true,
   })
   @LogMethod()
   async postComment(

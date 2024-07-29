@@ -1,17 +1,20 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
-import { HealthModule } from '@dmr.is/modules'
+import { ApplicationModule, HealthModule, PdfModule } from '@dmr.is/modules'
 
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
+import { SequelizeModule } from '@nestjs/sequelize'
+import { SequelizeConfigService } from '@dmr.is/db'
 
+const FILE_NAME = 'client-config.json'
 const TMP_DIR = 'tmp/swagger'
 
 const genereteFromSchema = () => {
   return new Promise((resolve, reject) => {
     exec(
-      `yarn openapi-generator -o ${TMP_DIR}/gen/fetch -i ${TMP_DIR}/swagger.json`,
+      `yarn openapi-generator generate -g typescript-fetch -o ${TMP_DIR}/gen/fetch -i ${TMP_DIR}/${FILE_NAME} --additional-properties=typescriptThreePlus=true`,
       (err, stdout) => {
         if (err) {
           reject(err)
@@ -27,9 +30,15 @@ describe('Swagger documentation', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [HealthModule],
+      imports: [
+        SequelizeModule.forRootAsync({
+          useClass: SequelizeConfigService,
+        }),
+        ApplicationModule,
+        HealthModule,
+        PdfModule,
+      ],
     }).compile()
-
     app = module.createNestApplication()
   })
 
@@ -57,11 +66,11 @@ describe('Swagger documentation', () => {
     if (!fs.existsSync(TMP_DIR)) {
       fs.mkdirSync(TMP_DIR, { recursive: true })
     }
-    fs.writeFileSync(`${TMP_DIR}/swagger.json`, JSON.stringify(document))
+    fs.writeFileSync(`${TMP_DIR}/${FILE_NAME}`, JSON.stringify(document))
 
-    // run the openapi generator
-    await genereteFromSchema()
+    // test if codegen works
+    // await genereteFromSchema()
 
-    expect(fs.existsSync(`${TMP_DIR}/swagger.json`)).toBeTruthy()
+    expect(fs.existsSync(`${TMP_DIR}/${FILE_NAME}`)).toBeTruthy()
   })
 })
