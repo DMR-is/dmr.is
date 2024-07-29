@@ -1,6 +1,32 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/cases/nextPublicationNumber/{departmentId}": {
+      "get": {
+        "operationId": "getNextPublicationNumber",
+        "summary": "Get next publication number for department",
+        "parameters": [
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetNextPublicationNumberResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/departments": {
       "get": {
         "operationId": "getDepartments",
@@ -153,6 +179,13 @@
         "operationId": "editorialOverview",
         "summary": "Get editorial overview",
         "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the case to get.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
           {
             "name": "search",
             "description": "String to search for in cases.",
@@ -578,6 +611,13 @@
         "summary": "Get cases",
         "parameters": [
           {
+            "name": "id",
+            "description": "ID of the case to get.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "search",
             "description": "String to search for in cases.",
             "required": false,
@@ -878,6 +918,17 @@
   "servers": [],
   "components": {
     "schemas": {
+      "GetNextPublicationNumberResponse": {
+        "type": "object",
+        "properties": {
+          "publicationNumber": {
+            "type": "number",
+            "description": "Next publication number",
+            "example": 1
+          }
+        },
+        "required": ["publicationNumber"]
+      },
       "Department": {
         "type": "object",
         "properties": {
@@ -1683,10 +1734,9 @@
         "type": "object",
         "properties": {
           "caseIds": {
+            "type": "string",
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "description": "Id of the case to publish.",
-            "type": "array",
-            "items": { "type": "string" }
+            "description": "Id of the case to publish."
           }
         },
         "required": ["caseIds"]

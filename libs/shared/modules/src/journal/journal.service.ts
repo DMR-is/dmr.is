@@ -1,11 +1,13 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
   AdvertType,
   Category,
+  CreateAdvert,
   DefaultSearchParams,
   Department,
   GetAdvertResponse,
@@ -54,6 +56,7 @@ import {
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,
+  AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
   AdvertDTO,
@@ -87,38 +90,63 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertStatusDTO)
     private advertStatusModel: typeof AdvertStatusDTO /* @InjectModel(AdvertStatusHistoryDTO)
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
+
+    @InjectModel(AdvertCategoriesDTO)
+    private advertCategoriesModel: typeof AdvertCategoriesDTO,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
 
-  @LogAndHandle()
-  async create(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
-    if (!model || !model.department) {
-      throw new BadRequestException()
-    }
+  @LogAndHandle({ logArgs: false })
+  async create(
+    model: CreateAdvert,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertResponse>> {
+    const publicationYear = model.publicationDate.getFullYear()
+    const localId = model.id ? model.id : uuid()
 
     const ad = await this.advertModel.create(
       {
-        departmentId: model.department?.id,
-        typeId: model.type?.id,
+        id: localId,
+        departmentId: model.departmentId,
+        typeId: model.typeId,
+        statusId: model.statusId,
+        involvedPartyId: model.involvedPartyId,
         subject: model.subject,
-        serialNumber: model.publicationNumber?.number,
-        publicationYear: model.publicationNumber?.year,
-        signatureDate: model.signatureDate,
+        serialNumber: model.publicationNumber,
+        publicationYear: publicationYear,
         publicationDate: model.publicationDate,
-        documentHtml: model.document.html,
-        documentPdfUrl: model.document.pdfUrl,
-        isLegacy: model.document.isLegacy,
-        involvedPartyId: model.involvedParty?.id,
-        statusId: model.status,
+        signatureDate: model.signatureDate,
+        documentHtml: model.documentHtml,
+        documentPdfUrl: model.documentPdfUrl,
+        isLegacy: model.isLegacy,
       },
       {
-        returning: ['id'],
+        transaction,
       },
     )
 
-    const newlyCreatedAd = await this.advertModel.findByPk(ad.id, {
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: model.categoryIds,
+      },
+      transaction,
+    })
+
+    await Promise.all(
+      categories.map(async (c) => {
+        await this.advertCategoriesModel.create(
+          {
+            advert_id: ad.id,
+            category_id: c.id,
+          },
+          { transaction },
+        )
+      }),
+    )
+
+    const advert = await this.advertModel.findByPk(ad.id, {
       include: [
         AdvertTypeDTO,
         AdvertDepartmentDTO,
@@ -127,13 +155,20 @@ export class JournalService implements IJournalService {
         AdvertAttachmentsDTO,
         AdvertCategoryDTO,
       ],
+      transaction,
     })
 
-    if (!newlyCreatedAd) {
-      throw new InternalServerErrorException()
+    this.logger.info(`Advert created: ${ad.id}`)
+
+    if (!advert) {
+      throw new InternalServerErrorException(
+        `Could not find advert<${ad.id}> after creation`,
+      )
     }
 
-    return ResultWrapper.ok({ advert: advertMigrate(newlyCreatedAd) })
+    this.logger.info(`Advert found: ${advert.id}`)
+
+    return ResultWrapper.ok({ advert: advertMigrate(advert) })
   }
 
   @LogAndHandle()
@@ -343,16 +378,22 @@ export class JournalService implements IJournalService {
   @LogAndHandle()
   async insertCategory(
     model: Category,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
 
-    const category = await this.advertCategoryModel.create({
-      title: model.title,
-      slug: model.slug,
-      mainCategoryID: model.mainCategory?.id,
-    })
+    const category = await this.advertCategoryModel.create(
+      {
+        title: model.title,
+        slug: model.slug,
+        mainCategoryID: model.mainCategory?.id,
+      },
+      {
+        transaction,
+      },
+    )
 
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }

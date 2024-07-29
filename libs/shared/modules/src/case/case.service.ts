@@ -17,6 +17,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
@@ -46,6 +47,7 @@ import { IApplicationService } from '../application/application.service.interfac
 import { ICommentService } from '../comment/comment.service.interface'
 import {
   advertCategoryMigrate,
+  advertStatusMigrate,
   caseParameters,
   counterResult,
 } from '../helpers'
@@ -437,7 +439,28 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
+  async getNextPublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
+    const doesDepartmentExist = (
+      await this.utilityService.departmentLookup(departmentId)
+    ).unwrap()
+
+    const publicationNumber = (
+      await this.utilityService.getNextPublicationNumber(doesDepartmentExist.id)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      publicationNumber,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async publish(
+    body: PostCasePublishBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
@@ -450,86 +473,67 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatus.Published)
     ).unwrap()
 
-    await this.sequelize.transaction(async (transaction) => {
-      await this.caseModel.update(
-        {
-          publishedAt: now,
-          statusId: caseStatus.id,
-        },
-        {
-          where: {
-            id: {
-              [Op.in]: caseIds,
-            },
+    await this.caseModel.update(
+      {
+        publishedAt: now,
+        statusId: caseStatus.id,
+      },
+      {
+        where: {
+          id: {
+            [Op.in]: caseIds,
           },
-          transaction: transaction,
         },
-      )
+        transaction: transaction,
+      },
+    )
 
-      await Promise.all(
-        caseIds.map(async (caseId) => {
-          const caseWithAdvert = (
-            await this.utilityService.getCaseWithAdvert(caseId)
-          ).unwrap()
+    await Promise.all(
+      caseIds.map(async (caseId) => {
+        const caseWithAdvert = (
+          await this.utilityService.getCaseWithAdvert(caseId)
+        ).unwrap()
 
-          const { activeCase, advert } = caseWithAdvert
-          if (!advert.type) {
-            return
-          }
+        const { activeCase, advert } = caseWithAdvert
 
-          const now = new Date()
-          const year = now.getFullYear()
-          const number = (
-            await this.utilityService.getNextSerialNumber(
-              activeCase.advertDepartment.id,
-              year,
-            )
-          ).unwrap()
+        const now = new Date()
+        const number = (
+          await this.utilityService.getNextPublicationNumber(
+            activeCase.advertDepartment.id,
+            transaction,
+          )
+        ).unwrap()
 
-          const advertId = uuid()
-          await this.journalService.create({
+        const advertStatus = (
+          await this.utilityService.advertStatusLookup(AdvertStatus.Published)
+        ).unwrap()
+
+        if (!advert.signatureDate) {
+          throw new BadRequestException('Signature date is required')
+        }
+
+        const advertId = uuid()
+        await this.journalService.create(
+          {
             id: advertId,
-            department: activeCase.advertDepartment,
-            type: advert.type,
-            subject: advert.type.title,
-            title: activeCase.advertTitle,
-            status: '312F62ED-B47A-4A1A-87A4-42B70E8BE4CA' as AdvertStatus,
-            publicationNumber: {
-              year: year,
-              number: number,
-              full: `${number}/${year}`,
-            },
-            createdDate: now.toISOString(),
-            updatedDate: now.toISOString(),
-            signatureDate: advert.signatureDate,
-            publicationDate: now.toISOString(),
-            categories: advert.categories,
-            involvedParty: {
-              id: 'A2A33C95-45CE-4540-BD56-12D964B7699B',
-              title: 'Reykjavíkurborg',
-              slug: 'reykjavikurborg',
-            },
-            document: {
-              html: advert.documents.full,
-              isLegacy: false,
-              pdfUrl: null,
-            },
-            signature: null,
-            attachments: [],
-          })
-        }),
-      )
-
-      // for each case, create a comment
-
-      // for each case insert advert
-
-      // caseIds.forEach(async (caseId) => {
-      //   const application = await this.case(caseId)
-
-      //    await this.journalService.insertAdvert({})
-      // })
-    })
+            departmentId: activeCase.advertDepartment.id,
+            typeId: activeCase.advertType.id,
+            involvedPartyId: activeCase.involvedParty.id,
+            categoryIds: activeCase.advertCategories.map((c) => c.id),
+            statusId: advertStatus.id,
+            subject: activeCase.advertTitle,
+            publicationNumber: number,
+            publicationDate: now,
+            signatureDate: new Date(advert.signatureDate),
+            isLegacy: activeCase.isLegacy,
+            documentHtml: advert.documents.full,
+            documentPdfUrl: '',
+            attachments: advert.attachments.map((a) => a.url),
+          },
+          transaction,
+        )
+      }),
+    )
 
     return ResultWrapper.ok()
   }

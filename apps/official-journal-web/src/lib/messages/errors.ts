@@ -1,6 +1,11 @@
 import { defineMessages } from 'react-intl'
 
 export const messages = defineMessages({
+  error: {
+    id: 'web.page.errors.error',
+    defaultMessage: 'Villa kom upp',
+    description: 'Error',
+  },
   noDataTitle: {
     id: 'web.page.errors.noDataTitle',
     defaultMessage: 'Villa kom upp',

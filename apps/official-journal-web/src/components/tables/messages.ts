@@ -158,6 +158,11 @@ export const messages = {
           defaultMessage: 'Stofnun',
           description: 'Institution column',
         },
+        type: {
+          id: 'web.components.tables:selectedCases.columns.type',
+          defaultMessage: 'Tegund',
+          description: 'Type column',
+        },
       }),
     },
     overview: {

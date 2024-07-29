@@ -14,6 +14,7 @@ import {
   GetCasesReponse,
   GetCategoriesResponse,
   GetDepartmentsResponse,
+  GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
   PostCaseComment,
@@ -55,6 +56,21 @@ export class CaseController {
     @Inject(ICommentService)
     private readonly caseCommentService: ICommentService,
   ) {}
+
+  @Route({
+    path: 'nextPublicationNumber/:departmentId',
+    operationId: 'getNextPublicationNumber',
+    summary: 'Get next publication number for department',
+    responseType: GetNextPublicationNumberResponse,
+    params: [{ name: 'departmentId', type: 'string', required: true }],
+  })
+  async getNextPublicationNumber(
+    @Param('departmentId') departmentId: string,
+  ): Promise<GetNextPublicationNumberResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getNextPublicationNumber(departmentId),
+    )
+  }
 
   @Route({
     path: 'departments',
