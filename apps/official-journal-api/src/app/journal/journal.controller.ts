@@ -1,8 +1,7 @@
-import { LogMethod, Route } from '@dmr.is/decorators'
+import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IJournalService } from '@dmr.is/modules'
 import {
-  AdvertNotFound,
   DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -22,8 +21,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiNotFoundResponse, ApiParam, ApiResponse } from '@nestjs/swagger'
+import { Controller, Inject, Param, Query } from '@nestjs/common'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -58,7 +56,6 @@ export class JournalController {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
   }
 
-  @LogMethod()
   @Route({
     path: '/departments/:id',
     operationId: 'getDepartmentById',
