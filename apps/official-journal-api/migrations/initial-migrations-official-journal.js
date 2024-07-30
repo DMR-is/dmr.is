@@ -275,6 +275,7 @@ module.exports = {
     DROP TABLE case_case CASCADE;
     DROP TABLE case_categories CASCADE;
     DROP TABLE case_channel CASCADE;
+    DROP TABLE case_channels CASCADE;
     DROP TABLE case_comments CASCADE;
     `)
   },

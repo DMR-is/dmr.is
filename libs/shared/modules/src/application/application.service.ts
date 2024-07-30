@@ -213,6 +213,15 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok()
   }
 
+  /**
+   * Posts an application.
+   * If case with the given applicationId does not exist, it will be created.
+   * If case with the given applicationId already exists, it will be reposted.
+   *
+   * @param applicationId - The ID of the application to be posted.
+   * @returns A `ResultWrapper` containing the result of the operation.
+   * @throws {InternalServerErrorException} If an error occurs while posting the application.
+   */
   @LogAndHandle()
   async postApplication(
     applicationId: string,
@@ -222,14 +231,24 @@ export class ApplicationService implements IApplicationService {
         await this.utilityService.caseLookupByApplicationId(applicationId)
       ).unwrap()
 
+      // TODO: check if application is in correct state to allow posting
+      // TODO: set status to submitted? not decided yet
+      // TODO: add property to case to mark "Ný svör hafa borist", remove when case is changed
+
+      // TODO: temp fix for involved party
+      const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
+
       await this.commentService.create(caseLookup.id, {
         internal: true,
         type: CaseCommentType.Submit,
         comment: null,
-        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        from: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
         to: null,
       })
 
+      this.logger.info(`Application<${applicationId}> reposted`, {
+        category: LOGGING_CATEGORY,
+      })
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -237,7 +256,7 @@ export class ApplicationService implements IApplicationService {
           applicationId,
         })
 
-        createResult.unwrap()
+        ResultWrapper.unwrap(createResult)
 
         return ResultWrapper.ok()
       }
@@ -276,10 +295,17 @@ export class ApplicationService implements IApplicationService {
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
+    // TODO: temp fix for involved party
+    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
+
+    const involvedPartyId = caseLookup.involvedPartyId
+      ? caseLookup.involvedPartyId
+      : involvedParty.id
+
     const createdResult = (
       await this.commentService.create(caseLookup.id, {
         comment: commentBody.comment,
-        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
         to: null,
         internal: false,
         type: CaseCommentType.Comment,
