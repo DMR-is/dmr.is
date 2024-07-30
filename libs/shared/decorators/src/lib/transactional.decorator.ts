@@ -1,6 +1,6 @@
 import { logger } from '@dmr.is/logging'
 import { Sequelize } from 'sequelize-typescript'
-import { UniqueConstraintError } from 'sequelize'
+import { Transaction, UniqueConstraintError } from 'sequelize'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function Transactional() {
@@ -13,6 +13,20 @@ export function Transactional() {
     descriptor.value = async function (...args: any[]) {
       if ('sequelize' in this === false) {
         throw new Error('sequelize instance is required')
+      }
+
+      // check if a transaction is already in progress, could be passed as an argument
+      if (args.length > 0) {
+        const currentTransaction = args.find(
+          (arg) => arg instanceof Transaction,
+        )
+
+        if (currentTransaction) {
+          logger.debug(
+            'Transaction already in progress, skipping transactional decorator',
+          )
+          return originalMethod.apply(this, args)
+        }
       }
 
       const sequelize: Sequelize = this.sequelize as Sequelize

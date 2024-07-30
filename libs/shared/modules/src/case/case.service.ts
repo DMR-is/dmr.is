@@ -178,186 +178,196 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async create(
     body: PostApplicationBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
-    return await this.sequelize.transaction<ResultWrapper<CreateCaseResponse>>(
-      async (t) => {
-        const existingCase =
-          await this.utilityService.caseLookupByApplicationId(
-            body.applicationId,
-          )
+    let exists: boolean
+    try {
+      ResultWrapper.unwrap(
+        await this.utilityService.caseLookupByApplicationId(body.applicationId),
+      )
 
-        if (existingCase.isOk()) {
-          throw new BadRequestException(
-            'Case already exists for this application',
-          )
-        }
+      exists = true
+    } catch (error) {
+      exists = false
+    }
 
-        const { application } = (
-          await this.applicationService.getApplication(body.applicationId)
-        ).unwrap()
+    if (exists) {
+      throw new BadRequestException(
+        `Case with application<${body.applicationId}> already exists`,
+      )
+    }
 
-        const caseStatus = (
-          await this.utilityService.caseStatusLookup(CaseStatus.Submitted)
-        ).unwrap()
+    // case does not exist so we can create it
+    const { application } = (
+      await this.applicationService.getApplication(body.applicationId)
+    ).unwrap()
 
-        const caseTag = (
-          await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted)
-        ).unwrap()
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatus.Submitted)
+    ).unwrap()
 
-        const caseCommunicationStatus = (
-          await this.utilityService.caseCommunicationStatusLookup(
-            CaseCommunicationStatus.NotStarted,
-          )
-        ).unwrap()
+    const caseTag = (
+      await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted)
+    ).unwrap()
 
-        const now = new Date()
-        const nextCaseNumber = (
-          await this.utilityService.generateCaseNumber()
-        ).unwrap()
+    const caseCommunicationStatus = (
+      await this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.NotStarted,
+      )
+    ).unwrap()
 
-        const department = (
-          await this.utilityService.departmentLookup(
-            application.answers.advert.department,
-          )
-        ).unwrap()
+    const now = new Date()
+    const nextCaseNumber = (
+      await this.utilityService.generateCaseNumber()
+    ).unwrap()
 
-        const type = (
-          await this.utilityService.typeLookup(application.answers.advert.type)
-        ).unwrap()
+    const department = (
+      await this.utilityService.departmentLookup(
+        application.answers.advert.department,
+      )
+    ).unwrap()
 
-        const requestedPublicationDate = new Date(
-          application.answers.publishing.date,
-        )
-        const today = new Date()
-        const diff = requestedPublicationDate.getTime() - today.getTime()
-        const diffDays = diff / (1000 * 3600 * 24)
-        let fastTrack = false
-        if (diffDays > FAST_TRACK_DAYS) {
-          fastTrack = true
-        }
+    const type = (
+      await this.utilityService.typeLookup(application.answers.advert.type)
+    ).unwrap()
 
-        const message = application.answers.publishing.message
+    const requestedPublicationDate = new Date(
+      application.answers.publishing.date,
+    )
+    const today = new Date()
+    const diff = requestedPublicationDate.getTime() - today.getTime()
+    const diffDays = diff / (1000 * 3600 * 24)
+    let fastTrack = false
+    if (diffDays > FAST_TRACK_DAYS) {
+      fastTrack = true
+    }
 
-        const caseId = uuid()
-        const msg =
-          typeof message === 'string' && message.length > 0 ? message : null
+    const message = application.answers.publishing.message
 
-        const newCase = await this.caseModel.create<CaseDto>(
-          {
-            id: caseId,
-            applicationId: application.id,
-            year: now.getFullYear(),
-            caseNumber: nextCaseNumber,
-            statusId: caseStatus.id,
-            tagId: caseTag.id,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            isLegacy: false,
-            assignedUserId: null,
-            communicationStatusId: caseCommunicationStatus.id,
-            publishedAt: null,
-            price: 0,
-            paid: false,
-            fastTrack: fastTrack,
-            advertTitle: application.answers.advert.title,
-            requestedPublicationDate: application.answers.publishing.date,
-            departmentId: department.id,
-            advertTypeId: type.id,
-            message: msg,
-          },
-          {
-            returning: ['id'],
-            transaction: t,
-          },
-        )
+    const caseId = uuid()
+    const msg =
+      typeof message === 'string' && message.length > 0 ? message : null
 
-        const categories = await Promise.all(
-          application.answers.publishing.contentCategories.map(
-            async (category) => {
-              return await this.utilityService.categoryLookup(category.value)
-            },
-          ),
-        )
+    // TODO: temp fix for involved party
+    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
-        const categoryIds = categories
-          .map((c) => {
-            if (!c) {
-              return null
-            }
-
-            const cat = c.unwrap()
-            return {
-              caseId: caseId,
-              categoryId: cat.id,
-            }
-          })
-          .filter((c) => c !== null) as { caseId: string; categoryId: string }[]
-
-        await this.caseCategoriesModel.bulkCreate(categoryIds, {
-          transaction: t,
-        })
-
-        const channels = application.answers.publishing.communicationChannels
-
-        if (channels && channels.length > 0) {
-          const caseChannels = channels
-            .map((channel) => {
-              if (!channel.email && !channel.phone) return null
-              return {
-                id: uuid(),
-                email: channel.email,
-                phone: channel.phone,
-              }
-            })
-            .filter((c) => c !== null)
-
-          const newChannels = await this.caseChannelModel.bulkCreate(
-            caseChannels.map((c) => ({
-              id: c?.id,
-              email: c?.email,
-              phone: c?.phone,
-            })),
-            {
-              transaction: t,
-              returning: ['id'],
-            },
-          )
-
-          await this.caseChannelsModel.bulkCreate(
-            newChannels.map((c) => ({
-              caseId: caseId,
-              channelId: c.id,
-            })),
-            {
-              transaction: t,
-            },
-          )
-        }
-
-        // TODO: When auth is setup, use the user id from the token
-        await this.commentService.create(
-          newCase.id,
-          {
-            internal: true,
-            type: CaseCommentType.Submit,
-            comment: null,
-            from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-            to: null,
-          },
-          t,
-        )
-
-        const newCreatedCase = (
-          await this.utilityService.caseLookup(newCase.id, t)
-        ).unwrap()
-
-        return ResultWrapper.ok({
-          case: caseMigrate(newCreatedCase),
-        })
+    const newCase = await this.caseModel.create<CaseDto>(
+      {
+        id: caseId,
+        applicationId: application.id,
+        year: now.getFullYear(),
+        caseNumber: nextCaseNumber,
+        statusId: caseStatus.id,
+        tagId: caseTag.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        isLegacy: false,
+        assignedUserId: null,
+        communicationStatusId: caseCommunicationStatus.id,
+        publishedAt: null,
+        price: 0,
+        paid: false,
+        involvedPartyId: involvedParty.id,
+        fastTrack: fastTrack,
+        advertTitle: application.answers.advert.title,
+        requestedPublicationDate: application.answers.publishing.date,
+        departmentId: department.id,
+        advertTypeId: type.id,
+        message: msg,
+      },
+      {
+        returning: ['id'],
+        transaction,
       },
     )
+
+    const categories = await Promise.all(
+      application.answers.publishing.contentCategories.map(async (category) => {
+        return await this.utilityService.categoryLookup(category.value)
+      }),
+    )
+
+    const categoryIds = categories
+      .map((c) => {
+        if (!c) {
+          return null
+        }
+
+        const cat = c.unwrap()
+        return {
+          caseId: caseId,
+          categoryId: cat.id,
+        }
+      })
+      .filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    await this.caseCategoriesModel.bulkCreate(categoryIds, {
+      transaction,
+    })
+
+    const channels = application.answers.publishing.communicationChannels
+
+    if (channels && channels.length > 0) {
+      const caseChannels = channels
+        .map((channel) => {
+          if (!channel.email && !channel.phone) return null
+          return {
+            id: uuid(),
+            email: channel.email,
+            phone: channel.phone,
+          }
+        })
+        .filter((c) => c !== null)
+
+      const newChannels = await this.caseChannelModel.bulkCreate(
+        caseChannels.map((c) => ({
+          id: c?.id,
+          email: c?.email,
+          phone: c?.phone,
+        })),
+        {
+          transaction,
+          returning: ['id'],
+        },
+      )
+
+      await this.caseChannelsModel.bulkCreate(
+        newChannels.map((c) => ({
+          caseId: caseId,
+          channelId: c.id,
+        })),
+        {
+          transaction,
+        },
+      )
+    }
+
+    // TODO: When auth is setup, use the user id from the token
+    await this.commentService.create(
+      newCase.id,
+      {
+        internal: true,
+        type: CaseCommentType.Submit,
+        comment: null,
+        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        to: null,
+      },
+      transaction,
+    )
+
+    const newCreatedCase = (
+      await this.utilityService.caseLookup(newCase.id, transaction)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      case: caseMigrate(newCreatedCase),
+    })
   }
 
   @LogAndHandle()

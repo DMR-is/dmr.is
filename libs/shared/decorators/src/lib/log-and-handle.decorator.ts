@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Transaction } from 'sequelize'
 import { handleException } from '../lib/utils'
 import { logger } from '@dmr.is/logging'
 
@@ -28,9 +29,14 @@ export function LogAndHandle(
           category: service,
         }
 
-        if (logArgs) {
-          Object.assign(logData, args)
+        if (!logArgs) {
+          logger.info(`${service}.${method}`)
         }
+        const filteredArgs = args.filter((arg) => !(arg instanceof Transaction))
+
+        Object.assign(logData, {
+          ...filteredArgs,
+        })
 
         logger.info(`${service}.${method}`, {
           ...logData,
