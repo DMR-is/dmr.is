@@ -903,8 +903,7 @@
       "get": {
         "operationId": "HealthController_",
         "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } },
-        "tags": ["health"]
+        "responses": { "200": { "description": "Health check endpoint." } }
       }
     }
   },
