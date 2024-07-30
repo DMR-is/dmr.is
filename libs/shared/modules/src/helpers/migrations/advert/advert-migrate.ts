@@ -1,8 +1,4 @@
-import {
-  Advert,
-  AdvertApplicationAttachment,
-  AdvertStatus,
-} from '@dmr.is/shared/dto'
+import { Advert, AdvertApplicationAttachment } from '@dmr.is/shared/dto'
 
 import { AdvertDTO } from '../../../journal/models'
 import { advertCategoryMigrate } from './advert-category-migrate'
@@ -25,9 +21,7 @@ export function advertMigrate(model: AdvertDTO): Advert {
 
   const advert: Advert = {
     id: model.id,
-    title: `${model.type ? advertTypesMigrate(model.type) : null} ${
-      model.subject
-    }`,
+    title: `${model.type.title} ${model.subject}`,
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
