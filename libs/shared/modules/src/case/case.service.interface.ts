@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import {
   CreateCaseResponse,
   EditorialOverviewResponse,
@@ -22,7 +23,10 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface ICaseService {
   case(id: string): Promise<ResultWrapper<GetCaseResponse>>
   cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
-  create(body: PostApplicationBody): Promise<ResultWrapper<CreateCaseResponse>>
+  create(
+    body: PostApplicationBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponse>>
   assign(id: string, userId: string): Promise<ResultWrapper<undefined>>
   updateStatus(
     id: string,
