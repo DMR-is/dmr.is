@@ -1,6 +1,7 @@
-import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   Application,
   CaseCommentPublicity,
@@ -43,6 +44,7 @@ export class ApplicationService implements IApplicationService {
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     private readonly authService: AuthService,
+    private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
   }
@@ -223,8 +225,10 @@ export class ApplicationService implements IApplicationService {
    * @throws {InternalServerErrorException} If an error occurs while posting the application.
    */
   @LogAndHandle()
+  @Transactional()
   async postApplication(
     applicationId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     try {
       const caseLookup = (
@@ -252,9 +256,12 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
-        const createResult = await this.caseService.create({
-          applicationId,
-        })
+        const createResult = await this.caseService.create(
+          {
+            applicationId,
+          },
+          transaction,
+        )
 
         ResultWrapper.unwrap(createResult)
 
