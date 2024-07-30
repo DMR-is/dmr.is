@@ -40,7 +40,10 @@ export function HandleApiException(
             query: req.query,
           })
 
-          return res.status(error.status).json(errorResponse)
+          return res.status(error.status).json({
+            message: errorResponse.message,
+            code: errorResponse.code,
+          })
         }
 
         logger.error(`${service}.${method}`, {
