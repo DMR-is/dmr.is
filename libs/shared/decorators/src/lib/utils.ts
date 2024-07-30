@@ -18,7 +18,8 @@ export const handleException = <T>({
   info?: Record<string, unknown>
   code?: number
 }): ResultWrapper<T> => {
-  let prefix = ''
+  let prefix = 'Error occurred'
+
   switch (code) {
     case 400:
       prefix = 'Bad request'

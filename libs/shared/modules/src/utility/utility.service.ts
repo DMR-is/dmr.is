@@ -1,6 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { CaseStatus, CaseWithAdvert, User } from '@dmr.is/shared/dto'
@@ -267,7 +267,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(found)
   }
 
-  @LogAndHandle()
+  @LogMethod()
   async caseLookup(
     caseId: string,
     transaction?: Transaction,
@@ -291,9 +291,11 @@ export class UtilityService implements IUtilityService {
   async getCaseWithAdvert(
     caseId: string,
   ): Promise<ResultWrapper<CaseWithAdvert>> {
-    const caseLookup = (await this.caseLookup(caseId)).unwrap()
+    const caseLookup = await this.caseLookup(caseId)
 
-    const activeCase = caseMigrate(caseLookup)
+    const unwrapped = caseLookup.unwrap()
+
+    const activeCase = caseMigrate(unwrapped)
 
     const applicationLookup = (
       await this.applicationService.getApplication(activeCase.applicationId)
@@ -321,23 +323,14 @@ export class UtilityService implements IUtilityService {
       },
     })
 
-    // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
-    // TODO: Implement this when users are implemented
-    // if (!involvedParty) {
-    //   throw new NotFoundException(
-    //     `Involved party with id ${application.applicant} not found`,
-    //   )
-    // }
-
     const involvedParty = await this.involvedPartyModel.findByPk(
-      '195eccdc-baf3-4cec-97ac-ef1c5161b091',
+      activeCase.involvedParty.id,
     )
 
     if (!involvedParty) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `Could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
-      })
+      throw new NotFoundException(
+        `Could not find involved party<${activeCase.involvedParty.id}>`,
+      )
     }
 
     const activeDepartment = advertDepartmentMigrate(department)

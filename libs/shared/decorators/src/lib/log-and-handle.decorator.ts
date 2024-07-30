@@ -41,7 +41,7 @@ export function LogAndHandle(
         logger.info(`${service}.${method}`, {
           ...logData,
         })
-        return originalMethod.apply(this, args)
+        return await originalMethod.apply(this, args)
       } catch (error) {
         return handleException({
           category: service,
