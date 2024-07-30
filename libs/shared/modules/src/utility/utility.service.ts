@@ -267,7 +267,7 @@ export class UtilityService implements IUtilityService {
     return ResultWrapper.ok(found)
   }
 
-  @LogMethod()
+  @LogAndHandle()
   async caseLookup(
     caseId: string,
     transaction?: Transaction,
@@ -291,11 +291,9 @@ export class UtilityService implements IUtilityService {
   async getCaseWithAdvert(
     caseId: string,
   ): Promise<ResultWrapper<CaseWithAdvert>> {
-    const caseLookup = await this.caseLookup(caseId)
+    const caseLookup = (await this.caseLookup(caseId)).unwrap()
 
-    const unwrapped = caseLookup.unwrap()
-
-    const activeCase = caseMigrate(unwrapped)
+    const activeCase = caseMigrate(caseLookup)
 
     const applicationLookup = (
       await this.applicationService.getApplication(activeCase.applicationId)
