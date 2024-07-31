@@ -1,7 +1,7 @@
-import { defineMessage } from 'react-intl'
+import { defineMessages } from 'react-intl'
 
 export const messages = {
-  general: defineMessage({
+  general: defineMessages({
     preparePublishing: {
       id: 'web.components.casePublishingTab:preparePublishing',
       defaultMessage: 'Undirbúa útgáfu',
