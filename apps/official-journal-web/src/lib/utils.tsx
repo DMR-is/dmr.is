@@ -15,7 +15,7 @@ import {
 } from '../gen/fetch'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
-export const formatDate = (date: string, df: string = 'dd.MM.yyyy') => {
+export const formatDate = (date: string, df = 'dd.MM.yyyy') => {
   try {
     return format(new Date(date), df, { locale: is })
   } catch (e) {

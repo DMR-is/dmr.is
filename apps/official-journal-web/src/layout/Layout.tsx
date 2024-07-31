@@ -194,7 +194,7 @@ export const withMainLayout = <T,>(
       <Layout {...layoutProps}>
         {/**
          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-         // @ts-ignore make web strict */}
+         // @ts-expect-error make web strict */}
         <Component {...componentProps} />
       </Layout>
     )
