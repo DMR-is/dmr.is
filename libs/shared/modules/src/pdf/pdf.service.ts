@@ -1,7 +1,6 @@
 import puppeteer from 'puppeteer'
-import { v4 as uuid } from 'uuid'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
-import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -66,22 +65,7 @@ export class PdfService implements IPdfService {
 
     const page = await browser.newPage()
 
-    let pdfTitle = ''
-    if (type && title) {
-      pdfTitle = `${type} ${title}`
-    }
-
-    if (type && !title) {
-      pdfTitle = `${type}`
-    }
-
-    if (!type && title) {
-      pdfTitle = `${title}`
-    }
-
-    if (!type && !title) {
-      pdfTitle = uuid()
-    }
+    const pdfTitle = `${type || ''} ${title || ''}`.trim() || 'Untitled'
 
     const htmlTemplate = `
     <!DOCTYPE html>
