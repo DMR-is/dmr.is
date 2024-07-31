@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { logger } from '@dmr.is/logging'
-
-const isReponse = (error: any): error is Response => {
-  return 'json' in error
-}
+import { isReponse } from '@dmr.is/utils/client'
 
 export function HandleApiException(
   message: string | undefined = 'Internal server error',

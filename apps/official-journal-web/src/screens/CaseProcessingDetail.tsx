@@ -1,3 +1,5 @@
+import { isReponse } from '@dmr.is/utils/client'
+
 import {
   AlertMessage,
   Box,
@@ -319,15 +321,20 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
       id: caseId,
     })
 
-    if (!activeCase) {
-      throw new CustomNextError(404, 'Þessi auglýsing finnst ekki!')
-    }
-
     return {
       activeCase: activeCase._case,
       step,
     }
   } catch (error) {
+    if (isReponse(error)) {
+      const errorResponse = await error.json()
+      throw new CustomNextError(
+        errorResponse.statusCode,
+        'Þessi auglýsing finnst ekki!',
+        errorResponse.message,
+      )
+    }
+
     throw new CustomNextError(
       500,
       'Villa kom upp við að sækja auglýsingu!',
