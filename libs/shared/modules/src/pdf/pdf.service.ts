@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer'
+import { v4 as uuid } from 'uuid'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
 import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
@@ -12,7 +13,6 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
@@ -29,32 +29,23 @@ export class PdfService implements IPdfService {
   async getPdfByApplicationId(
     applicationId: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const caseLookup = (
-      await this.utilityService.caseLookupByApplicationId(applicationId)
+    const applicationLookup = (
+      await this.utilityService.applicationLookup(applicationId)
     ).unwrap()
 
-    const migrated = caseMigrate(caseLookup)
+    const { application } = applicationLookup
+    const { answers } = application
 
-    const theCase = (
-      await this.utilityService.getCaseWithAdvert(migrated.id)
+    const type = (
+      await this.utilityService.typeLookup(answers.advert.type)
     ).unwrap()
-
-    const { activeCase, advert } = theCase
-
-    if (!activeCase.publishedAt) {
-      const pdf = (
-        await this.generatePdfFromHtml(advert.title, advert.documents.full)
-      ).unwrap()
-
-      return ResultWrapper.ok(pdf)
-    }
 
     const pdf = (
       await this.generatePdfFromHtml(
-        advert.title,
-        activeCase.isLegacy
-          ? dirtyClean(advert.documents.full as HTMLText)
-          : advert.documents.full,
+        type.title,
+        answers.advert.title,
+        answers.advert.document,
+        answers.signature.signature,
       )
     ).unwrap()
 
@@ -63,8 +54,10 @@ export class PdfService implements IPdfService {
 
   @LogAndHandle({ logArgs: false })
   private async generatePdfFromHtml(
-    title: string,
-    html: string,
+    type?: string,
+    title?: string,
+    advert?: string,
+    signature?: string,
   ): Promise<ResultWrapper<Buffer>> {
     const browser = await puppeteer.launch({
       headless: true,
@@ -73,16 +66,36 @@ export class PdfService implements IPdfService {
 
     const page = await browser.newPage()
 
+    let pdfTitle = ''
+    if (type && title) {
+      pdfTitle = `${type} ${title}`
+    }
+
+    if (type && !title) {
+      pdfTitle = `${type}`
+    }
+
+    if (!type && title) {
+      pdfTitle = `${title}`
+    }
+
+    if (!type && !title) {
+      pdfTitle = uuid()
+    }
+
     const htmlTemplate = `
     <!DOCTYPE html>
     <html lang="is">
     <head>
       <meta charset="UTF-8">
-      <title>${title}</title>
+      <title>${pdfTitle}</title>
       <style>${pdfCss}</style>
     </head>
     <body>
-      ${html}
+      ${type ? `${type}` : ''}
+      ${title ? `${title}` : ''}}
+      ${advert ? `${advert}` : ''}}
+      ${signature ? `${signature}` : ''}
     </body>
     </html>
     `
@@ -134,11 +147,17 @@ export class PdfService implements IPdfService {
 
     const { activeCase, advert } = caseLookup
 
-    const document = advert.documents.full
+    const { advert: advertHtml } = advert.documents
+    const { signature: signatureHtml } = advert.documents
 
     if (!activeCase.publishedAt) {
       const pdf = (
-        await this.generatePdfFromHtml(advert.title, document)
+        await this.generatePdfFromHtml(
+          activeCase.advertType.title,
+          advert.title,
+          advertHtml,
+          signatureHtml,
+        )
       ).unwrap()
 
       return ResultWrapper.ok(pdf)
@@ -146,7 +165,8 @@ export class PdfService implements IPdfService {
 
     const pdf = (
       await this.generatePdfFromHtml(
-        advert.title,
+        activeCase.advertType.title,
+        activeCase.advertTitle,
         activeCase.isLegacy
           ? dirtyClean(advert.documents.full as HTMLText)
           : advert.documents.full,
@@ -154,25 +174,5 @@ export class PdfService implements IPdfService {
     ).unwrap()
 
     return ResultWrapper.ok(pdf)
-  }
-
-  @LogMethod()
-  private async initialize() {
-    const accessKey = process.env.AWS_ACCESS_KEY_ID ?? ''
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? ''
-
-    if (!accessKey || !secretAccessKey) {
-      // eslint-disable-next-line no-console
-      console.log('Missing environment variables')
-      throw new InternalServerErrorException('Missing environment variables')
-    }
-
-    this.s3 = new S3Client({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: accessKey,
-        secretAccessKey: secretAccessKey,
-      },
-    })
   }
 }

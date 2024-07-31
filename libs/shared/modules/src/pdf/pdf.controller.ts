@@ -103,16 +103,19 @@ export class PdfController {
   async getPdfUrlByApplicationId(
     @Param('id') id: string,
   ): Promise<GetPdfUrlResponse> {
-    const caseLookup = (
-      await this.utilityService.caseLookupByApplicationId(id)
+    const applicationLookup = (
+      await this.utilityService.applicationLookup(id)
     ).unwrap()
 
     const url =
       process.env.NODE_ENV === 'development'
         ? `http://localhost:${
-            process.env.APPLICATION_PORT || 4000
+            process.env.APPLICATION_PORT || 5555
           }/api/v1/pdf/case/${id}`
-        : `${process.env.DMR_APPLICATION_API_BASE_PATH}/api/v1/pdf/case/${caseLookup.id}`
+        : `${
+            process.env.DMR_PDF_BASE_PATH ||
+            'https://application-api.official-journal.dev.dmr-dev.cloud'
+          }/api/v1/pdf/application/${applicationLookup.application.id}`
 
     return {
       url: url,

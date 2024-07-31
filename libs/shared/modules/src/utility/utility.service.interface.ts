@@ -1,5 +1,9 @@
 import { Transaction } from 'sequelize'
-import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import {
+  CaseWithAdvert,
+  GetApplicationResponse,
+  User,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -15,6 +19,9 @@ import {
 } from '../journal/models'
 
 export interface IUtilityService {
+  applicationLookup(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetApplicationResponse>>
   getCaseWithAdvert(caseId: string): Promise<ResultWrapper<CaseWithAdvert>>
   advertStatusLookup(status: string): Promise<ResultWrapper<AdvertStatusDTO>>
   departmentLookup(
