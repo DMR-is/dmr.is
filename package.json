@@ -1,6 +1,16 @@
 {
   "name": "dmr.is",
-  "packageManager": "yarn@4.1.1",
+  "version": "0.0.2",
+  "license": "MIT",
+  "engines": {
+    "npm": "please-use-yarn",
+    "node": "20.15.0",
+    "yarn": "4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DMR-is/dmr.is.git"
+  },
   "scripts": {
     "nx": "nx",
     "start": "nx serve",
