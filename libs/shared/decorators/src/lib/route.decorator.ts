@@ -2,6 +2,7 @@ import { Delete, Get, Post, Put, applyDecorators } from '@nestjs/common'
 import {
   ApiBody,
   ApiCreatedResponse,
+  ApiExcludeEndpoint,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -25,6 +26,7 @@ interface BaseRouteOptions {
   params?: ApiParamOptions[]
   query?: ApiQueryOptions[]
   tags?: string[]
+  exclude?: boolean
 }
 
 export function Route({
@@ -38,6 +40,7 @@ export function Route({
   tags = [],
   params = [],
   query = [],
+  exclude = false,
 }: BaseRouteOptions) {
   const decorators = []
 
@@ -84,6 +87,10 @@ export function Route({
 
   if (bodyType) {
     decorators.push(ApiBody({ type: bodyType, required: true }))
+  }
+
+  if (exclude) {
+    decorators.push(ApiExcludeEndpoint())
   }
 
   if (params && params.length) {
