@@ -109,6 +109,7 @@ export class ApplicationController {
     path: ':id/comments',
     operationId: 'postComment',
     params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: PostApplicationComment,
     responseType: PostCaseCommentResponse,
   })
   async postComment(
