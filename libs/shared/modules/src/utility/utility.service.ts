@@ -3,7 +3,13 @@ import { Filenames } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { CaseStatus, CaseWithAdvert, User } from '@dmr.is/shared/dto'
+import {
+  Application,
+  CaseStatus,
+  CaseWithAdvert,
+  GetApplicationResponse,
+  User,
+} from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
@@ -62,6 +68,15 @@ export class UtilityService implements IUtilityService {
     private advertStatusModel: typeof AdvertStatusDTO,
   ) {
     this.logger.info('Using UtilityService')
+  }
+  async applicationLookup(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetApplicationResponse>> {
+    const application = (
+      await this.applicationService.getApplication(applicationId)
+    ).unwrap()
+
+    return ResultWrapper.ok(application)
   }
 
   @LogAndHandle({ logArgs: false })
