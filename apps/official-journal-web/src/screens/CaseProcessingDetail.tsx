@@ -34,6 +34,7 @@ import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
 import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
+import { CustomNextError } from '../units/error'
 
 type Props = {
   activeCase: CaseWithAdvert | null
@@ -306,18 +307,32 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   const dmrClient = createDmrClient()
   const caseId = query.uid?.[0]
   const step = query.uid?.[1] as CaseStep | undefined
+  let activeCase
 
   if (!caseId || !step || !caseSteps.includes(step)) {
-    return { activeCase: null, step: null }
+    throw new CustomNextError(404, 'Slóð inniheldur ekki rétt gögn!')
   }
 
-  const activeCase = await dmrClient.getCase({
-    id: caseId,
-  })
+  try {
+    // TODO: getCase should return null if no case is found
+    activeCase = await dmrClient.getCase({
+      id: caseId,
+    })
 
-  return {
-    activeCase: activeCase._case,
-    step,
+    if (!activeCase) {
+      throw new CustomNextError(404, 'Þessi auglýsing finnst ekki!')
+    }
+
+    return {
+      activeCase: activeCase._case,
+      step,
+    }
+  } catch (error) {
+    throw new CustomNextError(
+      500,
+      'Villa kom upp við að sækja auglýsingu!',
+      (error as Error)?.message,
+    )
   }
 }
 
