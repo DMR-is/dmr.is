@@ -23,6 +23,7 @@ import {
   getStringFromQueryString,
   Screen,
 } from '../lib/types'
+import { CustomNextError } from '../units/error'
 type Props = {
   data: Case[]
   paging: Paging
@@ -220,20 +221,27 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
 }
 
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
-  const dmrClient = createDmrClient()
+  try {
+    const dmrClient = createDmrClient()
+    const caseData = await dmrClient.editorialOverview({
+      page: getStringFromQueryString(query.page),
+      pageSize: getStringFromQueryString(query.pageSize),
+      department: getStringFromQueryString(query.department),
+      status: getStringFromQueryString(query.status),
+      search: getStringFromQueryString(query.search),
+    })
 
-  const caseData = await dmrClient.editorialOverview({
-    page: getStringFromQueryString(query.page),
-    pageSize: getStringFromQueryString(query.pageSize),
-    department: getStringFromQueryString(query.department),
-    status: getStringFromQueryString(query.status),
-    search: getStringFromQueryString(query.search),
-  })
-
-  return {
-    data: caseData.cases,
-    paging: caseData.paging,
-    totalItems: caseData.totalItems,
+    return {
+      data: caseData.cases,
+      paging: caseData.paging,
+      totalItems: caseData.totalItems,
+    }
+  } catch (error) {
+    throw new CustomNextError(
+      500,
+      'Villa kom upp við að sækja gögn fyrir ritstjórn.',
+      (error as Error)?.message,
+    )
   }
 }
 

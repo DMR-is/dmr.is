@@ -18,6 +18,7 @@ import { createDmrClient } from '../lib/api/createClient'
 import { APIRotues, CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/casePublishOverview'
 import { getStringFromQueryString, Screen } from '../lib/types'
+import { CustomNextError } from '../units/error'
 
 type Props = {
   cases: Case[]
@@ -158,18 +159,25 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
 }
 
 CasePublishingOverview.getProps = async ({ query }) => {
-  const dmrClient = createDmrClient()
+  try {
+    const dmrClient = createDmrClient()
+    const department = getStringFromQueryString(query.tab) || 'a-deild'
 
-  const department = getStringFromQueryString(query.tab) || 'a-deild'
+    const { cases, paging } = await dmrClient.getCases({
+      department,
+      status: CaseStatusEnum.Tilbi,
+    })
 
-  const { cases, paging } = await dmrClient.getCases({
-    department,
-    status: CaseStatusEnum.Tilbi,
-  })
-
-  return {
-    cases,
-    paging,
+    return {
+      cases,
+      paging,
+    }
+  } catch (error) {
+    throw new CustomNextError(
+      500,
+      'Villa kom upp við að sækja gögn fyrir útgáfu.',
+      (error as Error)?.message,
+    )
   }
 }
 

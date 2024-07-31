@@ -9,7 +9,7 @@ import {
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { isSingular } from '@dmr.is/utils'
+import { isSingular } from '@dmr.is/utils/client'
 
 import {
   BadRequestException,

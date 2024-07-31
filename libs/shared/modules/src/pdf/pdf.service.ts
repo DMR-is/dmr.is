@@ -43,7 +43,7 @@ export class PdfService implements IPdfService {
 
     if (!activeCase.publishedAt) {
       const pdf = (
-        await this.generatePdfFromHtml(advert.documents.full)
+        await this.generatePdfFromHtml(advert.title, advert.documents.full)
       ).unwrap()
 
       return ResultWrapper.ok(pdf)
@@ -51,6 +51,7 @@ export class PdfService implements IPdfService {
 
     const pdf = (
       await this.generatePdfFromHtml(
+        advert.title,
         activeCase.isLegacy
           ? dirtyClean(advert.documents.full as HTMLText)
           : advert.documents.full,
@@ -62,10 +63,12 @@ export class PdfService implements IPdfService {
 
   @LogAndHandle({ logArgs: false })
   private async generatePdfFromHtml(
+    title: string,
     html: string,
   ): Promise<ResultWrapper<Buffer>> {
     const browser = await puppeteer.launch({
       headless: true,
+      args: ['--no-sandbox', '--font-render-hinting=none'],
     })
 
     const page = await browser.newPage()
@@ -75,8 +78,8 @@ export class PdfService implements IPdfService {
     <html lang="is">
     <head>
       <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
+      <style>${pdfCss}</style>
     </head>
     <body>
       ${html}
@@ -84,7 +87,6 @@ export class PdfService implements IPdfService {
     </html>
     `
     await page.setContent(htmlTemplate)
-    await page.addStyleTag({ content: pdfCss })
 
     const pdf = await page.pdf()
 
@@ -135,13 +137,16 @@ export class PdfService implements IPdfService {
     const document = advert.documents.full
 
     if (!activeCase.publishedAt) {
-      const pdf = (await this.generatePdfFromHtml(document)).unwrap()
+      const pdf = (
+        await this.generatePdfFromHtml(advert.title, document)
+      ).unwrap()
 
       return ResultWrapper.ok(pdf)
     }
 
     const pdf = (
       await this.generatePdfFromHtml(
+        advert.title,
         activeCase.isLegacy
           ? dirtyClean(advert.documents.full as HTMLText)
           : advert.documents.full,

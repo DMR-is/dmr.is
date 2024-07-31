@@ -15,6 +15,7 @@ import { CaseDepartmentTabs, Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseOverview'
 import { Screen } from '../lib/types'
 import { getCaseProcessingSearchParams } from '../lib/utils'
+import { CustomNextError } from '../units/error'
 
 type Props = {
   cases: Case[]
@@ -72,22 +73,30 @@ const CaseOverview: Screen<Props> = ({ cases, paging }) => {
 }
 
 CaseOverview.getProps = async ({ query }) => {
-  const { tab } = getCaseProcessingSearchParams(query) || DEFAULT_TAB
-  const dmrClient = createDmrClient()
+  try {
+    const { tab } = getCaseProcessingSearchParams(query) || DEFAULT_TAB
+    const dmrClient = createDmrClient()
 
-  const { cases, paging } = await dmrClient.getCases({
-    department: tab,
-    status:
-      CaseStatusEnum.Tgefi +
-      ',' +
-      CaseStatusEnum.BirtinguHafna +
-      ',' +
-      CaseStatusEnum.TekiRBirtingu,
-  })
+    const { cases, paging } = await dmrClient.getCases({
+      department: tab,
+      status:
+        CaseStatusEnum.Tgefi +
+        ',' +
+        CaseStatusEnum.BirtinguHafna +
+        ',' +
+        CaseStatusEnum.TekiRBirtingu,
+    })
 
-  return {
-    cases,
-    paging,
+    return {
+      cases,
+      paging,
+    }
+  } catch (error) {
+    throw new CustomNextError(
+      500,
+      'Villa kom upp við að sækja gögn fyrir heildarlista.',
+      (error as Error)?.message,
+    )
   }
 }
 
