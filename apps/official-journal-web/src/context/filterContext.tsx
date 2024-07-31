@@ -39,11 +39,11 @@ export const FilterContext = createContext<FilterStateContext>({
     enableCategories: false,
     activeFilters: [],
   },
-  setEnableTypes: () => {},
-  setEnableDepartments: () => {},
-  setEnableCategories: () => {},
-  toggleFilter: () => {},
-  clearFilter: () => {},
+  setEnableTypes: () => null,
+  setEnableDepartments: () => null,
+  setEnableCategories: () => null,
+  toggleFilter: () => null,
+  clearFilter: () => null,
 })
 
 export const FilterContextProvider = ({

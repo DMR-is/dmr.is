@@ -8,6 +8,7 @@ import { ApiResponse } from '@nestjs/swagger'
   path: 'health',
 })
 export class HealthController {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
 
   @Get()

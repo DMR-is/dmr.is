@@ -26,11 +26,11 @@ type PublishingStateContext = {
 
 export const PublishingContext = createContext<PublishingStateContext>({
   publishingState: publishingStateDefaults,
-  addCaseToSelectedList: () => {},
-  removeCaseFromSelectedList: () => {},
-  removeAllCasesFromSelectedList: () => {},
-  addManyCasesToSelectedList: () => {},
-  setCasesWithPublicationNumber: () => {},
+  addCaseToSelectedList: () => null,
+  removeCaseFromSelectedList: () => null,
+  removeAllCasesFromSelectedList: () => null,
+  addManyCasesToSelectedList: () => null,
+  setCasesWithPublicationNumber: () => null,
 })
 
 export const PublishingContextProvider = ({
