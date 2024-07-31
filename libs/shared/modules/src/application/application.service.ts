@@ -242,7 +242,7 @@ export class ApplicationService implements IApplicationService {
       // TODO: temp fix for involved party
       const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
-      await this.commentService.create(caseLookup.id, {
+      await this.commentService.createComment(caseLookup.id, {
         internal: true,
         type: CaseCommentType.Submit,
         comment: null,
@@ -283,7 +283,7 @@ export class ApplicationService implements IApplicationService {
     ).unwrap()
 
     const commentsResult = (
-      await this.commentService.comments(caseResponse.id, {
+      await this.commentService.getComments(caseResponse.id, {
         type: CaseCommentPublicity.External,
       })
     ).unwrap()
@@ -310,7 +310,7 @@ export class ApplicationService implements IApplicationService {
       : involvedParty.id
 
     const createdResult = (
-      await this.commentService.create(caseLookup.id, {
+      await this.commentService.createComment(caseLookup.id, {
         comment: commentBody.comment,
         from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
         to: null,

@@ -65,7 +65,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
-  async comment(
+  async getComment(
     caseId: string,
     commentId: string,
   ): Promise<ResultWrapper<GetCaseCommentResponse>> {
@@ -91,7 +91,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
-  async comments(
+  async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
@@ -132,7 +132,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
-  async create(
+  async createComment(
     caseId: string,
     body: PostCaseComment,
     transaction?: Transaction,
@@ -249,7 +249,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
-  async delete(
+  async deleteComment(
     caseId: string,
     commentId: string,
   ): Promise<ResultWrapper<DeleteCaseCommentResponse>> {

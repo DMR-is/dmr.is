@@ -10,22 +10,22 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentService {
-  comment(
+  getComment(
     caseId: string,
     commentId: string,
   ): Promise<ResultWrapper<GetCaseCommentResponse>>
-  comments(
+  getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 
-  create(
+  createComment(
     caseId: string,
     body: PostCaseComment,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PostCaseCommentResponse>>
 
-  delete(
+  deleteComment(
     caseId: string,
     commentId: string,
   ): Promise<ResultWrapper<DeleteCaseCommentResponse>>

@@ -348,7 +348,7 @@ export class CaseService implements ICaseService {
     }
 
     // TODO: When auth is setup, use the user id from the token
-    await this.commentService.create(
+    await this.commentService.createComment(
       newCase.id,
       {
         internal: true,
@@ -570,7 +570,7 @@ export class CaseService implements ICaseService {
       },
     )
 
-    await this.commentService.create(id, {
+    await this.commentService.createComment(id, {
       internal: true,
       type: caseRes.assignedUserId
         ? CaseCommentType.Assign
@@ -605,7 +605,7 @@ export class CaseService implements ICaseService {
       },
     )
 
-    await this.commentService.create(id, {
+    await this.commentService.createComment(id, {
       internal: true,
       type: CaseCommentType.Update,
       comment: null,
