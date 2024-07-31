@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  DeleteCaseCommentResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -252,7 +251,7 @@ export class CommentService implements ICommentService {
   async deleteComment(
     caseId: string,
     commentId: string,
-  ): Promise<ResultWrapper<DeleteCaseCommentResponse>> {
+  ): Promise<ResultWrapper> {
     // check if case and comment exists
     const exists = await this.caseCommentsModel.findOne({
       where: {

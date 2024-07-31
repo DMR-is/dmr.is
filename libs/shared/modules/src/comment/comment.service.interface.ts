@@ -1,6 +1,5 @@
 import { Transaction } from 'sequelize'
 import {
-  DeleteCaseCommentResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -25,10 +24,7 @@ export interface ICommentService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PostCaseCommentResponse>>
 
-  deleteComment(
-    caseId: string,
-    commentId: string,
-  ): Promise<ResultWrapper<DeleteCaseCommentResponse>>
+  deleteComment(caseId: string, commentId: string): Promise<ResultWrapper>
 }
 
 export const ICommentService = Symbol('ICommentService')
