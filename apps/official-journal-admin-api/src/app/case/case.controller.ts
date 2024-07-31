@@ -94,9 +94,7 @@ export class CaseController {
     responseType: GetTagsResponse,
   })
   async tags(): Promise<GetTagsResponse> {
-    const result = (await this.caseService.tags()).unwrap()
-
-    return result
+    return ResultWrapper.unwrap(await this.caseService.tags())
   }
 
   @Route({

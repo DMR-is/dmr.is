@@ -18,7 +18,7 @@ export class PdfController {
   ) {}
 
   @Route({
-    path: 'pdf/case/:id',
+    path: '/case/:id',
     operationId: 'getPdfByCaseId',
     params: [
       {
@@ -39,7 +39,7 @@ export class PdfController {
   }
 
   @Route({
-    path: 'pdf/application/:id',
+    path: 'application/:id',
     operationId: 'getPdfByApplicationId',
     params: [
       {

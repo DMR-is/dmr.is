@@ -47,7 +47,6 @@ import { IApplicationService } from '../application/application.service.interfac
 import { ICommentService } from '../comment/comment.service.interface'
 import {
   advertCategoryMigrate,
-  advertStatusMigrate,
   caseParameters,
   counterResult,
 } from '../helpers'
@@ -219,7 +218,6 @@ export class CaseService implements ICaseService {
       )
     ).unwrap()
 
-    const now = new Date()
     const nextCaseNumber = (
       await this.utilityService.generateCaseNumber()
     ).unwrap()
@@ -237,8 +235,9 @@ export class CaseService implements ICaseService {
     const requestedPublicationDate = new Date(
       application.answers.publishing.date,
     )
-    const today = new Date()
-    const diff = requestedPublicationDate.getTime() - today.getTime()
+
+    const now = new Date()
+    const diff = requestedPublicationDate.getTime() - now.getTime()
     const diffDays = diff / (1000 * 3600 * 24)
     let fastTrack = false
     if (diffDays > FAST_TRACK_DAYS) {

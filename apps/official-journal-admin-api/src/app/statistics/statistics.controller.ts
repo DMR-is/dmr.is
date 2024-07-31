@@ -3,6 +3,7 @@ import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { ApiQuery, ApiResponse } from '@nestjs/swagger'
@@ -29,7 +30,9 @@ export class StatisticsController {
   async department(
     @Query('slug') slug: string,
   ): Promise<GetStatisticsDepartmentResponse> {
-    return (await this.statisticsService.getDepartment(slug)).unwrap()
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getDepartment(slug),
+    )
   }
 
   @Get('overview')
@@ -44,6 +47,8 @@ export class StatisticsController {
     @Query('type') type: string,
     @Query('userId') userId?: string,
   ): Promise<GetStatisticsOverviewResponse> {
-    return (await this.statisticsService.getOverview(type, userId)).unwrap()
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getOverview(type, userId),
+    )
   }
 }
