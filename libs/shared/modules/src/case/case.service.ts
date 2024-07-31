@@ -103,6 +103,7 @@ export class CaseService implements ICaseService {
     const migrated: CaseTag[] = tags.map((t) => ({
       id: t.id,
       key: t.key,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       value: caseTagMapper(t.value)!,
     }))
 

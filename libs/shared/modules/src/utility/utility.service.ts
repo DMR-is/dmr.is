@@ -1,11 +1,9 @@
 import { Op, Transaction } from 'sequelize'
 import { Filenames } from '@dmr.is/constants'
-import { LogAndHandle, LogMethod } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
-  Application,
-  CaseStatus,
   CaseWithAdvert,
   GetApplicationResponse,
   User,

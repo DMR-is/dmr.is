@@ -29,6 +29,6 @@ export function LogMethod(logArgs: boolean | undefined = true) {
   }
 }
 
-export function TestLogMethod(logArgs: boolean = true): MethodDecorator {
+export function TestLogMethod(logArgs = true): MethodDecorator {
   return LogMethod(logArgs)
 }

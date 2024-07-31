@@ -47,7 +47,7 @@ export function LogAndHandle(
           category: service,
           method: method,
           error: error,
-          message: message!,
+          message: message || 'Internal server error',
           info: {
             args: {
               ...args,
