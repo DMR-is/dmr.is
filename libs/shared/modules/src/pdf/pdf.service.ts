@@ -1,4 +1,3 @@
-import puppeteer from 'puppeteer'
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
@@ -15,6 +14,7 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
+import { getBrowser } from './puppetBrowser'
 
 @Injectable()
 export class PdfService implements IPdfService {
@@ -58,10 +58,7 @@ export class PdfService implements IPdfService {
     advert?: string,
     signature?: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--font-render-hinting=none'],
-    })
+    const browser = await getBrowser()
 
     const page = await browser.newPage()
 
