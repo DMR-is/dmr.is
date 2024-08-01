@@ -8,9 +8,7 @@
     "submodules": true,
     "dist": true,
     "nx": true,
-    "tmp": true
-  },
-  "files.exclude": {
+    "tmp": true,
     "yarn.lock": true,
     "eslint-local-rules.js": true
   }
