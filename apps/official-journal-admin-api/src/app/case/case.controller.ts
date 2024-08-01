@@ -375,6 +375,7 @@ export class CaseController {
   }
 
   @Route({
+    method: 'post',
     path: ':id/comments',
     operationId: 'createComment',
     summary: 'Add comment to case',
@@ -385,7 +386,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: PostCaseCommentBody,
   ): Promise<void> {
-    await this.caseCommentService.createComment(id, body)
+    ResultWrapper.unwrap(await this.caseCommentService.createComment(id, body))
   }
 
   @Route({
@@ -402,6 +403,8 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<void> {
-    await this.caseCommentService.deleteComment(id, commentId)
+    ResultWrapper.unwrap(
+      await this.caseCommentService.deleteComment(id, commentId),
+    )
   }
 }

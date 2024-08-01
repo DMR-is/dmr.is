@@ -33,6 +33,9 @@ export function Transactional() {
       const transaction = await sequelize.transaction()
       try {
         const applyWithTransaction = originalMethod.bind(this)
+        logger.debug(
+          `Applying transaction to method: ${propertyKey} with args: ${args}`,
+        )
         const result = await applyWithTransaction(...args, transaction)
 
         await transaction.commit()

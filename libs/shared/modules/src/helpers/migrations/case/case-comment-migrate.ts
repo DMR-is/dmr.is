@@ -37,8 +37,8 @@ export const caseCommentMigrate = (model: CaseCommentDto): CaseComment => {
       state: model.state,
       task: {
         comment: model.task.comment,
-        from: userMapper(model.task.fromId),
-        to: userMapper(model.task.toId),
+        from: userMapper(model.task.fromId), // TODO user or institution
+        to: userMapper(model.task.toId), // TODO user or institution
         title: title,
       },
     }

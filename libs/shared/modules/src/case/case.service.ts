@@ -354,10 +354,10 @@ export class CaseService implements ICaseService {
         internal: true,
         type: CaseCommentType.Submit,
         comment: null,
-        from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
+        initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        receiver: null,
+        storeState: true,
       },
-      true,
       transaction,
     )
 
@@ -577,8 +577,8 @@ export class CaseService implements ICaseService {
         ? CaseCommentType.Assign
         : CaseCommentType.AssignSelf,
       comment: null,
-      from: caseRes.assignedUserId,
-      to: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
+      initiator: caseRes.assignedUserId,
+      receiver: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
     })
 
     return ResultWrapper.ok()
@@ -610,8 +610,8 @@ export class CaseService implements ICaseService {
       internal: true,
       type: CaseCommentType.Update,
       comment: null,
-      from: caseLookup.assignedUserId,
-      to: null,
+      initiator: caseLookup.assignedUserId,
+      receiver: null,
     })
 
     return ResultWrapper.ok()

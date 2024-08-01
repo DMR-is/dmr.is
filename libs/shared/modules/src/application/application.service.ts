@@ -4,7 +4,6 @@ import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseCommentPublicity,
   CaseCommentType,
   CasePriceResponse,
   GetApplicationResponse,
@@ -245,8 +244,8 @@ export class ApplicationService implements IApplicationService {
         internal: true,
         type: CaseCommentType.Submit,
         comment: null,
-        from: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
+        initiator: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
+        receiver: null,
       })
 
       this.logger.info(`Application<${applicationId}> reposted`, {
@@ -283,7 +282,7 @@ export class ApplicationService implements IApplicationService {
 
     const commentsResult = (
       await this.commentService.getComments(caseResponse.id, {
-        type: CaseCommentPublicity.External,
+        internal: false,
       })
     ).unwrap()
 
@@ -310,8 +309,8 @@ export class ApplicationService implements IApplicationService {
 
     await this.commentService.createComment(caseLookup.id, {
       comment: commentBody.comment,
-      from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
-      to: null,
+      initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
+      receiver: null,
       internal: false,
       type: CaseCommentType.Comment,
     })

@@ -1,15 +1,21 @@
+import { Transform } from 'class-transformer'
+
 import { ApiProperty } from '@nestjs/swagger'
 
-export enum CaseCommentPublicity {
-  Internal = 'internal',
-  External = 'external',
-  All = 'all',
-}
 export class GetCaseCommentsQuery {
   @ApiProperty({
-    enum: CaseCommentPublicity,
+    enum: Boolean,
     description: 'Type of the comment',
     required: false,
   })
-  type?: CaseCommentPublicity
+  @Transform(({ value }) => {
+    if (value === 'true') {
+      return true
+    }
+    if (value === 'false') {
+      return false
+    }
+    return undefined
+  })
+  internal?: boolean
 }

@@ -6,13 +6,27 @@ import {
   CaseCommentTypeDto,
 } from '../models'
 
-export const CASE_COMMENTS_RELATIONS = [
-  {
-    model: CaseCommentDto,
-    include: [
-      CaseCommentTypeDto,
-      CaseStatusDto,
-      { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-    ],
-  },
-]
+/**
+ * Get case comments relations
+ * @param internal - Internal flag - if not set, all comments are returned
+ * @returns Case comments relations
+ */
+export const getCaseCommentsRelations = (internal?: boolean) => {
+  const whereParams =
+    typeof internal === 'boolean' ? { internal: internal } : {}
+
+  return [
+    {
+      model: CaseCommentDto,
+      where: whereParams,
+      include: [
+        CaseCommentTypeDto,
+        CaseStatusDto,
+        {
+          model: CaseCommentTaskDto,
+          include: [CaseCommentTitleDto],
+        },
+      ],
+    },
+  ]
+}

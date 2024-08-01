@@ -22,15 +22,14 @@ export interface ICommentService {
   createComment(
     caseId: string,
     body: PostCaseCommentBody,
-    storeState?: boolean,
     transaction?: Transaction,
-  ): Promise<void>
+  ): Promise<ResultWrapper>
 
   deleteComment(
     caseId: string,
     commentId: string,
     transaction?: Transaction,
-  ): Promise<void>
+  ): Promise<ResultWrapper>
 }
 
 export const ICommentService = Symbol('ICommentService')
