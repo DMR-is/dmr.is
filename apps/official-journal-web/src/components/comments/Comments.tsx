@@ -179,7 +179,7 @@ export const Comments = ({ activeCase }: Props) => {
                   caseId: activeCase.activeCase.id,
                   internal: isInternalComment,
                   comment: commentValue,
-                  from: activeCase.activeCase.assignedTo?.id ?? '',
+                  initator: activeCase.activeCase.assignedTo?.id ?? '',
                 })
               }
             >
