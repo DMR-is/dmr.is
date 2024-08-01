@@ -5,7 +5,6 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -110,13 +109,12 @@ export class ApplicationController {
     operationId: 'postComment',
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: PostApplicationComment,
-    responseType: PostCaseCommentResponse,
   })
   async postComment(
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,
-  ): Promise<PostCaseCommentResponse> {
-    return ResultWrapper.unwrap(
+  ): Promise<void> {
+    ResultWrapper.unwrap(
       await this.applicationService.postComment(applicationId, commentBody),
     )
   }

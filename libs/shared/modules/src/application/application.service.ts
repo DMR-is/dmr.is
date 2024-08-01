@@ -295,7 +295,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<void> {
+  ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
@@ -313,6 +313,9 @@ export class ApplicationService implements IApplicationService {
       receiver: null,
       internal: false,
       type: CaseCommentType.Comment,
+      storeState: true,
     })
+
+    return ResultWrapper.ok()
   }
 }

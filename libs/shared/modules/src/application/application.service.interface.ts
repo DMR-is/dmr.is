@@ -26,7 +26,7 @@ export interface IApplicationService {
   postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<void>
+  ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
 }
