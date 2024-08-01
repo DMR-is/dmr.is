@@ -357,6 +357,7 @@ export class CaseService implements ICaseService {
         from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
         to: null,
       },
+      true,
       transaction,
     )
 

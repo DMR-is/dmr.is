@@ -3,8 +3,7 @@ import {
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
-  PostCaseComment,
-  PostCaseCommentResponse,
+  PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -12,19 +11,26 @@ export interface ICommentService {
   getComment(
     caseId: string,
     commentId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentResponse>>
   getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 
   createComment(
     caseId: string,
-    body: PostCaseComment,
+    body: PostCaseCommentBody,
+    storeState?: boolean,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<PostCaseCommentResponse>>
+  ): Promise<void>
 
-  deleteComment(caseId: string, commentId: string): Promise<ResultWrapper>
+  deleteComment(
+    caseId: string,
+    commentId: string,
+    transaction?: Transaction,
+  ): Promise<void>
 }
 
 export const ICommentService = Symbol('ICommentService')

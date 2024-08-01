@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { CaseCommentType } from './case-comment-constants'
 
-export class PostCaseComment {
+export class PostCaseCommentBody {
   @ApiProperty({
     type: Boolean,
     description: 'Is the comment internal',

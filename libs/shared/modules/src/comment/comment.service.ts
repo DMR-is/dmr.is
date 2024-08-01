@@ -1,19 +1,19 @@
 import { Transaction } from 'sequelize'
 import { v4 as uuid } from 'uuid'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  CaseCommentPublicity,
+  CaseCommentTitle,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
-  PostCaseComment,
-  PostCaseCommentResponse,
+  PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { mapCaseCommentTypeToCaseCommentTitle } from '@dmr.is/utils'
+import { mapCommentTypeToTitle } from '@dmr.is/utils'
 
 import {
-  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -23,12 +23,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { CaseStatusDto } from '../case/models'
-import {
-  caseCommentMigrate,
-  caseCommentTitleMapper,
-  caseCommentTypeMapper,
-} from '../helpers'
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { caseCommentMigrate } from '../helpers'
 import { IUtilityService } from '../utility/utility.module'
 import { CaseCommentDto } from './models/CaseComment'
 import { CaseCommentsDto } from './models/CaseComments'
@@ -36,6 +31,7 @@ import { CaseCommentTaskDto } from './models/CaseCommentTask'
 import { CaseCommentTitleDto } from './models/CaseCommentTitle'
 import { CaseCommentTypeDto } from './models/CaseCommentType'
 import { ICommentService } from './comment.service.interface'
+import { CASE_COMMENTS_RELATIONS } from './relations'
 
 @Injectable()
 export class CommentService implements ICommentService {
@@ -64,25 +60,63 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  private async caseCommentTitleLookup(
+    type: string | CaseCommentTitle,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommentTitleDto>> {
+    const title = await this.caseCommentTitleModel.findOne({
+      where: { value: type },
+      transaction,
+    })
+
+    if (!title) {
+      throw new NotFoundException(`No title found for type<${type}>`)
+    }
+
+    return ResultWrapper.ok(title)
+  }
+
+  @LogAndHandle()
+  private async caseCommentTypeLookup(
+    type: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommentTypeDto>> {
+    const commentType = await this.caseCommentTypeModel
+      .findOne({
+        where: { value: type },
+        transaction,
+      })
+      .catch((err) => {
+        this.logger.error('Error looking up comment type', err)
+        throw err
+      })
+
+    if (!commentType) {
+      throw new NotFoundException(`No type found for type<${type}>`)
+    }
+
+    return ResultWrapper.ok(commentType)
+  }
+
+  @LogAndHandle()
   async getComment(
     caseId: string,
     commentId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentResponse>> {
-    const comment = await this.caseCommentModel.findOne({
-      where: { id: commentId },
-      nest: true,
-      include: [
-        CaseCommentTypeDto,
-        CaseStatusDto,
-        { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-      ],
+    const comment = await this.caseCommentsModel.findOne({
+      where: { caseId: caseId, commentId: commentId },
+      include: CASE_COMMENTS_RELATIONS,
+      transaction,
     })
 
     if (!comment) {
-      throw new NotFoundException(`Comment<${commentId}> not found`)
+      throw new NotFoundException(
+        `Comment<${commentId}> not found for case<${caseId}>`,
+      )
     }
 
-    const migrated = caseCommentMigrate(comment)
+    const migrated = caseCommentMigrate(comment.caseComment)
 
     return ResultWrapper.ok({
       comment: migrated,
@@ -93,90 +127,52 @@ export class CommentService implements ICommentService {
   async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
-    const onlyExternal = params?.type === 'external'
-    const onlyInternal = params?.type === 'internal'
+    // TODO: Check if requestee has access to internal comments
+    const onlyInternal =
+      params?.type === CaseCommentPublicity.External ? false : true
 
-    const found = await this.caseCommentsModel.findAll({
-      where: { case_case_id: caseId },
-      include: [
-        {
-          model: CaseCommentDto,
-          include: [
-            CaseCommentTypeDto,
-            CaseStatusDto,
-            { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
-          ],
-        },
-      ],
+    const comments = await this.caseCommentsModel.findAll({
+      where: { case_case_id: caseId, internal: !onlyInternal },
+      include: CASE_COMMENTS_RELATIONS,
+      transaction,
     })
 
-    const comments = found
-      .map((c) => caseCommentMigrate(c.caseComment))
-      .filter((c) => {
-        if (onlyExternal) {
-          return !c.internal
-        }
-
-        if (onlyInternal) {
-          return c.internal
-        }
-
-        return true
-      })
+    const migrated = comments.map((comment) =>
+      caseCommentMigrate(comment.caseComment),
+    )
 
     return ResultWrapper.ok({
-      comments,
+      comments: migrated,
     })
   }
 
   @LogAndHandle()
+  @Transactional()
   async createComment(
     caseId: string,
-    body: PostCaseComment,
+    body: PostCaseCommentBody,
+    storeState = false,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<PostCaseCommentResponse>> {
-    const now = new Date().toISOString()
-
-    const caseLookup = (
+  ): Promise<void> {
+    const activeCase = (
       await this.utilityService.caseLookup(caseId, transaction)
     ).unwrap()
 
-    const theCase = caseMigrate(caseLookup)
+    const mappedTitle = mapCommentTypeToTitle(body.type)
 
-    // find which title to use
-    const title = caseCommentTitleMapper(
-      mapCaseCommentTypeToCaseCommentTitle(body.type),
-    )
-
-    const titleRef = await this.caseCommentTitleModel.findOne({
-      where: { value: title },
-      transaction: transaction,
-    })
-
-    if (!titleRef) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Title not found',
-      })
-    }
-
-    const newCommentType = caseCommentTypeMapper(body.type)
-
-    if (!newCommentType) {
-      throw new BadRequestException(`Invalid comment type: ${body.type}`)
-    }
+    const title = (
+      await this.caseCommentTitleLookup(mappedTitle, transaction)
+    ).unwrap()
 
     const newCommentTypeRef = await this.caseCommentTypeModel.findOne({
-      where: { value: newCommentType },
+      where: { value: body.type },
       transaction: transaction,
     })
 
     if (!newCommentTypeRef) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Comment type not found',
-      })
+      throw new NotFoundException(`No type found for type<${body.type}>`)
     }
 
     const newCommentTask = await this.caseCommentTaskModel.create(
@@ -185,28 +181,31 @@ export class CommentService implements ICommentService {
         comment: body.comment,
         fromId: body.from,
         toId: body.to,
-        titleId: titleRef.id,
+        titleId: title.id,
       },
       {
         transaction: transaction,
       },
     )
 
-    const applicationRes = (
-      await this.applicationService.getApplication(theCase.applicationId)
-    ).unwrap()
+    let state: string | null = null
+    if (storeState) {
+      const applicationRes = (
+        await this.applicationService.getApplication(activeCase.applicationId)
+      ).unwrap()
 
-    const { application } = applicationRes
+      const { application } = applicationRes
+
+      state = JSON.stringify(application)
+    }
 
     const newComment = await this.caseCommentModel.create(
       {
-        id: uuid(),
-        createdAt: now,
         internal: body.internal,
         typeId: newCommentTypeRef.id,
-        statusId: caseLookup.statusId,
+        statusId: activeCase.statusId,
         taskId: newCommentTask.id,
-        state: JSON.stringify(application),
+        state: state,
       },
       {
         returning: true,
@@ -236,22 +235,17 @@ export class CommentService implements ICommentService {
     })
 
     if (!withRelations) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Comment not found',
-      })
+      throw new NotFoundException(`Comment<${newComment.id}> not found`)
     }
-
-    return ResultWrapper.ok({
-      comment: caseCommentMigrate(withRelations),
-    })
   }
 
   @LogAndHandle()
+  @Transactional()
   async deleteComment(
     caseId: string,
     commentId: string,
-  ): Promise<ResultWrapper> {
+    transaction?: Transaction,
+  ): Promise<void> {
     // check if case and comment exists
     const exists = await this.caseCommentsModel.findOne({
       where: {
@@ -259,6 +253,7 @@ export class CommentService implements ICommentService {
         commentId,
       },
       include: [CaseCommentDto],
+      transaction,
     })
 
     if (!exists) {
@@ -284,10 +279,6 @@ export class CommentService implements ICommentService {
       where: {
         id: exists.caseComment.taskId,
       },
-    })
-
-    return ResultWrapper.ok({
-      success: true,
     })
   }
 }

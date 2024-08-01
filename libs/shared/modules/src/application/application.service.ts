@@ -10,7 +10,6 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -297,7 +296,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<ResultWrapper<PostCaseCommentResponse>> {
+  ): Promise<void> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
@@ -309,18 +308,12 @@ export class ApplicationService implements IApplicationService {
       ? caseLookup.involvedPartyId
       : involvedParty.id
 
-    const createdResult = (
-      await this.commentService.createComment(caseLookup.id, {
-        comment: commentBody.comment,
-        from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
-        internal: false,
-        type: CaseCommentType.Comment,
-      })
-    ).unwrap()
-
-    return ResultWrapper.ok({
-      comment: createdResult.comment,
+    await this.commentService.createComment(caseLookup.id, {
+      comment: commentBody.comment,
+      from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
+      to: null,
+      internal: false,
+      type: CaseCommentType.Comment,
     })
   }
 }
