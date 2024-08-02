@@ -1,11 +1,11 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
-export type SWRAddCommentParams = {
+export type AddCommentTriggerArgs = {
   caseId: string
   internal: boolean
   comment: string
-  from: string
-  to?: string
+  initator: string
+  receiver?: string
 }
 
 import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
@@ -14,7 +14,7 @@ type SWRAddCommentOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  SWRAddCommentParams
+  AddCommentTriggerArgs
 >
 
 type UseAddCommentParams = {
@@ -27,7 +27,7 @@ export const useAddComment = ({ caseId, options }: UseAddCommentParams) => {
     Response,
     Error,
     Key,
-    SWRAddCommentParams
+    AddCommentTriggerArgs
   >(APIRoutes.CreateComment.replace(':id', caseId), updateFetcher, options)
 
   return {

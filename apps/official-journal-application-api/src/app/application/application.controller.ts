@@ -1,34 +1,15 @@
-import { LogMethod } from '@dmr.is/decorators'
+import { Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Inject,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common'
-import {
-  ApiBody,
-  ApiCreatedResponse,
-  ApiExcludeEndpoint,
-  ApiNoContentResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-} from '@nestjs/swagger'
+import { Body, Controller, Inject, Param } from '@nestjs/common'
 
 @Controller({
   path: 'applications',
@@ -40,22 +21,12 @@ export class ApplicationController {
     private readonly applicationService: IApplicationService,
   ) {}
 
-  @Get(':id/price')
-  @ApiOperation({
+  @Route({
+    path: ':id/price',
     operationId: 'getPrice',
-    summary: 'Get price of application by ID.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: CasePriceResponse,
   })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to get price.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiOkResponse({
-    type: CasePriceResponse,
-  })
-  @LogMethod()
   async getPrice(
     @Param('id') applicationId: string,
   ): Promise<CasePriceResponse> {
@@ -64,23 +35,12 @@ export class ApplicationController {
     )
   }
 
-  @Get(':id')
-  @ApiOperation({
+  @Route({
+    path: ':id',
     operationId: 'getApplication',
-    summary: 'Get application by ID.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetApplicationResponse,
   })
-  @ApiOkResponse({
-    type: GetApplicationResponse,
-  })
-  @ApiExcludeEndpoint()
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to get.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @LogMethod()
   async getApplication(
     @Param('id') id: string,
   ): Promise<GetApplicationResponse> {
@@ -89,46 +49,25 @@ export class ApplicationController {
     )
   }
 
-  @Post(':id/submit')
-  @ApiOperation({
+  @Route({
+    method: 'post',
+    path: ':id/submit',
     operationId: 'submitApplication',
-    summary: 'Submit application by ID.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    exclude: true,
   })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to submit.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiNoContentResponse()
-  @HttpCode(204)
-  @ApiExcludeEndpoint()
-  @LogMethod()
   async submitApplication(@Param('id') id: string) {
     ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
   }
 
-  @Put(':id')
-  @ApiOperation({
+  @Route({
+    method: 'put',
+    path: ':id',
     operationId: 'updateApplication',
-    summary: 'Update answers of an application.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateApplicationBody,
+    exclude: true,
   })
-  @ApiNoContentResponse()
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to update.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiBody({
-    type: UpdateApplicationBody,
-    required: true,
-    description: 'Update application body, answers to update.',
-  })
-  @ApiExcludeEndpoint()
-  @LogMethod()
   async updateApplication(
     @Param('id') id: string,
     @Body() body: UpdateApplicationBody,
@@ -138,42 +77,24 @@ export class ApplicationController {
     )
   }
 
-  @Post(':id/post')
-  @ApiOperation({
+  @Route({
+    method: 'post',
+    path: ':id/post',
     operationId: 'postApplication',
-    summary: 'Post application.',
+    params: [{ name: 'id', type: 'string', required: true }],
   })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to post.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiNoContentResponse()
-  @HttpCode(204)
-  @LogMethod()
   async postApplication(@Param('id') applicationId: string) {
     return ResultWrapper.unwrap(
       await this.applicationService.postApplication(applicationId),
     )
   }
 
-  @Get(':id/comments')
-  @ApiOperation({
+  @Route({
+    path: ':id/comments',
     operationId: 'getComments',
-    summary: 'Get comments by application ID.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetCaseCommentsResponse,
   })
-  @ApiOkResponse({
-    type: GetCaseCommentsResponse,
-  })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to get comments.',
-    required: true,
-  })
-  @LogMethod()
   async getComments(
     @Param('id') applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
@@ -182,26 +103,18 @@ export class ApplicationController {
     )
   }
 
-  @Post(':id/comments')
-  @ApiCreatedResponse({
-    type: PostCaseCommentResponse,
-  })
-  @ApiOperation({
+  @Route({
+    method: 'post',
+    path: ':id/comments',
     operationId: 'postComment',
-    summary: 'Add comment to application.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: PostApplicationComment,
   })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to post comment.',
-    required: true,
-  })
-  @LogMethod()
   async postComment(
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,
-  ): Promise<PostCaseCommentResponse> {
-    return ResultWrapper.unwrap(
+  ): Promise<void> {
+    ResultWrapper.unwrap(
       await this.applicationService.postComment(applicationId, commentBody),
     )
   }

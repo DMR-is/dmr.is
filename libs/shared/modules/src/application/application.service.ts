@@ -4,13 +4,11 @@ import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseCommentPublicity,
   CaseCommentType,
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -242,12 +240,12 @@ export class ApplicationService implements IApplicationService {
       // TODO: temp fix for involved party
       const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
-      await this.commentService.create(caseLookup.id, {
+      await this.commentService.createComment(caseLookup.id, {
         internal: true,
         type: CaseCommentType.Submit,
         comment: null,
-        from: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
+        initiator: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
+        receiver: null,
       })
 
       this.logger.info(`Application<${applicationId}> reposted`, {
@@ -283,8 +281,8 @@ export class ApplicationService implements IApplicationService {
     ).unwrap()
 
     const commentsResult = (
-      await this.commentService.comments(caseResponse.id, {
-        type: CaseCommentPublicity.External,
+      await this.commentService.getComments(caseResponse.id, {
+        internal: false,
       })
     ).unwrap()
 
@@ -297,7 +295,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<ResultWrapper<PostCaseCommentResponse>> {
+  ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
@@ -309,18 +307,15 @@ export class ApplicationService implements IApplicationService {
       ? caseLookup.involvedPartyId
       : involvedParty.id
 
-    const createdResult = (
-      await this.commentService.create(caseLookup.id, {
-        comment: commentBody.comment,
-        from: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
-        to: null,
-        internal: false,
-        type: CaseCommentType.Comment,
-      })
-    ).unwrap()
-
-    return ResultWrapper.ok({
-      comment: createdResult.comment,
+    await this.commentService.createComment(caseLookup.id, {
+      comment: commentBody.comment,
+      initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
+      receiver: null,
+      internal: false,
+      type: CaseCommentType.Comment,
+      storeState: true,
     })
+
+    return ResultWrapper.ok()
   }
 }

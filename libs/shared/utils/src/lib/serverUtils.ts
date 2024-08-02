@@ -42,12 +42,9 @@ export function slicePagedData<T>(
   return data.slice((page - 1) * pageSize, page * pageSize)
 }
 
-export const mapCaseCommentTypeToCaseCommentTitle = (val?: string) => {
-  if (!val) {
-    return null
-  }
-
-  // TODO: CaseCommentType.AssignSelf is missing from the switch statement
+export const mapCommentTypeToTitle = (
+  val: CaseCommentType,
+): CaseCommentTitle => {
   switch (val) {
     case CaseCommentType.Comment:
       return CaseCommentTitle.Comment
@@ -61,7 +58,5 @@ export const mapCaseCommentTypeToCaseCommentTitle = (val?: string) => {
       return CaseCommentTitle.Submit
     case CaseCommentType.Update:
       return CaseCommentTitle.UpdateStatus
-    default:
-      return null
   }
 }

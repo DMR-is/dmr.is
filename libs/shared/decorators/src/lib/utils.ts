@@ -1,6 +1,6 @@
 import { logger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-
+import { BaseError } from 'sequelize'
 import { HttpException } from '@nestjs/common'
 
 export const handleException = <T>({
@@ -32,6 +32,19 @@ export const handleException = <T>({
       break
     default:
       prefix = 'Internal server error'
+  }
+
+  if (error instanceof BaseError) {
+    logger.debug(`Sequelize error ${error.name} in ${category}.${method}`, {
+      method,
+      category,
+    })
+
+    if ('errors' in error && Array.isArray(error.errors)) {
+      error.errors.forEach((err) => {
+        logger.debug(`${err.message}`)
+      })
+    }
   }
 
   if (error instanceof HttpException) {

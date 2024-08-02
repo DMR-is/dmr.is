@@ -17,8 +17,7 @@ import {
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
-  PostCaseComment,
-  PostCaseCommentResponse,
+  PostCaseCommentBody,
   PostCasePublishBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -32,14 +31,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  Body,
-  Controller,
-  Inject,
-  NotFoundException,
-  Param,
-  Query,
-} from '@nestjs/common'
+import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
 
 @Controller({
   version: '1',
@@ -359,7 +351,7 @@ export class CaseController {
     @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
-      await this.caseCommentService.comments(id, params),
+      await this.caseCommentService.getComments(id, params),
     )
   }
 
@@ -367,38 +359,39 @@ export class CaseController {
     path: ':id/comments/:commentId',
     operationId: 'getComment',
     summary: 'Get case comment',
-    responseType: GetCaseCommentResponse,
     params: [
       { name: 'id', type: 'string', required: true },
       { name: 'commentId', type: 'string', required: true },
     ],
+    responseType: GetCaseCommentResponse,
   })
   async getComment(
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
     return ResultWrapper.unwrap(
-      await this.caseCommentService.comment(id, commentId),
+      await this.caseCommentService.getComment(id, commentId),
     )
   }
 
   @Route({
+    method: 'post',
     path: ':id/comments',
     operationId: 'createComment',
     summary: 'Add comment to case',
-    bodyType: PostCaseComment,
-    responseType: PostCaseCommentResponse,
     params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: PostCaseCommentBody,
   })
   async createComment(
     @Param('id') id: string,
-    @Body() body: PostCaseComment,
-  ): Promise<PostCaseCommentResponse> {
-    return ResultWrapper.unwrap(await this.caseCommentService.create(id, body))
+    @Body() body: PostCaseCommentBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseCommentService.createComment(id, body))
   }
 
   @Route({
     method: 'delete',
+    path: ':id/comments/:commentId',
     operationId: 'deleteComment',
     summary: 'Delete comment from case',
     params: [
@@ -410,12 +403,8 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<void> {
-    const result = await this.caseCommentService.delete(id, commentId)
-
-    if (!result) {
-      throw new NotFoundException(
-        `Comment<${commentId}> not found on case<${id}>`,
-      )
-    }
+    ResultWrapper.unwrap(
+      await this.caseCommentService.deleteComment(id, commentId),
+    )
   }
 }

@@ -16,7 +16,7 @@ import {
   GetUsersQueryParams,
   GetUsersResponse,
   PostApplicationBody,
-  PostCaseComment,
+  PostCaseCommentBody,
   PostCasePublishBody,
   UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
@@ -132,7 +132,10 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('getComments', caseId, params)
     throw new Error('Method not implemented.')
   }
-  postComment(caseId: string, body: PostCaseComment): Promise<CaseComment[]> {
+  postComment(
+    caseId: string,
+    body: PostCaseCommentBody,
+  ): Promise<CaseComment[]> {
     this.logger.info('postComment', caseId, body)
     throw new Error('Method not implemented.')
   }

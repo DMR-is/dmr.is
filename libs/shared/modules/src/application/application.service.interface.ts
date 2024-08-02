@@ -3,7 +3,6 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -27,7 +26,7 @@ export interface IApplicationService {
   postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-  ): Promise<ResultWrapper<PostCaseCommentResponse>>
+  ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
 }

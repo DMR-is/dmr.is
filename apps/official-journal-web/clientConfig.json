@@ -740,25 +740,6 @@
             }
           }
         }
-      },
-      "delete": {
-        "operationId": "deleteComment",
-        "summary": "Delete comment from case",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "commentId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/publish": {
@@ -779,6 +760,37 @@
     },
     "/api/v1/cases/{id}/comments": {
       "get": {
+        "operationId": "getComments",
+        "summary": "Get case comments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "description": "Type of the comment",
+            "required": false,
+            "name": "internal",
+            "in": "query",
+            "schema": { "enum": [], "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCaseCommentsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
         "operationId": "createComment",
         "summary": "Add comment to case",
         "parameters": [
@@ -793,22 +805,11 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PostCaseComment" }
+              "schema": { "$ref": "#/components/schemas/PostCaseCommentBody" }
             }
           }
         },
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PostCaseCommentResponse"
-                }
-              }
-            }
-          }
-        }
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/cases/{id}/comments/{commentId}": {
@@ -841,6 +842,25 @@
             }
           }
         }
+      },
+      "delete": {
+        "operationId": "deleteComment",
+        "summary": "Delete comment from case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {
@@ -1228,8 +1248,8 @@
             "type": "string",
             "enum": [
               "Innsent af:",
-              "merkir sér málið.",
               "færir mál á",
+              "merkir sér málið.",
               "færir mál í stöðuna:",
               "gerir athugasemd.",
               "skráir skilaboð"
@@ -1761,7 +1781,7 @@
         },
         "required": ["comment"]
       },
-      "PostCaseComment": {
+      "PostCaseCommentBody": {
         "type": "object",
         "properties": {
           "internal": {
@@ -1784,26 +1804,20 @@
             "type": "string",
             "description": "The case comment itself"
           },
-          "from": {
+          "initiator": {
             "type": "string",
             "description": "Id of the user who created the comment"
           },
-          "to": {
+          "receiver": {
             "type": "string",
             "description": "To whom or what the task is assigned to."
+          },
+          "storeState": {
+            "type": "boolean",
+            "description": "Store the state of the application"
           }
         },
-        "required": ["internal", "type", "comment", "from"]
-      },
-      "PostCaseCommentResponse": {
-        "type": "object",
-        "properties": {
-          "comment": {
-            "description": "The created case comment",
-            "allOf": [{ "$ref": "#/components/schemas/CaseComment" }]
-          }
-        },
-        "required": ["comment"]
+        "required": ["internal", "type", "comment", "initiator"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",
