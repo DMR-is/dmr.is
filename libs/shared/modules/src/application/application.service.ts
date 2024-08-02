@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -148,22 +149,20 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
-  async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
+  async submitApplication(
+    id: string,
+    event: ApplicationEvent,
+  ): Promise<ResultWrapper<undefined>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
         method: 'PUT',
         body: new URLSearchParams({
-          event: 'REJECT',
+          event: event,
         }),
       },
     )
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const newCase = await this.caseService.create({
-      applicationId: id,
-    })
 
     return ResultWrapper.ok()
   }

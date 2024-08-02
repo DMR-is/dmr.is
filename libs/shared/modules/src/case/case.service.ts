@@ -96,6 +96,74 @@ export class CaseService implements ICaseService {
     this.logger.info('Using CaseService')
   }
 
+  @LogAndHandle({ logArgs: false })
+  @Transactional()
+  private async publishCase(caseId: string, transaction?: Transaction) {
+    this.logger.debug(`Publishing case<${caseId}>`)
+
+    const now = new Date()
+
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatus.Published)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        statusId: caseStatus.id,
+        publishedAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    const caseWithAdvert = (
+      await this.utilityService.getCaseWithAdvert(caseId)
+    ).unwrap()
+
+    const { activeCase, advert } = caseWithAdvert
+
+    const number = (
+      await this.utilityService.getNextPublicationNumber(
+        activeCase.advertDepartment.id,
+        transaction,
+      )
+    ).unwrap()
+
+    const advertStatus = (
+      await this.utilityService.advertStatusLookup(AdvertStatus.Published)
+    ).unwrap()
+
+    if (!advert.signatureDate) {
+      throw new BadRequestException('Signature date is required')
+    }
+
+    await this.journalService.create(
+      {
+        departmentId: activeCase.advertDepartment.id,
+        typeId: activeCase.advertType.id,
+        involvedPartyId: activeCase.involvedParty.id,
+        categoryIds: activeCase.advertCategories.map((c) => c.id),
+        statusId: advertStatus.id,
+        subject: activeCase.advertTitle,
+        publicationNumber: number,
+        publicationDate: new Date(),
+        signatureDate: new Date(advert.signatureDate),
+        isLegacy: activeCase.isLegacy,
+        documentHtml: advert.documents.full,
+        documentPdfUrl: '',
+        attachments: advert.attachments.map((a) => a.url),
+      },
+      transaction,
+    )
+
+    await this.utilityService.approveApplication(activeCase.applicationId)
+  }
+
   @LogAndHandle()
   async tags(): Promise<ResultWrapper<GetTagsResponse>> {
     const tags = await this.caseTagModel.findAll()
@@ -478,72 +546,10 @@ export class CaseService implements ICaseService {
       throw new BadRequestException()
     }
 
-    const now = new Date().toISOString()
-
-    const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatus.Published)
-    ).unwrap()
-
-    await this.caseModel.update(
-      {
-        publishedAt: now,
-        statusId: caseStatus.id,
-      },
-      {
-        where: {
-          id: {
-            [Op.in]: caseIds,
-          },
-        },
-        transaction: transaction,
-      },
-    )
-
     await Promise.all(
-      caseIds.map(async (caseId) => {
-        const caseWithAdvert = (
-          await this.utilityService.getCaseWithAdvert(caseId)
-        ).unwrap()
-
-        const { activeCase, advert } = caseWithAdvert
-
-        const now = new Date()
-        const number = (
-          await this.utilityService.getNextPublicationNumber(
-            activeCase.advertDepartment.id,
-            transaction,
-          )
-        ).unwrap()
-
-        const advertStatus = (
-          await this.utilityService.advertStatusLookup(AdvertStatus.Published)
-        ).unwrap()
-
-        if (!advert.signatureDate) {
-          throw new BadRequestException('Signature date is required')
-        }
-
-        const advertId = uuid()
-        await this.journalService.create(
-          {
-            id: advertId,
-            departmentId: activeCase.advertDepartment.id,
-            typeId: activeCase.advertType.id,
-            involvedPartyId: activeCase.involvedParty.id,
-            categoryIds: activeCase.advertCategories.map((c) => c.id),
-            statusId: advertStatus.id,
-            subject: activeCase.advertTitle,
-            publicationNumber: number,
-            publicationDate: now,
-            signatureDate: new Date(advert.signatureDate),
-            isLegacy: activeCase.isLegacy,
-            documentHtml: advert.documents.full,
-            documentPdfUrl: '',
-            attachments: advert.attachments.map((a) => a.url),
-          },
-          transaction,
-        )
-      }),
+      caseIds.map(
+        async (caseId) => await this.publishCase(caseId, transaction),
+      ),
     )
 
     return ResultWrapper.ok()

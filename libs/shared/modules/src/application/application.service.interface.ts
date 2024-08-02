@@ -1,3 +1,4 @@
+import { ApplicationEvent } from '@dmr.is/constants'
 import {
   CasePriceResponse,
   GetApplicationResponse,
@@ -15,7 +16,10 @@ export interface IApplicationService {
     answers?: UpdateApplicationBody,
   ): Promise<ResultWrapper<undefined>>
 
-  submitApplication(id: string): Promise<ResultWrapper<undefined>>
+  submitApplication(
+    id: string,
+    event: ApplicationEvent,
+  ): Promise<ResultWrapper<undefined>>
 
   postApplication(id: string): Promise<ResultWrapper<undefined>>
 

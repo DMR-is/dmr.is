@@ -7,3 +7,8 @@ export enum Filenames {
 }
 
 export const FAST_TRACK_DAYS = 10
+
+export enum ApplicationEvent {
+  Approve = 'APPROVE',
+  Reject = 'REJECT',
+}
