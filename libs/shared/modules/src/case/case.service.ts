@@ -165,13 +165,13 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async tags(): Promise<ResultWrapper<GetTagsResponse>> {
+  async getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
     const tags = await this.caseTagModel.findAll()
 
     const migrated: CaseTag[] = tags.map((t) => ({
       id: t.id,
       key: t.key,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       value: caseTagMapper(t.value)!,
     }))
 
@@ -181,10 +181,10 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async overview(
+  async getCasesOverview(
     params?: GetCasesQuery | undefined,
   ): Promise<ResultWrapper<EditorialOverviewResponse>> {
-    const cases = (await this.cases(params)).unwrap()
+    const cases = (await this.getCases(params)).unwrap()
 
     const counter = await this.caseModel.findAll({
       attributes: [
@@ -247,7 +247,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async create(
+  async createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
@@ -440,7 +440,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+  async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const caseWithAdvert = (
       await this.utilityService.getCaseWithAdvert(id)
     ).unwrap()
@@ -451,7 +451,9 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+  async getCases(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesReponse>> {
     const page = params?.page ? parseInt(params.page, 10) : 1
     const pageSize = params?.pageSize
       ? parseInt(params.pageSize, 10)
@@ -518,7 +520,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async getNextPublicationNumber(
+  async getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
     const doesDepartmentExist = (
@@ -536,7 +538,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async publish(
+  async publishCases(
     body: PostCasePublishBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
@@ -556,7 +558,10 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
+  async assignUserToCase(
+    id: string,
+    userId: string,
+  ): Promise<ResultWrapper<undefined>> {
     if (!id || !userId) {
       throw new BadRequestException()
     }
@@ -592,7 +597,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateStatus(
+  async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -625,7 +630,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
+  async updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     const activeCase = (await this.utilityService.caseLookup(id)).unwrap()
 
     const status = (
@@ -651,11 +656,11 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Invalid status')
     }
 
-    return this.updateStatus(id, { status: nextStatus })
+    return this.updateCaseStatus(id, { status: nextStatus })
   }
 
   @LogAndHandle()
-  async updatePrice(
+  async updateCasePrice(
     caseId: string,
     price: string,
   ): Promise<ResultWrapper<undefined>> {
@@ -678,7 +683,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateDepartment(
+  async updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -717,7 +722,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateType(
+  async updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
     transaction?: Transaction,
@@ -760,7 +765,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateCategories(
+  async updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -854,7 +859,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updatePublishDate(
+  async updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
     transaction?: Transaction,
@@ -909,7 +914,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateTitle(
+  async updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
     transaction?: Transaction,
@@ -946,7 +951,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updatePaid(
+  async updateCasePaid(
     caseId: string,
     body: UpdatePaidBody,
     transaction?: Transaction,
@@ -970,7 +975,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateTag(
+  async udpateCaseTag(
     caseId: string,
     body: UpdateTagBody,
     transaction?: Transaction,

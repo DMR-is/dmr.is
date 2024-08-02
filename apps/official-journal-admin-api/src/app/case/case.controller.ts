@@ -60,7 +60,7 @@ export class CaseController {
     @Param('departmentId') departmentId: string,
   ): Promise<GetNextPublicationNumberResponse> {
     return ResultWrapper.unwrap(
-      await this.caseService.getNextPublicationNumber(departmentId),
+      await this.caseService.getNextCasePublicationNumber(departmentId),
     )
   }
 
@@ -86,7 +86,7 @@ export class CaseController {
     responseType: GetTagsResponse,
   })
   async tags(): Promise<GetTagsResponse> {
-    return ResultWrapper.unwrap(await this.caseService.tags())
+    return ResultWrapper.unwrap(await this.caseService.getCaseTags())
   }
 
   @Route({
@@ -127,7 +127,7 @@ export class CaseController {
   async editorialOverview(
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
-    return ResultWrapper.unwrap(await this.caseService.overview(params))
+    return ResultWrapper.unwrap(await this.caseService.getCasesOverview(params))
   }
 
   @Route({
@@ -142,7 +142,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updatePrice(id, body.price))
+    ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body.price))
   }
 
   @Route({
@@ -157,7 +157,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdatePaidBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updatePaid(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
   }
 
   @Route({
@@ -172,7 +172,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateTagBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateTag(id, body))
+    ResultWrapper.unwrap(await this.caseService.udpateCaseTag(id, body))
   }
 
   @Route({
@@ -187,7 +187,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateDepartment(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseDepartment(id, body))
   }
 
   @Route({
@@ -201,7 +201,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseTypeBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateType(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
   }
 
   @Route({
@@ -216,7 +216,9 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdatePublishDateBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updatePublishDate(id, body))
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseRequestedPublishDate(id, body),
+    )
   }
 
   @Route({
@@ -231,7 +233,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateTitleBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateTitle(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseTitle(id, body))
   }
 
   @Route({
@@ -246,7 +248,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCategoriesBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCategories(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
   }
 
   @Route({
@@ -257,7 +259,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
   })
   async updateNextStatus(@Param('id') id: string): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateNextStatus(id))
+    ResultWrapper.unwrap(await this.caseService.updateCaseNextStatus(id))
   }
 
   @Route({
@@ -274,7 +276,7 @@ export class CaseController {
     @Param('id') id: string,
     @Param('userId') userId: string,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.assign(id, userId))
+    ResultWrapper.unwrap(await this.caseService.assignUserToCase(id, userId))
   }
 
   @Route({
@@ -289,7 +291,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCaseStatusBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateStatus(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseStatus(id, body))
   }
 
   @Route({
@@ -300,7 +302,7 @@ export class CaseController {
     responseType: GetCaseResponse,
   })
   async case(@Param('id') id: string): Promise<GetCaseResponse> {
-    return ResultWrapper.unwrap(await this.caseService.case(id))
+    return ResultWrapper.unwrap(await this.caseService.getCase(id))
   }
 
   @Route({
@@ -313,7 +315,7 @@ export class CaseController {
   async createCase(
     @Body() body: PostApplicationBody,
   ): Promise<CreateCaseResponse> {
-    return ResultWrapper.unwrap(await this.caseService.create(body))
+    return ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
   @Route({
@@ -324,7 +326,7 @@ export class CaseController {
     query: [{ type: GetCasesQuery }],
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    return ResultWrapper.unwrap(await this.caseService.cases(params))
+    return ResultWrapper.unwrap(await this.caseService.getCases(params))
   }
 
   @Route({
@@ -335,7 +337,7 @@ export class CaseController {
     bodyType: PostCasePublishBody,
   })
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.publish(body))
+    ResultWrapper.unwrap(await this.caseService.publishCases(body))
   }
 
   @Route({

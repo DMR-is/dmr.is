@@ -14,14 +14,11 @@ export interface IApplicationService {
   updateApplication(
     id: string,
     answers?: UpdateApplicationBody,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 
-  submitApplication(
-    id: string,
-    event: ApplicationEvent,
-  ): Promise<ResultWrapper<undefined>>
+  submitApplication(id: string, event: ApplicationEvent): Promise<ResultWrapper>
 
-  postApplication(id: string): Promise<ResultWrapper<undefined>>
+  postApplication(id: string): Promise<ResultWrapper>
 
   getComments(
     applicationId: string,

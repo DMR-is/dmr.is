@@ -21,59 +21,65 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICaseService {
-  case(id: string): Promise<ResultWrapper<GetCaseResponse>>
-  cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
-  create(
+  getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
+  getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
+  createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponse>>
-  assign(id: string, userId: string): Promise<ResultWrapper<undefined>>
-  updateStatus(
+  assignUserToCase(
+    id: string,
+    userId: string,
+  ): Promise<ResultWrapper<undefined>>
+  updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<ResultWrapper<undefined>>
-  updateNextStatus(id: string): Promise<ResultWrapper<undefined>>
-  publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>>
-  overview(
+  updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>>
+  publishCases(body: PostCasePublishBody): Promise<ResultWrapper<undefined>>
+  getCasesOverview(
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<EditorialOverviewResponse>>
-  tags(): Promise<ResultWrapper<GetTagsResponse>>
+  getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
 
-  updatePrice(caseId: string, price: string): Promise<ResultWrapper<undefined>>
-  updateDepartment(
+  updateCasePrice(
+    caseId: string,
+    price: string,
+  ): Promise<ResultWrapper<undefined>>
+  updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>>
-  updateType(
+  updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
   ): Promise<ResultWrapper<undefined>>
 
-  updateCategories(
+  updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
   ): Promise<ResultWrapper<undefined>>
 
-  updatePublishDate(
+  updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
   ): Promise<ResultWrapper<undefined>>
 
-  updateTitle(
+  updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
   ): Promise<ResultWrapper<undefined>>
-  updatePaid(
+  updateCasePaid(
     caseId: string,
     body: UpdatePaidBody,
   ): Promise<ResultWrapper<undefined>>
 
-  updateTag(
+  udpateCaseTag(
     caseId: string,
     body: UpdateTagBody,
   ): Promise<ResultWrapper<undefined>>
 
-  getNextPublicationNumber(
+  getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
 }

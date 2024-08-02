@@ -5,7 +5,6 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -15,12 +14,20 @@ import { Body, Controller, Inject, Param } from '@nestjs/common'
   path: 'applications',
   version: '1',
 })
+/**
+ * Controller class for handling application-related requests.
+ */
 export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
   ) {}
 
+  /**
+   * Retrieves the price of an application.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves to the price of the application.
+   */
   @Route({
     path: ':id/price',
     operationId: 'getPrice',
@@ -35,6 +42,11 @@ export class ApplicationController {
     )
   }
 
+  /**
+   * Retrieves an application by its ID.
+   * @param id The ID of the application.
+   * @returns A promise that resolves to the application.
+   */
   @Route({
     path: ':id',
     operationId: 'getApplication',
@@ -49,34 +61,39 @@ export class ApplicationController {
     )
   }
 
-  @Route({
-    method: 'post',
-    path: ':id/submit',
-    operationId: 'submitApplication',
-    params: [{ name: 'id', type: 'string', required: true }],
-    exclude: true,
-  })
-  async submitApplication(@Param('id') id: string) {
-    ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
-  }
+  // @Route({
+  //   method: 'post',
+  //   path: ':id/submit',
+  //   operationId: 'submitApplication',
+  //   params: [{ name: 'id', type: 'string', required: true }],
+  //   exclude: true,
+  // })
+  // async submitApplication(@Param('id') id: string) {
+  //   ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
+  // }
 
-  @Route({
-    method: 'put',
-    path: ':id',
-    operationId: 'updateApplication',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateApplicationBody,
-    exclude: true,
-  })
-  async updateApplication(
-    @Param('id') id: string,
-    @Body() body: UpdateApplicationBody,
-  ) {
-    ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(id, body),
-    )
-  }
+  // @Route({
+  //   method: 'put',
+  //   path: ':id',
+  //   operationId: 'updateApplication',
+  //   params: [{ name: 'id', type: 'string', required: true }],
+  //   bodyType: UpdateApplicationBody,
+  //   exclude: true,
+  // })
+  // async updateApplication(
+  //   @Param('id') id: string,
+  //   @Body() body: UpdateApplicationBody,
+  // ) {
+  //   ResultWrapper.unwrap(
+  //     await this.applicationService.updateApplication(id, body),
+  //   )
+  // }
 
+  /**
+   * Handles submissions from the application system.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves when the application is posted.
+   */
   @Route({
     method: 'post',
     path: ':id/post',
@@ -89,6 +106,11 @@ export class ApplicationController {
     )
   }
 
+  /**
+   * Retrieves the comments of an application.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves to the comments of the application.
+   */
   @Route({
     path: ':id/comments',
     operationId: 'getComments',
@@ -103,6 +125,12 @@ export class ApplicationController {
     )
   }
 
+  /**
+   * Posts a comment on an application.
+   * @param applicationId The ID of the application.
+   * @param commentBody The body of the comment.
+   * @returns A promise that resolves when the comment is posted.
+   */
   @Route({
     method: 'post',
     path: ':id/comments',

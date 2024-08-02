@@ -152,7 +152,7 @@ export class ApplicationService implements IApplicationService {
   async submitApplication(
     id: string,
     event: ApplicationEvent,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
@@ -171,7 +171,7 @@ export class ApplicationService implements IApplicationService {
   async updateApplication(
     id: string,
     answers: UpdateApplicationBody,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -226,7 +226,7 @@ export class ApplicationService implements IApplicationService {
   async postApplication(
     applicationId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     try {
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(applicationId)
@@ -253,7 +253,7 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
-        const createResult = await this.caseService.create(
+        const createResult = await this.caseService.createCase(
           {
             applicationId,
           },
@@ -271,6 +271,11 @@ export class ApplicationService implements IApplicationService {
     )
   }
 
+  /**
+   * Retrieves the comments of an application.
+   * @param applicationId - The id of the application.
+   * @returns A `ResultWrapper` containing the comments of the application.
+   */
   @LogAndHandle()
   async getComments(
     applicationId: string,
@@ -290,6 +295,12 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
+  /**
+   * Handles comment submissions from the application system.
+   * @param applicationId - The id of the application.
+   * @param commentBody - The body of the comment.
+   * @returns A `ResultWrapper.ok()`.
+   */
   @LogAndHandle()
   async postComment(
     applicationId: string,

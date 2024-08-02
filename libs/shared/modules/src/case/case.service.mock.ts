@@ -41,79 +41,82 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
-  getNextPublicationNumber(
+  getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse, GenericError>> {
     throw new Error('Method not implemented.')
   }
-  tags(): Promise<ResultWrapper<GetTagsResponse>> {
+  getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateTag(
+  udpateCaseTag(
     caseId: string,
     body: UpdateTagBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePaid(
+  updateCasePaid(
     caseId: string,
     body: UpdatePaidBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateType(
+  updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateCategories(
+  updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePublishDate(
+  updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateTitle(
+  updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateDepartment(
+  updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updatePrice(
+  updateCasePrice(
     caseId: string,
     price: string,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
+  updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  updateStatus(
+  updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
+  assignUserToCase(
+    id: string,
+    userId: string,
+  ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
-  publish(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
+  publishCases(body: PostCasePublishBody): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
 
-  create(
+  createCase(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
     this.logger.info('createCase', body)
@@ -143,12 +146,12 @@ export class CaseServiceMock implements ICaseService {
     this.logger.info('deleteComment', caseId, commentId)
     throw new Error('Method not implemented.')
   }
-  case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+  getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     this.logger.info('getCase', id)
     throw new Error('Method not implemented.')
   }
 
-  cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+  getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
     throw new Error('Method not implemented.')
   }
 
@@ -170,7 +173,7 @@ export class CaseServiceMock implements ICaseService {
     })
   }
 
-  async overview(
+  async getCasesOverview(
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<EditorialOverviewResponse>> {
     const submitted: Case[] = []
@@ -194,7 +197,7 @@ export class CaseServiceMock implements ICaseService {
       }
     })
 
-    const response = (await this.cases(params)).unwrap()
+    const response = (await this.getCases(params)).unwrap()
 
     const { cases, paging } = response
 
