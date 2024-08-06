@@ -1,7 +1,9 @@
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IJournalService } from '@dmr.is/modules'
+import { ICaseService, IJournalService } from '@dmr.is/modules'
 import {
+  CaseStatus,
   DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -11,6 +13,7 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
+  GetCasesReponse,
   GetCategoriesResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
@@ -31,6 +34,7 @@ const LOGGING_CATEGORY = 'JournalController'
 export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -157,6 +161,32 @@ export class JournalController {
     @Query() params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
     return ResultWrapper.unwrap(await this.journalService.getSignatures(params))
+  }
+
+  @Route({
+    path: '/cases',
+    operationId: 'getCasesInProgress',
+    query: [{ type: DefaultSearchParams, required: false }],
+    responseType: GetCasesReponse,
+  })
+  async getCasesInProgress(
+    @Query()
+    params?: DefaultSearchParams,
+  ): Promise<GetCasesReponse> {
+    const statuses = [
+      CaseStatus.Submitted,
+      CaseStatus.InProgress,
+      CaseStatus.InReview,
+      CaseStatus.ReadyForPublishing,
+    ]
+
+    return ResultWrapper.unwrap(
+      await this.caseService.getCases({
+        page: `${params?.page ?? 1}`,
+        pageSize: `${params?.pageSize ?? DEFAULT_PAGE_SIZE}`,
+        status: statuses,
+      }),
+    )
   }
 
   @Route({
