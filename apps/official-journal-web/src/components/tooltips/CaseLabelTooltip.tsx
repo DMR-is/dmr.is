@@ -6,12 +6,12 @@ import { Tooltip } from './Tooltip'
 import * as styles from './Tooltip.css'
 
 type Props = {
-  label: string
+  type: 'fasttrack' | 'new' | 'waiting'
 }
 
-export const CaseLabelTooltip = ({ label }: Props) => {
+export const CaseLabelTooltip = ({ type }: Props) => {
   const { formatMessage } = useFormatMessage()
-  switch (label) {
+  switch (type) {
     case 'fasttrack':
       return (
         <Tooltip text={formatMessage(messages.general.fasttrack)}>
@@ -20,7 +20,7 @@ export const CaseLabelTooltip = ({ label }: Props) => {
           </Box>
         </Tooltip>
       )
-    case 'warning':
+    case 'new':
       return (
         <Tooltip text={formatMessage(messages.general.feedback)}>
           <Box className={styles.caseLabelTooltipIcon}>
@@ -28,7 +28,7 @@ export const CaseLabelTooltip = ({ label }: Props) => {
           </Box>
         </Tooltip>
       )
-    case 'info':
+    case 'waiting':
       return (
         <Tooltip text={formatMessage(messages.general.waiting)}>
           <Box className={styles.caseLabelTooltipIcon}>

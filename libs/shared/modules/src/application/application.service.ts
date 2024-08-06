@@ -1,10 +1,12 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
   CaseCommentType,
+  CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
@@ -148,22 +150,20 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
-  async submitApplication(id: string): Promise<ResultWrapper<undefined>> {
+  async submitApplication(
+    id: string,
+    event: ApplicationEvent,
+  ): Promise<ResultWrapper> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
         method: 'PUT',
         body: new URLSearchParams({
-          event: 'REJECT',
+          event: event,
         }),
       },
     )
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const newCase = await this.caseService.create({
-      applicationId: id,
-    })
 
     return ResultWrapper.ok()
   }
@@ -172,7 +172,7 @@ export class ApplicationService implements IApplicationService {
   async updateApplication(
     id: string,
     answers: UpdateApplicationBody,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -227,15 +227,27 @@ export class ApplicationService implements IApplicationService {
   async postApplication(
     applicationId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     try {
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(applicationId)
       ).unwrap()
 
-      // TODO: check if application is in correct state to allow posting
-      // TODO: set status to submitted? not decided yet
-      // TODO: add property to case to mark "Ný svör hafa borist", remove when case is changed
+      // TODO: check if application is in correct state to allow posting?
+      const commStatus = (
+        await this.utilityService.caseCommunicationStatusLookup(
+          CaseCommunicationStatus.HasAnswers,
+          transaction,
+        )
+      ).unwrap()
+
+      await this.caseService.updateCaseCommunicationStatus(
+        caseLookup.id,
+        {
+          statusId: commStatus.id,
+        },
+        transaction,
+      )
 
       // TODO: temp fix for involved party
       const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
@@ -254,7 +266,7 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
-        const createResult = await this.caseService.create(
+        const createResult = await this.caseService.createCase(
           {
             applicationId,
           },
@@ -272,6 +284,11 @@ export class ApplicationService implements IApplicationService {
     )
   }
 
+  /**
+   * Retrieves the comments of an application.
+   * @param applicationId - The id of the application.
+   * @returns A `ResultWrapper` containing the comments of the application.
+   */
   @LogAndHandle()
   async getComments(
     applicationId: string,
@@ -291,6 +308,12 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
+  /**
+   * Handles comment submissions from the application system.
+   * @param applicationId - The id of the application.
+   * @param commentBody - The body of the comment.
+   * @returns A `ResultWrapper.ok()`.
+   */
   @LogAndHandle()
   async postComment(
     applicationId: string,

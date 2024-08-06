@@ -17,6 +17,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
@@ -25,6 +26,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -51,6 +53,7 @@ import {
   counterResult,
 } from '../helpers'
 import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
+import { caseCommunicationStatusMigrate } from '../helpers/migrations/case/case-communication-status-migrate'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -64,6 +67,7 @@ import { ICaseService } from './case.service.interface'
 import {
   CaseChannelDto,
   CaseChannelsDto,
+  CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
   CaseTagDto,
@@ -91,19 +95,92 @@ export class CaseService implements ICaseService {
     @InjectModel(AdvertCategoryDTO)
     private readonly advertCategoryModel: typeof AdvertCategoryDTO,
     @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
+
+    @InjectModel(CaseCommunicationStatusDto)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
   }
 
+  @LogAndHandle({ logArgs: false })
+  @Transactional()
+  private async publishCase(caseId: string, transaction?: Transaction) {
+    this.logger.debug(`Publishing case<${caseId}>`)
+
+    const now = new Date()
+
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatus.Published)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        statusId: caseStatus.id,
+        publishedAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    const caseWithAdvert = (
+      await this.utilityService.getCaseWithAdvert(caseId)
+    ).unwrap()
+
+    const { activeCase, advert } = caseWithAdvert
+
+    const number = (
+      await this.utilityService.getNextPublicationNumber(
+        activeCase.advertDepartment.id,
+        transaction,
+      )
+    ).unwrap()
+
+    const advertStatus = (
+      await this.utilityService.advertStatusLookup(AdvertStatus.Published)
+    ).unwrap()
+
+    if (!advert.signatureDate) {
+      throw new BadRequestException('Signature date is required')
+    }
+
+    await this.journalService.create(
+      {
+        departmentId: activeCase.advertDepartment.id,
+        typeId: activeCase.advertType.id,
+        involvedPartyId: activeCase.involvedParty.id,
+        categoryIds: activeCase.advertCategories.map((c) => c.id),
+        statusId: advertStatus.id,
+        subject: activeCase.advertTitle,
+        publicationNumber: number,
+        publicationDate: new Date(),
+        signatureDate: new Date(advert.signatureDate),
+        isLegacy: activeCase.isLegacy,
+        documentHtml: advert.documents.full,
+        documentPdfUrl: '',
+        attachments: advert.attachments.map((a) => a.url),
+      },
+      transaction,
+    )
+
+    ResultWrapper.unwrap(
+      await this.utilityService.approveApplication(activeCase.applicationId),
+    )
+  }
+
   @LogAndHandle()
-  async tags(): Promise<ResultWrapper<GetTagsResponse>> {
+  async getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
     const tags = await this.caseTagModel.findAll()
 
     const migrated: CaseTag[] = tags.map((t) => ({
       id: t.id,
       key: t.key,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       value: caseTagMapper(t.value)!,
     }))
 
@@ -113,10 +190,10 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async overview(
+  async getCasesOverview(
     params?: GetCasesQuery | undefined,
   ): Promise<ResultWrapper<EditorialOverviewResponse>> {
-    const cases = (await this.cases(params)).unwrap()
+    const cases = (await this.getCases(params)).unwrap()
 
     const counter = await this.caseModel.findAll({
       attributes: [
@@ -179,7 +256,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async create(
+  async createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
@@ -372,7 +449,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async case(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+  async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const caseWithAdvert = (
       await this.utilityService.getCaseWithAdvert(id)
     ).unwrap()
@@ -383,7 +460,9 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async cases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+  async getCases(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesReponse>> {
     const page = params?.page ? parseInt(params.page, 10) : 1
     const pageSize = params?.pageSize
       ? parseInt(params.pageSize, 10)
@@ -450,7 +529,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async getNextPublicationNumber(
+  async getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
     const doesDepartmentExist = (
@@ -468,7 +547,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async publish(
+  async publishCases(
     body: PostCasePublishBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
@@ -478,79 +557,20 @@ export class CaseService implements ICaseService {
       throw new BadRequestException()
     }
 
-    const now = new Date().toISOString()
-
-    const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatus.Published)
-    ).unwrap()
-
-    await this.caseModel.update(
-      {
-        publishedAt: now,
-        statusId: caseStatus.id,
-      },
-      {
-        where: {
-          id: {
-            [Op.in]: caseIds,
-          },
-        },
-        transaction: transaction,
-      },
-    )
-
     await Promise.all(
-      caseIds.map(async (caseId) => {
-        const caseWithAdvert = (
-          await this.utilityService.getCaseWithAdvert(caseId)
-        ).unwrap()
-
-        const { activeCase, advert } = caseWithAdvert
-
-        const now = new Date()
-        const number = (
-          await this.utilityService.getNextPublicationNumber(
-            activeCase.advertDepartment.id,
-            transaction,
-          )
-        ).unwrap()
-
-        const advertStatus = (
-          await this.utilityService.advertStatusLookup(AdvertStatus.Published)
-        ).unwrap()
-
-        if (!advert.signatureDate) {
-          throw new BadRequestException('Signature date is required')
-        }
-
-        const advertId = uuid()
-        await this.journalService.create(
-          {
-            id: advertId,
-            departmentId: activeCase.advertDepartment.id,
-            typeId: activeCase.advertType.id,
-            involvedPartyId: activeCase.involvedParty.id,
-            categoryIds: activeCase.advertCategories.map((c) => c.id),
-            statusId: advertStatus.id,
-            subject: activeCase.advertTitle,
-            publicationNumber: number,
-            publicationDate: now,
-            signatureDate: new Date(advert.signatureDate),
-            isLegacy: activeCase.isLegacy,
-            documentHtml: advert.documents.full,
-            documentPdfUrl: '',
-            attachments: advert.attachments.map((a) => a.url),
-          },
-          transaction,
-        )
-      }),
+      caseIds.map(
+        async (caseId) => await this.publishCase(caseId, transaction),
+      ),
     )
 
     return ResultWrapper.ok()
   }
 
   @LogAndHandle()
-  async assign(id: string, userId: string): Promise<ResultWrapper<undefined>> {
+  async assignUserToCase(
+    id: string,
+    userId: string,
+  ): Promise<ResultWrapper<undefined>> {
     if (!id || !userId) {
       throw new BadRequestException()
     }
@@ -586,7 +606,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateStatus(
+  async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -619,7 +639,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateNextStatus(id: string): Promise<ResultWrapper<undefined>> {
+  async updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>> {
     const activeCase = (await this.utilityService.caseLookup(id)).unwrap()
 
     const status = (
@@ -645,11 +665,11 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Invalid status')
     }
 
-    return this.updateStatus(id, { status: nextStatus })
+    return this.updateCaseStatus(id, { status: nextStatus })
   }
 
   @LogAndHandle()
-  async updatePrice(
+  async updateCasePrice(
     caseId: string,
     price: string,
   ): Promise<ResultWrapper<undefined>> {
@@ -672,7 +692,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateDepartment(
+  async updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -711,7 +731,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateType(
+  async updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
     transaction?: Transaction,
@@ -754,7 +774,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async updateCategories(
+  async updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
   ): Promise<ResultWrapper<undefined>> {
@@ -848,7 +868,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updatePublishDate(
+  async updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
     transaction?: Transaction,
@@ -903,7 +923,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateTitle(
+  async updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
     transaction?: Transaction,
@@ -940,7 +960,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updatePaid(
+  async updateCasePaid(
     caseId: string,
     body: UpdatePaidBody,
     transaction?: Transaction,
@@ -964,7 +984,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateTag(
+  async udpateCaseTag(
     caseId: string,
     body: UpdateTagBody,
     transaction?: Transaction,
@@ -974,6 +994,57 @@ export class CaseService implements ICaseService {
     await this.caseModel.update(
       {
         tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse>
+  > {
+    const statuses = (await this.caseCommunicationStatusModel.findAll()).map(
+      (s) => caseCommunicationStatusMigrate(s),
+    )
+
+    return ResultWrapper.ok({
+      statuses,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseCommunicationStatus(
+    caseId: string,
+    body: UpdateCommunicationStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const lookup = (
+      await this.utilityService.caseCommunicationStatusLookupById(body.statusId)
+    ).unwrap()
+
+    if (lookup.value === CaseCommunicationStatus.WaitingForAnswers) {
+      this.logger.debug(
+        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+      )
+      const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+      ResultWrapper.unwrap(
+        await this.utilityService.rejectApplication(caseLookup.applicationId),
+      )
+    }
+
+    await this.caseModel.update(
+      {
+        communicationStatusId: lookup.id,
       },
       {
         where: {

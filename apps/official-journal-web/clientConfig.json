@@ -68,6 +68,25 @@
         }
       }
     },
+    "/api/v1/cases/communicationStatuses": {
+      "get": {
+        "operationId": "getCommunicationStatuses",
+        "summary": "Get communication statuses",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCommunicationSatusesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/tags": {
       "get": {
         "operationId": "getTags",
@@ -400,6 +419,30 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCaseDepartmentBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/communicationStatus": {
+      "put": {
+        "operationId": "updateCommunicationStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommunicationStatusBody"
               }
             }
           }
@@ -1013,6 +1056,31 @@
         },
         "required": ["departments", "paging"]
       },
+      "CommunicationStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the communication status"
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the communication status"
+          }
+        },
+        "required": ["id", "value"]
+      },
+      "GetCommunicationSatusesResponse": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "description": "List of communication statuses",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationStatus" }
+          }
+        },
+        "required": ["statuses"]
+      },
       "CaseTag": {
         "type": "object",
         "properties": {
@@ -1401,15 +1469,8 @@
             "allOf": [{ "$ref": "#/components/schemas/User" }]
           },
           "communicationStatus": {
-            "type": "string",
-            "enum": [
-              "Ekki hafin",
-              "Beðið eftir svörum",
-              "Svör hafa borist",
-              "Lokið"
-            ],
-            "example": "Ekki hafin",
-            "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`"
+            "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
+            "allOf": [{ "$ref": "#/components/schemas/CommunicationStatus" }]
           },
           "fastTrack": {
             "type": "boolean",
@@ -1587,6 +1648,13 @@
           "departmentId": { "type": "string", "description": "Department id" }
         },
         "required": ["departmentId"]
+      },
+      "UpdateCommunicationStatusBody": {
+        "type": "object",
+        "properties": {
+          "statusId": { "type": "string", "description": "Status id" }
+        },
+        "required": ["statusId"]
       },
       "UpdateCaseTypeBody": {
         "type": "object",

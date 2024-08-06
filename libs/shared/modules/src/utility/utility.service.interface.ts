@@ -19,6 +19,9 @@ import {
 } from '../journal/models'
 
 export interface IUtilityService {
+  approveApplication(applicationId: string): Promise<ResultWrapper>
+
+  rejectApplication(applicationId: string): Promise<ResultWrapper>
   applicationLookup(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationResponse>>
@@ -38,6 +41,10 @@ export interface IUtilityService {
   caseTagLookup(tag: string): Promise<ResultWrapper<CaseStatusDto>>
   caseCommunicationStatusLookup(
     status: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
+  caseCommunicationStatusLookupById(
+    id: string,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
   caseLookupByApplicationId(advertId: string): Promise<ResultWrapper<CaseDto>>
 

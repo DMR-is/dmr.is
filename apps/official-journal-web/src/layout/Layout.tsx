@@ -62,10 +62,9 @@ const Layout: Screen<LayoutProps> = ({
       <SWRConfig
         value={{
           fetcher: defaultFetcher,
-          refreshInterval: 5000,
+          refreshInterval: 1000 * 60,
           errorRetryCount: 3,
           errorRetryInterval: 5000,
-          dedupingInterval: 5000,
           suspense: false,
         }}
       >

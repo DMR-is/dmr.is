@@ -36,7 +36,7 @@ export class StatisticsService implements IStatisticsService {
     slug: string,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const casesRes = (
-      await this.casesService.cases({
+      await this.casesService.getCases({
         pageSize: '1000',
         department: [slug],
         status: [
@@ -115,7 +115,7 @@ export class StatisticsService implements IStatisticsService {
     }
 
     const casesRes = (
-      await this.casesService.cases({
+      await this.casesService.getCases({
         pageSize: '1000',
         status: [
           CaseStatus.Submitted,

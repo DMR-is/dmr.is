@@ -1,5 +1,5 @@
 import { Op, Transaction } from 'sequelize'
-import { Filenames } from '@dmr.is/constants'
+import { ApplicationEvent, Filenames } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
@@ -67,6 +67,32 @@ export class UtilityService implements IUtilityService {
   ) {
     this.logger.info('Using UtilityService')
   }
+
+  @LogAndHandle()
+  async approveApplication(applicationId: string): Promise<ResultWrapper> {
+    ResultWrapper.unwrap(
+      await this.applicationService.submitApplication(
+        applicationId,
+        ApplicationEvent.Approve,
+      ),
+    )
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async rejectApplication(
+    applicationId: string,
+  ): Promise<ResultWrapper<unknown, GenericError>> {
+    ResultWrapper.unwrap(
+      await this.applicationService.submitApplication(
+        applicationId,
+        ApplicationEvent.Reject,
+      ),
+    )
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
   async applicationLookup(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
@@ -191,15 +217,33 @@ export class UtilityService implements IUtilityService {
   @LogAndHandle()
   async caseCommunicationStatusLookup(
     status: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
     const statusLookup = await this.caseCommunicationStatusModel.findOne({
       where: {
         value: status,
       },
+      transaction,
     })
 
     if (!statusLookup) {
       throw new NotFoundException(`CommunicationStatus<${status}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
+  }
+
+  @LogAndHandle()
+  async caseCommunicationStatusLookupById(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
+    const statusLookup = await this.caseCommunicationStatusModel.findByPk(id, {
+      transaction,
+    })
+
+    if (!statusLookup) {
+      throw new NotFoundException(`CommunicationStatus<${id}> not found`)
     }
 
     return ResultWrapper.ok(statusLookup)

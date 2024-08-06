@@ -72,7 +72,7 @@ describe('CaseController', () => {
         {
           provide: ICaseService,
           useClass: jest.fn(() => ({
-            create: () => ({}),
+            createCase: () => ({}),
           })),
         },
         {
@@ -109,10 +109,10 @@ describe('CaseController', () => {
 
   describe('createCase', () => {
     it('should create a case', async () => {
-      const createSpy = jest.spyOn(caseService, 'create')
+      const createSpy = jest.spyOn(caseService, 'createCase')
 
       jest
-        .spyOn(caseService, 'create')
+        .spyOn(caseService, 'createCase')
         .mockImplementation(() =>
           Promise.resolve(ResultWrapper.ok({ case: activeCase })),
         )

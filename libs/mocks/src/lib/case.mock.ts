@@ -20,6 +20,12 @@ const caseTag = {
   value: CaseTagEnum.NotStarted,
 }
 
+const communicationStatus = {
+  id: '08f2c487-2407-470b-bef3-72c9e0afb328',
+  key: 'NotStarted',
+  value: CaseCommunicationStatus.NotStarted,
+}
+
 const involvedParty = MOCK_INVOLVEDPARTY_USR
 
 export const CASE_SUBMITTED: Case = {
@@ -46,7 +52,7 @@ export const CASE_SUBMITTED: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_NEW,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -89,7 +95,7 @@ export const CASE_IN_PROGRESS: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
@@ -175,7 +181,7 @@ export const CASE_IN_REVIEW: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -345,7 +351,7 @@ export const CASE_READY: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_A,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -431,7 +437,7 @@ export const CASE_READY_2: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -517,7 +523,7 @@ export const CASE_READY_3: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B_2,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -603,7 +609,7 @@ export const CASE_PUBLISHED: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_B_866_2006,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -689,7 +695,7 @@ export const CASE_PUBLISHED_2: Case = {
   channels: [],
   message: null,
   // advert: JOURNAL_DEPARTMENT_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -775,7 +781,7 @@ export const CASE_PUBLISHED_3: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_B_1278_2023,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',

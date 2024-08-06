@@ -18,6 +18,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { AdvertType } from '../advert-types'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
+import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions'
 import { CaseTag } from '../tags'
@@ -119,13 +120,11 @@ export class Case {
   assignedTo!: User | null
 
   @ApiProperty({
-    enum: CaseCommunicationStatus,
-    example: CaseCommunicationStatus.NotStarted,
+    type: CommunicationStatus,
     description:
       'Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`',
   })
-  @IsEnum(CaseCommunicationStatus)
-  communicationStatus!: CaseCommunicationStatus
+  communicationStatus!: CommunicationStatus
 
   @ApiProperty({
     type: Boolean,
