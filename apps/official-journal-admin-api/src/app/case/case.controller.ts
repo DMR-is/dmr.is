@@ -25,6 +25,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -201,6 +202,22 @@ export class CaseController {
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseDepartment(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/communicationStatus',
+    operationId: 'updateCommunicationStatus',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCommunicationStatusBody,
+  })
+  async updateCommunicationStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateCommunicationStatusBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseCommunicationStatus(id, body),
+    )
   }
 
   @Route({

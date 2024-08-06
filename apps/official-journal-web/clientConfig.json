@@ -426,6 +426,30 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/communicationStatus": {
+      "put": {
+        "operationId": "updateCommunicationStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommunicationStatusBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/type": {
       "get": {
         "operationId": "updateType",
@@ -1624,6 +1648,13 @@
           "departmentId": { "type": "string", "description": "Department id" }
         },
         "required": ["departmentId"]
+      },
+      "UpdateCommunicationStatusBody": {
+        "type": "object",
+        "properties": {
+          "statusId": { "type": "string", "description": "Status id" }
+        },
+        "required": ["statusId"]
       },
       "UpdateCaseTypeBody": {
         "type": "object",

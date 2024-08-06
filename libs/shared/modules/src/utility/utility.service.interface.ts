@@ -42,6 +42,9 @@ export interface IUtilityService {
   caseCommunicationStatusLookup(
     status: string,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
+  caseCommunicationStatusLookupById(
+    id: string,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
   caseLookupByApplicationId(advertId: string): Promise<ResultWrapper<CaseDto>>
 
   userLookup(userId: string): Promise<ResultWrapper<User>>

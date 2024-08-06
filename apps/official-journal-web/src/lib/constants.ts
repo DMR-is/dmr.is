@@ -156,6 +156,7 @@ export enum APIRotues {
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
   UpdatePaid = '/api/cases/:id/updatePaid',
   UpdateTag = '/api/cases/:id/updateTag',
+  UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',

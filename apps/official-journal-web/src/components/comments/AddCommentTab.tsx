@@ -4,6 +4,7 @@ import { Box, Button, Input, Select, Stack } from '@island.is/island-ui/core'
 
 import { CommunicationStatus } from '../../gen/fetch'
 import { useAddComment, useCommunicationStatuses } from '../../hooks/api'
+import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 
@@ -13,6 +14,7 @@ type Props = {
   userId: string
   currentStatus: CommunicationStatus
   onAddCommentSuccess?: () => void
+  onUpdateStatusSuccess?: () => void
 }
 
 export const AddCommentTab = ({
@@ -21,6 +23,7 @@ export const AddCommentTab = ({
   userId,
   currentStatus,
   onAddCommentSuccess,
+  onUpdateStatusSuccess,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -38,6 +41,15 @@ export const AddCommentTab = ({
     },
   })
 
+  const { trigger: updateCommunicationStatus } = useUpdateCommunicationStatus({
+    caseId: caseId,
+    options: {
+      onSuccess: () => {
+        onUpdateStatusSuccess && onUpdateStatusSuccess()
+      },
+    },
+  })
+
   return (
     <Box marginTop={2}>
       <Stack space={2}>
@@ -46,6 +58,12 @@ export const AddCommentTab = ({
             <Select
               size="xs"
               name="communication-status"
+              onChange={(e) => {
+                if (!e) return
+                updateCommunicationStatus({
+                  statusId: e.value,
+                })
+              }}
               options={statuses.statuses.map((s) => ({
                 label: s.value,
                 value: s.id,

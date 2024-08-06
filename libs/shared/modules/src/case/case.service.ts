@@ -26,6 +26,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -1015,5 +1016,31 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok({
       statuses,
     })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseCommunicationStatus(
+    caseId: string,
+    body: UpdateCommunicationStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const lookup = (
+      await this.utilityService.caseCommunicationStatusLookupById(body.statusId)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        communicationStatusId: lookup.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
   }
 }

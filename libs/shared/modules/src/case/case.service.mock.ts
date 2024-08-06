@@ -23,6 +23,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -41,6 +42,12 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updateCaseCommunicationStatus(
+    caseId: string,
+    body: UpdateCommunicationStatusBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
   }
   getCommunicationStatuses(): Promise<
     ResultWrapper<GetCommunicationSatusesResponse, GenericError>

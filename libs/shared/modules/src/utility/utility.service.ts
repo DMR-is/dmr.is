@@ -232,6 +232,19 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
+  async caseCommunicationStatusLookupById(
+    id: string,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
+    const statusLookup = await this.caseCommunicationStatusModel.findByPk(id)
+
+    if (!statusLookup) {
+      throw new NotFoundException(`CommunicationStatus<${id}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
+  }
+
+  @LogAndHandle()
   async caseTagLookup(tag: string): Promise<ResultWrapper<CaseTagDto>> {
     const tagLookup = await this.caseTagModel.findOne({
       where: {

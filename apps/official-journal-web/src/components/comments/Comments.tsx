@@ -146,30 +146,33 @@ export const Comments = ({ activeCase }: Props) => {
         <Box padding={4} background="white">
           <Box borderTopWidth="standard" borderColor="blue200">
             <Tabs
+              selected="internal"
               contentBackground="white"
               tabs={[
                 {
                   id: 'internal',
-                  label: 'Innri athugasemdir',
+                  label: formatMessage(messages.comments.internalComments),
                   content: (
                     <AddCommentTab
                       caseId={activeCase.activeCase.id}
                       internal={true}
                       userId={activeCase.activeCase.assignedTo.id}
                       onAddCommentSuccess={refetchCase}
+                      onUpdateStatusSuccess={refetchCase}
                       currentStatus={activeCase.activeCase.communicationStatus}
                     />
                   ),
                 },
                 {
                   id: 'external',
-                  label: 'Skilaboð til auglýsanda',
+                  label: formatMessage(messages.comments.externalComments),
                   content: (
                     <AddCommentTab
                       caseId={activeCase.activeCase.id}
                       internal={true}
                       userId={activeCase.activeCase.assignedTo.id}
                       onAddCommentSuccess={refetchCase}
+                      onUpdateStatusSuccess={refetchCase}
                       currentStatus={activeCase.activeCase.communicationStatus}
                     />
                   ),

@@ -14,6 +14,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -87,6 +88,11 @@ export interface ICaseService {
   getCommunicationStatuses(): Promise<
     ResultWrapper<GetCommunicationSatusesResponse>
   >
+
+  updateCaseCommunicationStatus(
+    caseId: string,
+    body: UpdateCommunicationStatusBody,
+  ): Promise<ResultWrapper<undefined>>
 }
 
 export const ICaseService = Symbol('ICaseService')
