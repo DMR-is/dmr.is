@@ -168,7 +168,9 @@ export class CaseService implements ICaseService {
       transaction,
     )
 
-    await this.utilityService.approveApplication(activeCase.applicationId)
+    ResultWrapper.unwrap(
+      await this.utilityService.approveApplication(activeCase.applicationId),
+    )
   }
 
   @LogAndHandle()
@@ -1028,6 +1030,17 @@ export class CaseService implements ICaseService {
     const lookup = (
       await this.utilityService.caseCommunicationStatusLookupById(body.statusId)
     ).unwrap()
+
+    if (lookup.value === CaseCommunicationStatus.WaitingForAnswers) {
+      this.logger.debug(
+        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+      )
+      const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+      ResultWrapper.unwrap(
+        await this.utilityService.rejectApplication(caseLookup.applicationId),
+      )
+    }
 
     await this.caseModel.update(
       {
