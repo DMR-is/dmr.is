@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
   CaseCommentType,
+  CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
@@ -232,9 +233,21 @@ export class ApplicationService implements IApplicationService {
         await this.utilityService.caseLookupByApplicationId(applicationId)
       ).unwrap()
 
-      // TODO: check if application is in correct state to allow posting
-      // TODO: set status to submitted? not decided yet
-      // TODO: add property to case to mark "Ný svör hafa borist", remove when case is changed
+      // TODO: check if application is in correct state to allow posting?
+      const commStatus = (
+        await this.utilityService.caseCommunicationStatusLookup(
+          CaseCommunicationStatus.HasAnswers,
+          transaction,
+        )
+      ).unwrap()
+
+      await this.caseService.updateCaseCommunicationStatus(
+        caseLookup.id,
+        {
+          statusId: commStatus.id,
+        },
+        transaction,
+      )
 
       // TODO: temp fix for involved party
       const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið

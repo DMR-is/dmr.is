@@ -3,7 +3,7 @@ import { Text } from '@island.is/island-ui/core'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
-import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
+import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -57,11 +57,7 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
     case: row,
     cells: [
       {
-        children: row.fastTrack && (
-          <div className={styles.iconWrapper}>
-            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
-          </div>
-        ),
+        children: <CaseToolTips case={row} />,
       },
       {
         sortingKey: 'casePublishDate',

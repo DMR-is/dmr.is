@@ -41,6 +41,7 @@ export interface IUtilityService {
   caseTagLookup(tag: string): Promise<ResultWrapper<CaseStatusDto>>
   caseCommunicationStatusLookup(
     status: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
   caseCommunicationStatusLookupById(
     id: string,

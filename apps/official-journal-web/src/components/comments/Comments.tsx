@@ -146,6 +146,7 @@ export const Comments = ({ activeCase }: Props) => {
         <Box padding={4} background="white">
           <Box borderTopWidth="standard" borderColor="blue200">
             <Tabs
+              onlyRenderSelectedTab={true}
               selected="internal"
               contentBackground="white"
               tabs={[
@@ -169,7 +170,7 @@ export const Comments = ({ activeCase }: Props) => {
                   content: (
                     <AddCommentTab
                       caseId={activeCase.activeCase.id}
-                      internal={true}
+                      internal={false}
                       userId={activeCase.activeCase.assignedTo.id}
                       onAddCommentSuccess={refetchCase}
                       onUpdateStatusSuccess={refetchCase}

@@ -21,11 +21,6 @@ export const tableHeadCell = style({
   gap: theme.spacing[1],
 })
 
-export const iconWrapper = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-})
 export const typeTableCell = style({
   overflow: 'hidden',
   maxWidth: '25ch',

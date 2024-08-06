@@ -217,11 +217,13 @@ export class UtilityService implements IUtilityService {
   @LogAndHandle()
   async caseCommunicationStatusLookup(
     status: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
     const statusLookup = await this.caseCommunicationStatusModel.findOne({
       where: {
         value: status,
       },
+      transaction,
     })
 
     if (!statusLookup) {
@@ -234,8 +236,11 @@ export class UtilityService implements IUtilityService {
   @LogAndHandle()
   async caseCommunicationStatusLookupById(
     id: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
-    const statusLookup = await this.caseCommunicationStatusModel.findByPk(id)
+    const statusLookup = await this.caseCommunicationStatusModel.findByPk(id, {
+      transaction,
+    })
 
     if (!statusLookup) {
       throw new NotFoundException(`CommunicationStatus<${id}> not found`)

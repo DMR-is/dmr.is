@@ -15,6 +15,7 @@ import { usePublishContext } from '../../hooks/usePublishContext'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
+import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
   CaseTable,
@@ -143,11 +144,7 @@ export const CaseTableReady = () => {
           ),
         },
         {
-          children: row.fastTrack && (
-            <div className={styles.iconWrapper}>
-              {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
-            </div>
-          ),
+          children: <CaseToolTips case={row} />,
         },
         {
           sortingKey: 'caseAdvertType',
