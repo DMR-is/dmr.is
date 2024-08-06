@@ -11,6 +11,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   GetUsersQueryParams,
@@ -40,6 +41,11 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse, GenericError>
+  > {
+    throw new Error('Method not implemented.')
   }
   getNextCasePublicationNumber(
     departmentId: string,

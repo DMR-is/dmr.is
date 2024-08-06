@@ -164,7 +164,7 @@ describe('CaseService', () => {
     // TODO: this needs fixing
     it('should create a case', async () => {
       // method should fail and a transaction rollback should happen
-      jest.spyOn(caseService, 'create').mockImplementationOnce(() => {
+      jest.spyOn(caseService, 'createCase').mockImplementationOnce(() => {
         throw new Error()
       })
     })

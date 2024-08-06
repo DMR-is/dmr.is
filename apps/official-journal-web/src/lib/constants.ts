@@ -144,6 +144,7 @@ export enum APIRotues {
   GetCategories = '/api/cases/categories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
+  GetCommunicationStatuses = '/api/cases/communicationStatuses',
   UpdateEmployee = '/api/cases/:id/updateEmployee',
   UpdateCaseStatus = '/api/cases/:id/updateStatus',
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',

@@ -1,20 +1,14 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 import { Fragment, useState } from 'react'
 
-import {
-  Box,
-  Button,
-  Icon,
-  Input,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
 
 import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
-import { useAddComment, useCase, useDeleteComment } from '../../hooks/api'
+import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { APIRotues } from '../../lib/constants'
 import { commentTaskToNode } from '../../lib/utils'
+import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
 import { messages } from './messages'
 type Props = {
@@ -27,8 +21,7 @@ export const Comments = ({ activeCase }: Props) => {
   const [expanded, setExpanded] = useState(
     activeCase.activeCase.comments.length < 6,
   )
-  const [commentValue, setCommentValue] = useState('')
-  const [isInternalComment, setIsInternalComment] = useState(true) // TODO: Not sure how this will be implemented (checkbox, tabs?)
+
   const now = new Date()
 
   const { mutate: refetchCase, isLoading: isRefetchingCase } = useCase({
@@ -47,145 +40,144 @@ export const Comments = ({ activeCase }: Props) => {
       },
     })
 
-  const { trigger: onAddComment, isMutating: isAddingComment } = useAddComment({
-    caseId: activeCase.activeCase.id,
-    options: {
-      onSuccess: () => {
-        setCommentValue('')
-        setIsInternalComment(true)
-        refetchCase()
-      },
-    },
-  })
-
-  const isLoading = isRefetchingCase || isDeletingComment || isAddingComment
+  const isLoading = isRefetchingCase || isDeletingComment
 
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
+      {activeCase.activeCase.comments.length === 0 ? (
+        <Text>Engar athugasemdir fundust fyrir þetta mál</Text>
+      ) : (
+        activeCase.activeCase.comments.map((c, i) => {
+          const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
+          const suffix =
+            String(daysAgo).slice(-1) === '1'
+              ? formatMessage(messages.comments.day)
+              : formatMessage(messages.comments.days)
 
-      {activeCase.activeCase.comments.map((c, i) => {
-        const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
-        const suffix =
-          String(daysAgo).slice(-1) === '1'
-            ? formatMessage(messages.comments.day)
-            : formatMessage(messages.comments.days)
+          if (
+            !expanded &&
+            i !== 0 &&
+            i < activeCase.activeCase.comments.length - 4
+          ) {
+            return null
+          }
 
-        if (
-          !expanded &&
-          i !== 0 &&
-          i < activeCase.activeCase.comments.length - 4
-        ) {
-          return null
-        }
-
-        return (
-          <Fragment key={c.id}>
-            <Box
-              display="flex"
-              justifyContent="spaceBetween"
-              alignItems="center"
-              padding={[1, 2, 3]}
-              borderBottomWidth="standard"
-              borderColor="purple200"
-            >
-              <Icon
-                icon={
-                  c.type === CaseCommentTypeEnum.Comment
-                    ? 'pencil'
-                    : 'arrowForward'
-                }
-                color="purple400"
-                size="medium"
-                className={styles.icon}
-              />
-
-              <div className={styles.text}>
-                <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
-                {c.task.comment ? <Text>{c.task.comment}</Text> : null}
-                <Button
-                  loading={isLoading}
-                  variant="text"
-                  as="button"
-                  size="small"
-                  onClick={() =>
-                    onDeleteComment({
-                      commentId: c.id,
-                    })
-                  }
-                >
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    columnGap="smallGutter"
-                  >
-                    {formatMessage(messages.comments.deleteComment)}
-                    <Icon icon="trash" type="outline" size="small" />
-                  </Box>
-                </Button>
-              </div>
-
-              <Text whiteSpace="nowrap">
-                {daysAgo === 0
-                  ? formatMessage(messages.comments.today)
-                  : daysAgo === 1
-                  ? formatMessage(messages.comments.yesterday)
-                  : 'f. ' + daysAgo + ' ' + suffix}
-              </Text>
-            </Box>
-
-            {!expanded && i === 0 ? (
+          return (
+            <Fragment key={c.id}>
               <Box
                 display="flex"
-                justifyContent="center"
-                padding={[1, 2]}
+                justifyContent="spaceBetween"
+                alignItems="center"
+                padding={[1, 2, 3]}
                 borderBottomWidth="standard"
                 borderColor="purple200"
               >
-                <Button
-                  variant="text"
-                  as="button"
-                  size="small"
-                  onClick={() => setExpanded(true)}
-                >
-                  {formatMessage(messages.comments.seeAll)} (
-                  {activeCase.activeCase.comments.length - 5})
-                </Button>
+                <Icon
+                  icon={
+                    c.type === CaseCommentTypeEnum.Comment
+                      ? 'pencil'
+                      : 'arrowForward'
+                  }
+                  color="purple400"
+                  size="medium"
+                  className={styles.icon}
+                />
+
+                <div className={styles.text}>
+                  <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
+                  {c.task.comment ? <Text>{c.task.comment}</Text> : null}
+                  <Button
+                    loading={isLoading}
+                    variant="text"
+                    as="button"
+                    size="small"
+                    onClick={() =>
+                      onDeleteComment({
+                        commentId: c.id,
+                      })
+                    }
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      columnGap="smallGutter"
+                    >
+                      {formatMessage(messages.comments.deleteComment)}
+                      <Icon icon="trash" type="outline" size="small" />
+                    </Box>
+                  </Button>
+                </div>
+
+                <Text whiteSpace="nowrap">
+                  {daysAgo === 0
+                    ? formatMessage(messages.comments.today)
+                    : daysAgo === 1
+                    ? formatMessage(messages.comments.yesterday)
+                    : 'f. ' + daysAgo + ' ' + suffix}
+                </Text>
               </Box>
-            ) : null}
-          </Fragment>
-        )
-      })}
+
+              {!expanded && i === 0 ? (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  padding={[1, 2]}
+                  borderBottomWidth="standard"
+                  borderColor="purple200"
+                >
+                  <Button
+                    variant="text"
+                    as="button"
+                    size="small"
+                    onClick={() => setExpanded(true)}
+                  >
+                    {formatMessage(messages.comments.seeAll)} (
+                    {activeCase.activeCase.comments.length - 5})
+                  </Button>
+                </Box>
+              ) : null}
+            </Fragment>
+          )
+        })
+      )}
 
       {activeCase.activeCase.assignedTo && (
-        <Box marginTop={2}>
-          <Stack space={2}>
-            <Input
-              disabled={isLoading}
-              loading={isLoading}
-              type="text"
-              name="comment"
-              label={formatMessage(messages.comments.label)}
-              placeholder={formatMessage(messages.comments.placeholder)}
-              value={commentValue}
-              onChange={(e) => setCommentValue(e.target.value)}
-              textarea
+        <Box padding={4} background="white">
+          <Box borderTopWidth="standard" borderColor="blue200">
+            <Tabs
+              contentBackground="white"
+              tabs={[
+                {
+                  id: 'internal',
+                  label: 'Innri athugasemdir',
+                  content: (
+                    <AddCommentTab
+                      caseId={activeCase.activeCase.id}
+                      internal={true}
+                      userId={activeCase.activeCase.assignedTo.id}
+                      onAddCommentSuccess={refetchCase}
+                      currentStatus={activeCase.activeCase.communicationStatus}
+                    />
+                  ),
+                },
+                {
+                  id: 'external',
+                  label: 'Skilaboð til auglýsanda',
+                  content: (
+                    <AddCommentTab
+                      caseId={activeCase.activeCase.id}
+                      internal={true}
+                      userId={activeCase.activeCase.assignedTo.id}
+                      onAddCommentSuccess={refetchCase}
+                      currentStatus={activeCase.activeCase.communicationStatus}
+                    />
+                  ),
+                },
+              ]}
+              label={''}
             />
-            <Button
-              disabled={!commentValue}
-              loading={isAddingComment}
-              onClick={() =>
-                onAddComment({
-                  caseId: activeCase.activeCase.id,
-                  internal: isInternalComment,
-                  comment: commentValue,
-                  initator: activeCase.activeCase.assignedTo?.id ?? '',
-                })
-              }
-            >
-              {formatMessage(messages.comments.save)}
-            </Button>
-          </Stack>
+          </Box>
         </Box>
       )}
     </Box>

@@ -17,6 +17,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
@@ -51,6 +52,7 @@ import {
   counterResult,
 } from '../helpers'
 import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
+import { caseCommunicationStatusMigrate } from '../helpers/migrations/case/case-communication-status-migrate'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -64,6 +66,7 @@ import { ICaseService } from './case.service.interface'
 import {
   CaseChannelDto,
   CaseChannelsDto,
+  CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
   CaseTagDto,
@@ -91,6 +94,9 @@ export class CaseService implements ICaseService {
     @InjectModel(AdvertCategoryDTO)
     private readonly advertCategoryModel: typeof AdvertCategoryDTO,
     @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
+
+    @InjectModel(CaseCommunicationStatusDto)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -995,5 +1001,19 @@ export class CaseService implements ICaseService {
     )
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse>
+  > {
+    const statuses = (await this.caseCommunicationStatusModel.findAll()).map(
+      (s) => caseCommunicationStatusMigrate(s),
+    )
+
+    return ResultWrapper.ok({
+      statuses,
+    })
   }
 }

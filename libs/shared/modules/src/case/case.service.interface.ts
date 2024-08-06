@@ -5,6 +5,7 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   PostApplicationBody,
@@ -82,6 +83,10 @@ export interface ICaseService {
   getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
+
+  getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse>
+  >
 }
 
 export const ICaseService = Symbol('ICaseService')

@@ -13,6 +13,7 @@ import {
   GetCasesQuery,
   GetCasesReponse,
   GetCategoriesResponse,
+  GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
@@ -46,7 +47,7 @@ export class CaseController {
     private readonly journalService: IJournalService,
 
     @Inject(ICommentService)
-    private readonly caseCommentService: ICommentService,
+    private readonly commentService: ICommentService,
   ) {}
 
   @Route({
@@ -76,6 +77,18 @@ export class CaseController {
   ): Promise<GetDepartmentsResponse> {
     return ResultWrapper.unwrap(
       await this.journalService.getDepartments(params),
+    )
+  }
+
+  @Route({
+    path: 'communicationStatuses',
+    operationId: 'getCommunicationStatuses',
+    summary: 'Get communication statuses',
+    responseType: GetCommunicationSatusesResponse,
+  })
+  async communicationStatues(): Promise<GetCommunicationSatusesResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCommunicationStatuses(),
     )
   }
 
@@ -353,7 +366,7 @@ export class CaseController {
     @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
-      await this.caseCommentService.getComments(id, params),
+      await this.commentService.getComments(id, params),
     )
   }
 
@@ -372,7 +385,7 @@ export class CaseController {
     @Param('commentId') commentId: string,
   ): Promise<GetCaseCommentResponse> {
     return ResultWrapper.unwrap(
-      await this.caseCommentService.getComment(id, commentId),
+      await this.commentService.getComment(id, commentId),
     )
   }
 
@@ -388,7 +401,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: PostCaseCommentBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseCommentService.createComment(id, body))
+    ResultWrapper.unwrap(await this.commentService.createComment(id, body))
   }
 
   @Route({
@@ -405,8 +418,6 @@ export class CaseController {
     @Param('id') id: string,
     @Param('commentId') commentId: string,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseCommentService.deleteComment(id, commentId),
-    )
+    ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
   }
 }
