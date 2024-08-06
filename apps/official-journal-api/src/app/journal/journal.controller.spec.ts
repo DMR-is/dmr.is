@@ -1,5 +1,10 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IJournalService, MockJournalService } from '@dmr.is/modules'
+import {
+  CaseServiceMock,
+  ICaseService,
+  IJournalService,
+  MockJournalService,
+} from '@dmr.is/modules'
 
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -16,6 +21,10 @@ describe('JournalController', () => {
         {
           provide: IJournalService,
           useClass: MockJournalService,
+        },
+        {
+          provide: ICaseService,
+          useClass: CaseServiceMock,
         },
         {
           provide: LOGGER_PROVIDER,
