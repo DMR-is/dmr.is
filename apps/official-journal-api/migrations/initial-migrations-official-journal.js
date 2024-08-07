@@ -1,4 +1,4 @@
-'use strict'
+q'use strict'
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -248,6 +248,64 @@ module.exports = {
       CONSTRAINT fk_case_comments_comment_id FOREIGN KEY (case_comment_id) REFERENCES case_comment (id)
     );
 
+    CREATE TABLE signature_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE signature_member (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      text_above VARCHAR,
+      text_below VARCHAR,
+      text_after VARCHAR,
+      value VARCHAR NOT NULL,
+      PRIMARY KEY (id),
+    );
+
+    CREATE TABLE signature (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      type_id UUID NOT NULL,
+      additional_signature VARCHAR,
+      date TIMESTAMP WITH TIME ZONE NOT NULL,
+      institution VARCHAR NOT NULL,
+      involved_party_id UUID NOT NULL,
+      chairman_id UUID,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id),
+      CONSTRAINT fk_signature_type_id FOREIGN KEY (type_id) REFERENCES signature_type (id),
+      CONSTRAINT fk_signature_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),
+      CONSTRAINT fk_signature_chairman_id FOREIGN KEY (chairman_id) REFERENCES signature_member (id)
+    );
+
+    CREATE TABLE signature_member_signature (
+      signature_id UUID NOT NULL,
+      signature_member_id UUID NOT NULL,
+      PRIMARY KEY (signature_id, signature_member_id),
+      CONSTRAINT fk_signature_member_signature_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id),
+      CONSTRAINT fk_signature_member_signature_signature_member_id FOREIGN KEY (signature_member_id) REFERENCES signature_member (id)
+    );
+
+    CREATE TABLE case_signatures (
+      case_case_id UUID NOT NULL,
+      signature_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, signature_id),
+      CONSTRAINT fk_case_signatures_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_signatures_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id)
+    );
+
+    CREATE TABLE advert_signatures (
+      advert_id UUID NOT NULL,
+      signature_id UUID NOT NULL,
+      PRIMARY KEY (advert_id, signature_id),
+      CONSTRAINT fk_advert_signatures_advert_id FOREIGN KEY (advert_id) REFERENCES advert (id),
+      CONSTRAINT fk_advert_signatures_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id)
+    );
+
   COMMIT;
     `)
   },
@@ -277,6 +335,12 @@ module.exports = {
     DROP TABLE case_channel CASCADE;
     DROP TABLE case_channels CASCADE;
     DROP TABLE case_comments CASCADE;
+    DROP TABLE signature_type CASCADE;
+    DROP TABLE signature_member CASCADE;
+    DROP TABLE signature CASCADE;
+    DROP TABLE signature_member_signature CASCADE;
+    DROP TABLE case_signatures CASCADE;
+    DROP TABLE advert_signatures CASCADE
     `)
   },
 }
