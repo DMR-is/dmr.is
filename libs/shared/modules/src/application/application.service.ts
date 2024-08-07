@@ -130,15 +130,18 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    if (res.status != 200) {
-      this.logger.error(`getApplication, could not get application<${id}>`, {
-        applicationId: id,
-        status: res.status,
-        category: LOGGING_CATEGORY,
-      })
+    if (!res.ok) {
+      this.logger.error(
+        `Appliction.service.getApplication, could not get application<${id}>`,
+        {
+          applicationId: id,
+          status: res.status,
+          category: LOGGING_CATEGORY,
+        },
+      )
       return ResultWrapper.err({
         code: res.status,
-        message: `Could not get application<${id}>`,
+        message: `Application<${id}> not found`,
       })
     }
 
@@ -266,14 +269,14 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof NotFoundException) {
-        const createResult = await this.caseService.createCase(
-          {
-            applicationId,
-          },
-          transaction,
+        ResultWrapper.unwrap(
+          await this.caseService.createCase(
+            {
+              applicationId,
+            },
+            transaction,
+          ),
         )
-
-        ResultWrapper.unwrap(createResult)
 
         return ResultWrapper.ok()
       }
