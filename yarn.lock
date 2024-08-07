@@ -6184,16 +6184,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sparticuz/chromium@npm:^126.0.0":
-  version: 126.0.0
-  resolution: "@sparticuz/chromium@npm:126.0.0"
-  dependencies:
-    follow-redirects: "npm:^1.15.6"
-    tar-fs: "npm:^3.0.6"
-  checksum: 9d4324a2cb98b4ac4d79b0874fca7b581ca19252c54185e89552fcdaeb1828788933e88af8dcb1cdfaf98e349149a2981a949a719c372de6ec50a988c7d69528
-  languageName: node
-  linkType: hard
-
 "@storybook/csf@npm:^0.0.1":
   version: 0.0.1
   resolution: "@storybook/csf@npm:0.0.1"
@@ -10910,7 +10900,6 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
     "@react-pdf/renderer": "npm:^3.1.9"
     "@rehooks/component-size": "npm:^1.0.3"
-    "@sparticuz/chromium": "npm:^126.0.0"
     "@svgr/webpack": "npm:^8.0.1"
     "@swc-node/register": "npm:~1.6.7"
     "@swc/core": "npm:~1.3.85"
