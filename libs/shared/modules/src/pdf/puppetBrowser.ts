@@ -1,20 +1,19 @@
 import puppeteer from 'puppeteer'
 import puppeteerCore from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
 
 export async function getBrowser() {
   if (process.env.NODE_ENV === 'production') {
-    const executablePath = await chromium.executablePath()
-
-    const browser = await puppeteerCore.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless: chromium.headless,
+    return await puppeteerCore.launch({
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--font-render-hinting=none',
+      ],
+      executablePath: '/usr/bin/chromium-browser',
+      headless: true,
     })
-    return browser
   } else {
-    const browser = await puppeteer.launch({
+    return await puppeteer.launch({
       executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
       args: [
         '--no-sandbox',
@@ -23,6 +22,5 @@ export async function getBrowser() {
       ],
       headless: false,
     })
-    return browser
   }
 }

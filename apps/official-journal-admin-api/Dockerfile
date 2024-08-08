@@ -9,7 +9,12 @@ RUN yarn install --only=production
 
 # Production image, copy all the files and run nest
 FROM docker.io/node:lts-alpine as runner
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache \
+    dumb-init \
+    udev \
+    ttf-freefont \
+    chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV NODE_ENV production
 ENV PORT 3000
 WORKDIR /usr/src/app

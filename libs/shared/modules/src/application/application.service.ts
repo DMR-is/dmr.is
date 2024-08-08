@@ -18,6 +18,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import {
   BadRequestException,
   forwardRef,
+  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -271,14 +272,12 @@ export class ApplicationService implements IApplicationService {
 
       return ResultWrapper.ok()
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        ResultWrapper.unwrap(
-          await this.caseService.createCase(
-            {
-              applicationId,
-            },
-            transaction,
-          ),
+      if (error instanceof HttpException && error.getStatus() === 404) {
+        const createResult = await this.caseService.createCase(
+          {
+            applicationId,
+          },
+          transaction,
         )
 
         return ResultWrapper.ok()
