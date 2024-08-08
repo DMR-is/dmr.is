@@ -18,6 +18,7 @@
     "test": "nx test",
     "lint": "nx lint",
     "run-xroad-proxy": "./scripts/run-xroad-proxy.sh",
+    "run-pg-proxy": "./scripts/run-pg-proxy.sh",
     "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary",
     "openapi-generator": "openapi-generator generate -g typescript-fetch --additional-properties=typescriptThreePlus=true --skip-validate-spec",
     "openapi-generator:test": "openapi-generator generate -g typescript-fetch -i tmp/swagger/client-config.json -o tmp/swagger/gen/fetch  --additional-properties=typescriptThreePlus=true",
