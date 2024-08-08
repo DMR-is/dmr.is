@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
@@ -14,6 +15,7 @@ import {
   Advert,
   AdvertType,
   Category,
+  CreateAdvert,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -38,13 +40,10 @@ import {
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
-import { Inject, Injectable } from '@nestjs/common'
-
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import { IJournalService } from './journal.service.interface'
 
@@ -56,64 +55,68 @@ export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
   }
-  create(model: Advert): Promise<Result<GetAdvertResponse>> {
+  create(model: CreateAdvert): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
+  updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
-  getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
+  getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  insertDepartment(model: Department): Promise<Result<GetDepartmentResponse>> {
+  insertDepartment(
+    model: Department,
+  ): Promise<ResultWrapper<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateDepartment(model: Department): Promise<Result<GetDepartmentResponse>> {
+  updateDepartment(
+    model: Department,
+  ): Promise<ResultWrapper<GetDepartmentResponse>> {
     throw new Error('Method not implemented.')
   }
-  getType(id: unknown): Promise<Result<GetAdvertTypeResponse>> {
+  getType(id: unknown): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
-  insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  insertType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  updateType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
   insertMainCategory(
     model: MainCategory,
-  ): Promise<Result<GetMainCategoryResponse>> {
+  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(
     model: MainCategory,
-  ): Promise<Result<GetMainCategoryResponse>> {
+  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  getCategory(id: string): Promise<Result<GetCategoryResponse>> {
+  getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+  insertCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+  updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
+  getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
   insertInstitution(
     model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
+  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
   updateInstitution(
     model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
+  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }
 
-  getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
+  getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     this.logger.info('getAdvert', {
       category: LOGGING_CATEGORY,
       metadata: { id },
@@ -123,33 +126,16 @@ export class MockJournalService implements IJournalService {
       (advert) => advert.id === id,
     )
 
-    if (advert) {
-      return Promise.resolve({
-        ok: true,
-        value: {
-          advert: {
-            ...advert,
-            document: {
-              isLegacy: advert.document.isLegacy,
-              html: advert.document.isLegacy
-                ? dirtyClean(advert.document.html as HTMLText)
-                : advert.document.html,
-              pdfUrl: advert.document.pdfUrl,
-            },
-          },
-        },
-      })
-    } else {
-      return Promise.resolve({
-        ok: false,
-        error: { message: 'no advert', code: 500 },
-      })
+    if (!advert) {
+      throw new NotFoundException()
     }
+
+    return Promise.resolve(ResultWrapper.ok({ advert }))
   }
 
   getAdverts(
     params?: GetAdvertsQueryParams,
-  ): Promise<Result<GetAdvertsResponse>> {
+  ): Promise<ResultWrapper<GetAdvertsResponse>> {
     this.logger.info('getAdverts', {
       category: LOGGING_CATEGORY,
       metadata: { params },
@@ -178,12 +164,12 @@ export class MockJournalService implements IJournalService {
       },
     }
 
-    return Promise.resolve({ ok: true, value: result })
+    return Promise.resolve(ResultWrapper.ok(result))
   }
 
   getDepartments(
     params?: GetDepartmentsQueryParams,
-  ): Promise<Result<GetDepartmentsResponse>> {
+  ): Promise<ResultWrapper<GetDepartmentsResponse>> {
     const mockDepartments = ALL_MOCK_JOURNAL_DEPARTMENTS
 
     const filtered = mockDepartments.filter((department) => {
@@ -194,18 +180,17 @@ export class MockJournalService implements IJournalService {
       return true
     })
 
-    return Promise.resolve({
-      ok: true,
-      value: {
+    return Promise.resolve(
+      ResultWrapper.ok({
         departments: filtered,
         paging: MOCK_PAGING_SINGLE_PAGE,
-      },
-    })
+      }),
+    )
   }
 
   getTypes(
     params?: GetAdvertTypesQueryParams,
-  ): Promise<Result<GetAdvertTypesResponse>> {
+  ): Promise<ResultWrapper<GetAdvertTypesResponse>> {
     const mockTypes = ALL_MOCK_JOURNAL_TYPES
 
     const filtered = mockTypes.filter((type) => {
@@ -226,18 +211,17 @@ export class MockJournalService implements IJournalService {
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
 
-    return Promise.resolve({
-      ok: true,
-      value: {
+    return Promise.resolve(
+      ResultWrapper.ok({
         types: paged,
         paging: generatePaging(filtered, page),
-      },
-    })
+      }),
+    )
   }
 
   getMainCategories(
     params?: GetMainCategoriesQueryParams | undefined,
-  ): Promise<Result<GetMainCategoriesResponse>> {
+  ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
     const mockCategories = ALL_MOCK_JOURNAL_MAIN_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -254,12 +238,12 @@ export class MockJournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve({ ok: true, value: data })
+    return Promise.resolve(ResultWrapper.ok(data))
   }
 
   getCategories(
     params?: GetCategoriesQueryParams | undefined,
-  ): Promise<Result<GetCategoriesResponse>> {
+  ): Promise<ResultWrapper<GetCategoriesResponse>> {
     const mockCategories = ALL_MOCK_JOURNAL_CATEGORIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -276,12 +260,12 @@ export class MockJournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve({ ok: true, value: data })
+    return Promise.resolve(ResultWrapper.ok(data))
   }
 
   getInstitutions(
     params?: GetInstitutionsQueryParams | undefined,
-  ): Promise<Result<GetInstitutionsResponse>> {
+  ): Promise<ResultWrapper<GetInstitutionsResponse>> {
     const mockCategories = ALL_MOCK_JOURNAL_INVOLVED_PARTIES
     const filtered = mockCategories.filter((category) => {
       if (params?.search && category.id !== params.search) {
@@ -298,12 +282,12 @@ export class MockJournalService implements IJournalService {
       paging: generatePaging(filtered, page),
     }
 
-    return Promise.resolve({ ok: true, value: data })
+    return Promise.resolve(ResultWrapper.ok(data))
   }
 
   getSignatures(
     params?: GetAdvertSignatureQuery,
-  ): Promise<Result<GetAdvertSignatureResponse>> {
+  ): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
     const filtered = ALL_MOCK_SIGNATURES.filter((signature) => {
       if (params?.id && params.id !== signature.id) {
         return false
@@ -332,13 +316,12 @@ export class MockJournalService implements IJournalService {
     const page = params?.page ?? 1
     const paged = slicePagedData(filtered, page)
 
-    return Promise.resolve({
-      ok: true,
-      value: {
+    return Promise.resolve(
+      ResultWrapper.ok({
         items: paged,
         paging: generatePaging(filtered, page),
-      },
-    })
+      }),
+    )
   }
 
   error(): void {

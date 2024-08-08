@@ -1,11 +1,14 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { v4 as uuid } from 'uuid'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
   AdvertType,
   Category,
+  CreateAdvert,
+  DefaultSearchParams,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -15,29 +18,27 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
-  GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionResponse,
-  GetInstitutionsQueryParams,
   GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
   MainCategory,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
-import { generatePaging, sortAlphabetically } from '@dmr.is/utils'
+import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging } from '@dmr.is/utils'
 
 import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -55,6 +56,7 @@ import {
 import { IJournalService } from './journal.service.interface'
 import {
   AdvertAttachmentsDTO,
+  AdvertCategoriesDTO,
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
   AdvertDTO,
@@ -64,7 +66,6 @@ import {
   AdvertTypeDTO,
 } from './models'
 
-const LOGGING_CATEGORY = 'JournalService'
 const DEFAULT_PAGE_SIZE = 20
 @Injectable()
 export class JournalService implements IJournalService {
@@ -89,46 +90,63 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertStatusDTO)
     private advertStatusModel: typeof AdvertStatusDTO /* @InjectModel(AdvertStatusHistoryDTO)
     private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
+
+    @InjectModel(AdvertCategoriesDTO)
+    private advertCategoriesModel: typeof AdvertCategoriesDTO,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
   }
 
-  @Audit()
-  @HandleException()
-  async create(model: Advert): Promise<Result<GetAdvertResponse>> {
-    if (!model || !model.department) {
-      this.logger.error('create, no model')
-      return {
-        ok: false,
-        error: {
-          code: 400,
-          message: 'Bad request',
-        },
-      }
-    }
+  @LogAndHandle({ logArgs: false })
+  async create(
+    model: CreateAdvert,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertResponse>> {
+    const publicationYear = model.publicationDate.getFullYear()
+    const localId = model.id ? model.id : uuid()
 
     const ad = await this.advertModel.create(
       {
-        departmentId: model.department?.id,
-        typeId: model.type?.id,
+        id: localId,
+        departmentId: model.departmentId,
+        typeId: model.typeId,
+        statusId: model.statusId,
+        involvedPartyId: model.involvedPartyId,
         subject: model.subject,
-        serialNumber: model.publicationNumber?.number,
-        publicationYear: model.publicationNumber?.year,
-        signatureDate: model.signatureDate,
+        serialNumber: model.publicationNumber,
+        publicationYear: publicationYear,
         publicationDate: model.publicationDate,
-        documentHtml: model.document.html,
-        documentPdfUrl: model.document.pdfUrl,
-        isLegacy: model.document.isLegacy,
-        involvedPartyId: model.involvedParty?.id,
-        statusId: model.status,
+        signatureDate: model.signatureDate,
+        documentHtml: model.documentHtml,
+        documentPdfUrl: model.documentPdfUrl,
+        isLegacy: model.isLegacy,
       },
       {
-        returning: ['id'],
+        transaction,
       },
     )
 
-    const newlyCreatedAd = await this.advertModel.findByPk(ad.id, {
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: model.categoryIds,
+      },
+      transaction,
+    })
+
+    await Promise.all(
+      categories.map(async (c) => {
+        await this.advertCategoriesModel.create(
+          {
+            advert_id: ad.id,
+            category_id: c.id,
+          },
+          { transaction },
+        )
+      }),
+    )
+
+    const advert = await this.advertModel.findByPk(ad.id, {
       include: [
         AdvertTypeDTO,
         AdvertDepartmentDTO,
@@ -137,24 +155,24 @@ export class JournalService implements IJournalService {
         AdvertAttachmentsDTO,
         AdvertCategoryDTO,
       ],
+      transaction,
     })
 
-    if (!newlyCreatedAd) {
-      return {
-        ok: false,
-        error: {
-          code: 500,
-          message: 'Internal server error',
-        },
-      }
+    this.logger.info(`Advert created: ${ad.id}`)
+
+    if (!advert) {
+      throw new InternalServerErrorException(
+        `Could not find advert<${ad.id}> after creation`,
+      )
     }
 
-    return { ok: true, value: { advert: advertMigrate(newlyCreatedAd) } }
+    this.logger.info(`Advert found: ${advert.id}`)
+
+    return ResultWrapper.ok({ advert: advertMigrate(advert) })
   }
 
-  @Audit()
-  @HandleException()
-  async updateAdvert(model: Advert): Promise<Result<GetAdvertResponse>> {
+  @LogAndHandle()
+  async updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
@@ -178,14 +196,14 @@ export class JournalService implements IJournalService {
       },
       { where: { id: model.id }, returning: true },
     )
-    return { ok: true, value: { advert: advertMigrate(ad[1][0]) } }
+
+    return ResultWrapper.ok({ advert: advertMigrate(ad[1][0]) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async insertDepartment(
     model: Department,
-  ): Promise<Result<GetDepartmentResponse>> {
+  ): Promise<ResultWrapper<GetDepartmentResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
@@ -194,41 +212,36 @@ export class JournalService implements IJournalService {
       title: model.title,
       slug: model.slug,
     })
-    return { ok: true, value: { department: dep } }
+
+    return ResultWrapper.ok({ department: advertDepartmentMigrate(dep) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async updateDepartment(
     model: Department,
-  ): Promise<Result<GetDepartmentResponse>> {
+  ): Promise<ResultWrapper<GetDepartmentResponse>> {
     if (!model || !model.id) {
       throw new BadRequestException()
     }
+
     const dep = await this.advertDepartmentModel.update(
       { title: model.title, slug: model.slug },
       { where: { id: model.id }, returning: true },
     )
+
     if (!dep) {
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find department<${model.id}>`,
-        },
-      }
+      throw new NotFoundException(`Could not find department<${model.id}>`)
     }
-    return {
-      ok: true,
-      value: { department: advertDepartmentMigrate(dep[1][0]) },
-    }
+
+    return ResultWrapper.ok({
+      department: advertDepartmentMigrate(dep[1][0]),
+    })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async insertInstitution(
     model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
+  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
@@ -238,47 +251,48 @@ export class JournalService implements IJournalService {
       slug: model.slug,
     })
 
-    return { ok: true, value: { institution: inst } }
+    return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(inst) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async updateInstitution(
     model: Institution,
-  ): Promise<Result<GetInstitutionResponse>> {
+  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     if (!model || !model.id) {
       throw new BadRequestException()
     }
+
     const inst = await this.advertInvolvedPartyModel.update(
       { title: model.title, slug: model.slug },
       { where: { id: model.id }, returning: true },
     )
+
     if (!inst) {
-      throw new NotFoundException()
+      throw new NotFoundException(`Could not find institution<${model.id}>`)
     }
-    return {
-      ok: true,
-      value: { institution: advertInvolvedPartyMigrate(inst[1][0]) },
-    }
+
+    return ResultWrapper.ok({
+      institution: advertInvolvedPartyMigrate(inst[1][0]),
+    })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getSignatures(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     params?: GetAdvertSignatureQuery,
-  ): Promise<Result<GetAdvertSignatureResponse>> {
-    throw new Error('Method not implemented.')
+  ): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
+    throw new NotImplementedException()
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   error(): void {
-    throw new Error('Method not implemented.')
+    throw new NotImplementedException()
   }
 
-  @Audit()
-  @HandleException()
-  async insertType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  @LogAndHandle()
+  async insertType(
+    model: AdvertType,
+  ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
@@ -288,12 +302,14 @@ export class JournalService implements IJournalService {
       slug: model.slug,
       departmentId: model.department?.id,
     })
-    return { ok: true, value: { type: type } }
+
+    return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @Audit()
-  @HandleException()
-  async updateType(model: AdvertType): Promise<Result<GetAdvertTypeResponse>> {
+  @LogAndHandle()
+  async updateType(
+    model: AdvertType,
+  ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     if (!model || !model.id) {
       throw new BadRequestException()
     }
@@ -306,45 +322,41 @@ export class JournalService implements IJournalService {
       },
       { where: { id: model.id }, returning: true },
     )
+
     if (!type) {
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find type<${model.id}>`,
-        },
-      }
+      throw new NotFoundException(`Could not find type<${model.id}>`)
     }
-    return { ok: true, value: { type: advertTypesMigrate(type[1][0]) } }
+
+    return ResultWrapper.ok({ type: advertTypesMigrate(type[1][0]) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async insertMainCategory(
     model: MainCategory,
-  ): Promise<Result<GetMainCategoryResponse>> {
+  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
+
     const mainCategory = await this.advertMainCategoryModel.create({
       title: model.title,
       slug: model.slug,
       description: model.description,
     })
-    return {
-      ok: true,
-      value: { mainCategory: advertMainCategoryMigrate(mainCategory) },
-    }
+
+    return ResultWrapper.ok({
+      mainCategory: advertMainCategoryMigrate(mainCategory),
+    })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async updateMainCategory(
     model: MainCategory,
-  ): Promise<Result<GetMainCategoryResponse>> {
+  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     if (!model || !model.id) {
       throw new BadRequestException()
     }
+
     const mainCat = await this.advertMainCategoryModel.update(
       {
         title: model.title,
@@ -353,42 +365,47 @@ export class JournalService implements IJournalService {
       },
       { where: { id: model.id }, returning: true },
     )
+
     if (!mainCat) {
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find main category<${model.id}>`,
-        },
-      }
+      throw new NotFoundException(`Could not find main category<${model.id}>`)
     }
-    return {
-      ok: true,
-      value: { mainCategory: advertMainCategoryMigrate(mainCat[1][0]) },
-    }
+
+    return ResultWrapper.ok({
+      mainCategory: advertMainCategoryMigrate(mainCat[1][0]),
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async insertCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+  @LogAndHandle()
+  async insertCategory(
+    model: Category,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
 
-    const category = await this.advertCategoryModel.create({
-      title: model.title,
-      slug: model.slug,
-      mainCategoryID: model.mainCategory?.id,
-    })
-    return { ok: true, value: { category: advertCategoryMigrate(category) } }
+    const category = await this.advertCategoryModel.create(
+      {
+        title: model.title,
+        slug: model.slug,
+        mainCategoryID: model.mainCategory?.id,
+      },
+      {
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @Audit()
-  @HandleException()
-  async updateCategory(model: Category): Promise<Result<GetCategoryResponse>> {
+  @LogAndHandle()
+  async updateCategory(
+    model: Category,
+  ): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!model || !model.id) {
       throw new BadRequestException()
     }
+
     const category = await this.advertCategoryModel.update(
       {
         title: model.title,
@@ -397,26 +414,18 @@ export class JournalService implements IJournalService {
       },
       { where: { id: model.id }, returning: true },
     )
+
     if (!category) {
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find category<${model.id}>`,
-        },
-      }
+      throw new NotFoundException(`Could not find category<${model.id}>`)
     }
-    return {
-      ok: true,
-      value: { category: advertCategoryMigrate(category[1][0]) },
-    }
+
+    return ResultWrapper.ok({ category: advertCategoryMigrate(category[1][0]) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getMainCategories(
-    params?: GetMainCategoriesQueryParams,
-  ): Promise<Result<GetMainCategoriesResponse>> {
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
@@ -434,46 +443,37 @@ export class JournalService implements IJournalService {
     const mapped = mainCategories.rows.map((item) =>
       advertMainCategoryMigrate(item),
     )
+    const paging = generatePaging(mapped, page, pageSize, mainCategories.count)
 
-    return {
-      ok: true,
-      value: {
-        mainCategories: mapped,
-        paging: generatePaging(mapped, page, pageSize, mainCategories.count),
-      },
-    }
+    return ResultWrapper.ok({
+      mainCategories: mapped,
+      paging,
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getDepartment(id: string): Promise<Result<GetDepartmentResponse>> {
+  @LogAndHandle()
+  async getDepartment(
+    id: string,
+  ): Promise<ResultWrapper<GetDepartmentResponse>> {
     if (!id) {
       throw new BadRequestException()
     }
+
     const department = await this.advertDepartmentModel.findOne({
       where: { id },
     })
+
     if (!department) {
-      this.logger.warn('Department not found')
-      return {
-        ok: false,
-        error: { code: 404, message: `Could not find department<${id}>` },
-      }
+      throw new NotFoundException(`Could not find department<${id}>`)
     }
 
-    return {
-      ok: true,
-      value: {
-        department: advertDepartmentMigrate(department),
-      },
-    }
+    return ResultWrapper.ok({ department: advertDepartmentMigrate(department) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getDepartments(
-    params?: GetDepartmentsQueryParams,
-  ): Promise<Result<GetDepartmentsResponse>> {
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetDepartmentsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
@@ -497,19 +497,16 @@ export class JournalService implements IJournalService {
     })
 
     const mapped = departments.rows.map((item) => advertDepartmentMigrate(item))
+    const paging = generatePaging(mapped, page, pageSize, departments.count)
 
-    return {
-      ok: true,
-      value: {
-        departments: mapped,
-        paging: generatePaging(mapped, page, pageSize, departments.count),
-      },
-    }
+    return ResultWrapper.ok({
+      departments: mapped,
+      paging,
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getType(id: string): Promise<Result<GetAdvertTypeResponse>> {
+  @LogAndHandle()
+  async getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
       include: AdvertDepartmentDTO,
       where: {
@@ -518,24 +515,18 @@ export class JournalService implements IJournalService {
     })
 
     if (!type) {
-      return {
-        ok: false,
-        error: { code: 404, message: `Could not find type<${id}>` },
-      }
+      throw new NotFoundException(`Could not find type<${id}>`)
     }
 
-    return { ok: true, value: { type: type } }
+    return ResultWrapper.ok({ type: advertTypesMigrate(type) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getTypes(
     params?: GetAdvertTypesQueryParams,
-  ): Promise<Result<GetAdvertTypesResponse>> {
+  ): Promise<ResultWrapper<GetAdvertTypesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const query = ''
 
     const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
       distinct: true,
@@ -557,34 +548,19 @@ export class JournalService implements IJournalService {
       offset: (page - 1) * pageSize,
     })
 
-    // we need more context on dev to understand what is happening
-    if (types.count === 0 || types.rows.length === 0) {
-      this.logger.warn('No types found', {
-        category: LOGGING_CATEGORY,
-        params: params,
-        departmentsWhereParams: params?.department
-          ? {
-              slug: params?.department,
-            }
-          : undefined,
-        query,
-      })
-    }
-
     const mapped = types.rows.map((item) => advertTypesMigrate(item))
+    const paging = generatePaging(mapped, page, pageSize, types.count)
 
-    return {
-      ok: true,
-      value: {
-        types: mapped.sort((a, b) => sortAlphabetically(a.title, b.title)),
-        paging: generatePaging(mapped, page, pageSize, types.count),
-      },
-    }
+    return ResultWrapper.ok({
+      types: mapped,
+      paging,
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getInstitution(id: string): Promise<Result<GetInstitutionResponse>> {
+  @LogAndHandle()
+  async getInstitution(
+    id: string,
+  ): Promise<ResultWrapper<GetInstitutionResponse>> {
     if (!id) {
       throw new BadRequestException()
     }
@@ -592,25 +568,16 @@ export class JournalService implements IJournalService {
       where: { id },
     })
     if (!party) {
-      return {
-        ok: false,
-        error: { code: 404, message: `Could not find institution<${id}` },
-      }
+      throw new NotFoundException(`Could not find institution<${id}>`)
     }
 
-    return {
-      ok: true,
-      value: {
-        institution: advertInvolvedPartyMigrate(party),
-      },
-    }
+    return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(party) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getInstitutions(
-    params?: GetInstitutionsQueryParams,
-  ): Promise<Result<GetInstitutionsResponse>> {
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetInstitutionsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
@@ -627,44 +594,36 @@ export class JournalService implements IJournalService {
     })
 
     const mapped = parties.rows.map((item) => advertInvolvedPartyMigrate(item))
+    const paging = generatePaging(mapped, page, pageSize, parties.count)
 
-    return {
-      ok: true,
-      value: {
-        institutions: mapped,
-        paging: generatePaging(mapped, page, pageSize, parties.count),
-      },
-    }
+    return ResultWrapper.ok({
+      institutions: mapped,
+      paging,
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getCategory(id: string): Promise<Result<GetCategoryResponse>> {
+  @LogAndHandle()
+  async getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
     if (!id) {
       throw new BadRequestException()
     }
+
     const category = await this.advertCategoryModel.findOne({
       where: { id },
       include: AdvertMainCategoryDTO,
     })
+
     if (!category) {
-      return {
-        ok: false,
-        error: { code: 404, message: `Could not find category<${id}>` },
-      }
+      throw new NotFoundException(`Could not find category<${id}>`)
     }
 
-    return {
-      ok: true,
-      value: { category: advertCategoryMigrate(category) },
-    }
+    return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getCategories(
-    params?: GetCategoriesQueryParams,
-  ): Promise<Result<GetCategoriesResponse>> {
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
@@ -682,19 +641,16 @@ export class JournalService implements IJournalService {
     })
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
+    const paging = generatePaging(mapped, page, pageSize, categories.count)
 
-    return {
-      ok: true,
-      value: {
-        categories: mapped,
-        paging: generatePaging(mapped, page, pageSize, categories.count),
-      },
-    }
+    return ResultWrapper.ok({
+      categories: mapped,
+      paging,
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getAdvert(id: string): Promise<Result<GetAdvertResponse>> {
+  @LogAndHandle()
+  async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
       throw new BadRequestException()
     }
@@ -710,35 +666,28 @@ export class JournalService implements IJournalService {
     })
 
     if (!advert) {
-      return {
-        ok: false,
-        error: { code: 404, message: `Could not find advert<${id}>` },
-      }
+      throw new NotFoundException(`Could not find advert<${id}>`)
     }
 
     const ad = advertMigrate(advert)
-    return {
-      ok: true,
-      value: {
-        advert: {
-          ...ad,
-          document: {
-            isLegacy: advert.isLegacy,
-            html: advert.isLegacy
-              ? dirtyClean(advert.documentHtml as HTMLText)
-              : advert.documentHtml,
-            pdfUrl: advert.documentPdfUrl,
-          },
+    return ResultWrapper.ok({
+      advert: {
+        ...ad,
+        document: {
+          isLegacy: advert.isLegacy,
+          html: advert.isLegacy
+            ? dirtyClean(advert.documentHtml as HTMLText)
+            : advert.documentHtml,
+          pdfUrl: advert.documentPdfUrl,
         },
       },
-    }
+    })
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async getAdverts(
     params?: GetAdvertsQueryParams,
-  ): Promise<Result<GetAdvertsResponse>> {
+  ): Promise<ResultWrapper<GetAdvertsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
@@ -789,16 +738,18 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
-      order: [[{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC']],
+      order: [
+        // [{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC'],
+        ['publicationDate', 'DESC'],
+      ],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))
+    const paging = generatePaging(mapped, page, pageSize, adverts.count)
 
-    const result: GetAdvertsResponse = {
+    return ResultWrapper.ok({
       adverts: mapped,
-      paging: generatePaging(mapped, page, pageSize, adverts.count),
-    }
-
-    return { ok: true, value: result }
+      paging,
+    })
   }
 }

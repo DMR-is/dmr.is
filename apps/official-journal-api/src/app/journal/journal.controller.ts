@@ -1,8 +1,8 @@
+import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IJournalService } from '@dmr.is/modules'
 import {
-  Advert,
-  AdvertNotFound,
+  DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
@@ -11,32 +11,17 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
-  GetInstitutionsQueryParams,
   GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   ValidationResponse,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  Controller,
-  Get,
-  HttpException,
-  Inject,
-  Param,
-  Query,
-} from '@nestjs/common'
-import {
-  ApiNotFoundResponse,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { Controller, Inject, Param, Query } from '@nestjs/common'
 
 const LOGGING_CATEGORY = 'JournalController'
 
@@ -49,266 +34,135 @@ export class JournalController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Get('adverts/:id')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertResponse,
-    description: 'Advert by ID.',
-  })
-  @ApiNotFoundResponse({
-    description: 'Advert not found.',
-    type: AdvertNotFound,
-  })
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-    description: 'Advert ID.',
+  @Route({
+    path: '/adverts/:id',
+    operationId: 'getAdvertById',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetAdvertResponse,
   })
   async advert(@Param('id') id: string): Promise<GetAdvertResponse> {
-    const result = await this.journalService.getAdvert(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
 
-  @Get('adverts')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertsResponse,
-    description: 'List of adverts, optional query parameters.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/adverts',
+    operationId: 'getAdverts',
+    query: [{ type: GetAdvertsQueryParams, required: false }],
+    responseType: GetAdvertsResponse,
   })
   async adverts(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
-    const result = await this.journalService.getAdverts(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
   }
 
-  @Get('departments/:id')
-  @ApiResponse({
-    status: 200,
-    type: GetDepartmentResponse,
-    description: 'Department by ID.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-    description: 'Department ID.',
+  @Route({
+    path: '/departments/:id',
+    operationId: 'getDepartmentById',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetDepartmentResponse,
   })
   async department(@Param('id') id: string): Promise<GetDepartmentResponse> {
-    const result = await this.journalService.getDepartment(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
   }
 
-  @Get('departments')
-  @ApiResponse({
-    status: 200,
-    type: GetDepartmentsResponse,
-    description: 'List of departments.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/departments',
+    operationId: 'getDepartments',
+    query: [{ type: GetDepartmentsQueryParams, required: false }],
+    responseType: GetDepartmentsResponse,
   })
   async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
   ): Promise<GetDepartmentsResponse> {
-    const result = await this.journalService.getDepartments(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(
+      await this.journalService.getDepartments(params),
+    )
   }
 
-  @Get('types/:id')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertTypeResponse,
-    description: 'Advert type by ID.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-    description: 'Advert type ID.',
+  @Route({
+    path: '/types/:id',
+    operationId: 'getAdvertTypeById',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetAdvertTypeResponse,
   })
   async type(@Param('id') id: string): Promise<GetAdvertTypeResponse> {
-    const result = await this.journalService.getType(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getType(id))
   }
 
-  @Get('types')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertTypesResponse,
-    description: 'List of advert types.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/types',
+    operationId: 'getAdvertTypes',
+    query: [{ type: GetAdvertTypesQueryParams, required: false }],
+    responseType: GetAdvertTypesResponse,
   })
   async types(
     @Query()
     params?: GetAdvertTypesQueryParams,
   ): Promise<GetAdvertTypesResponse> {
-    const result = await this.journalService.getTypes(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
-  @Get('maincategories')
-  @ApiResponse({
-    status: 200,
-    type: GetMainCategoriesResponse,
-    description: 'List of main categories.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/maincategories',
+    operationId: 'getMainCategories',
+    query: [{ type: DefaultSearchParams, required: false }],
+    responseType: GetMainCategoriesResponse,
   })
   async mainCategories(
     @Query()
-    params?: GetMainCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetMainCategoriesResponse> {
-    const result = await this.journalService.getMainCategories(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(
+      await this.journalService.getMainCategories(params),
+    )
   }
 
-  @Get('categories')
-  @ApiResponse({
-    status: 200,
-    type: GetCategoriesResponse,
-    description: 'List of advert categories.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/categories',
+    operationId: 'getCategories',
+    query: [{ type: DefaultSearchParams, required: false }],
+    responseType: GetCategoriesResponse,
   })
   async categories(
     @Query()
-    params?: GetCategoriesQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
-    const result = await this.journalService.getCategories(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
 
-  @Get('institutions')
-  @ApiResponse({
-    status: 200,
-    type: GetInstitutionsResponse,
-    description: 'List of institutions.',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/institutions',
+    operationId: 'getInstitutions',
+    query: [{ type: DefaultSearchParams, required: false }],
+    responseType: GetInstitutionsResponse,
   })
   async institutions(
     @Query()
-    params?: GetInstitutionsQueryParams,
+    params?: DefaultSearchParams,
   ): Promise<GetInstitutionsResponse> {
-    const result = await this.journalService.getInstitutions(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(
+      await this.journalService.getInstitutions(params),
+    )
   }
 
-  @Get('signatures')
-  @ApiResponse({
-    status: 200,
-    type: GetAdvertSignatureResponse,
-    description: 'List of signatures',
-  })
-  @ApiResponse({
-    status: 400,
-    type: ValidationResponse,
-    description: 'Query string validation failed.',
+  @Route({
+    path: '/signatures',
+    operationId: 'getSignatures',
+    query: [{ type: GetAdvertSignatureQuery, required: false }],
+    responseType: GetAdvertSignatureResponse,
   })
   async signatures(
     @Query() params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
-    const result = await this.journalService.getSignatures(params)
-
-    if (!result.ok) {
-      throw new HttpException(result.error, result.error.code)
-    }
-
-    return Promise.resolve({
-      ...result.value,
-    })
+    return ResultWrapper.unwrap(await this.journalService.getSignatures(params))
   }
 
-  @Get('error')
-  @ApiResponse({
-    status: 500,
-    description: 'Explicit error from service to test logging.',
+  @Route({
+    path: '/error',
+    operationId: 'error',
+    responseType: ValidationResponse,
   })
   error(): void {
     this.logger.info('Testing to log national id 221101-0101 1212990101')

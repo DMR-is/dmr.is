@@ -8,6 +8,7 @@ import { CommentModule } from '../comment/comment.module'
 import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentDTO } from '../journal/models'
+import advertModels from '../journal/models'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
@@ -38,6 +39,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     SequelizeModule.forFeature([
       ...commentModels,
       ...caseModels,
+      ...advertModels,
       AdvertDepartmentDTO,
     ]),
     LoggingModule,

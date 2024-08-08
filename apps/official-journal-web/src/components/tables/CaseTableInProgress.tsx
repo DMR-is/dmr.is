@@ -2,7 +2,7 @@ import { Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
-import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
+import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -34,13 +34,8 @@ export const CaseTableInProgress = ({ data, paging }: TableProps) => {
       children: formatMessage(messages.tables.inProgress.columns.department),
     },
     {
-      name: 'caseAdvertType',
-      sortable: true,
-      children: formatMessage(messages.tables.general.type),
-    },
-    {
-      name: 'caseName',
-      sortable: true,
+      name: 'caseTitle',
+      sortable: false,
       children: formatMessage(messages.tables.inProgress.columns.title),
     },
     {
@@ -55,11 +50,7 @@ export const CaseTableInProgress = ({ data, paging }: TableProps) => {
     case: row,
     cells: [
       {
-        children: row.fastTrack && (
-          <div className={styles.iconWrapper}>
-            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
-          </div>
-        ),
+        children: <CaseToolTips case={row} />,
       },
       {
         sortingKey: 'casePublishDate',
@@ -80,23 +71,12 @@ export const CaseTableInProgress = ({ data, paging }: TableProps) => {
         ),
       },
       {
-        sortingKey: 'caseAdvertType',
-        sortingValue: row.advertType.title,
-        children: (
-          <div className={styles.nameTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title}
-            </Text>
-          </div>
-        ),
-      },
-      {
-        sortingKey: 'caseName',
+        sortingKey: 'caseTitle',
         sortingValue: row.advertTitle,
         children: (
-          <div className={styles.nameTableCell}>
+          <div className={styles.titleTableCell} title={row.advertTitle}>
             <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertType.title} {row.advertTitle}
             </Text>
           </div>
         ),
@@ -113,5 +93,12 @@ export const CaseTableInProgress = ({ data, paging }: TableProps) => {
     ],
   }))
 
-  return <CaseTable columns={columns} rows={rows} paging={paging} />
+  return (
+    <CaseTable
+      columns={columns}
+      rows={rows}
+      paging={paging}
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

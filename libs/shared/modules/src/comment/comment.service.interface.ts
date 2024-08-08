@@ -1,34 +1,35 @@
 import { Transaction } from 'sequelize'
 import {
-  DeleteCaseCommentResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
-  PostCaseComment,
-  PostCaseCommentResponse,
+  PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentService {
-  comment(
+  getComment(
     caseId: string,
     commentId: string,
-  ): Promise<Result<GetCaseCommentResponse>>
-  comments(
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetCaseCommentResponse>>
+  getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
-  ): Promise<Result<GetCaseCommentsResponse>>
-
-  create(
-    caseId: string,
-    body: PostCaseComment,
     transaction?: Transaction,
-  ): Promise<Result<PostCaseCommentResponse>>
+  ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 
-  delete(
+  createComment(
+    caseId: string,
+    body: PostCaseCommentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  deleteComment(
     caseId: string,
     commentId: string,
-  ): Promise<Result<DeleteCaseCommentResponse>>
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICommentService = Symbol('ICommentService')

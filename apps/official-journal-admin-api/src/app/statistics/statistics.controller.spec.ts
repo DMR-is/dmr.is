@@ -39,7 +39,7 @@ describe('StatisticsController', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
         const results = await controller.department(department.id)
-        expect(results.totalAdverts).toBeGreaterThanOrEqual(0)
+        expect(results.totalCases).toBeGreaterThanOrEqual(0)
       })
     })
   })
@@ -49,7 +49,7 @@ describe('StatisticsController', () => {
       const results = await controller.overview(
         StatisticsOverviewQueryType.General,
       )
-      expect(results.totalAdverts).toEqual(0)
+      expect(results.totalCases).toEqual(0)
     })
 
     it('Should throw not implemented error', async () => {

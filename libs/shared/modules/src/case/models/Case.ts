@@ -11,6 +11,7 @@ import { CaseCommentDto, CaseCommentsDto } from '../../comment/models'
 import {
   AdvertCategoryDTO,
   AdvertDepartmentDTO,
+  AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../../journal/models'
 import { CaseCategoriesDto } from './CaseCategories'
@@ -61,6 +62,15 @@ export class CaseDto extends Model {
 
   @BelongsTo(() => CaseTagDto, 'tag_id')
   tag!: CaseTagDto | null
+
+  @Column({
+    type: DataType.UUID,
+    field: 'involved_party_id',
+  })
+  involvedPartyId!: string
+
+  @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
+  involvedParty!: AdvertInvolvedPartyDTO
 
   @Column({
     type: DataType.STRING,

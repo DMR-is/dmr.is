@@ -1,6 +1,6 @@
-import { defineMessage } from 'react-intl'
+import { defineMessages } from 'react-intl'
 
-export const messages = defineMessage({
+export const messages = defineMessages({
   clearFilter: {
     id: 'web.general:clearFilter',
     defaultMessage: 'Hreinsa val',

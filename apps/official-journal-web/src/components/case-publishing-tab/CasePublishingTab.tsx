@@ -2,6 +2,7 @@ import { Box, Button, Text } from '@island.is/island-ui/core'
 
 import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { usePublishContext } from '../../hooks/usePublishContext'
 import { CaseTableReady } from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
@@ -9,54 +10,36 @@ import { messages } from './messages'
 type Props = {
   cases: Case[]
   paging: Paging
-  selectedCases: Case[]
-  setSelectedCases: React.Dispatch<React.SetStateAction<Case[]>>
-  onContinue: (selectedCases: Case[]) => void
-  casesReadyForPublication: Case[]
-  setCasesReadyForPublication: React.Dispatch<React.SetStateAction<Case[]>>
+  proceedToPublishing: (toggle: boolean) => void
 }
 
-export const CasePublishingTab = ({
-  cases,
-  paging,
-  onContinue,
-  selectedCases,
-  setSelectedCases,
-  casesReadyForPublication,
-  setCasesReadyForPublication,
-}: Props) => {
+export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
   const { formatMessage } = useFormatMessage()
 
+  const { publishingState } = usePublishContext()
+  const { casesWithPublishingNumber } = publishingState
+
   return (
-    <>
+    <Box display="flex" flexDirection="column" rowGap={4}>
       <Box>
-        <CaseTableReady
-          selectedCases={selectedCases}
-          setSelectedCases={setSelectedCases}
-          setCasesReadyForPublication={setCasesReadyForPublication}
-          data={cases}
-          paging={paging}
-        />
+        <CaseTableReady />
       </Box>
 
-      <Box marginTop={[3, 4]}>
+      <Box>
         <Text as="h3" fontWeight="semiBold" marginBottom={2}>
           {formatMessage(messages.general.selectedCasesForPublishing)}
         </Text>
-        <CaseTableSelectedCases
-          data={casesReadyForPublication}
-          setCasesReadyForPublication={setCasesReadyForPublication}
-        />
+        <CaseTableSelectedCases />
 
         <Box marginTop={3} display="flex" justifyContent="flexEnd">
           <Button
-            onClick={() => onContinue(casesReadyForPublication)}
-            disabled={casesReadyForPublication.length === 0}
+            disabled={casesWithPublishingNumber.length === 0}
+            onClick={() => proceedToPublishing(true)}
           >
             {formatMessage(messages.general.publishCases)}
           </Button>
         </Box>
       </Box>
-    </>
+    </Box>
   )
 }

@@ -18,10 +18,13 @@ import { ApiProperty } from '@nestjs/swagger'
 import { AdvertType } from '../advert-types'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
+import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
+import { Institution } from '../institutions'
+import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
 import { CaseChannel } from './case-channel.dto'
-import { CaseCommunicationStatus, CaseStatus, CaseTag } from './case-constants'
+import { CaseCommunicationStatus, CaseStatus } from './case-constants'
 
 export class Case {
   @ApiProperty({
@@ -69,13 +72,17 @@ export class Case {
   status!: CaseStatus
 
   @ApiProperty({
-    enum: CaseTag,
-    example: CaseTag.NotStarted,
+    type: CaseTag,
     description: 'Internal tag for the case, default to null',
   })
-  @IsEnum(CaseTag)
-  @ValidateIf((o) => o.tag !== null)
   tag!: CaseTag | null
+
+  @ApiProperty({
+    type: Institution,
+    description: 'Involved party of the case.',
+  })
+  @Type(() => Institution)
+  involvedParty!: Institution
 
   @ApiProperty({
     type: String,
@@ -113,13 +120,11 @@ export class Case {
   assignedTo!: User | null
 
   @ApiProperty({
-    enum: CaseCommunicationStatus,
-    example: CaseCommunicationStatus.NotStarted,
+    type: CommunicationStatus,
     description:
       'Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`',
   })
-  @IsEnum(CaseCommunicationStatus)
-  communicationStatus!: CaseCommunicationStatus
+  communicationStatus!: CommunicationStatus
 
   @ApiProperty({
     type: Boolean,

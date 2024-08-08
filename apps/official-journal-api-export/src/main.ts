@@ -38,6 +38,7 @@ import { getSuperCategories } from './lib/static.js'
 const ROOT_SQL_DIR = './apps/official-journal-api-export/sql'
 
 function log(message: string) {
+  // eslint-disable-next-line no-console
   console.log(message)
 }
 
@@ -159,4 +160,5 @@ async function main() {
   // Step 5: Dump the PDF binary data
 }
 
+// eslint-disable-next-line no-console
 main().catch(console.error)

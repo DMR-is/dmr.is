@@ -1,8 +1,8 @@
 import { Box, Icon, LinkV2, Stack, Text } from '@island.is/island-ui/core'
 
-import { Case, CaseWithAdvert } from '../../gen/fetch'
+import { CaseWithAdvert } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import * as styles from './Attachments.css'
+// import * as styles from './Attachments.css'
 import { messages } from './messages'
 type Props = {
   activeCase: CaseWithAdvert

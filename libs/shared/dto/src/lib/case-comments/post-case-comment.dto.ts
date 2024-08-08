@@ -2,7 +2,13 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { CaseCommentType } from './case-comment-constants'
 
-export class PostCaseComment {
+/**
+ * Represents the body of a POST request for creating a case comment.
+ */
+export class PostCaseCommentBody {
+  /**
+   * Indicates whether the comment is internal.
+   */
   @ApiProperty({
     type: Boolean,
     description: 'Is the comment internal',
@@ -10,6 +16,9 @@ export class PostCaseComment {
   })
   internal!: boolean
 
+  /**
+   * The type of the comment.
+   */
   @ApiProperty({
     enum: CaseCommentType,
     description: 'Type of the comment',
@@ -17,6 +26,9 @@ export class PostCaseComment {
   })
   type!: CaseCommentType
 
+  /**
+   * The content of the comment.
+   */
   @ApiProperty({
     type: String,
     description: 'The case comment itself',
@@ -24,17 +36,33 @@ export class PostCaseComment {
   })
   comment!: string | null
 
+  /**
+   * The ID of the user or instituion who created the comment.
+   */
   @ApiProperty({
     type: String,
     description: 'Id of the user who created the comment',
     required: true,
   })
-  from!: string | null
+  initiator!: string | null
 
+  /**
+   * The recipient user or institution of the task.
+   */
   @ApiProperty({
     type: String,
     description: 'To whom or what the task is assigned to.',
     required: false,
   })
-  to!: string | null
+  receiver!: string | null
+
+  /**
+   * Indicates whether the state of the application should be stored.
+   */
+  @ApiProperty({
+    type: Boolean,
+    description: 'Store the state of the application',
+    required: false,
+  })
+  storeState?: boolean
 }

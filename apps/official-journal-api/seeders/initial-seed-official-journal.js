@@ -6,6 +6,7 @@ const { cwd } = require('process')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
+    // eslint-disable-next-line no-console
     console.log(cwd())
     const allSeed = await readFile('./seeders/sql/all.sql', 'utf8')
     /*const departmentsSeed = await readFile(
@@ -37,67 +38,58 @@ module.exports = {
 
     */
 
-    const caseStatusSeed = await readFile(
-      './seeders/sql/10_case_status.sql',
-      'utf8',
-    )
-    const caseTagSeed = await readFile('./seeders/sql/11_case_tag.sql', 'utf8')
-    const caseCommunicationSeed = await readFile(
-      './seeders/sql/12_case_communication_status.sql',
-      'utf8',
-    )
-    const caseCommentTitleSeed = await readFile(
-      './seeders/sql/13_case_comment_title.sql',
-      'utf8',
-    )
-    const caseCommentTypeSeed = await readFile(
-      './seeders/sql/14_case_comment_type.sql',
-      'utf8',
-    )
-    const caseCommentTaskSeed = await readFile(
-      './seeders/sql/15_case_comment_task.sql',
-      'utf8',
-    )
-    const caseCommentSeed = await readFile(
-      './seeders/sql/16_case_comment.sql',
-      'utf8',
-    )
-    const caseSeed = await readFile('./seeders/sql/17_case.sql', 'utf8')
-    const caseCommentsSeed = await readFile(
-      './seeders/sql/18_case_comments.sql',
-      'utf8',
-    )
-    const caseCategoriesSeed = await readFile(
-      './seeders/sql/19_case_categories.sql',
-      'utf8',
-    )
+    // const caseStatusSeed = await readFile(
+    //   './seeders/sql/10_case_status.sql',
+    //   'utf8',
+    // )
+    // const caseTagSeed = await readFile('./seeders/sql/11_case_tag.sql', 'utf8')
+    // const caseCommunicationSeed = await readFile(
+    //   './seeders/sql/12_case_communication_status.sql',
+    //   'utf8',
+    // )
+    // const caseCommentTitleSeed = await readFile(
+    //   './seeders/sql/13_case_comment_title.sql',
+    //   'utf8',
+    // )
+    // const caseCommentTypeSeed = await readFile(
+    //   './seeders/sql/14_case_comment_type.sql',
+    //   'utf8',
+    // )
+    // const caseCommentTaskSeed = await readFile(
+    //   './seeders/sql/15_case_comment_task.sql',
+    //   'utf8',
+    // )
+    // const caseCommentSeed = await readFile(
+    //   './seeders/sql/16_case_comment.sql',
+    //   'utf8',
+    // )
+    // const caseSeed = await readFile('./seeders/sql/17_case.sql', 'utf8')
+    // const caseCommentsSeed = await readFile(
+    //   './seeders/sql/18_case_comments.sql',
+    //   'utf8',
+    // )
+    // const caseCategoriesSeed = await readFile(
+    //   './seeders/sql/19_case_categories.sql',
+    //   'utf8',
+    // )
 
-    const caseChannelSeed = await readFile(
-      './seeders/sql/19_case_channel.sql',
-      'utf8',
-    )
+    // const caseChannelSeed = await readFile(
+    //   './seeders/sql/19_case_channel.sql',
+    //   'utf8',
+    // )
 
-    const caseChannelsSeed = await readFile(
-      './seeders/sql/20_case_channels.sql',
-      'utf8',
-    )
+    // const caseChannelsSeed = await readFile(
+    //   './seeders/sql/20_case_channels.sql',
+    //   'utf8',
+    // )
+
+    const allCaseSeed = await readFile('./seeders/sql/all_case.sql', 'utf8')
 
     const seed = `
       BEGIN;
 
       ${allSeed}
-      ${caseStatusSeed}
-      ${caseTagSeed}
-      ${caseCommunicationSeed}
-      ${caseCommentTitleSeed}
-      ${caseCommentTypeSeed}
-      ${caseCommentTaskSeed}
-      ${caseCommentSeed}
-      ${caseSeed}
-      ${caseCommentsSeed}
-      ${caseCategoriesSeed}
-      ${caseChannelSeed}
-      ${caseChannelsSeed}
+      ${allCaseSeed}
 
 
       COMMIT;`

@@ -1,6 +1,6 @@
 import { Tag } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum, CaseTagEnum } from '../../gen/fetch'
+import { CaseStatusEnum, CaseTagValueEnum } from '../../gen/fetch'
 
 type Props = {
   tag?: string
@@ -9,6 +9,7 @@ type Props = {
 export const CaseTag = ({ tag }: Props) => {
   if (!tag) {
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.error('CaseTag: tag is missing, received:', tag)
     }
 
@@ -17,7 +18,7 @@ export const CaseTag = ({ tag }: Props) => {
 
   switch (tag) {
     case CaseStatusEnum.Innsent:
-    case CaseTagEnum.EkkiHafi:
+    case CaseTagValueEnum.EkkiHafi:
       return (
         <Tag disabled variant="blue">
           {tag}
@@ -25,7 +26,7 @@ export const CaseTag = ({ tag }: Props) => {
       )
     case CaseStatusEnum.Grunnvinnsla:
     case CaseStatusEnum.Yfirlestur:
-    case CaseTagEnum.Yfirlestri:
+    case CaseTagValueEnum.Yfirlestri:
       return (
         <Tag disabled variant="darkerBlue">
           {tag}
@@ -37,13 +38,13 @@ export const CaseTag = ({ tag }: Props) => {
           {tag}
         </Tag>
       )
-    case CaseTagEnum.ArfSkoun:
+    case CaseTagValueEnum.ArfSkoun:
       return (
         <Tag disabled variant="rose">
           {tag}
         </Tag>
       )
-    case CaseTagEnum.Samlesin:
+    case CaseTagValueEnum.Samlesin:
       return (
         <Tag disabled variant="purple">
           {tag}

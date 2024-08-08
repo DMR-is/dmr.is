@@ -1,6 +1,5 @@
 import reverse from 'lodash/reverse'
 import { useEffect, useMemo, useRef, useState } from 'react'
-// eslint-disable-next-line @typescript-eslint/naming-convention
 import ReactDOM from 'react-dom'
 
 import {
@@ -46,7 +45,7 @@ export type CaseTableRowProps = {
 }
 
 export type Props = {
-  defaultSort?: CaseTableColumnSort
+  defaultSort: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
   rows: CaseTableRowProps[]
   paging?: Paging
@@ -62,14 +61,11 @@ export type CaseTableColumnSort = {
 
 export const CaseTable = ({
   renderLink = true,
-  loading = true,
+  // loading = true,
   modalLink,
   columns,
   rows,
-  defaultSort = {
-    direction: 'asc',
-    key: columns.find((column) => column.sortable)?.name || '',
-  },
+  defaultSort,
   paging,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
@@ -199,15 +195,19 @@ export const CaseTable = ({
                           : undefined
                       }
                     >
-                      <Text variant="eyebrow" color={'blue400'}>
-                        {breakpoints.xl &&
-                          formatMessage(messages.general.openCaseLinkText)}{' '}
-                        <Icon
-                          icon="arrowForward"
-                          color="blue400"
-                          className={styles.seeMoreTableCellLinkIcon}
-                        />
-                      </Text>
+                      <Box className={styles.seeMoreTableCellLinkText}>
+                        <Text variant="eyebrow" color={'blue400'}>
+                          {breakpoints.xl &&
+                            formatMessage(
+                              messages.general.openCaseLinkText,
+                            )}{' '}
+                          <Icon
+                            icon="arrowForward"
+                            color="blue400"
+                            className={styles.seeMoreTableCellLinkIcon}
+                          />
+                        </Text>
+                      </Box>
                     </Box>
                   </td>
                 )}

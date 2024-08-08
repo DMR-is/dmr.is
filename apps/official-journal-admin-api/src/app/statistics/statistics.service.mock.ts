@@ -1,12 +1,13 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { AdvertStatus, CaseStatus } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -22,11 +23,9 @@ export class MockStatisticsService implements IStatisticsService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using StatisticsServiceMock')
   }
-  getDepartment(id: string): Promise<GetStatisticsDepartmentResponse> {
-    if (!id) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  getDepartment(
+    id: string,
+  ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const statuses = [
       AdvertStatus.Submitted,
       AdvertStatus.InProgress,
@@ -69,44 +68,42 @@ export class MockStatisticsService implements IStatisticsService {
     const inReviewPercentage = total ? (inReview / total) * 100 : 0
     const readyPercentage = total ? (ready / total) * 100 : 0
 
-    return Promise.resolve({
+    // @ts-expect-error FIXME: weird error
+    return ResultWrapper.ok({
       submitted: {
-        name: 'Innsendingar',
+        name: CaseStatus.Submitted,
         count: submitted,
         percentage: Math.round(submittedPercentage),
       },
       inProgress: {
-        name: 'Grunnvinnsla',
+        name: CaseStatus.InProgress,
         count: inProgress,
         percentage: Math.round(inProgressPercentage),
       },
       inReview: {
-        name: 'Yfirlestur',
+        name: CaseStatus.InReview,
         count: inReview,
         percentage: Math.round(inReviewPercentage),
       },
       ready: {
-        name: 'Tilbúið',
+        name: CaseStatus.ReadyForPublishing,
         count: ready,
         percentage: Math.round(readyPercentage),
       },
-      totalAdverts: total,
-      totalPercentage: 100,
+      totalCases: total,
     })
   }
 
-  getOverview(type: string): Promise<GetStatisticsOverviewResponse> {
-    if (!type) {
-      throw new BadRequestException('Missing parameters')
-    }
-
+  getOverview(
+    type: string,
+  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
     // check if type is in enum
     if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
       throw new BadRequestException('Invalid type')
     }
 
     let categories: StatisticsOverviewCategory[] = []
-    let totalAdverts = 0
+    let totalCases = 0
 
     if (type === StatisticsOverviewQueryType.General) {
       let submitted = 0
@@ -137,19 +134,25 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${adverts.length} innsend mál bíða úthlutunar`,
-          totalAdverts: submitted,
+          totalCases: submitted,
         },
         {
           text: `Borist hafa ný svör í ${inProgress} málum`,
-          totalAdverts: inProgress,
+          totalCases: inProgress,
         },
       ]
-      totalAdverts = adverts.length
-    } else if (type === StatisticsOverviewQueryType.Personal) {
+      totalCases = adverts.length
+    }
+
+    if (type === StatisticsOverviewQueryType.Personal) {
       throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Inactive) {
+    }
+
+    if (type === StatisticsOverviewQueryType.Inactive) {
       throw new NotImplementedException()
-    } else if (type === StatisticsOverviewQueryType.Publishing) {
+    }
+
+    if (type === StatisticsOverviewQueryType.Publishing) {
       let today = 0
       let pastDue = 0
 
@@ -170,20 +173,20 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalAdverts: today,
+          totalCases: today,
         },
         {
           text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalAdverts: pastDue,
+          totalCases: pastDue,
         },
       ]
-      totalAdverts = adverts.length
-    } else {
-      throw new BadRequestException('Invalid type')
+      totalCases = adverts.length
     }
-    return Promise.resolve({
+
+    // @ts-expect-error FIXME: weird error
+    return ResultWrapper.ok({
       categories: categories,
-      totalAdverts: totalAdverts,
+      totalCases: totalCases,
     })
   }
 }

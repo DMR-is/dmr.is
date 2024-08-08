@@ -15,8 +15,8 @@ type NotificationContextProps = {
 
 export const NotificationContext = createContext<NotificationContextProps>({
   notifications: [],
-  setNotifications: () => {},
-  clearNotifications: () => {},
+  setNotifications: () => null,
+  clearNotifications: () => null,
 })
 
 export const NotificationContextProvider = ({

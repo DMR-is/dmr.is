@@ -1,221 +1,149 @@
+import { Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
-  Application,
-  CaseComment,
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
-  PostCaseCommentResponse,
-  UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpException,
-  Inject,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common'
-import {
-  ApiBody,
-  ApiCreatedResponse,
-  ApiExcludeEndpoint,
-  ApiNoContentResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-} from '@nestjs/swagger'
+import { Body, Controller, Inject, Param } from '@nestjs/common'
 
 @Controller({
   path: 'applications',
   version: '1',
 })
+/**
+ * Controller class for handling application-related requests.
+ */
 export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
   ) {}
 
-  @Get(':id/price')
-  @ApiOperation({
+  /**
+   * Retrieves the price of an application.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves to the price of the application.
+   */
+  @Route({
+    path: ':id/price',
     operationId: 'getPrice',
-    summary: 'Get price of application by ID.',
-  })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to get price.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiOkResponse({
-    type: CasePriceResponse,
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: CasePriceResponse,
   })
   async getPrice(
     @Param('id') applicationId: string,
   ): Promise<CasePriceResponse> {
-    const result = await this.applicationService.getPrice(applicationId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return result.value
+    return ResultWrapper.unwrap(
+      await this.applicationService.getPrice(applicationId),
+    )
   }
 
-  @Get(':id')
-  @ApiOperation({
+  /**
+   * Retrieves an application by its ID.
+   * @param id The ID of the application.
+   * @returns A promise that resolves to the application.
+   */
+  @Route({
+    path: ':id',
     operationId: 'getApplication',
-    summary: 'Get application by ID.',
-  })
-  @ApiOkResponse({
-    type: GetApplicationResponse,
-  })
-  @ApiExcludeEndpoint()
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to get.',
-    required: true,
-    allowEmptyValue: false,
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetApplicationResponse,
   })
   async getApplication(
     @Param('id') id: string,
   ): Promise<GetApplicationResponse> {
-    const result = await this.applicationService.getApplication(id)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      application: result.value.application,
-    })
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplication(id),
+    )
   }
 
-  @Post(':id/submit')
-  @ApiOperation({
-    operationId: 'submitApplication',
-    summary: 'Submit application by ID.',
-  })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to submit.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiNoContentResponse()
-  @HttpCode(204)
-  @ApiExcludeEndpoint()
-  async submitApplication(@Param('id') id: string) {
-    const results = await this.applicationService.submitApplication(id)
+  // @Route({
+  //   method: 'post',
+  //   path: ':id/submit',
+  //   operationId: 'submitApplication',
+  //   params: [{ name: 'id', type: 'string', required: true }],
+  //   exclude: true,
+  // })
+  // async submitApplication(@Param('id') id: string) {
+  //   ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
+  // }
 
-    return Promise.resolve()
-  }
+  // @Route({
+  //   method: 'put',
+  //   path: ':id',
+  //   operationId: 'updateApplication',
+  //   params: [{ name: 'id', type: 'string', required: true }],
+  //   bodyType: UpdateApplicationBody,
+  //   exclude: true,
+  // })
+  // async updateApplication(
+  //   @Param('id') id: string,
+  //   @Body() body: UpdateApplicationBody,
+  // ) {
+  //   ResultWrapper.unwrap(
+  //     await this.applicationService.updateApplication(id, body),
+  //   )
+  // }
 
-  @Put(':id')
-  @ApiOperation({
-    operationId: 'updateApplication',
-    summary: 'Update answers of an application.',
-  })
-  @ApiOkResponse({
-    type: Application,
-  })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to update.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiBody({
-    type: UpdateApplicationBody,
-    required: true,
-    description: 'Update application body, answers to update.',
-  })
-  @ApiExcludeEndpoint()
-  async updateApplication(
-    @Param('id') id: string,
-    @Body() body: UpdateApplicationBody,
-  ): Promise<Application | null> {
-    return await this.applicationService.updateApplication(id, body)
-  }
-
-  @Post(':id/post')
-  @ApiOperation({
+  /**
+   * Handles submissions from the application system.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves when the application is posted.
+   */
+  @Route({
+    method: 'post',
+    path: ':id/post',
     operationId: 'postApplication',
-    summary: 'Post application.',
+    params: [{ name: 'id', type: 'string', required: true }],
   })
-  @ApiParam({
-    type: String,
-    name: 'id',
-    description: 'Id of the application to post.',
-    required: true,
-    allowEmptyValue: false,
-  })
-  @ApiNoContentResponse()
-  @HttpCode(204)
   async postApplication(@Param('id') applicationId: string) {
-    const results = await this.applicationService.postApplication(applicationId)
-
-    if (!results.ok) {
-      throw new HttpException(results.error.message, results.error.code)
-    }
-
-    return Promise.resolve()
+    return ResultWrapper.unwrap(
+      await this.applicationService.postApplication(applicationId),
+    )
   }
 
-  @Get(':id/comments')
-  @ApiOperation({
+  /**
+   * Retrieves the comments of an application.
+   * @param applicationId The ID of the application.
+   * @returns A promise that resolves to the comments of the application.
+   */
+  @Route({
+    path: ':id/comments',
     operationId: 'getComments',
-    summary: 'Get comments by application ID.',
-  })
-  @ApiOkResponse({
-    type: GetCaseCommentsResponse,
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetCaseCommentsResponse,
   })
   async getComments(
     @Param('id') applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
-    const result = await this.applicationService.getComments(applicationId)
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      comments: result.value.comments,
-    })
+    return ResultWrapper.unwrap(
+      await this.applicationService.getComments(applicationId),
+    )
   }
 
-  @Post(':id/comments')
-  @ApiCreatedResponse({
-    type: PostCaseCommentResponse,
-  })
-  @ApiOperation({
+  /**
+   * Posts a comment on an application.
+   * @param applicationId The ID of the application.
+   * @param commentBody The body of the comment.
+   * @returns A promise that resolves when the comment is posted.
+   */
+  @Route({
+    method: 'post',
+    path: ':id/comments',
     operationId: 'postComment',
-    summary: 'Add comment to application.',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: PostApplicationComment,
   })
   async postComment(
     @Param('id') applicationId: string,
     @Body() commentBody: PostApplicationComment,
-  ): Promise<PostCaseCommentResponse> {
-    const result = await this.applicationService.postComment(
-      applicationId,
-      commentBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.applicationService.postComment(applicationId, commentBody),
     )
-
-    if (!result.ok) {
-      throw new HttpException(result.error.message, result.error.code)
-    }
-
-    return Promise.resolve({
-      comment: result.value.comment,
-    })
   }
 }

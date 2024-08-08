@@ -1,3 +1,5 @@
+import { LogMethod } from '@dmr.is/decorators'
+
 import { Controller, Get } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 
@@ -6,6 +8,7 @@ import { ApiResponse } from '@nestjs/swagger'
   path: 'health',
 })
 export class HealthController {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
 
   @Get()
@@ -13,6 +16,7 @@ export class HealthController {
     status: 200,
     description: 'Health check endpoint.',
   })
+  @LogMethod()
   health(): Promise<string> {
     return Promise.resolve('OK')
   }

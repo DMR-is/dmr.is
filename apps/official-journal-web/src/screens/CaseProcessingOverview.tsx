@@ -1,14 +1,15 @@
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 
-import { AlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
+import { Meta } from '../components/meta/Meta'
 import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { Case, Paging } from '../gen/fetch'
+import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
 import { useCaseOverview } from '../hooks/api'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
@@ -17,7 +18,12 @@ import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages as caseProccessingMessages } from '../lib/messages/caseProcessingOverview'
 import { messages as errorMessages } from '../lib/messages/errors'
-import { CaseOverviewSearchParams, Screen } from '../lib/types'
+import {
+  CaseOverviewSearchParams,
+  getStringFromQueryString,
+  Screen,
+} from '../lib/types'
+import { CustomNextError } from '../units/error'
 type Props = {
   data: Case[]
   paging: Paging
@@ -28,15 +34,6 @@ type Props = {
     ready: number
   }
 }
-
-type CaseStatus = 'Innsent' | 'Grunnvinnsla' | 'Yfirlestur' | 'Tilbúið'
-
-const CaseProccessingOverviewTabIds: CaseStatus[] = [
-  'Innsent',
-  'Grunnvinnsla',
-  'Yfirlestur',
-  'Tilbúið',
-]
 
 const CaseProccessingOverviewScreen: Screen<Props> = ({
   data,
@@ -55,46 +52,44 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     setEnableTypes(true)
   }, [])
 
-  const [selectedTab, setSelectedTab] = useState<CaseStatus>('Innsent')
+  const [selectedTab, setSelectedTab] = useState<CaseStatusEnum>(
+    (router.query.status as CaseStatusEnum) ?? CaseStatusEnum.Innsent,
+  )
 
   const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
-    search: router.query.search,
-    department: router.query.department,
-    status: router.query.status,
-    page: router.query.page,
-    type: router.query.type,
-    category: router.query.category,
-    pageSize: router.query.pageSize,
+    search: getStringFromQueryString(router.query.search),
+    department: getStringFromQueryString(router.query.department),
+    status: getStringFromQueryString(router.query.status),
+    page: Number(getStringFromQueryString(router.query.page)) || undefined,
+    type: getStringFromQueryString(router.query.type),
+    category: getStringFromQueryString(router.query.category),
+    pageSize:
+      Number(getStringFromQueryString(router.query.pageSize)) || undefined,
   })
 
   useEffect(() => {
     setSearchParams({
-      search: router.query.search,
-      department: router.query.department,
-      status: router.query.status,
-      page: router.query.page,
-      type: router.query.type,
-      category: router.query.category,
-      pageSize: router.query.pageSize,
+      search: getStringFromQueryString(router.query.search),
+      department: getStringFromQueryString(router.query.department),
+      status: getStringFromQueryString(router.query.status),
+      page: Number(getStringFromQueryString(router.query.page)) || undefined,
+      type: getStringFromQueryString(router.query.type),
+      category: getStringFromQueryString(router.query.category),
+      pageSize:
+        Number(getStringFromQueryString(router.query.pageSize)) || undefined,
     })
   }, [router.query])
 
   const qsp = useMemo(() => {
-    const filters = Object.entries(searchParams).filter(
-      ([key, value]) => value !== undefined,
-    )
-
-    const qs = new URLSearchParams()
-
-    filters.forEach(([key, value]) => {
-      qs.append(key, value as string)
-    })
-
-    return qs.toString()
+    return searchParams
   }, [searchParams])
 
-  const { data: casesResponse, error } = useCaseOverview({
-    qsp: qsp,
+  const {
+    data: casesResponse,
+    error,
+    isLoading,
+  } = useCaseOverview({
+    params: qsp,
     options: {
       keepPreviousData: true,
       fallback: {
@@ -106,7 +101,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   })
 
   const onTabChange = (id: string) => {
-    const tabId = CaseProccessingOverviewTabIds.find((tab) => tab === id)
+    const tabId = id as CaseStatusEnum
     if (tabId) {
       setSelectedTab(tabId)
       setSearchParams({
@@ -121,6 +116,14 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
         { shallow: true },
       )
     }
+  }
+
+  if (isLoading) {
+    return (
+      <CaseOverviewGrid>
+        <SkeletonLoader repeat={3} height={44} />
+      </CaseOverviewGrid>
+    )
   }
 
   if (error) {
@@ -147,9 +150,9 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     )
   }
 
-  const tabs: Tab<CaseStatus>[] = [
+  const tabs: Tab<CaseStatusEnum>[] = [
     {
-      id: 'Innsent',
+      id: CaseStatusEnum.Innsent,
       label: formatMessage(caseProccessingMessages.tabs.submitted, {
         count: casesResponse.totalItems.submitted,
       }),
@@ -161,7 +164,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Grunnvinnsla',
+      id: CaseStatusEnum.Grunnvinnsla,
       label: formatMessage(caseProccessingMessages.tabs.inProgress, {
         count: casesResponse.totalItems.inProgress,
       }),
@@ -173,7 +176,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Yfirlestur',
+      id: CaseStatusEnum.Yfirlestur,
       label: formatMessage(caseProccessingMessages.tabs.inReview, {
         count: casesResponse.totalItems.inReview,
       }),
@@ -185,7 +188,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: 'Tilbúið',
+      id: CaseStatusEnum.Tilbi,
       label: formatMessage(caseProccessingMessages.tabs.ready, {
         count: casesResponse.totalItems.ready,
       }),
@@ -199,34 +202,46 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   ]
 
   return (
-    <CaseOverviewGrid>
-      <Tabs
-        onTabChange={onTabChange}
-        selectedTab={selectedTab}
-        tabs={tabs}
-        label={formatMessage(caseProccessingMessages.tabs.statuses)}
+    <>
+      <Meta
+        title={`${formatMessage(
+          caseProccessingMessages.breadcrumbs.cases,
+        )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
       />
-    </CaseOverviewGrid>
+      <CaseOverviewGrid>
+        <Tabs
+          onTabChange={onTabChange}
+          selectedTab={selectedTab}
+          tabs={tabs}
+          label={formatMessage(caseProccessingMessages.tabs.statuses)}
+        />
+      </CaseOverviewGrid>
+    </>
   )
 }
 
 CaseProccessingOverviewScreen.getProps = async ({ query }) => {
-  const dmrClient = createDmrClient()
+  try {
+    const dmrClient = createDmrClient()
+    const caseData = await dmrClient.editorialOverview({
+      page: getStringFromQueryString(query.page),
+      pageSize: getStringFromQueryString(query.pageSize),
+      department: getStringFromQueryString(query.department),
+      status: getStringFromQueryString(query.status),
+      search: getStringFromQueryString(query.search),
+    })
 
-  const { page, pageSize, department, status, search } = query
-
-  const caseData = await dmrClient.getEditorialOverview({
-    page: Array.isArray(page) ? page[0] : page,
-    pageSize: Array.isArray(pageSize) ? pageSize[0] : pageSize,
-    department: Array.isArray(department) ? department[0] : department,
-    status: Array.isArray(status) ? status[0] : status,
-    search: Array.isArray(search) ? search[0] : search,
-  })
-
-  return {
-    data: caseData.cases,
-    paging: caseData.paging,
-    totalItems: caseData.totalItems,
+    return {
+      data: caseData.cases,
+      paging: caseData.paging,
+      totalItems: caseData.totalItems,
+    }
+  } catch (error) {
+    throw new CustomNextError(
+      500,
+      'Villa kom upp við að sækja gögn fyrir ritstjórn.',
+      (error as Error)?.message,
+    )
   }
 }
 

@@ -37,11 +37,12 @@ describe('Swagger documentation', () => {
     await app.close()
 
     // Clean up
-    fs.rmSync(TMP_DIR, { recursive: true, force: true })
+    // fs.rmSync(TMP_DIR, { recursive: true, force: true })
   })
 
   it('should generate swagger spec', async () => {
     if (!process.env.TEST_CODEGEN) {
+      // eslint-disable-next-line no-console
       console.log('Skipping codegen tests')
       return
     }

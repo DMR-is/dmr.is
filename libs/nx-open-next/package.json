@@ -2,11 +2,11 @@
   "name": "nx-open-next",
   "version": "0.0.1",
   "dependencies": {
-    "tslib": "^2.3.0"
+    "@nx/devkit": "^17.2.5",
+    "@nx/next": "^17.2.5",
+    "tslib": "^2.6.3"
   },
-  "devDependencies": {
-    "@nx/next": "^16.8.0"
-  },
+  "devDependencies": {},
   "type": "module",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

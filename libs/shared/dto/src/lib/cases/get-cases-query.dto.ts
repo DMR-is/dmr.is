@@ -11,6 +11,21 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class GetCasesQuery {
   @ApiProperty({
+    name: 'id',
+    type: String,
+    description: 'ID of the case to get.',
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  id?: string[]
+
+  @ApiProperty({
     name: 'search',
     type: String,
     description: 'String to search for in cases.',
@@ -73,13 +88,19 @@ export class GetCasesQuery {
 
   @ApiProperty({
     name: 'status',
+    type: String,
     description:
       'Case status id to filter cases on, takes into account `status` on `Case`.',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  status?: string
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value
+    }
+    return value?.split(',')
+  })
+  status?: string[]
 
   @ApiProperty({
     name: 'employeeId',

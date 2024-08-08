@@ -52,5 +52,15 @@ export const messages = {
       defaultMessage: 'Eyða',
       description: '',
     },
+    internalComments: {
+      id: 'web.components.comments:internalComments',
+      defaultMessage: 'Innri athugasemdir',
+      description: '',
+    },
+    externalComments: {
+      id: 'web.components.comments:externalComments',
+      defaultMessage: 'Skilaboð til auglýsanda',
+      description: '',
+    },
   }),
 }

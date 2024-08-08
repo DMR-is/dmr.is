@@ -1,29 +1,36 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Audit, HandleApiException } from '@dmr.is/decorators'
+import { z } from 'zod'
+import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-class UpdateDepartmentHandler {
-  @Audit({ logArgs: false })
-  @HandleApiException()
-  public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query
-    const { caseId, departmentId } = req.body
+const bodySchema = z.object({
+  departmentId: z.string(),
+})
 
-    if (!caseId || !departmentId) {
+class UpdateDepartmentHandler {
+  @LogMethod(false)
+  @HandleApiException()
+  @Post()
+  public async handler(req: NextApiRequest, res: NextApiResponse) {
+    const { id } = req.query as { id?: string }
+
+    if (!id) {
       return res.status(400).end()
     }
 
-    if (!id || id !== caseId) {
+    const parsed = bodySchema.safeParse(req.body)
+
+    if (!parsed.success) {
       return res.status(400).end()
     }
 
     const dmrClient = createDmrClient()
 
     await dmrClient.updateDepartment({
-      id: caseId,
+      id: id,
       updateCaseDepartmentBody: {
-        departmentId: departmentId,
+        departmentId: parsed.data.departmentId,
       },
     })
 

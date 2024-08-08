@@ -1,17 +1,14 @@
-import {
-  Advert,
-  AdvertApplicationAttachment,
-  AdvertStatus,
-} from '@dmr.is/shared/dto'
+import { Advert, AdvertApplicationAttachment } from '@dmr.is/shared/dto'
 
 import { AdvertDTO } from '../../../journal/models'
 import { advertCategoryMigrate } from './advert-category-migrate'
 import { advertDepartmentMigrate } from './advert-department-migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty-migrate'
+import { advertStatusMigrate } from './advert-status-migrate'
 import { advertTypesMigrate } from './advert-types-migrate'
 
 export function advertMigrate(model: AdvertDTO): Advert {
-  const status = model.status.title as keyof typeof AdvertStatus
+  const status = advertStatusMigrate(model.status)
   const attachmentsDTO = model.attachments.map<AdvertApplicationAttachment>(
     (item) => {
       const result: AdvertApplicationAttachment = {
@@ -24,13 +21,13 @@ export function advertMigrate(model: AdvertDTO): Advert {
 
   const advert: Advert = {
     id: model.id,
-    title: `${model.type.title} fyrir ${model.subject}`,
+    title: `${model.type.title} ${model.subject}`,
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
     type: model.type ? advertTypesMigrate(model.type) : null,
     subject: model.subject,
-    status: AdvertStatus[status],
+    status: status,
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
       number: model.serialNumber,

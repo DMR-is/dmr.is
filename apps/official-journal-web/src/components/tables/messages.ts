@@ -158,6 +158,11 @@ export const messages = {
           defaultMessage: 'Stofnun',
           description: 'Institution column',
         },
+        type: {
+          id: 'web.components.tables:selectedCases.columns.type',
+          defaultMessage: 'Tegund',
+          description: 'Type column',
+        },
       }),
     },
     overview: {
@@ -167,9 +172,14 @@ export const messages = {
           defaultMessage: 'Útgáfudagur',
           description: 'Publish date column',
         },
+        caseNumber: {
+          id: 'web.components.tables:overview.columns.caseNumber',
+          defaultMessage: 'Nr.',
+          description: '',
+        },
         status: {
           id: 'web.components.tables:overview.columns.status',
-          defaultMessage: 'Staða/Nr.',
+          defaultMessage: 'Staða',
           description: 'Status column',
         },
         title: {

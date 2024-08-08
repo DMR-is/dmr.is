@@ -2,6 +2,7 @@ import { Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
+import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
   CaseTable,
@@ -44,75 +45,63 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
       children: formatMessage(messages.tables.submitted.columns.department),
     },
     {
-      name: 'caseAdvertType',
-      sortable: true,
-      size: 'tiny',
-      children: formatMessage(messages.tables.general.type),
-    },
-    {
-      name: 'caseName',
-      sortable: true,
+      name: 'caseTitle',
+      sortable: false,
       children: formatMessage(messages.tables.submitted.columns.title),
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => ({
-    case: row,
-    cells: [
-      {
-        children: row.fastTrack && (
-          <div className={styles.iconWrapper}>
-            {row.fastTrack && <CaseLabelTooltip label={'fasttrack'} />}
-          </div>
-        ),
-      },
-      {
-        sortingKey: 'casePublishDate',
-        sortingValue: row.requestedPublicationDate,
-        children: (
-          <Text variant="medium">
-            {formatDate(row.requestedPublicationDate)}
-          </Text>
-        ),
-      },
-      {
-        sortingKey: 'caseRegistrationDate',
-        sortingValue: row.createdAt,
-        children: <Text variant="medium">{formatDate(row.createdAt)}</Text>,
-      },
-      {
-        sortingKey: 'caseDepartment',
-        sortingValue: row.advertDepartment.title,
-        children: (
-          <Text truncate variant="medium">
-            {row.advertDepartment.title}
-          </Text>
-        ),
-      },
-      {
-        sortingKey: 'caseAdvertType',
-        sortingValue: row.advertType.title,
-        children: (
-          <div className={styles.nameTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title}
+  const rows: CaseTableRowProps[] = data.map((row) => {
+    return {
+      case: row,
+      cells: [
+        {
+          children: <CaseToolTips case={row} />,
+        },
+        {
+          sortingKey: 'casePublishDate',
+          sortingValue: row.requestedPublicationDate,
+          children: (
+            <Text variant="medium">
+              {formatDate(row.requestedPublicationDate)}
             </Text>
-          </div>
-        ),
-      },
-      {
-        sortingKey: 'caseName',
-        sortingValue: row.advertTitle,
-        children: (
-          <div className={styles.nameTableCell}>
+          ),
+        },
+        {
+          sortingKey: 'caseRegistrationDate',
+          sortingValue: row.createdAt,
+          children: <Text variant="medium">{formatDate(row.createdAt)}</Text>,
+        },
+        {
+          sortingKey: 'caseDepartment',
+          sortingValue: row.advertDepartment.title,
+          children: (
             <Text truncate variant="medium">
-              {row.advertTitle}
+              {row.advertDepartment.title}
             </Text>
-          </div>
-        ),
-      },
-    ],
-  }))
+          ),
+        },
+        {
+          sortingKey: 'caseTitle',
+          sortingValue: row.advertTitle,
+          children: (
+            <div className={styles.titleTableCell} title={row.advertTitle}>
+              <Text truncate variant="medium">
+                {row.advertType.title} {row.advertTitle}
+              </Text>
+            </div>
+          ),
+        },
+      ],
+    }
+  })
 
-  return <CaseTable paging={paging} columns={columns} rows={rows} />
+  return (
+    <CaseTable
+      paging={paging}
+      columns={columns}
+      rows={rows}
+      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+    />
+  )
 }

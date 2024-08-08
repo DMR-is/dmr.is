@@ -32,6 +32,9 @@ overrides:
       local-rules/require-reduce-defaults: error
       local-rules/disallow-kennitalas: warn
       local-rules/no-async-module-init: error
+      no-console:
+        - error
+        - allow: ['dir']
   - files:
       - '*.ts'
       - '*.tsx'
@@ -102,6 +105,11 @@ overrides:
           format:
             - camelCase
             - UPPER_CASE
+            - PascalCase
+        - selector: import
+          leadingUnderscore: allow
+          format:
+            - camelCase
             - PascalCase
       '@typescript-eslint/no-empty-interface':
         - error

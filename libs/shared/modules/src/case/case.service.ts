@@ -1,8 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { DEFAULT_PAGE_SIZE, FAST_TRACK_DAYS } from '@dmr.is/constants'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
@@ -11,16 +11,28 @@ import {
   CaseCommunicationStatus,
   CaseStatus,
   CaseTag,
+  CaseTagEnum,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  GetCommunicationSatusesResponse,
+  GetNextPublicationNumberResponse,
+  GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
+  UpdateCaseTypeBody,
+  UpdateCategoriesBody,
+  UpdateCommunicationStatusBody,
+  UpdatePaidBody,
+  UpdatePublishDateBody,
+  UpdateTagBody,
+  UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
@@ -35,7 +47,13 @@ import { InjectModel } from '@nestjs/sequelize'
 // import { HTMLText } from '@island.is/regulations-tools/types'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseParameters, counterResult } from '../helpers'
+import {
+  advertCategoryMigrate,
+  caseParameters,
+  counterResult,
+} from '../helpers'
+import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
+import { caseCommunicationStatusMigrate } from '../helpers/migrations/case/case-communication-status-migrate'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
@@ -49,12 +67,12 @@ import { ICaseService } from './case.service.interface'
 import {
   CaseChannelDto,
   CaseChannelsDto,
+  CaseCommunicationStatusDto,
   CaseDto,
   CaseStatusDto,
+  CaseTagDto,
 } from './models'
 import { CASE_RELATIONS } from './relations'
-
-const LOGGING_CATEGORY = 'CaseService'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -74,17 +92,108 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
     @InjectModel(CaseCategoriesDto)
     private readonly caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertCategoryDTO)
+    private readonly advertCategoryModel: typeof AdvertCategoryDTO,
+    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
+
+    @InjectModel(CaseCommunicationStatusDto)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
   }
 
-  @Audit()
-  @HandleException()
-  async overview(
+  @LogAndHandle({ logArgs: false })
+  @Transactional()
+  private async publishCase(caseId: string, transaction?: Transaction) {
+    this.logger.debug(`Publishing case<${caseId}>`)
+
+    const now = new Date()
+
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatus.Published)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        statusId: caseStatus.id,
+        publishedAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    const caseWithAdvert = (
+      await this.utilityService.getCaseWithAdvert(caseId)
+    ).unwrap()
+
+    const { activeCase, advert } = caseWithAdvert
+
+    const number = (
+      await this.utilityService.getNextPublicationNumber(
+        activeCase.advertDepartment.id,
+        transaction,
+      )
+    ).unwrap()
+
+    const advertStatus = (
+      await this.utilityService.advertStatusLookup(AdvertStatus.Published)
+    ).unwrap()
+
+    if (!advert.signatureDate) {
+      throw new BadRequestException('Signature date is required')
+    }
+
+    await this.journalService.create(
+      {
+        departmentId: activeCase.advertDepartment.id,
+        typeId: activeCase.advertType.id,
+        involvedPartyId: activeCase.involvedParty.id,
+        categoryIds: activeCase.advertCategories.map((c) => c.id),
+        statusId: advertStatus.id,
+        subject: activeCase.advertTitle,
+        publicationNumber: number,
+        publicationDate: new Date(),
+        signatureDate: new Date(advert.signatureDate),
+        isLegacy: activeCase.isLegacy,
+        documentHtml: advert.documents.full,
+        documentPdfUrl: '',
+        attachments: advert.attachments.map((a) => a.url),
+      },
+      transaction,
+    )
+
+    ResultWrapper.unwrap(
+      await this.utilityService.approveApplication(activeCase.applicationId),
+    )
+  }
+
+  @LogAndHandle()
+  async getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
+    const tags = await this.caseTagModel.findAll()
+
+    const migrated: CaseTag[] = tags.map((t) => ({
+      id: t.id,
+      key: t.key,
+
+      value: caseTagMapper(t.value)!,
+    }))
+
+    return ResultWrapper.ok({
+      tags: migrated,
+    })
+  }
+
+  @LogAndHandle()
+  async getCasesOverview(
     params?: GetCasesQuery | undefined,
-  ): Promise<Result<EditorialOverviewResponse>> {
-    const casesResponse = await this.cases(params)
+  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
+    const cases = (await this.getCases(params)).unwrap()
 
     const counter = await this.caseModel.findAll({
       attributes: [
@@ -97,285 +206,285 @@ export class CaseService implements ICaseService {
           as: 'status',
           attributes: [],
         },
+        {
+          model: AdvertDepartmentDTO,
+          where: params?.department
+            ? {
+                slug: {
+                  [Op.in]: params.department,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertTypeDTO,
+          where: params?.type
+            ? {
+                slug: {
+                  [Op.in]: params.type,
+                },
+              }
+            : undefined,
+        },
+        {
+          model: AdvertCategoryDTO,
+          where: params?.category
+            ? {
+                slug: params?.category,
+              }
+            : undefined,
+        },
       ],
-      group: ['status_id', `status.value`],
+      group: [
+        'status_id',
+        `status.value`,
+        'department.id',
+        'advertType.id',
+        'categories.id',
+        'CaseDto.id',
+        'categories->CaseCategoriesDto.case_case_id',
+        'categories->CaseCategoriesDto.category_id',
+      ],
     })
 
-    if (!casesResponse.ok) {
-      return casesResponse
-    }
-
-    return {
-      ok: true,
-      value: {
-        cases: casesResponse.value.cases,
-        paging: casesResponse.value.paging,
-        totalItems: counterResult(counter),
-      },
-    }
+    return ResultWrapper.ok({
+      cases: cases.cases,
+      paging: cases.paging,
+      totalItems: counterResult(counter),
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async create(body: PostApplicationBody): Promise<Result<CreateCaseResponse>> {
-    return await this.sequelize.transaction<Result<CreateCaseResponse>>(
-      async (t) => {
-        const existingCaseLookup =
-          await this.utilityService.caseLookupByApplicationId(
-            body.applicationId,
-          )
+  @LogAndHandle()
+  @Transactional()
+  async createCase(
+    body: PostApplicationBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponse>> {
+    let exists: boolean
+    try {
+      ResultWrapper.unwrap(
+        await this.utilityService.caseLookupByApplicationId(body.applicationId),
+      )
 
-        if (existingCaseLookup.ok) {
-          this.logger.warn('Case already exists for this application', {
-            applicationId: body.applicationId,
-            category: LOGGING_CATEGORY,
-          })
+      exists = true
+    } catch (error) {
+      exists = false
+    }
 
-          return {
-            ok: false,
-            error: {
-              code: 409,
-              message: 'Case already exists for this application',
-            },
-          }
-        }
+    if (exists) {
+      throw new BadRequestException(
+        `Case with application<${body.applicationId}> already exists`,
+      )
+    }
 
-        const applicationLookup = await this.applicationService.getApplication(
-          body.applicationId,
-        )
+    // case does not exist so we can create it
+    const { application } = (
+      await this.applicationService.getApplication(body.applicationId)
+    ).unwrap()
 
-        if (!applicationLookup.ok) {
-          return applicationLookup
-        }
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatus.Submitted)
+    ).unwrap()
 
-        const caseStatusLookup = await this.utilityService.caseStatusLookup(
-          CaseStatus.Submitted,
-        )
+    const caseTag = (
+      await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted)
+    ).unwrap()
 
-        if (!caseStatusLookup.ok) {
-          return caseStatusLookup
-        }
+    const caseCommunicationStatus = (
+      await this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.NotStarted,
+      )
+    ).unwrap()
 
-        const caseTagLookup = await this.utilityService.caseTagLookup(
-          CaseTag.NotStarted,
-        )
+    const nextCaseNumber = (
+      await this.utilityService.generateCaseNumber()
+    ).unwrap()
 
-        if (!caseTagLookup.ok) {
-          return caseTagLookup
-        }
+    const department = (
+      await this.utilityService.departmentLookup(
+        application.answers.advert.department,
+      )
+    ).unwrap()
 
-        const caseCommunicationStatus =
-          await this.utilityService.caseCommunicationStatusLookup(
-            CaseCommunicationStatus.NotStarted,
-          )
+    const type = (
+      await this.utilityService.typeLookup(application.answers.advert.type)
+    ).unwrap()
 
-        if (!caseCommunicationStatus.ok) {
-          return caseCommunicationStatus
-        }
+    const requestedPublicationDate = new Date(
+      application.answers.publishing.date,
+    )
 
-        const now = new Date()
-        const application = applicationLookup.value.application
-        const nextCaseNumber = await this.utilityService.generateCaseNumber()
+    const now = new Date()
+    const diff = requestedPublicationDate.getTime() - now.getTime()
+    const diffDays = diff / (1000 * 3600 * 24)
+    let fastTrack = false
+    if (diffDays > FAST_TRACK_DAYS) {
+      fastTrack = true
+    }
 
-        if (!nextCaseNumber.ok) {
-          return nextCaseNumber
-        }
+    const message = application.answers.publishing.message
 
-        const departmentLookup = await this.utilityService.departmentLookup(
-          application.answers.advert.department,
-        )
+    const caseId = uuid()
+    const msg =
+      typeof message === 'string' && message.length > 0 ? message : null
 
-        if (!departmentLookup.ok) {
-          return departmentLookup
-        }
+    // TODO: temp fix for involved party
+    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
-        const typeLookup = await this.utilityService.typeLookup(
-          application.answers.advert.type,
-        )
-
-        if (!typeLookup.ok) {
-          return typeLookup
-        }
-
-        const requestedPublicationDate = new Date(
-          application.answers.publishing.date,
-        )
-        const today = new Date()
-        const diff = requestedPublicationDate.getTime() - today.getTime()
-        const diffDays = diff / (1000 * 3600 * 24)
-        let fastTrack = false
-        if (diffDays > 10) {
-          fastTrack = true
-        }
-
-        const caseNumber = nextCaseNumber.value
-
-        const message = application.answers.publishing.message
-
-        const caseId = uuid()
-        const msg =
-          typeof message === 'string' && message.length > 0 ? message : null
-
-        const newCase = await this.caseModel.create<CaseDto>(
-          {
-            id: caseId,
-            applicationId: application.id,
-            year: now.getFullYear(),
-            caseNumber: caseNumber,
-            statusId: caseStatusLookup.value.id,
-            tagId: caseTagLookup.value.id,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            isLegacy: false,
-            assignedUserId: null,
-            communicationStatusId: caseCommunicationStatus.value.id,
-            publishedAt: null,
-            price: 0,
-            paid: false,
-            fastTrack: fastTrack,
-            advertTitle: application.answers.advert.title,
-            requestedPublicationDate: application.answers.publishing.date,
-            departmentId: departmentLookup.value.id,
-            advertTypeId: typeLookup.value.id,
-            message: msg,
-          },
-          {
-            returning: ['id'],
-            transaction: t,
-          },
-        )
-
-        const categories = await Promise.all(
-          application.answers.publishing.contentCategories.map(
-            async (category) => {
-              return await this.utilityService.categoryLookup(category.value)
-            },
-          ),
-        )
-
-        const categoryIds = categories
-          .map((c) => {
-            if (!c.ok) {
-              return null
-            }
-            return {
-              caseId: newCase.id,
-              categoryId: c.value.id,
-            }
-          })
-          .filter((c) => c !== null) as { caseId: string; categoryId: string }[]
-
-        await this.caseCategoriesModel.bulkCreate(categoryIds, {
-          transaction: t,
-        })
-
-        const channels = application.answers.publishing.communicationChannels
-
-        if (channels && channels.length > 0) {
-          const caseChannels = channels
-            .map((channel) => {
-              if (!channel.email && !channel.phone) return null
-              return {
-                id: uuid(),
-                email: channel.email,
-                phone: channel.phone,
-              }
-            })
-            .filter((c) => c !== null)
-
-          const newChannels = await this.caseChannelModel.bulkCreate(
-            caseChannels.map((c) => ({
-              id: c?.id,
-              email: c?.email,
-              phone: c?.phone,
-            })),
-            {
-              transaction: t,
-              returning: ['id'],
-            },
-          )
-
-          await this.caseChannelsModel.bulkCreate(
-            newChannels.map((c) => ({
-              caseId: caseId,
-              channelId: c.id,
-            })),
-            {
-              transaction: t,
-            },
-          )
-        }
-
-        // TODO: When auth is setup, use the user id from the token
-        await this.commentService.create(
-          newCase.id,
-          {
-            internal: true,
-            type: CaseCommentType.Submit,
-            comment: null,
-            from: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-            to: null,
-          },
-          t,
-        )
-
-        const newCaseLookup = await this.utilityService.caseLookup(
-          newCase.id,
-          t,
-        )
-
-        if (!newCaseLookup.ok) {
-          return newCaseLookup
-        }
-
-        return {
-          ok: true,
-          value: {
-            case: caseMigrate(newCaseLookup.value),
-          },
-        }
+    const newCase = await this.caseModel.create<CaseDto>(
+      {
+        id: caseId,
+        applicationId: application.id,
+        year: now.getFullYear(),
+        caseNumber: nextCaseNumber,
+        statusId: caseStatus.id,
+        tagId: caseTag.id,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        isLegacy: false,
+        assignedUserId: null,
+        communicationStatusId: caseCommunicationStatus.id,
+        publishedAt: null,
+        price: 0,
+        paid: false,
+        involvedPartyId: involvedParty.id,
+        fastTrack: fastTrack,
+        advertTitle: application.answers.advert.title,
+        requestedPublicationDate: application.answers.publishing.date,
+        departmentId: department.id,
+        advertTypeId: type.id,
+        message: msg,
+      },
+      {
+        returning: ['id'],
+        transaction,
       },
     )
-  }
 
-  @Audit()
-  @HandleException()
-  async case(id: string): Promise<Result<GetCaseResponse>> {
-    const result = await this.utilityService.getCaseWithAdvert(id)
+    const categories = await Promise.all(
+      application.answers.publishing.contentCategories.map(async (category) => {
+        return await this.utilityService.categoryLookup(category.value)
+      }),
+    )
 
-    if (!result.ok) {
-      return result
+    const categoryIds = categories
+      .map((c) => {
+        if (!c) {
+          return null
+        }
+
+        const cat = c.unwrap()
+        return {
+          caseId: caseId,
+          categoryId: cat.id,
+        }
+      })
+      .filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    await this.caseCategoriesModel.bulkCreate(categoryIds, {
+      transaction,
+    })
+
+    const channels = application.answers.publishing.communicationChannels
+
+    if (channels && channels.length > 0) {
+      const caseChannels = channels
+        .map((channel) => {
+          if (!channel.email && !channel.phone) return null
+          return {
+            id: uuid(),
+            email: channel.email,
+            phone: channel.phone,
+          }
+        })
+        .filter((c) => c !== null)
+
+      const newChannels = await this.caseChannelModel.bulkCreate(
+        caseChannels.map((c) => ({
+          id: c?.id,
+          email: c?.email,
+          phone: c?.phone,
+        })),
+        {
+          transaction,
+          returning: ['id'],
+        },
+      )
+
+      await this.caseChannelsModel.bulkCreate(
+        newChannels.map((c) => ({
+          caseId: caseId,
+          channelId: c.id,
+        })),
+        {
+          transaction,
+        },
+      )
     }
 
-    return {
-      ok: true,
-      value: { case: result.value },
-    }
+    // TODO: When auth is setup, use the user id from the token
+    await this.commentService.createComment(
+      newCase.id,
+      {
+        internal: true,
+        type: CaseCommentType.Submit,
+        comment: null,
+        initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+        receiver: null,
+        storeState: true,
+      },
+      transaction,
+    )
+
+    const newCreatedCase = (
+      await this.utilityService.caseLookup(newCase.id, transaction)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      case: caseMigrate(newCreatedCase),
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async cases(params?: GetCasesQuery): Promise<Result<GetCasesReponse>> {
+  @LogAndHandle()
+  async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+    const caseWithAdvert = (
+      await this.utilityService.getCaseWithAdvert(id)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      case: caseWithAdvert,
+    })
+  }
+
+  @LogAndHandle()
+  async getCases(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesReponse>> {
     const page = params?.page ? parseInt(params.page, 10) : 1
     const pageSize = params?.pageSize
       ? parseInt(params.pageSize, 10)
       : DEFAULT_PAGE_SIZE
 
-    let statusLookup: Result<CaseStatusDto> | undefined = undefined
-    if (params?.status) {
-      statusLookup = await this.utilityService.caseStatusLookup(params.status)
-    }
+    const statusLookups = params?.status?.map((s) => {
+      return this.utilityService.caseStatusLookup(s)
+    })
+    const statusesRes = statusLookups
+      ? await Promise.all(statusLookups).then((s) => s.map((ss) => ss.unwrap()))
+      : undefined
 
-    const whereParams = caseParameters(
-      params,
-      statusLookup?.ok ? statusLookup.value.id : undefined,
-    )
+    const statuses = statusesRes?.map((s) => s.id)
+
+    const whereParams = caseParameters(params, statuses)
 
     const cases = await this.caseModel.findAndCountAll({
       offset: (page - 1) * pageSize,
       limit: pageSize,
       where: whereParams,
       distinct: true,
+      order: [['createdAt', 'DESC']],
       include: [
         ...CASE_RELATIONS,
         {
@@ -413,153 +522,64 @@ export class CaseService implements ICaseService {
 
     const mapped = cases.rows.map((c) => caseMigrate(c))
 
-    return {
-      ok: true,
-      value: {
-        cases: mapped,
-        paging: generatePaging(mapped, page, pageSize, cases.count),
-      },
-    }
+    return ResultWrapper.ok({
+      cases: mapped,
+      paging: generatePaging(mapped, page, pageSize, cases.count),
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async publish(body: PostCasePublishBody): Promise<Result<undefined>> {
+  @LogAndHandle()
+  async getNextCasePublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
+    const doesDepartmentExist = (
+      await this.utilityService.departmentLookup(departmentId)
+    ).unwrap()
+
+    const publicationNumber = (
+      await this.utilityService.getNextPublicationNumber(doesDepartmentExist.id)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      publicationNumber,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async publishCases(
+    body: PostCasePublishBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
     if (!caseIds || !caseIds.length) {
       throw new BadRequestException()
     }
 
-    const now = new Date().toISOString()
-
-    const publishedStatusLookup = await this.utilityService.caseStatusLookup(
-      CaseStatus.Published,
+    await Promise.all(
+      caseIds.map(
+        async (caseId) => await this.publishCase(caseId, transaction),
+      ),
     )
 
-    if (!publishedStatusLookup.ok) {
-      return publishedStatusLookup
-    }
-
-    await this.sequelize.transaction(async (transaction) => {
-      await this.caseModel.update(
-        {
-          publishedAt: now,
-          statusId: publishedStatusLookup.value.id,
-        },
-        {
-          where: {
-            id: {
-              [Op.in]: caseIds,
-            },
-          },
-          transaction: transaction,
-        },
-      )
-
-      await Promise.all(
-        caseIds.map(async (caseId) => {
-          const caseLookup = await this.case(caseId)
-
-          if (!caseLookup.ok) {
-            return
-          }
-
-          if (caseLookup.value.case === null) {
-            return
-          }
-
-          const { activeCase, advert } = caseLookup.value.case
-
-          if (!advert.type) {
-            return
-          }
-
-          const now = new Date()
-          const year = now.getFullYear()
-          const number = await this.utilityService.getNextSerialNumber(
-            activeCase.advertDepartment.id,
-            year,
-          )
-
-          if (!number.ok) {
-            return
-          }
-
-          const advertId = uuid()
-          await this.journalService.create({
-            id: advertId,
-            department: activeCase.advertDepartment,
-            type: advert.type,
-            subject: advert.type.title,
-            title: activeCase.advertTitle,
-            status: '312F62ED-B47A-4A1A-87A4-42B70E8BE4CA' as AdvertStatus,
-            publicationNumber: {
-              year: year,
-              number: number.value, // TODO replace with count
-              full: `${number}/${year}`,
-            },
-            createdDate: now.toISOString(),
-            updatedDate: now.toISOString(),
-            signatureDate: advert.signatureDate,
-            publicationDate: now.toISOString(),
-            categories: advert.categories,
-            involvedParty: {
-              id: 'A2A33C95-45CE-4540-BD56-12D964B7699B',
-              title: 'Reykjavíkurborg',
-              slug: 'reykjavikurborg',
-            },
-            document: {
-              html: advert.documents.full,
-              isLegacy: false,
-              pdfUrl: null,
-            },
-            signature: null,
-            attachments: [],
-          })
-        }),
-      )
-
-      // for each case, create a comment
-
-      // for each case insert advert
-
-      // caseIds.forEach(async (caseId) => {
-      //   const application = await this.case(caseId)
-
-      //    await this.journalService.insertAdvert({})
-      // })
-    })
-
-    this.logger.info('publish, successfully publised cases', {
-      caseIds: body.caseIds,
-      category: LOGGING_CATEGORY,
-    })
-
-    return {
-      ok: true,
-      value: undefined,
-    }
+    return ResultWrapper.ok()
   }
 
-  @Audit()
-  @HandleException()
-  async assign(id: string, userId: string): Promise<Result<undefined>> {
+  @LogAndHandle()
+  async assignUserToCase(
+    id: string,
+    userId: string,
+  ): Promise<ResultWrapper<undefined>> {
     if (!id || !userId) {
       throw new BadRequestException()
     }
 
-    const caseRes = await this.utilityService.caseLookup(id)
+    const caseRes = (await this.utilityService.caseLookup(id)).unwrap()
 
-    if (!caseRes.ok) {
-      return caseRes
-    }
-
-    const employeeLookup = await this.utilityService.userLookup(userId)
-
-    if (!employeeLookup.ok) {
-      return employeeLookup
-    }
+    const employeeLookup = (
+      await this.utilityService.userLookup(userId)
+    ).unwrap()
 
     await this.caseModel.update(
       {
@@ -572,43 +592,33 @@ export class CaseService implements ICaseService {
       },
     )
 
-    await this.commentService.create(id, {
+    await this.commentService.createComment(id, {
       internal: true,
-      type: caseRes.value.assignedUserId
+      type: caseRes.assignedUserId
         ? CaseCommentType.Assign
         : CaseCommentType.AssignSelf,
       comment: null,
-      from: caseRes.value.assignedUserId,
-      to: employeeLookup.value.id, // TODO: REPLACE WITH ACTUAL USER
+      initiator: caseRes.assignedUserId,
+      receiver: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
     })
 
-    return {
-      ok: true,
-      value: undefined,
-    }
+    return ResultWrapper.ok()
   }
 
-  @Audit()
-  @HandleException()
-  async updateStatus(
+  @LogAndHandle()
+  async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
-  ): Promise<Result<undefined>> {
-    const caseLookup = await this.utilityService.caseLookup(id)
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(id)).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
-
-    const status = await this.utilityService.caseStatusLookup(body.status)
-
-    if (!status.ok) {
-      return status
-    }
+    const status = (
+      await this.utilityService.caseStatusLookup(body.status)
+    ).unwrap()
 
     await this.caseModel.update(
       {
-        statusId: status.value.id,
+        statusId: status.id,
       },
       {
         where: {
@@ -617,40 +627,24 @@ export class CaseService implements ICaseService {
       },
     )
 
-    await this.commentService.create(id, {
+    await this.commentService.createComment(id, {
       internal: true,
       type: CaseCommentType.Update,
       comment: null,
-      from: caseLookup.value.assignedUserId,
-      to: null,
+      initiator: caseLookup.assignedUserId,
+      receiver: null,
     })
 
-    return {
-      ok: true,
-      value: undefined,
-    }
+    return ResultWrapper.ok()
   }
 
-  @Audit()
-  @HandleException()
-  async updateNextStatus(id: string): Promise<Result<undefined>> {
-    const caseLookup = await this.utilityService.caseLookup(id)
+  @LogAndHandle()
+  async updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>> {
+    const activeCase = (await this.utilityService.caseLookup(id)).unwrap()
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
-
-    const activeCase = caseLookup.value
-
-    const currentStatus = await this.utilityService.caseStatusLookup(
-      activeCase.status.value,
-    )
-
-    if (!currentStatus.ok) {
-      return currentStatus
-    }
-
-    const status = currentStatus.value
+    const status = (
+      await this.utilityService.caseStatusLookup(activeCase.status.value)
+    ).unwrap()
 
     const nextStatus =
       status.value === CaseStatus.Submitted
@@ -667,21 +661,21 @@ export class CaseService implements ICaseService {
       nextStatus,
     )
 
-    if (!nextStatusLookup.ok) {
-      return nextStatusLookup
+    if (!nextStatusLookup.isOk()) {
+      throw new BadRequestException('Invalid status')
     }
 
-    return this.updateStatus(id, { status: nextStatus })
+    return this.updateCaseStatus(id, { status: nextStatus })
   }
 
-  @Audit()
-  @HandleException()
-  async updatePrice(caseId: string, price: string): Promise<Result<undefined>> {
+  @LogAndHandle()
+  async updateCasePrice(
+    caseId: string,
+    price: string,
+  ): Promise<ResultWrapper<undefined>> {
     const caseLookup = await this.utilityService.caseLookup(caseId)
 
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+    caseLookup.unwrap()
 
     await this.caseModel.update(
       {
@@ -694,33 +688,23 @@ export class CaseService implements ICaseService {
       },
     )
 
-    return {
-      ok: true,
-      value: undefined,
-    }
+    return ResultWrapper.ok()
   }
 
-  @Audit()
-  @HandleException()
-  async updateDepartment(
+  @LogAndHandle()
+  async updateCaseDepartment(
     caseId: string,
-    departmentId: string,
-  ): Promise<Result<undefined>> {
-    const caseLookup = await this.utilityService.caseLookup(caseId)
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+    body: UpdateCaseDepartmentBody,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
-    const departmentLookup = await this.utilityService.departmentLookup(
-      departmentId,
-    )
-    if (!departmentLookup.ok) {
-      return departmentLookup
-    }
+    const department = (
+      await this.utilityService.departmentLookup(body.departmentId)
+    ).unwrap()
 
     await this.caseModel.update(
       {
-        departmentId: departmentLookup.value.id,
+        departmentId: department.id,
       },
       {
         where: {
@@ -729,25 +713,347 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const updateApplicationResult =
+    ResultWrapper.unwrap(
       await this.applicationService.updateApplication(
-        caseLookup.value.applicationId,
+        caseLookup.applicationId,
         {
           answers: {
             advert: {
-              department: departmentId,
+              department: body.departmentId,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseType(
+    caseId: string,
+    body: UpdateCaseTypeBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const typeLookup = (
+      await this.utilityService.typeLookup(body.typeId)
+    ).unwrap()
+
+    await this.caseModel.update(
+      {
+        advertTypeId: typeLookup.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const updateApplicationResult =
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              type: body.typeId,
             },
           },
         },
       )
 
-    if (!updateApplicationResult.ok) {
-      return updateApplicationResult
+    if (!updateApplicationResult.isOk()) {
+      throw new BadRequestException('Failed to update application')
     }
 
-    return {
-      ok: true,
-      value: undefined,
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async updateCaseCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const currentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const incomingCategories = await Promise.all(
+      body.categoryIds.map(async (categoryId) => {
+        ResultWrapper.unwrap(
+          await this.utilityService.categoryLookup(categoryId),
+        )
+
+        return {
+          caseId,
+          categoryId,
+        }
+      }),
+    )
+
+    const newCategories = incomingCategories.filter((c) => c !== null) as {
+      caseId: string
+      categoryId: string
+    }[]
+
+    const newCategoryIds = newCategories.map((c) => c.categoryId)
+
+    const toRemove = currentCategories.filter((c) =>
+      newCategoryIds.includes(c.categoryId),
+    )
+
+    await this.caseCategoriesModel.bulkCreate(newCategories, {
+      ignoreDuplicates: true,
+    })
+
+    await Promise.all(
+      toRemove.map(async (c) => {
+        await c.destroy()
+      }),
+    )
+
+    const newCurrentCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId,
+      },
+    })
+
+    const ids = newCurrentCategories.map((c) => c.categoryId)
+
+    const categories = await this.advertCategoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: ids,
+        },
+      },
+    })
+
+    const migrated = categories.map((c) => advertCategoryMigrate(c))
+
+    const mapped = migrated.map((c) => ({
+      label: c.title,
+      value: c.id,
+    }))
+
+    const applicationLookup = (
+      await this.applicationService.getApplication(caseLookup.applicationId)
+    ).unwrap()
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            publishing: {
+              contentCategories: mapped,
+              communicationChannels:
+                applicationLookup.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseRequestedPublishDate(
+    caseId: string,
+    body: UpdatePublishDateBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    const requestedPublicationDate = new Date(body.date)
+    const createdAt = new Date(caseLookup.createdAt)
+    const timeDiff = Math.abs(
+      requestedPublicationDate.getTime() - createdAt.getTime(),
+    )
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+    await this.caseModel.update(
+      {
+        requestedPublicationDate: body.date,
+        fastTrack: daysDiff <= FAST_TRACK_DAYS,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    const applicationLookup = (
+      await this.applicationService.getApplication(caseLookup.applicationId)
+    ).unwrap()
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            publishing: {
+              date: body.date,
+              contentCategories:
+                applicationLookup.application.answers.publishing
+                  .contentCategories,
+              communicationChannels:
+                applicationLookup.application.answers.publishing
+                  .communicationChannels,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseTitle(
+    caseId: string,
+    body: UpdateTitleBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+    await this.caseModel.update(
+      {
+        advertTitle: body.title,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    ResultWrapper.unwrap(
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              title: body.title,
+            },
+          },
+        },
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCasePaid(
+    caseId: string,
+    body: UpdatePaidBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    ResultWrapper.unwrap(await this.utilityService.caseLookup(caseId))
+
+    await this.caseModel.update(
+      {
+        paid: body.paid,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async udpateCaseTag(
+    caseId: string,
+    body: UpdateTagBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    ResultWrapper.unwrap(await this.utilityService.caseLookup(caseId))
+
+    await this.caseModel.update(
+      {
+        tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse>
+  > {
+    const statuses = (await this.caseCommunicationStatusModel.findAll()).map(
+      (s) => caseCommunicationStatusMigrate(s),
+    )
+
+    return ResultWrapper.ok({
+      statuses,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseCommunicationStatus(
+    caseId: string,
+    body: UpdateCommunicationStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const lookup = (
+      await this.utilityService.caseCommunicationStatusLookupById(body.statusId)
+    ).unwrap()
+
+    if (lookup.value === CaseCommunicationStatus.WaitingForAnswers) {
+      this.logger.debug(
+        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+      )
+      const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
+
+      ResultWrapper.unwrap(
+        await this.utilityService.rejectApplication(caseLookup.applicationId),
+      )
     }
+
+    await this.caseModel.update(
+      {
+        communicationStatusId: lookup.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
   }
 }

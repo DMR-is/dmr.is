@@ -2,16 +2,31 @@ import {
   Case,
   CaseStatus,
   CaseCommentType,
-  CaseTag,
   CaseCommentTitle,
   CaseCommunicationStatus,
+  CaseTagEnum,
 } from '@dmr.is/shared/dto'
 import { ARMANN, PALINA } from './users.mock'
 import {
   DEPT_A_AUGLYSING,
   JOURNAL_DEPARTMENT_B,
   MOCK_CATEGORY_GAELUDYR,
+  MOCK_INVOLVEDPARTY_USR,
 } from './journal.mock'
+
+const caseTag = {
+  id: '08f2c487-2407-470b-bef3-72c9e0afb328',
+  key: 'NotStarted',
+  value: CaseTagEnum.NotStarted,
+}
+
+const communicationStatus = {
+  id: '08f2c487-2407-470b-bef3-72c9e0afb328',
+  key: 'NotStarted',
+  value: CaseCommunicationStatus.NotStarted,
+}
+
+const involvedParty = MOCK_INVOLVEDPARTY_USR
 
 export const CASE_SUBMITTED: Case = {
   id: 'e6d7c050-a462-4183-972a-5c375e6e348d',
@@ -23,7 +38,8 @@ export const CASE_SUBMITTED: Case = {
   caseNumber: '1234',
   isLegacy: true,
   status: CaseStatus.Submitted,
-  tag: CaseTag.NotStarted,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -36,7 +52,7 @@ export const CASE_SUBMITTED: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_NEW,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -65,7 +81,8 @@ export const CASE_IN_PROGRESS: Case = {
   caseNumber: '8526',
   isLegacy: true,
   status: CaseStatus.InProgress,
-  tag: CaseTag.NotStarted,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -78,7 +95,7 @@ export const CASE_IN_PROGRESS: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
@@ -150,7 +167,8 @@ export const CASE_IN_REVIEW: Case = {
   caseNumber: '5824',
   isLegacy: true,
   status: CaseStatus.InReview,
-  tag: CaseTag.InReview,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -163,7 +181,7 @@ export const CASE_IN_REVIEW: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
@@ -319,7 +337,8 @@ export const CASE_READY: Case = {
   caseNumber: '3211',
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: null,
@@ -332,7 +351,7 @@ export const CASE_READY: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_A,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -404,7 +423,8 @@ export const CASE_READY_2: Case = {
   caseNumber: '2314',
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
   modifiedAt: '2024-04-01T12:45:48.21Z',
   publishedAt: null,
@@ -417,7 +437,7 @@ export const CASE_READY_2: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -489,7 +509,8 @@ export const CASE_READY_3: Case = {
   caseNumber: '4321',
   isLegacy: true,
   status: CaseStatus.ReadyForPublishing,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
   modifiedAt: '2024-04-01T12:45:48.21Z',
   publishedAt: null,
@@ -502,7 +523,7 @@ export const CASE_READY_3: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_READY_B_2,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -574,7 +595,8 @@ export const CASE_PUBLISHED: Case = {
   caseNumber: '3211',
   isLegacy: true,
   status: CaseStatus.Published,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',
@@ -587,7 +609,7 @@ export const CASE_PUBLISHED: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_B_866_2006,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -659,7 +681,8 @@ export const CASE_PUBLISHED_2: Case = {
   caseNumber: '3211',
   isLegacy: true,
   status: CaseStatus.Published,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',
@@ -672,7 +695,7 @@ export const CASE_PUBLISHED_2: Case = {
   channels: [],
   message: null,
   // advert: JOURNAL_DEPARTMENT_B,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
@@ -744,7 +767,8 @@ export const CASE_PUBLISHED_3: Case = {
   caseNumber: '4523',
   isLegacy: true,
   status: CaseStatus.Published,
-  tag: CaseTag.MultipleReviewers,
+  tag: caseTag,
+  involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
   modifiedAt: '2024-03-12T12:45:48.21Z',
   publishedAt: '2024-03-04T12:45:48.21Z',
@@ -757,7 +781,7 @@ export const CASE_PUBLISHED_3: Case = {
   channels: [],
   message: null,
   // advert: ADVERT_B_1278_2023,
-  communicationStatus: CaseCommunicationStatus.NotStarted,
+  communicationStatus: communicationStatus,
   comments: [
     {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',

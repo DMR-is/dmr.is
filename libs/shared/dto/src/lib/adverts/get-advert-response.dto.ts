@@ -1,7 +1,5 @@
-import { HttpStatus } from '@nestjs/common'
 import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 
-import { Paging } from '../paging/paging.dto'
 import { Advert } from './advert.dto'
 import { AdvertNotFound } from './get-adverts-responses.dto'
 

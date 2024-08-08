@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import {
   SequelizeModuleOptions,
   SequelizeOptionsFactory,
@@ -12,6 +12,7 @@ import { getOptions } from './sequelize'
 
 @Injectable()
 export class SequelizeConfigService implements SequelizeOptionsFactory {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
   // @Inject(LOGGER_PROVIDER)
   // private logger: CustomLogger,

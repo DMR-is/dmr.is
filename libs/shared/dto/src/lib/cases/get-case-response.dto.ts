@@ -7,5 +7,5 @@ export class GetCaseResponse {
     type: CaseWithAdvert,
     required: true,
   })
-  readonly case!: CaseWithAdvert | null
+  readonly case!: CaseWithAdvert
 }

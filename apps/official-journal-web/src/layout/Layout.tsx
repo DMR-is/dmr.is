@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/naming-convention
 import Head from 'next/head'
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
@@ -13,8 +12,10 @@ import { Main } from '../components/main/Main'
 import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
-import { fetcher } from '../lib/constants'
+import { defaultFetcher } from '../lib/constants'
 import type { Screen } from '../lib/types'
+import { ARMANN } from '../lib/userMock'
+
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }
@@ -54,16 +55,16 @@ const Layout: Screen<LayoutProps> = ({
           return null
         }
 
+        // eslint-disable-next-line no-console
         console.error('Error in IntlProvider', { exception: err })
       }}
     >
       <SWRConfig
         value={{
-          fetcher: fetcher,
-          refreshInterval: 5000,
+          fetcher: defaultFetcher,
+          refreshInterval: 1000 * 60,
           errorRetryCount: 3,
           errorRetryInterval: 5000,
-          dedupingInterval: 5000,
           suspense: false,
         }}
       >
@@ -85,7 +86,7 @@ const Layout: Screen<LayoutProps> = ({
                     )
                   })}
                 </Head>
-                <Header headerWhite={headerWhite} />
+                <Header headerWhite={headerWhite} user={ARMANN} />
                 <Main>
                   {bannerProps.showBanner && (
                     <Banner
@@ -192,7 +193,7 @@ export const withMainLayout = <T,>(
       <Layout {...layoutProps}>
         {/**
          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-         // @ts-ignore make web strict */}
+         // @ts-expect-error make web strict */}
         <Component {...componentProps} />
       </Layout>
     )

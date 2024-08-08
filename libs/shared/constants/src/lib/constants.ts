@@ -5,3 +5,10 @@ export enum Filenames {
   Documents = 'Fylgiskjal',
   Appendix = 'Viðauki',
 }
+
+export const FAST_TRACK_DAYS = 10
+
+export enum ApplicationEvent {
+  Approve = 'APPROVE',
+  Reject = 'REJECT',
+}

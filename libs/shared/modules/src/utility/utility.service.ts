@@ -1,10 +1,14 @@
 import { Op, Transaction } from 'sequelize'
-import { Filenames } from '@dmr.is/constants'
-import { Audit, HandleException } from '@dmr.is/decorators'
+import { ApplicationEvent, Filenames } from '@dmr.is/constants'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { CaseWithAdvert, User } from '@dmr.is/shared/dto'
-import { Result } from '@dmr.is/types'
+import {
+  CaseWithAdvert,
+  GetApplicationResponse,
+  User,
+} from '@dmr.is/shared/dto'
+import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -29,11 +33,10 @@ import {
   AdvertDepartmentDTO,
   AdvertDTO,
   AdvertInvolvedPartyDTO,
+  AdvertStatusDTO,
   AdvertTypeDTO,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
-
-const LOGGING_CATEGORY = 'UtilityService'
 
 export class UtilityService implements IUtilityService {
   constructor(
@@ -59,28 +62,105 @@ export class UtilityService implements IUtilityService {
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
     @InjectModel(CaseCategoriesDto)
     private caseCategoriesModel: typeof CaseCategoriesDto,
+    @InjectModel(AdvertStatusDTO)
+    private advertStatusModel: typeof AdvertStatusDTO,
   ) {
     this.logger.info('Using UtilityService')
   }
 
-  @Audit()
-  @HandleException()
-  async categoryLookup(categoryId: string): Promise<Result<AdvertCategoryDTO>> {
+  @LogAndHandle()
+  async approveApplication(applicationId: string): Promise<ResultWrapper> {
+    ResultWrapper.unwrap(
+      await this.applicationService.submitApplication(
+        applicationId,
+        ApplicationEvent.Approve,
+      ),
+    )
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async rejectApplication(
+    applicationId: string,
+  ): Promise<ResultWrapper<unknown, GenericError>> {
+    ResultWrapper.unwrap(
+      await this.applicationService.submitApplication(
+        applicationId,
+        ApplicationEvent.Reject,
+      ),
+    )
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async applicationLookup(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetApplicationResponse>> {
+    const application = (
+      await this.applicationService.getApplication(applicationId)
+    ).unwrap()
+
+    return ResultWrapper.ok(application)
+  }
+
+  @LogAndHandle({ logArgs: false })
+  async getNextPublicationNumber(
+    departmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<number>> {
+    const now = new Date()
+
+    const year = now.getFullYear()
+    const janFirst = new Date(year, 0, 1)
+
+    const nextPublicationNumber = await this.advertModel.count({
+      distinct: true,
+      where: {
+        departmentId: {
+          [Op.eq]: departmentId,
+        },
+        publicationDate: {
+          [Op.gte]: janFirst,
+        },
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok(nextPublicationNumber + 1)
+  }
+
+  @LogAndHandle()
+  async categoryLookup(
+    categoryId: string,
+  ): Promise<ResultWrapper<AdvertCategoryDTO>> {
     const categoryLookup = await this.categoryModel.findByPk(categoryId)
 
     if (!categoryLookup) {
       throw new NotFoundException(`Category<${categoryId}> not found`)
     }
 
-    return {
-      ok: true,
-      value: categoryLookup,
-    }
+    return ResultWrapper.ok(categoryLookup)
   }
 
-  @Audit()
-  @HandleException()
-  async typeLookup(type: string): Promise<Result<AdvertTypeDTO>> {
+  @LogAndHandle()
+  async advertStatusLookup(
+    status: string,
+  ): Promise<ResultWrapper<AdvertStatusDTO, GenericError>> {
+    const statusLookup = await this.advertStatusModel.findOne({
+      where: {
+        title: status,
+      },
+    })
+
+    if (!statusLookup) {
+      throw new NotFoundException(`Status<${status}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
+  }
+
+  @LogAndHandle()
+  async typeLookup(type: string): Promise<ResultWrapper<AdvertTypeDTO>> {
     const typeLookup = await this.typeDto.findByPk(type, {
       include: [AdvertDepartmentDTO],
     })
@@ -89,33 +169,25 @@ export class UtilityService implements IUtilityService {
       throw new NotFoundException(`Type<${type}> not found`)
     }
 
-    return {
-      ok: true,
-      value: typeLookup,
-    }
+    return ResultWrapper.ok(typeLookup)
   }
 
-  @Audit()
-  @HandleException()
-  userLookup(userId: string): Promise<Result<User>> {
+  @LogAndHandle()
+  async userLookup(userId: string): Promise<ResultWrapper<User>> {
     const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
 
     if (!userLookup) {
       throw new NotFoundException(`User<${userId}> not found`)
     }
 
-    return Promise.resolve({
-      ok: true,
-      value: userLookup,
-    })
+    return ResultWrapper.ok(userLookup)
   }
 
-  @Audit()
-  @HandleException()
-  async getNextSerialNumber(
+  @LogAndHandle()
+  async getNextCaseNumber(
     departmentId: string,
     publicationYear: number,
-  ): Promise<Result<number>> {
+  ): Promise<ResultWrapper<number>> {
     const serialNumber: number | null = await this.advertModel.max(
       'serialNumber',
       {
@@ -126,53 +198,59 @@ export class UtilityService implements IUtilityService {
       },
     )
 
-    return {
-      ok: true,
-      value: serialNumber ? serialNumber + 1 : 1,
-    }
+    return ResultWrapper.ok(serialNumber ? serialNumber + 1 : 1)
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async departmentLookup(
     departmentId: string,
-  ): Promise<Result<AdvertDepartmentDTO>> {
+  ): Promise<ResultWrapper<AdvertDepartmentDTO>> {
     const departmentLookup = await this.departmentModel.findByPk(departmentId)
 
     if (!departmentLookup) {
       throw new NotFoundException(`Department<${departmentId}> not found`)
     }
 
-    return {
-      ok: true,
-      value: departmentLookup,
-    }
+    return ResultWrapper.ok(departmentLookup)
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async caseCommunicationStatusLookup(
     status: string,
-  ): Promise<Result<CaseCommunicationStatusDto>> {
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
     const statusLookup = await this.caseCommunicationStatusModel.findOne({
       where: {
         value: status,
       },
+      transaction,
     })
 
     if (!statusLookup) {
       throw new NotFoundException(`CommunicationStatus<${status}> not found`)
     }
 
-    return {
-      ok: true,
-      value: statusLookup,
-    }
+    return ResultWrapper.ok(statusLookup)
   }
 
-  @Audit()
-  @HandleException()
-  async caseTagLookup(tag: string): Promise<Result<CaseStatusDto>> {
+  @LogAndHandle()
+  async caseCommunicationStatusLookupById(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
+    const statusLookup = await this.caseCommunicationStatusModel.findByPk(id, {
+      transaction,
+    })
+
+    if (!statusLookup) {
+      throw new NotFoundException(`CommunicationStatus<${id}> not found`)
+    }
+
+    return ResultWrapper.ok(statusLookup)
+  }
+
+  @LogAndHandle()
+  async caseTagLookup(tag: string): Promise<ResultWrapper<CaseTagDto>> {
     const tagLookup = await this.caseTagModel.findOne({
       where: {
         value: tag,
@@ -183,15 +261,13 @@ export class UtilityService implements IUtilityService {
       throw new NotFoundException(`Tag<${tag}> not found`)
     }
 
-    return {
-      ok: true,
-      value: tagLookup,
-    }
+    return ResultWrapper.ok(tagLookup)
   }
 
-  @Audit()
-  @HandleException()
-  async caseStatusLookup(status: string): Promise<Result<CaseStatusDto>> {
+  @LogAndHandle()
+  async caseStatusLookup(
+    status: string,
+  ): Promise<ResultWrapper<CaseStatusDto>> {
     const statusLookup = await this.caseStatusModel.findOne({
       where: {
         value: status,
@@ -202,15 +278,11 @@ export class UtilityService implements IUtilityService {
       throw new NotFoundException(`Status<${status}> not found`)
     }
 
-    return {
-      ok: true,
-      value: statusLookup,
-    }
+    return ResultWrapper.ok(statusLookup)
   }
 
-  @Audit()
-  @HandleException()
-  async generateCaseNumber(): Promise<Result<string>> {
+  @LogAndHandle()
+  async generateCaseNumber(): Promise<ResultWrapper<string>> {
     const now = new Date().toISOString()
     const [year, month, date] = now.split('T')[0].split('-')
 
@@ -229,17 +301,13 @@ export class UtilityService implements IUtilityService {
 
     const caseNumber = `${year}${month}${date}${withLeadingZeros}`
 
-    return {
-      ok: true,
-      value: caseNumber,
-    }
+    return ResultWrapper.ok(caseNumber)
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async caseLookupByApplicationId(
     applicationId: string,
-  ): Promise<Result<CaseDto>> {
+  ): Promise<ResultWrapper<CaseDto>> {
     const found = await this.caseModel.findOne({
       where: {
         applicationId: applicationId,
@@ -253,18 +321,14 @@ export class UtilityService implements IUtilityService {
       )
     }
 
-    return {
-      ok: true,
-      value: found,
-    }
+    return ResultWrapper.ok(found)
   }
 
-  @Audit()
-  @HandleException()
+  @LogAndHandle()
   async caseLookup(
     caseId: string,
     transaction?: Transaction,
-  ): Promise<Result<CaseDto>> {
+  ): Promise<ResultWrapper<CaseDto>> {
     const found = await this.caseModel.findByPk(caseId, {
       include: CASE_RELATIONS,
       transaction,
@@ -274,44 +338,33 @@ export class UtilityService implements IUtilityService {
       throw new NotFoundException(`Case<${caseId}> not found`)
     }
 
-    return {
+    return new ResultWrapper({
       ok: true,
       value: found,
-    }
+    })
   }
 
-  @Audit()
-  @HandleException()
-  async getCaseWithAdvert(caseId: string): Promise<Result<CaseWithAdvert>> {
-    const caseLookup = await this.caseLookup(caseId)
-    if (!caseLookup.ok) {
-      return caseLookup
-    }
+  @LogAndHandle()
+  async getCaseWithAdvert(
+    caseId: string,
+  ): Promise<ResultWrapper<CaseWithAdvert>> {
+    const caseLookup = (await this.caseLookup(caseId)).unwrap()
 
-    const activeCase = caseMigrate(caseLookup.value)
+    const activeCase = caseMigrate(caseLookup)
 
-    const applicationLookup = await this.applicationService.getApplication(
-      activeCase.applicationId,
-    )
+    const applicationLookup = (
+      await this.applicationService.getApplication(activeCase.applicationId)
+    ).unwrap()
 
-    if (!applicationLookup.ok) {
-      return applicationLookup
-    }
+    const { application } = applicationLookup
 
-    const { application } = applicationLookup.value
+    const department = (
+      await this.departmentLookup(application.answers.advert.department)
+    ).unwrap()
 
-    const departmentLookup = await this.departmentLookup(
-      application.answers.advert.department,
-    )
-
-    if (!departmentLookup.ok) {
-      return departmentLookup
-    }
-
-    const type = await this.typeLookup(application.answers.advert.type)
-    if (!type.ok) {
-      return type
-    }
+    const type = (
+      await this.typeLookup(application.answers.advert.type)
+    ).unwrap()
 
     const categoryIds =
       application.answers.publishing.contentCategories?.map((c) => c.value) ??
@@ -325,38 +378,18 @@ export class UtilityService implements IUtilityService {
       },
     })
 
-    // await this.involvedPartyModel.findByPk(application.applicant), // TODO: Users not implemented yet
-    // TODO: Implement this when users are implemented
-    // if (!involvedParty) {
-    //   throw new NotFoundException(
-    //     `Involved party with id ${application.applicant} not found`,
-    //   )
-    // }
-
     const involvedParty = await this.involvedPartyModel.findByPk(
-      '195eccdc-baf3-4cec-97ac-ef1c5161b091',
+      activeCase.involvedParty.id,
     )
 
     if (!involvedParty) {
-      this.logger.warn(
-        `getCaseWithAdvert, could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
-        {
-          caseId: caseId,
-          applicationId: activeCase.applicationId,
-          category: LOGGING_CATEGORY,
-        },
+      throw new NotFoundException(
+        `Could not find involved party<${activeCase.involvedParty.id}>`,
       )
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find involved party <195eccdc-baf3-4cec-97ac-ef1c5161b091>`,
-        },
-      }
     }
 
-    const activeDepartment = advertDepartmentMigrate(departmentLookup.value)
-    const activeType = advertTypesMigrate(type.value)
+    const activeDepartment = advertDepartmentMigrate(department)
+    const activeType = advertTypesMigrate(type)
     const activeCategories = categories.map((c) => advertCategoryMigrate(c))
 
     let signatureDate = null
@@ -372,18 +405,10 @@ export class UtilityService implements IUtilityService {
     }
 
     if (!signatureDate) {
-      this.logger.warn(`getCaseWithAdvert, could not find signature date`, {
-        caseId: caseId,
-        applicationId: activeCase.applicationId,
-        category: LOGGING_CATEGORY,
+      return ResultWrapper.err({
+        code: 404,
+        message: `Could not find signature date`,
       })
-      return {
-        ok: false,
-        error: {
-          code: 404,
-          message: `Could not find signature date`,
-        },
-      }
     }
 
     const attachments: { name: string; url: string }[] = []
@@ -413,26 +438,23 @@ export class UtilityService implements IUtilityService {
       })
     })
 
-    return {
-      ok: true,
-      value: {
-        activeCase: activeCase,
-        advert: {
-          title: application.answers.advert.title,
-          documents: {
-            advert: application.answers.advert.document,
-            signature: application.answers.signature.signature,
-            full: application.answers.preview.document,
-          },
-          publicationDate: application.answers.publishing.date,
-          signatureDate: signatureDate,
-          department: activeDepartment,
-          type: activeType,
-          categories: activeCategories,
-          involvedParty: involvedParty,
-          attachments: attachments,
+    return ResultWrapper.ok({
+      activeCase: activeCase,
+      advert: {
+        title: application.answers.advert.title,
+        documents: {
+          advert: application.answers.advert.document,
+          signature: application.answers.signature.signature,
+          full: application.answers.preview.document,
         },
+        publicationDate: application.answers.publishing.date,
+        signatureDate: signatureDate,
+        department: activeDepartment,
+        type: activeType,
+        categories: activeCategories,
+        involvedParty: involvedParty,
+        attachments: attachments,
       },
-    }
+    })
   }
 }
