@@ -12,7 +12,7 @@ export class SignatureMember {
     required: true,
     description: 'The name/title/w.e. of the signature member',
   })
-  value!: string
+  text!: string
 
   /**
    * The text that comes above the signature member value.

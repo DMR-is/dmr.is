@@ -13,8 +13,9 @@ export class SignatureMemberModel extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    field: 'value',
   })
-  value!: string
+  text!: string
 
   @Column({
     type: DataType.STRING,

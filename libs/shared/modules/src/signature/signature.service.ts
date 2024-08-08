@@ -1,4 +1,3 @@
-import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
@@ -14,6 +13,7 @@ import { generatePaging } from '@dmr.is/utils'
 import { NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
 import { SignatureModel } from './models'
 import { ISignatureService } from './signature.service.interface'
 
@@ -58,15 +58,11 @@ export class SignatureService implements ISignatureService {
       //where: {...},
     })
 
-    const paging = generatePaging(
-      signatures.rows,
-      page,
-      pageSize,
-      signatures.count,
-    )
+    const migrated = signatures.rows.map((s) => signatureMigrate(s))
+    const paging = generatePaging(migrated, page, pageSize, signatures.count)
 
     return ResultWrapper.ok({
-      signatures: [],
+      signatures: migrated,
       paging,
     })
   }

@@ -32,10 +32,10 @@ export class SignatureModel extends Model {
   institution!: string
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.STRING,
     allowNull: false,
   })
-  date!: Date
+  date!: string
 
   @Column({
     type: DataType.UUID,
