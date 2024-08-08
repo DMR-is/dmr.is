@@ -1,4 +1,5 @@
 import {
+  DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesQuery,
   GetSignaturesResponse,
@@ -7,10 +8,22 @@ import { ResultWrapper } from '@dmr.is/types'
 
 export interface ISignatureService {
   createSignature(): Promise<ResultWrapper>
+  getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
   getSignatures(
     params?: GetSignaturesQuery,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
-  getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
+  getSignaturesByInvolvedPartyId(
+    involvedPartyId: string,
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetSignaturesResponse>>
+  getSignaturesByCaseId(
+    caseId: string,
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetSignaturesResponse>>
+  getSignaturesByAdvertId(
+    advertId: string,
+    params?: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetSignaturesResponse>>
   updateSignature(): Promise<ResultWrapper>
   deleteSignature(): Promise<ResultWrapper>
 }

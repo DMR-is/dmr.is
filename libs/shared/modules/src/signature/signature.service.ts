@@ -1,9 +1,10 @@
+import { Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import {
+  DefaultSearchParams,
   GetSignatureResponse,
-  GetSignaturesQuery,
   GetSignaturesResponse,
   Signature,
 } from '@dmr.is/shared/dto'
@@ -14,15 +15,59 @@ import { NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
-import { SignatureModel } from './models'
+import {
+  AdvertSignaturesModel,
+  CaseSignaturesModel,
+  SignatureModel,
+} from './models'
 import { ISignatureService } from './signature.service.interface'
+import { getDefaultOptions } from './utils'
 
 export class SignatureService implements ISignatureService {
   constructor(
     @InjectModel(SignatureModel)
     private readonly signatureModel: typeof SignatureModel,
+    @InjectModel(AdvertSignaturesModel)
+    private readonly advertSignaturesModel: typeof AdvertSignaturesModel,
+    @InjectModel(CaseSignaturesModel)
+    private readonly caseSignaturesModel: typeof CaseSignaturesModel,
     private readonly sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  private async findSignatures(
+    params?: DefaultSearchParams,
+    where?: WhereOptions,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignaturesResponse>> {
+    const defaultOptions = getDefaultOptions(params)
+
+    const signatures = await this.signatureModel.findAndCountAll({
+      ...defaultOptions,
+      where: {
+        institution: params?.search
+          ? {
+              [Op.like]: `%${params.search}%`,
+            }
+          : undefined,
+        ...where,
+      },
+      transaction,
+    })
+
+    const migrated = signatures.rows.map((s) => signatureMigrate(s))
+    const paging = generatePaging(
+      migrated,
+      params?.page || 1,
+      params?.pageSize || DEFAULT_PAGE_SIZE,
+      signatures.count,
+    )
+
+    return ResultWrapper.ok({
+      signatures: migrated,
+      paging,
+    })
+  }
 
   @LogAndHandle()
   async createSignature(): Promise<ResultWrapper> {
@@ -30,8 +75,11 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
-  async getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>> {
-    const signature = await this.signatureModel.findByPk(id)
+  async getSignature(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignatureResponse>> {
+    const signature = await this.signatureModel.findByPk(id, { transaction })
 
     if (!signature) {
       throw new NotFoundException(`Signature<${id}> not found`)
@@ -44,22 +92,78 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   async getSignatures(
-    params?: GetSignaturesQuery,
+    params?: DefaultSearchParams,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    const page = params?.page || 1
-    const pageSize = params?.pageSize || DEFAULT_PAGE_SIZE
+    return await this.findSignatures(params, undefined, transaction)
+  }
 
-    // TODO: Implement search
+  @LogAndHandle()
+  async getSignaturesByInvolvedPartyId(
+    involvedPartyId: string,
+    params?: DefaultSearchParams,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignaturesResponse>> {
+    return await this.findSignatures(params, { involvedPartyId }, transaction)
+  }
 
-    const signatures = await this.signatureModel.findAndCountAll({
-      distinct: true,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      //where: {...},
+  @LogAndHandle()
+  async getSignaturesByCaseId(
+    caseId: string,
+    params?: DefaultSearchParams,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignaturesResponse>> {
+    const defaultOptions = getDefaultOptions(params)
+
+    const advertSignatures = await this.caseSignaturesModel.findAndCountAll({
+      ...defaultOptions,
+      where: {
+        caseId,
+      },
+      transaction,
     })
 
-    const migrated = signatures.rows.map((s) => signatureMigrate(s))
-    const paging = generatePaging(migrated, page, pageSize, signatures.count)
+    const migrated = advertSignatures.rows.map((s) =>
+      signatureMigrate(s.signature),
+    )
+    const paging = generatePaging(
+      migrated,
+      params?.page || 1,
+      params?.pageSize || DEFAULT_PAGE_SIZE,
+      advertSignatures.count,
+    )
+
+    return ResultWrapper.ok({
+      signatures: migrated,
+      paging,
+    })
+  }
+
+  @LogAndHandle()
+  async getSignaturesByAdvertId(
+    advertId: string,
+    params?: DefaultSearchParams,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignaturesResponse>> {
+    const defaultOptions = getDefaultOptions(params)
+
+    const advertSignatures = await this.advertSignaturesModel.findAndCountAll({
+      ...defaultOptions,
+      where: {
+        advertId,
+      },
+      transaction,
+    })
+
+    const migrated = advertSignatures.rows.map((s) =>
+      signatureMigrate(s.signature),
+    )
+    const paging = generatePaging(
+      migrated,
+      params?.page || 1,
+      params?.pageSize || DEFAULT_PAGE_SIZE,
+      advertSignatures.count,
+    )
 
     return ResultWrapper.ok({
       signatures: migrated,

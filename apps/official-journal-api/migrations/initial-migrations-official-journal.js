@@ -271,8 +271,6 @@ module.exports = {
       institution VARCHAR NOT NULL,
       involved_party_id UUID NOT NULL,
       chairman_id UUID,
-      case_case_id UUID,
-      advert_id UUID,
       additional_signature VARCHAR,
       PRIMARY KEY (id),
       CONSTRAINT fk_signature_type_id FOREIGN KEY (type_id) REFERENCES signature_type (id),

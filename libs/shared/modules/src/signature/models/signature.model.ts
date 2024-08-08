@@ -63,20 +63,6 @@ export class SignatureModel extends Model {
   })
   additionalSignature?: string
 
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'case_case_id',
-  })
-  caseId?: string
-
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'advert_id',
-  })
-  advertId?: string
-
   @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
   involvedParty!: AdvertInvolvedPartyDTO
 
