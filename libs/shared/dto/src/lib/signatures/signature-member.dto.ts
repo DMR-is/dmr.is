@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+/**
+ * Represents a signature member.
+ */
 export class SignatureMember {
+  /**
+   * The name/title/w.e. of the signature member.
+   */
   @ApiProperty({
     type: String,
     required: true,
@@ -8,6 +14,9 @@ export class SignatureMember {
   })
   value!: string
 
+  /**
+   * The text that comes above the signature member value.
+   */
   @ApiProperty({
     type: String,
     required: false,
@@ -15,6 +24,9 @@ export class SignatureMember {
   })
   textAbove?: string
 
+  /**
+   * The text that comes below the signature member value.
+   */
   @ApiProperty({
     type: String,
     required: false,
@@ -22,6 +34,9 @@ export class SignatureMember {
   })
   textBelow?: string
 
+  /**
+   * The text that comes after the signature member value.
+   */
   @ApiProperty({
     type: String,
     required: false,

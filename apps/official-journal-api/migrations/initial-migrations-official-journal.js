@@ -1,4 +1,4 @@
-q'use strict'
+'use strict'
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -252,8 +252,6 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
-      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id)
     );
 
@@ -263,7 +261,7 @@ module.exports = {
       text_below VARCHAR,
       text_after VARCHAR,
       value VARCHAR NOT NULL,
-      PRIMARY KEY (id),
+      PRIMARY KEY (id)
     );
 
     CREATE TABLE signature (
@@ -274,20 +272,20 @@ module.exports = {
       institution VARCHAR NOT NULL,
       involved_party_id UUID NOT NULL,
       chairman_id UUID,
-      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      case_case_id UUID,
+      advert_id UUID,
       PRIMARY KEY (id),
       CONSTRAINT fk_signature_type_id FOREIGN KEY (type_id) REFERENCES signature_type (id),
       CONSTRAINT fk_signature_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),
       CONSTRAINT fk_signature_chairman_id FOREIGN KEY (chairman_id) REFERENCES signature_member (id)
     );
 
-    CREATE TABLE signature_member_signature (
+    CREATE TABLE signature_members (
       signature_id UUID NOT NULL,
       signature_member_id UUID NOT NULL,
       PRIMARY KEY (signature_id, signature_member_id),
-      CONSTRAINT fk_signature_member_signature_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id),
-      CONSTRAINT fk_signature_member_signature_signature_member_id FOREIGN KEY (signature_member_id) REFERENCES signature_member (id)
+      CONSTRAINT fk_signature_members_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id),
+      CONSTRAINT fk_signature_members_member_id FOREIGN KEY (signature_member_id) REFERENCES signature_member (id)
     );
 
     CREATE TABLE case_signatures (
