@@ -98,7 +98,7 @@ async function main() {
     fixInvolvedParties(dbInvolvedParties),
   )
   const adverts = await exec('fix adverts', () =>
-    fixAdverts(fixedTypes.types, dbAdverts),
+    fixAdverts(fixedTypes, dbAdverts),
   )
   const advertsCategories = mapAdvertsCategories(
     adverts,
