@@ -92,7 +92,7 @@ export class ApplicationService implements IApplicationService {
         },
       })
     } catch (error) {
-      this.logger.error('Fetch failed in ApplicationService.xroadFetch', {
+      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
         category: LOGGING_CATEGORY,
         error,
       })
@@ -131,15 +131,18 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    if (res.status != 200) {
-      this.logger.error(`getApplication, could not get application<${id}>`, {
-        applicationId: id,
-        status: res.status,
-        category: LOGGING_CATEGORY,
-      })
+    if (!res.ok) {
+      this.logger.error(
+        `Appliction.service.getApplication, could not get application<${id}>`,
+        {
+          applicationId: id,
+          status: res.status,
+          category: LOGGING_CATEGORY,
+        },
+      )
       return ResultWrapper.err({
         code: res.status,
-        message: `Could not get application<${id}>`,
+        message: `Application<${id}> not found`,
       })
     }
 
@@ -155,7 +158,6 @@ export class ApplicationService implements IApplicationService {
     id: string,
     event: ApplicationEvent,
   ): Promise<ResultWrapper> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const res = await this.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
@@ -165,6 +167,12 @@ export class ApplicationService implements IApplicationService {
         }),
       },
     )
+
+    if (!res.ok) {
+      throw new InternalServerErrorException(
+        `Could not submit application<${id}>`,
+      )
+    }
 
     return ResultWrapper.ok()
   }
@@ -242,28 +250,26 @@ export class ApplicationService implements IApplicationService {
         )
       ).unwrap()
 
-      await this.caseService.updateCaseCommunicationStatus(
-        caseLookup.id,
-        {
-          statusId: commStatus.id,
-        },
-        transaction,
+      ResultWrapper.unwrap(
+        await this.caseService.updateCaseCommunicationStatus(
+          caseLookup.id,
+          {
+            statusId: commStatus.id,
+          },
+          transaction,
+        ),
       )
 
-      // TODO: temp fix for involved party
-      const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
+      ResultWrapper.unwrap(
+        await this.commentService.createComment(caseLookup.id, {
+          internal: true,
+          type: CaseCommentType.Submit,
+          comment: null,
+          initiator: caseLookup.involvedPartyId,
+          receiver: null,
+        }),
+      )
 
-      await this.commentService.createComment(caseLookup.id, {
-        internal: true,
-        type: CaseCommentType.Submit,
-        comment: null,
-        initiator: involvedParty.id, // TODO: REPLACE WITH ACTUAL USER
-        receiver: null,
-      })
-
-      this.logger.info(`Application<${applicationId}> reposted`, {
-        category: LOGGING_CATEGORY,
-      })
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
@@ -273,8 +279,6 @@ export class ApplicationService implements IApplicationService {
           },
           transaction,
         )
-
-        ResultWrapper.unwrap(createResult)
 
         return ResultWrapper.ok()
       }
@@ -331,14 +335,16 @@ export class ApplicationService implements IApplicationService {
       ? caseLookup.involvedPartyId
       : involvedParty.id
 
-    await this.commentService.createComment(caseLookup.id, {
-      comment: commentBody.comment,
-      initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
-      receiver: null,
-      internal: false,
-      type: CaseCommentType.Comment,
-      storeState: true,
-    })
+    ResultWrapper.unwrap(
+      await this.commentService.createComment(caseLookup.id, {
+        comment: commentBody.comment,
+        initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
+        receiver: null,
+        internal: false,
+        type: CaseCommentType.Comment,
+        storeState: true,
+      }),
+    )
 
     return ResultWrapper.ok()
   }
