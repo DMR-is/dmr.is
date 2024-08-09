@@ -92,7 +92,7 @@ export class ApplicationService implements IApplicationService {
         },
       })
     } catch (error) {
-      this.logger.error('Fetch to failed in Application.service.xroadFetch', {
+      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
         category: LOGGING_CATEGORY,
         error,
       })

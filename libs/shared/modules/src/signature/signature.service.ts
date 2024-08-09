@@ -59,7 +59,7 @@ export class SignatureService implements ISignatureService {
     member: SignatureMemberModel,
     body: SignatureMember,
     transaction?: Transaction,
-  ): Promise<void> {
+  ): Promise<ResultWrapper> {
     await this.signatureMemberModel.update(
       {
         text: body.text,
@@ -74,6 +74,8 @@ export class SignatureService implements ISignatureService {
         transaction,
       },
     )
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -267,7 +269,7 @@ export class SignatureService implements ISignatureService {
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
     const defaultOptions = getDefaultOptions(params)
 
-    const advertSignatures = await this.caseSignaturesModel.findAndCountAll({
+    const caseSignatures = await this.caseSignaturesModel.findAndCountAll({
       ...defaultOptions,
       where: {
         caseId,
@@ -275,14 +277,14 @@ export class SignatureService implements ISignatureService {
       transaction,
     })
 
-    const migrated = advertSignatures.rows.map((s) =>
+    const migrated = caseSignatures.rows.map((s) =>
       signatureMigrate(s.signature),
     )
     const paging = generatePaging(
       migrated,
       params?.page,
       params?.pageSize,
-      advertSignatures.count,
+      caseSignatures.count,
     )
 
     return ResultWrapper.ok({
@@ -365,7 +367,9 @@ export class SignatureService implements ISignatureService {
         )
       }
 
-      await this.updateMember(chairman, body.chairman, transaction)
+      ResultWrapper.unwrap(
+        await this.updateMember(chairman, body.chairman, transaction),
+      )
     }
 
     if (body.members) {
