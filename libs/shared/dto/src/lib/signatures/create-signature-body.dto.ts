@@ -58,6 +58,15 @@ export class CreateSignatureBody {
 
   @ApiProperty({
     type: String,
+    required: false,
+    description: 'The html of the signature',
+  })
+  @IsOptional()
+  @IsString()
+  html?: string
+
+  @ApiProperty({
+    type: String,
     required: true,
     description: 'The case id of the signature',
   })

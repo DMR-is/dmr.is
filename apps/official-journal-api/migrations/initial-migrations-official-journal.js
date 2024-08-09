@@ -272,6 +272,7 @@ module.exports = {
       involved_party_id UUID NOT NULL,
       chairman_id UUID,
       additional_signature VARCHAR,
+      html TEXT NOT NULL,
       PRIMARY KEY (id),
       CONSTRAINT fk_signature_type_id FOREIGN KEY (type_id) REFERENCES signature_type (id),
       CONSTRAINT fk_signature_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),

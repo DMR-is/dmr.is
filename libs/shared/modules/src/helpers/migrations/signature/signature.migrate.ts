@@ -15,5 +15,6 @@ export const signatureMigrate = (model: SignatureModel): Signature => {
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     chairman: model.chairman ? signatureMemberMigrate(model.chairman) : null,
     additionalSignature: model.additionalSignature ?? null,
+    html: model.html ?? null,
   }
 }

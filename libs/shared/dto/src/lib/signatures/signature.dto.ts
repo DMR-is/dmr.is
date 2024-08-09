@@ -86,4 +86,13 @@ export class Signature {
   @ValidateIf((o) => o.additionalSignature !== null)
   @IsString()
   additionalSignature!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'HTML of the signature',
+    required: false,
+  })
+  @ValidateIf((o) => o.html !== null)
+  @IsString()
+  html!: string | null
 }

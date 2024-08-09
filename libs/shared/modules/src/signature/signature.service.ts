@@ -221,6 +221,7 @@ export class SignatureService implements ISignatureService {
         typeId: type.id,
         chairmanId: chairman ? chairman.id : null,
         additionalSignature: body.additionalSignature,
+        html: body.html,
       },
       { transaction },
     )

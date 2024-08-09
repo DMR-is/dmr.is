@@ -63,6 +63,12 @@ export class SignatureModel extends Model {
   })
   additionalSignature?: string
 
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  html?: string
+
   @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
   involvedParty!: AdvertInvolvedPartyDTO
 
