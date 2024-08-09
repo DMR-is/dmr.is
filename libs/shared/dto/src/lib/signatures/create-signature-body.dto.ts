@@ -16,7 +16,6 @@ import { SignatureMember } from './signature-member.dto'
 /**
  * The body of the create signature request
  * @export CreateSignatureBody
- * @class CreateSignatureBody
  */
 export class CreateSignatureBody {
   @ApiProperty({
@@ -26,6 +25,10 @@ export class CreateSignatureBody {
   })
   institution!: string
 
+  /**
+   * The date when the institution signed the signature ISO 8601 format
+   * @type {string}
+   */
   @ApiProperty({
     type: String,
     required: true,
@@ -52,6 +55,14 @@ export class CreateSignatureBody {
   @Type(() => SignatureMember)
   @ArrayMinSize(1)
   members!: SignatureMember[]
+
+  @ApiProperty({
+    type: String,
+    required: true,
+    description: 'The case id of the signature',
+  })
+  @IsUUID()
+  caseId!: string
 
   /**
    * The chairman of the signature,

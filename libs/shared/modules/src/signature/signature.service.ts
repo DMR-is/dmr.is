@@ -1,8 +1,11 @@
 import { Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { v4 as uuid } from 'uuid'
+import { SignatureTypeSlug } from '@dmr.is/constants'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  CreateSignatureBody,
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
@@ -11,14 +14,21 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
-import { NotFoundException } from '@nestjs/common'
+import {
+  Inject,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,
+  SignatureMemberModel,
+  SignatureMembersModel,
   SignatureModel,
+  SignatureTypeModel,
 } from './models'
 import { ISignatureService } from './signature.service.interface'
 import { getDefaultOptions } from './utils'
@@ -31,6 +41,13 @@ export class SignatureService implements ISignatureService {
     private readonly advertSignaturesModel: typeof AdvertSignaturesModel,
     @InjectModel(CaseSignaturesModel)
     private readonly caseSignaturesModel: typeof CaseSignaturesModel,
+    @InjectModel(SignatureMemberModel)
+    private readonly signatureMemberModel: typeof SignatureMemberModel,
+    @InjectModel(SignatureMembersModel)
+    private readonly signatureMembersModel: typeof SignatureMembersModel,
+    @InjectModel(SignatureTypeModel)
+    private readonly signatureTypeModel: typeof SignatureTypeModel,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -58,8 +75,8 @@ export class SignatureService implements ISignatureService {
     const migrated = signatures.rows.map((s) => signatureMigrate(s))
     const paging = generatePaging(
       migrated,
-      params?.page || 1,
-      params?.pageSize || DEFAULT_PAGE_SIZE,
+      params?.page,
+      params?.pageSize,
       signatures.count,
     )
 
@@ -70,8 +87,118 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
-  async createSignature(): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
+  @Transactional()
+  async createCaseSignature(
+    signatureId: string,
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseSignaturesModel.create(
+      {
+        signatureId,
+        caseId,
+      },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createAdvertSignature(
+    signatureId: string,
+    advertId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.advertSignaturesModel.create(
+      {
+        signatureId,
+        advertId,
+      },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createSignature(
+    body: CreateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const signatureId = uuid()
+
+    const chairman = body.chairman
+      ? await this.signatureMemberModel.create(
+          {
+            text: body.chairman.text,
+            textAbove: body.chairman.textAbove,
+            textBelow: body.chairman.textBelow,
+            textAfter: body.chairman.textAfter,
+          },
+          { transaction, returning: true },
+        )
+      : null
+
+    const members = await this.signatureMemberModel.bulkCreate(
+      body.members.map((m) => ({
+        text: m.text,
+        textAbove: m.textAbove,
+        textBelow: m.textBelow,
+        textAfter: m.textAfter,
+      })),
+      { transaction, returning: true },
+    )
+
+    if (chairman) {
+      await this.signatureMemberModel.create(
+        {
+          text: chairman.text,
+          textAbove: chairman.textAbove,
+          textBelow: chairman.textBelow,
+          textAfter: chairman.textAfter,
+        },
+        { transaction, returning: true },
+      )
+    }
+
+    await this.signatureMembersModel.bulkCreate(
+      members.map((m) => ({
+        signatureId,
+        memberId: m.id,
+      })),
+      { transaction },
+    )
+
+    const type = await this.signatureTypeModel.findOne({
+      where: {
+        slug: chairman
+          ? SignatureTypeSlug.Committee
+          : SignatureTypeSlug.Regular,
+      },
+      transaction,
+    })
+
+    if (!type) {
+      this.logger.error('Signature type not found')
+      throw new InternalServerErrorException()
+    }
+
+    await this.signatureModel.create(
+      {
+        institution: body.institution,
+        date: body.date,
+        involvedPartyId: body.involvedPartyId,
+        typeId: type.id,
+        chairmanId: chairman ? chairman.id : null,
+        additionalSignature: body.additionalSignature,
+      },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -128,8 +255,8 @@ export class SignatureService implements ISignatureService {
     )
     const paging = generatePaging(
       migrated,
-      params?.page || 1,
-      params?.pageSize || DEFAULT_PAGE_SIZE,
+      params?.page,
+      params?.pageSize,
       advertSignatures.count,
     )
 
@@ -160,8 +287,8 @@ export class SignatureService implements ISignatureService {
     )
     const paging = generatePaging(
       migrated,
-      params?.page || 1,
-      params?.pageSize || DEFAULT_PAGE_SIZE,
+      params?.page,
+      params?.pageSize,
       advertSignatures.count,
     )
 
@@ -176,7 +303,47 @@ export class SignatureService implements ISignatureService {
     throw new Error('Method not implemented.')
   }
   @LogAndHandle()
-  async deleteSignature(): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
+  @Transactional()
+  async deleteSignature(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const signature = await this.signatureModel.findByPk(signatureId, {
+      transaction,
+    })
+
+    if (!signature) {
+      throw new NotFoundException(`Signature<${signatureId}> not found`)
+    }
+
+    await this.signatureMembersModel.destroy({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    await this.signatureModel.destroy({
+      where: {
+        id: signatureId,
+      },
+      transaction,
+    })
+
+    await this.caseSignaturesModel.destroy({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    await this.advertSignaturesModel.destroy({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
   }
 }
