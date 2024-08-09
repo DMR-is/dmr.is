@@ -10,6 +10,8 @@ import {
   GetSignatureResponse,
   GetSignaturesResponse,
   Signature,
+  SignatureMember,
+  UpdateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -50,6 +52,29 @@ export class SignatureService implements ISignatureService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private readonly sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  @Transactional()
+  private async updateMember(
+    member: SignatureMemberModel,
+    body: SignatureMember,
+    transaction?: Transaction,
+  ): Promise<void> {
+    await this.signatureMemberModel.update(
+      {
+        text: body.text,
+        textAbove: body.textAbove,
+        textBelow: body.textBelow,
+        textAfter: body.textAfter,
+      },
+      {
+        where: {
+          id: member.id,
+        },
+        transaction,
+      },
+    )
+  }
 
   @LogAndHandle()
   private async findSignatures(
@@ -299,9 +324,120 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
-  async updateSignature(): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
+  @Transactional()
+  async updateSignature(
+    id: string,
+    body: UpdateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const signature = await this.signatureModel.findByPk(id, {
+      transaction,
+    })
+
+    if (!signature) {
+      throw new NotFoundException(`Signature<${id}> not found`)
+    }
+
+    await this.signatureModel.update(
+      {
+        institution: body.institution,
+        date: body.date,
+        involvedPartyId: body.involvedPartyId,
+        additionalSignature: body.additionalSignature,
+      },
+      {
+        where: {
+          id,
+        },
+        transaction,
+      },
+    )
+
+    if (body.chairman) {
+      const chairman = await this.signatureMemberModel.findByPk(
+        signature.chairmanId,
+        { transaction },
+      )
+
+      if (!chairman) {
+        throw new NotFoundException(
+          `Chairman<${signature.chairmanId}> not found`,
+        )
+      }
+
+      await this.updateMember(chairman, body.chairman, transaction)
+    }
+
+    if (body.members) {
+      const members = await this.signatureMembersModel.findAll({
+        where: {
+          signatureId: id,
+        },
+        transaction,
+      })
+
+      await this.signatureMemberModel.destroy({
+        where: {
+          id: members
+            .map((m) => m.id)
+            .filter((m) => m !== signature.chairmanId),
+        },
+      })
+
+      await this.signatureMembersModel.destroy({
+        where: {
+          signatureId: id,
+          memberId: {
+            [Op.not]: signature.chairmanId,
+          },
+        },
+        transaction,
+      })
+
+      await this.signatureMemberModel.bulkCreate(
+        body.members.map((m) => ({
+          text: m.text,
+          textAbove: m.textAbove,
+          textBelow: m.textBelow,
+          textAfter: m.textAfter,
+        })),
+        { transaction },
+      )
+
+      await this.signatureMembersModel.bulkCreate(
+        members.map((m) => ({
+          signatureId: id,
+          memberId: m.id,
+        })),
+        { transaction },
+      )
+    }
+
+    if (body.caseId) {
+      await this.caseSignaturesModel.destroy({
+        where: {
+          signatureId: id,
+        },
+        transaction,
+      })
+
+      await this.createCaseSignature(id, body.caseId, transaction)
+    }
+
+    if (body.advertId) {
+      await this.advertSignaturesModel.destroy({
+        where: {
+          signatureId: id,
+        },
+        transaction,
+      })
+
+      await this.createAdvertSignature(id, body.advertId, transaction)
+    }
+
+    return ResultWrapper.ok()
   }
+
   @LogAndHandle()
   @Transactional()
   async deleteSignature(

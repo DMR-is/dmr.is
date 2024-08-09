@@ -4,6 +4,7 @@ import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
+  UpdateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -19,7 +20,10 @@ export interface ISignatureService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
-  createSignature(body: CreateSignatureBody): Promise<ResultWrapper>
+  createSignature(
+    body: CreateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
   getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
   getSignatures(
     params?: DefaultSearchParams,
@@ -36,8 +40,15 @@ export interface ISignatureService {
     advertId: string,
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
-  updateSignature(): Promise<ResultWrapper>
-  deleteSignature(signatureId: string): Promise<ResultWrapper>
+  updateSignature(
+    id: string,
+    body: UpdateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+  deleteSignature(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ISignatureService = Symbol('ISignatureService')
