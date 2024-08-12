@@ -23,6 +23,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
+import { AdvertInvolvedPartyDTO } from '../journal/models'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,
@@ -271,6 +272,12 @@ export class SignatureService implements ISignatureService {
       where: {
         caseId,
       },
+      include: [
+        {
+          model: SignatureModel,
+          include: defaultOptions.include,
+        },
+      ],
       transaction,
     })
 
@@ -303,6 +310,12 @@ export class SignatureService implements ISignatureService {
       where: {
         advertId,
       },
+      include: [
+        {
+          model: SignatureModel,
+          include: defaultOptions.include,
+        },
+      ],
       transaction,
     })
 

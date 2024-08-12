@@ -51,7 +51,6 @@ export const signatureParams = (params?: WhereParams) => {
   const whereClause: WhereClause = {}
 
   if (params?.search) {
-    console.log('params.search', params.search)
     whereClause.institution = {
       [Op.like]: `%${params.search}%`,
     }
