@@ -1,5 +1,5 @@
-import { isUUID } from 'class-validator'
 import { Route } from '@dmr.is/decorators'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   DefaultSearchParams,
   GetSignatureResponse,
@@ -7,13 +7,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import {
-  BadRequestException,
-  Controller,
-  Inject,
-  Param,
-  Query,
-} from '@nestjs/common'
+import { Controller, Inject, Param, Query } from '@nestjs/common'
 
 import { ISignatureService } from './signature.service.interface'
 
@@ -34,7 +28,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesByInvolvedPartyId(
-    @Param('id') involvedPartyId: string,
+    @Param('id', UUIDValidationPipe) involvedPartyId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -52,7 +46,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesByCaseId(
-    @Param('id') caseId: string,
+    @Param('id', UUIDValidationPipe) caseId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -67,7 +61,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesByAdvertId(
-    @Param('id') advertId: string,
+    @Param('id', UUIDValidationPipe) advertId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -80,7 +74,7 @@ export class SignatureController {
     params: [{ name: 'id', type: String, required: true }],
     responseType: GetSignatureResponse,
   })
-  async getSignatureById(@Param('id') id: string) {
+  async getSignatureById(@Param('id', UUIDValidationPipe) id: string) {
     return ResultWrapper.unwrap(await this.signatureService.getSignature(id))
   }
 
