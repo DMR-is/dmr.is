@@ -3,6 +3,7 @@ import {
   ApplicationModule,
   HealthModule,
   SharedJournalModule,
+  SignatureModule,
 } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
@@ -21,6 +22,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     CaseModule,
     StatisticsModule,
     SharedJournalModule,
+    SignatureModule,
     HealthModule,
     RouterModule.register([
       {
