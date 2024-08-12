@@ -1,3 +1,4 @@
+import { isUUID } from 'class-validator'
 import { Route } from '@dmr.is/decorators'
 import {
   DefaultSearchParams,
@@ -6,7 +7,13 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Inject,
+  Param,
+  Query,
+} from '@nestjs/common'
 
 import { ISignatureService } from './signature.service.interface'
 
@@ -22,7 +29,7 @@ export class SignatureController {
 
   @Route({
     path: 'involved-party/:id',
-    params: [{ name: 'id', type: 'string', required: true }],
+    params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
   })
@@ -40,7 +47,7 @@ export class SignatureController {
 
   @Route({
     path: 'case/:id',
-    params: [{ name: 'id', type: 'string', required: true }],
+    params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
   })
@@ -55,7 +62,7 @@ export class SignatureController {
 
   @Route({
     path: 'advert/:id',
-    params: [{ name: 'id', type: 'string', required: true }],
+    params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
   })
@@ -70,7 +77,7 @@ export class SignatureController {
 
   @Route({
     path: ':id',
-    params: [{ name: 'id', type: 'string', required: true }],
+    params: [{ name: 'id', type: String, required: true }],
     responseType: GetSignatureResponse,
   })
   async getSignatureById(@Param('id') id: string) {

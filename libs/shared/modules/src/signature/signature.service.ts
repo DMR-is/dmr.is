@@ -9,7 +9,6 @@ import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
-  Signature,
   SignatureMember,
   UpdateSignatureBody,
 } from '@dmr.is/shared/dto'
@@ -88,14 +87,16 @@ export class SignatureService implements ISignatureService {
 
     const signatures = await this.signatureModel.findAndCountAll({
       ...defaultOptions,
-      where: {
-        institution: params?.search
-          ? {
-              [Op.like]: `%${params.search}%`,
-            }
-          : undefined,
-        ...where,
-      },
+      where: where
+        ? {
+            institution: params?.search
+              ? {
+                  [Op.like]: `%${params.search}%`,
+                }
+              : undefined,
+            ...where,
+          }
+        : undefined,
       transaction,
     })
 
@@ -234,14 +235,18 @@ export class SignatureService implements ISignatureService {
     id: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignatureResponse>> {
-    const signature = await this.signatureModel.findByPk(id, { transaction })
+    const defaultOptions = getDefaultOptions()
+    const signature = await this.signatureModel.findByPk(id, {
+      ...defaultOptions,
+      transaction,
+    })
 
     if (!signature) {
       throw new NotFoundException(`Signature<${id}> not found`)
     }
 
     return ResultWrapper.ok({
-      signature: signature as unknown as Signature,
+      signature: signatureMigrate(signature),
     })
   }
 
