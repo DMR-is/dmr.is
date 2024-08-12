@@ -2,6 +2,145 @@ const { v4 } = require('uuid')
 const fs = require('fs')
 const path = require('path')
 
+const INSTITUTIONS = [
+  'Áfengis- og tóbaksverslun ríkisins',
+  'Bankasýsla ríkisins',
+  'Barna- og fjölskyldustofa',
+  'Borgarholtsskóli',
+  'Byggðastofnun',
+  'Dómstólasýslan',
+  'Embætti landlæknis',
+  'Fangelsismálastofnun ríkisins',
+  'Ferðamálastofa',
+  'Fiskistofa',
+  'Fjarskiptastofa',
+  'Fjársýsla ríkisins',
+  'Fjölmiðlanefnd',
+  'Framkvæmdasýslan - Ríkiseignir',
+  'Geislavarnir ríkisins',
+  'Gljúfrasteinn: hús skáldsins',
+  'Gæða- og eftirlitsstofnun velferðamála',
+  'Hafrannsóknastofnun - Rannsókna- og ráðgjafarstofnun hafs og vatna',
+  'Hagstofa Íslands',
+  'Háskóli Íslands',
+  'Háskólinn á Akureyri',
+  'Heilbrigðisstofnun Austurlands',
+  'Heilbrigðisstofnun Norðurlands',
+  'Heilbrigðisstofnun Suðurlands',
+  'Heilbrigðisstofnun Suðurnesja',
+  'Heilbrigðisstofnun Vestfjarða',
+  'Heilbrigðisstofnun Vesturlands',
+  'Heilsugæsla höfuðborgarsvæðisins',
+  'Heyrnar- og talmeinastöð Íslands',
+  'Héraðsdómur Austurlands',
+  'Héraðsdómur Norðurlands eystra',
+  'Héraðsdómur Norðurlands vestra',
+  'Héraðsdómur Reykjaness',
+  'Héraðsdómur Reykjavíkur',
+  'Héraðsdómur Suðurlands',
+  'Héraðsdómur Vestfjarða',
+  'Héraðsdómur Vesturlands',
+  'Héraðssaksóknari',
+  'Hljóðbókasafn Íslands',
+  'Hólaskóli - Háskólinn á Hólum',
+  'Hugverkastofan',
+  'Húsnæðis- og mannvirkjastofnun',
+  'Hæstiréttur Íslands',
+  'Íslenskar orkurannsóknir',
+  'Íslenski dansflokkurinn',
+  'Jafnréttisstofa',
+  'Kvennaskólinn í Reykjavík',
+  'Kvikmyndamiðstöð Íslands',
+  'Kvikmyndasafn Íslands',
+  'Land og skóg­ur',
+  'Landbúnaðarháskóli Íslands',
+  'Landhelgisgæsla Íslands',
+  'Landmælingar Íslands',
+  'Landsbókasafn Íslands - Háskólabókasafn',
+  'Landskjörstjórn',
+  'Landspítali',
+  'Landsréttur',
+  'Listasafn Einars Jónssonar',
+  'Listasafn Íslands',
+  'Lyfjastofnun',
+  'Lögreglustjórinn á Austurlandi',
+  'Lögreglustjórinn á höfuðborgarsvæðinu',
+  'Lögreglustjórinn á Norðurlandi eystra',
+  'Lögreglustjórinn á Norðurlandi vestra',
+  'Lögreglustjórinn á Suðurlandi',
+  'Lögreglustjórinn á Suðurnesjum',
+  'Lögreglustjórinn á Vestfjörðum',
+  'Lögreglustjórinn á Vesturlandi',
+  'Lögreglustjórinn í Vestmannaeyjum',
+  'Matís ohf.',
+  'Matvælastofnun',
+  'Menntamálastofnun',
+  'Menntasjóður námsmanna',
+  'Miðstöð íslenskra bókmennta',
+  'Minjastofnun Íslands',
+  'Náttúrufræðistofnun Íslands',
+  'Náttúruhamfaratrygging Íslands',
+  'Náttúruminjasafn Íslands',
+  'Náttúrurannsóknastöðin við Mývatn',
+  'Neytendastofa',
+  'Nýsköpunarsjóður atvinnulífsins',
+  'Orkustofnun',
+  'Persónuvernd',
+  'Rannsóknamiðstöð Íslands (Rannís)',
+  'Rannsóknarnefnd samgönguslysa',
+  'Ráðgjafar- og greiningarstöð',
+  'Ríkiskaup',
+  'Ríkislögmaður',
+  'Ríkislögreglustjóri',
+  'Ríkissaksóknari',
+  'Ríkissáttasemjari',
+  'Ríkisútvarpið ohf.',
+  'Samgöngustofa',
+  'Samkeppniseftirlitið',
+  'Samskiptamiðstöð heyrnarlausra og heyrnarskertra',
+  'Seðlabanki Íslands (C-hluta stofnun)',
+  'Sinfóníuhljómsveit Íslands',
+  'Sjúkrahúsið Akureyri',
+  'Sjúkratryggingar Íslands',
+  'Skatturinn',
+  'Skipulagsstofnun',
+  'Stofnun Árna Magnússonar í íslenskum fræðum',
+  'Stofnun Vilhjálms Stefánssonar',
+  'Sýslumaðurinn á Austurlandi',
+  'Sýslumaðurinn á Höfuðborgarsvæðinu',
+  'Sýslumaðurinn á Norðurlandi eystra',
+  'Sýslumaðurinn á Norðurlandi vestra',
+  'Sýslumaðurinn á Suðurlandi',
+  'Sýslumaðurinn á Suðurnesjum',
+  'Sýslumaðurinn á Vestfjörðum',
+  'Sýslumaðurinn á Vesturlandi',
+  'Sýslumaðurinn í Vestmannaeyjum',
+  'Tilraunastöð Háskóla Íslands í meinafræði að Keldum',
+  'Tryggingastofnun ríkisins',
+  'Umboðsmaður barna',
+  'Umboðsmaður skuldara',
+  'Umhverfisstofnun',
+  'Úrskurðarnefnd umhverfis- og auðlindamála',
+  'Úrskurðarnefnd velferðarmála',
+  'Úrvinnslusjóður',
+  'Útlendingastofnun',
+  'Vatnajökulsþjóðgarður',
+  'Veðurstofa Íslands',
+  'Vegagerðin',
+  'Verðlagsstofa skiptaverðs',
+  'Verkmenntaskóli Austurlands',
+  'Verkmenntaskólinn á Akureyri',
+  'Vinnueftirlit ríkisins',
+  'Vinnumálastofnun',
+  'Vísindasiðanefnd',
+  'Yfirskattanefnd',
+  'Þjóðgarðurinn á Þingvöllum',
+  'Þjóðleikhúsið',
+  'Þjóðminjasafn Íslands',
+  'Þjóðskjalasafn Íslands',
+  'Þjóðskrá Íslands',
+]
+
 const DEPARTMENT_IDS = [
   '69CD3E90-106E-4B9C-8419-148C29E1738A',
   '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
@@ -928,7 +1067,6 @@ const STATUS_IDS = [
   'e926beb2-4001-4315-aed9-e4eec2ca963d',
   '22b038c1-1d8b-4a01-b061-02f22358d17e',
   'a90d65b7-905f-4ebb-aa1d-7fa115d91d56',
-  'cd1536de-4481-492f-8db1-1ea0e3e38880',
 ]
 
 const INVOLVED_PARTY_IDS = [
@@ -1991,12 +2129,259 @@ const EMPLOYEE_IDS = [
   '21140e6b-e272-4d78-b085-dbc3190b2a0a',
 ]
 
+const TITLES = [
+  'Forsætisráðherra',
+  'Háskóla-, iðnaða- og nýsköpunarráðherra',
+  'Dómsmálaráðherra',
+  'Mennta- og barnamálaráðherra',
+  'Fjármála- og efnahagsráðherra',
+  'Heilbrigðisráðherra',
+  'Menningar- og viðskiptaráðherra',
+  'Innviðaráðherra',
+  'Umhverfis-, orku og loftslagsráðherra',
+  'Utanríkisráðherra',
+  'Félags- og vinnumálaráðherra',
+  'Matvælaráðherra ',
+  'Þingmaður',
+  'Stjórnarmenn',
+  'Dómari',
+  'Varaseðlabankastjóri',
+  'Sendiherra',
+  'Bankaráðsmaður',
+  'Framkvæmdarstjóri',
+  'Aðstoðarframkvæmdarstjóri',
+]
+
+const firstMaleNames = [
+  'Andri',
+  'Björn',
+  'Davíð',
+  'Einar',
+  'Finnur',
+  'Gunnar',
+  'Hjalti',
+  'Ingimar',
+  'Jón',
+  'Karl',
+  'Lárus',
+  'Magnús',
+  'Njáll',
+  'Oddur',
+  'Ólafur',
+  'Pétur',
+  'Ragnar',
+  'Stefán',
+  'Tómas',
+  'Unnar',
+  'Úlfar',
+  'Valdimar',
+  'Yngvi',
+  'Ýmir',
+  'Þorsteinn',
+  'Ögmundur',
+]
+
+const maleLastNames = [
+  'Andrason',
+  'Björnsson',
+  'Davíðsson',
+  'Einarsson',
+  'Finnsson',
+  'Gunnarsson',
+  'Hjaltason',
+  'Ingimarsson',
+  'Jónsson',
+  'Karlsson',
+  'Lárusson',
+  'Magnússon',
+  'Njálsson',
+  'Oddarson',
+  'Ólafsson',
+  'Pétursson',
+  'Ragnarsson',
+  'Stefánsson',
+  'Tómasson',
+  'Unnarsson',
+  'Úlfarsson',
+  'Valdimarsson',
+  'Yngvason',
+  'Ýmirsson',
+  'Þorsteinsson',
+  'Ögmundarson',
+]
+
+const femaleLastNames = [
+  'Andradóttir',
+  'Björnsdóttir',
+  'Davíðsdóttir',
+  'Einarsdóttir',
+  'Finnsdóttir',
+  'Gunnarsdóttir',
+  'Hjaltadóttir',
+  'Ingimarsdóttir',
+  'Jónsdóttir',
+  'Karlsdóttir',
+  'Lárusdóttir',
+  'Magnúsdóttir',
+  'Njálsdóttir',
+  'Oddardóttir',
+  'Ólafsdóttir',
+  'Pétursdóttir',
+  'Ragnarsdóttir',
+  'Stefánsdóttir',
+  'Tómasdóttir',
+  'Unnarsdóttir',
+  'Úlfarsdóttir',
+  'Valdimarsdóttir',
+  'Yngvadóttir',
+  'Ýmirsdóttir',
+  'Þorsteinsdóttir',
+  'Ögmundardóttir',
+]
+
+const femaleFirstNames = [
+  'Anna',
+  'Ásta',
+  'Bryndís',
+  'Dagmar',
+  'Elín',
+  'Fanney',
+  'Guðrún',
+  'Helga',
+  'Ingibjörg',
+  'Íris',
+  'Jóhanna',
+  'Kristín',
+  'Lilja',
+  'Margrét',
+  'Nína',
+  'Oddný',
+  'Ólöf',
+  'Perla',
+  'Ragnheiður',
+  'Sigríður',
+  'Tanja',
+  'Unnur',
+  'Úlfhildur',
+  'Valgerður',
+  'Ylfa',
+  'Ýr',
+  'Þórdís',
+  'Ösp',
+]
+
 const SUBMITTED_STATUS = '799722be-5530-439a-91dc-606e129b030d'
 
 const APPLICATION_ID = '8fb627ec-fe9c-4f59-b3df-2c33b8f47597'
 
+const REGULAR_SIGNATURE_ID = '1b15e5a8-a548-4d0e-a79f-0c8d50520d29'
+const COMMITTEE_SIGNATURE_ID = 'b8b85c12-9d08-4267-9e4e-d6ae8b34ef4e'
+
+const getRandomName = (male = true) => {
+  const firstNames = male ? firstMaleNames : femaleFirstNames
+  const lastNames = male ? maleLastNames : femaleLastNames
+
+  const hasMiddleName = Math.random() > 0.5
+
+  const randomFirstName = pickRandom(firstNames)
+  const randomLastName = pickRandom(lastNames)
+  const randomMiddleName = hasMiddleName ? pickRandom(firstNames) : ''
+
+  return `${randomFirstName}${
+    randomMiddleName && ` ${randomMiddleName}`
+  } ${randomLastName}`
+}
+
 const generateCaseCategories = ({ caseId, categoryId }) => {
   return `INSERT INTO case_categories(case_case_id,category_id) VALUES ('${caseId}','${categoryId}');`
+}
+
+const generateSignatureSeed = ({
+  id,
+  type_id,
+  date,
+  institution,
+  involved_party_id,
+  chairman_id,
+  members,
+  additonal_signature,
+  html,
+  caseId,
+}) => {
+  const signatureId = id ? id : v4()
+  let dump = ''
+
+  members.forEach((member) => {
+    dump += `
+        INSERT INTO
+          SIGNATURE_MEMBER (
+            ID,
+            VALUE,
+            TEXT_ABOVE,
+            TEXT_BELOW,
+            TEXT_AFTER
+          )
+          VALUES (
+            '${member.id}',
+            '${member.value}',
+            ${member.text_above ? `'${member.text_above}'` : `NULL`},
+            ${member.text_below ? `'${member.text_below}'` : `NULL`},
+            ${member.text_after ? `'${member.text_after}'` : `NULL`}
+          );
+        `
+  })
+
+  dump += `
+  INSERT INTO
+    SIGNATURE (
+      ID,
+      TYPE_ID,
+      DATE,
+      INSTITUTION,
+      INVOLVED_PARTY_ID,
+      CHAIRMAN_ID,
+      ADDITIONAL_SIGNATURE,
+      HTML
+    )
+    VALUES (
+      '${signatureId}',
+      '${type_id}',
+      '${date}',
+      '${institution}',
+      '${involved_party_id}',
+      ${chairman_id ? `'${chairman_id}'` : `NULL`},
+      ${additonal_signature ? `'${additonal_signature}'` : `NULL`},
+      '${html}'
+    );
+  `
+
+  members.forEach((member) => {
+    dump += `
+    INSERT INTO
+      SIGNATURE_MEMBERS (
+        SIGNATURE_ID,
+        SIGNATURE_MEMBER_ID
+      )
+      VALUES (
+        '${signatureId}',
+        '${member.id}'
+      );
+    `
+  })
+
+  dump += `
+  INSERT INTO
+    CASE_SIGNATURES (
+      CASE_CASE_ID,
+      SIGNATURE_ID
+    )
+    VALUES (
+      '${caseId}',
+      '${signatureId}'
+    );
+  `
+
+  return dump
 }
 
 const generateCaseInsertSeed = ({
@@ -2054,7 +2439,7 @@ INSERT INTO
     '${createdAt}',
     '${updatedAt}',
     ${isLegacy},
-    ${assignedUserId ? `'${assignedUserId}'` : `${'NULL'}`},
+    ${assignedUserId ? `'${assignedUserId}'` : `NULL`},
     '${caseCommunicationStatusId}',
     NULL,
     ${paid},
@@ -2192,8 +2577,56 @@ function main() {
         .map((categoryId) => generateCaseCategories({ caseId: id, categoryId }))
         .join('\n')
 
+      // signatures
+      let signatureDump = ''
+      const signatureTypeId =
+        Math.random() > 0.5 ? REGULAR_SIGNATURE_ID : COMMITTEE_SIGNATURE_ID
+
+      const numberOfSignatures =
+        signatureTypeId === REGULAR_SIGNATURE_ID
+          ? Math.floor(Math.random() * 3) + 1
+          : 1
+
+      Array.from({ length: numberOfSignatures }, () => {
+        const numberOfSignatureMembers = Math.floor(Math.random() * 5) + 1
+        const members = []
+        Array.from({ length: numberOfSignatureMembers }, () => {
+          const isMale = Math.random() > 0.5
+          const name = getRandomName(isMale)
+          const text = pickRandom(TITLES)
+          const textPlacementRand = Math.random()
+          const textPlacement =
+            textPlacementRand > 0.33
+              ? 'right'
+              : textPlacementRand > 0.66
+              ? 'above'
+              : 'below'
+
+          members.push({
+            id: v4(),
+            value: name,
+            text_above: textPlacement === 'above' ? text : null,
+            text_below: textPlacement === 'below' ? text : null,
+            text_after: textPlacement === 'right' ? text : null,
+          })
+        })
+
+        signatureDump += generateSignatureSeed({
+          type_id: signatureTypeId,
+          date: created.toISOString(),
+          institution: pickRandom(INSTITUTIONS),
+          involved_party_id: involvedPartyId,
+          chairman_id:
+            signatureTypeId === COMMITTEE_SIGNATURE_ID ? members[0].id : null,
+          members,
+          caseId: id,
+          html: `<div>Signature</div>`,
+        })
+      })
+
       insertSeed += caseDump
       insertSeed += categoryDump
+      insertSeed += signatureDump
     }
 
     const filePath = path.join(__dirname, '../tmp/case-insert-dump.sql')
