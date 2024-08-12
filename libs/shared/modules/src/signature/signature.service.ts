@@ -1,4 +1,4 @@
-import { Op, Transaction, WhereOptions } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { SignatureTypeSlug } from '@dmr.is/constants'
@@ -32,7 +32,7 @@ import {
   SignatureTypeModel,
 } from './models'
 import { ISignatureService } from './signature.service.interface'
-import { getDefaultOptions } from './utils'
+import { getDefaultOptions, signatureParams, WhereParams } from './utils'
 
 export class SignatureService implements ISignatureService {
   constructor(
@@ -80,23 +80,14 @@ export class SignatureService implements ISignatureService {
   @LogAndHandle()
   private async findSignatures(
     params?: DefaultSearchParams,
-    where?: WhereOptions,
+    where?: WhereParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
     const defaultOptions = getDefaultOptions(params)
 
     const signatures = await this.signatureModel.findAndCountAll({
       ...defaultOptions,
-      where: where
-        ? {
-            institution: params?.search
-              ? {
-                  [Op.like]: `%${params.search}%`,
-                }
-              : undefined,
-            ...where,
-          }
-        : undefined,
+      where: signatureParams(where),
       transaction,
     })
 
@@ -255,11 +246,11 @@ export class SignatureService implements ISignatureService {
     params?: DefaultSearchParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(params, undefined, transaction)
+    return await this.findSignatures(params, params, transaction)
   }
 
   @LogAndHandle()
-  async getSignaturesByInvolvedPartyId(
+  async getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
     transaction?: Transaction,

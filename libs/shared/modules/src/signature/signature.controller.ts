@@ -27,12 +27,12 @@ export class SignatureController {
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
   })
-  async getSignaturesByInvolvedPartyId(
+  async getSignaturesForInvolvedParty(
     @Param('id', UUIDValidationPipe) involvedPartyId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
-      await this.signatureService.getSignaturesByInvolvedPartyId(
+      await this.signatureService.getSignatureForInvolvedParty(
         involvedPartyId,
         params,
       ),

@@ -28,7 +28,7 @@ export interface ISignatureService {
   getSignatures(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
-  getSignaturesByInvolvedPartyId(
+  getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
