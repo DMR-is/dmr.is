@@ -1,4 +1,4 @@
-import { Op, Transaction, WhereOptions } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { SignatureTypeSlug } from '@dmr.is/constants'
@@ -9,7 +9,6 @@ import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
-  Signature,
   SignatureMember,
   UpdateSignatureBody,
 } from '@dmr.is/shared/dto'
@@ -24,6 +23,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
+import { AdvertInvolvedPartyDTO } from '../journal/models'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,
@@ -33,7 +33,7 @@ import {
   SignatureTypeModel,
 } from './models'
 import { ISignatureService } from './signature.service.interface'
-import { getDefaultOptions } from './utils'
+import { getDefaultOptions, signatureParams, WhereParams } from './utils'
 
 export class SignatureService implements ISignatureService {
   constructor(
@@ -81,21 +81,14 @@ export class SignatureService implements ISignatureService {
   @LogAndHandle()
   private async findSignatures(
     params?: DefaultSearchParams,
-    where?: WhereOptions,
+    where?: WhereParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
     const defaultOptions = getDefaultOptions(params)
 
     const signatures = await this.signatureModel.findAndCountAll({
       ...defaultOptions,
-      where: {
-        institution: params?.search
-          ? {
-              [Op.like]: `%${params.search}%`,
-            }
-          : undefined,
-        ...where,
-      },
+      where: signatureParams(where),
       transaction,
     })
 
@@ -234,14 +227,18 @@ export class SignatureService implements ISignatureService {
     id: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignatureResponse>> {
-    const signature = await this.signatureModel.findByPk(id, { transaction })
+    const defaultOptions = getDefaultOptions()
+    const signature = await this.signatureModel.findByPk(id, {
+      ...defaultOptions,
+      transaction,
+    })
 
     if (!signature) {
       throw new NotFoundException(`Signature<${id}> not found`)
     }
 
     return ResultWrapper.ok({
-      signature: signature as unknown as Signature,
+      signature: signatureMigrate(signature),
     })
   }
 
@@ -250,11 +247,11 @@ export class SignatureService implements ISignatureService {
     params?: DefaultSearchParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(params, undefined, transaction)
+    return await this.findSignatures(params, params, transaction)
   }
 
   @LogAndHandle()
-  async getSignaturesByInvolvedPartyId(
+  async getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
     transaction?: Transaction,
@@ -275,6 +272,12 @@ export class SignatureService implements ISignatureService {
       where: {
         caseId,
       },
+      include: [
+        {
+          model: SignatureModel,
+          include: defaultOptions.include,
+        },
+      ],
       transaction,
     })
 
@@ -307,6 +310,12 @@ export class SignatureService implements ISignatureService {
       where: {
         advertId,
       },
+      include: [
+        {
+          model: SignatureModel,
+          include: defaultOptions.include,
+        },
+      ],
       transaction,
     })
 
@@ -350,7 +359,7 @@ export class SignatureService implements ISignatureService {
       },
       {
         where: {
-          id,
+          id: id,
         },
         transaction,
       },
@@ -381,38 +390,41 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.signatureMemberModel.destroy({
-        where: {
-          id: members
-            .map((m) => m.id)
-            .filter((m) => m !== signature.chairmanId),
-        },
-      })
+      const ids = members
+        .map((m) => m.signatureMemberId)
+        .filter((m) => m !== signature.chairmanId)
 
       await this.signatureMembersModel.destroy({
         where: {
           signatureId: id,
-          memberId: {
-            [Op.not]: signature.chairmanId,
+          signatureMemberId: {
+            [Op.in]: ids,
           },
         },
         transaction,
       })
 
-      await this.signatureMemberModel.bulkCreate(
+      await this.signatureMemberModel.destroy({
+        where: {
+          id: ids,
+        },
+        transaction,
+      })
+
+      const newMembers = await this.signatureMemberModel.bulkCreate(
         body.members.map((m) => ({
           text: m.text,
           textAbove: m.textAbove,
           textBelow: m.textBelow,
           textAfter: m.textAfter,
         })),
-        { transaction },
+        { transaction, returning: true },
       )
 
       await this.signatureMembersModel.bulkCreate(
-        members.map((m) => ({
+        newMembers.map((m) => ({
           signatureId: id,
-          memberId: m.id,
+          signatureMemberId: m.id,
         })),
         { transaction },
       )
@@ -457,20 +469,6 @@ export class SignatureService implements ISignatureService {
       throw new NotFoundException(`Signature<${signatureId}> not found`)
     }
 
-    await this.signatureMembersModel.destroy({
-      where: {
-        signatureId,
-      },
-      transaction,
-    })
-
-    await this.signatureModel.destroy({
-      where: {
-        id: signatureId,
-      },
-      transaction,
-    })
-
     await this.caseSignaturesModel.destroy({
       where: {
         signatureId,
@@ -481,6 +479,36 @@ export class SignatureService implements ISignatureService {
     await this.advertSignaturesModel.destroy({
       where: {
         signatureId,
+      },
+      transaction,
+    })
+
+    const members = await this.signatureMembersModel.findAll({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    const ids = members.map((m) => m.signatureMemberId)
+
+    await this.signatureMembersModel.destroy({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    await this.signatureMemberModel.destroy({
+      where: {
+        id: ids,
+      },
+      transaction,
+    })
+
+    await this.signatureModel.destroy({
+      where: {
+        id: signatureId,
       },
       transaction,
     })

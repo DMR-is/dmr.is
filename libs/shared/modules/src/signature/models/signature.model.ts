@@ -3,6 +3,7 @@ import {
   BelongsToMany,
   Column,
   DataType,
+  HasOne,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -78,10 +79,10 @@ export class SignatureModel extends Model {
   @BelongsTo(() => SignatureMemberModel, 'chairman_id')
   chairman?: SignatureMemberModel
 
-  @BelongsTo(() => CaseSignaturesModel, 'case_case_id')
+  @HasOne(() => CaseSignaturesModel, 'case_case_id')
   case?: CaseDto
 
-  @BelongsTo(() => AdvertSignaturesModel, 'advert_id')
+  @HasOne(() => AdvertSignaturesModel, 'advert_id')
   advert?: AdvertDTO
 
   @BelongsToMany(() => SignatureMemberModel, {

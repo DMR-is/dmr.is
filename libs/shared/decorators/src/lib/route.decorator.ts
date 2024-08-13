@@ -1,4 +1,11 @@
-import { Delete, Get, Post, Put, applyDecorators } from '@nestjs/common'
+import {
+  Delete,
+  Get,
+  HttpCode,
+  Post,
+  Put,
+  applyDecorators,
+} from '@nestjs/common'
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -74,10 +81,12 @@ export function Route({
         break
       case 'post':
         decorators.push(ApiCreatedResponse())
+        decorators.push(HttpCode(201))
         break
       case 'delete':
       case 'put':
         decorators.push(ApiNoContentResponse())
+        decorators.push(HttpCode(204))
         break
       default:
         decorators.push(ApiOkResponse())
