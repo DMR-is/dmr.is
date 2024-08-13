@@ -4,10 +4,11 @@ import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
+  UpdateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, Query } from '@nestjs/common'
+import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
 
 import { ISignatureService } from './signature.service.interface'
 
@@ -76,6 +77,28 @@ export class SignatureController {
   })
   async getSignatureById(@Param('id', UUIDValidationPipe) id: string) {
     return ResultWrapper.unwrap(await this.signatureService.getSignature(id))
+  }
+
+  @Route({
+    path: ':id',
+    method: 'delete',
+    params: [{ name: 'id', type: String, required: true }],
+  })
+  async deleteSignature(@Param('id', UUIDValidationPipe) id: string) {
+    ResultWrapper.unwrap(await this.signatureService.deleteSignature(id))
+  }
+
+  @Route({
+    path: ':id',
+    method: 'put',
+    params: [{ name: 'id', type: String, required: true }],
+    bodyType: UpdateSignatureBody,
+  })
+  async updateSignature(
+    @Param('id', UUIDValidationPipe) id: string,
+    @Body() body: UpdateSignatureBody,
+  ) {
+    ResultWrapper.unwrap(await this.signatureService.updateSignature(id, body))
   }
 
   @Route({

@@ -23,6 +23,8 @@ export class UpdateSignatureBody {
     required: true,
     description: 'The name of the institution responsible for the signature',
   })
+  @IsOptional()
+  @IsString()
   institution?: string
 
   /**
@@ -34,6 +36,7 @@ export class UpdateSignatureBody {
     required: true,
     description: 'Date when the institution signed the signature',
   })
+  @IsOptional()
   @IsDateString()
   date?: string
 
@@ -42,6 +45,7 @@ export class UpdateSignatureBody {
     required: true,
     description: 'The id of the involved party',
   })
+  @IsOptional()
   @IsUUID()
   involvedPartyId?: string
 
@@ -50,6 +54,7 @@ export class UpdateSignatureBody {
     required: true,
     description: 'The members of the signature',
   })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SignatureMember)

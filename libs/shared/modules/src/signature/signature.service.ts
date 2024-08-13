@@ -359,7 +359,7 @@ export class SignatureService implements ISignatureService {
       },
       {
         where: {
-          id,
+          id: id,
         },
         transaction,
       },
@@ -390,38 +390,41 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.signatureMemberModel.destroy({
-        where: {
-          id: members
-            .map((m) => m.id)
-            .filter((m) => m !== signature.chairmanId),
-        },
-      })
+      const ids = members
+        .map((m) => m.signatureMemberId)
+        .filter((m) => m !== signature.chairmanId)
 
       await this.signatureMembersModel.destroy({
         where: {
           signatureId: id,
-          memberId: {
-            [Op.not]: signature.chairmanId,
+          signatureMemberId: {
+            [Op.in]: ids,
           },
         },
         transaction,
       })
 
-      await this.signatureMemberModel.bulkCreate(
+      await this.signatureMemberModel.destroy({
+        where: {
+          id: ids,
+        },
+        transaction,
+      })
+
+      const newMembers = await this.signatureMemberModel.bulkCreate(
         body.members.map((m) => ({
           text: m.text,
           textAbove: m.textAbove,
           textBelow: m.textBelow,
           textAfter: m.textAfter,
         })),
-        { transaction },
+        { transaction, returning: true },
       )
 
       await this.signatureMembersModel.bulkCreate(
-        members.map((m) => ({
+        newMembers.map((m) => ({
           signatureId: id,
-          memberId: m.id,
+          signatureMemberId: m.id,
         })),
         { transaction },
       )
@@ -466,20 +469,6 @@ export class SignatureService implements ISignatureService {
       throw new NotFoundException(`Signature<${signatureId}> not found`)
     }
 
-    await this.signatureMembersModel.destroy({
-      where: {
-        signatureId,
-      },
-      transaction,
-    })
-
-    await this.signatureModel.destroy({
-      where: {
-        id: signatureId,
-      },
-      transaction,
-    })
-
     await this.caseSignaturesModel.destroy({
       where: {
         signatureId,
@@ -490,6 +479,36 @@ export class SignatureService implements ISignatureService {
     await this.advertSignaturesModel.destroy({
       where: {
         signatureId,
+      },
+      transaction,
+    })
+
+    const members = await this.signatureMembersModel.findAll({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    const ids = members.map((m) => m.signatureMemberId)
+
+    await this.signatureMembersModel.destroy({
+      where: {
+        signatureId,
+      },
+      transaction,
+    })
+
+    await this.signatureMemberModel.destroy({
+      where: {
+        id: ids,
+      },
+      transaction,
+    })
+
+    await this.signatureModel.destroy({
+      where: {
+        id: signatureId,
       },
       transaction,
     })
