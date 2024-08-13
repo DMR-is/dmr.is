@@ -158,15 +158,9 @@ export class JournalService implements IJournalService {
       transaction,
     })
 
-    this.logger.info(`Advert created: ${ad.id}`)
-
     if (!advert) {
-      throw new InternalServerErrorException(
-        `Could not find advert<${ad.id}> after creation`,
-      )
+      throw new InternalServerErrorException(`Advert<${ad.id}> not found`)
     }
-
-    this.logger.info(`Advert found: ${advert.id}`)
 
     return ResultWrapper.ok({ advert: advertMigrate(advert) })
   }
@@ -230,7 +224,7 @@ export class JournalService implements IJournalService {
     )
 
     if (!dep) {
-      throw new NotFoundException(`Could not find department<${model.id}>`)
+      throw new NotFoundException(`Department<${model.id}> not found`)
     }
 
     return ResultWrapper.ok({
@@ -268,7 +262,7 @@ export class JournalService implements IJournalService {
     )
 
     if (!inst) {
-      throw new NotFoundException(`Could not find institution<${model.id}>`)
+      throw new NotFoundException(`Institution<${model.id}> not found`)
     }
 
     return ResultWrapper.ok({
@@ -324,7 +318,7 @@ export class JournalService implements IJournalService {
     )
 
     if (!type) {
-      throw new NotFoundException(`Could not find type<${model.id}>`)
+      throw new NotFoundException(`Type<${model.id}> not found`)
     }
 
     return ResultWrapper.ok({ type: advertTypesMigrate(type[1][0]) })
@@ -367,7 +361,7 @@ export class JournalService implements IJournalService {
     )
 
     if (!mainCat) {
-      throw new NotFoundException(`Could not find main category<${model.id}>`)
+      throw new NotFoundException(`Main category<${model.id}> not found`)
     }
 
     return ResultWrapper.ok({
@@ -416,7 +410,7 @@ export class JournalService implements IJournalService {
     )
 
     if (!category) {
-      throw new NotFoundException(`Could not find category<${model.id}>`)
+      throw new NotFoundException(`Category<${model.id}> not found`)
     }
 
     return ResultWrapper.ok({ category: advertCategoryMigrate(category[1][0]) })
@@ -464,7 +458,7 @@ export class JournalService implements IJournalService {
     })
 
     if (!department) {
-      throw new NotFoundException(`Could not find department<${id}>`)
+      throw new NotFoundException(`Department<${id}> not found`)
     }
 
     return ResultWrapper.ok({ department: advertDepartmentMigrate(department) })
@@ -515,7 +509,7 @@ export class JournalService implements IJournalService {
     })
 
     if (!type) {
-      throw new NotFoundException(`Could not find type<${id}>`)
+      throw new NotFoundException(`Type<${id}> not found`)
     }
 
     return ResultWrapper.ok({ type: advertTypesMigrate(type) })
@@ -568,7 +562,7 @@ export class JournalService implements IJournalService {
       where: { id },
     })
     if (!party) {
-      throw new NotFoundException(`Could not find institution<${id}>`)
+      throw new NotFoundException(`Institution<${id}> not found`)
     }
 
     return ResultWrapper.ok({ institution: advertInvolvedPartyMigrate(party) })
@@ -614,7 +608,7 @@ export class JournalService implements IJournalService {
     })
 
     if (!category) {
-      throw new NotFoundException(`Could not find category<${id}>`)
+      throw new NotFoundException(`Category<${id}> not found`)
     }
 
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
@@ -666,7 +660,7 @@ export class JournalService implements IJournalService {
     })
 
     if (!advert) {
-      throw new NotFoundException(`Could not find advert<${id}>`)
+      throw new NotFoundException(`Advert<${id}> not found`)
     }
 
     const ad = advertMigrate(advert)

@@ -12,3 +12,13 @@ export enum ApplicationEvent {
   Approve = 'APPROVE',
   Reject = 'REJECT',
 }
+
+export enum SignatureTypeTitle {
+  Regular = 'Hefðbundin undirritun',
+  Committee = 'Undirritun nefndar',
+}
+
+export enum SignatureTypeSlug {
+  Regular = 'hefdbundin-undirritun',
+  Committee = 'undirritun-nefndar',
+}
