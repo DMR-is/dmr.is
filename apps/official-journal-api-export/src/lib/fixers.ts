@@ -205,6 +205,14 @@ function fixHtml(html: string | null): string {
   for (const stringToRemove of HTML_STRINGS_TO_REMOVE) {
     fixedHtml = fixedHtml.replace(stringToRemove, '')
   }
+
+  const tablePattern = /<TABLE.*?>.*?<\/TABLE>/is
+  fixedHtml = fixedHtml.replace(tablePattern, '')
+
+  // Remove all <TR> elements with class 'advertType'
+  const trPattern = /<TR[^>]*class=["']advertType["'][^>]*>.*?<\/TR>/gis
+  fixedHtml = fixedHtml.replace(trPattern, '')
+
   return fixedHtml.trim()
 }
 
@@ -236,7 +244,7 @@ export function fixAdverts(
       document_html: fixHtml(advert.document_html),
 
       type_id: typeId,
-      document_pdf_url: 'www.mbl.is', //fixPdfUrl() //need to take in attachments here
+      document_pdf_url: advert.document_pdf_url, //fixPdfUrl() //need to take in attachments here
     }
   })
 
