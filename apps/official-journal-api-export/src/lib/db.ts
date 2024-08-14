@@ -1,5 +1,14 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mssql from 'mssql'
+import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
+  HeadObjectCommand,
+  S3Client,
+  UploadPartCommand,
+} from '@aws-sdk/client-s3'
 
 import {
   DbDepartment,
@@ -11,6 +20,7 @@ import {
   DbInvolvedParty,
   AdvertCategory,
   DbDocuments,
+  Document,
 } from '../types'
 
 const DEPARTMENT_QUERY =
@@ -247,14 +257,20 @@ export async function getAdverts(
 
 export async function getAdvertDocuments(
   adverts: DbAdverts,
-): Promise<DbDocuments> {
-  const documents: DbDocuments = []
-  adverts.adverts.forEach(async (item) => {
-    const documentFromDB = await mssql.query(ADVERT_DOCUMENTS_QUERY(item.id))
+): Promise<Array<DbAdvert>> {
+  const advertsWithFileUrl = await Promise.all(
+    adverts.adverts.map(async (item) => {
+      const documentFromDB = await mssql.query(ADVERT_DOCUMENTS_QUERY(item.id))
 
-    documents.push(documentFromDB.recordset[0])
-  })
-  return documents
+      //const test = new PdfService();
+      const url = await savePDF(documentFromDB.recordset[0])
+      if (url) {
+        item.document_pdf_url = url
+      }
+      return item
+    }),
+  )
+  return advertsWithFileUrl
 }
 
 export async function getAdvertsCategories() {
@@ -270,4 +286,107 @@ export async function getAdvertsCategories() {
     advertsCategories.push(ac)
   })
   return advertsCategories
+}
+
+export async function savePDF(document: Document) {
+  const client = new S3Client({
+    region: 'eu-west-1',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+      sessionToken: process.env.AWS_SESSION_TOKEN ?? '',
+    },
+  })
+  if (!client) {
+    throw new Error('S3 client not initialized')
+  }
+
+  const bucket = 'official-journal-application-files-bucket-dev'
+  const key = `adverts/${document.FileName}`
+  if (!bucket) {
+    throw new Error('AWS_BUCKET_NAME not set')
+  }
+
+  try {
+    const command = new HeadObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+
+    const fileCheck = await client.send(command)
+    //console.log(`File exists: ${key}`)
+    //console.log(`https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`)
+    return `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
+    //https://official-journal-application-files-bucket-dev.s3.eu-west-1.amazonaws.com/adverts/A_nr_1_2006.pdf
+  } catch (error: any) {
+    console.log(`File does not exist: ${key}, let upload`)
+  }
+
+  let uploadId
+  const buffer = Buffer.from(document.Stream, 'utf8')
+  try {
+    const multipartUpload = await client.send(
+      new CreateMultipartUploadCommand({
+        Bucket: bucket,
+        Key: `adverts/${document.FileName}`,
+      }),
+    )
+
+    uploadId = multipartUpload.UploadId
+
+    const uploadPromises = []
+    // Multipart uploads require a minimum size of 5 MB per part.
+    const chunkSize = 1024 * 1024 * 5
+    const numberOfparts = Math.ceil(buffer.length / chunkSize)
+
+    // Upload each part.
+    for (let i = 0; i < numberOfparts; i++) {
+      const start = i * chunkSize
+      const end = start + chunkSize
+      uploadPromises.push(
+        client
+          .send(
+            new UploadPartCommand({
+              Bucket: bucket,
+              Key: `adverts/${document.FileName}`,
+              UploadId: uploadId,
+              Body: buffer.subarray(start, end),
+              PartNumber: i + 1,
+            }),
+          )
+          .then((d) => {
+            return d
+          }),
+      )
+    }
+
+    const uploadResults = await Promise.all(uploadPromises)
+
+    const res = await client.send(
+      new CompleteMultipartUploadCommand({
+        Bucket: bucket,
+        Key: `adverts/${document.FileName}`,
+        UploadId: uploadId,
+        MultipartUpload: {
+          Parts: uploadResults.map(({ ETag }, i) => ({
+            ETag,
+            PartNumber: i + 1,
+          })),
+        },
+      }),
+    )
+    return res.Location
+  } catch (err) {
+    console.log('Error uploading parts', err)
+    if (uploadId) {
+      const res = await client.send(
+        new AbortMultipartUploadCommand({
+          Bucket: bucket,
+          Key: `adverts/${document.FileName}`,
+          UploadId: uploadId,
+        }),
+      )
+    }
+    return null
+  }
 }

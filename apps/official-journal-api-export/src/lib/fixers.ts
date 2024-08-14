@@ -26,23 +26,48 @@ export function fixDeps(deps: Array<DbDepartment>): Promise<Array<Department>> {
   })
   return Promise.resolve(withSlugs)
 }
+const TYPE_MAP = new Map<string, string>()
 
-const TYPE_MAP: Record<string, string> = {
-  Aglýsing: 'AUGLÝSING',
-  'ALMENNAR SIÐAREGLUR': 'AUGLÝSING',
-  ARÐSKSKRÁ: 'AUGLÝSING',
-  AUGLÝSIG: 'AUGLÝSING',
-  AUGLÝSING: 'AUGLÝSING',
-  Auglýsingum: 'AUGLÝSING',
-  AUGLÝSINIG: 'AUGLÝSING',
-  AUGLÝSNG: 'AUGLÝSING',
-  AULGÝSING: 'AUGLÝSING',
-}
+//const TYPE_MAP: Record<string, string> = {
+TYPE_MAP.set('Aglýsing', 'AUGLÝSING')
+TYPE_MAP.set('AUGLÝLSING', 'AUGLÝSING')
+TYPE_MAP.set('AUGLÝSIG', 'AUGLÝSING')
+TYPE_MAP.set('Auglýsingar', 'AUGLÝSING')
+TYPE_MAP.set('Auglýsingum', 'AUGLÝSING')
+TYPE_MAP.set('AUGLÝSINIG', 'AUGLÝSING')
+TYPE_MAP.set('AUGLÝSNG', 'AUGLÝSING')
+TYPE_MAP.set('Augýsing', 'AUGLÝSING')
+TYPE_MAP.set('AULGÝSING', 'AUGLÝSING')
+TYPE_MAP.set('AULÝSING', 'AUGLÝSING')
+TYPE_MAP.set(' AUGLÝSING', 'AUGLÝSING')
+TYPE_MAP.set('RAUGLÝSING', 'AUGLÝSING')
+TYPE_MAP.set('Bæjanöfn', 'BÆJANÖFN O.FL.')
+TYPE_MAP.set('GJALDSKR��', 'GJALDSKRÁ')
+TYPE_MAP.set('GAJLDSKRÁ', 'GJALDSKRÁ')
+TYPE_MAP.set('GJALDSRKÁ', 'GJALDSKRÁ')
+TYPE_MAP.set(' GJALDSKRÁ', 'GJALDSKRÁ')
+TYPE_MAP.set('HAFNARRREGLUGERÐ', 'HAFNARREGLUGERÐ')
+TYPE_MAP.set('Reeglugerð', 'REGLUGERÐ')
+TYPE_MAP.set('Reglguerð', 'REGLUGERÐ')
+TYPE_MAP.set('REGLGUGERD', 'REGLUGERÐ')
+TYPE_MAP.set('EGLUGERÐ', 'REGLUGERÐ')
+TYPE_MAP.set('REGUGERÐ', 'REGLUGERÐ')
+TYPE_MAP.set('Reglulgerð', 'REGLUGERÐ')
+TYPE_MAP.set(' REGLUR', 'REGLUR')
+TYPE_MAP.set('Samþþykkt', 'SAMÞYKKT')
+TYPE_MAP.set('Samþykktir', 'SAMÞYKKT')
+TYPE_MAP.set('SAMYKKT', 'SAMÞYKKT')
+TYPE_MAP.set('SKIPULAGSSRKRÁ', 'SKIPULAGSSKRÁ')
+TYPE_MAP.set('ARÐSKSKRÁ', 'ARÐSKRÁ')
+TYPE_MAP.set(' LÖG', 'LÖG')
 
 const SKIP_TYPES = [
   'TEST',
   'TEST Á AÐ STOFNA MÁL SEINT Í GOPRO',
   'TEST ADVERT',
+  'ÞETTA ER PRUFUAUGLÝSING',
+  'PRUFA A DEILD - ÁLAG',
+  'ÞETTA ER PRUFA FYRIR TBR',
   'ÞETTA ER PRUFUAUGLÝSING',
 ]
 
@@ -73,30 +98,30 @@ export async function fixTypes(types: Array<DbType>): Promise<{
     return skip
   })
 
-  /* const withConsolidatedTypes = withoutSkippedTypes
+  const withConsolidatedTypes = withoutSkippedTypes
     .map((type) => {
-      if (type.title in TYPE_MAP) {
-        const targetTypeTitle = TYPE_MAP[type.title]
+      if (TYPE_MAP.get(type.title)) {
+        const targetTypeTitle = TYPE_MAP.get(type.title)
         const newId = withoutSkippedTypes.find(
-          (t) => t.title === targetTypeTitle,
+          (t) => t.title.toLowerCase() === targetTypeTitle?.toLocaleLowerCase(),
         )?.id
 
         if (!newId) {
           throw new Error(`type ${type.title} not found`)
         }
 
-        typeLegacyMap.set(type.legacy_id, type.id)
+        typeLegacyMap.set(type.title, newId)
 
-        return type
+        return null
       }
       return type
     })
     .filter((type): type is Type => Boolean(type))
-*/
+
   const idMap = new Map<string, Array<Type>>()
 
   // Group by id
-  for (const type of withoutSkippedTypes) {
+  for (const type of withConsolidatedTypes) {
     if (idMap.has(type.id)) {
       idMap.get(type.id)!.push(type)
     } else {
@@ -114,9 +139,8 @@ export async function fixTypes(types: Array<DbType>): Promise<{
       }
     }
   }
-
   const data = {
-    types: withoutSkippedTypes,
+    types: withConsolidatedTypes,
     typeLegacyMap,
     removedTypes,
   }
@@ -181,27 +205,46 @@ function fixHtml(html: string | null): string {
   for (const stringToRemove of HTML_STRINGS_TO_REMOVE) {
     fixedHtml = fixedHtml.replace(stringToRemove, '')
   }
+
+  const tablePattern = /<TABLE.*?>.*?<\/TABLE>/is
+  fixedHtml = fixedHtml.replace(tablePattern, '')
+
+  // Remove all <TR> elements with class 'advertType'
+  const trPattern = /<TR[^>]*class=["']advertType["'][^>]*>.*?<\/TR>/gis
+  fixedHtml = fixedHtml.replace(trPattern, '')
+
   return fixedHtml.trim()
 }
 
 export function fixAdverts(
-  types: Array<Type>,
+  types: {
+    types: Array<Type>
+    typeLegacyMap: Map<string, string>
+    removedTypes: Array<string>
+  },
   adverts: DbAdverts,
 ): Promise<Array<Advert>> {
   const mapped = adverts.adverts.map((advert) => {
+    let typeId =
+      types.types
+        .filter(
+          (x) =>
+            x.title.toLowerCase() ===
+            advert.typeName.toLocaleLowerCase().trim(),
+        )
+        .find((x) => x.department_id === advert.department_id)?.id ?? null
+    if (!typeId && types.typeLegacyMap.get(advert.typeName)) {
+      typeId =
+        types.types.find((x) => types.typeLegacyMap.get(advert.typeName))?.id ??
+        null
+    }
+
     return {
       ...advert,
       document_html: fixHtml(advert.document_html),
 
-      type_id:
-        types
-          .filter(
-            (x) =>
-              x.title.toLowerCase() ===
-              advert.typeName.toLocaleLowerCase().trim(),
-          )
-          .find((x) => x.department_id === advert.department_id)?.id ?? null,
-      document_pdf_url: 'www.mbl.is', //fixPdfUrl() //need to take in attachments here
+      type_id: typeId,
+      document_pdf_url: advert.document_pdf_url, //fixPdfUrl() //need to take in attachments here
     }
   })
 

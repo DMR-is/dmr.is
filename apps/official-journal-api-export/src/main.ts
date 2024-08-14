@@ -86,9 +86,9 @@ async function main() {
 
   // TODO page this
   const dbAdverts = await exec('get adverts', () => getAdverts(1000, 0))
-  /*const advertDocuments = await exec('getDocuments', () =>
+  dbAdverts.adverts = await exec('getDocuments', () =>
     getAdvertDocuments(dbAdverts),
-  )*/
+  )
   // Step 1.2: Select our custom data
   //const superCategories = await exec('get super categories', getSuperCategories)
   // Step 2: Fix, map and wrangle the data
@@ -99,7 +99,7 @@ async function main() {
     fixInvolvedParties(dbInvolvedParties),
   )
   const adverts = await exec('fix adverts', () =>
-    fixAdverts(fixedTypes.types, dbAdverts),
+    fixAdverts(fixedTypes, dbAdverts),
   )
   const advertsCategories = mapAdvertsCategories(
     adverts,
