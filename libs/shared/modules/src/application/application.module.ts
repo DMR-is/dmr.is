@@ -17,6 +17,7 @@ export { ApplicationService } from './application.service'
 import caseModels from '../case/models'
 import commentModels from '../comment/models'
 import advertModels from '../journal/models'
+import { S3Module } from '../s3/s3.module'
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import advertModels from '../journal/models'
       ...advertModels,
       ...commentModels,
     ]),
+    S3Module,
     LoggingModule,
     AuthModule,
     forwardRef(() => SharedCaseModule),

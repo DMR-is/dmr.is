@@ -32,7 +32,12 @@ export function LogAndHandle(
         if (!logArgs) {
           logger.info(`${service}.${method}`)
         }
-        const filteredArgs = args.filter((arg) => !(arg instanceof Transaction))
+        const filteredArgs = args.filter((arg) => {
+          const isTransaction = arg instanceof Transaction
+          const isBuffer = Buffer.isBuffer(arg.buffer) // filter out arguments with buffer / files
+
+          return !isTransaction && !isBuffer
+        })
 
         Object.assign(logData, {
           ...filteredArgs,

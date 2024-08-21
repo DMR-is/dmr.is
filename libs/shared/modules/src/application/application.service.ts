@@ -29,6 +29,7 @@ import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -45,6 +46,8 @@ export class ApplicationService implements IApplicationService {
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     private readonly authService: AuthService,
+    @Inject(IS3Service)
+    private readonly s3Service: IS3Service,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
@@ -345,6 +348,17 @@ export class ApplicationService implements IApplicationService {
         storeState: true,
       }),
     )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async uploadAttachment(applicationId: string, file: Express.Multer.File) {
+    ResultWrapper.unwrap(
+      await this.utilityService.caseLookupByApplicationId(applicationId),
+    )
+
+    await this.s3Service.uploadApplicationAttachment(applicationId, file)
 
     return ResultWrapper.ok()
   }

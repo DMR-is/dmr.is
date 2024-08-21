@@ -7,8 +7,18 @@ import {
   PostApplicationComment,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Body, Controller, Inject, Param } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import 'multer'
+import {
+  Body,
+  Controller,
+  Inject,
+  Param,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 @Controller({
   path: 'applications',
@@ -144,6 +154,17 @@ export class ApplicationController {
   ): Promise<void> {
     ResultWrapper.unwrap(
       await this.applicationService.postComment(applicationId, commentBody),
+    )
+  }
+
+  @Post(':id/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadApplicationAttachment(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    ResultWrapper.unwrap(
+      await this.applicationService.uploadAttachment(applicationId, file),
     )
   }
 }

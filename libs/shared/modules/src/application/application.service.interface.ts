@@ -8,6 +8,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import 'multer'
+
 export interface IApplicationService {
   getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>
 
@@ -30,6 +32,11 @@ export interface IApplicationService {
   ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
+
+  uploadAttachment(
+    applicationId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
