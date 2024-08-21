@@ -12,13 +12,18 @@ import 'multer'
 import {
   Body,
   Controller,
+  HttpCode,
   Inject,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Post,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { UUIDValidationPipe, FileTypeValidationPipe } from '@dmr.is/pipelines'
+import { ALLOWED_MIME_TYPES, ONE_MEGA_BYTE } from '@dmr.is/constants'
+import { ApiOperation } from '@nestjs/swagger'
 
 @Controller({
   path: 'applications',
@@ -158,10 +163,27 @@ export class ApplicationController {
   }
 
   @Post(':id/upload')
+  @ApiOperation({
+    operationId: 'uploadApplicationAttachment',
+  })
+  @HttpCode(200)
   @UseInterceptors(FileInterceptor('file'))
   async uploadApplicationAttachment(
     @Param('id', UUIDValidationPipe) applicationId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 10,
+            message: `File size exceeds the limit of 10MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_MIME_TYPES,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
     ResultWrapper.unwrap(
       await this.applicationService.uploadAttachment(applicationId, file),

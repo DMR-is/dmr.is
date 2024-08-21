@@ -2,6 +2,7 @@ import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  ListBucketsCommand,
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
@@ -40,6 +41,17 @@ export class S3Service implements IS3Service {
     }
   }
 
+  private async isAlive() {
+    try {
+      // some command to check if connection is alive
+      await this.client.send(new ListBucketsCommand())
+      return true
+    } catch (error) {
+      this.logger.error('Failed to connect to S3', error)
+      return false
+    }
+  }
+
   private async abortUpload(bucket: string, key: string, uploadId?: string) {
     const command = new AbortMultipartUploadCommand({
       Bucket: bucket,
@@ -72,6 +84,13 @@ export class S3Service implements IS3Service {
     key: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    const isAlive = await this.isAlive()
+
+    if (!isAlive) {
+      this.logger.error('Connection to S3 lost')
+      throw new InternalServerErrorException()
+    }
+
     const command = new CreateMultipartUploadCommand({
       Bucket: bucket,
       Key: key,

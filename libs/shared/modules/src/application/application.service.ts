@@ -358,7 +358,9 @@ export class ApplicationService implements IApplicationService {
       await this.utilityService.caseLookupByApplicationId(applicationId),
     )
 
-    await this.s3Service.uploadApplicationAttachment(applicationId, file)
+    ResultWrapper.unwrap(
+      await this.s3Service.uploadApplicationAttachment(applicationId, file),
+    )
 
     return ResultWrapper.ok()
   }

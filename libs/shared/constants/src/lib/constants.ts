@@ -1,6 +1,15 @@
 export const DEFAULT_PAGE_SIZE = 10
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
+export const ONE_KILO_BYTE = 1000
+export const ONE_MEGA_BYTE = 1000 * 1000
+
+export const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]
+
 export enum Filenames {
   Documents = 'Fylgiskjal',
   Appendix = 'Viðauki',

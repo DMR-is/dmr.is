@@ -23,6 +23,13 @@ export function LogAndHandle(
     const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: any[]) {
+      const filteredArgs = args.filter((arg) => {
+        const isTransaction = arg instanceof Transaction
+        const isBuffer = Buffer.isBuffer(arg.buffer) // filter out arguments with buffer / files
+
+        return !isTransaction && !isBuffer
+      })
+
       try {
         const logData = {
           method: method,
@@ -32,12 +39,6 @@ export function LogAndHandle(
         if (!logArgs) {
           logger.info(`${service}.${method}`)
         }
-        const filteredArgs = args.filter((arg) => {
-          const isTransaction = arg instanceof Transaction
-          const isBuffer = Buffer.isBuffer(arg.buffer) // filter out arguments with buffer / files
-
-          return !isTransaction && !isBuffer
-        })
 
         Object.assign(logData, {
           ...filteredArgs,
@@ -55,7 +56,7 @@ export function LogAndHandle(
           message: message || 'Internal server error',
           info: {
             args: {
-              ...args,
+              ...filteredArgs,
             },
           },
         })

@@ -1,7 +1,11 @@
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { DEFAULT_PAGE_SIZE, ONE_MEGA_BYTE } from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+} from '@nestjs/common'
 
 export function generatePaging(
   data: unknown[],
@@ -60,3 +64,13 @@ export const mapCommentTypeToTitle = (
       return CaseCommentTitle.UpdateStatus
   }
 }
+
+export const FILE_VALIDATORS = [
+  new MaxFileSizeValidator({
+    maxSize: ONE_MEGA_BYTE * 10,
+    message: `File size exceeds the limit of 10MB.`,
+  }),
+  new FileTypeValidator({
+    fileType: '.(png|jpeg|jpg)',
+  }),
+]
