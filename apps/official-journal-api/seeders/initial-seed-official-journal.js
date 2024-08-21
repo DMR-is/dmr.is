@@ -51,6 +51,12 @@ module.exports = {
         DELETE FROM case_channel;
         DELETE FROM case_channels;
         DELETE FROM case_case;
+        DELETE FROM signature_type;
+        DELETE FROM signature_member;
+        DELETE FROM signature;
+        DELETE FROM signature_members;
+        DELETE FROM case_signatures;
+        DELETE FROM advert_signatures;
       COMMIT;
     `)
   },

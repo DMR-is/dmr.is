@@ -142,507 +142,507 @@ const INSTITUTIONS = [
 ]
 
 const DEPARTMENT_IDS = [
-  '69CD3E90-106E-4B9C-8419-148C29E1738A',
-  '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
-  '637291F2-F7F4-405D-8586-EF88B59CAB00',
+  '69cd3e90-106e-4b9c-8419-148c29e1738a',
+  '472af28c-5f60-48b4-81f5-4bb4254dd74d',
+  '637291f2-f7f4-405d-8586-ef88b59cab00',
 ]
 
 const TYPE_IDS = [
   {
     typeId: '7a6a59ac-45ed-401f-b2a3-8480fd4b6438',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
     typeId: '9a5ca55f-66c5-4c63-8e69-da8f58c829c4',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'C8491509-809C-464F-8CF6-8CE96974439D',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'c8491509-809c-464f-8cf6-8ce96974439d',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'FE42E535-74C1-49A9-AADF-DB2FE7E134F2',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'fe42e535-74c1-49a9-aadf-db2fe7e134f2',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'EC94C279-EC56-4D58-A6FA-E81596634D04',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'ec94c279-ec56-4d58-a6fa-e81596634d04',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '3083494A-1BC4-4B45-9436-70D601E32A5F',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '3083494a-1bc4-4b45-9436-70d601e32a5f',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '69EA646D-C0E5-4335-9B17-33E8E1C1060A',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '69ea646d-c0e5-4335-9b17-33e8e1c1060a',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
     typeId: '6329581f-887e-4959-a806-7cf4f576f08d',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '68AC0B36-5D83-41C8-8024-B645ACB22623',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '68ac0b36-5d83-41c8-8024-b645acb22623',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '2FB5ED9C-3044-4EE6-823F-44F99BDBC0CC',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '2fb5ed9c-3044-4ee6-823f-44f99bdbc0cc',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '3985D8F3-FF31-4FA8-B227-7646C904CA1C',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '3985d8f3-ff31-4fa8-b227-7646c904ca1c',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '2C39CC10-85E1-436E-9083-40E3C4ED49BE',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '2c39cc10-85e1-436e-9083-40e3c4ed49be',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '82F36CCB-F60C-43DB-BD85-E35A6308DB4F',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '82f36ccb-f60c-43db-bd85-e35a6308db4f',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '0ECB5E36-88B1-4336-9658-1DD37F1A7F1E',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '0ecb5e36-88b1-4336-9658-1dd37f1a7f1e',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'DFDEAD5C-6E1C-4657-91F3-509D920F08A6',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'dfdead5c-6e1c-4657-91f3-509d920f08a6',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '28AC3ACF-2101-4DE5-97BD-F8461FD0518A',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '28ac3acf-2101-4de5-97bd-f8461fd0518a',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '3848DF98-956E-4209-9489-3F0E9A6F0A9F',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '3848df98-956e-4209-9489-3f0e9a6f0a9f',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'F89FACB8-9C2E-47E2-B909-1D4984EA348D',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'f89facb8-9c2e-47e2-b909-1d4984ea348d',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '8A0A6A08-FDEA-4F76-8DA5-22ABD3041A23',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '8a0a6a08-fdea-4f76-8da5-22abd3041a23',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'CC053C85-632A-4D82-98BC-94E88A9EE45D',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'cc053c85-632a-4d82-98bc-94e88a9ee45d',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '6F7FBBB8-DAA5-41AA-82BB-0AF9B93A943C',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '6f7fbbb8-daa5-41aa-82bb-0af9b93a943c',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'C845B999-7551-4BF2-898F-486B79EF03B8',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'c845b999-7551-4bf2-898f-486b79ef03b8',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '55EC9DA9-F2C6-4C36-8F69-84E794B530CD',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '55ec9da9-f2c6-4c36-8f69-84e794b530cd',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'C64DB31F-A16C-4CDC-AE04-FC2968D7ACFE',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'c64db31f-a16c-4cdc-ae04-fc2968d7acfe',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '2C066B02-324E-411F-9579-222BB4D9CFCE',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '2c066b02-324e-411f-9579-222bb4d9cfce',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '371A2E7A-6ED8-4A09-9B5F-330E499FCD81',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '371a2e7a-6ed8-4a09-9b5f-330e499fcd81',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'E31B4A73-CDF2-494D-A986-26B76B776658',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'e31b4a73-cdf2-494d-a986-26b76b776658',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'B0CC838B-EC4B-4DFB-9937-20988DAADF06',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'b0cc838b-ec4b-4dfb-9937-20988daadf06',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '3EEA4E74-FDE6-431E-A988-FF8F226544A6',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '3eea4e74-fde6-431e-a988-ff8f226544a6',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '5C1395C9-AC1C-4D1B-9F06-29811A4C178B',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '5c1395c9-ac1c-4d1b-9f06-29811a4c178b',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '8C5AD844-0736-4CE1-B080-6E30B13226DA',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '8c5ad844-0736-4ce1-b080-6e30b13226da',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '2DA6B772-77D5-4674-B2B1-82D62EAF6394',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '2da6b772-77d5-4674-b2b1-82d62eaf6394',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '78F512F5-6FEE-4E00-B029-EF9002836C1C',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '78f512f5-6fee-4e00-b029-ef9002836c1c',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '22415B09-30BD-4977-8B6A-E2CA9A081770',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '22415b09-30bd-4977-8b6a-e2ca9a081770',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '12BEB917-FB29-4F2C-9E8E-EBB016C8551F',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '12beb917-fb29-4f2c-9e8e-ebb016c8551f',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '4EBAA7B7-732B-4BEE-BB6F-F93EFB3F47E3',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '4ebaa7b7-732b-4bee-bb6f-f93efb3f47e3',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'B64043BC-2849-47A2-9805-268DAFA2BA0B',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'b64043bc-2849-47a2-9805-268dafa2ba0b',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'F256B17A-88B3-4955-BBA3-C87E89F991B6',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'f256b17a-88b3-4955-bba3-c87e89f991b6',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'D3DBFEAD-749D-4A0B-9C6B-217DCD0D48BE',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'd3dbfead-749d-4a0b-9c6b-217dcd0d48be',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '8A955490-4FF6-4B04-96AC-F44CC35C42F6',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '8a955490-4ff6-4b04-96ac-f44cc35c42f6',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '776CBDE2-E2BF-4C5B-AEAA-99AF5000D63B',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '776cbde2-e2bf-4c5b-aeaa-99af5000d63b',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '43F8E13D-EA01-4D90-A53A-DCCCA6BD7C48',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '43f8e13d-ea01-4d90-a53a-dccca6bd7c48',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '38A27EBF-21FA-4880-A2CB-B6ABB875A84E',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '38a27ebf-21fa-4880-a2cb-b6abb875a84e',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '666BE1EA-2A33-4F11-9040-6E170E660461',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '666be1ea-2a33-4f11-9040-6e170e660461',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: 'D02B7B16-2D09-4696-86A4-91BDBF973D3A',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: 'd02b7b16-2d09-4696-86a4-91bdbf973d3a',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
     typeId: '188eabad-1c4e-40a5-bf69-e1bcf11383bb',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
-    typeId: '00DB16AB-59F5-4D90-B404-5C7EE95AA539',
-    departmentId: '69CD3E90-106E-4B9C-8419-148C29E1738A',
+    typeId: '00db16ab-59f5-4d90-b404-5c7ee95aa539',
+    departmentId: '69cd3e90-106e-4b9c-8419-148c29e1738a',
   },
   {
     typeId: 'e0d87c01-f844-47c5-bb2c-d33d8d07757c',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
     typeId: 'a6bada6d-ed10-4530-8d42-064c0aca506c',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'C0E6CC1C-A4F9-4585-BBDD-6D99D9D212CA',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'c0e6cc1c-a4f9-4585-bbdd-6d99d9d212ca',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
     typeId: 'e037a62a-b10b-4c6b-befb-139ed807a2c0',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'A8E80C09-00B2-4880-90E1-67CCA022DA6D',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'a8e80c09-00b2-4880-90e1-67cca022da6d',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'BC422D67-B81B-4976-996C-CAC5587E0FDF',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'bc422d67-b81b-4976-996c-cac5587e0fdf',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '254E3D78-5E3C-400B-9417-8511BCFA8291',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '254e3d78-5e3c-400b-9417-8511bcfa8291',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '8ADE920A-B104-4CC0-ABF3-638269A3A0F3',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '8ade920a-b104-4cc0-abf3-638269a3a0f3',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '7568BE17-1C62-4363-9733-AAA8341D1D63',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '7568be17-1c62-4363-9733-aaa8341d1d63',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '0A07F841-251C-43F4-9CB9-3233F6C6E3F4',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '0a07f841-251c-43f4-9cb9-3233f6c6e3f4',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'EDACF0D0-C673-4A34-8223-3E2A73BD3181',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'edacf0d0-c673-4a34-8223-3e2a73bd3181',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'B8E00380-DC9C-4B75-8DBC-3ABCBC66BE78',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'b8e00380-dc9c-4b75-8dbc-3abcbc66be78',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '879E73B3-4134-4A4D-9D2D-95E1308FC671',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '879e73b3-4134-4a4d-9d2d-95e1308fc671',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '4740B358-D5A9-4803-BB2D-192DBA5AF4D7',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '4740b358-d5a9-4803-bb2d-192dba5af4d7',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '91395A48-D6C1-40F2-B8ED-48C96872DA34',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '91395a48-d6c1-40f2-b8ed-48c96872da34',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '2D41CF62-A41F-4920-8131-E0FD6841FF15',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '2d41cf62-a41f-4920-8131-e0fd6841ff15',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '99CFB581-AEE3-45E8-AB5F-7833FE584371',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '99cfb581-aee3-45e8-ab5f-7833fe584371',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '4F0D2874-5A3C-459B-8778-2074B3315F4C',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '4f0d2874-5a3c-459b-8778-2074b3315f4c',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '9F1F1515-784B-4118-B5EB-C4EBAAE4505B',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '9f1f1515-784b-4118-b5eb-c4ebaae4505b',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'ABB92A7A-0E7D-451A-B7BF-FC39C2638189',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'abb92a7a-0e7d-451a-b7bf-fc39c2638189',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '93A41480-3592-4EDE-8AD3-FF1C09D29E26',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '93a41480-3592-4ede-8ad3-ff1c09d29e26',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '8DC66FA2-6516-4496-A48D-C0435BBB05F3',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '8dc66fa2-6516-4496-a48d-c0435bbb05f3',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '78ED9A11-4BD0-4E33-96F2-39BECA695A4F',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '78ed9a11-4bd0-4e33-96f2-39beca695a4f',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '61432CD0-ACEC-4138-ADB3-60D1C0ED0679',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '61432cd0-acec-4138-adb3-60d1c0ed0679',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '28B320E4-52B9-4DE9-AB4A-CB8738DE613A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '28b320e4-52b9-4de9-ab4a-cb8738de613a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'F4CDB691-C0AF-428F-9630-E773FEB71A44',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'f4cdb691-c0af-428f-9630-e773feb71a44',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
     typeId: 'fbcd40ce-c6b3-4cfa-8b0d-67a875b1872b',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '56798DED-895C-4C89-A7D8-9AEAE05DC99A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '56798ded-895c-4c89-a7d8-9aeae05dc99a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'CE1186F3-3489-411B-A1B7-B999D07C51AE',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'ce1186f3-3489-411b-a1b7-b999d07c51ae',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '336539EB-332A-4F2E-BB23-C63EC402866B',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '336539eb-332a-4f2e-bb23-c63ec402866b',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'C219E135-F343-4E90-AFE3-913EFE0C86CE',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'c219e135-f343-4e90-afe3-913efe0c86ce',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '96E93299-F53E-49AF-A0DC-E43A2BD76488',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '96e93299-f53e-49af-a0dc-e43a2bd76488',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '5E9802BD-4CF4-43B5-91B7-F7DFD2FCE883',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '5e9802bd-4cf4-43b5-91b7-f7dfd2fce883',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '7BC07A24-1333-4F83-B787-11898064D4B5',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '7bc07a24-1333-4f83-b787-11898064d4b5',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '45C8403B-9B91-424A-9E55-6BA1F6295C3A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '45c8403b-9b91-424a-9e55-6ba1f6295c3a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'B5C42361-237F-4B94-9621-E9373B172362',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'b5c42361-237f-4b94-9621-e9373b172362',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '052D2C60-8FC1-4785-8E21-4993EB60ADC0',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '052d2c60-8fc1-4785-8e21-4993eb60adc0',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '5B8F4827-D885-4B3A-AF3D-5F1EAE9C23B8',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '5b8f4827-d885-4b3a-af3d-5f1eae9c23b8',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'D020277D-7C0F-4E4C-930C-843486B79A1B',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'd020277d-7c0f-4e4c-930c-843486b79a1b',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '780B691A-84AA-45DD-B630-2B9603097852',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '780b691a-84aa-45dd-b630-2b9603097852',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '9B7492A3-AE8A-4A8E-BC3B-492CB33C96E9',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '9b7492a3-ae8a-4a8e-bc3b-492cb33c96e9',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'A4D0615D-05FD-4BBB-AB6B-4C99EA9A5611',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'a4d0615d-05fd-4bbb-ab6b-4c99ea9a5611',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'B24704CD-2D7A-4279-AEE7-1A9E1361A068',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'b24704cd-2d7a-4279-aee7-1a9e1361a068',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '67F19CA9-06AE-4486-BD5B-54A9F326E718',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '67f19ca9-06ae-4486-bd5b-54a9f326e718',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'A50189B3-B9CA-4E1E-9103-1F6706252372',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'a50189b3-b9ca-4e1e-9103-1f6706252372',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'FD06352E-A9E4-478C-8AEE-FE2E466A23EA',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'fd06352e-a9e4-478c-8aee-fe2e466a23ea',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '641A4767-7E88-4281-BE60-99FEFF6178CC',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '641a4767-7e88-4281-be60-99feff6178cc',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'ED5443FB-1E9C-4699-A2BF-66295C5BBEA7',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'ed5443fb-1e9c-4699-a2bf-66295c5bbea7',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'CABC060C-3605-494B-B6C1-9E5B7AF4E487',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'cabc060c-3605-494b-b6c1-9e5b7af4e487',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '505C6D03-B86D-4D2D-8112-274DB96E6664',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '505c6d03-b86d-4d2d-8112-274db96e6664',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'CDB27A63-D710-425E-9BC7-28994A1EAD09',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'cdb27a63-d710-425e-9bc7-28994a1ead09',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'D648891A-E4EA-42A5-9E71-47DD521225B7',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'd648891a-e4ea-42a5-9e71-47dd521225b7',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '0FCE9C59-41B2-42F4-B6A2-7436EEA50DF5',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '0fce9c59-41b2-42f4-b6a2-7436eea50df5',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '82AA4382-A64C-47B0-8D08-AAD076803FD9',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '82aa4382-a64c-47b0-8d08-aad076803fd9',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '7081A9DA-F996-4B06-B7F8-56DAEBA726FC',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '7081a9da-f996-4b06-b7f8-56daeba726fc',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'B12E86FD-08FC-4085-8F89-F06843103FA0',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'b12e86fd-08fc-4085-8f89-f06843103fa0',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '6CDDF309-C4F2-430D-8B00-299531DCFA8A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '6cddf309-c4f2-430d-8b00-299531dcfa8a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '4C70F587-7715-4087-AE40-8A5626A70BA6',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '4c70f587-7715-4087-ae40-8a5626a70ba6',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'C17D412A-CF07-49EB-A743-363BFCBFA497',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'c17d412a-cf07-49eb-a743-363bfcbfa497',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '24E87B1C-46E5-4AC1-9801-274F7225F360',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '24e87b1c-46e5-4ac1-9801-274f7225f360',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '0FBECA03-5C12-4921-B9D1-08BC7565AFD9',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '0fbeca03-5c12-4921-b9d1-08bc7565afd9',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '10B1AEC4-C33F-4925-AAA9-DFF6C45E4920',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '10b1aec4-c33f-4925-aaa9-dff6c45e4920',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '3570C3D6-4466-4C29-A611-DB3C73A79D6A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '3570c3d6-4466-4c29-a611-db3c73a79d6a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '8E7E174A-5162-426D-B8CF-03097D32551A',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '8e7e174a-5162-426d-b8cf-03097d32551a',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '143EF092-145B-434F-9F1D-D514F0438653',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '143ef092-145b-434f-9f1d-d514f0438653',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '55B8DE56-7F38-4655-995F-6AA9F394E734',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '55b8de56-7f38-4655-995f-6aa9f394e734',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'F1E98860-EB0F-41BF-9E22-D788C01BE76C',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'f1e98860-eb0f-41bf-9e22-d788c01be76c',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'A4669E13-4144-4B08-A811-CBD96B2E7122',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'a4669e13-4144-4b08-a811-cbd96b2e7122',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'DE86BA50-608B-4781-A151-CCB60B5F3B47',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'de86ba50-608b-4781-a151-ccb60b5f3b47',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'DFF4D609-38C1-48C9-B516-E68F6D8E3833',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'dff4d609-38c1-48c9-b516-e68f6d8e3833',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: 'EF85F7F8-83B4-458C-9165-3842BD77F883',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: 'ef85f7f8-83b4-458c-9165-3842bd77f883',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '5F520279-6929-4D07-88E3-CA4D2FA333C0',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '5f520279-6929-4d07-88e3-ca4d2fa333c0',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '5771F14B-0BE8-4290-87B1-CE2FCF860419',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '5771f14b-0be8-4290-87b1-ce2fcf860419',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
-    typeId: '3A9A64DD-816D-4A27-A694-F568C403C20D',
-    departmentId: '637291F2-F7F4-405D-8586-EF88B59CAB00',
+    typeId: '3a9a64dd-816d-4a27-a694-f568c403c20d',
+    departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   },
   {
     typeId: 'cabd738c-a82e-44ab-a1fb-ec428f951ad1',
-    departmentId: '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
+    departmentId: '472af28c-5f60-48b4-81f5-4bb4254dd74d',
   },
   {
     typeId: '38ab9b3d-b0d5-4d05-87be-60a73af20af9',
-    departmentId: '472AF28C-5F60-48B4-81F5-4BB4254DD74D',
+    departmentId: '472af28c-5f60-48b4-81f5-4bb4254dd74d',
   },
   {
-    typeId: '59CAE054-4DEF-49C4-A642-7BF83F32F9BB',
-    departmentId: 'AA408EAE-A76A-4ED8-9AA3-388DC0C8FF05',
+    typeId: '59cae054-4def-49c4-a642-7bf83f32f9bb',
+    departmentId: 'aa408eae-a76a-4ed8-9aa3-388dc0c8ff05',
   },
 ]
 
@@ -2278,6 +2278,7 @@ const REGULAR_SIGNATURE_ID = '1b15e5a8-a548-4d0e-a79f-0c8d50520d29'
 const COMMITTEE_SIGNATURE_ID = 'b8b85c12-9d08-4267-9e4e-d6ae8b34ef4e'
 
 const getRandomName = (male = true) => {
+  console.log(`Generating random name for ${male ? 'male' : 'female'}`)
   const firstNames = male ? firstMaleNames : femaleFirstNames
   const lastNames = male ? maleLastNames : femaleLastNames
 
@@ -2293,6 +2294,9 @@ const getRandomName = (male = true) => {
 }
 
 const generateCaseCategories = ({ caseId, categoryId }) => {
+  console.log(
+    `Generating case category seed for case ${caseId}, category ${categoryId}`,
+  )
   return `INSERT INTO case_categories(case_case_id,category_id) VALUES ('${caseId}','${categoryId}');`
 }
 
@@ -2308,6 +2312,7 @@ const generateSignatureSeed = ({
   html,
   caseId,
 }) => {
+  console.log(`Generating signature seed for case ${caseId}`)
   const signatureId = id ? id : v4()
   let dump = ''
 
@@ -2454,6 +2459,7 @@ INSERT INTO
 }
 
 const findTypeFromDepartmentId = (departmentId) => {
+  console.log(`Searching for type with departmentId: ${departmentId}`)
   let found = false
   while (!found) {
     const type = TYPE_IDS[Math.floor(Math.random() * TYPE_IDS.length)]
@@ -2465,6 +2471,7 @@ const findTypeFromDepartmentId = (departmentId) => {
 }
 
 const getRandomDate = (minYear = 2022) => {
+  console.log(`Generating random date between ${minYear} and 2024`)
   const start = new Date(`${minYear}-01-01`)
   const end = new Date('2024-07-23')
 
@@ -2474,6 +2481,9 @@ const getRandomDate = (minYear = 2022) => {
 }
 
 const getRequestedPublicationDate = (createdAt) => {
+  console.log(
+    `Generating requested publication date for case created at ${createdAt}`,
+  )
   const startDate = new Date(createdAt)
   const endDate = new Date(createdAt)
   endDate.setDate(endDate.getDate() + 30)
@@ -2484,11 +2494,13 @@ const getRequestedPublicationDate = (createdAt) => {
   return randomDate
 }
 const addLeadingZeros = (number, max = 2) => {
+  console.log(`Adding leading zeros to number ${number}`)
   const zeros = Array(max).fill('0').join('')
   return (zeros + number).slice(-max)
 }
 
 const getCaseNumber = (date) => {
+  console.log(`Generating case number for date ${date}`)
   const year = date.getFullYear()
   const month = addLeadingZeros(date.getMonth() + 1)
   const day = addLeadingZeros(date.getDate())
@@ -2497,6 +2509,7 @@ const getCaseNumber = (date) => {
 }
 
 const pickRandom = (arr) => {
+  console.log(`Picking random item from array`)
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
@@ -2513,7 +2526,42 @@ function main() {
       throw new Error('Invalid argument, please provide a number')
     }
 
-    let insertSeed = ``
+    let insertSeed = `
+      INSERT INTO case_status (id, key, value) VALUES ('799722be-5530-439a-91dc-606e129b030d', 'Submitted', 'Innsent');
+      INSERT INTO case_status (id, key, value) VALUES ('e926beb2-4001-4315-aed9-e4eec2ca963d', 'InProgress', 'Grunnvinnsla');
+      INSERT INTO case_status (id, key, value) VALUES ('22b038c1-1d8b-4a01-b061-02f22358d17e', 'InReview', 'Yfirlestur');
+      INSERT INTO case_status (id, key, value) VALUES ('a90d65b7-905f-4ebb-aa1d-7fa115d91d56', 'ReadyForPublishing', 'Tilbúið');
+      INSERT INTO case_status (id, key, value) VALUES ('cd1536de-4481-492f-8db1-1ea0e3e38880', 'Published', 'Útgefið');
+      INSERT INTO case_status (id, key, value) VALUES ('c2b24d63-e5d9-417f-8ec1-ef5150e1a17f', 'Unpublished', 'Tekið úr birtingu');
+      INSERT INTO case_status (id, key, value) VALUES ('a8668645-ef72-4f2d-8e75-7bfe65b0123c', 'Rejected', 'Birtingu hafnað');
+
+      INSERT INTO case_tag (id, key, value) VALUES ('08f2c487-2407-470b-bef3-72c9e0afb328', 'NotStarted', 'Ekki hafið');
+      INSERT INTO case_tag (id, key, value) VALUES ('480853f2-a511-41b5-b663-df655741e77a', 'InReview', 'Í yfirlestri');
+      INSERT INTO case_tag (id, key, value) VALUES ('ec3849a2-2405-4459-a9e3-baf17f894e7b', 'MultipleReviewers', 'Samlesin');
+      INSERT INTO case_tag (id, key, value) VALUES ('8555af9f-96be-4320-8c51-e96e8d7010a9', 'RequiresReview', 'Þarf skoðun');
+
+      INSERT INTO case_communication_status (id, key, value) VALUES ('a96edcf2-97c5-427d-99e5-8de76c887e07', 'NotStarted', 'Ekki hafin');
+      INSERT INTO case_communication_status (id, key, value) VALUES ('01b1e30a-a3e9-4499-aae5-379c8f965dd2', 'WaitingForAnswers', 'Beðið eftir svörum');
+      INSERT INTO case_communication_status (id, key, value) VALUES ('a253814d-2ef5-4321-96ff-301967b6509b', 'HasAnswers', 'Svör hafa borist');
+      INSERT INTO case_communication_status (id, key, value) VALUES ('904d562b-079c-4419-8019-c054fb422892', 'Done', 'Lokið');
+
+      INSERT INTO case_comment_title (id, key, value) VALUES ('d1e1377d-2d01-4a5a-999f-cdb1ec0cfc17', 'Submit', 'Innsent af:');
+      INSERT INTO case_comment_title (id, key, value) VALUES ('cf8ce92b-8838-4a76-8fb3-956ce35bca3b', 'AssignSelf', 'merkir sér málið.');
+      INSERT INTO case_comment_title (id, key, value) VALUES ('bad8a244-9f02-4799-a3fc-bf652f6cf7fd', 'Assign', 'færir mál á');
+      INSERT INTO case_comment_title (id, key, value) VALUES ('84237319-b317-4ac4-a4cf-724b5d9bbed6', 'UpdateStatus', 'færir mál í stöðuna:');
+      INSERT INTO case_comment_title (id, key, value) VALUES ('72dbba56-6808-4344-883f-48e67783ab49', 'Comment', 'gerir athugasemd.');
+      INSERT INTO case_comment_title (id, key, value) VALUES ('a303587f-7cad-4f43-960d-e66d094a28b5', 'Message', 'skráir skilaboð');
+
+      INSERT INTO case_comment_type (id, key, value) VALUES ('6c28e8ff-63f6-4cfc-81f0-2835def7d021', 'Submit', 'submit');
+      INSERT INTO case_comment_type (id, key, value) VALUES ('be3b0ccd-51c8-4e96-8957-485bc35c8568', 'Assign', 'assign');
+      INSERT INTO case_comment_type (id, key, value) VALUES ('6c296957-6aab-447a-9706-9c3d54d0f03d', 'Assign', 'assign_self');
+      INSERT INTO case_comment_type (id, key, value) VALUES ('e34f7bf2-a7e7-4147-9b8b-1ca232f26952', 'Update', 'update');
+      INSERT INTO case_comment_type (id, key, value) VALUES ('755b2a15-9a64-41ef-a53e-b73688d71440', 'Comment', 'comment');
+      INSERT INTO case_comment_type (id, key, value) VALUES ('771cffc9-cc84-42a4-8b06-6ef51ee489e4', 'Message', 'message');
+
+      INSERT INTO signature_type (id, title, slug) VALUES ('1b15e5a8-a548-4d0e-a79f-0c8d50520d29', 'Hefðbundin undirritun', 'hefdbundin-undirritun');
+      INSERT INTO signature_type (id, title, slug) VALUES ('b8b85c12-9d08-4267-9e4e-d6ae8b34ef4e', 'Undirritun nefndar', 'undirritun-nefndar');
+    `
 
     for (let index = 0; index < iterations; index++) {
       const id = v4()
@@ -2629,14 +2677,19 @@ function main() {
       insertSeed += signatureDump
     }
 
-    const filePath = path.join(__dirname, '../tmp/case-insert-dump.sql')
+    const filePath = path.join(
+      __dirname,
+      '../apps/official-journal-api/seeders/sql/all_case.sql',
+    )
     fs.writeFileSync(filePath, insertSeed)
     console.log(
       `Generated ${iterations} case insert seeds, stored at ${filePath}`,
     )
+    process.exit()
   } catch (error) {
     console.error(error)
     console.log('Error generating case insert seed')
+    process.exit()
   }
 }
 
