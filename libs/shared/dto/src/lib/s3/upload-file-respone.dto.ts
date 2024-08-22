@@ -6,4 +6,16 @@ export class S3UploadFileResponse {
     description: 'The URL of the uploaded file.',
   })
   url!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Filename of the uploaded file.',
+  })
+  filename!: string
+
+  @ApiProperty({
+    type: Number,
+    description: 'The size of the uploaded file.',
+  })
+  size!: number
 }

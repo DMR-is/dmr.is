@@ -11,6 +11,8 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
+  S3UploadFileResponse,
+  S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -353,15 +355,20 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
-  async uploadAttachment(applicationId: string, file: Express.Multer.File) {
+  async uploadAttachments(
+    applicationId: string,
+    files: Array<Express.Multer.File>,
+  ): Promise<ResultWrapper<S3UploadFilesResponse>> {
     ResultWrapper.unwrap(
       await this.utilityService.caseLookupByApplicationId(applicationId),
     )
 
-    ResultWrapper.unwrap(
-      await this.s3Service.uploadApplicationAttachment(applicationId, file),
-    )
+    const uploadedFiles = (
+      await this.s3Service.uploadApplicationAttachments(applicationId, files)
+    ).unwrap()
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({
+      files: uploadedFiles,
+    })
   }
 }

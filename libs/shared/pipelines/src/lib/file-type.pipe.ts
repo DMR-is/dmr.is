@@ -1,13 +1,7 @@
-// import {
-//   PipeTransform,
-//   Injectable,
-//   ArgumentMetadata,
-//   BadRequestException,
-// } from '@nestjs/common'
-
 import { ALLOWED_MIME_TYPES } from '@dmr.is/constants'
 import { FileValidator } from '@nestjs/common'
 import { IFile } from '@nestjs/common/pipes/file/interfaces'
+import { extensions } from 'mime-types'
 
 interface FileAttributes {
   mimetype: string[]
@@ -22,11 +16,20 @@ export class FileTypeValidationPipe extends FileValidator<
       ? this.validationOptions.mimetype
       : [this.validationOptions.mimetype]
 
-    const fileType = file.mimetype
+    const fileExtensions = extensions[file.mimetype]
 
-    return `File type ${fileType} is not allowed, allowed types are ${allowFileTypes.join(
-      ', ',
-    )}`
+    const fileExtension = Array.isArray(fileExtensions)
+      ? fileExtensions[0]
+      : fileExtensions
+
+    const allowedExtensions = allowFileTypes
+      .map((type) => extensions[type])
+      .flat()
+      .join(', ')
+
+    return `File type ${
+      fileExtension ? `.${fileExtension}` : ''
+    } is not allowed, allowed types are ${allowedExtensions}`
   }
 
   isValid(files?: IFile | IFile[]): boolean | Promise<boolean> {

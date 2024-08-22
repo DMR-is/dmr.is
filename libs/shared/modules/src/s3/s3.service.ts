@@ -155,31 +155,37 @@ export class S3Service implements IS3Service {
 
     return ResultWrapper.ok({
       url: results.Location,
+      filename: file.originalname,
+      size: file.size,
     })
   }
 
   /**
    * Uploads an attachment sent from the application system to S3 bucket.
    * @param applicationId The ID of the application.
-   * @param file The file to upload.
+   * @param files The files to upload.
    */
   @LogAndHandle()
-  async uploadApplicationAttachment(
+  async uploadApplicationAttachments(
     applicationId: string,
-    file: Express.Multer.File,
-  ): Promise<ResultWrapper> {
+    files: Array<Express.Multer.File>,
+  ): Promise<ResultWrapper<Array<S3UploadFileResponse>>> {
     const bucket = 'official-journal-application-files-bucket-dev'
-    const key = `applications/${applicationId}/${file.originalname}`
 
-    const { url } = ResultWrapper.unwrap(
-      await this.uploadFile(bucket, key, file),
-    )
+    const promises = files.map((file) => {
+      const key = `applications/${applicationId}/${file.originalname}`
+      return this.uploadFile(bucket, key, file)
+    })
+
+    const results = await Promise.all(promises)
+
+    const unwrappedResults = results.map((result) => result.unwrap())
 
     // const fileCheck = await this.doesFileExist(bucket, key)
 
     // by default aws will overwrite file if it exists
     // skipping handling of file existence for now
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok(unwrappedResults)
   }
 }

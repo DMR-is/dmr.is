@@ -1,4 +1,4 @@
-import { Route } from '@dmr.is/decorators'
+import { LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
@@ -7,7 +7,7 @@ import {
   PostApplicationComment,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { FileInterceptor } from '@nestjs/platform-express'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import 'multer'
 import {
   Body,
@@ -19,6 +19,7 @@ import {
   ParseFilePipe,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
 import { UUIDValidationPipe, FileTypeValidationPipe } from '@dmr.is/pipelines'
@@ -167,10 +168,11 @@ export class ApplicationController {
     operationId: 'uploadApplicationAttachment',
   })
   @HttpCode(200)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files'))
+  @LogMethod()
   async uploadApplicationAttachment(
     @Param('id', UUIDValidationPipe) applicationId: string,
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({
@@ -183,10 +185,10 @@ export class ApplicationController {
         ],
       }),
     )
-    file: Express.Multer.File,
+    files: Array<Express.Multer.File>,
   ) {
-    ResultWrapper.unwrap(
-      await this.applicationService.uploadAttachment(applicationId, file),
+    return ResultWrapper.unwrap(
+      await this.applicationService.uploadAttachments(applicationId, files),
     )
   }
 }
