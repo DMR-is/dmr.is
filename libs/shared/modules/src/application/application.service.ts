@@ -359,9 +359,7 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>> {
-    ResultWrapper.unwrap(
-      await this.utilityService.caseLookupByApplicationId(applicationId),
-    )
+    ResultWrapper.unwrap(await this.getApplication(applicationId))
 
     const uploadedFiles = (
       await this.s3Service.uploadApplicationAttachments(applicationId, files)

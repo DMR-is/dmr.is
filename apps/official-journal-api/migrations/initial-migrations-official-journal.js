@@ -303,6 +303,33 @@ module.exports = {
       CONSTRAINT fk_advert_signatures_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id)
     );
 
+    CREATE TABLE application_attachment (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      application_id UUID NOT NULL,
+      original_file_name VARCHAR NOT NULL,
+      file_name VARCHAR NOT NULL,
+      file_format VARCHAR NOT NULL,
+      file_extension VARCHAR NOT NULL,
+      file_size INTEGER NOT NULL,
+      file_location VARCHAR NOT NULL,
+      deleted BOOLEAN DEFAULT FALSE,
+      PRIMARY KEY(id)
+    );
+
+    CREATE TABLE application_attachments (
+      application_id UUID NOT NULL,
+      attachment_id UUID NOT NULL,
+      PRIMARY KEY (application_id, attachment_id),
+      CONSTRAINT fk_application_attachments_application_id FOREIGN KEY (attachment_id) REFERENCES application_attachment (id)
+    );
+
+    CREATE TABLE case_attachments (
+      case_case_id UUID NOT NULL,
+      attachment_id UUID NOT NULL,
+      PRIMARY KEY (case_case_id, attachment_id),
+      CONSTRAINT fk_case_attachments_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id)
+    );
+
   COMMIT;
     `)
   },
@@ -337,7 +364,10 @@ module.exports = {
     DROP TABLE signature CASCADE;
     DROP TABLE signature_member_signature CASCADE;
     DROP TABLE case_signatures CASCADE;
-    DROP TABLE advert_signatures CASCADE
+    DROP TABLE advert_signatures CASCADE;
+    DROP TABLE application_attachment CASCADE;
+    DROP TABLE application_attachments CASCADE;
+    DROP TABLE case_attachments CASCADE;
     `)
   },
 }

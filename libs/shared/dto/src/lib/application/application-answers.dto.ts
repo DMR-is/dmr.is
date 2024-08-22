@@ -184,7 +184,7 @@ class ApplicationAttachmentsFileSchema {
   key!: string
 }
 
-export class ApplicationAttachments {
+class ApplicationAttachments {
   @ApiProperty({
     type: [ApplicationAttachmentsFileSchema],
     description: 'List of attachments',
