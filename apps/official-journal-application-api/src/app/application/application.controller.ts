@@ -1,4 +1,4 @@
-import { Route } from '@dmr.is/decorators'
+import { LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
@@ -7,8 +7,24 @@ import {
   PostApplicationComment,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Body, Controller, Inject, Param } from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
+import 'multer'
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Inject,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  Post,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common'
+import { UUIDValidationPipe, FileTypeValidationPipe } from '@dmr.is/pipelines'
+import { ALLOWED_MIME_TYPES, ONE_MEGA_BYTE } from '@dmr.is/constants'
+import { ApiOperation } from '@nestjs/swagger'
 
 @Controller({
   path: 'applications',
@@ -144,6 +160,35 @@ export class ApplicationController {
   ): Promise<void> {
     ResultWrapper.unwrap(
       await this.applicationService.postComment(applicationId, commentBody),
+    )
+  }
+
+  @Post(':id/upload')
+  @ApiOperation({
+    operationId: 'uploadApplicationAttachment',
+  })
+  @HttpCode(200)
+  @UseInterceptors(FilesInterceptor('files'))
+  @LogMethod()
+  async uploadApplicationAttachment(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 10,
+            message: `File size exceeds the limit of 10MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_MIME_TYPES,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.applicationService.uploadAttachments(applicationId, files),
     )
   }
 }

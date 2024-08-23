@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Transaction } from 'sequelize'
-import { handleException } from '../lib/utils'
+import { filterArgs, handleException } from '../lib/utils'
 import { logger } from '@dmr.is/logging'
 
 type LogAndHandleOptions = {
@@ -23,6 +23,7 @@ export function LogAndHandle(
     const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: any[]) {
+      const filteredArgs = filterArgs(args, service, method)
       try {
         const logData = {
           method: method,
@@ -32,7 +33,6 @@ export function LogAndHandle(
         if (!logArgs) {
           logger.info(`${service}.${method}`)
         }
-        const filteredArgs = args.filter((arg) => !(arg instanceof Transaction))
 
         Object.assign(logData, {
           ...filteredArgs,
@@ -50,7 +50,7 @@ export function LogAndHandle(
           message: message || 'Internal server error',
           info: {
             args: {
-              ...args,
+              ...filteredArgs,
             },
           },
         })

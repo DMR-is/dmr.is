@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
+import { filterArgs } from './utils'
 
 export function LogMethod(logArgs: boolean | undefined = true) {
   return function (
@@ -16,8 +17,9 @@ export function LogMethod(logArgs: boolean | undefined = true) {
         category: service,
       }
 
+      const filteredArgs = filterArgs(args, service, String(method))
       if (logArgs) {
-        Object.assign(logData, args)
+        Object.assign(logData, filteredArgs)
       }
 
       logger.info(`${service}.${String(method)}`, {

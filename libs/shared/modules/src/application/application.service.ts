@@ -11,6 +11,8 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
+  S3UploadFileResponse,
+  S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -29,6 +31,7 @@ import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -45,6 +48,8 @@ export class ApplicationService implements IApplicationService {
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     private readonly authService: AuthService,
+    @Inject(IS3Service)
+    private readonly s3Service: IS3Service,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
@@ -347,5 +352,21 @@ export class ApplicationService implements IApplicationService {
     )
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async uploadAttachments(
+    applicationId: string,
+    files: Array<Express.Multer.File>,
+  ): Promise<ResultWrapper<S3UploadFilesResponse>> {
+    ResultWrapper.unwrap(await this.getApplication(applicationId))
+
+    const uploadedFiles = (
+      await this.s3Service.uploadApplicationAttachments(applicationId, files)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      files: uploadedFiles,
+    })
   }
 }

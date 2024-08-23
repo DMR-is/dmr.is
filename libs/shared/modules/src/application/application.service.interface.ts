@@ -4,9 +4,12 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
+  S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+
+import 'multer'
 
 export interface IApplicationService {
   getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>
@@ -30,6 +33,11 @@ export interface IApplicationService {
   ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
+
+  uploadAttachments(
+    applicationId: string,
+    files: Array<Express.Multer.File>,
+  ): Promise<ResultWrapper<S3UploadFilesResponse>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
