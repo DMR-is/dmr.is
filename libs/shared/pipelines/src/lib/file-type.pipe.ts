@@ -5,16 +5,26 @@ import { extensions } from 'mime-types'
 
 interface FileAttributes {
   mimetype: string[]
+  maxNumberOfFiles?: number
 }
 export class FileTypeValidationPipe extends FileValidator<
   FileAttributes,
   IFile
 > {
-  protected validationOptions: FileAttributes = { mimetype: ALLOWED_MIME_TYPES }
+  protected validationOptions: FileAttributes = {
+    mimetype: ALLOWED_MIME_TYPES,
+    maxNumberOfFiles: 5,
+  }
   buildErrorMessage(file: any): string {
     const allowFileTypes = Array.isArray(this.validationOptions.mimetype)
       ? this.validationOptions.mimetype
       : [this.validationOptions.mimetype]
+
+    const maxNumberOfFiles = this.validationOptions.maxNumberOfFiles ?? 5
+
+    if (Array.isArray(file) && file.length > maxNumberOfFiles) {
+      return `Maximum of ${maxNumberOfFiles} files are allowed`
+    }
 
     const fileExtensions = extensions[file.mimetype]
 
@@ -37,7 +47,12 @@ export class FileTypeValidationPipe extends FileValidator<
       return false
     }
 
+    const maxNumberOfFiles = this.validationOptions.maxNumberOfFiles ?? 5
     if (Array.isArray(files)) {
+      if (maxNumberOfFiles < files.length) {
+        return false
+      }
+
       return files.some((file) =>
         this.validationOptions.mimetype.includes(file.mimetype),
       )

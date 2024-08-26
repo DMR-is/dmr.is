@@ -5,6 +5,7 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationComment,
+  S3UploadFilesResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -24,7 +25,13 @@ import {
 } from '@nestjs/common'
 import { UUIDValidationPipe, FileTypeValidationPipe } from '@dmr.is/pipelines'
 import { ALLOWED_MIME_TYPES, ONE_MEGA_BYTE } from '@dmr.is/constants'
-import { ApiOperation } from '@nestjs/swagger'
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 @Controller({
   path: 'applications',
@@ -167,6 +174,34 @@ export class ApplicationController {
   @ApiOperation({
     operationId: 'uploadApplicationAttachment',
   })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    required: true,
+  })
+  @ApiBody({
+    description: 'Handles uploading attachments for an application.',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          description: 'The attachments',
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The attachments were uploaded successfully.',
+    type: S3UploadFilesResponse,
+  })
   @HttpCode(200)
   @UseInterceptors(FilesInterceptor('files'))
   @LogMethod()
@@ -176,17 +211,18 @@ export class ApplicationController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({
-            maxSize: ONE_MEGA_BYTE * 10,
+            maxSize: ONE_MEGA_BYTE * 20,
             message: `File size exceeds the limit of 10MB.`,
           }),
           new FileTypeValidationPipe({
             mimetype: ALLOWED_MIME_TYPES,
+            maxNumberOfFiles: 5,
           }),
         ],
       }),
     )
     files: Array<Express.Multer.File>,
-  ) {
+  ): Promise<S3UploadFilesResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.uploadAttachments(applicationId, files),
     )
