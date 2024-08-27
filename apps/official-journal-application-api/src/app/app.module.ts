@@ -1,8 +1,14 @@
 import { ApplicationModule, HealthModule, PdfModule } from '@dmr.is/modules'
-import { Module } from '@nestjs/common'
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common'
 import { ApplicationController } from './application/application.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { SequelizeConfigService } from '@dmr.is/db'
+import { LogRequestMiddleware } from '@dmr.is/middleware'
 
 @Module({
   imports: [
@@ -16,4 +22,10 @@ import { SequelizeConfigService } from '@dmr.is/db'
   controllers: [ApplicationController],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LogRequestMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL })
+  }
+}

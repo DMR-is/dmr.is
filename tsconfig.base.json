@@ -11,6 +11,7 @@
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
+      "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
@@ -51,7 +52,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node", "Multer"],
+    "types": ["node", "Multer"]
   },
   "exclude": ["node_modules", "tmp"]
 }
