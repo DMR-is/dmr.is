@@ -6,6 +6,7 @@ import {
   GetCaseCommentsResponse,
   GetPresignedUrlBody,
   PostApplicationComment,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -241,13 +242,13 @@ export class ApplicationController {
     method: 'post',
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: GetPresignedUrlBody,
-    responseType: String,
+    responseType: PresignedUrlResponse,
   })
   async getPresignedUrl(
     @Param('id') applicationId: string,
     @Body() body: GetPresignedUrlBody,
-  ): Promise<string> {
-    return ResultWrapper.unwrap(
+  ): Promise<PresignedUrlResponse> {
+    const url = ResultWrapper.unwrap(
       await this.applicationService.getPresignedUrl(
         applicationId,
         body.fileName,
@@ -255,5 +256,7 @@ export class ApplicationController {
         body.isOriginal,
       ),
     )
+
+    return { url }
   }
 }
