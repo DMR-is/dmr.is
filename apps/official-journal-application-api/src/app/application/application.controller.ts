@@ -239,6 +239,7 @@ export class ApplicationController {
   @Route({
     path: ':id/presigned-url',
     method: 'post',
+    params: [{ name: 'id', type: 'string', required: true }],
     bodyType: GetPresignedUrlBody,
     responseType: String,
   })
