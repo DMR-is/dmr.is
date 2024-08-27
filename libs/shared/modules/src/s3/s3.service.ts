@@ -6,14 +6,18 @@ import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  GetObjectCommand,
   ListBucketsCommand,
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { APPLICATION_FILES_BUCKET, ONE_HOUR } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ApplicationAttachment, S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import { createApplicationKey, getApplicationBucket } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -289,7 +293,7 @@ export class S3Service implements IS3Service {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<Array<S3UploadFileResponse>>> {
-    const bucket = 'official-journal-application-files-bucket-dev'
+    const bucket = getApplicationBucket()
     const now = new Date().toISOString()
     const promises = files.map((file) => {
       const key = `applications/${applicationId}/${now}-${file.originalname}`
@@ -306,5 +310,43 @@ export class S3Service implements IS3Service {
     // skipping handling of file existence for now
 
     return ResultWrapper.ok(unwrappedResults)
+  }
+
+  /**
+   * Generates a presigned URL for a file in the S3 bucket.
+   */
+  @LogAndHandle()
+  async getPresignedUrl(
+    applicationId: string,
+    fileName: string,
+    fileType: string,
+    isOriginal = false,
+  ): Promise<ResultWrapper<string>> {
+    const isAlive = await this.isAlive()
+
+    if (!isAlive) {
+      this.logger.error('Connection to S3 lost')
+      throw new InternalServerErrorException()
+    }
+
+    const bucket = getApplicationBucket()
+
+    const key = createApplicationKey(
+      applicationId,
+      isOriginal,
+      fileName,
+      fileType,
+    )
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+
+    const data = await getSignedUrl(this.client, command, {
+      expiresIn: ONE_HOUR,
+    })
+
+    return ResultWrapper.ok(data)
   }
 }

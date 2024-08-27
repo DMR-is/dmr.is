@@ -1,4 +1,8 @@
-import { DEFAULT_PAGE_SIZE, ONE_MEGA_BYTE } from '@dmr.is/constants'
+import {
+  APPLICATION_FILES_BUCKET,
+  DEFAULT_PAGE_SIZE,
+  ONE_MEGA_BYTE,
+} from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
 
 import {
@@ -74,3 +78,24 @@ export const FILE_VALIDATORS = [
     fileType: '.(png|jpeg|jpg)',
   }),
 ]
+
+export const getApplicationBucket = () =>
+  process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
+
+/**
+ * Creates the key for the application file
+ * @param applicationId string
+ * @param isOriginal boolean
+ * @param fileName string
+ * @param fileType string
+ * @returns the key of the application file
+ */
+export const createApplicationKey = (
+  applicationId: string,
+  isOriginal: boolean,
+  fileName: string,
+  fileType: string,
+) =>
+  `applications/${applicationId}/${
+    isOriginal ? 'frumrit' : 'fylgiskjol'
+  }/${fileName}.${fileType}`

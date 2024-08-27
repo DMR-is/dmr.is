@@ -4,7 +4,9 @@ import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  GetPresignedUrlBody,
   PostApplicationComment,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -19,7 +21,6 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
@@ -32,6 +33,7 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Controller({
   path: 'applications',
@@ -44,6 +46,8 @@ export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   /**
@@ -212,19 +216,47 @@ export class ApplicationController {
         validators: [
           new MaxFileSizeValidator({
             maxSize: ONE_MEGA_BYTE * 20,
-            message: `File size exceeds the limit of 10MB.`,
+            message: `File size exceeds the limit of 20MB.`,
           }),
           new FileTypeValidationPipe({
             mimetype: ALLOWED_MIME_TYPES,
-            maxNumberOfFiles: 5,
+            maxNumberOfFiles: 10,
           }),
         ],
       }),
     )
     files: Array<Express.Multer.File>,
   ): Promise<S3UploadFilesResponse> {
+    this.logger.debug('Uploading attachments for application', {
+      applicationId,
+      files: files.map((file) => file.originalname),
+    })
+
     return ResultWrapper.unwrap(
       await this.applicationService.uploadAttachments(applicationId, files),
     )
+  }
+
+  @Route({
+    path: ':id/presigned-url',
+    method: 'post',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: GetPresignedUrlBody,
+    responseType: PresignedUrlResponse,
+  })
+  async getPresignedUrl(
+    @Param('id') applicationId: string,
+    @Body() body: GetPresignedUrlBody,
+  ): Promise<PresignedUrlResponse> {
+    const url = ResultWrapper.unwrap(
+      await this.applicationService.getPresignedUrl(
+        applicationId,
+        body.fileName,
+        body.fileType,
+        body.isOriginal,
+      ),
+    )
+
+    return { url }
   }
 }

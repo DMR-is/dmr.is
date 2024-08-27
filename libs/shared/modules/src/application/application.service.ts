@@ -369,4 +369,19 @@ export class ApplicationService implements IApplicationService {
       files: uploadedFiles,
     })
   }
+
+  @LogAndHandle()
+  async getPresignedUrl(
+    applicationId: string,
+    fileName: string,
+    fileType: string,
+    isOriginal: boolean,
+  ): Promise<ResultWrapper<string>> {
+    return this.s3Service.getPresignedUrl(
+      applicationId,
+      fileName,
+      fileType,
+      isOriginal,
+    )
+  }
 }
