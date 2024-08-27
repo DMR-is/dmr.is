@@ -371,7 +371,17 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
-  async getPresignedUrl(applicationId: string): Promise<ResultWrapper<string>> {
-    return await this.s3Service.getPresignedUrl(applicationId, 'file', 'pdf')
+  async getPresignedUrl(
+    applicationId: string,
+    fileName: string,
+    fileType: string,
+    isOriginal: boolean,
+  ): Promise<ResultWrapper<string>> {
+    return await this.s3Service.getPresignedUrl(
+      applicationId,
+      fileName,
+      fileType,
+      isOriginal,
+    )
   }
 }
