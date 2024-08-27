@@ -4,6 +4,7 @@ import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  GetPresignedUrlBody,
   PostApplicationComment,
   S3UploadFilesResponse,
 } from '@dmr.is/shared/dto'
@@ -19,8 +20,6 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  Req,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
@@ -33,7 +32,6 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
-import { Request } from 'express'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Controller({
@@ -212,21 +210,21 @@ export class ApplicationController {
   @LogMethod()
   async uploadApplicationAttachment(
     @Param('id', UUIDValidationPipe) applicationId: string,
-    @Req() request: Request,
-    @UploadedFiles()
-    files: // new ParseFilePipe({
-    //   validators: [
-    //     new MaxFileSizeValidator({
-    //       maxSize: ONE_MEGA_BYTE * 20,
-    //       message: `File size exceeds the limit of 20MB.`,
-    //     }),
-    //     new FileTypeValidationPipe({
-    //       mimetype: ALLOWED_MIME_TYPES,
-    //       maxNumberOfFiles: 10,
-    //     }),
-    //   ],
-    // }),
-    Array<Express.Multer.File>,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 20,
+            message: `File size exceeds the limit of 20MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_MIME_TYPES,
+            maxNumberOfFiles: 10,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
   ): Promise<S3UploadFilesResponse> {
     this.logger.debug('Uploading attachments for application', {
       applicationId,
@@ -235,6 +233,26 @@ export class ApplicationController {
 
     return ResultWrapper.unwrap(
       await this.applicationService.uploadAttachments(applicationId, files),
+    )
+  }
+
+  @Route({
+    path: ':id/presigned-url',
+    method: 'post',
+    bodyType: GetPresignedUrlBody,
+    responseType: String,
+  })
+  async getPresignedUrl(
+    @Param('id') applicationId: string,
+    @Body() body: GetPresignedUrlBody,
+  ): Promise<string> {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getPresignedUrl(
+        applicationId,
+        body.fileName,
+        body.fileType,
+        body.isOriginal,
+      ),
     )
   }
 }

@@ -38,6 +38,13 @@ export interface IApplicationService {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>>
+
+  getPresignedUrl(
+    applicationId: string,
+    fileName: string,
+    fileType: string,
+    isOriginal: boolean,
+  ): Promise<ResultWrapper<string>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
