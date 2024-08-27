@@ -377,7 +377,7 @@ export class ApplicationService implements IApplicationService {
     fileType: string,
     isOriginal: boolean,
   ): Promise<ResultWrapper<string>> {
-    return await this.s3Service.getPresignedUrl(
+    return this.s3Service.getPresignedUrl(
       applicationId,
       fileName,
       fileType,
