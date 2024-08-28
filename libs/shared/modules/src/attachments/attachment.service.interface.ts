@@ -2,18 +2,14 @@ import { Transaction } from 'sequelize'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
+  PostApplicationAttachmentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface IAttachmentService {
   createAttachment(
     applicationId: string,
-    fileName: string,
-    originalFileName: string,
-    fileFormat: string,
-    fileExtension: string,
-    fileLocation: string,
-    fileSize: number,
+    body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

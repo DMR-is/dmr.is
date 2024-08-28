@@ -5,6 +5,7 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   GetPresignedUrlBody,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
@@ -259,5 +260,24 @@ export class ApplicationController {
     )
 
     return { url }
+  }
+
+  @Route({
+    path: ':id/attachments',
+    method: 'post',
+    operationId: 'addApplicationAttachment',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: PostApplicationAttachmentBody,
+  })
+  async addApplicationAttachment(
+    @Param('id') applicationId: string,
+    @Body() body: PostApplicationAttachmentBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.applicationService.addApplicationAttachment(
+        applicationId,
+        body,
+      ),
+    )
   }
 }

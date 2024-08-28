@@ -3,6 +3,7 @@ import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
   S3UploadFilesResponse,
   UpdateApplicationBody,
@@ -53,6 +54,17 @@ export interface IApplicationService {
     fileType: string,
     isOriginal: boolean,
   ): Promise<ResultWrapper<string>>
+
+  /**
+   * Adds an attachment to an application.
+   * After a user has uploaded attachment with the presigned URL, the attachment is added to the application.
+   * @param applicationId
+   * @param body
+   */
+  addApplicationAttachment(
+    applicationId: string,
+    body: PostApplicationAttachmentBody,
+  ): Promise<ResultWrapper>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

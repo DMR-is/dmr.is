@@ -10,8 +10,8 @@ import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
-  S3UploadFileResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -27,6 +27,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
@@ -41,6 +42,8 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IAttachmentService)
+    private readonly attachmentService: IAttachmentService,
     @Inject(forwardRef(() => IUtilityService))
     private readonly utilityService: IUtilityService,
     @Inject(ICommentService)
@@ -385,14 +388,33 @@ export class ApplicationService implements IApplicationService {
     )
   }
 
+  /**
+   * Used to add an attachment to an application.
+   * When an attachment is uploaded from the application system (with presigned url)
+   * this method is called to store the attachment in the database.
+   * @param applicationId id of the application
+   * @param fileName name of the file ex. dummy
+   * @param originalFileName original name of the file ex. dummy.pdf
+   * @param fileFormat format of the file ex. pdf
+   * @param fileExtension extension of the file ex. pdf
+   * @param fileLocation the s3 url where the file is stored
+   * @param fileSize size of the file in bytes
+   * @param transaction
+   * @returns
+   */
   @LogAndHandle()
+  @Transactional()
   async addApplicationAttachment(
     applicationId: string,
-    fileName: string,
-    originalFileName: string | undefined,
-    fileType: string,
-    fileSize: string,
+    body: PostApplicationAttachmentBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    await this.attachmentService.createAttachment(
+      applicationId,
+      body,
+      transaction,
+    )
+
     return ResultWrapper.ok()
   }
 }

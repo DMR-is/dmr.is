@@ -5,6 +5,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
+  PostApplicationAttachmentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -70,16 +71,15 @@ export class AttachmentService implements IAttachmentService {
   @Transactional()
   async createAttachment(
     applicationId: string,
-    fileName: string,
-    originalFileName = fileName,
-    fileFormat: string,
-    fileExtension: string,
-    fileLocation: string,
-    fileSize: number,
+    body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     ResultWrapper.unwrap(
-      await this.handleReUpload(applicationId, originalFileName, transaction),
+      await this.handleReUpload(
+        applicationId,
+        body.originalFileName,
+        transaction,
+      ),
     )
 
     const id = uuid()
@@ -87,12 +87,12 @@ export class AttachmentService implements IAttachmentService {
       {
         id: id,
         applicationId: applicationId,
-        originalFileName: originalFileName,
-        fileName: fileName,
-        fileFormat: fileFormat,
-        fileExtension: fileExtension,
-        fileLocation: fileLocation,
-        fileSize: fileSize,
+        originalFileName: body.originalFileName,
+        fileName: body.fileName,
+        fileFormat: body.fileFormat,
+        fileExtension: body.fileExtension,
+        fileLocation: body.fileLocation,
+        fileSize: body.fileSize,
         deleted: false,
       },
       { transaction: transaction },

@@ -1,4 +1,3 @@
-import { extension } from 'mime-types'
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
@@ -15,10 +14,9 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { createApplicationKey, getApplicationBucket } from '@dmr.is/utils'
+import { getApplicationBucket } from '@dmr.is/utils'
 
 import {
-  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -81,6 +79,7 @@ export class S3Service implements IS3Service {
 
   /**
    * Handles the upload of a file to the S3 bucket.
+   * Used for admin system to upload attachments.
    * @param bucket What bucket to store the attachment
    * @param key The key to store the attachment
    * @param file The file that was uploaded
@@ -161,12 +160,6 @@ export class S3Service implements IS3Service {
       )
     }
 
-    const fileExtension = extension(file.mimetype)
-
-    if (!fileExtension) {
-      throw new BadRequestException('Failed to get file extension')
-    }
-
     return ResultWrapper.ok({
       url: results.Location,
       filename: file.originalname,
@@ -205,6 +198,7 @@ export class S3Service implements IS3Service {
 
   /**
    * Generates a presigned URL for a file in the S3 bucket.
+   * Used in the application system to upload attachments.
    * @param key The key of the object to generate a presigned URL for.
    * @returns A presigned URL.
    */
@@ -233,7 +227,6 @@ export class S3Service implements IS3Service {
 
   /**
    * Deletes an object from the S3 bucket.
-   * Maybe add bucket as a parameter in the future.
    * @param key The key of the object to delete.
    */
   @LogAndHandle()
