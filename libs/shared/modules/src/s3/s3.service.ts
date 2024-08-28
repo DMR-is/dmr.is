@@ -59,17 +59,6 @@ export class S3Service implements IS3Service {
     }
   }
 
-  private async isAlive() {
-    try {
-      // some command to check if connection is alive
-      await this.client.send(new ListBucketsCommand())
-      return true
-    } catch (error) {
-      this.logger.error('Failed to connect to S3', error)
-      return false
-    }
-  }
-
   /**
    * Responsible for aborting an upload to the S3 bucket.
    * @param bucket The bucket to abort the upload
@@ -175,13 +164,6 @@ export class S3Service implements IS3Service {
     applicationId: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
-    const isAlive = await this.isAlive()
-
-    if (!isAlive) {
-      this.logger.error('Connection to S3 lost')
-      throw new InternalServerErrorException()
-    }
-
     const command = new CreateMultipartUploadCommand({
       Bucket: bucket,
       Key: key,
@@ -317,13 +299,6 @@ export class S3Service implements IS3Service {
     fileType: string,
     isOriginal = false,
   ): Promise<ResultWrapper<string>> {
-    const isAlive = await this.isAlive()
-
-    if (!isAlive) {
-      this.logger.error('Connection to S3 lost')
-      throw new InternalServerErrorException()
-    }
-
     const bucket = getApplicationBucket()
 
     const key = createApplicationKey(
