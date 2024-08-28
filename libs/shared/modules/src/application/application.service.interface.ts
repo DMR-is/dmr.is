@@ -39,6 +39,14 @@ export interface IApplicationService {
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>>
 
+  /**
+   * Gets a presigned url from the S3 service.
+   * @param applicationId
+   * @param fileName
+   * @param fileType
+   * @param isOriginal
+   * @returns A presigned URL.
+   */
   getPresignedUrl(
     applicationId: string,
     fileName: string,

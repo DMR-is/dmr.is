@@ -1,4 +1,6 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript'
+import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
+
+import { ApplicationAttachmentTypeModel } from './application-attachment-type.model'
 
 @Table({ tableName: 'application_attachment', timestamps: false })
 export class ApplicationAttachmentModel extends Model {
@@ -65,4 +67,14 @@ export class ApplicationAttachmentModel extends Model {
     field: 'deleted',
   })
   deleted!: boolean
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'type_id',
+  })
+  typeId!: string
+
+  @BelongsTo(() => ApplicationAttachmentTypeModel, 'type_id')
+  type!: ApplicationAttachmentTypeModel
 }

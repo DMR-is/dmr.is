@@ -384,4 +384,15 @@ export class ApplicationService implements IApplicationService {
       isOriginal,
     )
   }
+
+  @LogAndHandle()
+  async addApplicationAttachment(
+    applicationId: string,
+    fileName: string,
+    originalFileName: string | undefined,
+    fileType: string,
+    fileSize: string,
+  ): Promise<ResultWrapper> {
+    return ResultWrapper.ok()
+  }
 }

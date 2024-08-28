@@ -23,6 +23,12 @@ export interface IS3Service {
     fileType: string,
     isOriginal?: boolean,
   ): Promise<ResultWrapper<string>>
+
+  /**
+   * Deletes object from S3 bucket
+   * @param key The key of the object to delete
+   */
+  deleteObject(key: string): Promise<ResultWrapper>
 }
 
 export const IS3Service = Symbol('IS3Service')

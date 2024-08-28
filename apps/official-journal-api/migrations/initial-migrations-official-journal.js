@@ -303,6 +303,13 @@ module.exports = {
       CONSTRAINT fk_advert_signatures_signature_id FOREIGN KEY (signature_id) REFERENCES signature (id)
     );
 
+    CREATE TABLE application_attachment_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
     CREATE TABLE application_attachment (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       application_id UUID NOT NULL,
@@ -312,8 +319,10 @@ module.exports = {
       file_extension VARCHAR NOT NULL,
       file_size INTEGER NOT NULL,
       file_location VARCHAR NOT NULL,
+      type_id UUID NOT NULL,
       deleted BOOLEAN DEFAULT FALSE,
-      PRIMARY KEY(id)
+      PRIMARY KEY(id),
+      CONSTRAINT fk_application_attachment_type_id FOREIGN KEY (type_id) REFERENCES application_attachment_type (id)
     );
 
     CREATE TABLE application_attachments (
