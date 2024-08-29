@@ -265,12 +265,6 @@ export class ApplicationController {
   ): Promise<PresignedUrlResponse> {
     const key = `${applicationId}/${type}/${body.fileName}.${body.fileType}`
 
-    this.logger.debug(`Generating presigned URL with key<${key}>`, {
-      applicationId,
-      fileName: body.fileName,
-      fileType: body.fileType,
-    })
-
     return ResultWrapper.unwrap(
       await this.applicationService.getPresignedUrl(key),
     )
