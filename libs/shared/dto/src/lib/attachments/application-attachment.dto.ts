@@ -2,6 +2,8 @@ import { IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApplicationAttachmentType } from './application-attachment-type.dto'
+
 export class ApplicationAttachment {
   @ApiProperty({
     type: String,
@@ -52,6 +54,12 @@ export class ApplicationAttachment {
     description: 'File location',
   })
   fileLocation!: string
+
+  @ApiProperty({
+    type: ApplicationAttachmentType,
+    description: 'Attachment type',
+  })
+  type!: ApplicationAttachmentType
 
   @ApiProperty({
     type: Boolean,

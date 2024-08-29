@@ -2,7 +2,7 @@ import { ApplicationAttachment } from '@dmr.is/shared/dto'
 
 import { ApplicationAttachmentModel } from '../models/application-attachment.model'
 
-export const applicationAttachmentMigrate = (
+export const attachmentMigrate = (
   model: ApplicationAttachmentModel,
 ): ApplicationAttachment => {
   return {
@@ -14,6 +14,7 @@ export const applicationAttachmentMigrate = (
     fileExtension: model.fileExtension,
     fileLocation: model.fileLocation,
     fileSize: model.fileSize,
+    type: model.type,
     deleted: model.deleted,
   }
 }

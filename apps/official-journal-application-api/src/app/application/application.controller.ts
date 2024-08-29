@@ -5,6 +5,7 @@ import {
   GetApplicationResponse,
   GetCaseCommentsResponse,
   GetPresignedUrlBody,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
@@ -24,8 +25,16 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
-import { UUIDValidationPipe, FileTypeValidationPipe } from '@dmr.is/pipelines'
-import { ALLOWED_MIME_TYPES, ONE_MEGA_BYTE } from '@dmr.is/constants'
+import {
+  UUIDValidationPipe,
+  FileTypeValidationPipe,
+  EnumValidationPipe,
+} from '@dmr.is/pipelines'
+import {
+  ALLOWED_MIME_TYPES,
+  AttachmentTypeParams,
+  ONE_MEGA_BYTE,
+} from '@dmr.is/constants'
 import {
   ApiBody,
   ApiConsumes,
@@ -238,26 +247,51 @@ export class ApplicationController {
   }
 
   @Route({
-    path: ':id/presigned-url',
+    path: ':id/presigned-url/:type',
     method: 'post',
     operationId: 'getPresignedUrl',
-    params: [{ name: 'id', type: 'string', required: true }],
+    params: [
+      { name: 'id', type: 'string', required: true },
+      { name: 'type', enum: AttachmentTypeParams, required: true },
+    ],
     bodyType: GetPresignedUrlBody,
     responseType: PresignedUrlResponse,
   })
   async getPresignedUrl(
-    @Param('id') applicationId: string,
     @Body() body: GetPresignedUrlBody,
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
+    type: AttachmentTypeParams,
   ): Promise<PresignedUrlResponse> {
-    const url = ResultWrapper.unwrap(
-      await this.applicationService.getPresignedUrl(
+    const key = `${applicationId}/${type}/${body.fileName}.${body.fileType}`
+
+    return ResultWrapper.unwrap(
+      await this.applicationService.getPresignedUrl(key),
+    )
+  }
+
+  @Route({
+    path: ':id/attachments/:type',
+    method: 'post',
+    operationId: 'addApplicationAttachment',
+    params: [
+      { name: 'id', type: String, required: true },
+      { name: 'type', enum: AttachmentTypeParams, required: true },
+    ],
+    bodyType: PostApplicationAttachmentBody,
+  })
+  async addApplicationAttachment(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
+    type: AttachmentTypeParams,
+    @Body() body: PostApplicationAttachmentBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.applicationService.addApplicationAttachment(
         applicationId,
-        body.fileName,
-        body.fileType,
-        body.isOriginal,
+        type,
+        body,
       ),
     )
-
-    return { url }
   }
 }

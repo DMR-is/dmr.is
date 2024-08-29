@@ -99,3 +99,8 @@ export const createApplicationKey = (
   `applications/${applicationId}/${
     isOriginal ? 'frumrit' : 'fylgiskjol'
   }/${fileName}.${fileType}`
+
+export const getKeyFromLocation = (location: string) => {
+  const splitKey = 'applications/'
+  return `${splitKey}${location.split(splitKey)[1]}`
+}

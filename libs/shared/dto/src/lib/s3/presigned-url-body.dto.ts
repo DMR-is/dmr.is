@@ -1,4 +1,4 @@
-import { IsBoolean, IsString } from 'class-validator'
+import { IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -16,11 +16,4 @@ export class GetPresignedUrlBody {
   })
   @IsString()
   fileType!: string
-
-  @ApiProperty({
-    type: Boolean,
-    required: true,
-  })
-  @IsBoolean()
-  isOriginal!: boolean
 }

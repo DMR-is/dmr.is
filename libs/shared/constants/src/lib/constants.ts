@@ -37,3 +37,11 @@ export enum SignatureTypeSlug {
   Regular = 'hefdbundin-undirritun',
   Committee = 'undirritun-nefndar',
 }
+
+/**
+ * Enum for attachment types, used for parameter routes when uploading attachments.
+ */
+export enum AttachmentTypeParams {
+  OriginalDocument = 'frumrit',
+  AdditonalDocument = 'fylgiskjol',
+}

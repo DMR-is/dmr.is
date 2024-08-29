@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { ApplicationEvent } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -10,8 +10,9 @@ import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
-  S3UploadFileResponse,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -27,6 +28,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
@@ -41,6 +43,8 @@ const LOGGING_CATEGORY = 'application-service'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IAttachmentService)
+    private readonly attachmentService: IAttachmentService,
     @Inject(forwardRef(() => IUtilityService))
     private readonly utilityService: IUtilityService,
     @Inject(ICommentService)
@@ -278,11 +282,13 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        const createResult = await this.caseService.createCase(
-          {
-            applicationId,
-          },
-          transaction,
+        ResultWrapper.unwrap(
+          await this.caseService.createCase(
+            {
+              applicationId,
+            },
+            transaction,
+          ),
         )
 
         return ResultWrapper.ok()
@@ -372,16 +378,42 @@ export class ApplicationService implements IApplicationService {
 
   @LogAndHandle()
   async getPresignedUrl(
+    key: string,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    return this.s3Service.getPresignedUrl(key)
+  }
+
+  /**
+   * Used to add an attachment to an application.
+   * When an attachment is uploaded from the application system (with presigned url)
+   * this method is called to store the attachment in the database.
+   * @param applicationId id of the application
+   * @param fileName name of the file ex. dummy
+   * @param originalFileName original name of the file ex. dummy.pdf
+   * @param fileFormat format of the file ex. pdf
+   * @param fileExtension extension of the file ex. pdf
+   * @param fileLocation the s3 url where the file is stored
+   * @param fileSize size of the file in bytes
+   * @param transaction
+   * @returns
+   */
+  @LogAndHandle()
+  @Transactional()
+  async addApplicationAttachment(
     applicationId: string,
-    fileName: string,
-    fileType: string,
-    isOriginal: boolean,
-  ): Promise<ResultWrapper<string>> {
-    return this.s3Service.getPresignedUrl(
-      applicationId,
-      fileName,
-      fileType,
-      isOriginal,
+    type: AttachmentTypeParams,
+    body: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    ResultWrapper.unwrap(
+      await this.attachmentService.createAttachment(
+        applicationId,
+        type,
+        body,
+        transaction,
+      ),
     )
+
+    return ResultWrapper.ok()
   }
 }

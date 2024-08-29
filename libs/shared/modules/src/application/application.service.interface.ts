@@ -1,9 +1,11 @@
-import { ApplicationEvent } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
 import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationComment,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -39,12 +41,27 @@ export interface IApplicationService {
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>>
 
-  getPresignedUrl(
+  /**
+   * Gets a presigned url from the S3 service.
+   * @param applicationId
+   * @param fileName
+   * @param fileType
+   * @param isOriginal
+   * @returns A presigned URL.
+   */
+  getPresignedUrl(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
+
+  /**
+   * Adds an attachment to an application.
+   * After a user has uploaded attachment with the presigned URL, the attachment is added to the application.
+   * @param applicationId
+   * @param body
+   */
+  addApplicationAttachment(
     applicationId: string,
-    fileName: string,
-    fileType: string,
-    isOriginal: boolean,
-  ): Promise<ResultWrapper<string>>
+    attachmentType: AttachmentTypeParams,
+    body: PostApplicationAttachmentBody,
+  ): Promise<ResultWrapper>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
