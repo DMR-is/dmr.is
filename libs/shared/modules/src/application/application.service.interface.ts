@@ -1,10 +1,11 @@
-import { ApplicationEvent } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
 import {
   CasePriceResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
   PostApplicationComment,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -48,12 +49,7 @@ export interface IApplicationService {
    * @param isOriginal
    * @returns A presigned URL.
    */
-  getPresignedUrl(
-    applicationId: string,
-    fileName: string,
-    fileType: string,
-    isOriginal: boolean,
-  ): Promise<ResultWrapper<string>>
+  getPresignedUrl(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 
   /**
    * Adds an attachment to an application.
@@ -63,6 +59,7 @@ export interface IApplicationService {
    */
   addApplicationAttachment(
     applicationId: string,
+    attachmentType: AttachmentTypeParams,
     body: PostApplicationAttachmentBody,
   ): Promise<ResultWrapper>
 }

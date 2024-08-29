@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { ApplicationEvent } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -12,6 +12,7 @@ import {
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
   PostApplicationComment,
+  PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
@@ -281,11 +282,13 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        const createResult = await this.caseService.createCase(
-          {
-            applicationId,
-          },
-          transaction,
+        ResultWrapper.unwrap(
+          await this.caseService.createCase(
+            {
+              applicationId,
+            },
+            transaction,
+          ),
         )
 
         return ResultWrapper.ok()
@@ -375,17 +378,9 @@ export class ApplicationService implements IApplicationService {
 
   @LogAndHandle()
   async getPresignedUrl(
-    applicationId: string,
-    fileName: string,
-    fileType: string,
-    isOriginal: boolean,
-  ): Promise<ResultWrapper<string>> {
-    return this.s3Service.getPresignedUrl(
-      applicationId,
-      fileName,
-      fileType,
-      isOriginal,
-    )
+    key: string,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    return this.s3Service.getPresignedUrl(key)
   }
 
   /**
@@ -406,13 +401,17 @@ export class ApplicationService implements IApplicationService {
   @Transactional()
   async addApplicationAttachment(
     applicationId: string,
+    type: AttachmentTypeParams,
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.attachmentService.createAttachment(
-      applicationId,
-      body,
-      transaction,
+    ResultWrapper.unwrap(
+      await this.attachmentService.createAttachment(
+        applicationId,
+        type,
+        body,
+        transaction,
+      ),
     )
 
     return ResultWrapper.ok()

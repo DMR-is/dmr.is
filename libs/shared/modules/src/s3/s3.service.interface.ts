@@ -1,4 +1,4 @@
-import { S3UploadFileResponse } from '@dmr.is/shared/dto'
+import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'
@@ -17,12 +17,7 @@ export interface IS3Service {
    * @param isOriginal Whether the file is the original file or additions/documents
    * @returns a presigned URL
    */
-  getPresignedUrl(
-    applicationId: string,
-    fileName: string,
-    fileType: string,
-    isOriginal?: boolean,
-  ): Promise<ResultWrapper<string>>
+  getPresignedUrl(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 
   /**
    * Deletes object from S3 bucket

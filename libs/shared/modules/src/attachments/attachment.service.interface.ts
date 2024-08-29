@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+import { AttachmentTypeParams } from '@dmr.is/constants'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
@@ -9,6 +10,7 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface IAttachmentService {
   createAttachment(
     applicationId: string,
+    attachmentType: AttachmentTypeParams,
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>

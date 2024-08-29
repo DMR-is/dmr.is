@@ -264,8 +264,8 @@ INSERT INTO
 VALUES
   (
     '822dc306-bafd-4fdf-82f9-ef194142f72a',
-    'Frumit',
-    'frumit'
+    'Frumrit',
+    'frumrit'
   );
 
 INSERT INTO
@@ -275,7 +275,8 @@ VALUES
     '6cdd170a-2274-4f3c-a3b5-829602793455',
     'Fylgiskjöl',
     'fylgiskjol'
-  )
+  );
+
 INSERT INTO
   CASE_CASE (
     ID,

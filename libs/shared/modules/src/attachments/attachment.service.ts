@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
-import { v4 as uuid } from 'uuid'
+import { Sequelize } from 'sequelize-typescript'
+import { AttachmentTypeParams } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -14,16 +15,24 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { attachmentMigrate } from './migrations/attachment.migration'
 import { IAttachmentService } from './attachment.service.interface'
-import { ApplicationAttachmentModel } from './models'
+import {
+  ApplicationAttachmentModel,
+  ApplicationAttachmentsModel,
+  ApplicationAttachmentTypeModel,
+} from './models'
 
 @Injectable()
 export class AttachmentService implements IAttachmentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(ApplicationAttachmentModel)
-    private applicationAttachmentModel: typeof ApplicationAttachmentModel,
-    @InjectModel(ApplicationAttachmentModel)
-    private applicationAttachmentsModel: typeof ApplicationAttachmentModel,
+    private readonly applicationAttachmentModel: typeof ApplicationAttachmentModel,
+    @InjectModel(ApplicationAttachmentsModel)
+    private readonly applicationAttachmentsModel: typeof ApplicationAttachmentsModel,
+    @InjectModel(ApplicationAttachmentTypeModel)
+    private readonly applicationAttachmentTypeModel: typeof ApplicationAttachmentTypeModel,
+
+    private sequelize: Sequelize,
   ) {}
 
   /**
@@ -71,6 +80,7 @@ export class AttachmentService implements IAttachmentService {
   @Transactional()
   async createAttachment(
     applicationId: string,
+    attachmentType: AttachmentTypeParams,
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
@@ -82,26 +92,40 @@ export class AttachmentService implements IAttachmentService {
       ),
     )
 
-    const id = uuid()
-    const newAttachment = await this.applicationAttachmentModel.create(
+    const foundAttachmentType =
+      await this.applicationAttachmentTypeModel.findOne({
+        where: {
+          slug: attachmentType,
+        },
+        transaction: transaction,
+      })
+
+    if (!foundAttachmentType) {
+      throw new NotFoundException(`AttachmentType<${attachmentType}> not found`)
+    }
+
+    const attachment = await this.applicationAttachmentModel.create(
       {
-        id: id,
         applicationId: applicationId,
         originalFileName: body.originalFileName,
-        fileName: body.fileName,
+        fileName: body.originalFileName,
         fileFormat: body.fileFormat,
         fileExtension: body.fileExtension,
-        fileLocation: body.fileLocation,
         fileSize: body.fileSize,
+        fileLocation: body.fileLocation,
         deleted: false,
+        typeId: foundAttachmentType.id,
       },
-      { transaction: transaction },
+      {
+        transaction: transaction,
+        returning: ['id'],
+      },
     )
 
     await this.applicationAttachmentsModel.create(
       {
         applicationId: applicationId,
-        attachmentId: newAttachment.id,
+        attachmentId: attachment.id,
       },
       {
         transaction: transaction,

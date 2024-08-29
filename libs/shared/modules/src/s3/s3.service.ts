@@ -12,7 +12,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ONE_HOUR } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { S3UploadFileResponse } from '@dmr.is/shared/dto'
+import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getApplicationBucket } from '@dmr.is/utils'
 
@@ -203,7 +203,9 @@ export class S3Service implements IS3Service {
    * @returns A presigned URL.
    */
   @LogAndHandle()
-  async getPresignedUrl(key: string): Promise<ResultWrapper<string>> {
+  async getPresignedUrl(
+    key: string,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
     const isAlive = await this.isAlive()
 
     if (!isAlive) {
@@ -218,11 +220,11 @@ export class S3Service implements IS3Service {
       Key: key,
     })
 
-    const data = await getSignedUrl(this.client, command, {
+    const url = await getSignedUrl(this.client, command, {
       expiresIn: ONE_HOUR,
     })
 
-    return ResultWrapper.ok(data)
+    return ResultWrapper.ok({ url: url })
   }
 
   /**

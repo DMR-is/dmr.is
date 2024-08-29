@@ -1,6 +1,6 @@
 import { logger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-import { BaseError, Transaction } from 'sequelize'
+import { BaseError, Transaction, ValidationErrorItem } from 'sequelize'
 import { HttpException } from '@nestjs/common'
 
 export const handleException = <T>({
@@ -42,7 +42,13 @@ export const handleException = <T>({
 
     if ('errors' in error && Array.isArray(error.errors)) {
       error.errors.forEach((err) => {
-        logger.debug(`${err.message}`)
+        if (err instanceof ValidationErrorItem) {
+          logger.debug(
+            `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}`,
+          )
+        } else {
+          logger.debug(`${err.message}`)
+        }
       })
     }
   }
