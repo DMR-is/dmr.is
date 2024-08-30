@@ -39,7 +39,7 @@ export class PostApplicationAttachmentBody {
   fileLocation!: string
 
   @ApiProperty({
-    type: String,
+    type: Number,
     required: true,
   })
   @IsNumber()
