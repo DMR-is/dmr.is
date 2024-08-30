@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator'
+import { IsString, MaxLength, MinLength } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -8,6 +8,7 @@ export class GetPresignedUrlBody {
     required: true,
   })
   @IsString()
+  @MinLength(1)
   fileName!: string
 
   @ApiProperty({
@@ -15,5 +16,7 @@ export class GetPresignedUrlBody {
     required: true,
   })
   @IsString()
+  @MinLength(3)
+  @MaxLength(4)
   fileType!: string
 }
