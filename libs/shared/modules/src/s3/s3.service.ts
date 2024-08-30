@@ -4,6 +4,7 @@ import {
   CreateMultipartUploadCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  PutObjectCommand,
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
@@ -189,7 +190,7 @@ export class S3Service implements IS3Service {
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
     const bucket = getApplicationBucket()
 
-    const command = new GetObjectCommand({
+    const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
     })
