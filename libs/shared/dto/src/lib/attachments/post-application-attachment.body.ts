@@ -35,7 +35,7 @@ export class PostApplicationAttachmentBody {
     type: String,
     required: true,
   })
-  @IsUrl()
+  @IsString()
   fileLocation!: string
 
   @ApiProperty({
