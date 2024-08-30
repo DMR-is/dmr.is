@@ -7,7 +7,11 @@ import { WinstonModule } from 'nest-winston'
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
-import { ValidationPipe, VersioningType } from '@nestjs/common'
+import {
+  BadRequestException,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
@@ -22,7 +26,30 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(
+    new ValidationPipe({
+      exceptionFactory(errors) {
+        const errs = errors.map((error) => {
+          const target = error.target?.constructor.name
+          logger.warn(
+            `Application API validation error: ${target}.${error.property} received<${error.value}>`,
+            {
+              constraints: error.constraints,
+              children: error.children,
+            },
+          )
+
+          return {
+            property: error.property,
+            constraints: error.constraints,
+          }
+        })
+        return new BadRequestException(errs)
+      },
+      transform: true,
+      // stopAtFirstError: true,
+    }),
+  )
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({
