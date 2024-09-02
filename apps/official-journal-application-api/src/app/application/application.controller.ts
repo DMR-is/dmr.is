@@ -324,11 +324,11 @@ export class ApplicationController {
     operationId: 'deleteApplicationAttachment',
     params: [
       { name: 'id', type: String, required: true },
-      { name: 'type', enum: AttachmentTypeParams, required: true },
+      { name: 'attachmentId', type: String, required: true },
     ],
   })
   async deleteApplicationAttachment(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', UUIDValidationPipe) applicationId: string, // might be useful in the future
     @Param('attachmentId', UUIDValidationPipe) attachmentId: string,
   ) {
     ResultWrapper.unwrap(
