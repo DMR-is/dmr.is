@@ -35,6 +35,24 @@ export class AttachmentService implements IAttachmentService {
     private sequelize: Sequelize,
   ) {}
 
+  private async typeLookup(
+    type: AttachmentTypeParams,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<ApplicationAttachmentTypeModel>> {
+    const found = await this.applicationAttachmentTypeModel.findOne({
+      where: {
+        slug: type,
+      },
+      transaction: transaction,
+    })
+
+    if (!found) {
+      throw new NotFoundException(`AttachmentType<${type}> not found`)
+    }
+
+    return ResultWrapper.ok(found)
+  }
+
   /**
    * We need to mark db records as deleted if an object with the same name/key exists in the S3 bucket.
    * Because S3 will overwrite the file with the same name/key.
@@ -92,17 +110,9 @@ export class AttachmentService implements IAttachmentService {
       ),
     )
 
-    const foundAttachmentType =
-      await this.applicationAttachmentTypeModel.findOne({
-        where: {
-          slug: attachmentType,
-        },
-        transaction: transaction,
-      })
-
-    if (!foundAttachmentType) {
-      throw new NotFoundException(`AttachmentType<${attachmentType}> not found`)
-    }
+    const foundAttachmentType = (
+      await this.typeLookup(attachmentType, transaction)
+    ).unwrap()
 
     const attachment = await this.applicationAttachmentModel.create(
       {
@@ -191,11 +201,15 @@ export class AttachmentService implements IAttachmentService {
   @Transactional()
   async getAttachments(
     applicationId: string,
+    type: AttachmentTypeParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
+    const typeLookup = (await this.typeLookup(type, transaction)).unwrap()
+
     const found = await this.applicationAttachmentModel.findAll({
       where: {
         applicationId: applicationId,
+        typeId: typeLookup.id,
         deleted: false,
       },
       transaction: transaction,

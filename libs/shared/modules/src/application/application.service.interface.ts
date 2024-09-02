@@ -1,6 +1,7 @@
 import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
 import {
   CasePriceResponse,
+  GetApplicationAttachmentsResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
@@ -62,6 +63,11 @@ export interface IApplicationService {
     attachmentType: AttachmentTypeParams,
     body: PostApplicationAttachmentBody,
   ): Promise<ResultWrapper>
+
+  getApplicationAttachments(
+    applicationId: string,
+    type: AttachmentTypeParams,
+  ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
