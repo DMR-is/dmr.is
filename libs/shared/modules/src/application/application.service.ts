@@ -59,6 +59,9 @@ export class ApplicationService implements IApplicationService {
   ) {
     this.logger.info('Using ApplicationService')
   }
+  deleteApplicationAttachment(attachmentId: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
 
   @LogMethod()
   private async xroadFetch(url: string, options: RequestInit) {
@@ -271,8 +274,6 @@ export class ApplicationService implements IApplicationService {
         ),
       )
 
-      // TODO: UPDATE ALL CASE FIELDS
-
       ResultWrapper.unwrap(
         await this.commentService.createComment(caseLookup.id, {
           internal: true,
@@ -431,5 +432,14 @@ export class ApplicationService implements IApplicationService {
     ).unwrap()
 
     return ResultWrapper.ok(attachments)
+  }
+
+  @LogAndHandle()
+  async deleteAttachment(attachmentId: string): Promise<ResultWrapper> {
+    ResultWrapper.unwrap(
+      await this.attachmentService.deleteAttachment(attachmentId),
+    )
+
+    return ResultWrapper.ok()
   }
 }

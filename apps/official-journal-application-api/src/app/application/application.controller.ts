@@ -317,4 +317,22 @@ export class ApplicationController {
       ),
     )
   }
+
+  @Route({
+    path: ':id/attachments/:attachmentId',
+    method: 'delete',
+    operationId: 'deleteApplicationAttachment',
+    params: [
+      { name: 'id', type: String, required: true },
+      { name: 'type', enum: AttachmentTypeParams, required: true },
+    ],
+  })
+  async deleteApplicationAttachment(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('attachmentId', UUIDValidationPipe) attachmentId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.applicationService.deleteApplicationAttachment(attachmentId),
+    )
+  }
 }

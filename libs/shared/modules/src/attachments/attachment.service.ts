@@ -145,12 +145,25 @@ export class AttachmentService implements IAttachmentService {
     return ResultWrapper.ok()
   }
 
+  /**
+   * Used when users remove the attachment from the file inputs
+   * @param attachmentId deletes an attachment by id
+   * @param transaction
+   * @returns
+   */
   @LogAndHandle()
   @Transactional()
   async deleteAttachment(
     attachmentId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    await this.applicationAttachmentsModel.destroy({
+      where: {
+        attachmentId: attachmentId,
+      },
+      transaction: transaction,
+    })
+
     await this.applicationAttachmentModel.update(
       { deleted: true },
       {
@@ -161,13 +174,6 @@ export class AttachmentService implements IAttachmentService {
         transaction: transaction,
       },
     )
-
-    await this.applicationAttachmentsModel.destroy({
-      where: {
-        attachmentId: attachmentId,
-      },
-      transaction: transaction,
-    })
 
     return ResultWrapper.ok()
   }
