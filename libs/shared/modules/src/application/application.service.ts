@@ -59,9 +59,6 @@ export class ApplicationService implements IApplicationService {
   ) {
     this.logger.info('Using ApplicationService')
   }
-  deleteApplicationAttachment(attachmentId: string): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
-  }
 
   @LogMethod()
   private async xroadFetch(url: string, options: RequestInit) {
@@ -435,11 +432,14 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
-  async deleteAttachment(attachmentId: string): Promise<ResultWrapper> {
-    ResultWrapper.unwrap(
-      await this.attachmentService.deleteAttachment(attachmentId),
+  @Transactional()
+  async deleteApplicationAttachment(
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return await this.attachmentService.deleteAttachment(
+      attachmentId,
+      transaction,
     )
-
-    return ResultWrapper.ok()
   }
 }

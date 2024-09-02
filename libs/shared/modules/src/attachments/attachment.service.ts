@@ -157,6 +157,7 @@ export class AttachmentService implements IAttachmentService {
     attachmentId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    this.logger.debug(`Deleting attachments<${attachmentId}>`)
     await this.applicationAttachmentsModel.destroy({
       where: {
         attachmentId: attachmentId,
@@ -164,17 +165,15 @@ export class AttachmentService implements IAttachmentService {
       transaction: transaction,
     })
 
-    await this.applicationAttachmentModel.update(
-      { deleted: true },
-      {
-        where: {
-          id: attachmentId,
-        },
-        returning: ['applicationId'],
-        transaction: transaction,
+    this.logger.debug(`Deleting attachment<${attachmentId}>`)
+    await this.applicationAttachmentModel.destroy({
+      where: {
+        id: attachmentId,
       },
-    )
+      transaction: transaction,
+    })
 
+    this.logger.debug(`Deleted attachment<${attachmentId}>`)
     return ResultWrapper.ok()
   }
 
