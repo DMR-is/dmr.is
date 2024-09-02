@@ -8,6 +8,7 @@ import {
   CaseCommentType,
   CaseCommunicationStatus,
   CasePriceResponse,
+  GetApplicationAttachmentsResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
@@ -246,6 +247,7 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    ResultWrapper
     try {
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(applicationId)
@@ -415,5 +417,29 @@ export class ApplicationService implements IApplicationService {
     )
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async getApplicationAttachments(
+    applicationId: string,
+    type: AttachmentTypeParams,
+  ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
+    const attachments = (
+      await this.attachmentService.getAttachments(applicationId, type)
+    ).unwrap()
+
+    return ResultWrapper.ok(attachments)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteApplicationAttachment(
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return await this.attachmentService.deleteAttachment(
+      attachmentId,
+      transaction,
+    )
   }
 }

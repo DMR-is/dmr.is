@@ -6,10 +6,12 @@ Monorepo DMR
 
 TODO
 
-## Start by running submodules checkout
+## Start by running submodules checkout and install dependencies
 
 ```bash
 ./.gitscripts/checkout-submodules.sh
+brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman
+yarn
 ```
 
 ## Generate client and schemas for web app

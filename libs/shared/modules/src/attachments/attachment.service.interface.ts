@@ -27,6 +27,7 @@ export interface IAttachmentService {
 
   getAttachments(
     applicationId: string,
+    type: AttachmentTypeParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
 }
