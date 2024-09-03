@@ -2,6 +2,7 @@ import { LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
+  DeleteApplicationAttachmentBody,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
@@ -318,21 +319,28 @@ export class ApplicationController {
     )
   }
 
+  /**
+   *
+   * @param applicationId id of the application
+   * @param key location of the attachment in s3
+   */
   @Route({
-    path: ':id/attachments/:attachmentId',
+    path: ':id/attachments/',
     method: 'delete',
     operationId: 'deleteApplicationAttachment',
-    params: [
-      { name: 'id', type: String, required: true },
-      { name: 'attachmentId', type: String, required: true },
-    ],
+    params: [{ name: 'id', type: String, required: true }],
+    bodyType: DeleteApplicationAttachmentBody,
   })
   async deleteApplicationAttachment(
-    @Param('id', UUIDValidationPipe) applicationId: string, // might be useful in the future
-    @Param('attachmentId', UUIDValidationPipe) attachmentId: string,
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Body() body: DeleteApplicationAttachmentBody,
   ) {
+    this.logger.debug(`Deleting attachment for application<${applicationId}>`)
     ResultWrapper.unwrap(
-      await this.applicationService.deleteApplicationAttachment(attachmentId),
+      await this.applicationService.deleteApplicationAttachment(
+        applicationId,
+        body.key,
+      ),
     )
   }
 }
