@@ -69,7 +69,10 @@ export interface IApplicationService {
     type: AttachmentTypeParams,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
 
-  deleteApplicationAttachment(attachmentId: string): Promise<ResultWrapper>
+  deleteApplicationAttachment(
+    applicationId: string,
+    key: string,
+  ): Promise<ResultWrapper>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

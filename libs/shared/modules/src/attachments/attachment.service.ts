@@ -147,33 +147,46 @@ export class AttachmentService implements IAttachmentService {
 
   /**
    * Used when users remove the attachment from the file inputs
-   * @param attachmentId deletes an attachment by id
+   * @param key deletes an attachment by id
    * @param transaction
    * @returns
    */
   @LogAndHandle()
   @Transactional()
-  async deleteAttachment(
-    attachmentId: string,
+  async deleteAttachmentByKey(
+    applicationId: string,
+    key: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    this.logger.debug(`Deleting attachments<${attachmentId}>`)
+    const found = await this.applicationAttachmentModel.findOne({
+      where: {
+        applicationId: applicationId,
+        fileLocation: key,
+        deleted: false,
+      },
+      transaction: transaction,
+    })
+
+    if (!found) {
+      throw new NotFoundException(`Attachment with location<${key}> not found`)
+    }
+
     await this.applicationAttachmentsModel.destroy({
       where: {
-        attachmentId: attachmentId,
+        applicationId: applicationId,
+        attachmentId: found.id,
       },
       transaction: transaction,
     })
 
-    this.logger.debug(`Deleting attachment<${attachmentId}>`)
     await this.applicationAttachmentModel.destroy({
       where: {
-        id: attachmentId,
+        applicationId: applicationId,
+        id: found.id,
       },
       transaction: transaction,
     })
 
-    this.logger.debug(`Deleted attachment<${attachmentId}>`)
     return ResultWrapper.ok()
   }
 

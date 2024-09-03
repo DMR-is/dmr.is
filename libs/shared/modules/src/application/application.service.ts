@@ -434,11 +434,13 @@ export class ApplicationService implements IApplicationService {
   @LogAndHandle()
   @Transactional()
   async deleteApplicationAttachment(
-    attachmentId: string,
+    applicationId: string,
+    key: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return await this.attachmentService.deleteAttachment(
-      attachmentId,
+    return await this.attachmentService.deleteAttachmentByKey(
+      applicationId,
+      key,
       transaction,
     )
   }

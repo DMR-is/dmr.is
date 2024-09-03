@@ -15,8 +15,9 @@ export interface IAttachmentService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
-  deleteAttachment(
-    attachmentId: string,
+  deleteAttachmentByKey(
+    applicationId: string,
+    key: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
