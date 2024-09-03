@@ -335,7 +335,6 @@ export class ApplicationController {
     @Param('id', UUIDValidationPipe) applicationId: string,
     @Body() body: DeleteApplicationAttachmentBody,
   ) {
-    this.logger.debug(`Deleting attachment for application<${applicationId}>`)
     ResultWrapper.unwrap(
       await this.applicationService.deleteApplicationAttachment(
         applicationId,
