@@ -217,4 +217,30 @@ export class S3Service implements IS3Service {
 
     return ResultWrapper.ok()
   }
+
+  /**
+   * Fetches an object from key in S3 bucket
+   * @param key key to which object to retrieve
+   * @returns
+   */
+  @LogAndHandle()
+  async getObject(key: string): Promise<ResultWrapper<string>> {
+    const bucket = getApplicationBucket()
+
+    // check if key starts with slash
+    if (key.startsWith('/')) {
+      key = key.substring(1)
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+
+    const url = await getSignedUrl(this.client, command, {
+      expiresIn: ONE_HOUR,
+    })
+
+    return ResultWrapper.ok(url)
+  }
 }

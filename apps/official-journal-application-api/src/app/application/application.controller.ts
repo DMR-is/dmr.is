@@ -2,6 +2,7 @@ import { LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
+  GetApplicationAttachmentsResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   GetPresignedUrlBody,
@@ -292,6 +293,46 @@ export class ApplicationController {
         type,
         body,
       ),
+    )
+  }
+
+  @Route({
+    path: ':id/attachments/:type',
+    params: [
+      { name: 'id', type: String, required: true },
+      { name: 'type', enum: AttachmentTypeParams, required: true },
+    ],
+    operationId: 'getApplicationAttachments',
+    responseType: GetApplicationAttachmentsResponse,
+  })
+  async getApplicationAttachments(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
+    type: AttachmentTypeParams,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplicationAttachments(
+        applicationId,
+        type,
+      ),
+    )
+  }
+
+  @Route({
+    path: ':id/attachments/:attachmentId',
+    method: 'delete',
+    operationId: 'deleteApplicationAttachment',
+    params: [
+      { name: 'id', type: String, required: true },
+      { name: 'attachmentId', type: String, required: true },
+    ],
+  })
+  async deleteApplicationAttachment(
+    @Param('id', UUIDValidationPipe) applicationId: string, // might be useful in the future
+    @Param('attachmentId', UUIDValidationPipe) attachmentId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.applicationService.deleteApplicationAttachment(attachmentId),
     )
   }
 }
