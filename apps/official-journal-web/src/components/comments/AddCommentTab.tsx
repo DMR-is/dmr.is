@@ -24,7 +24,6 @@ export const AddCommentTab = ({
   userId,
   inputPlaceholder,
   onAddCommentSuccess,
-  onUpdateStatusSuccess,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -56,14 +55,14 @@ export const AddCommentTab = ({
         />
         <Button
           disabled={!commentValue}
-          onClick={() =>
+          onClick={() => {
             onAddComment({
               caseId: caseId,
               internal: internal,
               comment: commentValue,
               initator: userId,
             })
-          }
+          }}
         >
           {formatMessage(messages.comments.save)}
         </Button>
