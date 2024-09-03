@@ -362,9 +362,7 @@ export class UtilityService implements IUtilityService {
       await this.departmentLookup(application.answers.advert.department)
     ).unwrap()
 
-    const type = (
-      await this.typeLookup(application.answers.advert.type)
-    ).unwrap()
+    const type = (await this.typeLookup(caseLookup.advertTypeId)).unwrap()
 
     const categoryIds =
       application.answers.publishing.contentCategories?.map((c) => c.value) ??
