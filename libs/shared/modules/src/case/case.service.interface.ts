@@ -10,6 +10,7 @@ import {
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -29,6 +30,10 @@ export interface ICaseService {
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponse>>
+  updateCase(
+    body: UpdateCaseBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>>
   assignUserToCase(
     id: string,
     userId: string,
