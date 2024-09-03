@@ -1,6 +1,8 @@
 import { Route } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import {
+  CaseCommentType,
+  CaseCommunicationStatus,
   CreateCaseResponse,
   DefaultSearchParams,
   EditorialOverviewResponse,
@@ -419,6 +421,16 @@ export class CaseController {
     @Body() body: PostCaseCommentBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.commentService.createComment(id, body))
+
+    //If it's a message, update the application status to "waiting for answers"
+    if (body.type === CaseCommentType.Message) {
+      ResultWrapper.unwrap(
+        await this.caseService.updateCaseCommunicationStatusByStatus(
+          id,
+          CaseCommunicationStatus.WaitingForAnswers,
+        ),
+      )
+    }
   }
 
   @Route({

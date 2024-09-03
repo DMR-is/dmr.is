@@ -4,6 +4,7 @@ import {
   AlertMessage,
   Box,
   Button,
+  Input,
   LinkV2,
   Select,
   SkeletonLoader,
@@ -242,6 +243,15 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
                   statusId: e.value,
                 })
               }}
+            />
+            <Input
+              name="status"
+              disabled
+              value={activeCase?.communicationStatus.value}
+              type="text"
+              label={formatMessage(messages.actions.communicationsStatus)}
+              size="sm"
+              backgroundColor={'blue'}
             />
           </Stack>
         }

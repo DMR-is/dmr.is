@@ -1035,6 +1035,45 @@ export class CaseService implements ICaseService {
       this.logger.debug(
         `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
       )
+      return this.updateCommunication(caseId, lookup.id, transaction, true)
+    }
+
+    return this.updateCommunication(caseId, lookup.id, transaction)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseCommunicationStatusByStatus(
+    caseId: string,
+    status: CaseCommunicationStatus,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const lookup = (
+      await this.utilityService.caseCommunicationStatusLookup(status)
+    ).unwrap()
+
+    if (status === CaseCommunicationStatus.WaitingForAnswers) {
+      this.logger.debug(
+        `Communication status set to ${status}, rejecting application`,
+      )
+      return this.updateCommunication(caseId, lookup.id, transaction, true)
+    }
+
+    return this.updateCommunication(caseId, lookup.id, transaction)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  private async updateCommunication(
+    caseId: string,
+    communicationLookupId: string,
+    transaction?: Transaction,
+    reject?: boolean,
+  ): Promise<ResultWrapper<undefined>> {
+    if (reject) {
+      this.logger.debug(
+        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+      )
       const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
       ResultWrapper.unwrap(
@@ -1044,7 +1083,7 @@ export class CaseService implements ICaseService {
 
     await this.caseModel.update(
       {
-        communicationStatusId: lookup.id,
+        communicationStatusId: communicationLookupId,
       },
       {
         where: {

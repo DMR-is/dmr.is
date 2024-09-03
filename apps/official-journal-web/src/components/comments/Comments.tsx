@@ -158,6 +158,9 @@ export const Comments = ({ activeCase }: Props) => {
                       caseId={activeCase.activeCase.id}
                       internal={true}
                       userId={activeCase.activeCase.assignedTo.id}
+                      inputPlaceholder={formatMessage(
+                        messages.comments.internalCommentsInputPlaceholder,
+                      )}
                       onAddCommentSuccess={refetchCase}
                       onUpdateStatusSuccess={refetchCase}
                       currentStatus={activeCase.activeCase.communicationStatus}
@@ -172,6 +175,9 @@ export const Comments = ({ activeCase }: Props) => {
                       caseId={activeCase.activeCase.id}
                       internal={false}
                       userId={activeCase.activeCase.assignedTo.id}
+                      inputPlaceholder={formatMessage(
+                        messages.comments.externalCommentInputPlaceholder,
+                      )}
                       onAddCommentSuccess={refetchCase}
                       onUpdateStatusSuccess={refetchCase}
                       currentStatus={activeCase.activeCase.communicationStatus}

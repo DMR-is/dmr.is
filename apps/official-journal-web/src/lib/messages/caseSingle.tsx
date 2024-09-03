@@ -65,6 +65,11 @@ export const messages = {
       defaultMessage: 'Staða',
       description: '',
     },
+    communicationsStatus: {
+      id: 'web.page.caseSingle:actions.communicationsStatus',
+      defaultMessage: 'Samskiptastaða',
+      description: '',
+    },
   }),
 
   paging: defineMessages({

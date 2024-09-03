@@ -4,6 +4,7 @@ import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
+  CaseCommunicationStatus,
   CaseStatus,
   CreateCaseResponse,
   EditorialOverviewResponse,
@@ -46,6 +47,12 @@ export class CaseServiceMock implements ICaseService {
   updateCaseCommunicationStatus(
     caseId: string,
     body: UpdateCommunicationStatusBody,
+  ): Promise<ResultWrapper<undefined>> {
+    throw new Error('Method not implemented.')
+  }
+  updateCaseCommunicationStatusByStatus(
+    caseId: string,
+    body: CaseCommunicationStatus,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }

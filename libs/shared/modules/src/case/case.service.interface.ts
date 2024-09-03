@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import {
+  CaseCommunicationStatus,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
@@ -92,6 +93,12 @@ export interface ICaseService {
   updateCaseCommunicationStatus(
     caseId: string,
     body: UpdateCommunicationStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>>
+
+  updateCaseCommunicationStatusByStatus(
+    caseId: string,
+    body: CaseCommunicationStatus,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>>
 }
