@@ -16,14 +16,17 @@ import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import 'multer'
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpCode,
+  HttpException,
   Inject,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
@@ -31,6 +34,7 @@ import {
   UUIDValidationPipe,
   FileTypeValidationPipe,
   EnumValidationPipe,
+  IsStringValidationPipe,
 } from '@dmr.is/pipelines'
 import {
   ALLOWED_MIME_TYPES,
@@ -45,6 +49,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { isString } from 'class-validator'
 
 @Controller({
   path: 'applications',
@@ -329,16 +334,16 @@ export class ApplicationController {
     method: 'delete',
     operationId: 'deleteApplicationAttachment',
     params: [{ name: 'id', type: String, required: true }],
-    bodyType: DeleteApplicationAttachmentBody,
+    query: [{ name: 'key', type: String, required: true }],
   })
   async deleteApplicationAttachment(
     @Param('id', UUIDValidationPipe) applicationId: string,
-    @Body() body: DeleteApplicationAttachmentBody,
+    @Query('key', IsStringValidationPipe) key: string,
   ) {
     ResultWrapper.unwrap(
       await this.applicationService.deleteApplicationAttachment(
         applicationId,
-        body.key,
+        key,
       ),
     )
   }
