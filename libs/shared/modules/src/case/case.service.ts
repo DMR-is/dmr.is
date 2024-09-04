@@ -451,18 +451,12 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<undefined>> {
     const updateData = updateCaseBodyMapper(body)
 
-    try {
-      await this.caseModel.update<CaseDto>(updateData, {
-        where: {
-          id: body.caseId,
-        },
-        transaction,
-      })
-    } catch (error) {
-      throw new BadRequestException(
-        `Case<${body.caseId}> not updated: ${JSON.stringify(error)}`,
-      )
-    }
+    await this.caseModel.update<CaseDto>(updateData, {
+      where: {
+        id: body.caseId,
+      },
+      transaction,
+    })
 
     // TODO: ApplicationCommunicationChannels?
 
