@@ -1,6 +1,7 @@
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_SIZE,
+  FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
 } from '@dmr.is/constants'
 import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
@@ -103,4 +104,18 @@ export const createApplicationKey = (
 export const getKeyFromLocation = (location: string) => {
   const splitKey = 'applications/'
   return `${splitKey}${location.split(splitKey)[1]}`
+}
+
+export const getFastTrack = (date: Date) => {
+  const now = new Date()
+  const diff = date.getTime() - now.getTime()
+  const diffDays = diff / (1000 * 3600 * 24)
+  let fastTrack = false
+  if (diffDays > FAST_TRACK_DAYS) {
+    fastTrack = true
+  }
+  return {
+    fastTrack,
+    now,
+  }
 }

@@ -253,7 +253,26 @@ export class ApplicationService implements IApplicationService {
         await this.utilityService.caseLookupByApplicationId(applicationId)
       ).unwrap()
 
-      // TODO: check if application is in correct state to allow posting?
+      const { application } = (
+        await this.getApplication(applicationId)
+      ).unwrap()
+
+      const contentCategories =
+        application.answers.publishing.contentCategories.map(
+          (item) => item.value,
+        )
+
+      this.caseService.updateCase({
+        caseId: caseLookup.id,
+        advertTitle: application.answers.advert.title,
+        departmentId: application.answers.advert.department,
+        advertTypeId: application.answers.advert.type,
+        requestedPublicationDate: application.answers.publishing.date,
+        message: application.answers.publishing.message,
+        categoryIds:
+          contentCategories.length > 0 ? contentCategories : undefined,
+      })
+
       const commStatus = (
         await this.utilityService.caseCommunicationStatusLookup(
           CaseCommunicationStatus.HasAnswers,

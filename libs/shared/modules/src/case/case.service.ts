@@ -22,6 +22,7 @@ import {
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -33,7 +34,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging, getFastTrack } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -52,7 +53,7 @@ import {
   caseParameters,
   counterResult,
 } from '../helpers'
-import { caseTagMapper } from '../helpers/mappers/case/tag.mapper'
+import { caseTagMapper, updateCaseBodyMapper } from '../helpers/mappers/case'
 import { caseCommunicationStatusMigrate } from '../helpers/migrations/case/case-communication-status-migrate'
 import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
@@ -314,13 +315,7 @@ export class CaseService implements ICaseService {
       application.answers.publishing.date,
     )
 
-    const now = new Date()
-    const diff = requestedPublicationDate.getTime() - now.getTime()
-    const diffDays = diff / (1000 * 3600 * 24)
-    let fastTrack = false
-    if (diffDays > FAST_TRACK_DAYS) {
-      fastTrack = true
-    }
+    const { fastTrack, now } = getFastTrack(requestedPublicationDate)
 
     const message = application.answers.publishing.message
 
@@ -446,6 +441,32 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok({
       case: caseMigrate(newCreatedCase),
     })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCase(
+    body: UpdateCaseBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const updateData = updateCaseBodyMapper(body)
+
+    await this.caseModel.update<CaseDto>(updateData, {
+      where: {
+        id: body.caseId,
+      },
+      transaction,
+    })
+
+    // TODO: ApplicationCommunicationChannels?
+
+    if (body.categoryIds?.length) {
+      this.updateCaseCategories(body.caseId, {
+        categoryIds: body.categoryIds,
+      })
+    }
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

@@ -20,6 +20,7 @@ import {
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
+  UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -67,6 +68,9 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  updateCase(body: UpdateCaseBody): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
   udpateCaseTag(
