@@ -18,6 +18,7 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import { calculatePriceForApplication } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -119,14 +120,10 @@ export class ApplicationService implements IApplicationService {
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
-    const caseLookup = (
-      await this.utilityService.caseLookupByApplicationId(applicationId)
-    ).unwrap()
-
-    const activeCase = caseMigrate(caseLookup)
+    ResultWrapper.unwrap(await this.getApplication(applicationId))
 
     return ResultWrapper.ok({
-      price: activeCase.price || 0,
+      price: calculatePriceForApplication(),
     })
   }
 

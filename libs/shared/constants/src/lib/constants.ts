@@ -45,3 +45,5 @@ export enum AttachmentTypeParams {
   OriginalDocument = 'frumrit',
   AdditonalDocument = 'fylgiskjol',
 }
+
+export const DEFAULT_PRICE = 17000

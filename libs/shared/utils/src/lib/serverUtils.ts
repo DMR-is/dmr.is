@@ -1,6 +1,7 @@
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_SIZE,
+  DEFAULT_PRICE,
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
 } from '@dmr.is/constants'
@@ -119,3 +120,10 @@ export const getFastTrack = (date: Date) => {
     now,
   }
 }
+
+/**
+ * Calculates the price for the application
+ * For now we dont know how to calculate the price
+ * so we will return default price
+ */
+export const calculatePriceForApplication = () => DEFAULT_PRICE
