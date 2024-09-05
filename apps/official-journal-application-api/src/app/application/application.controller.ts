@@ -49,7 +49,6 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { isString } from 'class-validator'
 
 @Controller({
   path: 'applications',
@@ -78,7 +77,7 @@ export class ApplicationController {
     responseType: CasePriceResponse,
   })
   async getPrice(
-    @Param('id') applicationId: string,
+    @Param('id', UUIDValidationPipe) applicationId: string,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getPrice(applicationId),
@@ -97,7 +96,7 @@ export class ApplicationController {
     responseType: GetApplicationResponse,
   })
   async getApplication(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
   ): Promise<GetApplicationResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getApplication(id),
@@ -143,7 +142,9 @@ export class ApplicationController {
     operationId: 'postApplication',
     params: [{ name: 'id', type: 'string', required: true }],
   })
-  async postApplication(@Param('id') applicationId: string) {
+  async postApplication(
+    @Param('id', UUIDValidationPipe) applicationId: string,
+  ) {
     return ResultWrapper.unwrap(
       await this.applicationService.postApplication(applicationId),
     )
@@ -161,7 +162,7 @@ export class ApplicationController {
     responseType: GetCaseCommentsResponse,
   })
   async getComments(
-    @Param('id') applicationId: string,
+    @Param('id', UUIDValidationPipe) applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),
@@ -182,7 +183,7 @@ export class ApplicationController {
     bodyType: PostApplicationComment,
   })
   async postComment(
-    @Param('id') applicationId: string,
+    @Param('id', UUIDValidationPipe) applicationId: string,
     @Body() commentBody: PostApplicationComment,
   ): Promise<void> {
     ResultWrapper.unwrap(
