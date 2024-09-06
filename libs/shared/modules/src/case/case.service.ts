@@ -694,9 +694,7 @@ export class CaseService implements ICaseService {
     caseId: string,
     price: string,
   ): Promise<ResultWrapper<undefined>> {
-    const caseLookup = await this.utilityService.caseLookup(caseId)
-
-    caseLookup.unwrap()
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
     await this.caseModel.update(
       {
@@ -704,7 +702,7 @@ export class CaseService implements ICaseService {
       },
       {
         where: {
-          id: caseId,
+          id: caseLookup.id,
         },
       },
     )

@@ -1,6 +1,10 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
+import {
+  ApplicationEvent,
+  AttachmentTypeParams,
+  DEFAULT_PRICE,
+} from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -120,11 +124,35 @@ export class ApplicationService implements IApplicationService {
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
-    ResultWrapper.unwrap(await this.getApplication(applicationId))
+    /**
+     * First we check if there is an existing case for the application.
+     * If so then we return the price of the case.
+     * If not then we calculate the price of the application.
+     */
+    try {
+      const caseLookup = (
+        await this.utilityService.caseLookupByApplicationId(applicationId)
+      ).unwrap()
 
-    return ResultWrapper.ok({
-      price: calculatePriceForApplication(),
-    })
+      /**
+       * If price has not been set we return default price
+       */
+
+      const price = caseLookup.price ? caseLookup.price : DEFAULT_PRICE
+
+      return ResultWrapper.ok({
+        price: price,
+      })
+    } catch (error) {
+      ResultWrapper.unwrap(await this.getApplication(applicationId))
+
+      // case does not exist, calculate price
+      const price = calculatePriceForApplication()
+
+      return ResultWrapper.ok({
+        price: price,
+      })
+    }
   }
 
   @LogAndHandle()
@@ -357,12 +385,9 @@ export class ApplicationService implements IApplicationService {
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
-    // TODO: temp fix for involved party
-    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
-
     const involvedPartyId = caseLookup.involvedPartyId
       ? caseLookup.involvedPartyId
-      : involvedParty.id
+      : 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f'
 
     ResultWrapper.unwrap(
       await this.commentService.createComment(caseLookup.id, {

@@ -2,7 +2,6 @@ import { LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
-  DeleteApplicationAttachmentBody,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
@@ -16,11 +15,9 @@ import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import 'multer'
 import {
-  BadRequestException,
   Body,
   Controller,
   HttpCode,
-  HttpException,
   Inject,
   MaxFileSizeValidator,
   Param,
@@ -102,34 +99,6 @@ export class ApplicationController {
       await this.applicationService.getApplication(id),
     )
   }
-
-  // @Route({
-  //   method: 'post',
-  //   path: ':id/submit',
-  //   operationId: 'submitApplication',
-  //   params: [{ name: 'id', type: 'string', required: true }],
-  //   exclude: true,
-  // })
-  // async submitApplication(@Param('id') id: string) {
-  //   ResultWrapper.unwrap(await this.applicationService.submitApplication(id))
-  // }
-
-  // @Route({
-  //   method: 'put',
-  //   path: ':id',
-  //   operationId: 'updateApplication',
-  //   params: [{ name: 'id', type: 'string', required: true }],
-  //   bodyType: UpdateApplicationBody,
-  //   exclude: true,
-  // })
-  // async updateApplication(
-  //   @Param('id') id: string,
-  //   @Body() body: UpdateApplicationBody,
-  // ) {
-  //   ResultWrapper.unwrap(
-  //     await this.applicationService.updateApplication(id, body),
-  //   )
-  // }
 
   /**
    * Handles submissions from the application system.
