@@ -1,5 +1,6 @@
 import { Route } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseCommentType,
   CaseCommunicationStatus,
@@ -305,8 +306,8 @@ export class CaseController {
     ],
   })
   async assign(
-    @Param('id') id: string,
-    @Param('userId') userId: string,
+    @Param('id', UUIDValidationPipe) id: string,
+    @Param('userId', UUIDValidationPipe) userId: string,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.assignUserToCase(id, userId))
   }

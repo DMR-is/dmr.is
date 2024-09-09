@@ -1,5 +1,4 @@
 export * from './application-answers.dto'
-export * from './application-events.dto'
 export * from './application.dto'
 export * from './get-application-response.dto'
 export * from './post-application-body.dto'

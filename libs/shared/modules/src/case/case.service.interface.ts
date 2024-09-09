@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import {
   CaseCommunicationStatus,
+  CreateCaseChannelBody,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
@@ -13,10 +14,12 @@ import {
   PostCasePublishBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -34,58 +37,54 @@ export interface ICaseService {
   updateCase(
     body: UpdateCaseBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>>
-  assignUserToCase(
-    id: string,
-    userId: string,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
+  assignUserToCase(id: string, userId: string): Promise<ResultWrapper>
   updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
-  ): Promise<ResultWrapper<undefined>>
-  updateCaseNextStatus(id: string): Promise<ResultWrapper<undefined>>
-  publishCases(body: PostCasePublishBody): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
+  updateCaseNextStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+  ): Promise<ResultWrapper>
+  publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
   getCasesOverview(
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<EditorialOverviewResponse>>
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
 
+  createCaseChannel(
+    caseId: string,
+    body: CreateCaseChannelBody,
+  ): Promise<ResultWrapper>
+
   updateCasePrice(
     caseId: string,
-    price: string,
-  ): Promise<ResultWrapper<undefined>>
+    body: UpdateCasePriceBody,
+  ): Promise<ResultWrapper>
   updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
   updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 
   updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 
   updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 
-  updateCaseTitle(
-    caseId: string,
-    body: UpdateTitleBody,
-  ): Promise<ResultWrapper<undefined>>
-  updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
-  ): Promise<ResultWrapper<undefined>>
+  updateCaseTitle(caseId: string, body: UpdateTitleBody): Promise<ResultWrapper>
+  updateCasePaid(caseId: string, body: UpdatePaidBody): Promise<ResultWrapper>
 
-  udpateCaseTag(
-    caseId: string,
-    body: UpdateTagBody,
-  ): Promise<ResultWrapper<undefined>>
+  udpateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
 
   getNextCasePublicationNumber(
     departmentId: string,
@@ -99,13 +98,13 @@ export interface ICaseService {
     caseId: string,
     body: UpdateCommunicationStatusBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 
   updateCaseCommunicationStatusByStatus(
     caseId: string,
     body: CaseCommunicationStatus,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>>
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')

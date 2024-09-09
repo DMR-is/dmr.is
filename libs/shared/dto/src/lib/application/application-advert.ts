@@ -9,7 +9,7 @@ export class ApplicationCommunicationChannel {
     description: 'Email of the communication channel',
   })
   @IsOptional()
-  channel!: string
+  email!: string
 
   @ApiProperty({
     type: String,

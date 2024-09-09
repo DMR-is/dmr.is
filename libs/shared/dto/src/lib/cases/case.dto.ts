@@ -24,7 +24,7 @@ import { Institution } from '../institutions'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
 import { CaseChannel } from './case-channel.dto'
-import { CaseCommunicationStatus, CaseStatus } from './case-constants'
+import { CaseStatus } from './case-constants'
 
 export class Case {
   @ApiProperty({

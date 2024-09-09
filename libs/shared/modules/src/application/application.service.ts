@@ -283,6 +283,7 @@ export class ApplicationService implements IApplicationService {
 
       this.caseService.updateCase({
         caseId: caseLookup.id,
+        applicationId: applicationId,
         advertTitle: application.answers.advert.title,
         departmentId: application.answers.advert.departmentId,
         advertTypeId: application.answers.advert.typeId,

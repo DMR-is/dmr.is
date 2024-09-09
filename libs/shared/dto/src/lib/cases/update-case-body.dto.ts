@@ -1,11 +1,4 @@
-import {
-  IsArray,
-  IsBooleanString,
-  IsDateString,
-  IsNumberString,
-  IsOptional,
-  IsString,
-} from 'class-validator'
+import { IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -16,7 +9,14 @@ export class UpdateCaseBody {
     required: true,
     nullable: false,
   })
+  @IsUUID()
   readonly caseId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  readonly applicationId!: string
 
   @ApiProperty({
     type: String,

@@ -9,4 +9,10 @@ export class UpdateCaseTypeBody {
   })
   @IsUUID()
   typeId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  applicationId!: string
 }

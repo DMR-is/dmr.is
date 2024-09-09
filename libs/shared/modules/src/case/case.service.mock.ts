@@ -6,6 +6,7 @@ import {
   CaseComment,
   CaseCommunicationStatus,
   CaseStatus,
+  CreateCaseChannelBody,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
@@ -22,6 +23,7 @@ import {
   PostCasePublishBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
@@ -44,6 +46,18 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  createCaseChannel(
+    caseId: string,
+    body: CreateCaseChannelBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateCasePrice(
+    caseId: string,
+    body: UpdateCasePriceBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
   }
   updateCaseCommunicationStatus(
     caseId: string,
@@ -112,12 +126,6 @@ export class CaseServiceMock implements ICaseService {
   updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
-  ): Promise<ResultWrapper<undefined>> {
-    throw new Error('Method not implemented.')
-  }
-  updateCasePrice(
-    caseId: string,
-    price: string,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
