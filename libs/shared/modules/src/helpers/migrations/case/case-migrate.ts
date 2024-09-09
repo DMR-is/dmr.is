@@ -44,6 +44,7 @@ export const caseMigrate = (model: CaseDto): Case => {
     advertType: model.advertType,
     advertCategories: model.categories.map((c) => advertCategoryMigrate(c)),
     message: model.message,
+    html: model.html,
     channels: model.channels.map((c) => caseChannelMigrate(c)),
   }
 }

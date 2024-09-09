@@ -209,6 +209,13 @@ export class Case {
   message!: string | null
 
   @ApiProperty({
+    type: String,
+    description: 'The case html content.',
+  })
+  @IsString()
+  html!: string
+
+  @ApiProperty({
     type: [CaseChannel],
     description: 'Channels for the case.',
     example: {

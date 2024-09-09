@@ -168,6 +168,12 @@ export class CaseDto extends Model {
   })
   advertTypeId!: string
 
+  @Column({
+    type: DataType.TEXT,
+    field: 'advert_html',
+  })
+  html!: string
+
   @BelongsTo(() => AdvertTypeDTO, 'advert_type_id')
   advertType!: AdvertTypeDTO
 
