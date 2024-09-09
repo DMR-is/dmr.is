@@ -2,6 +2,7 @@ import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatus,
   DefaultSearchParams,
@@ -44,7 +45,9 @@ export class JournalController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetAdvertResponse,
   })
-  async advert(@Param('id') id: string): Promise<GetAdvertResponse> {
+  async advert(
+    @Param('id', UUIDValidationPipe) id: string,
+  ): Promise<GetAdvertResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
 
@@ -66,7 +69,9 @@ export class JournalController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetDepartmentResponse,
   })
-  async department(@Param('id') id: string): Promise<GetDepartmentResponse> {
+  async department(
+    @Param('id', UUIDValidationPipe) id: string,
+  ): Promise<GetDepartmentResponse> {
     return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
   }
 
@@ -91,7 +96,9 @@ export class JournalController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetAdvertTypeResponse,
   })
-  async type(@Param('id') id: string): Promise<GetAdvertTypeResponse> {
+  async type(
+    @Param('id', UUIDValidationPipe) id: string,
+  ): Promise<GetAdvertTypeResponse> {
     return ResultWrapper.unwrap(await this.journalService.getType(id))
   }
 
