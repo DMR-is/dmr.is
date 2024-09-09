@@ -62,6 +62,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async caseCommentTitleLookup(
     type: string | CaseCommentTitle,
     transaction?: Transaction,
@@ -79,6 +80,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async caseCommentTypeLookup(
     type: string,
     transaction?: Transaction,
@@ -96,6 +98,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getComment(
     caseId: string,
     commentId: string,
@@ -123,6 +126,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
