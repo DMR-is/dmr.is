@@ -29,6 +29,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -159,7 +160,7 @@ export class CaseController {
     @Param('id') id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body.price))
+    ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
   }
 
   @Route({
@@ -289,10 +290,14 @@ export class CaseController {
     path: ':id/status/next',
     operationId: 'updateNextStatus',
     summary: 'Update case status to next.',
+    bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
-  async updateNextStatus(@Param('id') id: string): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCaseNextStatus(id))
+  async updateNextStatus(
+    @Param('id', UUIDValidationPipe) id: string,
+    @Body() body: UpdateNextStatusBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCaseNextStatus(id, body))
   }
 
   @Route({
