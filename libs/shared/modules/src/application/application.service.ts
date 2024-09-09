@@ -281,20 +281,14 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId)
       ).unwrap()
 
-      const contentCategories =
-        application.answers.publishing.contentCategories.map(
-          (item) => item.value,
-        )
-
       this.caseService.updateCase({
         caseId: caseLookup.id,
         advertTitle: application.answers.advert.title,
-        departmentId: application.answers.advert.department,
-        advertTypeId: application.answers.advert.type,
-        requestedPublicationDate: application.answers.publishing.date,
-        message: application.answers.publishing.message,
-        categoryIds:
-          contentCategories.length > 0 ? contentCategories : undefined,
+        departmentId: application.answers.advert.departmentId,
+        advertTypeId: application.answers.advert.typeId,
+        requestedPublicationDate: application.answers.advert.requestedDate,
+        message: application.answers.advert.message,
+        categoryIds: application.answers.advert.categories,
       })
 
       const commStatus = (
