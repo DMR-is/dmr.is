@@ -42,21 +42,26 @@ module.exports = {
         DELETE FROM advert_involved_party;
         DELETE FROM case_status;
         DELETE FROM case_tag;
+        DELETE FROM case_comments;
+        DELETE FROM case_channels;
+        DELETE FROM case_categories;
+        DELETE FROM case_channel;
+        DELETE FROM case_comment;
+        DELETE FROM case_case;
         DELETE FROM case_communication_status;
         DELETE FROM case_comment_title;
         DELETE FROM case_comment_type;
         DELETE FROM case_comment_task;
-        DELETE FROM case_comment;
-        DELETE FROM case_comments;
-        DELETE FROM case_channel;
-        DELETE FROM case_channels;
-        DELETE FROM case_case;
-        DELETE FROM signature_type;
-        DELETE FROM signature_member;
-        DELETE FROM signature;
         DELETE FROM signature_members;
         DELETE FROM case_signatures;
         DELETE FROM advert_signatures;
+        DELETE FROM signature_type;
+        DELETE FROM signature_member;
+        DELETE FROM signature;
+        DELETE FROM application_attachment_type;
+        DELETE FROM application_attachments;
+        DELETE FROM case_attachments;
+        DELETE FROM application_attachment;
       COMMIT;
     `)
   },
