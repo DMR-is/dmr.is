@@ -63,7 +63,7 @@ export class CaseController {
     params: [{ name: 'departmentId', type: 'string', required: true }],
   })
   async getNextPublicationNumber(
-    @Param('departmentId') departmentId: string,
+    @Param('departmentId', UUIDValidationPipe) departmentId: string,
   ): Promise<GetNextPublicationNumberResponse> {
     return ResultWrapper.unwrap(
       await this.caseService.getNextCasePublicationNumber(departmentId),
@@ -157,7 +157,7 @@ export class CaseController {
     bodyType: UpdateCasePriceBody,
   })
   async updatePrice(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCasePriceBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
@@ -172,7 +172,7 @@ export class CaseController {
     bodyType: UpdatePaidBody,
   })
   async updatePaid(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdatePaidBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
@@ -187,7 +187,7 @@ export class CaseController {
     bodyType: UpdateTagBody,
   })
   async updateTag(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateTagBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.udpateCaseTag(id, body))
@@ -202,7 +202,7 @@ export class CaseController {
     bodyType: UpdateCaseDepartmentBody,
   })
   async updateDepartment(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCaseDepartmentBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseDepartment(id, body))
@@ -216,7 +216,7 @@ export class CaseController {
     bodyType: UpdateCommunicationStatusBody,
   })
   async updateCommunicationStatus(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCommunicationStatusBody,
   ): Promise<void> {
     ResultWrapper.unwrap(
@@ -232,7 +232,7 @@ export class CaseController {
     bodyType: UpdateCaseTypeBody,
   })
   async updateType(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCaseTypeBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
@@ -247,7 +247,7 @@ export class CaseController {
     bodyType: UpdatePublishDateBody,
   })
   async updatePublishDate(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdatePublishDateBody,
   ): Promise<void> {
     ResultWrapper.unwrap(
@@ -264,7 +264,7 @@ export class CaseController {
     bodyType: UpdateTitleBody,
   })
   async updateTitle(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateTitleBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseTitle(id, body))
@@ -279,7 +279,7 @@ export class CaseController {
     bodyType: UpdateCategoriesBody,
   })
   async updateCategories(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCategoriesBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
@@ -326,7 +326,7 @@ export class CaseController {
     bodyType: UpdateCaseStatusBody,
   })
   async updateStatus(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: UpdateCaseStatusBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseStatus(id, body))
@@ -339,7 +339,9 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetCaseResponse,
   })
-  async case(@Param('id') id: string): Promise<GetCaseResponse> {
+  async case(
+    @Param('id', UUIDValidationPipe) id: string,
+  ): Promise<GetCaseResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCase(id))
   }
 
@@ -387,7 +389,7 @@ export class CaseController {
     query: [{ type: GetCaseCommentsQuery }],
   })
   async getComments(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
@@ -406,8 +408,8 @@ export class CaseController {
     responseType: GetCaseCommentResponse,
   })
   async getComment(
-    @Param('id') id: string,
-    @Param('commentId') commentId: string,
+    @Param('id', UUIDValidationPipe) id: string,
+    @Param('commentId', UUIDValidationPipe) commentId: string,
   ): Promise<GetCaseCommentResponse> {
     return ResultWrapper.unwrap(
       await this.commentService.getComment(id, commentId),
@@ -423,7 +425,7 @@ export class CaseController {
     bodyType: PostCaseCommentBody,
   })
   async createComment(
-    @Param('id') id: string,
+    @Param('id', UUIDValidationPipe) id: string,
     @Body() body: PostCaseCommentBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.commentService.createComment(id, body))
@@ -450,8 +452,8 @@ export class CaseController {
     ],
   })
   async deleteComment(
-    @Param('id') id: string,
-    @Param('commentId') commentId: string,
+    @Param('id', UUIDValidationPipe) id: string,
+    @Param('commentId', UUIDValidationPipe) commentId: string,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
   }
