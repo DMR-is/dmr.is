@@ -38,7 +38,12 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getFastTrack } from '@dmr.is/utils'
+import {
+  generatePaging,
+  getFastTrack,
+  getSignatureBody,
+  withTransaction,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -62,6 +67,7 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
+import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { ICaseService } from './case.service.interface'
@@ -85,6 +91,8 @@ export class CaseService implements ICaseService {
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
     @InjectModel(CaseChannelDto)
     private readonly caseChannelModel: typeof CaseChannelDto,
     @InjectModel(CaseChannelsDto)
@@ -109,7 +117,7 @@ export class CaseService implements ICaseService {
     body: CreateCaseChannelBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.caseChannelModel.create(
+    const channel = await this.caseChannelModel.create(
       {
         email: body.email,
         phone: body.phone,
@@ -123,7 +131,7 @@ export class CaseService implements ICaseService {
     await this.caseChannelsModel.create(
       {
         caseId,
-        channelId: 'id',
+        channelId: channel.id,
       },
       {
         transaction,
@@ -141,31 +149,36 @@ export class CaseService implements ICaseService {
   ) {
     const now = new Date()
 
-    const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatus.Submitted)
-    ).unwrap()
+    const caseStatus = ResultWrapper.unwrap(
+      await this.utilityService.caseStatusLookup(CaseStatus.Submitted),
+    )
 
-    const caseTag = (
-      await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted)
-    ).unwrap()
+    const caseTag = ResultWrapper.unwrap(
+      await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted),
+    )
 
-    const caseCommunicationStatus = (
+    const caseCommunicationStatus = ResultWrapper.unwrap(
       await this.utilityService.caseCommunicationStatusLookup(
         CaseCommunicationStatus.NotStarted,
-      )
-    ).unwrap()
-
-    const internalCaseNumber = (
-      await this.utilityService.generateInternalCaseNumber()
-    ).unwrap()
-
-    const typeId = await this.utilityService.typeLookup(
-      application.answers.advert.typeId,
-      transaction,
+      ),
     )
-    const departmentId = await this.utilityService.departmentLookup(
-      application.answers.advert.departmentId,
-      transaction,
+
+    const internalCaseNumber = ResultWrapper.unwrap(
+      await this.utilityService.generateInternalCaseNumber(),
+    )
+
+    const typeId = ResultWrapper.unwrap(
+      await this.utilityService.typeLookup(
+        application.answers.advert.typeId,
+        transaction,
+      ),
+    )
+
+    const departmentId = ResultWrapper.unwrap(
+      await this.utilityService.departmentLookup(
+        application.answers.advert.departmentId,
+        transaction,
+      ),
     )
 
     /**
@@ -180,17 +193,17 @@ export class CaseService implements ICaseService {
     )
 
     const requestedDate = new Date(application.answers.advert.requestedDate)
-    const fastTrack = getFastTrack(requestedDate)
+    const { fastTrack } = getFastTrack(requestedDate)
     const message = application.answers.advert.message
 
     return {
-      caseStatus,
-      caseTag,
-      caseCommunicationStatus,
-      internalCaseNumber,
-      typeId,
-      departmentId,
-      requestedDate,
+      caseStatus: caseStatus.id,
+      caseTag: caseTag.id,
+      caseCommunicationStatus: caseCommunicationStatus.id,
+      internalCaseNumber: internalCaseNumber,
+      typeId: typeId.id,
+      departmentId: departmentId.id,
+      requestedDate: requestedDate.toISOString(),
       categories,
       fastTrack,
       message,
@@ -352,23 +365,6 @@ export class CaseService implements ICaseService {
   async createCase(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<CreateCaseResponse>> {
-    let exists: boolean
-    try {
-      ResultWrapper.unwrap(
-        await this.utilityService.caseLookupByApplicationId(body.applicationId),
-      )
-
-      exists = true
-    } catch (error) {
-      exists = false
-    }
-
-    if (exists) {
-      throw new ConflictException(
-        `Case with application<${body.applicationId}> already exists`,
-      )
-    }
-
     const createCaseTransaction = await this.sequelize.transaction()
 
     // case does not exist so we can create it
@@ -401,13 +397,13 @@ export class CaseService implements ICaseService {
         applicationId: application.id,
         year: now.getFullYear(),
         caseNumber: internalCaseNumber,
-        statusId: caseStatus.id,
-        tagId: caseTag.id,
+        statusId: caseStatus,
+        tagId: caseTag,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         isLegacy: false,
         assignedUserId: null,
-        communicationStatusId: caseCommunicationStatus.id,
+        communicationStatusId: caseCommunicationStatus,
         publishedAt: null,
         price: 0,
         paid: false,
@@ -417,6 +413,7 @@ export class CaseService implements ICaseService {
         requestedPublicationDate: requestedDate,
         departmentId: departmentId,
         advertTypeId: typeId,
+        html: application.answers.advert.html,
         message: message,
       },
       {
@@ -441,35 +438,62 @@ export class CaseService implements ICaseService {
 
     await createCaseTransaction.commit()
 
-    const categoriesTransaction = await this.sequelize.transaction()
-
-    await this.caseCategoriesModel.bulkCreate(
-      categories.map((c) => ({ caseId: caseId, c }), {
-        transaction: categoriesTransaction,
-      }),
-    )
-
-    await categoriesTransaction.commit()
-
-    const channelsTransaction = await this.sequelize.transaction()
+    withTransaction(this.sequelize)(async (transaction) => {
+      await this.caseCategoriesModel.bulkCreate(
+        categories.map((c) => ({ caseId: newCase.id, categoryId: c }), {
+          transaction: transaction,
+        }),
+      )
+    })
 
     const channels = application.answers.advert.channels
 
     if (channels && channels.length > 0) {
-      channels.forEach(
-        async (channel) =>
-          await this.createCaseChannel(
-            caseId,
-            {
-              email: channel.email,
-              phone: channel.phone,
-            },
-            channelsTransaction,
-          ),
-      )
+      withTransaction(this.sequelize)(async (channelsTransaction) => {
+        const promises = channels.map(async (channel) => {
+          ResultWrapper.unwrap(
+            await this.createCaseChannel(
+              caseId,
+              {
+                email: channel.email,
+                phone: channel.phone,
+              },
+              channelsTransaction,
+            ),
+          )
+        })
+
+        await Promise.all(promises)
+      })
     }
 
-    await channelsTransaction.commit()
+    const { signatureType } = application.answers.misc
+    const signature = application.answers.signatures[signatureType]
+
+    if (!signature) {
+      this.logger.warn(
+        `CaseService.createCase<${caseId}>: No signature found for signatureType<${signatureType}>`,
+      )
+
+      throw new BadRequestException('Signature is missing')
+    }
+
+    const signatureBodies = Array.isArray(signature)
+      ? signature.map((s) => getSignatureBody(caseId, s))
+      : [getSignatureBody(caseId, signature)]
+
+    withTransaction(this.sequelize)(async (transaction) => {
+      const promises = signatureBodies.map(async (signatureBody) => {
+        ResultWrapper.unwrap(
+          await this.signatureService.createSignature(
+            signatureBody,
+            transaction,
+          ),
+        )
+      })
+
+      await Promise.all(promises)
+    })
 
     const newCreatedCase = (
       await this.utilityService.caseLookup(newCase.id)

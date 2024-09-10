@@ -9,6 +9,7 @@ import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentDTO } from '../journal/models'
 import advertModels from '../journal/models'
+import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
@@ -44,6 +45,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     ]),
     LoggingModule,
     SharedJournalModule,
+    SignatureModule,
     forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),

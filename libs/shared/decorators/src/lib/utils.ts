@@ -1,6 +1,11 @@
 import { logger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-import { BaseError, Transaction, ValidationErrorItem } from 'sequelize'
+import {
+  BaseError,
+  Transaction,
+  DatabaseError,
+  ValidationError,
+} from 'sequelize'
 import { HttpException } from '@nestjs/common'
 
 export const handleException = <T>({
@@ -14,7 +19,7 @@ export const handleException = <T>({
   method: string
   message: string
   category: string
-  error: unknown
+  error: any
   info?: Record<string, unknown>
   code?: number
 }): ResultWrapper<T> => {
@@ -40,15 +45,27 @@ export const handleException = <T>({
       category,
     })
 
-    if ('errors' in error && Array.isArray(error.errors)) {
+    if (error instanceof DatabaseError) {
+      logger.warn(
+        `${error.name} in ${category}.${method}, reason: ${error.message}`,
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Database error',
+      })
+    }
+
+    if (error instanceof ValidationError) {
       error.errors.forEach((err) => {
-        if (err instanceof ValidationErrorItem) {
-          logger.debug(
-            `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}`,
-          )
-        } else {
-          logger.debug(`${err.message}`)
-        }
+        logger.debug(
+          `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}`,
+        )
+      })
+
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Validation failed',
       })
     }
   }
@@ -72,7 +89,7 @@ export const handleException = <T>({
   }
 
   if (error instanceof Error) {
-    logger.error(`Error in ${category}.${method}`, {
+    logger.error(`Error in ${category}.${method}: ${error.message}`, {
       ...info,
       method,
       category,
@@ -89,12 +106,7 @@ export const handleException = <T>({
     })
   }
 
-  logger.error(`Error in ${category}.${method}`, {
-    ...info,
-    category,
-    method,
-    error,
-  })
+  logger.error(`Unhandled error in ${category}.${method}: ${error.message}!`)
 
   return ResultWrapper.err({
     code: code,

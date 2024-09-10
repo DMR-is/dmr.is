@@ -20,27 +20,34 @@ export class SignatureMember {
   @ApiProperty({
     type: String,
     required: false,
-    description: 'The text comes above the signature member value',
+    description: 'The text comes above the signature name',
   })
   textAbove?: string
 
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'The text that comes before the signature name',
+  })
+  textBefore?: string
+
   /**
-   * The text that comes below the signature member value.
+   * The text that comes below the signature name.
    */
   @ApiProperty({
     type: String,
     required: false,
-    description: 'The text cines below the signature member value',
+    description: 'The text cines below the signature name',
   })
   textBelow?: string
 
   /**
-   * The text that comes after the signature member value.
+   * The text that comes after the signature name.
    */
   @ApiProperty({
     type: String,
     required: false,
-    description: 'The text that comes after the signature member value',
+    description: 'The text that comes after the signature name',
   })
   textAfter?: string
 }

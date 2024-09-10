@@ -1,8 +1,10 @@
+import { SignatureType } from '@dmr.is/constants'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 export class ApplicationMisc {
   @ApiProperty({
-    type: String,
+    enum: SignatureType,
   })
-  signatureType!: string
+  signatureType!: SignatureType
 }

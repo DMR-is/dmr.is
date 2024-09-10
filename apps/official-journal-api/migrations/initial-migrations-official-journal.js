@@ -259,6 +259,7 @@ module.exports = {
     CREATE TABLE signature_member (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       text_above VARCHAR,
+      text_before VARCHAR,
       text_below VARCHAR,
       text_after VARCHAR,
       value VARCHAR NOT NULL,

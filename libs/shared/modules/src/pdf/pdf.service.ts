@@ -1,5 +1,5 @@
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
-import { SignatureTypeSlug } from '@dmr.is/constants'
+import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
 
@@ -46,10 +46,10 @@ export class PdfService implements IPdfService {
     let signatureHtml = ''
 
     switch (signatureType) {
-      case SignatureTypeSlug.Committee:
+      case SignatureType.Committee:
         signatureHtml += answers.signatures.committee?.html
         break
-      case SignatureTypeSlug.Regular:
+      case SignatureType.Regular:
         signatureHtml += answers.signatures.regular?.map(
           (signature) => signature.html,
         )

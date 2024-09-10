@@ -7,6 +7,7 @@ export const signatureMemberMigrate = (
 ): SignatureMember => {
   return {
     text: model.text,
+    textBefore: model.textBefore,
     textAbove: model.textAbove,
     textAfter: model.textAfter,
     textBelow: model.textBelow,

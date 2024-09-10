@@ -1,4 +1,5 @@
 import { Op, Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -54,6 +55,7 @@ export class UtilityService implements IUtilityService {
     private caseCategoriesModel: typeof CaseCategoriesDto,
     @InjectModel(AdvertStatusDTO)
     private advertStatusModel: typeof AdvertStatusDTO,
+    private sequelize: Sequelize,
   ) {
     this.logger.info('Using UtilityService')
   }

@@ -1,7 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { SignatureTypeSlug } from '@dmr.is/constants'
+import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -23,7 +23,6 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
-import { AdvertInvolvedPartyDTO } from '../journal/models'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,
@@ -108,7 +107,7 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  async createCaseSignature(
+  private async createCaseSignatures(
     signatureId: string,
     caseId: string,
     transaction?: Transaction,
@@ -126,7 +125,7 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  async createAdvertSignature(
+  private async createAdvertSignatures(
     signatureId: string,
     advertId: string,
     transaction?: Transaction,
@@ -147,7 +146,7 @@ export class SignatureService implements ISignatureService {
   async createSignature(
     body: CreateSignatureBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<{ id: string }>> {
     const signatureId = uuid()
 
     const chairman = body.chairman
@@ -184,14 +183,6 @@ export class SignatureService implements ISignatureService {
       )
     }
 
-    await this.signatureMembersModel.bulkCreate(
-      members.map((m) => ({
-        signatureId,
-        memberId: m.id,
-      })),
-      { transaction },
-    )
-
     const type = await this.signatureTypeModel.findOne({
       where: {
         slug: chairman
@@ -206,7 +197,7 @@ export class SignatureService implements ISignatureService {
       throw new InternalServerErrorException()
     }
 
-    await this.signatureModel.create(
+    const createdSignature = await this.signatureModel.create(
       {
         institution: body.institution,
         date: body.date,
@@ -214,10 +205,30 @@ export class SignatureService implements ISignatureService {
         typeId: type.id,
         chairmanId: chairman ? chairman.id : null,
         additionalSignature: body.additionalSignature,
-        html: body.html,
+        html: body.html === '' ? '<div></div>' : body.html,
       },
+      { transaction, returning: ['id'] },
+    )
+
+    await this.signatureMembersModel.bulkCreate(
+      members.map((m) => ({
+        signatureId: createdSignature.id,
+        signatureMemberId: m.id,
+      })),
       { transaction },
     )
+
+    return ResultWrapper.ok({
+      id: signatureId,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseSignature(body: CreateSignatureBody): Promise<ResultWrapper> {
+    const { id } = (await this.createSignature(body)).unwrap()
+
+    ResultWrapper.unwrap(await this.createCaseSignatures(id, body.caseId))
 
     return ResultWrapper.ok()
   }
@@ -438,7 +449,7 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.createCaseSignature(id, body.caseId, transaction)
+      await this.createCaseSignatures(id, body.caseId, transaction)
     }
 
     if (body.advertId) {
@@ -449,7 +460,7 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.createAdvertSignature(id, body.advertId, transaction)
+      await this.createAdvertSignatures(id, body.advertId, transaction)
     }
 
     return ResultWrapper.ok()
