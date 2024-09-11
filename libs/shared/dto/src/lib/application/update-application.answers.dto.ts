@@ -39,7 +39,7 @@ export class ApplicationAdvert {
   @ApiProperty({
     type: String,
     example: '2021-04-01T00:00:00.000Z',
-    description: 'Request advert publcation date',
+    description: 'Request advert publication date',
   })
   @IsOptional()
   requestedDate?: string
