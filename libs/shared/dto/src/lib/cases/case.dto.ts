@@ -21,6 +21,7 @@ import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions'
+import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
 import { CaseChannel } from './case-channel.dto'
@@ -249,4 +250,12 @@ export class Case {
   @ValidateNested({ each: true })
   @Type(() => CaseComment)
   comments!: CaseComment[]
+
+  @ApiProperty({
+    type: [Signature],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Signature)
+  signatures!: Signature[]
 }

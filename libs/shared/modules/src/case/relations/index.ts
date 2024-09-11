@@ -10,6 +10,7 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../../journal/models'
+import { SignatureModel } from '../../signature/models'
 import {
   CaseChannelDto,
   CaseCommunicationStatusDto,
@@ -36,5 +37,8 @@ export const CASE_RELATIONS = [
       CaseStatusDto,
       CaseCommentTypeDto,
     ],
+  },
+  {
+    model: SignatureModel,
   },
 ]

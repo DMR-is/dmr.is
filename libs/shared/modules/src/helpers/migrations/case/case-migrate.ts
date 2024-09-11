@@ -5,6 +5,7 @@ import { CaseDto } from '../../../case/models'
 import { caseStatusMapper } from '../../mappers'
 import { advertInvolvedPartyMigrate } from '../advert'
 import { advertCategoryMigrate } from '../advert/advert-category-migrate'
+import { signatureMigrate } from '../signature/signature.migrate'
 import { caseChannelMigrate } from './case-channel-migrate'
 import { caseCommentMigrate } from './case-comment-migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status-migrate'
@@ -46,5 +47,6 @@ export const caseMigrate = (model: CaseDto): Case => {
     message: model.message,
     html: model.html,
     channels: model.channels.map((c) => caseChannelMigrate(c)),
+    signatures: model.signatures.map((s) => signatureMigrate(s)),
   }
 }

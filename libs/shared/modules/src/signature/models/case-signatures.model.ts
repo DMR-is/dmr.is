@@ -16,7 +16,7 @@ export class CaseSignaturesModel extends Model {
   @PrimaryKey
   @ForeignKey(() => SignatureModel)
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUIDV4,
     allowNull: false,
     field: 'signature_id',
   })
@@ -25,7 +25,7 @@ export class CaseSignaturesModel extends Model {
   @PrimaryKey
   @ForeignKey(() => CaseDto)
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUIDV4,
     allowNull: false,
     field: 'case_case_id',
   })

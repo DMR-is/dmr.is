@@ -67,6 +67,7 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
+import { SignatureMemberModel, SignatureModel } from '../signature/models'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
@@ -485,7 +486,7 @@ export class CaseService implements ICaseService {
     withTransaction(this.sequelize)(async (transaction) => {
       const promises = signatureBodies.map(async (signatureBody) => {
         ResultWrapper.unwrap(
-          await this.signatureService.createSignature(
+          await this.signatureService.createCaseSignature(
             signatureBody,
             transaction,
           ),

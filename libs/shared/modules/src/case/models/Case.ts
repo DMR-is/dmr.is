@@ -14,6 +14,7 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../../journal/models'
+import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
 import { CaseCategoriesDto } from './CaseCategories'
 import { CaseChannelDto } from './CaseChannel'
 import { CaseChannelsDto } from './CaseChannels'
@@ -191,4 +192,9 @@ export class CaseDto extends Model {
     through: { model: () => CaseCommentsDto },
   })
   comments!: CaseCommentDto[]
+
+  @BelongsToMany(() => SignatureModel, {
+    through: { model: () => CaseSignaturesModel },
+  })
+  signatures!: SignatureModel[]
 }
