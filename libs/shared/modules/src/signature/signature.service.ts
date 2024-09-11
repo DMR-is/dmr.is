@@ -1,7 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
+import { SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -78,6 +78,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async findSignatures(
     params?: DefaultSearchParams,
     where?: WhereParams,
@@ -218,6 +219,14 @@ export class SignatureService implements ISignatureService {
       { transaction },
     )
 
+    await this.caseSignaturesModel.create(
+      {
+        signatureId: createdSignature.id,
+        caseId: body.caseId,
+      },
+      { transaction },
+    )
+
     return ResultWrapper.ok({
       id: signatureId,
     })
@@ -225,15 +234,19 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  async createCaseSignature(body: CreateSignatureBody): Promise<ResultWrapper> {
-    const { id } = (await this.createSignature(body)).unwrap()
+  async createCaseSignature(
+    body: CreateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>> {
+    const createdSignature = (
+      await this.createSignature(body, transaction)
+    ).unwrap()
 
-    ResultWrapper.unwrap(await this.createCaseSignatures(id, body.caseId))
-
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({ id: createdSignature.id })
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignature(
     id: string,
     transaction?: Transaction,
@@ -254,6 +267,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignatures(
     params?: DefaultSearchParams,
     transaction?: Transaction,
@@ -262,6 +276,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
@@ -271,6 +286,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignaturesByCaseId(
     caseId: string,
     params?: DefaultSearchParams,
@@ -309,6 +325,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignaturesByAdvertId(
     advertId: string,
     params?: DefaultSearchParams,

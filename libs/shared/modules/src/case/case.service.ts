@@ -67,7 +67,12 @@ import {
   AdvertDepartmentDTO,
   AdvertTypeDTO,
 } from '../journal/models'
-import { SignatureMemberModel, SignatureModel } from '../signature/models'
+import {
+  SignatureMemberModel,
+  SignatureMembersModel,
+  SignatureModel,
+  SignatureTypeModel,
+} from '../signature/models'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
@@ -363,11 +368,7 @@ export class CaseService implements ICaseService {
    * @returns
    */
   @LogAndHandle()
-  async createCase(
-    body: PostApplicationBody,
-  ): Promise<ResultWrapper<CreateCaseResponse>> {
-    const createCaseTransaction = await this.sequelize.transaction()
-
+  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
     // case does not exist so we can create it
     const { application } = (
       await this.applicationService.getApplication(body.applicationId)
@@ -385,61 +386,66 @@ export class CaseService implements ICaseService {
       fastTrack,
       message,
       now,
-    } = await this.getDefaultValues(application, createCaseTransaction)
+    } = await this.getDefaultValues(application)
 
     const caseId = uuid()
 
     // TODO: temp fix for involved party
     const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
-    const newCase = await this.caseModel.create<CaseDto>(
-      {
-        id: caseId,
-        applicationId: application.id,
-        year: now.getFullYear(),
-        caseNumber: internalCaseNumber,
-        statusId: caseStatus,
-        tagId: caseTag,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        isLegacy: false,
-        assignedUserId: null,
-        communicationStatusId: caseCommunicationStatus,
-        publishedAt: null,
-        price: 0,
-        paid: false,
-        involvedPartyId: involvedParty.id,
-        fastTrack: fastTrack,
-        advertTitle: application.answers.advert.title,
-        requestedPublicationDate: requestedDate,
-        departmentId: departmentId,
-        advertTypeId: typeId,
-        html: application.answers.advert.html,
-        message: message,
-      },
-      {
-        returning: ['id'],
-        transaction: createCaseTransaction,
-      },
+    const newCase = ResultWrapper.unwrap(
+      await withTransaction<ResultWrapper<CaseDto>>(this.sequelize)(
+        async (transaction) => {
+          const newCase = await this.caseModel.create<CaseDto>(
+            {
+              id: caseId,
+              applicationId: application.id,
+              year: now.getFullYear(),
+              caseNumber: internalCaseNumber,
+              statusId: caseStatus,
+              tagId: caseTag,
+              createdAt: now.toISOString(),
+              updatedAt: now.toISOString(),
+              isLegacy: false,
+              assignedUserId: null,
+              communicationStatusId: caseCommunicationStatus,
+              publishedAt: null,
+              price: 0,
+              paid: false,
+              involvedPartyId: involvedParty.id,
+              fastTrack: fastTrack,
+              advertTitle: application.answers.advert.title,
+              requestedPublicationDate: requestedDate,
+              departmentId: departmentId,
+              advertTypeId: typeId,
+              html: application.answers.advert.html,
+              message: message,
+            },
+            {
+              returning: ['id'],
+              transaction: transaction,
+            },
+          )
+
+          // TODO: When auth is setup, use the user id from the token
+          await this.commentService.createComment(
+            newCase.id,
+            {
+              internal: true,
+              type: CaseCommentType.Submit,
+              comment: null,
+              initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+              receiver: null,
+              storeState: true,
+            },
+            transaction,
+          )
+          return ResultWrapper.ok(newCase)
+        },
+      ),
     )
 
-    // TODO: When auth is setup, use the user id from the token
-    await this.commentService.createComment(
-      newCase.id,
-      {
-        internal: true,
-        type: CaseCommentType.Submit,
-        comment: null,
-        initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-        receiver: null,
-        storeState: true,
-      },
-      createCaseTransaction,
-    )
-
-    await createCaseTransaction.commit()
-
-    withTransaction(this.sequelize)(async (transaction) => {
+    await withTransaction(this.sequelize)(async (transaction) => {
       await this.caseCategoriesModel.bulkCreate(
         categories.map((c) => ({ caseId: newCase.id, categoryId: c }), {
           transaction: transaction,
@@ -450,7 +456,7 @@ export class CaseService implements ICaseService {
     const channels = application.answers.advert.channels
 
     if (channels && channels.length > 0) {
-      withTransaction(this.sequelize)(async (channelsTransaction) => {
+      await withTransaction(this.sequelize)(async (channelsTransaction) => {
         const promises = channels.map(async (channel) => {
           ResultWrapper.unwrap(
             await this.createCaseChannel(
@@ -483,9 +489,9 @@ export class CaseService implements ICaseService {
       ? signature.map((s) => getSignatureBody(caseId, s))
       : [getSignatureBody(caseId, signature)]
 
-    withTransaction(this.sequelize)(async (transaction) => {
-      const promises = signatureBodies.map(async (signatureBody) => {
-        ResultWrapper.unwrap(
+    await withTransaction(this.sequelize)(async (transaction) => {
+      const signaturePromises = signatureBodies.map(async (signatureBody) => {
+        return ResultWrapper.unwrap(
           await this.signatureService.createCaseSignature(
             signatureBody,
             transaction,
@@ -493,16 +499,16 @@ export class CaseService implements ICaseService {
         )
       })
 
-      await Promise.all(promises)
+      return await Promise.all(signaturePromises)
     })
+
+    this.logger.debug('Successfully created signature for case')
 
     const newCreatedCase = (
       await this.utilityService.caseLookup(newCase.id)
     ).unwrap()
 
-    return ResultWrapper.ok({
-      case: caseMigrate(newCreatedCase),
-    })
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

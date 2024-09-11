@@ -1,13 +1,16 @@
 import { SignatureType } from '@dmr.is/shared/dto'
+import { withTryCatch } from '@dmr.is/utils'
 
 import { SignatureTypeModel } from '../../../signature/models'
 
 export const signatureTypeMigrate = (
   model: SignatureTypeModel,
 ): SignatureType => {
-  return {
-    id: model.id,
-    title: model.title,
-    slug: model.slug,
-  }
+  return withTryCatch<SignatureType>(() => {
+    return {
+      id: model.id,
+      title: model.title,
+      slug: model.slug,
+    }
+  }, 'Error migrating signature type')
 }

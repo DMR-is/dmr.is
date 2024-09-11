@@ -186,3 +186,12 @@ export const withTransaction =
       throw error
     }
   }
+
+export const withTryCatch = <T>(cb: () => T, message: string): T => {
+  try {
+    return cb()
+  } catch (error) {
+    logger.error(`Exception occured in ${message}`, error)
+    throw error
+  }
+}

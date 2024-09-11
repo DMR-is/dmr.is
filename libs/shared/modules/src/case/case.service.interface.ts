@@ -33,7 +33,7 @@ export interface ICaseService {
   createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CreateCaseResponse>>
+  ): Promise<ResultWrapper>
   updateCase(
     body: UpdateCaseBody,
     transaction?: Transaction,

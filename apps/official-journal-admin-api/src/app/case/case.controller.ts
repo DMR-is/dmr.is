@@ -352,10 +352,8 @@ export class CaseController {
     bodyType: PostApplicationBody,
     responseType: CreateCaseResponse,
   })
-  async createCase(
-    @Body() body: PostApplicationBody,
-  ): Promise<CreateCaseResponse> {
-    return ResultWrapper.unwrap(await this.caseService.createCase(body))
+  async createCase(@Body() body: PostApplicationBody): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
   @Route({

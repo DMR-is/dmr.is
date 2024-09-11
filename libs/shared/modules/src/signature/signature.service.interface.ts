@@ -17,7 +17,7 @@ export interface ISignatureService {
   createCaseSignature(
     body: CreateSignatureBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<{ id: string }>>
 
   getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
   getSignatures(

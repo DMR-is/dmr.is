@@ -44,11 +44,11 @@ export class SignatureModel extends Model {
   })
   involvedPartyId!: string
 
-  @Column({
-    type: DataType.UUID,
-    field: 'type_id',
-  })
+  @Column({ type: DataType.UUID, field: 'type_id' })
   typeId!: string
+
+  @BelongsTo(() => SignatureTypeModel, 'type_id')
+  type!: SignatureTypeModel
 
   @Column({
     type: DataType.UUID,
@@ -73,10 +73,10 @@ export class SignatureModel extends Model {
   @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
   involvedParty!: AdvertInvolvedPartyDTO
 
-  @BelongsTo(() => SignatureTypeModel, 'type_id')
-  type!: SignatureTypeModel
-
-  @BelongsTo(() => SignatureMemberModel, 'chairman_id')
+  @BelongsTo(() => SignatureMemberModel, {
+    foreignKey: 'chairman_id',
+    as: 'chairman',
+  })
   chairman?: SignatureMemberModel
 
   @HasOne(() => CaseSignaturesModel, 'case_case_id')
@@ -86,6 +86,7 @@ export class SignatureModel extends Model {
   advert?: AdvertDTO
 
   @BelongsToMany(() => SignatureMemberModel, {
+    as: 'members',
     through: { model: () => SignatureMembersModel },
   })
   members!: SignatureMemberModel[]

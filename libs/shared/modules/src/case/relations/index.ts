@@ -10,7 +10,11 @@ import {
   AdvertInvolvedPartyDTO,
   AdvertTypeDTO,
 } from '../../journal/models'
-import { SignatureModel } from '../../signature/models'
+import {
+  SignatureMemberModel,
+  SignatureModel,
+  SignatureTypeModel,
+} from '../../signature/models'
 import {
   CaseChannelDto,
   CaseCommunicationStatusDto,
@@ -40,5 +44,17 @@ export const CASE_RELATIONS = [
   },
   {
     model: SignatureModel,
+    include: [
+      SignatureTypeModel,
+      AdvertInvolvedPartyDTO,
+      {
+        model: SignatureMemberModel,
+        as: 'chairman',
+      },
+      {
+        model: SignatureMemberModel,
+        as: 'members',
+      },
+    ],
   },
 ]
