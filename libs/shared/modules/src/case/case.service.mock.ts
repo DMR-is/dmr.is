@@ -5,7 +5,7 @@ import {
   Case,
   CaseComment,
   CaseCommunicationStatus,
-  CaseStatus,
+  CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
   EditorialOverviewResponse,
@@ -218,13 +218,13 @@ export class CaseServiceMock implements ICaseService {
     }
 
     ALL_MOCK_CASES.forEach((c) => {
-      if (c.status === CaseStatus.Submitted) {
+      if (c.status === CaseStatusEnum.Submitted) {
         submitted.push(c)
-      } else if (c.status === CaseStatus.InProgress) {
+      } else if (c.status === CaseStatusEnum.InProgress) {
         inProgress.push(c)
-      } else if (c.status === CaseStatus.InReview) {
+      } else if (c.status === CaseStatusEnum.InReview) {
         inReview.push(c)
-      } else if (c.status === CaseStatus.ReadyForPublishing) {
+      } else if (c.status === CaseStatusEnum.ReadyForPublishing) {
         ready.push(c)
       }
     })

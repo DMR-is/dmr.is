@@ -7,9 +7,8 @@ export const caseTagMigrate = (model: CaseTagDto): CaseTag => {
   try {
     const mapped: CaseTag = {
       id: model.id,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      value: caseTagMapper(model.value)!,
-      key: model.key,
+      title: model.title,
+      slug: model.slug,
     }
 
     return mapped

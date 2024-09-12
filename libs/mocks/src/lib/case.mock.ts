@@ -1,6 +1,6 @@
 import {
   Case,
-  CaseStatus,
+  CaseStatusEnum,
   CaseCommentType,
   CaseCommentTitle,
   CaseCommunicationStatus,
@@ -37,7 +37,7 @@ export const CASE_SUBMITTED: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '1234',
   isLegacy: true,
-  status: CaseStatus.Submitted,
+  status: CaseStatusEnum.Submitted,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -60,7 +60,7 @@ export const CASE_SUBMITTED: Case = {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -82,7 +82,7 @@ export const CASE_IN_PROGRESS: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '8526',
   isLegacy: true,
-  status: CaseStatus.InProgress,
+  status: CaseStatusEnum.InProgress,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -105,7 +105,7 @@ export const CASE_IN_PROGRESS: Case = {
       id: '76caef40-c98d-40bf-9c78-76832d2xa1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -119,7 +119,7 @@ export const CASE_IN_PROGRESS: Case = {
       id: 'a72e9b33-ad8c-4a83-84bf-92e109721e0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -133,7 +133,7 @@ export const CASE_IN_PROGRESS: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -147,7 +147,7 @@ export const CASE_IN_PROGRESS: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -170,7 +170,7 @@ export const CASE_IN_REVIEW: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '5824',
   isLegacy: true,
-  status: CaseStatus.InReview,
+  status: CaseStatusEnum.InReview,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -193,7 +193,7 @@ export const CASE_IN_REVIEW: Case = {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -207,7 +207,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'a72e9b33-ad8c-4d83-84bf-92e109721z0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -221,7 +221,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -235,7 +235,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -250,7 +250,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Assign,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -264,7 +264,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -278,7 +278,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InReview,
+      caseStatus: CaseStatusEnum.InReview,
       internal: false,
       state: null,
       task: {
@@ -292,7 +292,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Assign,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InReview,
+      caseStatus: CaseStatusEnum.InReview,
       internal: false,
       state: null,
       task: {
@@ -306,7 +306,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InReview,
+      caseStatus: CaseStatusEnum.InReview,
       internal: false,
       state: null,
       task: {
@@ -320,7 +320,7 @@ export const CASE_IN_REVIEW: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbc1d4666',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InReview,
+      caseStatus: CaseStatusEnum.InReview,
       internal: false,
       state: null,
       task: {
@@ -342,7 +342,7 @@ export const CASE_READY: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '3211',
   isLegacy: true,
-  status: CaseStatus.ReadyForPublishing,
+  status: CaseStatusEnum.ReadyForPublishing,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -365,7 +365,7 @@ export const CASE_READY: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -379,7 +379,7 @@ export const CASE_READY: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -393,7 +393,7 @@ export const CASE_READY: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -407,7 +407,7 @@ export const CASE_READY: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -430,7 +430,7 @@ export const CASE_READY_2: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '2314',
   isLegacy: true,
-  status: CaseStatus.ReadyForPublishing,
+  status: CaseStatusEnum.ReadyForPublishing,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
@@ -453,7 +453,7 @@ export const CASE_READY_2: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -467,7 +467,7 @@ export const CASE_READY_2: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -481,7 +481,7 @@ export const CASE_READY_2: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -495,7 +495,7 @@ export const CASE_READY_2: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -518,7 +518,7 @@ export const CASE_READY_3: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '4321',
   isLegacy: true,
-  status: CaseStatus.ReadyForPublishing,
+  status: CaseStatusEnum.ReadyForPublishing,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-04-01T12:45:48.21Z',
@@ -541,7 +541,7 @@ export const CASE_READY_3: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -555,7 +555,7 @@ export const CASE_READY_3: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -569,7 +569,7 @@ export const CASE_READY_3: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -583,7 +583,7 @@ export const CASE_READY_3: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -606,7 +606,7 @@ export const CASE_PUBLISHED: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '3211',
   isLegacy: true,
-  status: CaseStatus.Published,
+  status: CaseStatusEnum.Published,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -629,7 +629,7 @@ export const CASE_PUBLISHED: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -643,7 +643,7 @@ export const CASE_PUBLISHED: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -657,7 +657,7 @@ export const CASE_PUBLISHED: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -671,7 +671,7 @@ export const CASE_PUBLISHED: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -694,7 +694,7 @@ export const CASE_PUBLISHED_2: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '3211',
   isLegacy: true,
-  status: CaseStatus.Published,
+  status: CaseStatusEnum.Published,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -717,7 +717,7 @@ export const CASE_PUBLISHED_2: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -731,7 +731,7 @@ export const CASE_PUBLISHED_2: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -745,7 +745,7 @@ export const CASE_PUBLISHED_2: Case = {
       id: 'fb85443f-1d10-4c7c-bef3-d1b8dkc1d462',
       type: CaseCommentType.Update,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -759,7 +759,7 @@ export const CASE_PUBLISHED_2: Case = {
       id: 'jk85443f-1d10-4c7c-bef3-d1b8dbcld462',
       type: CaseCommentType.Comment,
       createdAt: '2024-03-13T12:45:48.21Z',
-      caseStatus: CaseStatus.InProgress,
+      caseStatus: CaseStatusEnum.InProgress,
       internal: false,
       state: null,
       task: {
@@ -782,7 +782,7 @@ export const CASE_PUBLISHED_3: Case = {
   advertTitle: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
   caseNumber: '4523',
   isLegacy: true,
-  status: CaseStatus.Published,
+  status: CaseStatusEnum.Published,
   tag: caseTag,
   involvedParty: involvedParty,
   createdAt: '2024-03-12T12:45:48.21Z',
@@ -805,7 +805,7 @@ export const CASE_PUBLISHED_3: Case = {
       id: '76caef40-c98d-40bf-9c78-7683ad2ea1d1',
       type: CaseCommentType.Submit,
       createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {
@@ -819,7 +819,7 @@ export const CASE_PUBLISHED_3: Case = {
       id: 'a72e9x33-ad8c-4d83-84bf-92e10972kz0f',
       createdAt: '2024-03-13T12:45:48.21Z',
       type: CaseCommentType.Assign,
-      caseStatus: CaseStatus.Submitted,
+      caseStatus: CaseStatusEnum.Submitted,
       internal: false,
       state: null,
       task: {

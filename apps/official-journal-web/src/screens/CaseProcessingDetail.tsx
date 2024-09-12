@@ -23,7 +23,7 @@ import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
 import { Meta } from '../components/meta/Meta'
-import { CaseStatusEnum, CaseWithAdvert } from '../gen/fetch'
+import { Case, CaseStatusEnum } from '../gen/fetch'
 import {
   useCase,
   useUpdateCaseStatus,
@@ -40,16 +40,12 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
-  activeCase: CaseWithAdvert | null
-  step: CaseStep | null
+  activeCase: Case
+  step: CaseStep
 }
 
-const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
+const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
   const { formatMessage } = useFormatMessage()
-
-  if (!data || !step) {
-    return null
-  }
 
   const {
     data: caseData,
@@ -57,15 +53,15 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
     isLoading,
     mutate: refetchCase,
   } = useCase({
-    caseId: data.activeCase.id,
+    caseId: activeCase.id,
     options: {
-      fallback: data,
+      fallback: activeCase,
     },
   })
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      caseId: data.activeCase.id,
+      caseId: activeCase.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -73,7 +69,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      caseId: data.activeCase.id,
+      caseId: activeCase.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -81,7 +77,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
 
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
-      caseId: data.activeCase.id,
+      caseId: activeCase.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -119,7 +115,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
     )
   }
 
-  const { advert, activeCase: activeCase } = caseData._case
+  // const { advert, activeCase: activeCase } = caseData._case
 
   const stepper = generateSteps(caseData._case)
   const prevStep =
@@ -149,7 +145,7 @@ const CaseSingle: Screen<Props> = ({ activeCase: data, step }) => {
   }))
 
   const assignedCaseStatus = caseStatusOptions.find(
-    (c) => c.value === activeCase.status,
+    (c) => c.value === activeCase?.status,
   )
 
   const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus

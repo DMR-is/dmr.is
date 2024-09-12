@@ -3,29 +3,23 @@ import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { Case } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../../../case/models'
-import { caseStatusMapper } from '../../mappers'
 import { advertInvolvedPartyMigrate } from '../advert'
 import { advertCategoryMigrate } from '../advert/advert-category-migrate'
 import { signatureMigrate } from '../signature/signature.migrate'
 import { caseChannelMigrate } from './case-channel-migrate'
 import { caseCommentMigrate } from './case-comment-migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status-migrate'
+import { caseStatusMigrate } from './case-status-migrate'
 import { caseTagMigrate } from './case-tag-migrate'
 
 export const caseMigrate = (model: CaseDto): Case => {
-  const status = caseStatusMapper(model.status.value)
-
-  if (!status) {
-    throw new Error(`Unknown case status: ${model.status.value}`)
-  }
-
   try {
     return {
       id: model.id,
       applicationId: model.applicationId,
       year: model.year,
       caseNumber: model.caseNumber,
-      status: status,
+      status: caseStatusMigrate(model.status),
       tag: model.tag ? caseTagMigrate(model.tag) : null,
       involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
       createdAt: model.createdAt,

@@ -25,11 +25,11 @@ export class CaseCommunicationStatusDto extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  key!: string
+  title!: string
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  value!: string
+  slug!: string
 }

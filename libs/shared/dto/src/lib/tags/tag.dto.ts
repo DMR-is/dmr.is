@@ -20,7 +20,7 @@ export class CaseTag {
     required: true,
     type: String,
   })
-  readonly key!: string
+  readonly title!: string
 
   @ApiProperty({
     description: 'Value of the case tag',
@@ -29,5 +29,5 @@ export class CaseTag {
     enum: CaseTagEnum,
   })
   @IsEnum(CaseTagEnum)
-  readonly value!: CaseTagEnum
+  readonly slug!: CaseTagEnum
 }

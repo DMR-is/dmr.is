@@ -10,7 +10,7 @@ import {
   Application,
   CaseCommentType,
   CaseCommunicationStatus,
-  CaseStatus,
+  CaseStatusEnum,
   CaseTag,
   CaseTagEnum,
   CreateCaseChannelBody,
@@ -156,7 +156,7 @@ export class CaseService implements ICaseService {
     const now = new Date()
 
     const caseStatus = ResultWrapper.unwrap(
-      await this.utilityService.caseStatusLookup(CaseStatus.Submitted),
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Submitted),
     )
 
     const caseTag = ResultWrapper.unwrap(
@@ -226,7 +226,7 @@ export class CaseService implements ICaseService {
     const now = new Date()
 
     const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatus.Published)
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Published)
     ).unwrap()
 
     await this.caseModel.update(
@@ -750,14 +750,14 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const nextStatus =
-      status.value === CaseStatus.Submitted
-        ? CaseStatus.InProgress
-        : status.value === CaseStatus.InProgress
-        ? CaseStatus.InReview
-        : status.value === CaseStatus.InReview
-        ? CaseStatus.ReadyForPublishing
-        : status.value === CaseStatus.ReadyForPublishing
-        ? CaseStatus.Published
+      status.value === CaseStatusEnum.Submitted
+        ? CaseStatusEnum.InProgress
+        : status.value === CaseStatusEnum.InProgress
+        ? CaseStatusEnum.InReview
+        : status.value === CaseStatusEnum.InReview
+        ? CaseStatusEnum.ReadyForPublishing
+        : status.value === CaseStatusEnum.ReadyForPublishing
+        ? CaseStatusEnum.Published
         : status.value
 
     const nextStatusLookup = await this.utilityService.caseStatusLookup(

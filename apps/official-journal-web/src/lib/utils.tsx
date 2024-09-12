@@ -5,13 +5,13 @@ import { ParsedUrlQuery } from 'querystring'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
+  Case,
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentTaskTitleEnum,
   CaseCommentTypeEnum,
   CaseStatusEnum,
   CaseTagValueEnum,
-  CaseWithAdvert,
 } from '../gen/fetch'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
@@ -183,8 +183,8 @@ export const commentTaskToNode = (
   }
 }
 
-export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
-  const statusIndex = caseStatusToIndex[activeCase.activeCase.status]
+export const generateSteps = (activeCase: Case): StepsType[] => {
+  const statusIndex = caseStatusToIndex[activeCase.status]
   const displayTypes = [CaseCommentTypeEnum.Submit, CaseCommentTypeEnum.Assign]
   return [
     {
