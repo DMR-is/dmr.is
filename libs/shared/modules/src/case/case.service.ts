@@ -269,8 +269,8 @@ export class CaseService implements ICaseService {
         signatureDate: now, // TODO: Replace with signature
         isLegacy: activeCase.isLegacy,
         documentHtml: activeCase.html,
-        documentPdfUrl: '', // TODO: Replace with pdf
-        attachments: [], // TODO: remove attachments
+        documentPdfUrl: '', // TODO: Replace with pdf url and add advert attachments s3 keys
+        attachments: [],
       },
       transaction,
     )
