@@ -10,6 +10,7 @@ import { IApplicationService } from '../application/application.service.interfac
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import { AdvertCategoryDTO, AdvertDepartmentDTO } from '../journal/models'
+import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesDto } from './models/CaseCategories'
 import { CaseService } from './case.service'
@@ -28,6 +29,7 @@ describe('CaseService', () => {
   let commentService: ICommentService
   let applicationService: IApplicationService
   let journalService: IJournalService
+  let signatureService: ISignatureService
   let caseModel: CaseDto
   let categoriesModel: CaseCategoriesDto
   let advertCategoryModel: AdvertCategoryDTO
@@ -55,6 +57,10 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({
             getApplication: () => ({}),
           })),
+        },
+        {
+          provide: ISignatureService,
+          useClass: jest.fn(() => ({})),
         },
         {
           provide: IUtilityService,

@@ -16,7 +16,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { HttpException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
@@ -113,20 +112,14 @@ describe('CaseController', () => {
 
       jest
         .spyOn(caseService, 'createCase')
-        .mockImplementation(() =>
-          Promise.resolve(ResultWrapper.ok({ case: activeCase })),
-        )
+        .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
-      const result = await caseController.createCase({
+      await caseController.createCase({
         applicationId: activeCase.applicationId,
       })
 
       expect(createSpy).toHaveBeenCalledWith({
         applicationId: activeCase.applicationId,
-      })
-
-      expect(result).toEqual({
-        case: activeCase,
       })
     })
   })
