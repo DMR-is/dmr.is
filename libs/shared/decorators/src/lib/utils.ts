@@ -122,12 +122,12 @@ export const handleException = <T>({
 export const filterArgs = (args: any[], service?: string, method?: string) => {
   const filteredArgs = args.filter((arg) => {
     const isTransaction = arg instanceof Transaction
-    const isBuffer = Buffer.isBuffer(arg.buffer) // filter out arguments with buffer / files
+    const isBuffer = Buffer.isBuffer(arg?.buffer) // filter out arguments with buffer / files
 
     if (Array.isArray(arg)) {
       const isTransactionOrBuffer = arg.filter((a) => {
         const isTransaction = a instanceof Transaction
-        const isBuffer = Buffer.isBuffer(a.buffer) // filter out arguments with buffer / files
+        const isBuffer = Buffer.isBuffer(a?.buffer) // filter out arguments with buffer / files
 
         if (isBuffer && service && method) {
           logger.debug(

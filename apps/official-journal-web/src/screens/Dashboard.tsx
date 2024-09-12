@@ -1,3 +1,5 @@
+import { isReponse } from '@dmr.is/utils/client'
+
 import {
   Box,
   GridColumn,
@@ -224,9 +226,15 @@ Dashboard.getProps = async () => {
         type: 'publishing',
       }),
     ].map((promise) =>
-      promise.catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err)
+      promise.catch(async (err) => {
+        if (isReponse(err)) {
+          const json = await err.json()
+          console.error(`${json.error}: ${json.message}`, {
+            statusCode: json.statusCode,
+            message: json.message,
+            error: json.error,
+          })
+        }
         return null
       }),
     ),

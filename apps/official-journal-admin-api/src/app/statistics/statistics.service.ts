@@ -11,12 +11,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { isSingular } from '@dmr.is/utils/client'
 
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
@@ -106,14 +101,10 @@ export class StatisticsService implements IStatisticsService {
 
   @LogAndHandle()
   async getOverview(
-    type: string,
+    type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    // check if type is in enum
-    if (!Object.values<string>(StatisticsOverviewQueryType).includes(type)) {
-      throw new BadRequestException('Invalid type')
-    }
-
+    console.log('yehaw')
     const casesRes = (
       await this.casesService.getCases({
         pageSize: '1000',
@@ -125,6 +116,7 @@ export class StatisticsService implements IStatisticsService {
         ],
       })
     ).unwrap()
+
     const cases = casesRes.cases
 
     const categories: StatisticsOverviewCategory[] = []
