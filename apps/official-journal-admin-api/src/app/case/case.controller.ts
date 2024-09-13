@@ -2,7 +2,7 @@ import { Route } from '@dmr.is/decorators'
 import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
-  CaseCommentType,
+  CaseCommentTypeEnum,
   CaseCommunicationStatus,
   CreateCaseResponse,
   DefaultSearchParams,
@@ -429,7 +429,7 @@ export class CaseController {
     ResultWrapper.unwrap(await this.commentService.createComment(id, body))
 
     //If it's a message, update the application status to "waiting for answers"
-    if (body.type === CaseCommentType.Message) {
+    if (body.type === CaseCommentTypeEnum.Message) {
       ResultWrapper.unwrap(
         await this.caseService.updateCaseCommunicationStatusByStatus(
           id,

@@ -9,7 +9,13 @@ export class CommunicationStatus {
 
   @ApiProperty({
     type: String,
-    description: 'The value of the communication status',
+    description: 'The title of the communication status',
   })
-  value!: string
+  title!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The slug of the communication status',
+  })
+  slug!: string
 }

@@ -9,19 +9,19 @@ import { Test } from '@nestjs/testing'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
-import { AdvertCategoryDTO, AdvertDepartmentDTO } from '../journal/models'
+import { AdvertCategorymodel, AdvertDepartmentmodel } from '../journal/models'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
-import { CaseCategoriesDto } from './models/CaseCategories'
+import { CaseCategoriesModel } from './models/case-categories.model'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
-  CaseChannelDto,
-  CaseChannelsDto,
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
 } from './models'
 
 describe('CaseService', () => {
@@ -30,12 +30,12 @@ describe('CaseService', () => {
   let applicationService: IApplicationService
   let journalService: IJournalService
   let signatureService: ISignatureService
-  let caseModel: CaseDto
-  let categoriesModel: CaseCategoriesDto
-  let advertCategoryModel: AdvertCategoryDTO
-  let caseCategoriesModel: CaseCategoriesDto
-  let caseChannelModel: CaseChannelDto
-  let caseChannelsModel: CaseChannelsDto
+  let caseModel: CaseModel
+  let categoriesModel: CaseCategoriesModel
+  let advertCategoryModel: AdvertCategorymodel
+  let caseCategoriesModel: CaseCategoriesModel
+  let caseChannelModel: CaseChannelModel
+  let caseChannelsModel: CaseChannelsModel
   let sequelize: Sequelize
 
   beforeAll(async () => {
@@ -71,7 +71,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CaseDto),
+          provide: getModelToken(CaseModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
             findOne: () => ({}),
@@ -79,55 +79,55 @@ describe('CaseService', () => {
           })),
         },
         {
-          provide: getModelToken(CaseCategoriesDto),
+          provide: getModelToken(CaseCategoriesModel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(AdvertCategoryDTO),
+          provide: getModelToken(AdvertCategorymodel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CaseStatusDto),
+          provide: getModelToken(CaseStatusModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
         },
         {
-          provide: getModelToken(CaseTagDto),
+          provide: getModelToken(CaseTagModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
         },
         {
-          provide: getModelToken(CaseCommunicationStatusDto),
+          provide: getModelToken(CaseCommunicationStatusModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
         },
         {
-          provide: getModelToken(AdvertDepartmentDTO),
+          provide: getModelToken(AdvertDepartmentmodel),
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
         },
         {
-          provide: getModelToken(CaseChannelDto),
+          provide: getModelToken(CaseChannelModel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CaseChannelsDto),
+          provide: getModelToken(CaseChannelsModel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CaseTagDto),
+          provide: getModelToken(CaseTagModel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CaseCategoriesDto),
+          provide: getModelToken(CaseCategoriesModel),
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: AdvertCategoryDTO,
+          provide: AdvertCategorymodel,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -152,14 +152,18 @@ describe('CaseService', () => {
     commentService = app.get<ICommentService>(ICommentService)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
-    caseModel = app.get<CaseDto>(getModelToken(CaseDto))
-    caseCategoriesModel = app.get<CaseCategoriesDto>(
-      getModelToken(CaseCategoriesDto),
+    caseModel = app.get<CaseModel>(getModelToken(CaseModel))
+    caseCategoriesModel = app.get<CaseCategoriesModel>(
+      getModelToken(CaseCategoriesModel),
     )
-    caseChannelModel = app.get<CaseChannelDto>(getModelToken(CaseChannelDto))
-    caseChannelsModel = app.get<CaseChannelsDto>(getModelToken(CaseChannelsDto))
-    categoriesModel = app.get<CaseCategoriesDto>(
-      getModelToken(CaseCategoriesDto),
+    caseChannelModel = app.get<CaseChannelModel>(
+      getModelToken(CaseChannelModel),
+    )
+    caseChannelsModel = app.get<CaseChannelsModel>(
+      getModelToken(CaseChannelsModel),
+    )
+    categoriesModel = app.get<CaseCategoriesModel>(
+      getModelToken(CaseCategoriesModel),
     )
     sequelize = app.get<Sequelize>(Sequelize)
   })

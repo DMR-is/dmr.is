@@ -1,2 +1,1 @@
-export * from './mappers'
-export * from './migrations'
+export * from './mappers/user.mapper'

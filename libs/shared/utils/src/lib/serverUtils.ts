@@ -11,8 +11,8 @@ import { logger } from '@dmr.is/logging'
 import {
   ApplicationCommitteeSignature,
   ApplicationSignature,
-  CaseCommentTitle,
-  CaseCommentType,
+  CaseCommentTitleEnum,
+  CaseCommentTypeEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 
@@ -62,21 +62,21 @@ export function slicePagedData<T>(
 }
 
 export const mapCommentTypeToTitle = (
-  val: CaseCommentType,
-): CaseCommentTitle => {
+  val: CaseCommentTypeEnum,
+): CaseCommentTitleEnum => {
   switch (val) {
-    case CaseCommentType.Comment:
-      return CaseCommentTitle.Comment
-    case CaseCommentType.Message:
-      return CaseCommentTitle.Message
-    case CaseCommentType.Assign:
-      return CaseCommentTitle.Assign
-    case CaseCommentType.AssignSelf:
-      return CaseCommentTitle.AssignSelf
-    case CaseCommentType.Submit:
-      return CaseCommentTitle.Submit
-    case CaseCommentType.Update:
-      return CaseCommentTitle.UpdateStatus
+    case CaseCommentTypeEnum.Comment:
+      return CaseCommentTitleEnum.Comment
+    case CaseCommentTypeEnum.Message:
+      return CaseCommentTitleEnum.Message
+    case CaseCommentTypeEnum.Assign:
+      return CaseCommentTitleEnum.Assign
+    case CaseCommentTypeEnum.AssignSelf:
+      return CaseCommentTitleEnum.AssignSelf
+    case CaseCommentTypeEnum.Submit:
+      return CaseCommentTitleEnum.Submit
+    case CaseCommentTypeEnum.Update:
+      return CaseCommentTitleEnum.UpdateStatus
   }
 }
 
@@ -191,7 +191,7 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
   try {
     return cb()
   } catch (error) {
-    logger.error(`Exception occured in ${message}`, error)
+    logger.error(`${message}`, error)
     throw error
   }
 }

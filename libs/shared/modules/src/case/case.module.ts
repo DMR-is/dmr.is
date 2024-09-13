@@ -7,7 +7,7 @@ import { ApplicationModule } from '../application/application.module'
 import { CommentModule } from '../comment/comment.module'
 import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
-import { AdvertDepartmentDTO } from '../journal/models'
+import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
 import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
@@ -16,10 +16,10 @@ import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 import caseModels from './models'
 import {
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
 } from './models'
 
 export {
@@ -27,10 +27,10 @@ export {
   CaseService,
   CaseServiceMock,
   caseModels,
-  CaseDto,
-  CaseTagDto,
-  CaseStatusDto,
-  CaseCommunicationStatusDto,
+  CaseModel,
+  CaseTagModel,
+  CaseStatusModel,
+  CaseCommunicationStatusModel,
 }
 
 const API_MOCK = process.env.API_MOCK === 'true'
@@ -41,7 +41,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
       ...commentModels,
       ...caseModels,
       ...advertModels,
-      AdvertDepartmentDTO,
+      AdvertDepartmentModel,
     ]),
     LoggingModule,
     SharedJournalModule,

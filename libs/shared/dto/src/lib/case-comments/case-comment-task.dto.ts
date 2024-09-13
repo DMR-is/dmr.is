@@ -1,8 +1,9 @@
-import { IsEnum, IsString, ValidateIf } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsString, ValidateIf } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseCommentTitle } from './case-comment-constants'
+import { CaseCommentTitle } from './case-comment-title.dto'
 
 export class CaseCommentTask {
   @ApiProperty({
@@ -27,11 +28,10 @@ export class CaseCommentTask {
   to!: string | null
 
   @ApiProperty({
-    enum: CaseCommentTitle,
-    example: CaseCommentTitle.Submit,
+    type: CaseCommentTitle,
     description: 'Title for the task action',
   })
-  @IsEnum(CaseCommentTitle)
+  @Type(() => CaseCommentTitle)
   title!: CaseCommentTitle
 
   @ApiProperty({

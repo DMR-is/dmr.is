@@ -1,7 +1,7 @@
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IUtilityService } from '@dmr.is/modules'
-import { CaseStatus } from '@dmr.is/shared/dto'
+import { CaseStatusEnum } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -35,10 +35,10 @@ export class StatisticsService implements IStatisticsService {
         pageSize: '1000',
         department: [slug],
         status: [
-          CaseStatus.Submitted,
-          CaseStatus.InProgress,
-          CaseStatus.InReview,
-          CaseStatus.ReadyForPublishing,
+          CaseStatusEnum.Submitted,
+          CaseStatusEnum.InProgress,
+          CaseStatusEnum.InReview,
+          CaseStatusEnum.ReadyForPublishing,
         ],
       })
     ).unwrap()
@@ -50,17 +50,17 @@ export class StatisticsService implements IStatisticsService {
     let ready = 0
 
     cases.forEach((thisCase) => {
-      switch (thisCase.status) {
-        case CaseStatus.Submitted:
+      switch (thisCase.status.title) {
+        case CaseStatusEnum.Submitted:
           submitted++
           break
-        case CaseStatus.InProgress:
+        case CaseStatusEnum.InProgress:
           inProgress++
           break
-        case CaseStatus.InReview:
+        case CaseStatusEnum.InReview:
           inReview++
           break
-        case CaseStatus.ReadyForPublishing:
+        case CaseStatusEnum.ReadyForPublishing:
           ready++
           break
       }
@@ -75,22 +75,22 @@ export class StatisticsService implements IStatisticsService {
     return ResultWrapper.ok({
       data: {
         submitted: {
-          name: CaseStatus.Submitted,
+          name: CaseStatusEnum.Submitted,
           count: submitted,
           percentage: Math.round(submittedPercentage),
         },
         inProgress: {
-          name: CaseStatus.InProgress,
+          name: CaseStatusEnum.InProgress,
           count: inProgress,
           percentage: Math.round(inProgressPercentage),
         },
         inReview: {
-          name: CaseStatus.InReview,
+          name: CaseStatusEnum.InReview,
           count: inReview,
           percentage: Math.round(inReviewPercentage),
         },
         ready: {
-          name: CaseStatus.ReadyForPublishing,
+          name: CaseStatusEnum.ReadyForPublishing,
           count: ready,
           percentage: Math.round(readyPercentage),
         },
@@ -104,15 +104,14 @@ export class StatisticsService implements IStatisticsService {
     type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    console.log('yehaw')
     const casesRes = (
       await this.casesService.getCases({
         pageSize: '1000',
         status: [
-          CaseStatus.Submitted,
-          CaseStatus.InProgress,
-          CaseStatus.InReview,
-          CaseStatus.ReadyForPublishing,
+          CaseStatusEnum.Submitted,
+          CaseStatusEnum.InProgress,
+          CaseStatusEnum.InReview,
+          CaseStatusEnum.ReadyForPublishing,
         ],
       })
     ).unwrap()
@@ -131,26 +130,28 @@ export class StatisticsService implements IStatisticsService {
       // fast track functionality is not implemented yet
 
       cases.forEach((thisCase) => {
-        if (thisCase.status === CaseStatus.Submitted) {
+        if (thisCase.status.title === CaseStatusEnum.Submitted) {
           submittedCount++
         }
 
         if (
-          [CaseStatus.InProgress, CaseStatus.InReview].includes(thisCase.status)
+          [CaseStatusEnum.InProgress, CaseStatusEnum.InReview].includes(
+            thisCase.status.title as CaseStatusEnum,
+          )
         ) {
           inProgressCount++
         }
 
         if (
           thisCase.fastTrack &&
-          thisCase.status !== CaseStatus.ReadyForPublishing
+          thisCase.status.title !== CaseStatusEnum.ReadyForPublishing
         ) {
           submittedFastTrack++
         }
 
         if (
           thisCase.fastTrack &&
-          thisCase.status === CaseStatus.ReadyForPublishing
+          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
         ) {
           inReviewFastTrack++
         }
@@ -222,10 +223,11 @@ export class StatisticsService implements IStatisticsService {
       const inactiveCases = cases.filter(
         (c) =>
           [
-            CaseStatus.Submitted,
-            CaseStatus.InProgress,
-            CaseStatus.InReview,
-          ].includes(c.status) && new Date(c.modifiedAt) < limit,
+            CaseStatusEnum.Submitted,
+            CaseStatusEnum.InProgress,
+            CaseStatusEnum.InReview,
+          ].includes(c.status.title as CaseStatusEnum) &&
+          new Date(c.modifiedAt) < limit,
       )
       const inactiveCasesCount = inactiveCases.length
 
@@ -249,7 +251,7 @@ export class StatisticsService implements IStatisticsService {
         if (
           thisCase.requestedPublicationDate &&
           new Date(thisCase.requestedPublicationDate) === today &&
-          thisCase.status === CaseStatus.ReadyForPublishing
+          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
         ) {
           todayCount++
         }
@@ -257,7 +259,7 @@ export class StatisticsService implements IStatisticsService {
         if (
           thisCase.requestedPublicationDate &&
           new Date(thisCase.requestedPublicationDate) < today &&
-          thisCase.status === CaseStatus.ReadyForPublishing
+          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
         ) {
           pastDueCount++
         }

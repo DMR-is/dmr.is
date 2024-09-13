@@ -12,7 +12,7 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'

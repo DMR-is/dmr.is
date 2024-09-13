@@ -3,7 +3,7 @@
  * @enum {string} CaseCommentType
  *
  */
-export enum CaseCommentType {
+export enum CaseCommentTypeEnum {
   /**
    * When user submits the application
    */
@@ -39,7 +39,7 @@ export enum CaseCommentType {
  * Represents the title of a case comment.
  * @enum {string} CaseCommentTitle
  */
-export enum CaseCommentTitle {
+export enum CaseCommentTitleEnum {
   Submit = 'Innsent af:',
   Assign = 'færir mál á',
   AssignSelf = 'merkir sér málið.',

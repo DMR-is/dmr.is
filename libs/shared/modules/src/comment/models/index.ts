@@ -1,23 +1,23 @@
-import { CaseCommentDto } from './CaseComment'
-import { CaseCommentsDto } from './CaseComments'
-import { CaseCommentTaskDto } from './CaseCommentTask'
-import { CaseCommentTitleDto } from './CaseCommentTitle'
-import { CaseCommentTypeDto } from './CaseCommentType'
+import { CaseCommentModel } from './case-comment.model'
+import { CaseCommentTaskModel } from './case-comment-task.model'
+import { CaseCommentTitleModel } from './case-comment-title.model'
+import { CaseCommentTypeModel } from './case-comment-type.model'
+import { CaseCommentsModel } from './case-comments.model'
 
 export {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTypeDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
+  CaseCommentModel,
+  CaseCommentsModel,
+  CaseCommentTypeModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
 }
 
 export const models = [
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTypeDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
+  CaseCommentModel,
+  CaseCommentsModel,
+  CaseCommentTypeModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
 ]
 
 export default models

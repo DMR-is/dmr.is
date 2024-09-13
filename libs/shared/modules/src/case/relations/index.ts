@@ -1,14 +1,14 @@
 import {
-  CaseCommentDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
+  CaseCommentModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
+  CaseCommentTypeModel,
 } from '../../comment/models'
 import {
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertTypeDTO,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertTypeModel,
 } from '../../journal/models'
 import {
   SignatureMemberModel,
@@ -16,37 +16,37 @@ import {
   SignatureTypeModel,
 } from '../../signature/models'
 import {
-  CaseChannelDto,
-  CaseCommunicationStatusDto,
-  CaseStatusDto,
-  CaseTagDto,
+  CaseChannelModel,
+  CaseCommunicationStatusModel,
+  CaseStatusModel,
+  CaseTagModel,
 } from '../models'
 
 export const CASE_RELATIONS = [
-  CaseTagDto,
-  CaseStatusDto,
-  CaseCommunicationStatusDto,
-  AdvertDepartmentDTO,
-  AdvertTypeDTO,
-  AdvertCategoryDTO,
-  CaseChannelDto,
-  AdvertInvolvedPartyDTO,
+  CaseTagModel,
+  CaseStatusModel,
+  CaseCommunicationStatusModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
+  AdvertCategoryModel,
+  CaseChannelModel,
+  AdvertInvolvedPartyModel,
   {
-    model: CaseCommentDto,
+    model: CaseCommentModel,
     include: [
       {
-        model: CaseCommentTaskDto,
-        include: [CaseCommentTitleDto],
+        model: CaseCommentTaskModel,
+        include: [CaseCommentTitleModel],
       },
-      CaseStatusDto,
-      CaseCommentTypeDto,
+      CaseStatusModel,
+      CaseCommentTypeModel,
     ],
   },
   {
     model: SignatureModel,
     include: [
       SignatureTypeModel,
-      AdvertInvolvedPartyDTO,
+      AdvertInvolvedPartyModel,
       {
         model: SignatureMemberModel,
         as: 'chairman',
