@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { CaseTagEnum } from '../cases'
+
 export class CaseTag {
   @ApiProperty({
     description: 'Unique ID for the case tag',
@@ -11,12 +13,12 @@ export class CaseTag {
   readonly id!: string
 
   @ApiProperty({
+    enum: CaseTagEnum,
     description: 'Title of the case tag',
     example: 'Í yfirlestri',
     required: true,
-    type: String,
   })
-  readonly title!: string
+  readonly title!: CaseTagEnum
 
   @ApiProperty({
     description: 'Slug of the case tag',

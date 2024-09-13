@@ -8,7 +8,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Catch, Controller, HttpException, Inject, Query } from '@nestjs/common'
+import { Controller, Inject, Query } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
@@ -24,6 +24,7 @@ export class StatisticsController {
 
   @Route({
     path: '/department',
+    operationId: 'getStatisticsForDepartment',
     query: [{ name: 'slug', type: 'string', required: true }],
     description: 'Gets statistics for individual department (a, b or c)',
     responseType: GetStatisticsDepartmentResponse,
@@ -38,6 +39,7 @@ export class StatisticsController {
 
   @Route({
     path: '/overview',
+    operationId: 'getStatisticsOverview',
     query: [
       { name: 'type', enum: StatisticsOverviewQueryType, required: true },
       {

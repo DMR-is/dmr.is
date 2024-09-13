@@ -8,10 +8,4 @@ export class UpdatePublishDateBody {
   })
   @IsDateString()
   date!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  @IsUUID()
-  applicationId!: string
 }

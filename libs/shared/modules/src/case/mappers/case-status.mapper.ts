@@ -1,4 +1,5 @@
 import { CaseOverviewTotalItems, CaseStatusEnum } from '@dmr.is/shared/dto'
+import { withTryCatch } from '@dmr.is/utils'
 
 import { CaseModel } from '../models'
 
@@ -10,27 +11,27 @@ interface Result {
   [key: string]: number
 }
 
-export const caseStatusMapper = (status?: string | null) => {
-  if (!status) return null
+export const caseStatusMapper = (status: string) => {
+  return withTryCatch(() => {
+    switch (status) {
+      case CaseStatusEnum.Submitted:
+        return CaseStatusEnum.Submitted
+      case CaseStatusEnum.InProgress:
+        return CaseStatusEnum.InProgress
+      case CaseStatusEnum.InReview:
+        return CaseStatusEnum.InReview
+      case CaseStatusEnum.ReadyForPublishing:
+        return CaseStatusEnum.ReadyForPublishing
+      case CaseStatusEnum.Published:
+        return CaseStatusEnum.Published
+      case CaseStatusEnum.Rejected:
+        return CaseStatusEnum.Rejected
+      case CaseStatusEnum.Unpublished:
+        return CaseStatusEnum.Unpublished
+    }
 
-  switch (status) {
-    case CaseStatusEnum.Submitted:
-      return CaseStatusEnum.Submitted
-    case CaseStatusEnum.InProgress:
-      return CaseStatusEnum.InProgress
-    case CaseStatusEnum.InReview:
-      return CaseStatusEnum.InReview
-    case CaseStatusEnum.ReadyForPublishing:
-      return CaseStatusEnum.ReadyForPublishing
-    case CaseStatusEnum.Published:
-      return CaseStatusEnum.Published
-    case CaseStatusEnum.Rejected:
-      return CaseStatusEnum.Rejected
-    case CaseStatusEnum.Unpublished:
-      return CaseStatusEnum.Unpublished
-  }
-
-  return null
+    throw new Error(`Case status<${status}> not found`)
+  }, `Failed to migrate case status with title: ${status}`)
 }
 
 export const statusResMapper: StatusResMapper = {

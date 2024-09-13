@@ -17,7 +17,7 @@ export enum CaseCommentTypeEnum {
   /**
    * When case has no employee, and the emloyee assigns himself.
    */
-  AssignSelf = 'assign_self',
+  AssignSelf = 'assign-self',
 
   /**
    * When an employee changes the status of the case.

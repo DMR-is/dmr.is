@@ -1,27 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+
+const updatePriceBody = z.object({
+  price: z.number(),
+})
 
 class UpdatePriceHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query
-    const { caseId, price } = req.body
+    const { id } = req.query as { id?: string }
 
-    if (!caseId || !price) {
+    if (!id) {
       return res.status(400).end()
     }
 
-    if (!id || id !== caseId) {
-      return res.status(400).end()
-    }
+    const price = updatePriceBody.parse(req.body).price
 
     const dmrClient = createDmrClient()
 
     await dmrClient.updatePrice({
-      id: caseId,
+      id: id,
       updateCasePriceBody: {
         price: price,
       },

@@ -8,7 +8,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum } from '../../gen/fetch'
+import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
@@ -16,7 +16,6 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -45,7 +44,7 @@ export const CaseTableReady = () => {
   } = useCases({
     params: {
       department: department,
-      status: CaseStatusEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbi,
     },
     options: {
       refreshInterval: 1000 * 60,

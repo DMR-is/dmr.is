@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { CaseCommunicationStatus } from '../cases'
+
 export class CommunicationStatus {
   @ApiProperty({
     type: String,
@@ -8,10 +10,10 @@ export class CommunicationStatus {
   readonly id!: string
 
   @ApiProperty({
-    type: String,
+    enum: CaseCommunicationStatus,
     description: 'The title of the communication status',
   })
-  title!: string
+  title!: CaseCommunicationStatus
 
   @ApiProperty({
     type: String,

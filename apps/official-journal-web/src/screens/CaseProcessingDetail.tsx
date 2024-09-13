@@ -23,7 +23,7 @@ import { StepInnsending } from '../components/form-steps/StepInnsending'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
 import { Meta } from '../components/meta/Meta'
-import { Case, CaseStatusEnum } from '../gen/fetch'
+import { Case, CaseStatusTitleEnum } from '../gen/fetch'
 import {
   useCase,
   useUpdateCaseStatus,
@@ -40,11 +40,11 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
-  activeCase: Case
+  data: Case
   step: CaseStep
 }
 
-const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
+const CaseSingle: Screen<Props> = ({ data, step }) => {
   const { formatMessage } = useFormatMessage()
 
   const {
@@ -53,15 +53,15 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
     isLoading,
     mutate: refetchCase,
   } = useCase({
-    caseId: activeCase.id,
+    caseId: data.id,
     options: {
-      fallback: activeCase,
+      fallback: data,
     },
   })
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      caseId: activeCase.id,
+      caseId: data.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -69,7 +69,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      caseId: activeCase.id,
+      caseId: data.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -77,7 +77,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
 
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
-      caseId: activeCase.id,
+      caseId: data.id,
       options: {
         onSuccess: () => refetchCase(),
       },
@@ -115,8 +115,6 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
     )
   }
 
-  // const { advert, activeCase: activeCase } = caseData._case
-
   const stepper = generateSteps(caseData._case)
   const prevStep =
     caseSteps.indexOf(step) > 0
@@ -139,13 +137,15 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
     },
   ]
 
-  const caseStatusOptions = Object.values(CaseStatusEnum).map((c) => ({
+  const activeCase = caseData._case
+
+  const caseStatusOptions = Object.values(CaseStatusTitleEnum).map((c) => ({
     label: c,
     value: c,
   }))
 
-  const assignedCaseStatus = caseStatusOptions.find(
-    (c) => c.value === activeCase?.status,
+  const selectedCaseStatus = caseStatusOptions.find(
+    (c) => c.value === activeCase.status.title,
   )
 
   const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus
@@ -227,10 +227,10 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
               options={caseStatusOptions.map((c) => ({
                 label: c.label,
                 value: c.value,
-                disabled: c.value === activeCase.status,
+                disabled: c.value === activeCase.status.title,
               }))}
-              defaultValue={assignedCaseStatus}
-              value={assignedCaseStatus}
+              defaultValue={selectedCaseStatus}
+              value={selectedCaseStatus}
               label={formatMessage(messages.actions.status)}
               size="sm"
               onChange={(e) => {
@@ -243,7 +243,7 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
             <Input
               name="status"
               disabled
-              value={activeCase?.communicationStatus.value}
+              value={activeCase.communicationStatus.title}
               type="text"
               label={formatMessage(messages.actions.communicationsStatus)}
               size="sm"
@@ -253,20 +253,16 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
         }
       >
         <Stack space={[2, 3, 4]}>
-          {step === 'innsending' && (
-            <StepInnsending activeCase={caseData._case} />
-          )}
-          {step === 'grunnvinnsla' && (
-            <StepGrunnvinnsla data={caseData._case} />
-          )}
-          {step === 'yfirlestur' && <StepYfirlestur data={caseData._case} />}
-          {step === 'tilbuid' && <StepTilbuid activeCase={caseData._case} />}
+          {step === 'innsending' && <StepInnsending activeCase={activeCase} />}
+          {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
+          {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
+          {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-          {advert.attachments.length > 0 && (
-            <Attachments activeCase={caseData._case} />
-          )}
+          {/* {activeCase.attachments.length > 0 && (
+            <Attachments activeCase={activeCase} />
+          )} */}
 
-          <Comments activeCase={caseData._case} />
+          <Comments activeCase={activeCase} />
 
           <Box
             display="flex"
@@ -298,7 +294,11 @@ const CaseSingle: Screen<Props> = ({ activeCase, step }) => {
                   loading={isUpdatingNextStatus}
                   as="span"
                   icon="arrowForward"
-                  onClick={() => onUpdateNextCaseStatus()}
+                  onClick={() =>
+                    onUpdateNextCaseStatus({
+                      currentStatus: activeCase.status.title,
+                    })
+                  }
                   unfocusable
                 >
                   {formatMessage(messages.paging.nextStep)}
@@ -328,7 +328,7 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     })
 
     return {
-      activeCase: activeCase._case,
+      data: activeCase._case,
       step,
     }
   } catch (error) {
