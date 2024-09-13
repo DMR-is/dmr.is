@@ -230,6 +230,7 @@ Dashboard.getProps = async () => {
       promise.catch(async (err) => {
         if (isReponse(err)) {
           const json = await err.json()
+          // eslint-disable-next-line no-console
           console.error(`${json.error}: ${json.message}`, {
             statusCode: json.statusCode,
             message: json.message,
