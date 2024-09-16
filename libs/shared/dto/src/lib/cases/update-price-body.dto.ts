@@ -1,13 +1,13 @@
-import { IsNumberString } from 'class-validator'
+import { IsNumber } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 export class UpdateCasePriceBody {
   @ApiProperty({
-    type: String,
+    type: Number,
     description: 'Price',
-    example: '1000',
+    example: 12000,
   })
-  @IsNumberString()
-  price!: string
+  @IsNumber()
+  price!: number
 }

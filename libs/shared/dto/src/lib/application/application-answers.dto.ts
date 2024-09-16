@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { ApplicationAdvert } from './application-advert'
 import { ApplicationMisc } from './application-misc'
-import { ApplicationSignature } from './application-signature.dto'
+import { ApplicationSignatures } from './application-signature.dto'
 
 export class ApplicationAnswers {
   @ApiProperty({
@@ -18,8 +18,8 @@ export class ApplicationAnswers {
   misc!: ApplicationMisc
 
   @ApiProperty({
-    type: ApplicationSignature,
+    type: ApplicationSignatures,
     description: 'Signature answers',
   })
-  signatures!: ApplicationSignature
+  signatures!: ApplicationSignatures
 }

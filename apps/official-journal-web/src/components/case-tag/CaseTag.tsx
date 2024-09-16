@@ -1,6 +1,6 @@
 import { Tag } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum, CaseTagValueEnum } from '../../gen/fetch'
+import { CaseStatusTitleEnum, CaseTagTitleEnum } from '../../gen/fetch'
 
 type Props = {
   tag?: string
@@ -17,34 +17,34 @@ export const CaseTag = ({ tag }: Props) => {
   }
 
   switch (tag) {
-    case CaseStatusEnum.Innsent:
-    case CaseTagValueEnum.EkkiHafi:
+    case CaseStatusTitleEnum.Innsent:
+    case CaseTagTitleEnum.EkkiHafi:
       return (
         <Tag disabled variant="blue">
           {tag}
         </Tag>
       )
-    case CaseStatusEnum.Grunnvinnsla:
-    case CaseStatusEnum.Yfirlestur:
-    case CaseTagValueEnum.Yfirlestri:
+    case CaseStatusTitleEnum.Grunnvinnsla:
+    case CaseStatusTitleEnum.Yfirlestur:
+    case CaseTagTitleEnum.Yfirlestri:
       return (
         <Tag disabled variant="darkerBlue">
           {tag}
         </Tag>
       )
-    case CaseStatusEnum.Tilbi:
+    case CaseStatusTitleEnum.Tilbi:
       return (
         <Tag disabled variant="mint">
           {tag}
         </Tag>
       )
-    case CaseTagValueEnum.ArfSkoun:
+    case CaseTagTitleEnum.ArfSkoun:
       return (
         <Tag disabled variant="rose">
           {tag}
         </Tag>
       )
-    case CaseTagValueEnum.Samlesin:
+    case CaseTagTitleEnum.Samlesin:
       return (
         <Tag disabled variant="purple">
           {tag}

@@ -1,5 +1,3 @@
-import { IsEnum } from 'class-validator'
-
 import { ApiProperty } from '@nestjs/swagger'
 
 import { CaseTagEnum } from '../cases'
@@ -15,19 +13,17 @@ export class CaseTag {
   readonly id!: string
 
   @ApiProperty({
-    description: 'Key of the case tag',
-    example: 'InReview',
-    required: true,
-    type: String,
-  })
-  readonly key!: string
-
-  @ApiProperty({
-    description: 'Value of the case tag',
+    enum: CaseTagEnum,
+    description: 'Title of the case tag',
     example: 'Í yfirlestri',
     required: true,
-    enum: CaseTagEnum,
   })
-  @IsEnum(CaseTagEnum)
-  readonly value!: CaseTagEnum
+  readonly title!: CaseTagEnum
+
+  @ApiProperty({
+    description: 'Slug of the case tag',
+    example: 'i-yfirlestri',
+    required: true,
+  })
+  readonly slug!: string
 }

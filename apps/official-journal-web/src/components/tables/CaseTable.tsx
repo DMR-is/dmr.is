@@ -191,7 +191,7 @@ export const CaseTable = ({
                       }
                       href={
                         !modalLink
-                          ? generateCaseLink(row.case.status, row.case.id)
+                          ? generateCaseLink(row.case.status.title, row.case.id)
                           : undefined
                       }
                     >

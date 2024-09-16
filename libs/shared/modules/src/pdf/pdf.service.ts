@@ -1,5 +1,5 @@
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
-import { SignatureTypeSlug } from '@dmr.is/constants'
+import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
 
@@ -12,7 +12,7 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
+import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
@@ -46,10 +46,10 @@ export class PdfService implements IPdfService {
     let signatureHtml = ''
 
     switch (signatureType) {
-      case SignatureTypeSlug.Committee:
+      case SignatureType.Committee:
         signatureHtml += answers.signatures.committee?.html
         break
-      case SignatureTypeSlug.Regular:
+      case SignatureType.Regular:
         signatureHtml += answers.signatures.regular?.map(
           (signature) => signature.html,
         )

@@ -1,12 +1,14 @@
+import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Get, Inject, Query } from '@nestjs/common'
-import { ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { Controller, Inject, Query } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
@@ -20,12 +22,12 @@ export class StatisticsController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Get('department')
-  @ApiQuery({ name: 'slug', type: String, required: true })
-  @ApiResponse({
-    status: 200,
-    type: GetStatisticsDepartmentResponse,
+  @Route({
+    path: '/department',
+    operationId: 'getStatisticsForDepartment',
+    query: [{ name: 'slug', type: 'string', required: true }],
     description: 'Gets statistics for individual department (a, b or c)',
+    responseType: GetStatisticsDepartmentResponse,
   })
   async department(
     @Query('slug') slug: string,
@@ -35,20 +37,41 @@ export class StatisticsController {
     )
   }
 
-  @Get('overview')
-  @ApiQuery({ name: 'type', type: String, required: true })
-  @ApiQuery({ name: 'userId', type: String, required: false })
-  @ApiResponse({
-    status: 200,
-    type: GetStatisticsOverviewResponse,
+  @Route({
+    path: '/overview',
+    operationId: 'getStatisticsOverview',
+    query: [
+      { name: 'type', enum: StatisticsOverviewQueryType, required: true },
+      {
+        name: 'userId',
+        type: String,
+        required: false,
+        allowEmptyValue: true,
+      },
+    ],
     description: 'Gets overview of statistics',
+    responseType: GetStatisticsOverviewResponse,
   })
   async overview(
-    @Query('type') type: string,
-    @Query('userId') userId?: string,
+    @Query('type', new EnumValidationPipe(StatisticsOverviewQueryType))
+    type: StatisticsOverviewQueryType,
+    @Query('userId', new UUIDValidationPipe(true)) userId?: string,
   ): Promise<GetStatisticsOverviewResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverview(type, userId),
     )
+  }
+
+  @Route({
+    path: 'test',
+    query: [
+      {
+        type: 'string',
+        name: 'test',
+      },
+    ],
+  })
+  async test(@Query() test: string): Promise<string> {
+    return test
   }
 }

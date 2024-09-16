@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdvertDTO } from '../../journal/models'
+import { AdvertModel } from '../../journal/models'
 import { SignatureModel } from './signature.model'
 
 @Table({ tableName: 'advert_signatures', timestamps: false })
@@ -23,7 +23,7 @@ export class AdvertSignaturesModel extends Model {
   signatureId!: string
 
   @PrimaryKey
-  @ForeignKey(() => AdvertDTO)
+  @ForeignKey(() => AdvertModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -34,6 +34,6 @@ export class AdvertSignaturesModel extends Model {
   @BelongsTo(() => SignatureModel, 'signature_id')
   signature!: SignatureModel
 
-  @BelongsTo(() => AdvertDTO, 'advert_id')
-  case!: AdvertDTO
+  @BelongsTo(() => AdvertModel, 'advert_id')
+  case!: AdvertModel
 }

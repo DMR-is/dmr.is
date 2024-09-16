@@ -5,6 +5,7 @@ import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatus,
+  CaseStatusEnum,
   DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -46,7 +47,7 @@ export class JournalController {
     responseType: GetAdvertResponse,
   })
   async advert(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetAdvertResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
@@ -70,7 +71,7 @@ export class JournalController {
     responseType: GetDepartmentResponse,
   })
   async department(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetDepartmentResponse> {
     return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
   }
@@ -97,7 +98,7 @@ export class JournalController {
     responseType: GetAdvertTypeResponse,
   })
   async type(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetAdvertTypeResponse> {
     return ResultWrapper.unwrap(await this.journalService.getType(id))
   }
@@ -181,10 +182,10 @@ export class JournalController {
     params?: DefaultSearchParams,
   ): Promise<GetCasesReponse> {
     const statuses = [
-      CaseStatus.Submitted,
-      CaseStatus.InProgress,
-      CaseStatus.InReview,
-      CaseStatus.ReadyForPublishing,
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+      CaseStatusEnum.ReadyForPublishing,
     ]
 
     return ResultWrapper.unwrap(

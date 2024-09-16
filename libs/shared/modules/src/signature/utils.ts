@@ -2,7 +2,7 @@ import { Op } from 'sequelize'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { DefaultSearchParams } from '@dmr.is/shared/dto'
 
-import { AdvertInvolvedPartyDTO } from '../journal/models'
+import { AdvertInvolvedPartyModel } from '../journal/models'
 import { SignatureMemberModel, SignatureTypeModel } from './models'
 
 export const getDefaultOptions = (params?: DefaultSearchParams) => {
@@ -22,7 +22,7 @@ export const getDefaultOptions = (params?: DefaultSearchParams) => {
         as: 'type',
       },
       {
-        model: AdvertInvolvedPartyDTO,
+        model: AdvertInvolvedPartyModel,
         as: 'involvedParty',
       },
     ],

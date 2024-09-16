@@ -1,3 +1,5 @@
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_SIZE,
@@ -5,7 +7,14 @@ import {
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
 } from '@dmr.is/constants'
-import { CaseCommentTitle, CaseCommentType } from '@dmr.is/shared/dto'
+import { logger } from '@dmr.is/logging'
+import {
+  ApplicationCommitteeSignature,
+  ApplicationSignature,
+  CaseCommentTitleEnum,
+  CaseCommentTypeEnum,
+  CreateSignatureBody,
+} from '@dmr.is/shared/dto'
 
 import {
   BadRequestException,
@@ -53,21 +62,21 @@ export function slicePagedData<T>(
 }
 
 export const mapCommentTypeToTitle = (
-  val: CaseCommentType,
-): CaseCommentTitle => {
+  val: CaseCommentTypeEnum,
+): CaseCommentTitleEnum => {
   switch (val) {
-    case CaseCommentType.Comment:
-      return CaseCommentTitle.Comment
-    case CaseCommentType.Message:
-      return CaseCommentTitle.Message
-    case CaseCommentType.Assign:
-      return CaseCommentTitle.Assign
-    case CaseCommentType.AssignSelf:
-      return CaseCommentTitle.AssignSelf
-    case CaseCommentType.Submit:
-      return CaseCommentTitle.Submit
-    case CaseCommentType.Update:
-      return CaseCommentTitle.UpdateStatus
+    case CaseCommentTypeEnum.Comment:
+      return CaseCommentTitleEnum.Comment
+    case CaseCommentTypeEnum.Message:
+      return CaseCommentTitleEnum.Message
+    case CaseCommentTypeEnum.Assign:
+      return CaseCommentTitleEnum.Assign
+    case CaseCommentTypeEnum.AssignSelf:
+      return CaseCommentTitleEnum.AssignSelf
+    case CaseCommentTypeEnum.Submit:
+      return CaseCommentTitleEnum.Submit
+    case CaseCommentTypeEnum.Update:
+      return CaseCommentTitleEnum.UpdateStatus
   }
 }
 
@@ -127,3 +136,62 @@ export const getFastTrack = (date: Date) => {
  * so we will return default price
  */
 export const calculatePriceForApplication = () => DEFAULT_PRICE
+
+export const getSignatureBody = (
+  caseId: string,
+  signature: ApplicationSignature | ApplicationCommitteeSignature,
+  additionalSignature?: string,
+): CreateSignatureBody => {
+  const hasChairman = 'chairman' in signature
+  return {
+    caseId: caseId,
+    date: signature.date,
+    institution: signature.institution,
+    involvedPartyId: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f', // TODO: add auth set to dómsmálaráðuneytið
+    members: signature.members.map((member) => ({
+      text: member.name,
+      textAbove: member.above,
+      textAfter: member.after,
+      textBefore: member.before,
+      textBelow: member.below,
+    })),
+    additionalSignature: additionalSignature,
+    html: signature.html,
+    chairman: hasChairman
+      ? {
+          text: signature.chairman.name,
+          textAbove: signature.chairman.above,
+          textAfter: signature.chairman.after,
+          textBefore: signature.chairman.before,
+          textBelow: signature.chairman.below,
+        }
+      : undefined,
+  }
+}
+
+export const withTransaction =
+  <T>(sequelize: Sequelize) =>
+  async (cb: (transaction: Transaction) => Promise<T>) => {
+    const transaction = await sequelize.transaction()
+    try {
+      // call cb
+      const result = await cb(transaction)
+
+      logger.debug('Transaction commit')
+      await transaction.commit()
+      return result
+    } catch (error) {
+      logger.debug('Transaction rollback')
+      await transaction.rollback()
+      throw error
+    }
+  }
+
+export const withTryCatch = <T>(cb: () => T, message: string): T => {
+  try {
+    return cb()
+  } catch (error) {
+    logger.error(`${message}`, error)
+    throw error
+  }
+}

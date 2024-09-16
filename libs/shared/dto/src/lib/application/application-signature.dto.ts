@@ -2,8 +2,6 @@ import { IsDateString, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { SignatureMember } from '../signatures'
-
 class AdditionalSignature {
   @ApiProperty({
     type: String,
@@ -57,7 +55,7 @@ class ApplicationSignatureMember {
   after?: string
 }
 
-class Signature {
+export class ApplicationSignature {
   @ApiProperty({
     type: String,
     description: 'Institution of the signature',
@@ -85,13 +83,13 @@ class Signature {
   html!: string
 }
 
-class CommitteeSignature extends Signature {
+export class ApplicationCommitteeSignature extends ApplicationSignature {
   @ApiProperty({
-    type: SignatureMember,
+    type: ApplicationSignatureMember,
     description: 'The title of the committee',
   })
   @IsString()
-  chairman!: SignatureMember
+  chairman!: ApplicationSignatureMember
 }
 
 /**
@@ -100,7 +98,7 @@ class CommitteeSignature extends Signature {
  * Then we use the signature type to determine which one is chosen.
  * @see ApplicationMisc
  */
-export class ApplicationSignature {
+export class ApplicationSignatures {
   @ApiProperty({
     type: AdditionalSignature,
     example: 'Some message to the applicant',
@@ -110,16 +108,16 @@ export class ApplicationSignature {
   additionalSignature?: AdditionalSignature
 
   @ApiProperty({
-    type: [Signature],
+    type: [ApplicationSignature],
     description: 'Regular signature',
   })
   @IsOptional()
-  regular?: Signature[]
+  regular?: ApplicationSignature[]
 
   @ApiProperty({
-    type: CommitteeSignature,
+    type: ApplicationCommitteeSignature,
     description: 'Committee signature',
   })
   @IsOptional()
-  committee?: CommitteeSignature
+  committee?: ApplicationCommitteeSignature
 }

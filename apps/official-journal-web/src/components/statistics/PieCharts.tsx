@@ -5,7 +5,7 @@ import { Box, Table as T, Text } from '@island.is/island-ui/core'
 import { theme } from '@island.is/island-ui/theme'
 
 import {
-  CaseStatusEnum,
+  CaseStatusTitleEnum,
   GetStatisticsDepartmentResponse,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -27,13 +27,13 @@ export const StatisticsPieCharts = ({ data }: Props) => {
 
   const mapTitleToColor = (name: string) => {
     switch (name) {
-      case CaseStatusEnum.Innsent:
+      case CaseStatusTitleEnum.Innsent:
         return theme.color.dark400
-      case CaseStatusEnum.Grunnvinnsla:
+      case CaseStatusTitleEnum.Grunnvinnsla:
         return theme.color.blue400
-      case CaseStatusEnum.Yfirlestur:
+      case CaseStatusTitleEnum.Yfirlestur:
         return theme.color.mint600
-      case CaseStatusEnum.Tilbi:
+      case CaseStatusTitleEnum.Tilbi:
         return theme.color.roseTinted400
       default:
         return theme.color.black

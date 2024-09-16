@@ -6,7 +6,7 @@ import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { CaseTableOverview } from '../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../components/tabs/Tabs'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { Case, CaseStatusTitleEnum, Paging } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { useQueryParams } from '../hooks/useQueryParams'
 import { withMainLayout } from '../layout/Layout'
@@ -80,11 +80,11 @@ CaseOverview.getProps = async ({ query }) => {
     const { cases, paging } = await dmrClient.getCases({
       department: tab,
       status:
-        CaseStatusEnum.Tgefi +
+        CaseStatusTitleEnum.Tgefi +
         ',' +
-        CaseStatusEnum.BirtinguHafna +
+        CaseStatusTitleEnum.BirtinguHafna +
         ',' +
-        CaseStatusEnum.TekiRBirtingu,
+        CaseStatusTitleEnum.TekiRBirtingu,
     })
 
     return {

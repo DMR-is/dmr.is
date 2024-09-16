@@ -1,4 +1,4 @@
-export enum CaseStatus {
+export enum CaseStatusEnum {
   Submitted = 'Innsent',
   InProgress = 'Grunnvinnsla',
   InReview = 'Yfirlestur',
