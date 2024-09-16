@@ -147,6 +147,9 @@ jobs:
   build:
     needs:
       - prepare
+    strategy:
+      matrix:
+        project: [official-journal-web]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -167,5 +170,11 @@ jobs:
           path: node_modules
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
+      - name: Yarn install
+        run: yarn install --immutable
+
+      - name: Codegen application
+        run: yarn nx run ${{matrix.project}}:codegen
+
       - name: Build application
-        run: yarn nx run official-journal-web:build:production
+        run: yarn nx run ${{matrix.project}}:build:production
