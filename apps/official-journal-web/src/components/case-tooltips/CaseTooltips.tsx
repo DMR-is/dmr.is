@@ -11,8 +11,8 @@ const NEW_ANSWER_VALUE = 'Svör hafa borist'
 export const CaseToolTips = ({ case: caseData }: Props) => {
   const isFastTrack = caseData.fastTrack
   const isWaitingForAnswers =
-    caseData.communicationStatus.value === WAITING_ANSWERS_VALUE
-  const hasNewAnswer = caseData.communicationStatus.value === NEW_ANSWER_VALUE
+    caseData.communicationStatus.title === WAITING_ANSWERS_VALUE
+  const hasNewAnswer = caseData.communicationStatus.title === NEW_ANSWER_VALUE
 
   if (!isFastTrack && !isWaitingForAnswers && !hasNewAnswer) return null
 

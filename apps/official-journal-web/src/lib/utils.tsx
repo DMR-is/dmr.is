@@ -133,7 +133,7 @@ type StepsType = {
 
 export const commentTaskToNode = (
   task: CaseCommentTask,
-  status: CaseStatus,
+  status: CaseStatusTitleEnum,
 ) => {
   switch (task.title.title) {
     case CaseCommentTitleTitleEnum.InnsentAf: {
@@ -162,7 +162,7 @@ export const commentTaskToNode = (
       return (
         <>
           <strong>{task.from}</strong> {task.title.title}{' '}
-          <strong>{status.title}</strong>
+          <strong>{status}</strong>
         </>
       )
     }
@@ -205,10 +205,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseStatusTitleEnum.Innsent &&
-            displayTypes.includes(c.type),
+            c.status.title === CaseStatusTitleEnum.Innsent &&
+            displayTypes.includes(c.type.title),
         )
-        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
+        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
     },
     {
       step: 'grunnvinnsla',
@@ -218,10 +218,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseStatusTitleEnum.Grunnvinnsla &&
-            displayTypes.includes(c.type),
+            c.status.title === CaseStatusTitleEnum.Grunnvinnsla &&
+            displayTypes.includes(c.type.title),
         )
-        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
+        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
     },
     {
       step: 'yfirlestur',
@@ -231,10 +231,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseStatusTitleEnum.Yfirlestur &&
-            displayTypes.includes(c.type),
+            c.status.title === CaseStatusTitleEnum.Yfirlestur &&
+            displayTypes.includes(c.type.title),
         )
-        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
+        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
     },
     {
       step: 'tilbuid',
@@ -244,10 +244,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseStatusTitleEnum.Tilbi &&
-            displayTypes.includes(c.type),
+            c.status.title === CaseStatusTitleEnum.Tilbi &&
+            displayTypes.includes(c.type.title),
         )
-        ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
+        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
     },
   ]
 }

@@ -1362,6 +1362,137 @@
         },
         "required": ["id", "email", "phone"]
       },
+      "CaseCommentType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The title of the case comment type"
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "submit",
+              "assign",
+              "assign-self",
+              "update",
+              "comment",
+              "message"
+            ],
+            "description": "The title of the case comment type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the case comment type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "CaseCommentTitle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The title of the case comment type"
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "Innsent af:",
+              "færir mál á",
+              "merkir sér málið.",
+              "færir mál í stöðuna:",
+              "gerir athugasemd.",
+              "skráir skilaboð"
+            ],
+            "description": "The title of the case comment type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the case comment type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "CaseCommentTask": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "From who or what initied the task, used by client to show who inited the task.",
+            "example": "Ármann",
+            "nullable": true
+          },
+          "to": {
+            "type": "string",
+            "description": "To whom or what the task is assigned to.",
+            "example": "Pálina J",
+            "nullable": true
+          },
+          "title": {
+            "description": "Title for the task action",
+            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTitle" }]
+          },
+          "comment": {
+            "type": "string",
+            "description": "The comment itself",
+            "example": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?",
+            "nullable": true
+          }
+        },
+        "required": ["from", "to", "title", "comment"]
+      },
+      "CaseComment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the case comment."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Date and time of the comment, ISO 8601 format, UTC time format.",
+            "example": "2024-01-01T09:00:00Z"
+          },
+          "internal": {
+            "type": "boolean",
+            "description": "Is the comment internal or external.",
+            "example": false
+          },
+          "type": {
+            "description": "Type of the case task.",
+            "allOf": [{ "$ref": "#/components/schemas/CaseCommentType" }]
+          },
+          "status": {
+            "description": "Status of case when comment was added.",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
+          },
+          "state": {
+            "type": "string",
+            "description": "JSON state of the application"
+          },
+          "task": {
+            "example": {
+              "from": "Ármann",
+              "to": null,
+              "title": "gerir athugasemd",
+              "comment": "Pálína, getur\n      þú tekið við og staðfest að upplýsingarnar séu réttar?"
+            },
+            "description": "The task itself",
+            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTask" }]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "internal",
+          "type",
+          "status",
+          "state",
+          "task"
+        ]
+      },
       "SignatureType": {
         "type": "object",
         "properties": {
@@ -1397,7 +1528,7 @@
           },
           "textBelow": {
             "type": "string",
-            "description": "The text cines below the signature name"
+            "description": "The text that comes below the signature name"
           },
           "textAfter": {
             "type": "string",
@@ -1583,7 +1714,7 @@
               }
             },
             "type": "array",
-            "items": { "type": "array" }
+            "items": { "$ref": "#/components/schemas/CaseComment" }
           },
           "signatures": {
             "type": "array",
@@ -1785,137 +1916,6 @@
           }
         },
         "required": ["caseIds"]
-      },
-      "CaseCommentType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The title of the case comment type"
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "submit",
-              "assign",
-              "assign-self",
-              "update",
-              "comment",
-              "message"
-            ],
-            "description": "The title of the case comment type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the case comment type"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "CaseCommentTitle": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The title of the case comment type"
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Innsent af:",
-              "færir mál á",
-              "merkir sér málið.",
-              "færir mál í stöðuna:",
-              "gerir athugasemd.",
-              "skráir skilaboð"
-            ],
-            "description": "The title of the case comment type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the case comment type"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "CaseCommentTask": {
-        "type": "object",
-        "properties": {
-          "from": {
-            "type": "string",
-            "description": "From who or what initied the task, used by client to show who inited the task.",
-            "example": "Ármann",
-            "nullable": true
-          },
-          "to": {
-            "type": "string",
-            "description": "To whom or what the task is assigned to.",
-            "example": "Pálina J",
-            "nullable": true
-          },
-          "title": {
-            "description": "Title for the task action",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTitle" }]
-          },
-          "comment": {
-            "type": "string",
-            "description": "The comment itself",
-            "example": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?",
-            "nullable": true
-          }
-        },
-        "required": ["from", "to", "title", "comment"]
-      },
-      "CaseComment": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "description": "Id of the case comment."
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Date and time of the comment, ISO 8601 format, UTC time format.",
-            "example": "2024-01-01T09:00:00Z"
-          },
-          "internal": {
-            "type": "boolean",
-            "description": "Is the comment internal or external.",
-            "example": false
-          },
-          "type": {
-            "description": "Type of the case task.",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentType" }]
-          },
-          "caseStatus": {
-            "description": "Status of case when comment was added.",
-            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
-          },
-          "state": {
-            "type": "string",
-            "description": "JSON state of the application"
-          },
-          "task": {
-            "example": {
-              "from": "Ármann",
-              "to": null,
-              "title": "gerir athugasemd",
-              "comment": "Pálína, getur\n      þú tekið við og staðfest að upplýsingarnar séu réttar?"
-            },
-            "description": "The task itself",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTask" }]
-          }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "internal",
-          "type",
-          "caseStatus",
-          "state",
-          "task"
-        ]
       },
       "GetCaseCommentsResponse": {
         "type": "object",

@@ -66,7 +66,7 @@ export const Comments = ({ activeCase }: Props) => {
               >
                 <Icon
                   icon={
-                    c.type === CaseCommentTypeTitleEnum.Comment
+                    c.type.title === CaseCommentTypeTitleEnum.Comment
                       ? 'pencil'
                       : 'arrowForward'
                   }
@@ -76,7 +76,7 @@ export const Comments = ({ activeCase }: Props) => {
                 />
 
                 <div className={styles.text}>
-                  <Text>{commentTaskToNode(c.task, c.caseStatus)}</Text>
+                  <Text>{commentTaskToNode(c.task, c.status.title)}</Text>
                   {c.task.comment ? <Text>{c.task.comment}</Text> : null}
                   <Button
                     loading={isLoading}

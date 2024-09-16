@@ -1,11 +1,11 @@
 import { Box, Icon, LinkV2, Stack, Text } from '@island.is/island-ui/core'
 
-import { CaseWithAdvert } from '../../gen/fetch'
+import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 // import * as styles from './Attachments.css'
 import { messages } from './messages'
 type Props = {
-  activeCase: CaseWithAdvert
+  activeCase: Case
 }
 
 export const Attachments = ({ activeCase }: Props) => {
@@ -22,7 +22,7 @@ export const Attachments = ({ activeCase }: Props) => {
         borderWidth="standard"
         borderColor="blue200"
       >
-        <Stack space={2}>
+        {/* <Stack space={2}>
           {activeCase.advert.attachments.map((a, i) => {
             return (
               <Box
@@ -68,7 +68,7 @@ export const Attachments = ({ activeCase }: Props) => {
               </Box>
             )
           })}
-        </Stack>
+        </Stack> */}
       </Box>
     </Box>
   )

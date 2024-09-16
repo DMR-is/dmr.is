@@ -13,7 +13,7 @@ export const caseCommentMigrate = (model: CaseCommentModel): CaseComment => {
       id: model.id,
       internal: model.internal,
       createdAt: model.createdAt,
-      caseStatus: caseStatusMigrate(model.status),
+      status: caseStatusMigrate(model.status),
       type: caseCommentTypeMigrate(model.type),
       state: model.state,
       task: {

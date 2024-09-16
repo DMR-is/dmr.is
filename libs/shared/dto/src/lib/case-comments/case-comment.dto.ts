@@ -40,11 +40,11 @@ export class CaseComment {
   type!: CaseCommentType
 
   @ApiProperty({
-    type: CaseStatus,
+    type: () => CaseStatus,
     description: 'Status of case when comment was added.',
   })
   @Type(() => CaseStatus)
-  caseStatus!: CaseStatus
+  status!: CaseStatus
 
   @ApiProperty({
     type: String,
