@@ -127,3 +127,14 @@ export const getFastTrack = (date: Date) => {
  * so we will return default price
  */
 export const calculatePriceForApplication = () => DEFAULT_PRICE
+
+type EnumType = { [s: number]: string }
+
+export const isEnum = <T extends EnumType>(
+  val: unknown,
+  enumType: T,
+): T[keyof T] | null => {
+  const found = Object.values(enumType).find((enumVal) => enumVal === val)
+
+  return found ? (found as T[keyof T]) : null
+}
