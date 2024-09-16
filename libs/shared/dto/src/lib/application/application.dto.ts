@@ -85,11 +85,6 @@ export class Application {
   answers!: ApplicationAnswers
 
   @ApiProperty({
-    type: Object,
-  })
-  externalData?: Record<string, unknown>
-
-  @ApiProperty({
     type: Boolean,
     example: true,
     description: 'Is the application listed',

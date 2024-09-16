@@ -33,6 +33,11 @@ export enum SignatureTypeTitle {
   Committee = 'Undirritun nefndar',
 }
 
+export enum SignatureType {
+  Regular = 'regular',
+  Committee = 'committee',
+}
+
 export enum SignatureTypeSlug {
   Regular = 'hefdbundin-undirritun',
   Committee = 'undirritun-nefndar',

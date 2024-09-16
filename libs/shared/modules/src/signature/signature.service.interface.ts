@@ -9,21 +9,16 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ISignatureService {
-  createAdvertSignature(
-    signatureId: string,
-    advertId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-  createCaseSignature(
-    signatureId: string,
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
   createSignature(
     body: CreateSignatureBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  createCaseSignature(
+    body: CreateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>>
+
   getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
   getSignatures(
     params?: DefaultSearchParams,

@@ -1,16 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+
+const updateNextStatusSchema = z.object({
+  currentStatus: z.string(),
+})
 
 class UpdateNextStatusHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query as { id?: string }
+    const { id } = req.query as {
+      id?: string
+    }
 
-    if (!id) {
+    const { currentStatus } = updateNextStatusSchema.parse(req.body)
+
+    if (!id || !currentStatus) {
       return res.status(400).end()
     }
 
@@ -18,6 +27,9 @@ class UpdateNextStatusHandler {
 
     await client.updateNextStatus({
       id: id,
+      updateNextStatusBody: {
+        currentStatus: currentStatus,
+      },
     })
 
     return res.status(204).end()

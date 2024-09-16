@@ -1,4 +1,5 @@
 import { Route } from '@dmr.is/decorators'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { GetPdfUrlResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -29,7 +30,9 @@ export class PdfController {
     ],
     responseType: StreamableFile,
   })
-  async getPdfByCaseId(@Param('id') id: string): Promise<StreamableFile> {
+  async getPdfByCaseId(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<StreamableFile> {
     const pdf = (await this.pdfService.getPdfByCaseId(id)).unwrap()
 
     return new StreamableFile(pdf, {
@@ -51,7 +54,7 @@ export class PdfController {
     responseType: StreamableFile,
   })
   async getPdfByApplicationId(
-    @Param('id') id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<StreamableFile> {
     const pdf = (await this.pdfService.getPdfByApplicationId(id)).unwrap()
 
@@ -73,7 +76,9 @@ export class PdfController {
     ],
     responseType: GetPdfUrlResponse,
   })
-  async getPdfUrlByCaseId(@Param('id') id: string): Promise<GetPdfUrlResponse> {
+  async getPdfUrlByCaseId(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetPdfUrlResponse> {
     ResultWrapper.unwrap(await this.utilityService.caseLookup(id))
 
     const url =
@@ -101,7 +106,7 @@ export class PdfController {
     responseType: GetPdfUrlResponse,
   })
   async getPdfUrlByApplicationId(
-    @Param('id') id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
     const applicationLookup = (
       await this.utilityService.applicationLookup(id)

@@ -8,8 +8,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseDto } from '../../case/models'
-import { AdvertDTO, AdvertInvolvedPartyDTO } from '../../journal/models'
+import { CaseModel } from '../../case/models'
+import { AdvertInvolvedPartyModel, AdvertModel } from '../../journal/models'
 import { AdvertSignaturesModel } from './advert-signatures.model'
 import { CaseSignaturesModel } from './case-signatures.model'
 import { SignatureMemberModel } from './signature-member.model'
@@ -44,11 +44,11 @@ export class SignatureModel extends Model {
   })
   involvedPartyId!: string
 
-  @Column({
-    type: DataType.UUID,
-    field: 'type_id',
-  })
+  @Column({ type: DataType.UUID, field: 'type_id' })
   typeId!: string
+
+  @BelongsTo(() => SignatureTypeModel, 'type_id')
+  type!: SignatureTypeModel
 
   @Column({
     type: DataType.UUID,
@@ -70,22 +70,23 @@ export class SignatureModel extends Model {
   })
   html?: string
 
-  @BelongsTo(() => AdvertInvolvedPartyDTO, 'involved_party_id')
-  involvedParty!: AdvertInvolvedPartyDTO
+  @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
+  involvedParty!: AdvertInvolvedPartyModel
 
-  @BelongsTo(() => SignatureTypeModel, 'type_id')
-  type!: SignatureTypeModel
-
-  @BelongsTo(() => SignatureMemberModel, 'chairman_id')
+  @BelongsTo(() => SignatureMemberModel, {
+    foreignKey: 'chairman_id',
+    as: 'chairman',
+  })
   chairman?: SignatureMemberModel
 
   @HasOne(() => CaseSignaturesModel, 'case_case_id')
-  case?: CaseDto
+  case?: CaseModel
 
   @HasOne(() => AdvertSignaturesModel, 'advert_id')
-  advert?: AdvertDTO
+  advert?: AdvertModel
 
   @BelongsToMany(() => SignatureMemberModel, {
+    as: 'members',
     through: { model: () => SignatureMembersModel },
   })
   members!: SignatureMemberModel[]

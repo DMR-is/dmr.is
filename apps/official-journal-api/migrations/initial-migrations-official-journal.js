@@ -129,36 +129,36 @@ module.exports = {
 
     CREATE TABLE case_status (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_tag (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_communication_status (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_comment_title (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_comment_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
@@ -215,6 +215,7 @@ module.exports = {
       message TEXT,
       advert_requested_publication_date TIMESTAMP WITH TIME ZONE,
       advert_type_id UUID NOT NULL,
+      advert_html TEXT NOT NULL,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),
@@ -258,6 +259,7 @@ module.exports = {
     CREATE TABLE signature_member (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       text_above VARCHAR,
+      text_before VARCHAR,
       text_below VARCHAR,
       text_after VARCHAR,
       value VARCHAR NOT NULL,

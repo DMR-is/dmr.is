@@ -1,28 +1,29 @@
-import { CaseDto } from './Case'
-import { CaseCategoriesDto } from './CaseCategories'
-import { CaseChannelDto } from './CaseChannel'
-import { CaseChannelsDto } from './CaseChannels'
-import { CaseCommunicationStatusDto } from './CaseCommunicationStatus'
-import { CaseStatusDto } from './CaseStatus'
-import { CaseTagDto } from './CaseTag'
+import { CaseModel } from './case.model'
+import { CaseCategoriesModel } from './case-categories.model'
+import { CaseChannelModel } from './case-channel.model'
+import { CaseChannelsModel } from './case-channels.model'
+import { CaseCommunicationStatusModel } from './case-communication-status.model'
+import { CaseStatusModel } from './case-status.model'
+import { CaseTagModel } from './case-tag.model'
 
 export {
-  CaseDto,
-  CaseTagDto,
-  CaseStatusDto,
-  CaseCommunicationStatusDto,
-  CaseChannelDto,
-  CaseChannelsDto,
+  CaseModel,
+  CaseTagModel,
+  CaseStatusModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseCategoriesModel,
 }
 
 export const models = [
-  CaseDto,
-  CaseTagDto,
-  CaseStatusDto,
-  CaseChannelDto,
-  CaseCommunicationStatusDto,
-  CaseCategoriesDto,
-  CaseChannelsDto,
+  CaseModel,
+  CaseTagModel,
+  CaseStatusModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseCategoriesModel,
 ]
 
 export default models

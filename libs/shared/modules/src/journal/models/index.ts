@@ -1,41 +1,38 @@
-import { AdvertDTO } from './Advert'
-import { AdvertAttachmentsDTO } from './AdvertAttachments'
-import { AdvertCategoriesDTO } from './AdvertCategories'
-import { AdvertCategoryDTO } from './AdvertCategory'
-import { AdvertDepartmentDTO } from './AdvertDepartment'
-import { AdvertInvolvedPartyDTO } from './AdvertInvolvedParty'
-import { AdvertMainCategoryDTO } from './AdvertMainCategory'
-import { AdvertStatusDTO } from './AdvertStatus'
-import { AdvertStatusHistoryDTO } from './AdvertStatusHistory'
-import { AdvertTypeDTO } from './AdvertType'
-import { CategoryDepartmentsDTO } from './CategoryDepartments'
+import { AdvertModel } from './advert.model'
+import { AdvertAttachmentsModel } from './advert-attachments.model'
+import { AdvertCategoriesModel } from './advert-categories.model'
+import { AdvertCategoryModel } from './advert-category.model'
+import { AdvertCategoryDepartmentsModel } from './advert-category-departments.model'
+import { AdvertDepartmentModel } from './advert-department.model'
+import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
+import { AdvertMainCategoryModel } from './advert-main-category.model'
+import { AdvertStatusModel } from './advert-status.model'
+import { AdvertTypeModel } from './advert-type.model'
 
 export {
-  AdvertDTO,
-  AdvertAttachmentsDTO,
-  AdvertCategoriesDTO,
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertMainCategoryDTO,
-  AdvertStatusDTO,
-  AdvertStatusHistoryDTO,
-  AdvertTypeDTO,
-  CategoryDepartmentsDTO,
+  AdvertModel,
+  AdvertAttachmentsModel,
+  AdvertCategoriesModel,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertMainCategoryModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
+  AdvertCategoryDepartmentsModel,
 }
 
 export const models = [
-  AdvertDTO,
-  AdvertCategoriesDTO,
-  AdvertAttachmentsDTO,
-  AdvertCategoryDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertMainCategoryDTO,
-  AdvertStatusDTO,
-  AdvertStatusHistoryDTO,
-  AdvertTypeDTO,
-  CategoryDepartmentsDTO,
-  AdvertDepartmentDTO,
+  AdvertModel,
+  AdvertCategoriesModel,
+  AdvertAttachmentsModel,
+  AdvertCategoryModel,
+  AdvertInvolvedPartyModel,
+  AdvertMainCategoryModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
+  AdvertCategoryDepartmentsModel,
+  AdvertDepartmentModel,
 ]
 
 export default models

@@ -34,6 +34,13 @@ export class SignatureMemberModel extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: true,
+    field: 'text_before',
+  })
+  textBefore?: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
     field: 'text_after',
   })
   textAfter?: string

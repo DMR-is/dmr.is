@@ -1,4 +1,5 @@
 import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
+import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Result, ResultWrapper } from '@dmr.is/types'
 
@@ -11,6 +12,7 @@ import {
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
@@ -36,15 +38,30 @@ export class PdfService implements IPdfService {
     const { answers } = application
 
     const type = (
-      await this.utilityService.typeLookup(answers.advert.type)
+      await this.utilityService.typeLookup(answers.advert.typeId)
     ).unwrap()
+
+    const { signatureType } = answers.misc
+
+    let signatureHtml = ''
+
+    switch (signatureType) {
+      case SignatureType.Committee:
+        signatureHtml += answers.signatures.committee?.html
+        break
+      case SignatureType.Regular:
+        signatureHtml += answers.signatures.regular?.map(
+          (signature) => signature.html,
+        )
+        break
+    }
 
     const pdf = (
       await this.generatePdfFromHtml(
         type.title,
         answers.advert.title,
-        answers.advert.document,
-        answers.signature.signature,
+        answers.advert.html,
+        signatureHtml,
       )
     ).unwrap()
 
@@ -122,22 +139,17 @@ export class PdfService implements IPdfService {
 
   @LogAndHandle()
   async getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
-    const caseLookup = (
-      await this.utilityService.getCaseWithAdvert(caseId)
-    ).unwrap()
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
-    const { activeCase, advert } = caseLookup
-
-    const { advert: advertHtml } = advert.documents
-    const { signature: signatureHtml } = advert.documents
+    const activeCase = caseMigrate(caseLookup)
 
     if (!activeCase.publishedAt) {
       const pdf = (
         await this.generatePdfFromHtml(
           activeCase.advertType.title,
-          advert.title,
-          advertHtml,
-          signatureHtml,
+          activeCase.advertTitle,
+          activeCase.html,
+          '', // TODO: Add signature
         )
       ).unwrap()
 
@@ -149,8 +161,8 @@ export class PdfService implements IPdfService {
         activeCase.advertType.title,
         activeCase.advertTitle,
         activeCase.isLegacy
-          ? dirtyClean(advert.documents.full as HTMLText)
-          : advert.documents.full,
+          ? dirtyClean(activeCase.html as HTMLText)
+          : activeCase.html,
       )
     ).unwrap()
 
