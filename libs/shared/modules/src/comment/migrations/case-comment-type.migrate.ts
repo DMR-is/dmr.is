@@ -1,6 +1,7 @@
 import { CaseCommentType } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
+import { caseCommentTypeMapper } from '../mappers/commentType.mapper'
 import { CaseCommentTypeModel } from '../models'
 
 export const caseCommentTypeMigrate = (
@@ -9,7 +10,7 @@ export const caseCommentTypeMigrate = (
   return withTryCatch(() => {
     return {
       id: model.id,
-      title: model.title,
+      title: caseCommentTypeMapper(model.slug),
       slug: model.slug,
     }
   }, `Failed to migrate case comment type with id: ${model.id}`)

@@ -9,10 +9,4 @@ export class UpdateCaseDepartmentBody {
   })
   @IsUUID()
   departmentId!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  @IsUUID()
-  applicationId!: string
 }

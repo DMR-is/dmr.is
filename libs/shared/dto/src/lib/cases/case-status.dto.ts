@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { CaseStatusEnum } from './case-constants'
+
 export class CaseStatus {
   @ApiProperty({
     type: String,
@@ -8,11 +10,11 @@ export class CaseStatus {
   readonly id!: string
 
   @ApiProperty({
-    type: String,
+    enum: CaseStatusEnum,
     example: 'Innsent',
     description: 'Status of the case',
   })
-  readonly title!: string
+  readonly title!: CaseStatusEnum
 
   @ApiProperty({
     type: String,

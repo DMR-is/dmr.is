@@ -512,6 +512,7 @@ export class CaseService implements ICaseService {
       where: {
         id: body.caseId,
       },
+      returning: true,
       transaction,
     })
 
@@ -521,7 +522,6 @@ export class CaseService implements ICaseService {
       this.updateCaseCategories(
         body.caseId,
         {
-          applicationId: body.applicationId,
           categoryIds: body.categoryIds,
         },
         transaction,
@@ -767,7 +767,7 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<undefined>> {
     await this.caseModel.update(
       {
-        price: parseFloat(body.price),
+        price: body.price,
       },
       {
         where: {
@@ -784,7 +784,7 @@ export class CaseService implements ICaseService {
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         departmentId: body.departmentId,
       },
@@ -792,11 +792,14 @@ export class CaseService implements ICaseService {
         where: {
           id: caseId,
         },
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             departmentId: body.departmentId,
@@ -815,7 +818,7 @@ export class CaseService implements ICaseService {
     body: UpdateCaseTypeBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         advertTypeId: body.typeId,
       },
@@ -824,11 +827,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     const updateApplicationResult =
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             typeId: body.typeId,
@@ -850,6 +856,7 @@ export class CaseService implements ICaseService {
     body: UpdateCategoriesBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const currentCategories = await this.caseCategoriesModel.findAll({
       where: {
         caseId,
@@ -902,13 +909,16 @@ export class CaseService implements ICaseService {
     const ids = newCurrentCategories.map((c) => c.categoryId)
 
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
-        answers: {
-          advert: {
-            categories: ids,
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              categories: ids,
+            },
           },
         },
-      }),
+      ),
     )
 
     return ResultWrapper.ok()
@@ -924,7 +934,7 @@ export class CaseService implements ICaseService {
     const requestedPublicationDate = new Date(body.date)
     const { fastTrack } = getFastTrack(requestedPublicationDate)
 
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         requestedPublicationDate: body.date,
         fastTrack: fastTrack,
@@ -934,11 +944,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             requestedDate: body.date,
@@ -957,7 +970,7 @@ export class CaseService implements ICaseService {
     body: UpdateTitleBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         advertTitle: body.title,
       },
@@ -966,11 +979,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             title: body.title,

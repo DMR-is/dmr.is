@@ -1,5 +1,6 @@
 import { CommunicationStatus } from '@dmr.is/shared/dto'
 
+import { caseCommunicationStatusMapper } from '../mappers/case-communication-status.mapper'
 import { CaseCommunicationStatusModel } from '../models'
 
 export const caseCommunicationStatusMigrate = (
@@ -7,7 +8,7 @@ export const caseCommunicationStatusMigrate = (
 ): CommunicationStatus => {
   const migrated: CommunicationStatus = {
     id: model.id,
-    title: model.title,
+    title: caseCommunicationStatusMapper(model.title),
     slug: model.slug,
   }
 

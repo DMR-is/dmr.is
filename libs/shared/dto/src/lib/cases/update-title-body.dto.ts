@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator'
+import { IsNotEmpty, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -9,11 +9,4 @@ export class UpdateTitleBody {
   @IsString()
   @IsNotEmpty()
   title!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  applicationId!: string
 }

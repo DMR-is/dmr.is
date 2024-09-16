@@ -10,7 +10,7 @@ import { CasePublishingTab } from '../components/case-publishing-tab/CasePublish
 import { Meta } from '../components/meta/Meta'
 import { Tabs } from '../components/tabs/Tabs'
 import { PublishingContextProvider } from '../context/publishingContext'
-import { Case, CaseStatusEnum, Paging } from '../gen/fetch'
+import { Case, CaseStatusTitleEnum, Paging } from '../gen/fetch'
 import { useFilterContext } from '../hooks/useFilterContext'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -51,7 +51,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
     const revalidate = `${
       APIRotues.GetCases
     }?department=${selectedTab}&status=${encodeURIComponent(
-      CaseStatusEnum.Tilbi,
+      CaseStatusTitleEnum.Tilbi,
     )}`
     mutate(revalidate)
   }
@@ -165,7 +165,7 @@ CasePublishingOverview.getProps = async ({ query }) => {
 
     const { cases, paging } = await dmrClient.getCases({
       department,
-      status: CaseStatusEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbi,
     })
 
     return {

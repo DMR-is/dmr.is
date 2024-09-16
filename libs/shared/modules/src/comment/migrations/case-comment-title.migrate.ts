@@ -1,6 +1,7 @@
 import { CaseCommentTitle } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
+import { caseCommentTitleMapper } from '../mappers/commentTitle.mapper'
 import { CaseCommentTitleModel } from '../models'
 
 export const caseCommentTitleMigrate = (
@@ -9,7 +10,7 @@ export const caseCommentTitleMigrate = (
   return withTryCatch(() => {
     return {
       id: model.id,
-      title: model.title,
+      title: caseCommentTitleMapper(model.title),
       slug: model.slug,
     }
   }, `Failed to migrate case comment title with id: ${model.id}`)

@@ -5,6 +5,7 @@ import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatus,
+  CaseStatusEnum,
   DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -181,10 +182,10 @@ export class JournalController {
     params?: DefaultSearchParams,
   ): Promise<GetCasesReponse> {
     const statuses = [
-      CaseStatus.Submitted,
-      CaseStatus.InProgress,
-      CaseStatus.InReview,
-      CaseStatus.ReadyForPublishing,
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+      CaseStatusEnum.ReadyForPublishing,
     ]
 
     return ResultWrapper.unwrap(

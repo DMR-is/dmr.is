@@ -9,7 +9,7 @@ import { Test } from '@nestjs/testing'
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
-import { AdvertCategorymodel, AdvertDepartmentmodel } from '../journal/models'
+import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
@@ -32,7 +32,7 @@ describe('CaseService', () => {
   let signatureService: ISignatureService
   let caseModel: CaseModel
   let categoriesModel: CaseCategoriesModel
-  let advertCategoryModel: AdvertCategorymodel
+  let advertCategoryModel: AdvertCategoryModel
   let caseCategoriesModel: CaseCategoriesModel
   let caseChannelModel: CaseChannelModel
   let caseChannelsModel: CaseChannelsModel
@@ -83,7 +83,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(AdvertCategorymodel),
+          provide: getModelToken(AdvertCategoryModel),
           useClass: jest.fn(() => ({})),
         },
         {
@@ -105,7 +105,7 @@ describe('CaseService', () => {
           })),
         },
         {
-          provide: getModelToken(AdvertDepartmentmodel),
+          provide: getModelToken(AdvertDepartmentModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
@@ -127,7 +127,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: AdvertCategorymodel,
+          provide: AdvertCategoryModel,
           useClass: jest.fn(() => ({})),
         },
         {
