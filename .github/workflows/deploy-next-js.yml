@@ -102,7 +102,7 @@ jobs:
           restore-keys: ubuntu-latest-rubygems-
 
       - name: Install Terragrunt
-        run: brew install terragrunt
+        run: brew install terragrunt tfenv
 
       - name: Deploy
         id: deploy
