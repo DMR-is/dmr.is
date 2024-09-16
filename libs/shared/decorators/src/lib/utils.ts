@@ -19,7 +19,7 @@ export const handleException = <T>({
   method: string
   message: string
   category: string
-  error: any
+  error: unknown
   info?: Record<string, unknown>
   code?: number
 }): ResultWrapper<T> => {
@@ -106,7 +106,9 @@ export const handleException = <T>({
     })
   }
 
-  logger.error(`Unhandled error in ${category}.${method}: ${error.message}!`)
+  logger.error(`Unknown error in ${category}.${method}`, {
+    error: error,
+  })
 
   return ResultWrapper.err({
     code: code,

@@ -37,7 +37,7 @@ export class SignatureMember {
   @ApiProperty({
     type: String,
     required: false,
-    description: 'The text cines below the signature name',
+    description: 'The text that comes below the signature name',
   })
   textBelow?: string
 

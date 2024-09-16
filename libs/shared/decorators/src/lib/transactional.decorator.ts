@@ -41,7 +41,9 @@ export function Transactional() {
         await transaction.commit()
         return result
       } catch (error) {
-        logger.debug(`Transaction failed, rolling back`)
+        logger.debug(
+          `Transaction for method: ${propertyKey} failed, rolling back`,
+        )
         await transaction.rollback()
         throw error
       }

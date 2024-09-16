@@ -502,8 +502,6 @@ export class CaseService implements ICaseService {
       return await Promise.all(signaturePromises)
     })
 
-    this.logger.debug('Successfully created signature for case')
-
     const newCreatedCase = (
       await this.utilityService.caseLookup(newCase.id)
     ).unwrap()
