@@ -1,7 +1,7 @@
 import { CaseCommentTitle } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
-import { caseCommentTitleMapper } from '../mappers/commentTitle.mapper'
+import { caseCommentTitleMapper } from '../mappers/comment-title.mapper'
 import { CaseCommentTitleModel } from '../models'
 
 export const caseCommentTitleMigrate = (

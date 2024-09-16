@@ -1,7 +1,7 @@
 import { CaseCommentType } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
-import { caseCommentTypeMapper } from '../mappers/commentType.mapper'
+import { caseCommentTypeMapper } from '../mappers/comment-type.mapper'
 import { CaseCommentTypeModel } from '../models'
 
 export const caseCommentTypeMigrate = (
