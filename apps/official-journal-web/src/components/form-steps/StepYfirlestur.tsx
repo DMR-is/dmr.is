@@ -6,15 +6,15 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseWithAdvert } from '../../gen/fetch'
+import { Case } from '../../gen/fetch'
 import { useCase, useTags, useUpdateTag } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { formatDate } from '../../lib/utils'
+import { formatDate, getSignatureDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  data: CaseWithAdvert
+  data: Case
 }
 
 export const StepYfirlestur = ({ data }: Props) => {
@@ -26,7 +26,7 @@ export const StepYfirlestur = ({ data }: Props) => {
     isLoading: isLoadingCase,
     mutate: refetchCase,
   } = useCase({
-    caseId: data.activeCase.id,
+    caseId: data.id,
     options: {
       fallback: data,
     },
@@ -37,7 +37,7 @@ export const StepYfirlestur = ({ data }: Props) => {
   })
 
   const { trigger: updateTag } = useUpdateTag({
-    caseId: data.activeCase.id,
+    caseId: data.id,
     options: {
       onSuccess: () => refetchCase(),
     },
@@ -55,7 +55,9 @@ export const StepYfirlestur = ({ data }: Props) => {
     return <div>No data</div>
   }
 
-  const { activeCase, advert } = caseData._case
+  const activeCase = caseData._case
+
+  const signatureDate = getSignatureDate(activeCase.signatures)
 
   return (
     <GridContainer>
@@ -72,13 +74,13 @@ export const StepYfirlestur = ({ data }: Props) => {
           <AdvertDisplay
             advertNumber={`${activeCase.caseNumber}`}
             signatureDate={
-              advert.signatureDate
-                ? formatDate(advert.signatureDate, 'dd. MMMM yyyy')
+              signatureDate
+                ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
             advertType={activeCase.advertTitle}
-            advertSubject={advert.title}
-            advertText={advert.documents.advert}
+            advertSubject={activeCase.advertTitle}
+            advertText={activeCase.html}
             isLegacy={activeCase.isLegacy}
           />
         </GridColumn>
@@ -90,11 +92,11 @@ export const StepYfirlestur = ({ data }: Props) => {
             <Select
               name="tag"
               defaultValue={{
-                label: activeCase.tag.value,
+                label: activeCase.tag.title,
                 value: activeCase.tag.id,
               }}
               options={tagsData.tags.map((tag) => ({
-                label: tag.value,
+                label: tag.title,
                 value: tag.id,
               }))}
               label={formatMessage(messages.yfirlestur.tag)}

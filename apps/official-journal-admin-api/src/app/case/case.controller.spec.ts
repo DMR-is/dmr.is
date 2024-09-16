@@ -9,14 +9,13 @@ import {
 import {
   Case,
   CaseComment,
-  CaseCommentTitle,
-  CaseCommentType,
+  CaseCommentTitleEnum,
+  CaseCommentTypeEnum,
   CaseCommunicationStatus,
-  CaseStatus,
+  CaseStatusEnum,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { HttpException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
@@ -30,14 +29,14 @@ describe('CaseController', () => {
 
   const comment = {
     id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-    type: CaseCommentType.Submit,
+    type: CaseCommentTypeEnum.Submit,
     createdAt: '2024-03-12T12:45:48.21Z',
-    caseStatus: CaseStatus.Submitted,
+    caseStatus: CaseStatusEnum.Submitted,
     internal: false,
     task: {
       from: null,
       to: 'Stofnun x',
-      title: CaseCommentTitle.Submit,
+      title: CaseCommentTitleEnum.Submit,
       comment: null,
     },
   }
@@ -48,7 +47,7 @@ describe('CaseController', () => {
     year: 2024,
     caseNumber: '1234',
     isLegacy: true,
-    status: CaseStatus.Submitted,
+    status: CaseStatusEnum.Submitted,
     tag: null,
     createdAt: '2024-03-12T12:45:48.21Z',
     modifiedAt: '2024-03-12T12:45:48.21Z',
@@ -113,20 +112,14 @@ describe('CaseController', () => {
 
       jest
         .spyOn(caseService, 'createCase')
-        .mockImplementation(() =>
-          Promise.resolve(ResultWrapper.ok({ case: activeCase })),
-        )
+        .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
-      const result = await caseController.createCase({
+      await caseController.createCase({
         applicationId: activeCase.applicationId,
       })
 
       expect(createSpy).toHaveBeenCalledWith({
         applicationId: activeCase.applicationId,
-      })
-
-      expect(result).toEqual({
-        case: activeCase,
       })
     })
   })
@@ -134,7 +127,7 @@ describe('CaseController', () => {
   describe('createComment', () => {
     const comment = {
       id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-      type: 'comment',
+      type: { title: 'comment' },
       createdAt: '2024-03-12T12:45:48.21Z',
       caseStatus: 'Innsent',
       internal: false,
@@ -158,7 +151,7 @@ describe('CaseController', () => {
         initiator: `${comment.task.from}`,
         receiver: comment.task.to,
         internal: comment.internal,
-        type: comment.type,
+        type: comment.type.title,
       })
 
       expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
@@ -166,7 +159,7 @@ describe('CaseController', () => {
         initiator: `${comment.task.from}`,
         receiver: comment.task.to,
         internal: comment.internal,
-        type: comment.type,
+        type: comment.type.title,
       })
     })
   })

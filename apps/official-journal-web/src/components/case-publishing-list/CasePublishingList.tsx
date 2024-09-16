@@ -6,7 +6,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusEnum } from '../../gen/fetch'
+import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
 import { usePublishCases } from '../../hooks/api/post/usePublishCases'
 import { usePublishContext } from '../../hooks/usePublishContext'
@@ -57,7 +57,7 @@ export const CasePublishingList = ({
       refreshInterval: 0,
     },
     params: {
-      status: CaseStatusEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbi,
       id: ids,
     },
   })

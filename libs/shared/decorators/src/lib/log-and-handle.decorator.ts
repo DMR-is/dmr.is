@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Transaction } from 'sequelize'
 import { filterArgs, handleException } from '../lib/utils'
 import { logger } from '@dmr.is/logging'
 

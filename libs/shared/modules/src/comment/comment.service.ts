@@ -1,10 +1,9 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseCommentTitle,
+  CaseCommentTitleEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -22,14 +21,14 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
-import { CaseStatusDto } from '../case/models'
-import { caseCommentMigrate } from '../helpers'
+import { CaseStatusModel } from '../case/models'
 import { IUtilityService } from '../utility/utility.module'
-import { CaseCommentDto } from './models/CaseComment'
-import { CaseCommentsDto } from './models/CaseComments'
-import { CaseCommentTaskDto } from './models/CaseCommentTask'
-import { CaseCommentTitleDto } from './models/CaseCommentTitle'
-import { CaseCommentTypeDto } from './models/CaseCommentType'
+import { caseCommentMigrate } from './migrations/case-comment.migrate'
+import { CaseCommentModel } from './models/case-comment.model'
+import { CaseCommentTaskModel } from './models/case-comment-task.model'
+import { CaseCommentTitleModel } from './models/case-comment-title.model'
+import { CaseCommentTypeModel } from './models/case-comment-type.model'
+import { CaseCommentsModel } from './models/case-comments.model'
 import { ICommentService } from './comment.service.interface'
 import { getCaseCommentsRelations } from './relations'
 
@@ -42,19 +41,19 @@ export class CommentService implements ICommentService {
 
     @Inject(forwardRef(() => IApplicationService))
     private applicationService: IApplicationService,
-    @InjectModel(CaseCommentsDto)
-    private caseCommentsModel: typeof CaseCommentsDto,
-    @InjectModel(CaseCommentDto)
-    private caseCommentModel: typeof CaseCommentDto,
+    @InjectModel(CaseCommentsModel)
+    private caseCommentsModel: typeof CaseCommentsModel,
+    @InjectModel(CaseCommentModel)
+    private caseCommentModel: typeof CaseCommentModel,
 
-    @InjectModel(CaseCommentTaskDto)
-    private caseCommentTaskModel: typeof CaseCommentTaskDto,
+    @InjectModel(CaseCommentTaskModel)
+    private caseCommentTaskModel: typeof CaseCommentTaskModel,
 
-    @InjectModel(CaseCommentTitleDto)
-    private caseCommentTitleModel: typeof CaseCommentTitleDto,
+    @InjectModel(CaseCommentTitleModel)
+    private caseCommentTitleModel: typeof CaseCommentTitleModel,
 
-    @InjectModel(CaseCommentTypeDto)
-    private caseCommentTypeModel: typeof CaseCommentTypeDto,
+    @InjectModel(CaseCommentTypeModel)
+    private caseCommentTypeModel: typeof CaseCommentTypeModel,
 
     private readonly sequelize: Sequelize,
   ) {
@@ -62,12 +61,13 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async caseCommentTitleLookup(
-    type: string | CaseCommentTitle,
+    type: string | CaseCommentTitleEnum,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommentTitleDto>> {
+  ): Promise<ResultWrapper<CaseCommentTitleModel>> {
     const title = await this.caseCommentTitleModel.findOne({
-      where: { value: type },
+      where: { title: type },
       transaction,
     })
 
@@ -79,12 +79,13 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async caseCommentTypeLookup(
     type: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommentTypeDto>> {
+  ): Promise<ResultWrapper<CaseCommentTypeModel>> {
     const commentType = await this.caseCommentTypeModel.findOne({
-      where: { value: type },
+      where: { slug: type },
       transaction,
     })
 
@@ -96,6 +97,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getComment(
     caseId: string,
     commentId: string,
@@ -123,6 +125,7 @@ export class CommentService implements ICommentService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getComments(
     caseId: string,
     params?: GetCaseCommentsQuery,
@@ -221,9 +224,9 @@ export class CommentService implements ICommentService {
     const withRelations = await this.caseCommentModel.findByPk(newComment.id, {
       nest: true,
       include: [
-        CaseCommentTypeDto,
-        CaseStatusDto,
-        { model: CaseCommentTaskDto, include: [CaseCommentTitleDto] },
+        CaseCommentTypeModel,
+        CaseStatusModel,
+        { model: CaseCommentTaskModel, include: [CaseCommentTitleModel] },
       ],
       transaction: transaction,
     })
@@ -248,7 +251,7 @@ export class CommentService implements ICommentService {
         caseId,
         commentId,
       },
-      include: [CaseCommentDto],
+      include: [CaseCommentModel],
       transaction,
     })
 

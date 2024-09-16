@@ -1,106 +1,68 @@
+import { IsOptional } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApplicationCommunicationChannel } from './application-advert'
 export class ApplicationAdvert {
   @ApiProperty({
     type: String,
     example: 'b783c4d5-6e78-9f01-2g34-h56i7j8k9l0m',
     description: 'Id of the selected department for the application advert',
   })
-  department?: string
+  @IsOptional()
+  departmentId?: string
 
   @ApiProperty({
     type: String,
     example: 'a71ka2b3-4c56-7d89-0e12-3f45g6h7i8j9',
     description: 'Id of the selected type for the application advert',
   })
-  type?: string
+  @IsOptional()
+  typeId?: string
 
   @ApiProperty({
     type: String,
     example: 'GJALDSKRÁ fyrir hundahald í Reykjavík',
     description: 'Title of the application advert',
   })
+  @IsOptional()
   title?: string
 
   @ApiProperty({
     type: String,
-    description: 'HTML string of the application advert',
+    example: 'a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0',
+    description: 'HTML contents of the advert',
   })
-  document?: string
+  @IsOptional()
+  html?: string
 
-  @ApiProperty({
-    type: String,
-    description: 'Selected template for the application advert',
-  })
-  template?: string
-
-  @ApiProperty({
-    type: String,
-    example: 'b781ks2-3c45-6d78-9e01-2f34g5h6i7j8',
-    description:
-      'Id of the selected subType for the application advert, only when type is "Reglugerð"',
-  })
-  subType?: string
-}
-
-class ApplicationContentCategories {
-  @ApiProperty({
-    type: String,
-    example: 'Gæludýr',
-    description: 'Label of the category',
-  })
-  label!: string
-
-  @ApiProperty({
-    type: String,
-    example: 'b619j2k3-4l56-7m89-0n12-3o45p6q7r8s9',
-    description: 'Id of the selected category',
-  })
-  value!: string
-}
-
-class ApplicationCommunicationChannels {
-  @ApiProperty({
-    type: String,
-    example: 'email',
-    description: 'Selected communication channel',
-  })
-  email!: string
-
-  @ApiProperty({
-    type: String,
-    example: '5555555',
-    description: 'Phone number of the communication channel',
-  })
-  phone!: string
-}
-
-export class ApplicationPublishing {
   @ApiProperty({
     type: String,
     example: '2021-04-01T00:00:00.000Z',
-    description: 'Requested publishing date',
+    description: 'Request advert publication date',
   })
-  date?: string
+  @IsOptional()
+  requestedDate?: string
 
   @ApiProperty({
-    type: [ApplicationContentCategories],
-    description: 'List of selected categories',
+    type: [String],
   })
-  contentCategories?: ApplicationContentCategories[]
-
-  @ApiProperty({
-    type: [ApplicationCommunicationChannels],
-    description: 'Selected communication channels',
-  })
-  communicationChannels?: ApplicationCommunicationChannels[]
+  @IsOptional()
+  categories?: string[]
 
   @ApiProperty({
     type: String,
-    example: 'Some message..',
-    description: 'Message for the publisher',
+    example: 'Some message to the admins',
+    description: 'Message to the admins of the advert',
   })
   message?: string
+
+  @ApiProperty({
+    type: [ApplicationCommunicationChannel],
+    description: 'Communication channels',
+  })
+  @IsOptional()
+  channels?: ApplicationCommunicationChannel[]
 }
 
 export class UpdateApplicationAnswersBody {
@@ -109,10 +71,4 @@ export class UpdateApplicationAnswersBody {
     description: 'Application advert',
   })
   advert?: ApplicationAdvert
-
-  @ApiProperty({
-    type: ApplicationPublishing,
-    description: 'Application publishing',
-  })
-  publishing?: ApplicationPublishing
 }

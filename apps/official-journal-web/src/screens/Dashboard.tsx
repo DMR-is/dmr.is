@@ -1,3 +1,5 @@
+import { isReponse } from '@dmr.is/utils/client'
+
 import {
   Box,
   GridColumn,
@@ -17,6 +19,7 @@ import { StatisticsPieCharts } from '../components/statistics/PieCharts'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  GetStatisticsOverviewTypeEnum,
 } from '../gen/fetch'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -210,23 +213,30 @@ Dashboard.getProps = async () => {
 
   const [general, personal, inactive, publishing] = await Promise.all(
     [
-      dmrClient.statisticsControllerOverview({
-        type: 'general',
+      dmrClient.getStatisticsOverview({
+        type: GetStatisticsOverviewTypeEnum.General,
       }),
-      dmrClient.statisticsControllerOverview({
-        type: 'personal',
+      dmrClient.getStatisticsOverview({
+        type: GetStatisticsOverviewTypeEnum.Personal,
         userId: user.id,
       }),
-      dmrClient.statisticsControllerOverview({
-        type: 'inactive',
+      dmrClient.getStatisticsOverview({
+        type: GetStatisticsOverviewTypeEnum.Inactive,
       }),
-      dmrClient.statisticsControllerOverview({
-        type: 'publishing',
+      dmrClient.getStatisticsOverview({
+        type: GetStatisticsOverviewTypeEnum.Publishing,
       }),
     ].map((promise) =>
-      promise.catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err)
+      promise.catch(async (err) => {
+        if (isReponse(err)) {
+          const json = await err.json()
+          // eslint-disable-next-line no-console
+          console.error(`${json.error}: ${json.message}`, {
+            statusCode: json.statusCode,
+            message: json.message,
+            error: json.error,
+          })
+        }
         return null
       }),
     ),
@@ -234,13 +244,13 @@ Dashboard.getProps = async () => {
 
   const [aStatistics, bStatistics, cStatistics] = await Promise.all(
     [
-      dmrClient.statisticsControllerDepartment({
+      dmrClient.getStatisticsForDepartment({
         slug: 'a-deild',
       }),
-      dmrClient.statisticsControllerDepartment({
+      dmrClient.getStatisticsForDepartment({
         slug: 'b-deild',
       }),
-      dmrClient.statisticsControllerDepartment({
+      dmrClient.getStatisticsForDepartment({
         slug: 'c-deild',
       }),
     ].map((promise) =>

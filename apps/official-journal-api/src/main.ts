@@ -6,8 +6,9 @@
 import { WinstonModule } from 'nest-winston'
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
+import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
-import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
@@ -25,7 +26,7 @@ async function bootstrap() {
   // TODO make this behave with nest
   // app.useLogger(logger)
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(ExceptionFactoryPipe())
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({

@@ -5,13 +5,15 @@ import { ParsedUrlQuery } from 'querystring'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
+  Case,
   CaseComment,
-  CaseCommentCaseStatusEnum,
-  CaseCommentTaskTitleEnum,
-  CaseCommentTypeEnum,
-  CaseStatusEnum,
-  CaseTagValueEnum,
-  CaseWithAdvert,
+  CaseCommentTask,
+  CaseCommentTitleTitleEnum,
+  CaseCommentTypeTitleEnum,
+  CaseStatus,
+  CaseStatusTitleEnum,
+  CaseTagTitleEnum,
+  Signature,
 } from '../gen/fetch'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
 
@@ -47,24 +49,24 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
 }
 
 export const mapTabIdToCaseStatus = (param?: string) => {
-  if (!param) return CaseStatusEnum.Innsent
+  if (!param) return CaseStatusTitleEnum.Innsent
 
   switch (param) {
-    case CaseStatusEnum.Innsent:
-      return CaseStatusEnum.Innsent
-    case CaseStatusEnum.Grunnvinnsla:
-      return CaseStatusEnum.Grunnvinnsla
-    case CaseStatusEnum.Yfirlestur:
-      return CaseStatusEnum.Yfirlestur
-    case CaseStatusEnum.Tilbi:
-      return CaseStatusEnum.Tilbi
+    case CaseStatusTitleEnum.Innsent:
+      return CaseStatusTitleEnum.Innsent
+    case CaseStatusTitleEnum.Grunnvinnsla:
+      return CaseStatusTitleEnum.Grunnvinnsla
+    case CaseStatusTitleEnum.Yfirlestur:
+      return CaseStatusTitleEnum.Yfirlestur
+    case CaseStatusTitleEnum.Tilbi:
+      return CaseStatusTitleEnum.Tilbi
     default:
-      return CaseStatusEnum.Tilbi
+      return CaseStatusTitleEnum.Tilbi
   }
 }
 
 export const enumToOptions = (
-  obj: typeof CaseStatusEnum | typeof CaseTagValueEnum,
+  obj: typeof CaseStatusTitleEnum | typeof CaseTagTitleEnum,
 ): StringOption[] => {
   return Object.entries(obj).map(([_, value]) => ({
     label: value,
@@ -72,37 +74,40 @@ export const enumToOptions = (
   }))
 }
 
-const caseStatusToIndex: Record<CaseStatusEnum, number> = {
-  [CaseStatusEnum.Innsent]: 0,
-  [CaseStatusEnum.Grunnvinnsla]: 1,
-  [CaseStatusEnum.Yfirlestur]: 2,
-  [CaseStatusEnum.Tilbi]: 3,
-  [CaseStatusEnum.Tgefi]: 4,
-  [CaseStatusEnum.TekiRBirtingu]: 5,
-  [CaseStatusEnum.BirtinguHafna]: 6,
+const caseStatusToIndex: Record<CaseStatusTitleEnum, number> = {
+  [CaseStatusTitleEnum.Innsent]: 0,
+  [CaseStatusTitleEnum.Grunnvinnsla]: 1,
+  [CaseStatusTitleEnum.Yfirlestur]: 2,
+  [CaseStatusTitleEnum.Tilbi]: 3,
+  [CaseStatusTitleEnum.Tgefi]: 4,
+  [CaseStatusTitleEnum.TekiRBirtingu]: 5,
+  [CaseStatusTitleEnum.BirtinguHafna]: 6,
 }
 
-export const generateCaseLink = (status: CaseStatusEnum, caseId: string) => {
+export const generateCaseLink = (
+  status: CaseStatusTitleEnum,
+  caseId: string,
+) => {
   let route = Routes.OverviewDetail
 
   if (
-    status === CaseStatusEnum.Tgefi ||
-    status === CaseStatusEnum.BirtinguHafna ||
-    status === CaseStatusEnum.TekiRBirtingu
+    status === CaseStatusTitleEnum.Tgefi ||
+    status === CaseStatusTitleEnum.BirtinguHafna ||
+    status === CaseStatusTitleEnum.TekiRBirtingu
   ) {
     route = Routes.OverviewDetail
   }
 
-  if (status === CaseStatusEnum.Innsent) {
+  if (status === CaseStatusTitleEnum.Innsent) {
     route = Routes.ProcessingDetailSubmitted
   }
-  if (status === CaseStatusEnum.Grunnvinnsla) {
+  if (status === CaseStatusTitleEnum.Grunnvinnsla) {
     route = Routes.ProcessingDetailInProgress
   }
-  if (status === CaseStatusEnum.Yfirlestur) {
+  if (status === CaseStatusTitleEnum.Yfirlestur) {
     route = Routes.ProcessingDetailInReview
   }
-  if (status === CaseStatusEnum.Tilbi) {
+  if (status === CaseStatusTitleEnum.Tilbi) {
     route = Routes.ProcessingDetailReady
   }
 
@@ -127,75 +132,80 @@ type StepsType = {
 }
 
 export const commentTaskToNode = (
-  task: CaseComment['task'],
-  status: CaseComment['caseStatus'],
+  task: CaseCommentTask,
+  status: CaseStatus,
 ) => {
-  switch (task.title) {
-    case CaseCommentTaskTitleEnum.InnsentAf: {
+  switch (task.title.title) {
+    case CaseCommentTitleTitleEnum.InnsentAf: {
       return (
         <>
-          {task.title} <strong>{task.from}</strong>
+          {task.title.title} <strong>{task.from}</strong>
         </>
       )
     }
-    case CaseCommentTaskTitleEnum.MerkirSrMli: {
+    case CaseCommentTitleTitleEnum.MerkirSrMli: {
       return (
         <>
-          <strong>{task.to}</strong> {task.title}
+          <strong>{task.to}</strong> {task.title.title}
         </>
       )
     }
-    case CaseCommentTaskTitleEnum.FrirMl: {
+    case CaseCommentTitleTitleEnum.FrirMl: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title} <strong>{task.to}</strong>
+          <strong>{task.from}</strong> {task.title.title}{' '}
+          <strong>{task.to}</strong>
         </>
       )
     }
-    case CaseCommentTaskTitleEnum.FrirMlStuna: {
+    case CaseCommentTitleTitleEnum.FrirMlStuna: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title} <strong>{status}</strong>
+          <strong>{task.from}</strong> {task.title.title}{' '}
+          <strong>{status.title}</strong>
         </>
       )
     }
-    case CaseCommentTaskTitleEnum.GerirAthugasemd: {
+    case CaseCommentTitleTitleEnum.GerirAthugasemd: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title}
+          <strong>{task.from}</strong> {task.title.title}
         </>
       )
     }
-    case CaseCommentTaskTitleEnum.SkrirSkilabo: {
+    case CaseCommentTitleTitleEnum.SkrirSkilabo: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title}
+          <strong>{task.from}</strong> {task.title.title}
         </>
       )
     }
     default: {
       return (
         <>
-          <strong>{task.from ?? ''}</strong> {task.title ?? ''}
+          <strong>{task.from ?? ''}</strong> {task.title.title ?? ''}
         </>
       )
     }
   }
 }
 
-export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
-  const statusIndex = caseStatusToIndex[activeCase.activeCase.status]
-  const displayTypes = [CaseCommentTypeEnum.Submit, CaseCommentTypeEnum.Assign]
+export const generateSteps = (activeCase: Case): StepsType[] => {
+  const statusIndex = caseStatusToIndex[activeCase.status.title]
+  const displayTypes = [
+    CaseCommentTypeTitleEnum.Submit,
+    CaseCommentTypeTitleEnum.Assign,
+  ]
   return [
     {
       step: 'innsending',
       title: 'Innsending',
       isActive: statusIndex === 0,
       isComplete: statusIndex > 0,
-      notes: activeCase.activeCase.comments
+      notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseCommentCaseStatusEnum.Innsent &&
+            c.caseStatus === CaseStatusTitleEnum.Innsent &&
             displayTypes.includes(c.type),
         )
         ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
@@ -205,10 +215,10 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
       title: 'Grunnvinnsla',
       isActive: statusIndex === 1,
       isComplete: statusIndex > 1,
-      notes: activeCase.activeCase.comments
+      notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseCommentCaseStatusEnum.Grunnvinnsla &&
+            c.caseStatus === CaseStatusTitleEnum.Grunnvinnsla &&
             displayTypes.includes(c.type),
         )
         ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
@@ -218,10 +228,10 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
       title: 'Yfirlestur',
       isActive: statusIndex === 2,
       isComplete: statusIndex > 2,
-      notes: activeCase.activeCase.comments
+      notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseCommentCaseStatusEnum.Yfirlestur &&
+            c.caseStatus === CaseStatusTitleEnum.Yfirlestur &&
             displayTypes.includes(c.type),
         )
         ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
@@ -231,10 +241,10 @@ export const generateSteps = (activeCase: CaseWithAdvert): StepsType[] => {
       title: 'Tilbúið til útgáfu',
       isActive: statusIndex === 3,
       isComplete: statusIndex > 3,
-      notes: activeCase.activeCase.comments
+      notes: activeCase.comments
         .filter(
           (c) =>
-            c.caseStatus === CaseCommentCaseStatusEnum.Tilbi &&
+            c.caseStatus === CaseStatusTitleEnum.Tilbi &&
             displayTypes.includes(c.type),
         )
         ?.map(({ task, caseStatus }) => commentTaskToNode(task, caseStatus)),
@@ -279,4 +289,12 @@ export const generateOptions = ({
         }))
       : [],
   }
+}
+
+export const getSignatureDate = (signatures: Signature[]) => {
+  if (signatures.length === 0) {
+    return null
+  }
+
+  return signatures[0].date
 }

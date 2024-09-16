@@ -9,7 +9,7 @@ import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseCommentType,
+  CaseCommentTypeEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
@@ -38,7 +38,6 @@ import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { AuthService } from '../auth/auth.service'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
@@ -282,20 +281,15 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId)
       ).unwrap()
 
-      const contentCategories =
-        application.answers.publishing.contentCategories.map(
-          (item) => item.value,
-        )
-
       this.caseService.updateCase({
         caseId: caseLookup.id,
+        applicationId: applicationId,
         advertTitle: application.answers.advert.title,
-        departmentId: application.answers.advert.department,
-        advertTypeId: application.answers.advert.type,
-        requestedPublicationDate: application.answers.publishing.date,
-        message: application.answers.publishing.message,
-        categoryIds:
-          contentCategories.length > 0 ? contentCategories : undefined,
+        departmentId: application.answers.advert.departmentId,
+        advertTypeId: application.answers.advert.typeId,
+        requestedPublicationDate: application.answers.advert.requestedDate,
+        message: application.answers.advert.message,
+        categoryIds: application.answers.advert.categories,
       })
 
       const commStatus = (
@@ -318,7 +312,7 @@ export class ApplicationService implements IApplicationService {
       ResultWrapper.unwrap(
         await this.commentService.createComment(caseLookup.id, {
           internal: true,
-          type: CaseCommentType.Submit,
+          type: CaseCommentTypeEnum.Submit,
           comment: null,
           initiator: caseLookup.involvedPartyId,
           receiver: null,
@@ -395,7 +389,7 @@ export class ApplicationService implements IApplicationService {
         initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
         receiver: null,
         internal: false,
-        type: CaseCommentType.Comment,
+        type: CaseCommentTypeEnum.Comment,
         storeState: true,
       }),
     )

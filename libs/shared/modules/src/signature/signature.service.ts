@@ -22,8 +22,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
-import { AdvertInvolvedPartyDTO } from '../journal/models'
+import { signatureMigrate } from './migrations/signature.migrate'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,
@@ -79,6 +78,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   private async findSignatures(
     params?: DefaultSearchParams,
     where?: WhereParams,
@@ -108,7 +108,7 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  async createCaseSignature(
+  private async createCaseSignatures(
     signatureId: string,
     caseId: string,
     transaction?: Transaction,
@@ -126,7 +126,7 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  async createAdvertSignature(
+  private async createAdvertSignatures(
     signatureId: string,
     advertId: string,
     transaction?: Transaction,
@@ -147,7 +147,7 @@ export class SignatureService implements ISignatureService {
   async createSignature(
     body: CreateSignatureBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<{ id: string }>> {
     const signatureId = uuid()
 
     const chairman = body.chairman
@@ -184,14 +184,6 @@ export class SignatureService implements ISignatureService {
       )
     }
 
-    await this.signatureMembersModel.bulkCreate(
-      members.map((m) => ({
-        signatureId,
-        memberId: m.id,
-      })),
-      { transaction },
-    )
-
     const type = await this.signatureTypeModel.findOne({
       where: {
         slug: chairman
@@ -206,7 +198,7 @@ export class SignatureService implements ISignatureService {
       throw new InternalServerErrorException()
     }
 
-    await this.signatureModel.create(
+    const createdSignature = await this.signatureModel.create(
       {
         institution: body.institution,
         date: body.date,
@@ -214,15 +206,47 @@ export class SignatureService implements ISignatureService {
         typeId: type.id,
         chairmanId: chairman ? chairman.id : null,
         additionalSignature: body.additionalSignature,
-        html: body.html,
+        html: body.html === '' ? '<div></div>' : body.html,
+      },
+      { transaction, returning: ['id'] },
+    )
+
+    await this.signatureMembersModel.bulkCreate(
+      members.map((m) => ({
+        signatureId: createdSignature.id,
+        signatureMemberId: m.id,
+      })),
+      { transaction },
+    )
+
+    await this.caseSignaturesModel.create(
+      {
+        signatureId: createdSignature.id,
+        caseId: body.caseId,
       },
       { transaction },
     )
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({
+      id: signatureId,
+    })
   }
 
   @LogAndHandle()
+  @Transactional()
+  async createCaseSignature(
+    body: CreateSignatureBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>> {
+    const createdSignature = (
+      await this.createSignature(body, transaction)
+    ).unwrap()
+
+    return ResultWrapper.ok({ id: createdSignature.id })
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async getSignature(
     id: string,
     transaction?: Transaction,
@@ -243,6 +267,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignatures(
     params?: DefaultSearchParams,
     transaction?: Transaction,
@@ -251,6 +276,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
@@ -260,6 +286,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignaturesByCaseId(
     caseId: string,
     params?: DefaultSearchParams,
@@ -298,6 +325,7 @@ export class SignatureService implements ISignatureService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getSignaturesByAdvertId(
     advertId: string,
     params?: DefaultSearchParams,
@@ -438,7 +466,7 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.createCaseSignature(id, body.caseId, transaction)
+      await this.createCaseSignatures(id, body.caseId, transaction)
     }
 
     if (body.advertId) {
@@ -449,7 +477,7 @@ export class SignatureService implements ISignatureService {
         transaction,
       })
 
-      await this.createAdvertSignature(id, body.advertId, transaction)
+      await this.createAdvertSignatures(id, body.advertId, transaction)
     }
 
     return ResultWrapper.ok()

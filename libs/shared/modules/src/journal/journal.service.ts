@@ -45,6 +45,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -52,18 +53,17 @@ import {
   advertMainCategoryMigrate,
   advertMigrate,
   advertTypesMigrate,
-} from '../helpers'
-import { IJournalService } from './journal.service.interface'
+} from './migrations'
 import {
-  AdvertAttachmentsDTO,
-  AdvertCategoriesDTO,
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertMainCategoryDTO,
-  AdvertStatusDTO,
-  AdvertTypeDTO,
+  AdvertAttachmentsModel,
+  AdvertCategoriesModel,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertMainCategoryModel,
+  AdvertModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
 } from './models'
 
 const DEFAULT_PAGE_SIZE = 20
@@ -72,27 +72,27 @@ export class JournalService implements IJournalService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
-    @InjectModel(AdvertDTO)
-    private advertModel: typeof AdvertDTO,
+    @InjectModel(AdvertModel)
+    private advertModel: typeof AdvertModel,
 
-    @InjectModel(AdvertTypeDTO)
-    private advertTypeModel: typeof AdvertTypeDTO,
+    @InjectModel(AdvertTypeModel)
+    private advertTypeModel: typeof AdvertTypeModel,
 
-    @InjectModel(AdvertMainCategoryDTO)
-    private advertMainCategoryModel: typeof AdvertMainCategoryDTO,
+    @InjectModel(AdvertMainCategoryModel)
+    private advertMainCategoryModel: typeof AdvertMainCategoryModel,
 
-    @InjectModel(AdvertDepartmentDTO)
-    private advertDepartmentModel: typeof AdvertDepartmentDTO,
-    @InjectModel(AdvertInvolvedPartyDTO)
-    private advertInvolvedPartyModel: typeof AdvertInvolvedPartyDTO,
-    @InjectModel(AdvertCategoryDTO)
-    private advertCategoryModel: typeof AdvertCategoryDTO,
-    @InjectModel(AdvertStatusDTO)
-    private advertStatusModel: typeof AdvertStatusDTO /* @InjectModel(AdvertStatusHistoryDTO)
-    private advertStatusHistoryModel: typeof AdvertStatusHistoryDTO,*/,
+    @InjectModel(AdvertDepartmentModel)
+    private advertDepartmentModel: typeof AdvertDepartmentModel,
+    @InjectModel(AdvertInvolvedPartyModel)
+    private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
+    @InjectModel(AdvertCategoryModel)
+    private advertCategoryModel: typeof AdvertCategoryModel,
+    @InjectModel(AdvertStatusModel)
+    private advertStatusModel: typeof AdvertStatusModel /* @InjectModel(AdvertStatusHistoryModel)
+    private advertStatusHistoryModel: typeof AdvertStatusHistoryModel,*/,
 
-    @InjectModel(AdvertCategoriesDTO)
-    private advertCategoriesModel: typeof AdvertCategoriesDTO,
+    @InjectModel(AdvertCategoriesModel)
+    private advertCategoriesModel: typeof AdvertCategoriesModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
@@ -148,12 +148,12 @@ export class JournalService implements IJournalService {
 
     const advert = await this.advertModel.findByPk(ad.id, {
       include: [
-        AdvertTypeDTO,
-        AdvertDepartmentDTO,
-        AdvertStatusDTO,
-        AdvertInvolvedPartyDTO,
-        AdvertAttachmentsDTO,
-        AdvertCategoryDTO,
+        AdvertTypeModel,
+        AdvertDepartmentModel,
+        AdvertStatusModel,
+        AdvertInvolvedPartyModel,
+        AdvertAttachmentsModel,
+        AdvertCategoryModel,
       ],
       transaction,
     })
@@ -501,8 +501,8 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    const type = await this.advertTypeModel.findOne<AdvertTypeDTO>({
-      include: AdvertDepartmentDTO,
+    const type = await this.advertTypeModel.findOne<AdvertTypeModel>({
+      include: AdvertDepartmentModel,
       where: {
         id: id,
       },
@@ -522,11 +522,11 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
-    const types = await this.advertTypeModel.findAndCountAll<AdvertTypeDTO>({
+    const types = await this.advertTypeModel.findAndCountAll<AdvertTypeModel>({
       distinct: true,
       include: [
         {
-          model: AdvertDepartmentDTO,
+          model: AdvertDepartmentModel,
           where: params?.department
             ? {
                 id: params?.department,
@@ -604,7 +604,7 @@ export class JournalService implements IJournalService {
 
     const category = await this.advertCategoryModel.findOne({
       where: { id },
-      include: AdvertMainCategoryDTO,
+      include: AdvertMainCategoryModel,
     })
 
     if (!category) {
@@ -631,7 +631,7 @@ export class JournalService implements IJournalService {
             title: { [Op.iLike]: `%${params?.search}%` },
           }
         : undefined,
-      include: AdvertMainCategoryDTO,
+      include: AdvertMainCategoryModel,
     })
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
@@ -650,12 +650,12 @@ export class JournalService implements IJournalService {
     }
     const advert = await this.advertModel.findByPk(id, {
       include: [
-        AdvertTypeDTO,
-        AdvertDepartmentDTO,
-        AdvertStatusDTO,
-        AdvertInvolvedPartyDTO,
-        AdvertAttachmentsDTO,
-        AdvertCategoryDTO,
+        AdvertTypeModel,
+        AdvertDepartmentModel,
+        AdvertStatusModel,
+        AdvertInvolvedPartyModel,
+        AdvertAttachmentsModel,
+        AdvertCategoryModel,
       ],
     })
 
@@ -696,7 +696,7 @@ export class JournalService implements IJournalService {
       },
       include: [
         {
-          model: AdvertTypeDTO,
+          model: AdvertTypeModel,
           as: 'type',
           where: params?.type
             ? {
@@ -705,26 +705,26 @@ export class JournalService implements IJournalService {
             : undefined,
         },
         {
-          model: AdvertDepartmentDTO,
+          model: AdvertDepartmentModel,
           where: params?.department
             ? {
                 slug: params?.department,
               }
             : undefined,
         },
-        AdvertStatusDTO,
+        AdvertStatusModel,
         {
-          model: AdvertInvolvedPartyDTO,
+          model: AdvertInvolvedPartyModel,
           where: params?.involvedParty
             ? {
                 slug: params?.involvedParty,
               }
             : undefined,
         },
-        AdvertAttachmentsDTO,
-        AdvertCategoryDTO,
+        AdvertAttachmentsModel,
+        AdvertCategoryModel,
         {
-          model: AdvertCategoryDTO,
+          model: AdvertCategoryModel,
           where: params?.category
             ? {
                 slug: params?.category,
@@ -733,7 +733,7 @@ export class JournalService implements IJournalService {
         },
       ],
       order: [
-        // [{ model: AdvertTypeDTO, as: 'type' }, 'title', 'ASC'],
+        // [{ model: AdvertTypeModel, as: 'type' }, 'title', 'ASC'],
         ['publicationDate', 'DESC'],
       ],
     })

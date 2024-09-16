@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_CASES, ALL_MOCK_USERS } from '@dmr.is/mocks'
+import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   Case,
   CaseComment,
   CaseCommunicationStatus,
-  CaseStatus,
+  CaseStatusEnum,
+  CreateCaseChannelBody,
   CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
@@ -22,6 +23,7 @@ import {
   PostCasePublishBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
@@ -44,6 +46,23 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getCasesOverview(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  createCaseChannel(
+    caseId: string,
+    body: CreateCaseChannelBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateCasePrice(
+    caseId: string,
+    body: UpdateCasePriceBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
   }
   updateCaseCommunicationStatus(
     caseId: string,
@@ -112,12 +131,6 @@ export class CaseServiceMock implements ICaseService {
   updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
-  ): Promise<ResultWrapper<undefined>> {
-    throw new Error('Method not implemented.')
-  }
-  updateCasePrice(
-    caseId: string,
-    price: string,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }
@@ -195,47 +208,5 @@ export class CaseServiceMock implements ICaseService {
     return Promise.resolve({
       users: filtered,
     })
-  }
-
-  async getCasesOverview(
-    params?: GetCasesQuery,
-  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
-    const submitted: Case[] = []
-    const inProgress: Case[] = []
-    const inReview: Case[] = []
-    const ready: Case[] = []
-
-    if (!params?.status) {
-      throw new BadRequestException('Missing status')
-    }
-
-    ALL_MOCK_CASES.forEach((c) => {
-      if (c.status === CaseStatus.Submitted) {
-        submitted.push(c)
-      } else if (c.status === CaseStatus.InProgress) {
-        inProgress.push(c)
-      } else if (c.status === CaseStatus.InReview) {
-        inReview.push(c)
-      } else if (c.status === CaseStatus.ReadyForPublishing) {
-        ready.push(c)
-      }
-    })
-
-    const response = (await this.getCases(params)).unwrap()
-
-    const { cases, paging } = response
-
-    return Promise.resolve(
-      ResultWrapper.ok({
-        cases,
-        totalItems: {
-          submitted: submitted.length,
-          inProgress: inProgress.length,
-          inReview: inReview.length,
-          ready: ready.length,
-        },
-        paging,
-      }),
-    )
   }
 }

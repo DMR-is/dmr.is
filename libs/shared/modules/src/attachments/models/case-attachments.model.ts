@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseDto } from '../../case/models'
+import { CaseModel } from '../../case/models'
 import { ApplicationAttachmentModel } from './application-attachment.model'
 
 @Table({ tableName: 'case_attachments', timestamps: false })
@@ -23,7 +23,7 @@ export class CaseAttachmentsModel extends Model {
   attachmentId!: string
 
   @PrimaryKey
-  @ForeignKey(() => CaseDto)
+  @ForeignKey(() => CaseModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -34,6 +34,6 @@ export class CaseAttachmentsModel extends Model {
   @BelongsTo(() => ApplicationAttachmentModel, 'attachment_id')
   attachment!: ApplicationAttachmentModel
 
-  @BelongsTo(() => CaseDto, 'case_case_id')
-  case!: CaseDto
+  @BelongsTo(() => CaseModel, 'case_case_id')
+  case!: CaseModel
 }
