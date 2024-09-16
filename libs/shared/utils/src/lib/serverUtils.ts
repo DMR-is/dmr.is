@@ -139,13 +139,26 @@ export const calculatePriceForApplication = () => DEFAULT_PRICE
 
 type EnumType = { [s: number]: string }
 
-export const isEnum = <T extends EnumType>(
+export const safeEnumMapper = <T extends EnumType>(
   val: unknown,
   enumType: T,
 ): T[keyof T] | null => {
   const found = Object.values(enumType).find((enumVal) => enumVal === val)
 
   return found ? (found as T[keyof T]) : null
+}
+
+export const enumMapper = <T extends EnumType>(
+  val: unknown,
+  enumType: T,
+): T[keyof T] => {
+  const found = Object.values(enumType).find((enumVal) => enumVal === val)
+
+  if (found) {
+    return found as T[keyof T]
+  }
+
+  throw new Error(`EnumMapper: ${val} not found in ${enumType}`)
 }
 
 export const getSignatureBody = (

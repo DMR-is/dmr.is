@@ -1,7 +1,6 @@
-import { CaseCommentTitle } from '@dmr.is/shared/dto'
-import { withTryCatch } from '@dmr.is/utils'
+import { CaseCommentTitle, CaseCommentTitleEnum } from '@dmr.is/shared/dto'
+import { enumMapper, withTryCatch } from '@dmr.is/utils'
 
-import { caseCommentTitleMapper } from '../mappers/comment-title.mapper'
 import { CaseCommentTitleModel } from '../models'
 
 export const caseCommentTitleMigrate = (
@@ -10,7 +9,7 @@ export const caseCommentTitleMigrate = (
   return withTryCatch(() => {
     return {
       id: model.id,
-      title: caseCommentTitleMapper(model.title),
+      title: enumMapper(model.title, CaseCommentTitleEnum),
       slug: model.slug,
     }
   }, `Failed to migrate case comment title with id: ${model.id}`)

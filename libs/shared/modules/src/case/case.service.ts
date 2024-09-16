@@ -63,13 +63,13 @@ import {
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
-import { counterResult } from './mappers/case-status.mapper'
 import { updateCaseBodyMapper } from './mappers/case-update-body.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
 import { caseTagMigrate } from './migrations/case-tag.migrate'
 import { CaseCategoriesModel } from './models/case-categories.model'
 import { ICaseService } from './case.service.interface'
+import { counterResult } from './case.utils'
 import {
   CaseChannelModel,
   CaseChannelsModel,

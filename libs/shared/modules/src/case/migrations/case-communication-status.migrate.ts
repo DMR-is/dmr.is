@@ -1,6 +1,9 @@
-import { CommunicationStatus } from '@dmr.is/shared/dto'
+import {
+  CaseCommunicationStatus,
+  CommunicationStatus,
+} from '@dmr.is/shared/dto'
+import { enumMapper } from '@dmr.is/utils'
 
-import { caseCommunicationStatusMapper } from '../mappers/case-communication-status.mapper'
 import { CaseCommunicationStatusModel } from '../models'
 
 export const caseCommunicationStatusMigrate = (
@@ -8,7 +11,7 @@ export const caseCommunicationStatusMigrate = (
 ): CommunicationStatus => {
   const migrated: CommunicationStatus = {
     id: model.id,
-    title: caseCommunicationStatusMapper(model.title),
+    title: enumMapper(model.title, CaseCommunicationStatus),
     slug: model.slug,
   }
 
