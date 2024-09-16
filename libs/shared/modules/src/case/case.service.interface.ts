@@ -2,7 +2,6 @@ import { Transaction } from 'sequelize'
 import {
   CaseCommunicationStatus,
   CreateCaseChannelBody,
-  CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,

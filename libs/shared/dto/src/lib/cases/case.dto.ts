@@ -3,7 +3,6 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsEnum,
   IsNumber,
   IsString,
   IsUUID,
@@ -25,7 +24,7 @@ import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
 import { CaseChannel } from './case-channel.dto'
-import { CaseStatus } from './case-constants'
+import { CaseStatus } from './case-status.dto'
 
 export class Case {
   @ApiProperty({
@@ -65,11 +64,10 @@ export class Case {
   readonly caseNumber!: string
 
   @ApiProperty({
-    enum: CaseStatus,
-    example: CaseStatus.Submitted,
+    type: CaseStatus,
     description: 'Status of the case, default to "Innsent"',
   })
-  @IsEnum(CaseStatus)
+  @Type(() => CaseStatus)
   status!: CaseStatus
 
   @ApiProperty({

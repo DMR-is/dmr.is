@@ -1,9 +1,9 @@
-import { CaseStatusDto } from '../../case/models'
+import { CaseStatusModel } from '../../case/models'
 import {
-  CaseCommentDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
+  CaseCommentModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
+  CaseCommentTypeModel,
 } from '../models'
 
 /**
@@ -17,14 +17,14 @@ export const getCaseCommentsRelations = (internal?: boolean) => {
 
   return [
     {
-      model: CaseCommentDto,
+      model: CaseCommentModel,
       where: whereParams,
       include: [
-        CaseCommentTypeDto,
-        CaseStatusDto,
+        CaseCommentTypeModel,
+        CaseStatusModel,
         {
-          model: CaseCommentTaskDto,
-          include: [CaseCommentTitleDto],
+          model: CaseCommentTaskModel,
+          include: [CaseCommentTitleModel],
         },
       ],
     },

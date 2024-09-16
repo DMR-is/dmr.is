@@ -74,7 +74,7 @@ export class ApplicationController {
     responseType: CasePriceResponse,
   })
   async getPrice(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getPrice(applicationId),
@@ -93,7 +93,7 @@ export class ApplicationController {
     responseType: GetApplicationResponse,
   })
   async getApplication(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetApplicationResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getApplication(id),
@@ -112,7 +112,7 @@ export class ApplicationController {
     params: [{ name: 'id', type: 'string', required: true }],
   })
   async postApplication(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
   ) {
     return ResultWrapper.unwrap(
       await this.applicationService.postApplication(applicationId),
@@ -131,7 +131,7 @@ export class ApplicationController {
     responseType: GetCaseCommentsResponse,
   })
   async getComments(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),
@@ -152,7 +152,7 @@ export class ApplicationController {
     bodyType: PostApplicationComment,
   })
   async postComment(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Body() commentBody: PostApplicationComment,
   ): Promise<void> {
     ResultWrapper.unwrap(
@@ -196,7 +196,7 @@ export class ApplicationController {
   @UseInterceptors(FilesInterceptor('files'))
   @LogMethod()
   async uploadApplicationAttachment(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
@@ -236,7 +236,7 @@ export class ApplicationController {
   })
   async getPresignedUrl(
     @Body() body: GetPresignedUrlBody,
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Param('type', new EnumValidationPipe(AttachmentTypeParams))
     type: AttachmentTypeParams,
   ): Promise<PresignedUrlResponse> {
@@ -258,7 +258,7 @@ export class ApplicationController {
     bodyType: PostApplicationAttachmentBody,
   })
   async addApplicationAttachment(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Param('type', new EnumValidationPipe(AttachmentTypeParams))
     type: AttachmentTypeParams,
     @Body() body: PostApplicationAttachmentBody,
@@ -282,7 +282,7 @@ export class ApplicationController {
     responseType: GetApplicationAttachmentsResponse,
   })
   async getApplicationAttachments(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Param('type', new EnumValidationPipe(AttachmentTypeParams))
     type: AttachmentTypeParams,
   ) {
@@ -307,7 +307,7 @@ export class ApplicationController {
     query: [{ name: 'key', type: String, required: true }],
   })
   async deleteApplicationAttachment(
-    @Param('id', UUIDValidationPipe) applicationId: string,
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Query('key', IsStringValidationPipe) key: string,
   ) {
     ResultWrapper.unwrap(

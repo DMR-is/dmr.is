@@ -8,23 +8,13 @@ import { IJournalService } from './journal.service.interface'
 import { MockJournalService } from './journal.service.mock'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
-import {
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
-} from '../case/models'
+
+import caseModels from '../case/models'
 import { models as advertModels } from './models'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([
-      CaseDto,
-      CaseTagDto,
-      CaseStatusDto,
-      CaseCommunicationStatusDto,
-      ...advertModels,
-    ]),
+    SequelizeModule.forFeature([...caseModels, ...advertModels]),
     LoggingModule,
   ],
   controllers: [],

@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdvertDTO } from '../../journal/models'
+import { AdvertModel } from '../../journal/models'
 import { ApplicationAttachmentModel } from './application-attachment.model'
 
 @Table({ tableName: 'Advert_attachments', timestamps: false })
@@ -23,7 +23,7 @@ export class AdvertAttachmentsModel extends Model {
   attachmentId!: string
 
   @PrimaryKey
-  @ForeignKey(() => AdvertDTO)
+  @ForeignKey(() => AdvertModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -34,6 +34,6 @@ export class AdvertAttachmentsModel extends Model {
   @BelongsTo(() => ApplicationAttachmentModel, 'attachment_id')
   attachment!: ApplicationAttachmentModel
 
-  @BelongsTo(() => AdvertDTO, 'advert_id')
-  advert!: AdvertDTO
+  @BelongsTo(() => AdvertModel, 'advert_id')
+  advert!: AdvertModel
 }

@@ -1,6 +1,7 @@
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -10,7 +11,7 @@ export interface IStatisticsService {
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>>
 
   getOverview(
-    id: string,
+    type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>>
 }

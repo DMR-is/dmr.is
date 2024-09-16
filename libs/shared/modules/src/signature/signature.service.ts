@@ -22,7 +22,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { signatureMigrate } from '../helpers/migrations/signature/signature.migrate'
+import { signatureMigrate } from './migrations/signature.migrate'
 import {
   AdvertSignaturesModel,
   CaseSignaturesModel,

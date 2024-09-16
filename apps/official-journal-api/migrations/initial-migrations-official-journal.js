@@ -129,36 +129,36 @@ module.exports = {
 
     CREATE TABLE case_status (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_tag (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_communication_status (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_comment_title (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 
     CREATE TABLE case_comment_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      key VARCHAR NOT NULL,
-      value VARCHAR NOT NULL,
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
       PRIMARY KEY (id)
     );
 

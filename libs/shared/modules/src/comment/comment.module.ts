@@ -9,22 +9,22 @@ import { UtilityModule } from '../utility/utility.module'
 import { CommentService } from './comment.service'
 import { ICommentService } from './comment.service.interface'
 import commentModels, {
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
-  CaseCommentTypeDto,
+  CaseCommentModel,
+  CaseCommentsModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
+  CaseCommentTypeModel,
 } from './models'
 
 export {
   CommentService,
   ICommentService,
   commentModels,
-  CaseCommentDto,
-  CaseCommentsDto,
-  CaseCommentTypeDto,
-  CaseCommentTaskDto,
-  CaseCommentTitleDto,
+  CaseCommentModel,
+  CaseCommentsModel,
+  CaseCommentTypeModel,
+  CaseCommentTaskModel,
+  CaseCommentTitleModel,
 }
 
 @Module({

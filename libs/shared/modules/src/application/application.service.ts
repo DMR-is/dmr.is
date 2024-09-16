@@ -9,7 +9,7 @@ import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseCommentType,
+  CaseCommentTypeEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
@@ -312,7 +312,7 @@ export class ApplicationService implements IApplicationService {
       ResultWrapper.unwrap(
         await this.commentService.createComment(caseLookup.id, {
           internal: true,
-          type: CaseCommentType.Submit,
+          type: CaseCommentTypeEnum.Submit,
           comment: null,
           initiator: caseLookup.involvedPartyId,
           receiver: null,
@@ -389,7 +389,7 @@ export class ApplicationService implements IApplicationService {
         initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
         receiver: null,
         internal: false,
-        type: CaseCommentType.Comment,
+        type: CaseCommentTypeEnum.Comment,
         storeState: true,
       }),
     )

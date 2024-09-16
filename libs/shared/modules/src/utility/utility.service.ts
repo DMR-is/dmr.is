@@ -12,20 +12,20 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import {
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
 } from '../case/models'
-import { CaseCategoriesDto } from '../case/models/CaseCategories'
+import { CaseCategoriesModel } from '../case/models/case-categories.model'
 import { CASE_RELATIONS } from '../case/relations'
 import {
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertDTO,
-  AdvertInvolvedPartyDTO,
-  AdvertStatusDTO,
-  AdvertTypeDTO,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
 
@@ -35,26 +35,27 @@ export class UtilityService implements IUtilityService {
 
     @Inject(IApplicationService)
     private applicationService: IApplicationService,
-    @InjectModel(AdvertDTO) private advertModel: typeof AdvertDTO,
-    @InjectModel(CaseDto) private caseModel: typeof CaseDto,
-    @InjectModel(AdvertDepartmentDTO)
-    private departmentModel: typeof AdvertDepartmentDTO,
-    @InjectModel(AdvertTypeDTO) private typeDto: typeof AdvertTypeDTO,
+    @InjectModel(AdvertModel) private advertModel: typeof AdvertModel,
+    @InjectModel(CaseModel) private caseModel: typeof CaseModel,
+    @InjectModel(AdvertDepartmentModel)
+    private departmentModel: typeof AdvertDepartmentModel,
+    @InjectModel(AdvertTypeModel) private typeModel: typeof AdvertTypeModel,
 
-    @InjectModel(AdvertInvolvedPartyDTO)
-    private involvedPartyModel: typeof AdvertInvolvedPartyDTO,
-    @InjectModel(AdvertCategoryDTO)
-    private categoryModel: typeof AdvertCategoryDTO,
+    @InjectModel(AdvertInvolvedPartyModel)
+    private involvedPartyModel: typeof AdvertInvolvedPartyModel,
+    @InjectModel(AdvertCategoryModel)
+    private categoryModel: typeof AdvertCategoryModel,
 
-    @InjectModel(CaseStatusDto) private caseStatusModel: typeof CaseStatusDto,
+    @InjectModel(CaseStatusModel)
+    private caseStatusModel: typeof CaseStatusModel,
 
-    @InjectModel(CaseTagDto) private caseTagModel: typeof CaseTagDto,
-    @InjectModel(CaseCommunicationStatusDto)
-    private caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
-    @InjectModel(CaseCategoriesDto)
-    private caseCategoriesModel: typeof CaseCategoriesDto,
-    @InjectModel(AdvertStatusDTO)
-    private advertStatusModel: typeof AdvertStatusDTO,
+    @InjectModel(CaseTagModel) private caseTagModel: typeof CaseTagModel,
+    @InjectModel(CaseCommunicationStatusModel)
+    private caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
+    @InjectModel(CaseCategoriesModel)
+    private caseCategoriesModel: typeof CaseCategoriesModel,
+    @InjectModel(AdvertStatusModel)
+    private advertStatusModel: typeof AdvertStatusModel,
     private sequelize: Sequelize,
   ) {
     this.logger.info('Using UtilityService')
@@ -127,7 +128,7 @@ export class UtilityService implements IUtilityService {
   async categoryLookup(
     categoryId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertCategoryDTO>> {
+  ): Promise<ResultWrapper<AdvertCategoryModel>> {
     const categoryLookup = await this.categoryModel.findByPk(categoryId, {
       transaction,
     })
@@ -144,7 +145,7 @@ export class UtilityService implements IUtilityService {
   async advertStatusLookup(
     status: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertStatusDTO>> {
+  ): Promise<ResultWrapper<AdvertStatusModel>> {
     const statusLookup = await this.advertStatusModel.findOne({
       where: {
         title: status,
@@ -164,9 +165,9 @@ export class UtilityService implements IUtilityService {
   async typeLookup(
     type: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertTypeDTO>> {
-    const typeLookup = await this.typeDto.findByPk(type, {
-      include: [AdvertDepartmentDTO],
+  ): Promise<ResultWrapper<AdvertTypeModel>> {
+    const typeLookup = await this.typeModel.findByPk(type, {
+      include: [AdvertDepartmentModel],
       transaction,
     })
 
@@ -214,7 +215,7 @@ export class UtilityService implements IUtilityService {
   async departmentLookup(
     departmentId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertDepartmentDTO>> {
+  ): Promise<ResultWrapper<AdvertDepartmentModel>> {
     const departmentLookup = await this.departmentModel.findByPk(departmentId, {
       transaction,
     })
@@ -231,10 +232,10 @@ export class UtilityService implements IUtilityService {
   async caseCommunicationStatusLookup(
     status: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
+  ): Promise<ResultWrapper<CaseCommunicationStatusModel>> {
     const statusLookup = await this.caseCommunicationStatusModel.findOne({
       where: {
-        value: status,
+        title: status,
       },
       transaction,
     })
@@ -251,7 +252,7 @@ export class UtilityService implements IUtilityService {
   async caseCommunicationStatusLookupById(
     id: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommunicationStatusDto>> {
+  ): Promise<ResultWrapper<CaseCommunicationStatusModel>> {
     const statusLookup = await this.caseCommunicationStatusModel.findByPk(id, {
       transaction,
     })
@@ -268,10 +269,10 @@ export class UtilityService implements IUtilityService {
   async caseTagLookup(
     tag: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseTagDto>> {
+  ): Promise<ResultWrapper<CaseTagModel>> {
     const tagLookup = await this.caseTagModel.findOne({
       where: {
-        value: tag,
+        title: tag,
       },
       transaction,
     })
@@ -288,10 +289,10 @@ export class UtilityService implements IUtilityService {
   async caseStatusLookup(
     status: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseStatusDto>> {
+  ): Promise<ResultWrapper<CaseStatusModel>> {
     const statusLookup = await this.caseStatusModel.findOne({
       where: {
-        value: status,
+        title: status,
       },
       transaction,
     })
@@ -335,7 +336,7 @@ export class UtilityService implements IUtilityService {
   async caseLookupByApplicationId(
     applicationId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseDto>> {
+  ): Promise<ResultWrapper<CaseModel>> {
     const found = await this.caseModel.findOne({
       where: {
         applicationId: applicationId,
@@ -358,7 +359,7 @@ export class UtilityService implements IUtilityService {
   async caseLookup(
     caseId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseDto>> {
+  ): Promise<ResultWrapper<CaseModel>> {
     const found = await this.caseModel.findByPk(caseId, {
       include: CASE_RELATIONS,
       transaction,

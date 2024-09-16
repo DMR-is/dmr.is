@@ -3,7 +3,7 @@ import { Fragment, useState } from 'react'
 
 import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
 
-import { CaseCommentTypeEnum, CaseWithAdvert } from '../../gen/fetch'
+import { Case, CaseCommentTypeTitleEnum } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { APIRotues } from '../../lib/constants'
@@ -12,27 +12,22 @@ import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
 import { messages } from './messages'
 type Props = {
-  activeCase: CaseWithAdvert
+  activeCase: Case
 }
 
 export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const [expanded, setExpanded] = useState(
-    activeCase.activeCase.comments.length < 6,
-  )
+  const [expanded, setExpanded] = useState(activeCase.comments.length < 6)
 
   const now = new Date()
 
   const { mutate: refetchCase, isLoading: isRefetchingCase } = useCase({
-    caseId: activeCase.activeCase.id,
+    caseId: activeCase.id,
   })
   const { trigger: onDeleteComment, isMutating: isDeletingComment } =
     useDeleteComment({
-      basePath: APIRotues.DeleteComment.replace(
-        ':id',
-        activeCase.activeCase.id,
-      ),
+      basePath: APIRotues.DeleteComment.replace(':id', activeCase.id),
       options: {
         onSuccess: () => {
           refetchCase()
@@ -45,21 +40,17 @@ export const Comments = ({ activeCase }: Props) => {
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
       <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
-      {activeCase.activeCase.comments.length === 0 ? (
+      {activeCase.comments.length === 0 ? (
         <Text>Engar athugasemdir fundust fyrir þetta mál</Text>
       ) : (
-        activeCase.activeCase.comments.map((c, i) => {
+        activeCase.comments.map((c, i) => {
           const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
           const suffix =
             String(daysAgo).slice(-1) === '1'
               ? formatMessage(messages.comments.day)
               : formatMessage(messages.comments.days)
 
-          if (
-            !expanded &&
-            i !== 0 &&
-            i < activeCase.activeCase.comments.length - 4
-          ) {
+          if (!expanded && i !== 0 && i < activeCase.comments.length - 4) {
             return null
           }
 
@@ -75,7 +66,7 @@ export const Comments = ({ activeCase }: Props) => {
               >
                 <Icon
                   icon={
-                    c.type === CaseCommentTypeEnum.Comment
+                    c.type === CaseCommentTypeTitleEnum.Comment
                       ? 'pencil'
                       : 'arrowForward'
                   }
@@ -133,7 +124,7 @@ export const Comments = ({ activeCase }: Props) => {
                     onClick={() => setExpanded(true)}
                   >
                     {formatMessage(messages.comments.seeAll)} (
-                    {activeCase.activeCase.comments.length - 5})
+                    {activeCase.comments.length - 5})
                   </Button>
                 </Box>
               ) : null}
@@ -142,7 +133,7 @@ export const Comments = ({ activeCase }: Props) => {
         })
       )}
 
-      {activeCase.activeCase.assignedTo && (
+      {activeCase.assignedTo && (
         <Box padding={4} background="white">
           <Box borderTopWidth="standard" borderColor="blue200">
             <Tabs
@@ -155,15 +146,15 @@ export const Comments = ({ activeCase }: Props) => {
                   label: formatMessage(messages.comments.internalComments),
                   content: (
                     <AddCommentTab
-                      caseId={activeCase.activeCase.id}
+                      caseId={activeCase.id}
                       internal={true}
-                      userId={activeCase.activeCase.assignedTo.id}
+                      userId={activeCase.assignedTo.id}
                       inputPlaceholder={formatMessage(
                         messages.comments.internalCommentsInputPlaceholder,
                       )}
                       onAddCommentSuccess={refetchCase}
                       onUpdateStatusSuccess={refetchCase}
-                      currentStatus={activeCase.activeCase.communicationStatus}
+                      currentStatus={activeCase.communicationStatus}
                     />
                   ),
                 },
@@ -172,15 +163,15 @@ export const Comments = ({ activeCase }: Props) => {
                   label: formatMessage(messages.comments.externalComments),
                   content: (
                     <AddCommentTab
-                      caseId={activeCase.activeCase.id}
+                      caseId={activeCase.id}
                       internal={false}
-                      userId={activeCase.activeCase.assignedTo.id}
+                      userId={activeCase.assignedTo.id}
                       inputPlaceholder={formatMessage(
                         messages.comments.externalCommentInputPlaceholder,
                       )}
                       onAddCommentSuccess={refetchCase}
                       onUpdateStatusSuccess={refetchCase}
-                      currentStatus={activeCase.activeCase.communicationStatus}
+                      currentStatus={activeCase.communicationStatus}
                     />
                   ),
                 },

@@ -31,7 +31,7 @@ export class PdfController {
     responseType: StreamableFile,
   })
   async getPdfByCaseId(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<StreamableFile> {
     const pdf = (await this.pdfService.getPdfByCaseId(id)).unwrap()
 
@@ -54,7 +54,7 @@ export class PdfController {
     responseType: StreamableFile,
   })
   async getPdfByApplicationId(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<StreamableFile> {
     const pdf = (await this.pdfService.getPdfByApplicationId(id)).unwrap()
 
@@ -77,7 +77,7 @@ export class PdfController {
     responseType: GetPdfUrlResponse,
   })
   async getPdfUrlByCaseId(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
     ResultWrapper.unwrap(await this.utilityService.caseLookup(id))
 
@@ -106,7 +106,7 @@ export class PdfController {
     responseType: GetPdfUrlResponse,
   })
   async getPdfUrlByApplicationId(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
     const applicationLookup = (
       await this.utilityService.applicationLookup(id)

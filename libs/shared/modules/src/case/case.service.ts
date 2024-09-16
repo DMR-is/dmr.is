@@ -8,13 +8,11 @@ import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   AdvertStatus,
   Application,
-  CaseCommentType,
+  CaseCommentTypeEnum,
   CaseCommunicationStatus,
-  CaseStatus,
-  CaseTag,
+  CaseStatusEnum,
   CaseTagEnum,
   CreateCaseChannelBody,
-  CreateCaseResponse,
   EditorialOverviewResponse,
   GetCaseResponse,
   GetCasesQuery,
@@ -47,7 +45,6 @@ import {
 
 import {
   BadRequestException,
-  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -57,33 +54,29 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
-import { caseParameters, counterResult } from '../helpers'
-import { caseTagMapper, updateCaseBodyMapper } from '../helpers/mappers/case'
-import { caseCommunicationStatusMigrate } from '../helpers/migrations/case/case-communication-status-migrate'
-import { caseMigrate } from '../helpers/migrations/case/case-migrate'
 import { IJournalService } from '../journal'
 import {
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertTypeDTO,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
 } from '../journal/models'
-import {
-  SignatureMemberModel,
-  SignatureMembersModel,
-  SignatureModel,
-  SignatureTypeModel,
-} from '../signature/models'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
-import { CaseCategoriesDto } from './models/CaseCategories'
+import { caseParameters } from './mappers/case-parameters.mapper'
+import { counterResult } from './mappers/case-status.mapper'
+import { updateCaseBodyMapper } from './mappers/case-update-body.mapper'
+import { caseMigrate } from './migrations/case.migrate'
+import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
+import { caseTagMigrate } from './migrations/case-tag.migrate'
+import { CaseCategoriesModel } from './models/case-categories.model'
 import { ICaseService } from './case.service.interface'
 import {
-  CaseChannelDto,
-  CaseChannelsDto,
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
-  CaseTagDto,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
 } from './models'
 import { CASE_RELATIONS } from './relations'
 
@@ -99,18 +92,19 @@ export class CaseService implements ICaseService {
     private readonly commentService: ICommentService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
-    @InjectModel(CaseChannelDto)
-    private readonly caseChannelModel: typeof CaseChannelDto,
-    @InjectModel(CaseChannelsDto)
-    private readonly caseChannelsModel: typeof CaseChannelsDto,
+    @InjectModel(CaseChannelModel)
+    private readonly caseChannelModel: typeof CaseChannelModel,
+    @InjectModel(CaseChannelsModel)
+    private readonly caseChannelsModel: typeof CaseChannelsModel,
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-    @InjectModel(CaseDto) private readonly caseModel: typeof CaseDto,
-    @InjectModel(CaseCategoriesDto)
-    private readonly caseCategoriesModel: typeof CaseCategoriesDto,
-    @InjectModel(CaseTagDto) private readonly caseTagModel: typeof CaseTagDto,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(CaseCategoriesModel)
+    private readonly caseCategoriesModel: typeof CaseCategoriesModel,
+    @InjectModel(CaseTagModel)
+    private readonly caseTagModel: typeof CaseTagModel,
 
-    @InjectModel(CaseCommunicationStatusDto)
-    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusDto,
+    @InjectModel(CaseCommunicationStatusModel)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -156,7 +150,7 @@ export class CaseService implements ICaseService {
     const now = new Date()
 
     const caseStatus = ResultWrapper.unwrap(
-      await this.utilityService.caseStatusLookup(CaseStatus.Submitted),
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Submitted),
     )
 
     const caseTag = ResultWrapper.unwrap(
@@ -226,7 +220,7 @@ export class CaseService implements ICaseService {
     const now = new Date()
 
     const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatus.Published)
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Published)
     ).unwrap()
 
     await this.caseModel.update(
@@ -286,12 +280,7 @@ export class CaseService implements ICaseService {
   async getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
     const tags = await this.caseTagModel.findAll()
 
-    const migrated: CaseTag[] = tags.map((t) => ({
-      id: t.id,
-      key: t.key,
-
-      value: caseTagMapper(t.value)!,
-    }))
+    const migrated = tags.map((tag) => caseTagMigrate(tag))
 
     return ResultWrapper.ok({
       tags: migrated,
@@ -306,17 +295,17 @@ export class CaseService implements ICaseService {
 
     const counter = await this.caseModel.findAll({
       attributes: [
-        [Sequelize.literal(`status.value`), 'caseStatusValue'],
+        [Sequelize.literal(`status.title`), 'caseStatusTitle'],
         [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
       ],
       include: [
         {
-          model: CaseStatusDto,
+          model: CaseStatusModel,
           as: 'status',
           attributes: [],
         },
         {
-          model: AdvertDepartmentDTO,
+          model: AdvertDepartmentModel,
           where: params?.department
             ? {
                 slug: {
@@ -326,7 +315,7 @@ export class CaseService implements ICaseService {
             : undefined,
         },
         {
-          model: AdvertTypeDTO,
+          model: AdvertTypeModel,
           where: params?.type
             ? {
                 slug: {
@@ -336,7 +325,7 @@ export class CaseService implements ICaseService {
             : undefined,
         },
         {
-          model: AdvertCategoryDTO,
+          model: AdvertCategoryModel,
           where: params?.category
             ? {
                 slug: params?.category,
@@ -346,13 +335,13 @@ export class CaseService implements ICaseService {
       ],
       group: [
         'status_id',
-        `status.value`,
+        `status.title`,
         'department.id',
         'advertType.id',
         'categories.id',
-        'CaseDto.id',
-        'categories->CaseCategoriesDto.case_case_id',
-        'categories->CaseCategoriesDto.category_id',
+        'CaseModel.id',
+        'categories->CaseCategoriesModel.case_case_id',
+        'categories->CaseCategoriesModel.category_id',
       ],
     })
 
@@ -394,9 +383,9 @@ export class CaseService implements ICaseService {
     const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
 
     const newCase = ResultWrapper.unwrap(
-      await withTransaction<ResultWrapper<CaseDto>>(this.sequelize)(
+      await withTransaction<ResultWrapper<CaseModel>>(this.sequelize)(
         async (transaction) => {
-          const newCase = await this.caseModel.create<CaseDto>(
+          const newCase = await this.caseModel.create<CaseModel>(
             {
               id: caseId,
               applicationId: application.id,
@@ -432,7 +421,7 @@ export class CaseService implements ICaseService {
             newCase.id,
             {
               internal: true,
-              type: CaseCommentType.Submit,
+              type: CaseCommentTypeEnum.Submit,
               comment: null,
               initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
               receiver: null,
@@ -517,10 +506,11 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<undefined>> {
     const updateData = updateCaseBodyMapper(body)
 
-    await this.caseModel.update<CaseDto>(updateData, {
+    await this.caseModel.update<CaseModel>(updateData, {
       where: {
         id: body.caseId,
       },
+      returning: true,
       transaction,
     })
 
@@ -530,7 +520,6 @@ export class CaseService implements ICaseService {
       this.updateCaseCategories(
         body.caseId,
         {
-          applicationId: body.applicationId,
           categoryIds: body.categoryIds,
         },
         transaction,
@@ -546,13 +535,13 @@ export class CaseService implements ICaseService {
       include: [
         ...CASE_RELATIONS,
         {
-          model: AdvertDepartmentDTO,
+          model: AdvertDepartmentModel,
         },
         {
-          model: AdvertTypeDTO,
+          model: AdvertTypeModel,
         },
         {
-          model: AdvertCategoryDTO,
+          model: AdvertCategoryModel,
         },
       ],
     })
@@ -596,7 +585,7 @@ export class CaseService implements ICaseService {
       include: [
         ...CASE_RELATIONS,
         {
-          model: AdvertDepartmentDTO,
+          model: AdvertDepartmentModel,
           where: params?.department
             ? {
                 slug: {
@@ -606,7 +595,7 @@ export class CaseService implements ICaseService {
             : undefined,
         },
         {
-          model: AdvertTypeDTO,
+          model: AdvertTypeModel,
           where: params?.type
             ? {
                 slug: {
@@ -616,7 +605,7 @@ export class CaseService implements ICaseService {
             : undefined,
         },
         {
-          model: AdvertCategoryDTO,
+          model: AdvertCategoryModel,
           where: params?.category
             ? {
                 slug: {
@@ -693,8 +682,8 @@ export class CaseService implements ICaseService {
     await this.commentService.createComment(id, {
       internal: true,
       type: caseRes.assignedUserId
-        ? CaseCommentType.Assign
-        : CaseCommentType.AssignSelf,
+        ? CaseCommentTypeEnum.Assign
+        : CaseCommentTypeEnum.AssignSelf,
       comment: null,
       initiator: caseRes.assignedUserId,
       receiver: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
@@ -727,7 +716,7 @@ export class CaseService implements ICaseService {
 
     await this.commentService.createComment(id, {
       internal: true,
-      type: CaseCommentType.Update,
+      type: CaseCommentTypeEnum.Update,
       comment: null,
       initiator: caseLookup.assignedUserId,
       receiver: null,
@@ -748,15 +737,15 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const nextStatus =
-      status.value === CaseStatus.Submitted
-        ? CaseStatus.InProgress
-        : status.value === CaseStatus.InProgress
-        ? CaseStatus.InReview
-        : status.value === CaseStatus.InReview
-        ? CaseStatus.ReadyForPublishing
-        : status.value === CaseStatus.ReadyForPublishing
-        ? CaseStatus.Published
-        : status.value
+      status.title === CaseStatusEnum.Submitted
+        ? CaseStatusEnum.InProgress
+        : status.title === CaseStatusEnum.InProgress
+        ? CaseStatusEnum.InReview
+        : status.title === CaseStatusEnum.InReview
+        ? CaseStatusEnum.ReadyForPublishing
+        : status.title === CaseStatusEnum.ReadyForPublishing
+        ? CaseStatusEnum.Published
+        : status.title
 
     const nextStatusLookup = await this.utilityService.caseStatusLookup(
       nextStatus,
@@ -776,7 +765,7 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<undefined>> {
     await this.caseModel.update(
       {
-        price: parseFloat(body.price),
+        price: body.price,
       },
       {
         where: {
@@ -793,7 +782,7 @@ export class CaseService implements ICaseService {
     caseId: string,
     body: UpdateCaseDepartmentBody,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         departmentId: body.departmentId,
       },
@@ -801,11 +790,14 @@ export class CaseService implements ICaseService {
         where: {
           id: caseId,
         },
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             departmentId: body.departmentId,
@@ -824,7 +816,7 @@ export class CaseService implements ICaseService {
     body: UpdateCaseTypeBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         advertTypeId: body.typeId,
       },
@@ -833,11 +825,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     const updateApplicationResult =
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             typeId: body.typeId,
@@ -859,6 +854,7 @@ export class CaseService implements ICaseService {
     body: UpdateCategoriesBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
+    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const currentCategories = await this.caseCategoriesModel.findAll({
       where: {
         caseId,
@@ -911,13 +907,16 @@ export class CaseService implements ICaseService {
     const ids = newCurrentCategories.map((c) => c.categoryId)
 
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
-        answers: {
-          advert: {
-            categories: ids,
+      await this.applicationService.updateApplication(
+        caseLookup.applicationId,
+        {
+          answers: {
+            advert: {
+              categories: ids,
+            },
           },
         },
-      }),
+      ),
     )
 
     return ResultWrapper.ok()
@@ -933,7 +932,7 @@ export class CaseService implements ICaseService {
     const requestedPublicationDate = new Date(body.date)
     const { fastTrack } = getFastTrack(requestedPublicationDate)
 
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         requestedPublicationDate: body.date,
         fastTrack: fastTrack,
@@ -943,11 +942,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             requestedDate: body.date,
@@ -966,7 +968,7 @@ export class CaseService implements ICaseService {
     body: UpdateTitleBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    await this.caseModel.update(
+    const [_, updatedModels] = await this.caseModel.update(
       {
         advertTitle: body.title,
       },
@@ -975,11 +977,14 @@ export class CaseService implements ICaseService {
           id: caseId,
         },
         transaction,
+        returning: true,
       },
     )
 
+    const applicationId = updatedModels[0].applicationId
+
     ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(body.applicationId, {
+      await this.applicationService.updateApplication(applicationId, {
         answers: {
           advert: {
             title: body.title,
@@ -1060,7 +1065,7 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseCommunicationStatusLookupById(body.statusId)
     ).unwrap()
 
-    if (lookup.value === CaseCommunicationStatus.WaitingForAnswers) {
+    if (lookup.title === CaseCommunicationStatus.WaitingForAnswers) {
       this.logger.debug(
         `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
       )

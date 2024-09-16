@@ -29,7 +29,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesForInvolvedParty(
-    @Param('id', UUIDValidationPipe) involvedPartyId: string,
+    @Param('id', new UUIDValidationPipe()) involvedPartyId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -47,7 +47,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesByCaseId(
-    @Param('id', UUIDValidationPipe) caseId: string,
+    @Param('id', new UUIDValidationPipe()) caseId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -62,7 +62,7 @@ export class SignatureController {
     responseType: GetSignaturesResponse,
   })
   async getSignaturesByAdvertId(
-    @Param('id', UUIDValidationPipe) advertId: string,
+    @Param('id', new UUIDValidationPipe()) advertId: string,
     @Query() params?: DefaultSearchParams,
   ) {
     return ResultWrapper.unwrap(
@@ -75,7 +75,7 @@ export class SignatureController {
     params: [{ name: 'id', type: String, required: true }],
     responseType: GetSignatureResponse,
   })
-  async getSignatureById(@Param('id', UUIDValidationPipe) id: string) {
+  async getSignatureById(@Param('id', new UUIDValidationPipe()) id: string) {
     return ResultWrapper.unwrap(await this.signatureService.getSignature(id))
   }
 
@@ -84,7 +84,7 @@ export class SignatureController {
     method: 'delete',
     params: [{ name: 'id', type: String, required: true }],
   })
-  async deleteSignature(@Param('id', UUIDValidationPipe) id: string) {
+  async deleteSignature(@Param('id', new UUIDValidationPipe()) id: string) {
     ResultWrapper.unwrap(await this.signatureService.deleteSignature(id))
   }
 
@@ -95,7 +95,7 @@ export class SignatureController {
     bodyType: UpdateSignatureBody,
   })
   async updateSignature(
-    @Param('id', UUIDValidationPipe) id: string,
+    @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateSignatureBody,
   ) {
     ResultWrapper.unwrap(await this.signatureService.updateSignature(id, body))

@@ -3,15 +3,15 @@ import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
-  CaseCommunicationStatusDto,
-  CaseDto,
-  CaseStatusDto,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
 } from '../case/models'
 import {
-  AdvertCategoryDTO,
-  AdvertDepartmentDTO,
-  AdvertStatusDTO,
-  AdvertTypeDTO,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
 } from '../journal/models'
 
 export interface IUtilityService {
@@ -21,45 +21,45 @@ export interface IUtilityService {
   applicationLookup(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationResponse>>
-  advertStatusLookup(status: string): Promise<ResultWrapper<AdvertStatusDTO>>
+  advertStatusLookup(status: string): Promise<ResultWrapper<AdvertStatusModel>>
   departmentLookup(
     departmentId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertDepartmentDTO>>
+  ): Promise<ResultWrapper<AdvertDepartmentModel>>
   typeLookup(
     type: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertTypeDTO>>
+  ): Promise<ResultWrapper<AdvertTypeModel>>
   categoryLookup(
     categoryId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<AdvertCategoryDTO>>
+  ): Promise<ResultWrapper<AdvertCategoryModel>>
   caseLookup(
     caseId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseDto>>
+  ): Promise<ResultWrapper<CaseModel>>
   generateInternalCaseNumber(
     transaction?: Transaction,
   ): Promise<ResultWrapper<string>>
   caseStatusLookup(
     status: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseStatusDto>>
+  ): Promise<ResultWrapper<CaseStatusModel>>
   caseTagLookup(
     tag: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseStatusDto>>
+  ): Promise<ResultWrapper<CaseStatusModel>>
   caseCommunicationStatusLookup(
     status: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
+  ): Promise<ResultWrapper<CaseCommunicationStatusModel>>
   caseCommunicationStatusLookupById(
     id: string,
-  ): Promise<ResultWrapper<CaseCommunicationStatusDto>>
+  ): Promise<ResultWrapper<CaseCommunicationStatusModel>>
   caseLookupByApplicationId(
     advertId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseDto>>
+  ): Promise<ResultWrapper<CaseModel>>
 
   userLookup(userId: string): Promise<ResultWrapper<User>>
 
