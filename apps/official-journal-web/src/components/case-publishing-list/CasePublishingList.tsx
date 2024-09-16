@@ -116,7 +116,7 @@ export const CasePublishingList = ({
             publicationNumber={`${c.publishingNumber}/${c.year}`}
             title={c.advertTitle}
             categories={c.advertCategories.map((c) => c.title)}
-            link={generateCaseLink(c.status, c.id)}
+            link={generateCaseLink(c.status.title, c.id)}
           />
         ))}
       </Stack>

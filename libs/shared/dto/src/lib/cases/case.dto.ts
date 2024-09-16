@@ -229,7 +229,7 @@ export class Case {
   channels!: CaseChannel[]
 
   @ApiProperty({
-    type: [CaseComment],
+    type: () => [CaseComment],
     description: 'Comments on the case.',
     example: {
       id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',

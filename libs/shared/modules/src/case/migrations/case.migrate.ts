@@ -25,7 +25,6 @@ export const caseMigrate = (model: CaseModel): Case => {
       createdAt: model.createdAt,
       assignedTo:
         ALL_MOCK_USERS.find((u) => u.id === model.assignedUserId) ?? null, // TODO: Implement this when auth is ready
-      comments: model.comments.map((c) => caseCommentMigrate(c)),
       communicationStatus: caseCommunicationStatusMigrate(
         model.communicationStatus,
       ),
@@ -44,6 +43,7 @@ export const caseMigrate = (model: CaseModel): Case => {
       html: model.html,
       channels: model.channels.map((c) => caseChannelMigrate(c)),
       signatures: model.signatures.map((s) => signatureMigrate(s)),
+      comments: model.comments.map((c) => caseCommentMigrate(c)),
     }
   }, `Error migrating case ${model.id}`)
 }

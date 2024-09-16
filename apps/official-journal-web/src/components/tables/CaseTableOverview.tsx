@@ -54,7 +54,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
         ),
       },
       {
-        children: <Text variant="medium">{row.status}</Text>, // TODO: Add publication number to case
+        children: <Text variant="medium">{row.status.title}</Text>, // TODO: Add publication number to case
       },
       {
         children: (

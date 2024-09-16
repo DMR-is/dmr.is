@@ -99,8 +99,8 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       },
       {
         sortingKey: 'caseTag',
-        sortingValue: row.tag.value,
-        children: <CaseTag tag={row.tag.value} />,
+        sortingValue: row.tag.title,
+        children: <CaseTag tag={row.tag.title} />,
       },
     ],
   }))

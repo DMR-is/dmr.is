@@ -7,14 +7,14 @@ export class CaseStatus {
     type: String,
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
   })
-  readonly id!: string
+  id!: string
 
   @ApiProperty({
     enum: CaseStatusEnum,
     example: 'Innsent',
     description: 'Status of the case',
   })
-  readonly title!: CaseStatusEnum
+  title!: CaseStatusEnum
 
   @ApiProperty({
     type: String,
