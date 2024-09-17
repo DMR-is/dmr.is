@@ -186,13 +186,19 @@ export class CommentService implements ICommentService {
     let state: string | null = null
 
     if (body.storeState) {
-      const applicationRes = (
-        await this.applicationService.getApplication(activeCase.applicationId)
-      ).unwrap()
+      try {
+        const applicationRes = (
+          await this.applicationService.getApplication(activeCase.applicationId)
+        ).unwrap()
 
-      const { application } = applicationRes
+        const { application } = applicationRes
 
-      state = JSON.stringify(application)
+        state = JSON.stringify(application)
+      } catch (e) {
+        this.logger.warn(
+          `Failed to store state for case<${caseId}> with application<${activeCase.applicationId}>`,
+        )
+      }
     }
 
     const newComment = await this.caseCommentModel.create(
