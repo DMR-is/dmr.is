@@ -2,6 +2,7 @@ import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { Case } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
+import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
 import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
@@ -44,6 +45,7 @@ export const caseMigrate = (model: CaseModel): Case => {
       channels: model.channels.map((c) => caseChannelMigrate(c)),
       signatures: model.signatures.map((s) => signatureMigrate(s)),
       comments: model.comments.map((c) => caseCommentMigrate(c)),
+      attachments: model.attachments.map((a) => attachmentMigrate(a)),
     }
   }, `Error migrating case ${model.id}`)
 }

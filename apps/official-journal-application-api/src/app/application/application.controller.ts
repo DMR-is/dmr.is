@@ -35,7 +35,7 @@ import {
 } from '@dmr.is/pipelines'
 import {
   ALLOWED_MIME_TYPES,
-  AttachmentTypeParams,
+  AttachmentTypeParam,
   ONE_MEGA_BYTE,
 } from '@dmr.is/constants'
 import {
@@ -229,7 +229,7 @@ export class ApplicationController {
     operationId: 'getPresignedUrl',
     params: [
       { name: 'id', type: 'string', required: true },
-      { name: 'type', enum: AttachmentTypeParams, required: true },
+      { name: 'type', enum: AttachmentTypeParam, required: true },
     ],
     bodyType: GetPresignedUrlBody,
     responseType: PresignedUrlResponse,
@@ -237,8 +237,8 @@ export class ApplicationController {
   async getPresignedUrl(
     @Body() body: GetPresignedUrlBody,
     @Param('id', new UUIDValidationPipe()) applicationId: string,
-    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
-    type: AttachmentTypeParams,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParam))
+    type: AttachmentTypeParam,
   ): Promise<PresignedUrlResponse> {
     const key = `applications/${applicationId}/${type}/${body.fileName}.${body.fileType}`
 
@@ -253,14 +253,14 @@ export class ApplicationController {
     operationId: 'addApplicationAttachment',
     params: [
       { name: 'id', type: String, required: true },
-      { name: 'type', enum: AttachmentTypeParams, required: true },
+      { name: 'type', enum: AttachmentTypeParam, required: true },
     ],
     bodyType: PostApplicationAttachmentBody,
   })
   async addApplicationAttachment(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
-    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
-    type: AttachmentTypeParams,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParam))
+    type: AttachmentTypeParam,
     @Body() body: PostApplicationAttachmentBody,
   ) {
     ResultWrapper.unwrap(
@@ -276,15 +276,15 @@ export class ApplicationController {
     path: ':id/attachments/:type',
     params: [
       { name: 'id', type: String, required: true },
-      { name: 'type', enum: AttachmentTypeParams, required: true },
+      { name: 'type', enum: AttachmentTypeParam, required: true },
     ],
     operationId: 'getApplicationAttachments',
     responseType: GetApplicationAttachmentsResponse,
   })
   async getApplicationAttachments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
-    @Param('type', new EnumValidationPipe(AttachmentTypeParams))
-    type: AttachmentTypeParams,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParam))
+    type: AttachmentTypeParam,
   ) {
     return ResultWrapper.unwrap(
       await this.applicationService.getApplicationAttachments(

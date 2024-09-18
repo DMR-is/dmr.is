@@ -7,6 +7,10 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import {
+  ApplicationAttachmentModel,
+  CaseAttachmentsModel,
+} from '../../attachments/models'
 import { CaseCommentModel, CaseCommentsModel } from '../../comment/models'
 import {
   AdvertCategoryModel,
@@ -197,4 +201,9 @@ export class CaseModel extends Model {
     through: { model: () => CaseSignaturesModel },
   })
   signatures!: SignatureModel[]
+
+  @BelongsToMany(() => ApplicationAttachmentModel, {
+    through: { model: () => CaseAttachmentsModel },
+  })
+  attachments!: ApplicationAttachmentModel[]
 }

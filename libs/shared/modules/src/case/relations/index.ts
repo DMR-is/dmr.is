@@ -1,4 +1,8 @@
 import {
+  ApplicationAttachmentModel,
+  ApplicationAttachmentTypeModel,
+} from '../../attachments/models'
+import {
   CaseCommentModel,
   CaseCommentTaskModel,
   CaseCommentTitleModel,
@@ -31,6 +35,10 @@ export const CASE_RELATIONS = [
   AdvertCategoryModel,
   CaseChannelModel,
   AdvertInvolvedPartyModel,
+  {
+    model: ApplicationAttachmentModel,
+    include: [ApplicationAttachmentTypeModel],
+  },
   {
     model: CaseCommentModel,
     include: [

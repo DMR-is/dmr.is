@@ -1,7 +1,11 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import {
+  ApplicationStates,
+  AttachmentTypeParam,
+  DEFAULT_PAGE_SIZE,
+} from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
@@ -14,6 +18,7 @@ import {
   CaseTagEnum,
   CreateCaseChannelBody,
   EditorialOverviewResponse,
+  GetApplicationAttachmentsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -22,6 +27,7 @@ import {
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -53,6 +59,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
+import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import {
@@ -60,6 +67,7 @@ import {
   AdvertDepartmentModel,
   AdvertTypeModel,
 } from '../journal/models'
+import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
@@ -90,6 +98,11 @@ export class CaseService implements ICaseService {
     private readonly applicationService: IApplicationService,
     @Inject(forwardRef(() => ICommentService))
     private readonly commentService: ICommentService,
+    @Inject(forwardRef(() => IS3Service)) private readonly s3: IS3Service,
+
+    @Inject(forwardRef(() => IAttachmentService))
+    private readonly attachmentService: IAttachmentService,
+
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
     @InjectModel(CaseChannelModel)
@@ -353,8 +366,8 @@ export class CaseService implements ICaseService {
   }
 
   /**
-   * We do not use the transactional parameter here because we want to handle the transaction in the createCase method
-   * @returns
+   * We do not use the transactional parameter here
+   * because we want to use multiple transactions
    */
   @LogAndHandle()
   async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
@@ -385,6 +398,7 @@ export class CaseService implements ICaseService {
     const newCase = ResultWrapper.unwrap(
       await withTransaction<ResultWrapper<CaseModel>>(this.sequelize)(
         async (transaction) => {
+          this.logger.debug('Creating case')
           const newCase = await this.caseModel.create<CaseModel>(
             {
               id: caseId,
@@ -415,7 +429,7 @@ export class CaseService implements ICaseService {
               transaction: transaction,
             },
           )
-
+          this.logger.debug('Creating comment')
           // TODO: When auth is setup, use the user id from the token
           await this.commentService.createComment(
             newCase.id,
@@ -429,11 +443,13 @@ export class CaseService implements ICaseService {
             },
             transaction,
           )
+          this.logger.debug('Case and case created')
           return ResultWrapper.ok(newCase)
         },
       ),
     )
 
+    this.logger.debug('Creating case categories')
     await withTransaction(this.sequelize)(async (transaction) => {
       await this.caseCategoriesModel.bulkCreate(
         categories.map((c) => ({ caseId: newCase.id, categoryId: c }), {
@@ -441,10 +457,12 @@ export class CaseService implements ICaseService {
         }),
       )
     })
+    this.logger.debug('Case categories created')
 
     const channels = application.answers.advert.channels
 
     if (channels && channels.length > 0) {
+      this.logger.debug('Creating case channels')
       await withTransaction(this.sequelize)(async (channelsTransaction) => {
         const promises = channels.map(async (channel) => {
           ResultWrapper.unwrap(
@@ -461,6 +479,7 @@ export class CaseService implements ICaseService {
 
         await Promise.all(promises)
       })
+      this.logger.debug('Case channels created')
     }
 
     const { signatureType } = application.answers.misc
@@ -478,6 +497,7 @@ export class CaseService implements ICaseService {
       ? signature.map((s) => getSignatureBody(caseId, s))
       : [getSignatureBody(caseId, signature)]
 
+    this.logger.debug('Creating case signatures')
     await withTransaction(this.sequelize)(async (transaction) => {
       const signaturePromises = signatureBodies.map(async (signatureBody) => {
         return ResultWrapper.unwrap(
@@ -490,10 +510,7 @@ export class CaseService implements ICaseService {
 
       return await Promise.all(signaturePromises)
     })
-
-    const newCreatedCase = (
-      await this.utilityService.caseLookup(newCase.id)
-    ).unwrap()
+    this.logger.debug('Case signatures created')
 
     return ResultWrapper.ok()
   }
@@ -1110,9 +1127,16 @@ export class CaseService implements ICaseService {
       )
       const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
 
-      ResultWrapper.unwrap(
-        await this.utilityService.rejectApplication(caseLookup.applicationId),
-      )
+      const { application } = (
+        await this.applicationService.getApplication(caseLookup.applicationId)
+      ).unwrap()
+
+      // we should only reject the application if the state of the application is submitted
+      if (application.state === ApplicationStates.SUBMITTED) {
+        ResultWrapper.unwrap(
+          await this.utilityService.rejectApplication(caseLookup.applicationId),
+        )
+      }
     }
 
     await this.caseModel.update(
@@ -1128,5 +1152,27 @@ export class CaseService implements ICaseService {
     )
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    const { attachment } = (
+      await this.attachmentService.getCaseAttachment(
+        caseId,
+        attachmentId,
+        transaction,
+      )
+    ).unwrap()
+
+    const signedUrl = (
+      await this.s3.getObject(attachment.fileLocation)
+    ).unwrap()
+
+    return Promise.resolve(ResultWrapper.ok({ url: signedUrl }))
   }
 }

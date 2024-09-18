@@ -23,6 +23,7 @@ import {
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -146,6 +147,25 @@ export class CaseController {
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCasesOverview(params))
+  }
+
+  @Route({
+    path: ':caseId/attachments/:attachmentId',
+    params: [
+      { name: 'caseId', type: 'string', required: true },
+      { name: 'attachmentId', type: 'string', required: true },
+    ],
+    summary: 'Get case attachment',
+    operationId: 'getCaseAttachment',
+    responseType: PresignedUrlResponse,
+  })
+  async getCaseAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
+  ): Promise<PresignedUrlResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCaseAttachment(caseId, attachmentId),
+    )
   }
 
   @Route({

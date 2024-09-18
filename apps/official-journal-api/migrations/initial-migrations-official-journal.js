@@ -88,19 +88,6 @@ module.exports = {
       CONSTRAINT advert_serial_number_publication_year_department_unique UNIQUE (serial_number, publication_year, department_id)
     );
 
-    CREATE TABLE advert_status_history (
-      id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      advert_id UUID NOT NULL,
-      status_id UUID NOT NULL,
-      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      -- TODO add user_id
-      PRIMARY KEY (id),
-      CONSTRAINT fk_advert_status_history_advert_id FOREIGN KEY (advert_id) REFERENCES advert (id),
-      CONSTRAINT fk_advert_status_history_status_id FOREIGN KEY (status_id) REFERENCES advert_status (id)
-    );
-
-
-
     CREATE TABLE advert_categories (
       advert_id UUID NOT NULL,
       category_id UUID NOT NULL,
@@ -347,38 +334,38 @@ module.exports = {
 
   async down(queryInterface) {
     return await queryInterface.sequelize.query(`
-    DROP TABLE advert_categories CASCADE;
-    DROP TABLE advert_status_history CASCADE;
-    DROP TABLE advert_involved_party CASCADE;
-    DROP TABLE advert_status CASCADE;
-    DROP TABLE advert_category CASCADE;
-    DROP TABLE advert_main_category CASCADE;
-    DROP TABLE advert_type CASCADE;
-    DROP TABLE advert_department CASCADE;
-    DROP TABLE advert_attachments CASCADE;
-	  DROP TABLE advert CASCADE;
-    DROP TABLE category_department CASCADE;
-    DROP TABLE case_status CASCADE;
-    DROP TABLE case_tag CASCADE;
-    DROP TABLE case_communication_status CASCADE;
-    DROP TABLE case_comment_title CASCADE;
-    DROP TABLE case_comment_type CASCADE;
-    DROP TABLE case_comment_task CASCADE;
-    DROP TABLE case_comment CASCADE;
-    DROP TABLE case_case CASCADE;
-    DROP TABLE case_categories CASCADE;
-    DROP TABLE case_channel CASCADE;
-    DROP TABLE case_channels CASCADE;
-    DROP TABLE case_comments CASCADE;
-    DROP TABLE signature_type CASCADE;
-    DROP TABLE signature_member CASCADE;
-    DROP TABLE signature CASCADE;
-    DROP TABLE signature_member_signature CASCADE;
-    DROP TABLE case_signatures CASCADE;
-    DROP TABLE advert_signatures CASCADE;
-    DROP TABLE application_attachment CASCADE;
-    DROP TABLE application_attachments CASCADE;
-    DROP TABLE case_attachments CASCADE;
+    DROP TABLE IF EXISTS advert_categories CASCADE;
+    DROP TABLE IF EXISTS advert_involved_party CASCADE;
+    DROP TABLE IF EXISTS advert_status CASCADE;
+    DROP TABLE IF EXISTS advert_category CASCADE;
+    DROP TABLE IF EXISTS advert_main_category CASCADE;
+    DROP TABLE IF EXISTS advert_type CASCADE;
+    DROP TABLE IF EXISTS advert_department CASCADE;
+    DROP TABLE IF EXISTS advert_attachments CASCADE;
+	  DROP TABLE IF EXISTS advert CASCADE;
+    DROP TABLE IF EXISTS category_department CASCADE;
+    DROP TABLE IF EXISTS case_status CASCADE;
+    DROP TABLE IF EXISTS case_tag CASCADE;
+    DROP TABLE IF EXISTS case_communication_status CASCADE;
+    DROP TABLE IF EXISTS case_comment_title CASCADE;
+    DROP TABLE IF EXISTS case_comment_type CASCADE;
+    DROP TABLE IF EXISTS case_comment_task CASCADE;
+    DROP TABLE IF EXISTS case_comment CASCADE;
+    DROP TABLE IF EXISTS case_case CASCADE;
+    DROP TABLE IF EXISTS case_categories CASCADE;
+    DROP TABLE IF EXISTS case_channel CASCADE;
+    DROP TABLE IF EXISTS case_channels CASCADE;
+    DROP TABLE IF EXISTS case_comments CASCADE;
+    DROP TABLE IF EXISTS signature_type CASCADE;
+    DROP TABLE IF EXISTS signature_member CASCADE;
+    DROP TABLE IF EXISTS signature CASCADE;
+    DROP TABLE IF EXISTS signature_member_signature CASCADE;
+    DROP TABLE IF EXISTS case_signatures CASCADE;
+    DROP TABLE IF EXISTS advert_signatures CASCADE;
+    DROP TABLE IF EXISTS application_attachments CASCADE;
+    DROP TABLE IF EXISTS case_attachments CASCADE;
+    DROP TABLE IF EXISTS application_attachment CASCADE;
+    DROP TABLE IF EXISTS application_attachment_type CASCADE;
     `)
   },
 }

@@ -3,6 +3,7 @@ import {
   CaseCommunicationStatus,
   CreateCaseChannelBody,
   EditorialOverviewResponse,
+  GetApplicationAttachmentsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -11,6 +12,7 @@ import {
   GetTagsResponse,
   PostApplicationBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -104,6 +106,12 @@ export interface ICaseService {
     body: CaseCommunicationStatus,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

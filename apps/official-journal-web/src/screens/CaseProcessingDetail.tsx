@@ -258,9 +258,9 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
           {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
-          {/* {activeCase.attachments.length > 0 && (
+          {activeCase.attachments.length > 0 && (
             <Attachments activeCase={activeCase} />
-          )} */}
+          )}
 
           <Comments activeCase={activeCase} />
 

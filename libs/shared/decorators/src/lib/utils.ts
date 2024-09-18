@@ -52,7 +52,7 @@ export const handleException = <T>({
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Database error',
+        message: 'Internal server error',
       })
     }
 

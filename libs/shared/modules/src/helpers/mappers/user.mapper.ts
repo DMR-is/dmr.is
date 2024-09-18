@@ -1,4 +1,4 @@
-import { ARMANN, PALINA, REYKJAVIKUR_BORG } from '@dmr.is/mocks'
+import { ARMANN, PALINA, REYKJAVIKUR_BORG, UNKNOWN_USER } from '@dmr.is/mocks'
 
 export const userMapper = (id?: string | null) => {
   if (!id) return null
@@ -10,7 +10,7 @@ export const userMapper = (id?: string | null) => {
       return REYKJAVIKUR_BORG.name
     case PALINA.id:
       return PALINA.name
+    default:
+      return UNKNOWN_USER.name
   }
-
-  return null
 }

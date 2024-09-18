@@ -15,6 +15,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-types'
+import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'
@@ -256,4 +257,12 @@ export class Case {
   @ValidateNested({ each: true })
   @Type(() => Signature)
   signatures!: Signature[]
+
+  @ApiProperty({
+    type: [ApplicationAttachment],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ApplicationAttachment)
+  attachments!: ApplicationAttachment[]
 }

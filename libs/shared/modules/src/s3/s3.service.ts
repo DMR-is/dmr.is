@@ -232,9 +232,16 @@ export class S3Service implements IS3Service {
       key = key.substring(1)
     }
 
+    const fileName = key.split('/').pop()
+
+    if (!fileName) {
+      throw new InternalServerErrorException('Failed to get file name from key')
+    }
+
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
+      ResponseContentDisposition: `attachment; filename="${fileName}"`,
     })
 
     const url = await getSignedUrl(this.client, command, {
