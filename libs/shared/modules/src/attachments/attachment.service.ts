@@ -284,4 +284,24 @@ export class AttachmentService implements IAttachmentService {
       attachments: attachments,
     })
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseAttachmentsModel.create(
+      {
+        caseId: caseId,
+        attachmentId: attachmentId,
+      },
+      {
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
 }

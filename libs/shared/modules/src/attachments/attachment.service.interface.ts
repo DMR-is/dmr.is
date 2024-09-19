@@ -51,6 +51,12 @@ export interface IAttachmentService {
     type: AttachmentTypeParam,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationAttachmentTypeModel>>
+
+  createCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const IAttachmentService = Symbol('IAttachmentService')

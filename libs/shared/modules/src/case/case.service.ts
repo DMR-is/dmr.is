@@ -519,17 +519,33 @@ export class CaseService implements ICaseService {
     this.logger.debug('Case signatures created')
 
     await withTransaction(this.sequelize)(async (transaction) => {
-      const additons = await this.attachmentService.getAttachments(
-        application.id,
-        AttachmentTypeParam.AdditonalDocument,
-        transaction,
+      const additons = ResultWrapper.unwrap(
+        await this.attachmentService.getAttachments(
+          application.id,
+          AttachmentTypeParam.AdditonalDocument,
+          transaction,
+        ),
       )
-    })
 
-    const original = await this.attachmentService.getAttachments(
-      application.id,
-      AttachmentTypeParam.OriginalDocument,
-    )
+      const original = ResultWrapper.unwrap(
+        await this.attachmentService.getAttachments(
+          application.id,
+          AttachmentTypeParam.OriginalDocument,
+          transaction,
+        ),
+      )
+
+      const promises = [...additons.attachments, ...original.attachments].map(
+        (attachment) =>
+          this.attachmentService.createCaseAttachment(
+            caseId,
+            attachment.id,
+            transaction,
+          ),
+      )
+
+      await Promise.all(promises)
+    })
 
     return ResultWrapper.ok()
   }
