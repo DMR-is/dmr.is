@@ -4,7 +4,7 @@ export const isSingular = (n: number | string): boolean => {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isReponse = (error: any): error is Response => {
+export const isResponse = (error: any): error is Response => {
   return 'json' in error
 }
 

@@ -12,19 +12,20 @@ import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   AdvertStatus,
   Application,
+  ApplicationAttachmentType,
   CaseCommentTypeEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CaseTagEnum,
   CreateCaseChannelBody,
   EditorialOverviewResponse,
-  GetApplicationAttachmentsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
@@ -43,6 +44,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
+  enumMapper,
   generatePaging,
   getFastTrack,
   getSignatureBody,
@@ -60,6 +62,10 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
+import {
+  ApplicationAttachmentModel,
+  ApplicationAttachmentTypeModel,
+} from '../attachments/models'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import {
@@ -512,6 +518,19 @@ export class CaseService implements ICaseService {
     })
     this.logger.debug('Case signatures created')
 
+    await withTransaction(this.sequelize)(async (transaction) => {
+      const additons = await this.attachmentService.getAttachments(
+        application.id,
+        AttachmentTypeParam.AdditonalDocument,
+        transaction,
+      )
+    })
+
+    const original = await this.attachmentService.getAttachments(
+      application.id,
+      AttachmentTypeParam.OriginalDocument,
+    )
+
     return ResultWrapper.ok()
   }
 
@@ -559,6 +578,13 @@ export class CaseService implements ICaseService {
         },
         {
           model: AdvertCategoryModel,
+        },
+        {
+          model: ApplicationAttachmentModel,
+          where: {
+            deleted: false,
+          },
+          include: [ApplicationAttachmentTypeModel],
         },
       ],
     })
@@ -1174,5 +1200,60 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     return Promise.resolve(ResultWrapper.ok({ url: signedUrl }))
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async overwriteCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    incomingAttachment: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    // fetch the presigned url for the new attachment
+
+    const signedUrl = (
+      await this.s3.getPresignedUrl(incomingAttachment.fileLocation)
+    ).unwrap()
+
+    // fetch the old attachment
+    const { attachment } = (
+      await this.attachmentService.getCaseAttachment(
+        caseId,
+        attachmentId,
+        transaction,
+      )
+    ).unwrap()
+
+    // mark the old attachment as deleted
+    ResultWrapper.unwrap(
+      await this.attachmentService.deleteAttachmentByKey(
+        attachment.applicationId,
+        attachment.fileLocation,
+        transaction,
+      ),
+    )
+
+    const attachmentType = enumMapper(attachment.type.slug, AttachmentTypeParam)
+
+    if (!attachmentType) {
+      throw new BadRequestException('Invalid attachment type')
+    }
+
+    // create the new attachment
+    ResultWrapper.unwrap(
+      await this.attachmentService.createAttachment({
+        params: {
+          caseId,
+          applicationId: attachment.applicationId,
+          attachmentType: attachmentType,
+          body: incomingAttachment,
+        },
+        transaction,
+      }),
+    )
+
+    // return the presigned url for the client to upload the new attachment
+    return ResultWrapper.ok({ url: signedUrl.url })
   }
 }

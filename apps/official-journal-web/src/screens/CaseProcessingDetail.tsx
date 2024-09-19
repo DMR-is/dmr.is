@@ -1,4 +1,4 @@
-import { isReponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client'
 
 import {
   AlertMessage,
@@ -259,7 +259,7 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
 
           {activeCase.attachments.length > 0 && (
-            <Attachments activeCase={activeCase} />
+            <Attachments activeCase={activeCase} refetchCase={refetchCase} />
           )}
 
           <Comments activeCase={activeCase} />
@@ -332,7 +332,7 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
       step,
     }
   } catch (error) {
-    if (isReponse(error)) {
+    if (isResponse(error)) {
       const errorResponse = await error.json()
       throw new CustomNextError(
         errorResponse.statusCode,

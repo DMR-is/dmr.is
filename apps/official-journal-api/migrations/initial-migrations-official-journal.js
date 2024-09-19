@@ -325,7 +325,8 @@ module.exports = {
       case_case_id UUID NOT NULL,
       attachment_id UUID NOT NULL,
       PRIMARY KEY (case_case_id, attachment_id),
-      CONSTRAINT fk_case_attachments_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id)
+      CONSTRAINT fk_case_attachments_case_id FOREIGN KEY (case_case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_attachments_attachment_id FOREIGN KEY (attachment_id) REFERENCES application_attachment (id)
     );
 
   COMMIT;

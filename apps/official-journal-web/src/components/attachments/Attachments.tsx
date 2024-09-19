@@ -1,19 +1,33 @@
 import React from 'react'
+import { KeyedMutator } from 'swr'
 
-import { Box, Button, Icon, Stack, Text } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  Box,
+  Button,
+  Icon,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
 
-import { ApplicationAttachmentTypeTitleEnum, Case } from '../../gen/fetch'
+import {
+  ApplicationAttachmentTypeTitleEnum,
+  Case,
+  GetCaseResponse,
+} from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 type Props = {
   activeCase: Case
+  refetchCase: KeyedMutator<GetCaseResponse>
 }
 
-export const Attachments = ({ activeCase }: Props) => {
+export const Attachments = ({ activeCase, refetchCase }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { loading, downloadAttachment } = useAttachments()
+  const { loading, downloadAttachment, overwriteAttachment, error } =
+    useAttachments()
 
   const fileUploadRef = React.useRef<HTMLInputElement>(null)
 
@@ -23,9 +37,36 @@ export const Attachments = ({ activeCase }: Props) => {
     }
   }
 
+  const onFileUpload = async (
+    attachmentId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    overwriteAttachment({
+      attachmentId,
+      caseId: activeCase.id,
+      applicationId: activeCase.applicationId,
+      file,
+      onSuccess: () => {
+        refetchCase()
+      },
+    })
+  }
+
   return (
     <Box>
       <Text variant="h5">{formatMessage(messages.attachments.title)}</Text>
+
+      {error && (
+        <Box marginY={2}>
+          <AlertMessage type="warning" title="Villa kom upp" message={error} />
+        </Box>
+      )}
 
       <Box
         marginTop={2}
@@ -72,6 +113,7 @@ export const Attachments = ({ activeCase }: Props) => {
                         ref={fileUploadRef}
                         style={{ display: 'none' }}
                         accept={['.pdf', '.doc', '.docx'].join(',')}
+                        onChange={(e) => onFileUpload(a.id, e)}
                       />
                       <Button
                         variant="text"

@@ -20,6 +20,7 @@ import {
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
@@ -166,6 +167,28 @@ export class CaseController {
     return ResultWrapper.unwrap(
       await this.caseService.getCaseAttachment(caseId, attachmentId),
     )
+  }
+
+  @Route({
+    method: 'put',
+    path: ':caseId/attachments/:attachmentId',
+    operationId: 'overwriteCaseAttachment',
+    summary: 'Overwrite case attachment',
+    params: [
+      { name: 'caseId', type: 'string', required: true },
+      { name: 'attachmentId', type: 'string', required: true },
+    ],
+    bodyType: PostApplicationAttachmentBody,
+    responseType: PresignedUrlResponse,
+  })
+  async overwriteCaseAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
+    @Body() body: PostApplicationAttachmentBody,
+  ): Promise<PresignedUrlResponse> {
+    return (
+      await this.caseService.overwriteCaseAttachment(caseId, attachmentId, body)
+    ).unwrap()
   }
 
   @Route({

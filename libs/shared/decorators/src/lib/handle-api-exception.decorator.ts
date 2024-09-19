@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { logger } from '@dmr.is/logging'
-import { isReponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client'
 
 export function HandleApiException(
   message: string | undefined = 'Internal server error',
@@ -21,7 +21,7 @@ export function HandleApiException(
         const req = args[0]
         const res = args[1]
 
-        if (isReponse(error)) {
+        if (isResponse(error)) {
           const errorResponse = await error.json()
 
           logger.error(`${service}.${method}`, {

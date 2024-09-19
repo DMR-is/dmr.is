@@ -3,13 +3,13 @@ import {
   CaseCommunicationStatus,
   CreateCaseChannelBody,
   EditorialOverviewResponse,
-  GetApplicationAttachmentsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
@@ -110,6 +110,13 @@ export interface ICaseService {
   getCaseAttachment(
     caseId: string,
     attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
+
+  overwriteCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    newAttachment: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>>
 }

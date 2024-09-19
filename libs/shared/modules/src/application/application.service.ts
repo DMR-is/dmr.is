@@ -443,12 +443,14 @@ export class ApplicationService implements IApplicationService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     ResultWrapper.unwrap(
-      await this.attachmentService.createAttachment(
-        applicationId,
-        type,
-        body,
+      await this.attachmentService.createAttachment({
+        params: {
+          applicationId: applicationId,
+          attachmentType: type,
+          body: body,
+        },
         transaction,
-      ),
+      }),
     )
 
     return ResultWrapper.ok()

@@ -19,6 +19,7 @@ import {
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
@@ -48,6 +49,14 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  overwriteCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    newAttachment: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    throw new Error('Method not implemented.')
   }
   getCaseAttachment(
     caseId: string,

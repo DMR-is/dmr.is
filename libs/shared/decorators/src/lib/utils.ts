@@ -146,5 +146,9 @@ export const filterArgs = (args: any[], service?: string, method?: string) => {
     return !isTransaction && !isBuffer
   })
 
+  if (typeof args === 'object' && 'transaction' in args) {
+    delete args.transaction
+  }
+
   return filteredArgs
 }
