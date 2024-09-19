@@ -7,7 +7,6 @@ import { ApplicationAttachmentModel } from '../models/application-attachment.mod
 export const attachmentMigrate = (
   model: ApplicationAttachmentModel,
 ): ApplicationAttachment => {
-  console.log(model.id)
   return withTryCatch(() => {
     return {
       id: model.id,
