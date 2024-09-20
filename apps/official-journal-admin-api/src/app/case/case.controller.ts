@@ -20,9 +20,11 @@ import {
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -146,6 +148,47 @@ export class CaseController {
     @Query() params?: GetCasesQuery,
   ): Promise<EditorialOverviewResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCasesOverview(params))
+  }
+
+  @Route({
+    path: ':caseId/attachments/:attachmentId',
+    params: [
+      { name: 'caseId', type: 'string', required: true },
+      { name: 'attachmentId', type: 'string', required: true },
+    ],
+    summary: 'Get case attachment',
+    operationId: 'getCaseAttachment',
+    responseType: PresignedUrlResponse,
+  })
+  async getCaseAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
+  ): Promise<PresignedUrlResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCaseAttachment(caseId, attachmentId),
+    )
+  }
+
+  @Route({
+    method: 'put',
+    path: ':caseId/attachments/:attachmentId',
+    operationId: 'overwriteCaseAttachment',
+    summary: 'Overwrite case attachment',
+    params: [
+      { name: 'caseId', type: 'string', required: true },
+      { name: 'attachmentId', type: 'string', required: true },
+    ],
+    bodyType: PostApplicationAttachmentBody,
+    responseType: PresignedUrlResponse,
+  })
+  async overwriteCaseAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
+    @Body() body: PostApplicationAttachmentBody,
+  ): Promise<PresignedUrlResponse> {
+    return (
+      await this.caseService.overwriteCaseAttachment(caseId, attachmentId, body)
+    ).unwrap()
   }
 
   @Route({

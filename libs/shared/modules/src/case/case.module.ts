@@ -4,11 +4,13 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
+import { AttachmentsModule } from '../attachments/attachments.module'
 import { CommentModule } from '../comment/comment.module'
 import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
+import { S3Module } from '../s3/s3.module'
 import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseService } from './case.service'
@@ -46,6 +48,8 @@ const API_MOCK = process.env.API_MOCK === 'true'
     LoggingModule,
     SharedJournalModule,
     SignatureModule,
+    forwardRef(() => S3Module),
+    forwardRef(() => AttachmentsModule),
     forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),

@@ -167,6 +167,7 @@ export const getSignatureBody = (
   additionalSignature?: string,
 ): CreateSignatureBody => {
   const hasChairman = 'chairman' in signature
+
   return {
     caseId: caseId,
     date: signature.date,
@@ -197,17 +198,23 @@ export const withTransaction =
   <T>(sequelize: Sequelize) =>
   async (cb: (transaction: Transaction) => Promise<T>) => {
     const transaction = await sequelize.transaction()
+    let hasError = false
     try {
       // call cb
+      logger.debug('Transaction start')
       const result = await cb(transaction)
-
-      logger.debug('Transaction commit')
-      await transaction.commit()
       return result
     } catch (error) {
-      logger.debug('Transaction rollback')
-      await transaction.rollback()
+      hasError = true
       throw error
+    } finally {
+      if (hasError) {
+        logger.debug('Transaction rollback')
+        await transaction.rollback()
+      } else {
+        logger.debug('Transaction commit')
+        await transaction.commit()
+      }
     }
   }
 

@@ -9,6 +9,8 @@ import models from './models'
 import { SignatureService } from './signature.service'
 import { ISignatureService } from './signature.service.interface'
 
+export { SignatureController } from './signature.controller'
+
 @Module({
   imports: [
     SequelizeModule.forFeature([...models, ...advertModels, ...caseModels]),

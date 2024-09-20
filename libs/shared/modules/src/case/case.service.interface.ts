@@ -9,8 +9,10 @@ import {
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -104,6 +106,19 @@ export interface ICaseService {
     body: CaseCommunicationStatus,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
+
+  overwriteCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    newAttachment: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

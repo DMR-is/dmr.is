@@ -1,4 +1,4 @@
-import { ApplicationEvent, AttachmentTypeParams } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
@@ -60,13 +60,13 @@ export interface IApplicationService {
    */
   addApplicationAttachment(
     applicationId: string,
-    attachmentType: AttachmentTypeParams,
+    attachmentType: AttachmentTypeParam,
     body: PostApplicationAttachmentBody,
   ): Promise<ResultWrapper>
 
   getApplicationAttachments(
     applicationId: string,
-    type: AttachmentTypeParams,
+    type: AttachmentTypeParam,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
 
   deleteApplicationAttachment(

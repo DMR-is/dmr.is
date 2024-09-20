@@ -28,4 +28,11 @@ const INACTIVE: User = {
   active: false,
 }
 
+export const UNKNOWN_USER: User = {
+  id: '3d918322-8e60-44ad-be5e-7485d0e45cdc',
+  name: 'Óþekktur notandi',
+  lastName: 'notandi',
+  active: true,
+}
+
 export const ALL_MOCK_USERS = [ARMANN, PALINA, INACTIVE]

@@ -3,9 +3,8 @@ export const isSingular = (n: number | string): boolean => {
   return c.slice(-1) === '1' && c.slice(-2) !== '11'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isReponse = (error: any): error is Response => {
-  return 'json' in error
+export const isResponse = (error: unknown): error is Response => {
+  return typeof error === 'object' && error !== null && 'json' in error
 }
 
 export const ICELANDIC_ALPHABET = 'AÁBDÐEÉFGHIÍJKLMNOÓPRSTUÚVXYÝÞÆÖ'

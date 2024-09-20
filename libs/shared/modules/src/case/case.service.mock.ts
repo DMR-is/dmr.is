@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
@@ -18,9 +19,11 @@ import {
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
+  PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
+  PresignedUrlResponse,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -46,6 +49,24 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  overwriteCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    newAttachment: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getCaseAttachments(caseId: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
   }
   getCasesOverview(
     params?: GetCasesQuery,

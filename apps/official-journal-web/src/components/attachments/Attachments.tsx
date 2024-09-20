@@ -1,19 +1,72 @@
-import { Box, Icon, LinkV2, Stack, Text } from '@island.is/island-ui/core'
+import React from 'react'
+import { KeyedMutator } from 'swr'
 
-import { Case } from '../../gen/fetch'
+import {
+  AlertMessage,
+  Box,
+  Button,
+  Icon,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
+
+import {
+  ApplicationAttachmentTypeTitleEnum,
+  Case,
+  GetCaseResponse,
+} from '../../gen/fetch'
+import { useAttachments } from '../../hooks/useAttachments'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-// import * as styles from './Attachments.css'
 import { messages } from './messages'
 type Props = {
   activeCase: Case
+  refetchCase: KeyedMutator<GetCaseResponse>
 }
 
-export const Attachments = ({ activeCase }: Props) => {
+export const Attachments = ({ activeCase, refetchCase }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const { loading, downloadAttachment, overwriteAttachment, error } =
+    useAttachments()
+
+  const fileUploadRef = React.useRef<HTMLInputElement>(null)
+
+  const onOpenOverwriteAttachment = () => {
+    if (fileUploadRef.current) {
+      fileUploadRef.current.click()
+    }
+  }
+
+  const onFileUpload = async (
+    attachmentId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    overwriteAttachment({
+      attachmentId,
+      caseId: activeCase.id,
+      applicationId: activeCase.applicationId,
+      file,
+      onSuccess: () => {
+        refetchCase()
+      },
+    })
+  }
 
   return (
     <Box>
       <Text variant="h5">{formatMessage(messages.attachments.title)}</Text>
+
+      {error && (
+        <Box marginY={2}>
+          <AlertMessage type="warning" title="Villa kom upp" message={error} />
+        </Box>
+      )}
 
       <Box
         marginTop={2}
@@ -22,8 +75,8 @@ export const Attachments = ({ activeCase }: Props) => {
         borderWidth="standard"
         borderColor="blue200"
       >
-        {/* <Stack space={2}>
-          {activeCase.advert.attachments.map((a, i) => {
+        <Stack space={2}>
+          {activeCase.attachments.map((a, i) => {
             return (
               <Box
                 key={i}
@@ -40,35 +93,61 @@ export const Attachments = ({ activeCase }: Props) => {
               >
                 <Box display="flex" columnGap={2}>
                   <Icon
-                    // icon={a.type === 'signature' ? 'pencil' : 'attach'}
-                    icon="attach"
+                    icon={
+                      a.type.title ===
+                      ApplicationAttachmentTypeTitleEnum.Frumrit
+                        ? 'pencil'
+                        : 'attach'
+                    }
                     color="blue400"
                   />
-                  <Text>{a.name}</Text>
+                  <Text>{a.fileName}</Text>
                 </Box>
 
-                <LinkV2
-                  href={a.url}
-                  underline="small"
-                  color="blue400"
-                  underlineVisibility="always"
-                >
-                  <Box display="flex" alignItems="center" columnGap={1}>
-                    <Text fontWeight="semiBold" variant="small" color="blue400">
-                      {formatMessage(messages.attachments.fetchFile)}
-                    </Text>
-                    <Icon
+                <Box display="flex" alignItems="center" columnGap={2}>
+                  {a.type.title ===
+                    ApplicationAttachmentTypeTitleEnum.Fylgiskjl && (
+                    <>
+                      <input
+                        type="file"
+                        ref={fileUploadRef}
+                        style={{ display: 'none' }}
+                        accept={['.pdf', '.doc', '.docx'].join(',')}
+                        onChange={(e) => onFileUpload(a.id, e)}
+                      />
+                      <Button
+                        variant="text"
+                        icon="share"
+                        iconType="outline"
+                        size="small"
+                        onClick={onOpenOverwriteAttachment}
+                      >
+                        {formatMessage(messages.attachments.overwrite)}
+                      </Button>
+                    </>
+                  )}
+                  <Box>
+                    <Button
+                      variant="text"
                       icon="download"
+                      iconType="outline"
                       size="small"
-                      color="blue400"
-                      type="outline"
-                    />
+                      loading={loading}
+                      onClick={() =>
+                        downloadAttachment({
+                          caseId: activeCase.id,
+                          attachmentId: a.id,
+                        })
+                      }
+                    >
+                      {formatMessage(messages.attachments.fetchFile)}
+                    </Button>
                   </Box>
-                </LinkV2>
+                </Box>
               </Box>
             )
           })}
-        </Stack> */}
+        </Stack>
       </Box>
     </Box>
   )

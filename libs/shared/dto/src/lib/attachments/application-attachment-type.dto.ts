@@ -1,4 +1,5 @@
-import { IsString, IsUUID } from 'class-validator'
+import { IsEnum, IsString, IsUUID } from 'class-validator'
+import { AttachmentTypeEnum } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -11,11 +12,11 @@ export class ApplicationAttachmentType {
   id!: string
 
   @ApiProperty({
-    type: String,
+    enum: AttachmentTypeEnum,
     description: 'Title of the attachment type',
   })
-  @IsString()
-  title!: string
+  @IsEnum(AttachmentTypeEnum)
+  title!: AttachmentTypeEnum
 
   @ApiProperty({
     type: String,

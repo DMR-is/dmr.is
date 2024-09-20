@@ -12,6 +12,8 @@ export const FALLBACK_DOMAIN = 'https://admin.stjornartidindi.is' // THIS IS A M
 
 export const JSON_ENDING = '.json'
 
+export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
+
 export enum Routes {
   Dashboard = '/',
   ProcessingOverview = '/ritstjorn',

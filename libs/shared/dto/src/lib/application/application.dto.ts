@@ -1,3 +1,5 @@
+import { ApplicationStates } from '@dmr.is/constants'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { ApplicationAnswers } from './application-answers.dto'
@@ -31,11 +33,11 @@ export class Application {
   attachments!: Record<string, string>
 
   @ApiProperty({
-    type: String,
+    enum: ApplicationStates,
     example: 'draft',
     description: 'State of the application',
   })
-  state!: string
+  state!: ApplicationStates
 
   @ApiProperty({
     type: String,

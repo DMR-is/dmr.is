@@ -46,9 +46,22 @@ export enum SignatureTypeSlug {
 /**
  * Enum for attachment types, used for parameter routes when uploading attachments.
  */
-export enum AttachmentTypeParams {
+export enum AttachmentTypeParam {
   OriginalDocument = 'frumrit',
   AdditonalDocument = 'fylgiskjol',
 }
 
+export enum AttachmentTypeEnum {
+  OriginalDocument = 'Frumrit',
+  AdditonalDocument = 'Fylgiskjöl',
+}
+
 export const DEFAULT_PRICE = 17000
+
+export enum ApplicationStates {
+  REQUIREMENTS = 'requirements',
+  DRAFT = 'draft',
+  DRAFT_RETRY = 'draft_retry',
+  SUBMITTED = 'submitted',
+  COMPLETE = 'complete',
+}

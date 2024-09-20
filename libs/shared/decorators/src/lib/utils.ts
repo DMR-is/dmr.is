@@ -52,7 +52,7 @@ export const handleException = <T>({
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Database error',
+        message: 'Internal server error',
       })
     }
 
@@ -145,6 +145,10 @@ export const filterArgs = (args: any[], service?: string, method?: string) => {
 
     return !isTransaction && !isBuffer
   })
+
+  if (typeof args === 'object' && 'transaction' in args) {
+    delete args.transaction
+  }
 
   return filteredArgs
 }

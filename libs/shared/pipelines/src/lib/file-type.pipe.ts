@@ -11,7 +11,7 @@ export class FileTypeValidationPipe extends FileValidator<
   FileAttributes,
   IFile
 > {
-  protected validationOptions: FileAttributes = {
+  protected override validationOptions: FileAttributes = {
     mimetype: ALLOWED_MIME_TYPES,
     maxNumberOfFiles: 5,
   }

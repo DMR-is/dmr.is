@@ -332,6 +332,78 @@
         }
       }
     },
+    "/api/v1/cases/{caseId}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "getCaseAttachment",
+        "summary": "Get case attachment",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUrlResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "overwriteCaseAttachment",
+        "summary": "Overwrite case attachment",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostApplicationAttachmentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUrlResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/{id}/price": {
       "put": {
         "operationId": "updatePrice",
@@ -912,6 +984,230 @@
           }
         ],
         "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/involved-party/{id}": {
+      "get": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSignaturesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signatures/case/{id}": {
+      "get": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSignaturesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signatures/advert/{id}": {
+      "get": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSignaturesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signatures/{id}": {
+      "get": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSignatureResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      },
+      "put": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSignatureBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures": {
+      "get": {
+        "operationId": "SignatureController_",
+        "parameters": [
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": { "200": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {
@@ -1581,6 +1877,66 @@
           "members"
         ]
       },
+      "ApplicationAttachmentType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id of the attachment type"
+          },
+          "title": {
+            "type": "string",
+            "enum": ["Frumrit", "Fylgiskjöl"],
+            "description": "Title of the attachment type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the attachment type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "ApplicationAttachment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Id of the attachment" },
+          "applicationId": {
+            "type": "string",
+            "description": "Id of the application"
+          },
+          "originalFileName": {
+            "type": "string",
+            "description": "Original file name"
+          },
+          "fileName": { "type": "string", "description": "File name" },
+          "fileFormat": { "type": "string", "description": "File format" },
+          "fileExtension": {
+            "type": "string",
+            "description": "File extension"
+          },
+          "fileSize": { "type": "number", "description": "File size" },
+          "fileLocation": { "type": "string", "description": "File location" },
+          "type": {
+            "description": "Attachment type",
+            "allOf": [
+              { "$ref": "#/components/schemas/ApplicationAttachmentType" }
+            ]
+          },
+          "deleted": { "type": "boolean", "description": "Deleted" }
+        },
+        "required": [
+          "id",
+          "applicationId",
+          "originalFileName",
+          "fileName",
+          "fileFormat",
+          "fileExtension",
+          "fileSize",
+          "fileLocation",
+          "type",
+          "deleted"
+        ]
+      },
       "Case": {
         "type": "object",
         "properties": {
@@ -1719,6 +2075,10 @@
           "signatures": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/Signature" }
+          },
+          "attachments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationAttachment" }
           }
         },
         "required": [
@@ -1747,7 +2107,8 @@
           "html",
           "channels",
           "comments",
-          "signatures"
+          "signatures",
+          "attachments"
         ]
       },
       "CaseOverviewTotalItems": {
@@ -1794,6 +2155,30 @@
           }
         },
         "required": ["cases", "totalItems", "paging"]
+      },
+      "PresignedUrlResponse": {
+        "type": "object",
+        "properties": { "url": { "type": "string" } },
+        "required": ["url"]
+      },
+      "PostApplicationAttachmentBody": {
+        "type": "object",
+        "properties": {
+          "fileName": { "type": "string" },
+          "originalFileName": { "type": "string" },
+          "fileFormat": { "type": "string" },
+          "fileExtension": { "type": "string" },
+          "fileLocation": { "type": "string" },
+          "fileSize": { "type": "number" }
+        },
+        "required": [
+          "fileName",
+          "originalFileName",
+          "fileFormat",
+          "fileExtension",
+          "fileLocation",
+          "fileSize"
+        ]
       },
       "UpdateCasePriceBody": {
         "type": "object",
@@ -1975,6 +2360,73 @@
           }
         },
         "required": ["internal", "type", "comment", "initiator"]
+      },
+      "GetSignaturesResponse": {
+        "type": "object",
+        "properties": {
+          "signatures": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Signature" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["signatures", "paging"]
+      },
+      "GetSignatureResponse": {
+        "type": "object",
+        "properties": {
+          "signature": {
+            "description": "The signature",
+            "allOf": [{ "$ref": "#/components/schemas/Signature" }]
+          }
+        },
+        "required": ["signature"]
+      },
+      "UpdateSignatureBody": {
+        "type": "object",
+        "properties": {
+          "institution": {
+            "type": "string",
+            "description": "The name of the institution responsible for the signature"
+          },
+          "date": {
+            "type": "string",
+            "description": "Date when the institution signed the signature"
+          },
+          "involvedPartyId": {
+            "type": "string",
+            "description": "The id of the involved party"
+          },
+          "members": {
+            "description": "The members of the signature",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SignatureMember" }
+          },
+          "caseId": {
+            "type": "string",
+            "description": "The case id of the signature"
+          },
+          "advertId": {
+            "type": "string",
+            "description": "The advert id of the signature"
+          },
+          "chairman": {
+            "description": "The chairman of the signature",
+            "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
+          },
+          "additionalSignature": {
+            "type": "string",
+            "description": "Additional signature member name"
+          }
+        },
+        "required": [
+          "institution",
+          "date",
+          "involvedPartyId",
+          "members",
+          "caseId",
+          "advertId"
+        ]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

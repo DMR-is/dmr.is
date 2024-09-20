@@ -7,9 +7,11 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { IApplicationService } from '../application/application.service.interface'
+import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
+import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
@@ -30,6 +32,8 @@ describe('CaseService', () => {
   let applicationService: IApplicationService
   let journalService: IJournalService
   let signatureService: ISignatureService
+  let attachmentService: IAttachmentService
+  let s3Service: IS3Service
   let caseModel: CaseModel
   let categoriesModel: CaseCategoriesModel
   let advertCategoryModel: AdvertCategoryModel
@@ -68,6 +72,14 @@ describe('CaseService', () => {
         },
         {
           provide: IJournalService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IAttachmentService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IS3Service,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -152,6 +164,7 @@ describe('CaseService', () => {
     commentService = app.get<ICommentService>(ICommentService)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
+    attachmentService = app.get<IAttachmentService>(IAttachmentService)
     caseModel = app.get<CaseModel>(getModelToken(CaseModel))
     caseCategoriesModel = app.get<CaseCategoriesModel>(
       getModelToken(CaseCategoriesModel),

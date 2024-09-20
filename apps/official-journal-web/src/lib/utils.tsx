@@ -153,8 +153,8 @@ export const commentTaskToNode = (
     case CaseCommentTitleTitleEnum.FrirMl: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title.title}{' '}
-          <strong>{task.to}</strong>
+          <strong>{task.from ? task.from : 'Óþekktur notandi'}</strong>{' '}
+          {task.title.title} <strong>{task.to}</strong>
         </>
       )
     }

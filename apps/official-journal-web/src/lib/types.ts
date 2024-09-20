@@ -1,5 +1,5 @@
 import { GetServerSidePropsContext, NextApiHandler } from 'next'
-
+import { z } from 'zod'
 export type HandlerDecorator = (handler: NextApiHandler) => NextApiHandler
 
 export type ScreenContext = {
@@ -7,6 +7,15 @@ export type ScreenContext = {
   req: GetServerSidePropsContext['req']
   res: GetServerSidePropsContext['res']
 }
+
+export const overrideAttachmentSchema = z.object({
+  fileName: z.string(),
+  originalFileName: z.string(),
+  fileFormat: z.string(),
+  fileExtension: z.string(),
+  fileLocation: z.string(),
+  fileSize: z.number(),
+})
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type Screen<Props = {}> = React.ComponentType<Props> & {

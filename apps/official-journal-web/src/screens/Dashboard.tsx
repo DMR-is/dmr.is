@@ -1,4 +1,4 @@
-import { isReponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client'
 
 import {
   Box,
@@ -228,7 +228,7 @@ Dashboard.getProps = async () => {
       }),
     ].map((promise) =>
       promise.catch(async (err) => {
-        if (isReponse(err)) {
+        if (isResponse(err)) {
           const json = await err.json()
           // eslint-disable-next-line no-console
           console.error(`${json.error}: ${json.message}`, {

@@ -2,7 +2,7 @@ import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   ApplicationEvent,
-  AttachmentTypeParams,
+  AttachmentTypeParam,
   DEFAULT_PRICE,
 } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
@@ -438,17 +438,19 @@ export class ApplicationService implements IApplicationService {
   @Transactional()
   async addApplicationAttachment(
     applicationId: string,
-    type: AttachmentTypeParams,
+    type: AttachmentTypeParam,
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     ResultWrapper.unwrap(
-      await this.attachmentService.createAttachment(
-        applicationId,
-        type,
-        body,
+      await this.attachmentService.createAttachment({
+        params: {
+          applicationId: applicationId,
+          attachmentType: type,
+          body: body,
+        },
         transaction,
-      ),
+      }),
     )
 
     return ResultWrapper.ok()
@@ -457,7 +459,7 @@ export class ApplicationService implements IApplicationService {
   @LogAndHandle()
   async getApplicationAttachments(
     applicationId: string,
-    type: AttachmentTypeParams,
+    type: AttachmentTypeParam,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
     const attachments = (
       await this.attachmentService.getAttachments(applicationId, type)

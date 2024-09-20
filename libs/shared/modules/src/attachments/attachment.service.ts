@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { AttachmentTypeParams } from '@dmr.is/constants'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -14,11 +14,15 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { attachmentMigrate } from './migrations/attachment.migration'
-import { IAttachmentService } from './attachment.service.interface'
+import {
+  CreateAttachmentParams,
+  IAttachmentService,
+} from './attachment.service.interface'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentsModel,
   ApplicationAttachmentTypeModel,
+  CaseAttachmentsModel,
 } from './models'
 
 @Injectable()
@@ -32,11 +36,16 @@ export class AttachmentService implements IAttachmentService {
     @InjectModel(ApplicationAttachmentTypeModel)
     private readonly applicationAttachmentTypeModel: typeof ApplicationAttachmentTypeModel,
 
+    @InjectModel(CaseAttachmentsModel)
+    private readonly caseAttachmentsModel: typeof CaseAttachmentsModel,
+
     private sequelize: Sequelize,
   ) {}
 
-  private async typeLookup(
-    type: AttachmentTypeParams,
+  @LogAndHandle()
+  @Transactional()
+  async attachmentTypeLookup(
+    type: AttachmentTypeParam,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationAttachmentTypeModel>> {
     const found = await this.applicationAttachmentTypeModel.findOne({
@@ -96,45 +105,43 @@ export class AttachmentService implements IAttachmentService {
 
   @LogAndHandle()
   @Transactional()
-  async createAttachment(
-    applicationId: string,
-    attachmentType: AttachmentTypeParams,
-    body: PostApplicationAttachmentBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  async createAttachment({
+    params,
+    transaction,
+  }: CreateAttachmentParams): Promise<ResultWrapper<{ id: string }>> {
     ResultWrapper.unwrap(
       await this.handleReUpload(
-        applicationId,
-        body.originalFileName,
+        params.applicationId,
+        params.body.originalFileName,
         transaction,
       ),
     )
 
     const foundAttachmentType = (
-      await this.typeLookup(attachmentType, transaction)
+      await this.attachmentTypeLookup(params.attachmentType, transaction)
     ).unwrap()
 
     const attachment = await this.applicationAttachmentModel.create(
       {
-        applicationId: applicationId,
-        originalFileName: body.originalFileName,
-        fileName: body.originalFileName,
-        fileFormat: body.fileFormat,
-        fileExtension: body.fileExtension,
-        fileSize: body.fileSize,
-        fileLocation: body.fileLocation,
+        applicationId: params.applicationId,
+        originalFileName: params.body.originalFileName,
+        fileName: params.body.originalFileName,
+        fileFormat: params.body.fileFormat,
+        fileExtension: params.body.fileExtension,
+        fileSize: params.body.fileSize,
+        fileLocation: params.body.fileLocation,
         deleted: false,
         typeId: foundAttachmentType.id,
       },
       {
         transaction: transaction,
-        returning: ['id'],
+        returning: true,
       },
     )
 
     await this.applicationAttachmentsModel.create(
       {
-        applicationId: applicationId,
+        applicationId: params.applicationId,
         attachmentId: attachment.id,
       },
       {
@@ -142,7 +149,19 @@ export class AttachmentService implements IAttachmentService {
       },
     )
 
-    return ResultWrapper.ok()
+    if (params.caseId) {
+      await this.caseAttachmentsModel.create(
+        {
+          caseId: params.caseId,
+          attachmentId: attachment.id,
+        },
+        {
+          transaction: transaction,
+        },
+      )
+    }
+
+    return ResultWrapper.ok({ id: attachment.id })
   }
 
   /**
@@ -171,21 +190,12 @@ export class AttachmentService implements IAttachmentService {
       throw new NotFoundException(`Attachment with location<${key}> not found`)
     }
 
-    await this.applicationAttachmentsModel.destroy({
-      where: {
-        applicationId: applicationId,
-        attachmentId: found.id,
+    await found.update(
+      {
+        deleted: true,
       },
-      transaction: transaction,
-    })
-
-    await this.applicationAttachmentModel.destroy({
-      where: {
-        applicationId: applicationId,
-        id: found.id,
-      },
-      transaction: transaction,
-    })
+      { transaction: transaction },
+    )
 
     return ResultWrapper.ok()
   }
@@ -217,12 +227,47 @@ export class AttachmentService implements IAttachmentService {
 
   @LogAndHandle()
   @Transactional()
+  async getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentResponse>> {
+    const found = await this.caseAttachmentsModel.findOne({
+      where: {
+        caseId: caseId,
+        attachmentId: attachmentId,
+      },
+      include: [
+        {
+          model: ApplicationAttachmentModel,
+          where: { deleted: false },
+          include: [ApplicationAttachmentTypeModel],
+        },
+      ],
+      transaction: transaction,
+    })
+
+    if (!found) {
+      throw new NotFoundException(`Attachment<${attachmentId}> not found`)
+    }
+
+    const attachment = attachmentMigrate(found.attachment)
+
+    return ResultWrapper.ok({
+      attachment: attachment,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async getAttachments(
     applicationId: string,
-    type: AttachmentTypeParams,
+    type: AttachmentTypeParam,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
-    const typeLookup = (await this.typeLookup(type, transaction)).unwrap()
+    const typeLookup = (
+      await this.attachmentTypeLookup(type, transaction)
+    ).unwrap()
 
     const found = await this.applicationAttachmentModel.findAll({
       where: {
@@ -238,5 +283,25 @@ export class AttachmentService implements IAttachmentService {
     return ResultWrapper.ok({
       attachments: attachments,
     })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseAttachmentsModel.create(
+      {
+        caseId: caseId,
+        attachmentId: attachmentId,
+      },
+      {
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
   }
 }

@@ -1,5 +1,5 @@
 import { Transaction } from 'sequelize'
-import { AttachmentTypeParams } from '@dmr.is/constants'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
@@ -7,13 +7,22 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { ApplicationAttachmentTypeModel } from './models'
+
+export interface CreateAttachmentParams {
+  params: {
+    applicationId: string
+    attachmentType: AttachmentTypeParam
+    body: PostApplicationAttachmentBody
+    caseId?: string
+  }
+  transaction?: Transaction
+}
+
 export interface IAttachmentService {
   createAttachment(
-    applicationId: string,
-    attachmentType: AttachmentTypeParams,
-    body: PostApplicationAttachmentBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
+    params: CreateAttachmentParams,
+  ): Promise<ResultWrapper<{ id: string }>>
 
   deleteAttachmentByKey(
     applicationId: string,
@@ -26,11 +35,28 @@ export interface IAttachmentService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentResponse>>
 
+  getCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentResponse>>
+
   getAttachments(
     applicationId: string,
-    type: AttachmentTypeParams,
+    type: AttachmentTypeParam,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
+
+  attachmentTypeLookup(
+    type: AttachmentTypeParam,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<ApplicationAttachmentTypeModel>>
+
+  createCaseAttachment(
+    caseId: string,
+    attachmentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const IAttachmentService = Symbol('IAttachmentService')
