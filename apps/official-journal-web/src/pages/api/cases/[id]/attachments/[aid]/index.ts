@@ -30,7 +30,9 @@ class GetCaseAttachmentHandler {
         if (isResponse(e)) {
           const json = await e.json()
 
-          logger.warn(`Failed to fetch attachment ${json.message}`)
+          logger.warn(`Failed to fetch attachment`, {
+            message: json.message,
+          })
 
           return void res
             .status(json.statusCode)
