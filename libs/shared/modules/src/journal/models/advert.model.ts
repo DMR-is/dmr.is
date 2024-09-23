@@ -41,7 +41,7 @@ export class AdvertModel extends Model {
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => AdvertCategoriesModel },
   })
-  categories!: AdvertCategoryModel[]
+  categories?: AdvertCategoryModel[]
 
   @Column
   subject!: string

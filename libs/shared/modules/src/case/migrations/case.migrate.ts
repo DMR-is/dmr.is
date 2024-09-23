@@ -39,13 +39,23 @@ export const caseMigrate = (model: CaseModel): Case => {
       advertTitle: model.advertTitle,
       advertDepartment: model.department,
       advertType: model.advertType,
-      advertCategories: model.categories.map((c) => advertCategoryMigrate(c)),
       message: model.message,
       html: model.html,
-      channels: model.channels.map((c) => caseChannelMigrate(c)),
-      signatures: model.signatures.map((s) => signatureMigrate(s)),
-      comments: model.comments.map((c) => caseCommentMigrate(c)),
-      attachments: model.attachments.map((a) => attachmentMigrate(a)),
+      advertCategories: model.categories
+        ? model.categories.map((c) => advertCategoryMigrate(c)) ?? []
+        : [],
+      channels: model.channels
+        ? model.channels.map((c) => caseChannelMigrate(c))
+        : [],
+      signatures: model.signatures
+        ? model.signatures.map((s) => signatureMigrate(s))
+        : [],
+      comments: model.comments
+        ? model.comments.map((c) => caseCommentMigrate(c))
+        : [],
+      attachments: model.attachments
+        ? model.attachments.map((a) => attachmentMigrate(a))
+        : [],
     }
   }, `Error migrating case ${model.id}`)
 }
