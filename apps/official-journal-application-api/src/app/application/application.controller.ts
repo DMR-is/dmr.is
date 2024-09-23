@@ -138,8 +138,6 @@ export class ApplicationController {
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @CurrentUser() user: ApplicationUser,
   ): Promise<GetCaseCommentsResponse> {
-    console.log('User:', user)
-
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),
     )
