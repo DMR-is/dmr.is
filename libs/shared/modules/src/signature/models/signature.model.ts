@@ -89,5 +89,5 @@ export class SignatureModel extends Model {
     as: 'members',
     through: { model: () => SignatureMembersModel },
   })
-  members!: SignatureMemberModel[]
+  members?: SignatureMemberModel[]
 }

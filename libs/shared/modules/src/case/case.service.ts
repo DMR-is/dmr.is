@@ -274,7 +274,9 @@ export class CaseService implements ICaseService {
         departmentId: activeCase.departmentId,
         typeId: activeCase.advertTypeId,
         involvedPartyId: activeCase.involvedParty.id,
-        categoryIds: activeCase.categories.map((c) => c.id),
+        categoryIds: activeCase.categories
+          ? activeCase.categories.map((c) => c.id)
+          : [],
         statusId: advertStatus.id,
         subject: activeCase.advertTitle,
         publicationNumber: number,
