@@ -34,7 +34,11 @@ export class AppModule implements NestModule {
       .apply(LogRequestMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL })
       .apply(WithAuthMiddleware)
-      .exclude('health')
+      .exclude({
+        method: RequestMethod.ALL,
+        path: '/health',
+        version: '1',
+      })
       .forRoutes({ path: '*', method: RequestMethod.ALL })
   }
 }
