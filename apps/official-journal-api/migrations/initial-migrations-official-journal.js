@@ -329,6 +329,26 @@ module.exports = {
       CONSTRAINT fk_case_attachments_attachment_id FOREIGN KEY (attachment_id) REFERENCES application_attachment (id)
     );
 
+    CREATE TABLE application_user (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      national_id VARCHAR NOT NULL,
+      first_name VARCHAR NOT NULL,
+      last_name VARCHAR NOT NULL,
+      email VARCHAR,
+      phone VARCHAR,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE application_user_involved_party (
+      application_user_id UUID NOT NULL,
+      involved_party_id UUID NOT NULL,
+      PRIMARY KEY (application_user_id, involved_party_id),
+      CONSTRAINT fk_application_user_involved_party_user_id FOREIGN KEY (application_user_id) REFERENCES application_user (id),
+      CONSTRAINT fk_application_user_involved_party_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id)
+    );
+
   COMMIT;
     `)
   },
