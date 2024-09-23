@@ -185,25 +185,25 @@ export class CaseModel extends Model {
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => CaseCategoriesModel },
   })
-  categories!: AdvertCategoryModel[]
+  categories?: AdvertCategoryModel[]
 
   @BelongsToMany(() => CaseChannelModel, {
     through: { model: () => CaseChannelsModel },
   })
-  channels!: CaseChannelModel[]
+  channels?: CaseChannelModel[]
 
   @BelongsToMany(() => CaseCommentModel, {
     through: { model: () => CaseCommentsModel },
   })
-  comments!: CaseCommentModel[]
+  comments?: CaseCommentModel[]
 
   @BelongsToMany(() => SignatureModel, {
     through: { model: () => CaseSignaturesModel },
   })
-  signatures!: SignatureModel[]
+  signatures?: SignatureModel[]
 
   @BelongsToMany(() => ApplicationAttachmentModel, {
     through: { model: () => CaseAttachmentsModel },
   })
-  attachments!: ApplicationAttachmentModel[]
+  attachments?: ApplicationAttachmentModel[]
 }

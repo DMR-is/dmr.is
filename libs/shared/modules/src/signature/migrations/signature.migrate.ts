@@ -13,7 +13,9 @@ export const signatureMigrate = (model: SignatureModel): Signature => {
       type: signatureTypeMigrate(model.type),
       institution: model.institution,
       date: model.date,
-      members: model.members.map((m) => signatureMemberMigrate(m)),
+      members: model.members
+        ? model.members.map((m) => signatureMemberMigrate(m))
+        : [],
       involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
       chairman: model.chairman ? signatureMemberMigrate(model.chairman) : null,
       additionalSignature: model.additionalSignature ?? null,
