@@ -2,7 +2,7 @@ import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ApplicationUser } from '@dmr.is/shared/dto'
+import { ApplicationUser, Institution } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
@@ -21,6 +21,15 @@ export class ApplicationUserService implements IApplicationUserService {
     private readonly userModel: typeof ApplicationUserModel,
     private readonly sequelize: Sequelize,
   ) {}
+  async getUserInvolvedParties(
+    nationalId: string,
+  ): Promise<ResultWrapper<{ involvedParties: Institution[] }>> {
+    const parties = ResultWrapper.unwrap(await this.getUser(nationalId))
+
+    return ResultWrapper.ok({
+      involvedParties: parties.user.involvedParties,
+    })
+  }
 
   @LogAndHandle()
   @Transactional()
