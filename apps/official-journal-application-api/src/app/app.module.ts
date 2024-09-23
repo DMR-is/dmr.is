@@ -8,7 +8,7 @@ import {
 import { ApplicationController } from './application/application.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { SequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware } from '@dmr.is/middleware'
+import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
 
 @Module({
   imports: [
@@ -26,6 +26,8 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LogRequestMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL })
+      .apply(WithAuthMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL })
   }
 }

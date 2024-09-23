@@ -1,4 +1,4 @@
-import { LogMethod, Route } from '@dmr.is/decorators'
+import { Auth, AuthGuard, LogMethod, Route } from '@dmr.is/decorators'
 import { IApplicationService } from '@dmr.is/modules'
 import {
   CasePriceResponse,
@@ -17,6 +17,7 @@ import 'multer'
 import {
   Body,
   Controller,
+  Header,
   HttpCode,
   Inject,
   MaxFileSizeValidator,
@@ -25,6 +26,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import {
@@ -92,6 +94,7 @@ export class ApplicationController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetApplicationResponse,
   })
+  @UseGuards(AuthGuard)
   async getApplication(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetApplicationResponse> {
