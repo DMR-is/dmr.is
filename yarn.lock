@@ -7125,6 +7125,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jsonwebtoken@npm:^9":
+  version: 9.0.7
+  resolution: "@types/jsonwebtoken@npm:9.0.7"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: e1cd0e48fcae21b1d4378887a23453bd7212b480a131b11bcda2cdeb0687d03c9646ee5ba592e04cfaf76f7cc80f179950e627cdb3ebc90a5923bce49a35631a
+  languageName: node
+  linkType: hard
+
 "@types/license-checker@npm:^25.0.6":
   version: 25.0.6
   resolution: "@types/license-checker@npm:25.0.6"
@@ -11065,6 +11074,7 @@ __metadata:
     "@types/eslint": "npm:^8.56.10"
     "@types/jest": "npm:^29.4.0"
     "@types/js-base64": "npm:^3.0.0"
+    "@types/jsonwebtoken": "npm:^9"
     "@types/license-checker": "npm:^25.0.6"
     "@types/lodash": "npm:^4.14.160"
     "@types/mime-types": "npm:^2"
@@ -11115,6 +11125,7 @@ __metadata:
     jest-environment-jsdom: "npm:^29.4.1"
     jest-environment-node: "npm:^29.4.1"
     js-base64: "npm:2.5.2"
+    jsonwebtoken: "npm:^9.0.2"
     kennitala: "npm:^2.0.0-beta.3"
     libphonenumber-js: "npm:1.7.53"
     license-checker: "npm:^25.0.1"
@@ -15423,7 +15434,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^9.0.0":
+"jsonwebtoken@npm:^9.0.0, jsonwebtoken@npm:^9.0.2":
   version: 9.0.2
   resolution: "jsonwebtoken@npm:9.0.2"
   dependencies:

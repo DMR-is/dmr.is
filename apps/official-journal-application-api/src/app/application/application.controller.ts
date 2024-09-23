@@ -1,6 +1,7 @@
-import { LogMethod, Route } from '@dmr.is/decorators'
-import { IApplicationService } from '@dmr.is/modules'
+import { CurrentUser, LogMethod, Route } from '@dmr.is/decorators'
+import { AuthGuard, IApplicationService } from '@dmr.is/modules'
 import {
+  ApplicationUser,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
@@ -17,6 +18,7 @@ import 'multer'
 import {
   Body,
   Controller,
+  Header,
   HttpCode,
   Inject,
   MaxFileSizeValidator,
@@ -25,6 +27,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import {
@@ -124,6 +127,7 @@ export class ApplicationController {
    * @param applicationId The ID of the application.
    * @returns A promise that resolves to the comments of the application.
    */
+  @UseGuards(AuthGuard)
   @Route({
     path: ':id/comments',
     operationId: 'getComments',
@@ -132,6 +136,7 @@ export class ApplicationController {
   })
   async getComments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentUser() user: ApplicationUser,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),

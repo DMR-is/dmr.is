@@ -276,3 +276,30 @@ VALUES
     'Fylgiskjöl',
     'fylgiskjol'
   );
+
+INSERT INTO
+  application_user(
+    id,
+    national_id,
+    first_name,
+    last_name,
+    email,
+    phone
+  )
+VALUES
+  (
+    'd463f814-1ab1-4e9c-8fed-0fb9024a20aa',
+    '0101307789',
+    'Gervimaður',
+    'Útlönd',
+    NULL,
+    NULL
+  );
+
+INSERT INTO
+  application_user_involved_party (application_user_id, involved_party_id)
+VALUES
+  (
+    'd463f814-1ab1-4e9c-8fed-0fb9024a20aa',
+    'E5A35CF9-DC87-4DA7-85A2-06EB5D43812F'
+  );
