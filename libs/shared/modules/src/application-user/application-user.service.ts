@@ -34,19 +34,21 @@ export class ApplicationUserService implements IApplicationUserService {
   @LogAndHandle()
   @Transactional()
   async getUser(
-    id: string,
+    nationalId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ user: ApplicationUser }>> {
     const user = await this.userModel.findOne({
       where: {
-        nationalId: id,
+        nationalId: nationalId,
       },
       include: [AdvertInvolvedPartyModel],
       transaction: transaction,
     })
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`)
+      throw new NotFoundException(
+        `User with national id<${nationalId}> not found`,
+      )
     }
 
     const migrated = applicationUserMigrate(user)

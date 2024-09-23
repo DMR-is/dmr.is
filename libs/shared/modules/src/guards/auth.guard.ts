@@ -1,5 +1,6 @@
 import { decode } from 'jsonwebtoken'
 import { Sequelize } from 'sequelize-typescript'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
@@ -8,6 +9,7 @@ import { IApplicationUserService } from '../application-user/application-user.mo
 
 export class AuthGuard implements CanActivate {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IApplicationUserService)
     private readonly applicationUserService: IApplicationUserService,
     private readonly sequelize: Sequelize,
@@ -42,8 +44,9 @@ export class AuthGuard implements CanActivate {
 
       return true
     } catch (error) {
-      // user does not exists
-
+      this.logger.warn(`Auth guard denied incoming request`, {
+        category: 'auth-guard',
+      })
       return false
     }
   }
