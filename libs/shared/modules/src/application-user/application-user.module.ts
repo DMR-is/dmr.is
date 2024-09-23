@@ -3,18 +3,20 @@ import { LoggingModule } from '@dmr.is/logging'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { UserService } from './application-user.service'
-import { IUserService } from './application-user.service.interface'
+import { ApplicationUserService } from './application-user.service'
+import { IApplicationUserService } from './application-user.service.interface'
 import models from './models'
+
+export { IApplicationUserService, ApplicationUserService }
 
 @Module({
   imports: [SequelizeModule.forFeature([...models]), LoggingModule],
   providers: [
     {
-      provide: IUserService,
-      useClass: UserService,
+      provide: IApplicationUserService,
+      useClass: ApplicationUserService,
     },
   ],
-  exports: [IUserService],
+  exports: [IApplicationUserService],
 })
-export class UserModule {}
+export class ApplicationUserModule {}

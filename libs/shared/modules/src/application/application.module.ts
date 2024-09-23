@@ -14,6 +14,7 @@ import { IApplicationService } from './application.service.interface'
 export { IApplicationService } from './application.service.interface'
 export { ApplicationService } from './application.service'
 
+import { ApplicationUserModule } from '../application-user/application-user.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import caseModels from '../case/models'
 import commentModels from '../comment/models'
@@ -31,6 +32,7 @@ import { S3Module } from '../s3/s3.module'
     LoggingModule,
     AuthModule,
     AttachmentsModule,
+    ApplicationUserModule,
     forwardRef(() => SharedCaseModule),
     forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),

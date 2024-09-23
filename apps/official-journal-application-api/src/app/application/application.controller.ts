@@ -1,6 +1,7 @@
-import { Auth, AuthGuard, LogMethod, Route } from '@dmr.is/decorators'
-import { IApplicationService } from '@dmr.is/modules'
+import { CurrentUser, LogMethod, Route } from '@dmr.is/decorators'
+import { AuthGuard, IApplicationService } from '@dmr.is/modules'
 import {
+  ApplicationUser,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
@@ -94,7 +95,6 @@ export class ApplicationController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetApplicationResponse,
   })
-  @UseGuards(AuthGuard)
   async getApplication(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetApplicationResponse> {
@@ -127,6 +127,7 @@ export class ApplicationController {
    * @param applicationId The ID of the application.
    * @returns A promise that resolves to the comments of the application.
    */
+  @UseGuards(AuthGuard)
   @Route({
     path: ':id/comments',
     operationId: 'getComments',
@@ -135,7 +136,10 @@ export class ApplicationController {
   })
   async getComments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentUser() user: ApplicationUser,
   ): Promise<GetCaseCommentsResponse> {
+    console.log('User:', user)
+
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),
     )

@@ -9,7 +9,7 @@ import {
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { ApplicationUserInvolvedPartyModel } from './application-user-involved-party.model'
 
-@Table({ tableName: 'application_user' })
+@Table({ tableName: 'application_user', timestamps: false })
 export class ApplicationUserModel extends Model {
   @Column({
     type: DataType.UUIDV4,

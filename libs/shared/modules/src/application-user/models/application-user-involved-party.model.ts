@@ -11,7 +11,7 @@ import {
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { ApplicationUserModel } from './application-user.model'
 
-@Table({ tableName: 'application_user_involved_party' })
+@Table({ tableName: 'application_user_involved_party', timestamps: false })
 export class ApplicationUserInvolvedPartyModel extends Model {
   @PrimaryKey
   @ForeignKey(() => ApplicationUserModel)

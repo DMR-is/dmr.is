@@ -1,17 +1,47 @@
-import { LogAndHandle } from '@dmr.is/decorators'
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ApplicationUser } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
-import { IUserService } from './application-user.service.interface'
+import { AdvertInvolvedPartyModel } from '../journal/models'
+import { applicationUserMigrate } from './migrations/application-user.migrate'
+import { IApplicationUserService } from './application-user.service.interface'
+import { ApplicationUserModel } from './models'
 
 @Injectable()
-export class UserService implements IUserService {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
+export class ApplicationUserService implements IApplicationUserService {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectModel(ApplicationUserModel)
+    private readonly userModel: typeof ApplicationUserModel,
+    private readonly sequelize: Sequelize,
+  ) {}
 
   @LogAndHandle()
-  async getUser(id: string): Promise<ResultWrapper> {
-    return ResultWrapper.ok()
+  @Transactional()
+  async getUser(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ user: ApplicationUser }>> {
+    const user = await this.userModel.findOne({
+      where: {
+        nationalId: id,
+      },
+      include: [AdvertInvolvedPartyModel],
+      transaction: transaction,
+    })
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`)
+    }
+
+    const migrated = applicationUserMigrate(user)
+
+    return ResultWrapper.ok({ user: migrated })
   }
 }

@@ -1,4 +1,9 @@
-import { ApplicationModule, HealthModule, PdfModule } from '@dmr.is/modules'
+import {
+  ApplicationModule,
+  ApplicationUserModule,
+  HealthModule,
+  PdfModule,
+} from '@dmr.is/modules'
 import {
   MiddlewareConsumer,
   Module,
@@ -18,6 +23,7 @@ import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
     ApplicationModule,
     HealthModule,
     PdfModule,
+    ApplicationUserModule,
   ],
   controllers: [ApplicationController],
   providers: [],

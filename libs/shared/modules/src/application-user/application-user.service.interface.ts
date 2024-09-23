@@ -1,7 +1,8 @@
+import { ApplicationUser } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-export interface IUserService {
-  getUser(nationalId: string): Promise<ResultWrapper>
+export interface IApplicationUserService {
+  getUser(nationalId: string): Promise<ResultWrapper<{ user: ApplicationUser }>>
 }
 
-export const IUserService = Symbol('IUserService')
+export const IApplicationUserService = Symbol('IApplicationUserService')
