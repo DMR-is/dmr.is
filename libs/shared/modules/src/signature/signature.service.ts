@@ -16,6 +16,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
+  BadRequestException,
   Inject,
   InternalServerErrorException,
   NotFoundException,
@@ -149,6 +150,11 @@ export class SignatureService implements ISignatureService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ id: string }>> {
     const signatureId = uuid()
+
+    if (!body.institution || body.date) {
+      this.logger.warn('Institution date are required ')
+      throw new BadRequestException()
+    }
 
     const chairman = body.chairman
       ? await this.signatureMemberModel.create(

@@ -11,6 +11,10 @@ export class WithAuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { headers } = req
 
+    if (process.env.NODE_ENV === 'development') {
+      return next()
+    }
+
     const token = headers.authorization
 
     if (!token) {

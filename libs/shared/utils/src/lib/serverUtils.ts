@@ -1,4 +1,9 @@
-import { Transaction } from 'sequelize'
+import {
+  BaseError,
+  DatabaseError,
+  Transaction,
+  ValidationError,
+} from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   APPLICATION_FILES_BUCKET,
@@ -15,10 +20,12 @@ import {
   CaseCommentTypeEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
+import { Result, ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
   FileTypeValidator,
+  HttpException,
   MaxFileSizeValidator,
 } from '@nestjs/common'
 
@@ -196,33 +203,180 @@ export const getSignatureBody = (
 
 export const withTransaction =
   <T>(sequelize: Sequelize) =>
-  async (cb: (transaction: Transaction) => Promise<T>) => {
+  async (cb: (transaction: Transaction) => Promise<ResultWrapper<T>>) => {
     const transaction = await sequelize.transaction()
-    let hasError = false
+
     try {
-      // call cb
-      logger.debug('Transaction start')
-      const result = await cb(transaction)
-      return result
+      const results = await cb(transaction)
+      await transaction.commit()
+      return results
     } catch (error) {
-      hasError = true
-      throw error
-    } finally {
-      if (hasError) {
-        logger.debug('Transaction rollback')
-        await transaction.rollback()
-      } else {
-        logger.debug('Transaction commit')
-        await transaction.commit()
-      }
+      await transaction.rollback()
+      return handleException<T>({
+        method: 'withTransaction',
+        message: 'Error occurred during transaction',
+        category: 'server',
+        error,
+      })
     }
   }
+
+export const handleException = <T>({
+  method,
+  message,
+  category,
+  error,
+  info,
+  code = 500,
+}: {
+  method: string
+  message: string
+  category: string
+  error: unknown
+  info?: Record<string, unknown>
+  code?: number
+}): ResultWrapper<T> => {
+  let prefix = 'Error occurred'
+
+  switch (code) {
+    case 400:
+      prefix = 'Bad request'
+      break
+    case 404:
+      prefix = 'Not found'
+      break
+    case 405:
+      prefix = 'Method not allowed'
+      break
+    default:
+      prefix = 'Internal server error'
+  }
+
+  if (error instanceof BaseError) {
+    logger.debug(`Sequelize error ${error.name} in ${category}.${method}`, {
+      method,
+      category,
+    })
+
+    if (error instanceof DatabaseError) {
+      logger.warn(
+        `${error.name} in ${category}.${method}, reason: ${error.message}`,
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Internal server error',
+      })
+    }
+
+    if (error instanceof ValidationError) {
+      error.errors.forEach((err) => {
+        logger.debug(
+          `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}`,
+        )
+      })
+
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Validation failed',
+      })
+    }
+  }
+
+  if (error instanceof HttpException) {
+    logger.warn(`${prefix} exception in ${category}.${method}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return ResultWrapper.err({
+      code: error.getStatus(),
+      message: error.message,
+    })
+  }
+
+  if (error instanceof Error) {
+    logger.error(`Error in ${category}.${method}: ${error.message}`, {
+      ...info,
+      method,
+      category,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
+    })
+
+    return ResultWrapper.err({
+      code: code,
+      message: message,
+    })
+  }
+
+  logger.error(`Unknown error in ${category}.${method}`, {
+    error: error,
+  })
+
+  return ResultWrapper.err({
+    code: code,
+    message: message,
+  })
+}
+
+/**
+ * Filters out arguments that are instances of Transaction or Buffer
+ * @param args arguments to filter
+ * @returns
+ */
+export const filterArgs = (args: any[], service?: string, method?: string) => {
+  const filteredArgs = args.filter((arg) => {
+    const isTransaction = arg instanceof Transaction
+    const isBuffer = Buffer.isBuffer(arg?.buffer) // filter out arguments with buffer / files
+
+    if (Array.isArray(arg)) {
+      const isTransactionOrBuffer = arg.filter((a) => {
+        const isTransaction = a instanceof Transaction
+        const isBuffer = Buffer.isBuffer(a?.buffer) // filter out arguments with buffer / files
+
+        if (isBuffer && service && method) {
+          logger.debug(
+            `${service}.${String(method)}: received buffer as argument`,
+          )
+        }
+
+        return !isTransaction && !isBuffer
+      })
+
+      return !isTransactionOrBuffer
+    }
+
+    return !isTransaction && !isBuffer
+  })
+
+  if (typeof args === 'object' && 'transaction' in args) {
+    delete args.transaction
+  }
+
+  return filteredArgs
+}
 
 export const withTryCatch = <T>(cb: () => T, message: string): T => {
   try {
     return cb()
   } catch (error) {
-    logger.error(`${message}`, error)
-    throw error
+    const err = handleException<T>({
+      method: 'withTryCatch',
+      message,
+      category: 'server',
+      error,
+    }).unwrap()
+
+    return err
   }
 }
