@@ -19,6 +19,6 @@ export class AuthController {
     operationId: 'login',
   })
   async login() {
-    return this.authService.getCodeVerification()
+    return (await this.authService.getCodeVerification()).unwrap()
   }
 }
