@@ -13,6 +13,10 @@ import advertModels from '../journal/models'
 import { S3Module } from '../s3/s3.module'
 import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
+import { CaseCreateService } from './services/create/case-create.service'
+import { ICaseCreateService } from './services/create/case-create.service.interface'
+import { CaseUpdateService } from './services/update/case-update.service'
+import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
@@ -59,6 +63,14 @@ const API_MOCK = process.env.API_MOCK === 'true'
     {
       provide: ICaseService,
       useClass: API_MOCK ? CaseServiceMock : CaseService,
+    },
+    {
+      provide: ICaseUpdateService,
+      useClass: CaseUpdateService,
+    },
+    {
+      provide: ICaseCreateService,
+      useClass: CaseCreateService,
     },
   ],
   exports: [ICaseService],

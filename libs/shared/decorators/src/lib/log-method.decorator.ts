@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
-import { filterArgs } from './utils'
+import { filterArgs } from '@dmr.is/utils'
 
 export function LogMethod(logArgs: boolean | undefined = true) {
   return function (

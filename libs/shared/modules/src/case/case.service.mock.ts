@@ -50,6 +50,12 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  updateEmployee(id: string, userId: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
   overwriteCaseAttachment(
     caseId: string,
     attachmentId: string,

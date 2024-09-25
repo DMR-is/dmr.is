@@ -287,6 +287,27 @@ export class AttachmentService implements IAttachmentService {
 
   @LogAndHandle()
   @Transactional()
+  async getAllAttachments(
+    applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
+    const found = await this.applicationAttachmentModel.findAll({
+      where: {
+        applicationId: applicationId,
+        deleted: false,
+      },
+      transaction: transaction,
+    })
+
+    const attachments = found.map((attachment) => attachmentMigrate(attachment))
+
+    return ResultWrapper.ok({
+      attachments: attachments,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async createCaseAttachment(
     caseId: string,
     attachmentId: string,
