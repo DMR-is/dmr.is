@@ -296,6 +296,7 @@ export class AttachmentService implements IAttachmentService {
         applicationId: applicationId,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 
