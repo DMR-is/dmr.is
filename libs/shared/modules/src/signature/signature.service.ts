@@ -151,11 +151,6 @@ export class SignatureService implements ISignatureService {
   ): Promise<ResultWrapper<{ id: string }>> {
     const signatureId = uuid()
 
-    if (!body.institution || body.date) {
-      this.logger.warn('Institution date are required ')
-      throw new BadRequestException()
-    }
-
     const chairman = body.chairman
       ? await this.signatureMemberModel.create(
           {
