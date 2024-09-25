@@ -211,6 +211,7 @@ export class AttachmentService implements IAttachmentService {
         id: attachmentId,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 
@@ -275,6 +276,7 @@ export class AttachmentService implements IAttachmentService {
         typeId: typeLookup.id,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 
@@ -296,6 +298,7 @@ export class AttachmentService implements IAttachmentService {
         applicationId: applicationId,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 
