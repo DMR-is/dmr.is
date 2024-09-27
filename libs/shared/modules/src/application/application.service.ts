@@ -110,12 +110,8 @@ export class ApplicationService implements IApplicationService {
         category: LOGGING_CATEGORY,
         error,
       })
-      if (error instanceof TypeError) {
-        throw new InternalServerErrorException(
-          `${error.name}, ${error.message}`,
-        )
-      }
-      throw new InternalServerErrorException()
+
+      throw new InternalServerErrorException('Failed to fetch')
     }
   }
 
@@ -334,24 +330,16 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        const createResults = await this.caseService.createCase({
+        return await this.caseService.createCase({
           applicationId,
         })
-
-        if (!createResults.result.ok) {
-          return ResultWrapper.err({
-            code: createResults.result.error.code,
-            message: createResults.result.error.message,
-          })
-        }
-
-        return ResultWrapper.ok()
       }
     }
 
-    throw new InternalServerErrorException(
-      `Could not post application<${applicationId}>`,
-    )
+    return ResultWrapper.err({
+      code: 500,
+      message: 'Could not post application',
+    })
   }
 
   /**

@@ -22,9 +22,6 @@ export function Transactional() {
         )
 
         if (currentTransaction) {
-          logger.debug(
-            'Transaction already in progress, skipping transactional decorator',
-          )
           return originalMethod.apply(this, args)
         }
       }

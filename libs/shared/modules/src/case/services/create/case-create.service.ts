@@ -231,7 +231,7 @@ export class CaseCreateService implements ICaseCreateService {
         departmentId: department.id,
         advertTypeId: type.id,
         year: now.getFullYear(),
-        caseNumber: internalCaseNumber,
+        caseNumber: internalCaseNumber.internalCaseNumber,
         advertTitle: application.answers.advert.title,
         html: application.answers.advert.html,
         requestedPublicationDate: requestedDate,

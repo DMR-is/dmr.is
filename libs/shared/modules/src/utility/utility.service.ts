@@ -329,7 +329,7 @@ export class UtilityService implements IUtilityService {
   @Transactional()
   async generateInternalCaseNumber(
     transaction?: Transaction,
-  ): Promise<ResultWrapper<string>> {
+  ): Promise<ResultWrapper<{ internalCaseNumber: string }>> {
     const now = new Date().toISOString()
     const [year, month, date] = now.split('T')[0].split('-')
 
@@ -349,7 +349,7 @@ export class UtilityService implements IUtilityService {
 
     const caseNumber = `${year}${month}${date}${withLeadingZeros}`
 
-    return ResultWrapper.ok(caseNumber)
+    return ResultWrapper.ok({ internalCaseNumber: caseNumber })
   }
 
   @LogAndHandle()

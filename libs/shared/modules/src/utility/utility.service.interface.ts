@@ -45,7 +45,7 @@ export interface IUtilityService {
   ): Promise<ResultWrapper<CaseModel>>
   generateInternalCaseNumber(
     transaction?: Transaction,
-  ): Promise<ResultWrapper<string>>
+  ): Promise<ResultWrapper<{ internalCaseNumber: string }>>
   caseStatusLookup(
     status: string,
     transaction?: Transaction,
