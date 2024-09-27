@@ -6,7 +6,7 @@ import { logger } from '@dmr.is/logging'
 export class LogRequestMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl, body, query, params, headers } = req
-    logger.info(`${method}: ${originalUrl}`, {
+    logger.debug(`${method}: ${originalUrl}`, {
       body,
       query,
       params,

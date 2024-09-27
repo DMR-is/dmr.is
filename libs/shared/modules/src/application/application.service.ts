@@ -35,7 +35,7 @@ import {
 } from '@nestjs/common'
 
 import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { AuthService } from '../auth/auth.service'
+import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
@@ -56,7 +56,8 @@ export class ApplicationService implements IApplicationService {
     private readonly commentService: ICommentService,
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
-    private readonly authService: AuthService,
+    @Inject(IAuthService)
+    private readonly authService: IAuthService,
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
     private readonly sequelize: Sequelize,

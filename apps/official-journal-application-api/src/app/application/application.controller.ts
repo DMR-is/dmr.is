@@ -1,7 +1,12 @@
 import { CurrentUser, LogMethod, Route } from '@dmr.is/decorators'
-import { AuthGuard, IApplicationService } from '@dmr.is/modules'
+import {
+  AuthGuard,
+  IApplicationService,
+  IApplicationUserService,
+} from '@dmr.is/modules'
 import {
   ApplicationUser,
+  ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
@@ -18,7 +23,6 @@ import 'multer'
 import {
   Body,
   Controller,
-  Header,
   HttpCode,
   Inject,
   MaxFileSizeValidator,
@@ -61,6 +65,9 @@ export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+
+    @Inject(IApplicationUserService)
+    private readonly applicationUserService: IApplicationUserService,
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -320,6 +327,19 @@ export class ApplicationController {
         applicationId,
         key,
       ),
+    )
+  }
+
+  @UseGuards(AuthGuard)
+  @Route({
+    path: ':id/involved-parties',
+    operationId: 'getInvolvedParties',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: ApplicationUserInvolvedPartiesResponse,
+  })
+  async getInvolvedParties(@CurrentUser() user: ApplicationUser) {
+    return ResultWrapper.unwrap(
+      await this.applicationUserService.getUserInvolvedParties(user.nationalId),
     )
   }
 }
