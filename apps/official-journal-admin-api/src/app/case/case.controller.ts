@@ -233,7 +233,7 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateTagBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.udpateCaseTag(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateCaseTag(id, body))
   }
 
   @Route({
@@ -357,7 +357,7 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.assignUserToCase(id, userId))
+    ResultWrapper.unwrap(await this.caseService.updateEmployee(id, userId))
   }
 
   @Route({

@@ -47,6 +47,11 @@ export interface IAttachmentService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
 
+  getAllAttachments(
+    applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>>
+
   attachmentTypeLookup(
     type: AttachmentTypeParam,
     transaction?: Transaction,

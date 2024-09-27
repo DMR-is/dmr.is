@@ -211,6 +211,7 @@ export class AttachmentService implements IAttachmentService {
         id: attachmentId,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 
@@ -275,6 +276,29 @@ export class AttachmentService implements IAttachmentService {
         typeId: typeLookup.id,
         deleted: false,
       },
+      include: [ApplicationAttachmentTypeModel],
+      transaction: transaction,
+    })
+
+    const attachments = found.map((attachment) => attachmentMigrate(attachment))
+
+    return ResultWrapper.ok({
+      attachments: attachments,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getAllAttachments(
+    applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
+    const found = await this.applicationAttachmentModel.findAll({
+      where: {
+        applicationId: applicationId,
+        deleted: false,
+      },
+      include: [ApplicationAttachmentTypeModel],
       transaction: transaction,
     })
 

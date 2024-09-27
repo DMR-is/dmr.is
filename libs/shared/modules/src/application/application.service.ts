@@ -275,30 +275,38 @@ export class ApplicationService implements IApplicationService {
     ResultWrapper
     try {
       const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(applicationId)
-      ).unwrap()
-
-      const { application } = (
-        await this.getApplication(applicationId)
-      ).unwrap()
-
-      this.caseService.updateCase({
-        caseId: caseLookup.id,
-        applicationId: applicationId,
-        advertTitle: application.answers.advert.title,
-        departmentId: application.answers.advert.departmentId,
-        advertTypeId: application.answers.advert.typeId,
-        requestedPublicationDate: application.answers.advert.requestedDate,
-        message: application.answers.advert.message,
-        categoryIds: application.answers.advert.categories,
-      })
-
-      const commStatus = (
-        await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatus.HasAnswers,
+        await this.utilityService.caseLookupByApplicationId(
+          applicationId,
           transaction,
         )
       ).unwrap()
+
+      const { application } = ResultWrapper.unwrap(
+        await this.getApplication(applicationId),
+      )
+
+      ResultWrapper.unwrap(
+        await this.caseService.updateCase(
+          {
+            caseId: caseLookup.id,
+            applicationId: applicationId,
+            advertTitle: application.answers.advert.title,
+            departmentId: application.answers.advert.departmentId,
+            advertTypeId: application.answers.advert.typeId,
+            requestedPublicationDate: application.answers.advert.requestedDate,
+            message: application.answers.advert.message,
+            categoryIds: application.answers.advert.categories,
+          },
+          transaction,
+        ),
+      )
+
+      const commStatus = ResultWrapper.unwrap(
+        await this.utilityService.caseCommunicationStatusLookup(
+          CaseCommunicationStatus.HasAnswers,
+          transaction,
+        ),
+      )
 
       ResultWrapper.unwrap(
         await this.caseService.updateCaseCommunicationStatus(
@@ -311,25 +319,26 @@ export class ApplicationService implements IApplicationService {
       )
 
       ResultWrapper.unwrap(
-        await this.commentService.createComment(caseLookup.id, {
-          internal: true,
-          type: CaseCommentTypeEnum.Submit,
-          comment: null,
-          initiator: caseLookup.involvedPartyId,
-          receiver: null,
-        }),
+        await this.commentService.createComment(
+          caseLookup.id,
+          {
+            internal: true,
+            type: CaseCommentTypeEnum.Submit,
+            comment: null,
+            initiator: caseLookup.involvedPartyId,
+            receiver: null,
+          },
+          transaction,
+        ),
       )
 
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
         ResultWrapper.unwrap(
-          await this.caseService.createCase(
-            {
-              applicationId,
-            },
-            transaction,
-          ),
+          await this.caseService.createCase({
+            applicationId,
+          }),
         )
 
         return ResultWrapper.ok()

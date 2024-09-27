@@ -16,6 +16,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
+  BadRequestException,
   Inject,
   InternalServerErrorException,
   NotFoundException,

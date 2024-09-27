@@ -15,6 +15,8 @@ import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
+import { ICaseCreateService } from './services/create/case-create.service.interface'
+import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
@@ -40,6 +42,8 @@ describe('CaseService', () => {
   let caseCategoriesModel: CaseCategoriesModel
   let caseChannelModel: CaseChannelModel
   let caseChannelsModel: CaseChannelsModel
+  let caseCreateService: ICaseCreateService
+  let caseUpdateService: ICaseUpdateService
   let sequelize: Sequelize
 
   beforeAll(async () => {
@@ -80,6 +84,14 @@ describe('CaseService', () => {
         },
         {
           provide: IS3Service,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: ICaseCreateService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: ICaseUpdateService,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -165,6 +177,10 @@ describe('CaseService', () => {
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
+    signatureService = app.get<ISignatureService>(ISignatureService)
+    s3Service = app.get<IS3Service>(IS3Service)
+    caseCreateService = app.get<ICaseCreateService>(ICaseCreateService)
+    caseUpdateService = app.get<ICaseUpdateService>(ICaseUpdateService)
     caseModel = app.get<CaseModel>(getModelToken(CaseModel))
     caseCategoriesModel = app.get<CaseCategoriesModel>(
       getModelToken(CaseCategoriesModel),

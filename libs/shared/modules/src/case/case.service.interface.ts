@@ -35,19 +35,7 @@ export interface ICaseService {
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-  updateCase(
-    body: UpdateCaseBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-  assignUserToCase(id: string, userId: string): Promise<ResultWrapper>
-  updateCaseStatus(
-    id: string,
-    body: UpdateCaseStatusBody,
-  ): Promise<ResultWrapper>
-  updateCaseNextStatus(
-    id: string,
-    body: UpdateNextStatusBody,
-  ): Promise<ResultWrapper>
+
   publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
   getCasesOverview(
     params?: GetCasesQuery,
@@ -57,6 +45,20 @@ export interface ICaseService {
   createCaseChannel(
     caseId: string,
     body: CreateCaseChannelBody,
+  ): Promise<ResultWrapper>
+
+  updateCase(
+    body: UpdateCaseBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+  updateEmployee(id: string, userId: string): Promise<ResultWrapper>
+  updateCaseStatus(
+    id: string,
+    body: UpdateCaseStatusBody,
+  ): Promise<ResultWrapper>
+  updateCaseNextStatus(
+    id: string,
+    body: UpdateNextStatusBody,
   ): Promise<ResultWrapper>
 
   updateCasePrice(
@@ -85,15 +87,7 @@ export interface ICaseService {
   updateCaseTitle(caseId: string, body: UpdateTitleBody): Promise<ResultWrapper>
   updateCasePaid(caseId: string, body: UpdatePaidBody): Promise<ResultWrapper>
 
-  udpateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
-
-  getNextCasePublicationNumber(
-    departmentId: string,
-  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
-
-  getCommunicationStatuses(): Promise<
-    ResultWrapper<GetCommunicationSatusesResponse>
-  >
+  updateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
 
   updateCaseCommunicationStatus(
     caseId: string,
@@ -106,6 +100,14 @@ export interface ICaseService {
     body: CaseCommunicationStatus,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  getNextCasePublicationNumber(
+    departmentId: string,
+  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
+
+  getCommunicationStatuses(): Promise<
+    ResultWrapper<GetCommunicationSatusesResponse>
+  >
 
   getCaseAttachment(
     caseId: string,

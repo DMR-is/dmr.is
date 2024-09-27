@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { handleException } from '../lib/utils'
+
+import { handleException } from '@dmr.is/utils'
 
 export function HandleException(message?: string | undefined) {
   return function (
