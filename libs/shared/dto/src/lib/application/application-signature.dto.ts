@@ -112,12 +112,12 @@ export class ApplicationSignatures {
     description: 'Regular signature',
   })
   @IsOptional()
-  regular?: ApplicationSignature[]
+  regular!: ApplicationSignature[]
 
   @ApiProperty({
     type: ApplicationCommitteeSignature,
     description: 'Committee signature',
   })
   @IsOptional()
-  committee?: ApplicationCommitteeSignature
+  committee!: ApplicationCommitteeSignature
 }

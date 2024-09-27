@@ -142,6 +142,24 @@ export class UtilityService implements IUtilityService {
 
   @LogAndHandle()
   @Transactional()
+  async categoriesLookup(
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<AdvertCategoryModel[]>> {
+    const categories = await this.categoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: categoryIds,
+        },
+      },
+      transaction: transaction,
+    })
+
+    return ResultWrapper.ok(categories)
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async advertStatusLookup(
     status: string,
     transaction?: Transaction,
@@ -298,7 +316,10 @@ export class UtilityService implements IUtilityService {
     })
 
     if (!statusLookup) {
-      throw new NotFoundException(`Status<${status}> not found`)
+      return ResultWrapper.err({
+        code: 404,
+        message: `Status<${status}> not found`,
+      })
     }
 
     return ResultWrapper.ok(statusLookup)
@@ -308,7 +329,7 @@ export class UtilityService implements IUtilityService {
   @Transactional()
   async generateInternalCaseNumber(
     transaction?: Transaction,
-  ): Promise<ResultWrapper<string>> {
+  ): Promise<ResultWrapper<{ internalCaseNumber: string }>> {
     const now = new Date().toISOString()
     const [year, month, date] = now.split('T')[0].split('-')
 
@@ -328,7 +349,7 @@ export class UtilityService implements IUtilityService {
 
     const caseNumber = `${year}${month}${date}${withLeadingZeros}`
 
-    return ResultWrapper.ok(caseNumber)
+    return ResultWrapper.ok({ internalCaseNumber: caseNumber })
   }
 
   @LogAndHandle()

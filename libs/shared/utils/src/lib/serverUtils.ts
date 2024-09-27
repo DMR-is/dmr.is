@@ -1,10 +1,10 @@
+import { isDefined } from 'class-validator'
 import {
   BaseError,
   DatabaseError,
   Transaction,
   ValidationError,
 } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_SIZE,
@@ -20,7 +20,7 @@ import {
   CaseCommentTypeEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
-import { Result, ResultWrapper } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
   BadRequestException,
@@ -201,37 +201,15 @@ export const getSignatureBody = (
   }
 }
 
-export const withTransaction =
-  <T>(sequelize: Sequelize) =>
-  async (cb: (transaction: Transaction) => Promise<ResultWrapper<T>>) => {
-    const transaction = await sequelize.transaction()
-
-    try {
-      const results = await cb(transaction)
-      await transaction.commit()
-      return results
-    } catch (error) {
-      await transaction.rollback()
-      return handleException<T>({
-        method: 'withTransaction',
-        message: 'Error occurred during transaction',
-        category: 'server',
-        error,
-      })
-    }
-  }
-
 export const handleException = <T>({
   method,
-  message,
-  category,
+  service,
   error,
   info,
   code = 500,
 }: {
   method: string
-  message: string
-  category: string
+  service: string
   error: unknown
   info?: Record<string, unknown>
   code?: number
@@ -253,14 +231,14 @@ export const handleException = <T>({
   }
 
   if (error instanceof BaseError) {
-    logger.debug(`Sequelize error ${error.name} in ${category}.${method}`, {
+    logger.debug(`Sequelize error ${error.name} in ${service}.${method}`, {
       method,
-      category,
+      category: service,
     })
 
     if (error instanceof DatabaseError) {
       logger.warn(
-        `${error.name} in ${category}.${method}, reason: ${error.message}`,
+        `${error.name} in ${service}.${method}, reason: ${error.message}`,
       )
 
       return ResultWrapper.err({
@@ -284,10 +262,10 @@ export const handleException = <T>({
   }
 
   if (error instanceof HttpException) {
-    logger.warn(`${prefix} exception in ${category}.${method}`, {
+    logger.warn(`${prefix} exception in ${service}.${method}`, {
       ...info,
       method,
-      category,
+      category: service,
       error: {
         name: error.name,
         message: error.message,
@@ -302,10 +280,10 @@ export const handleException = <T>({
   }
 
   if (error instanceof Error) {
-    logger.error(`Error in ${category}.${method}: ${error.message}`, {
+    logger.error(`Error in ${service}.${method}: ${error.message}`, {
       ...info,
       method,
-      category,
+      category: service,
       error: {
         name: error.name,
         message: error.message,
@@ -315,17 +293,17 @@ export const handleException = <T>({
 
     return ResultWrapper.err({
       code: code,
-      message: message,
+      message: error.message,
     })
   }
 
-  logger.error(`Unknown error in ${category}.${method}`, {
+  logger.error(`Unknown error in ${service}.${method}`, {
     error: error,
   })
 
   return ResultWrapper.err({
     code: code,
-    message: message,
+    message: 'Internal server error',
   })
 }
 
@@ -334,10 +312,18 @@ export const handleException = <T>({
  * @param args arguments to filter
  * @returns
  */
-export const filterArgs = (args: any[], service?: string, method?: string) => {
+export const filterArgs = (
+  args: unknown[],
+  service?: string,
+  method?: string,
+) => {
   const filteredArgs = args.filter((arg) => {
     const isTransaction = arg instanceof Transaction
-    const isBuffer = Buffer.isBuffer(arg?.buffer) // filter out arguments with buffer / files
+    const isBuffer =
+      typeof arg === 'object' &&
+      isDefined(arg) &&
+      'buffer' in arg &&
+      Buffer.isBuffer(arg.buffer)
 
     if (Array.isArray(arg)) {
       const isTransactionOrBuffer = arg.filter((a) => {
@@ -370,13 +356,10 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
   try {
     return cb()
   } catch (error) {
-    const err = handleException<T>({
+    return handleException<T>({
       method: 'withTryCatch',
-      message,
-      category: 'server',
+      service: 'server',
       error,
     }).unwrap()
-
-    return err
   }
 }

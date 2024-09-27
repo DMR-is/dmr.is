@@ -111,12 +111,8 @@ export class ApplicationService implements IApplicationService {
         category: LOGGING_CATEGORY,
         error,
       })
-      if (error instanceof TypeError) {
-        throw new InternalServerErrorException(
-          `${error.name}, ${error.message}`,
-        )
-      }
-      throw new InternalServerErrorException()
+
+      throw new InternalServerErrorException('Failed to fetch')
     }
   }
 
@@ -335,19 +331,16 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        ResultWrapper.unwrap(
-          await this.caseService.createCase({
-            applicationId,
-          }),
-        )
-
-        return ResultWrapper.ok()
+        return await this.caseService.createCase({
+          applicationId,
+        })
       }
     }
 
-    throw new InternalServerErrorException(
-      `Could not post application<${applicationId}>`,
-    )
+    return ResultWrapper.err({
+      code: 500,
+      message: 'Could not post application',
+    })
   }
 
   /**
