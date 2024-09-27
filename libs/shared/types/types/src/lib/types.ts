@@ -1,3 +1,4 @@
+import { logger } from '@dmr.is/logging'
 import { HttpException } from '@nestjs/common'
 
 export type GenericError = { code: number; message: string }
@@ -14,7 +15,7 @@ export class ResultWrapper<
   OkType = unknown,
   ErrType extends { message: string; code: number } = GenericError,
 > {
-  private result: Result<OkType, ErrType>
+  public result: Result<OkType, ErrType>
 
   constructor(result: Result<OkType, ErrType>) {
     this.result = result
@@ -56,6 +57,7 @@ export class ResultWrapper<
       return this.result.value
     }
 
+    logger.debug(`Error unwrapping result, ${this.result.error.message}`)
     throw new HttpException(this.result.error.message, this.result.error.code)
   }
 }

@@ -142,6 +142,24 @@ export class UtilityService implements IUtilityService {
 
   @LogAndHandle()
   @Transactional()
+  async categoriesLookup(
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<AdvertCategoryModel[]>> {
+    const categories = await this.categoryModel.findAll({
+      where: {
+        id: {
+          [Op.in]: categoryIds,
+        },
+      },
+      transaction: transaction,
+    })
+
+    return ResultWrapper.ok(categories)
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async advertStatusLookup(
     status: string,
     transaction?: Transaction,
@@ -298,7 +316,10 @@ export class UtilityService implements IUtilityService {
     })
 
     if (!statusLookup) {
-      throw new NotFoundException(`Status<${status}> not found`)
+      return ResultWrapper.err({
+        code: 404,
+        message: `Status<${status}> not found`,
+      })
     }
 
     return ResultWrapper.ok(statusLookup)

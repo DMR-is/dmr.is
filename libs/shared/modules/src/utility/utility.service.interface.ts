@@ -6,6 +6,7 @@ import {
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
+  CaseTagModel,
 } from '../case/models'
 import {
   AdvertCategoryModel,
@@ -34,6 +35,10 @@ export interface IUtilityService {
     categoryId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<AdvertCategoryModel>>
+  categoriesLookup(
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<AdvertCategoryModel[]>>
   caseLookup(
     caseId: string,
     transaction?: Transaction,
@@ -48,7 +53,7 @@ export interface IUtilityService {
   caseTagLookup(
     tag: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseStatusModel>>
+  ): Promise<ResultWrapper<CaseTagModel>>
   caseCommunicationStatusLookup(
     status: string,
     transaction?: Transaction,

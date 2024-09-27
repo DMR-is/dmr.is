@@ -334,11 +334,16 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        ResultWrapper.unwrap(
-          await this.caseService.createCase({
-            applicationId,
-          }),
-        )
+        const createResults = await this.caseService.createCase({
+          applicationId,
+        })
+
+        if (!createResults.result.ok) {
+          return ResultWrapper.err({
+            code: createResults.result.error.code,
+            message: createResults.result.error.message,
+          })
+        }
 
         return ResultWrapper.ok()
       }

@@ -2,7 +2,7 @@
 
 import { handleException } from '@dmr.is/utils'
 
-export function HandleException(message?: string | undefined) {
+export function HandleException() {
   return function (
     target: any,
     method: string,
@@ -15,18 +15,15 @@ export function HandleException(message?: string | undefined) {
       try {
         return await originalMethod.apply(this, args)
       } catch (err: any) {
-        const msg = message ? message : 'Internal server error'
-
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
           console.error(err.message)
         }
 
         return handleException({
-          category: service,
+          service: service,
           method: method,
           error: err,
-          message: msg,
           info: {
             args: {
               ...args,

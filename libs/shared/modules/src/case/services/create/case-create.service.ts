@@ -10,23 +10,21 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CaseTagEnum,
+  CreateCaseBody,
   CreateCaseChannelBody,
+  CreateSignatureBody,
   PostApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import {
-  getFastTrack,
-  getSignatureBody,
-  handleException,
-  withTransaction,
-} from '@dmr.is/utils'
+import { getFastTrack, getSignatureBody } from '@dmr.is/utils'
 
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import { ICommentService } from '../../../comment/comment.service.interface'
+import { AdvertCategoryModel } from '../../../journal/models'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import {
@@ -38,6 +36,36 @@ import {
 import { ICaseCreateService } from './case-create.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCreateService'
+
+interface CreateCaseBodyValues {
+  caseBody: {
+    id: string
+    applicationId: string
+    statusId: string
+    tagId: string
+    communicationStatusId: string
+    involvedPartyId: string
+    departmentId: string
+    advertTypeId: string
+    year: number
+    caseNumber: string
+    advertTitle: string
+    html: string
+    requestedPublicationDate: string
+    assignedUserId: string | null
+    publishedAt: string | null
+    price: number
+    paid: boolean
+    fastTrack: boolean
+    message: string | null
+    isLegacy: boolean
+    createdAt: string
+    updatedAt: string
+  }
+  categories: AdvertCategoryModel[]
+  channels: CreateCaseChannelBody[]
+  signature: CreateSignatureBody[]
+}
 
 @Injectable()
 export class CaseCreateService implements ICaseCreateService {
@@ -69,88 +97,112 @@ export class CaseCreateService implements ICaseCreateService {
   private async getCreateCaseBody(
     application: Application,
     transaction?: Transaction,
-  ) {
+  ): Promise<ResultWrapper<CreateCaseBodyValues>> {
     const now = new Date()
     const caseId = uuid()
 
-    const caseStatus = ResultWrapper.unwrap(
-      await this.utilityService.caseStatusLookup(CaseStatusEnum.Submitted),
-    )
-
-    const caseTag = ResultWrapper.unwrap(
-      await this.utilityService.caseTagLookup(CaseTagEnum.NotStarted),
-    )
-
-    const caseCommunicationStatus = ResultWrapper.unwrap(
-      await this.utilityService.caseCommunicationStatusLookup(
-        CaseCommunicationStatus.NotStarted,
+    const promises = await Promise.all([
+      this.utilityService.caseStatusLookup(
+        CaseStatusEnum.Submitted,
+        transaction,
       ),
-    )
-
-    const internalCaseNumber = ResultWrapper.unwrap(
-      await this.utilityService.generateInternalCaseNumber(),
-    )
-
-    const type = ResultWrapper.unwrap(
-      await this.utilityService.typeLookup(
+      this.utilityService.caseTagLookup(CaseTagEnum.NotStarted, transaction),
+      this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.NotStarted,
+        transaction,
+      ),
+      this.utilityService.generateInternalCaseNumber(transaction),
+      this.utilityService.typeLookup(
         application.answers.advert.typeId,
         transaction,
       ),
-    )
-
-    const department = ResultWrapper.unwrap(
-      await this.utilityService.departmentLookup(
+      this.utilityService.departmentLookup(
         application.answers.advert.departmentId,
         transaction,
       ),
-    )
+      this.utilityService.categoriesLookup(
+        application.answers.advert.categories,
+        transaction,
+      ),
+    ])
 
-    const categoriesLookup = application.answers.advert.categories.map(
-      async (category) => {
-        try {
-          const lookup = ResultWrapper.unwrap(
-            await this.utilityService.categoryLookup(category),
-          )
+    const [
+      caseStatusResult,
+      caseTagResult,
+      caseCommunicationStatusResult,
+      internalCaseNumberResult,
+      typeResult,
+      departmentResult,
+      categoriesResult,
+    ] = promises
 
-          return {
-            caseId: caseId,
-            categoryId: lookup.id,
-          }
-        } catch (e) {
-          this.logger.warn(
-            `Uknown category<${category}> found in application`,
-            {
-              category: LOGGING_CATEGORY,
-              categoryId: category,
-            },
-          )
+    if (!caseStatusResult.result.ok) {
+      return ResultWrapper.err({
+        code: caseStatusResult.result.error.code,
+        message: caseStatusResult.result.error.message,
+      })
+    }
 
-          return null
+    if (!caseTagResult.result.ok) {
+      return ResultWrapper.err({
+        code: caseTagResult.result.error.code,
+        message: caseTagResult.result.error.message,
+      })
+    }
+
+    if (!caseCommunicationStatusResult.result.ok) {
+      return ResultWrapper.err({
+        code: caseCommunicationStatusResult.result.error.code,
+        message: caseCommunicationStatusResult.result.error.message,
+      })
+    }
+
+    if (!internalCaseNumberResult.result.ok) {
+      return ResultWrapper.err({
+        code: internalCaseNumberResult.result.error.code,
+        message: internalCaseNumberResult.result.error.message,
+      })
+    }
+
+    if (!typeResult.result.ok) {
+      return ResultWrapper.err({
+        code: typeResult.result.error.code,
+        message: typeResult.result.error.message,
+      })
+    }
+
+    if (!departmentResult.result.ok) {
+      return ResultWrapper.err({
+        code: departmentResult.result.error.code,
+        message: departmentResult.result.error.message,
+      })
+    }
+
+    if (!categoriesResult.result.ok) {
+      return ResultWrapper.err({
+        code: categoriesResult.result.error.code,
+        message: categoriesResult.result.error.message,
+      })
+    }
+
+    const caseStatus = caseStatusResult.result.value
+    const caseTag = caseTagResult.result.value
+    const caseCommunicationStatus = caseCommunicationStatusResult.result.value
+    const internalCaseNumber = internalCaseNumberResult.result.value
+    const type = typeResult.result.value
+    const department = departmentResult.result.value
+    const categories = categoriesResult.result.value
+
+    const channels =
+      application.answers.advert.channels?.map((channel) => {
+        return {
+          email: channel.email,
+          phone: channel.phone,
         }
-      },
-    )
-
-    const categories = (await Promise.all(categoriesLookup)).filter(
-      (category) => category !== null,
-    )
-
-    const channels = application.answers.advert.channels?.map((channel) => {
-      return {
-        email: channel.email,
-        phone: channel.phone,
-      }
-    })
+      }) ?? []
 
     const signatureType = application.answers.misc.signatureType
     const signature = application.answers.signatures[signatureType]
-
-    if (!signature) {
-      this.logger.warn(
-        `CaseService.createCase<${caseId}>: No signature found for signatureType<${signatureType}>`,
-      )
-
-      throw new BadRequestException('Signature is missing')
-    }
 
     const additionalSignature =
       application.answers.signatures.additionalSignature !== undefined
@@ -166,37 +218,55 @@ export class CaseCreateService implements ICaseCreateService {
     const requestedDate = application.answers.advert.requestedDate
     const { fastTrack } = getFastTrack(new Date(requestedDate))
     const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
-    const message = application.answers.advert.message
+    const message = application.answers.advert?.message ?? null
 
     return ResultWrapper.ok({
       caseBody: {
         id: caseId,
         applicationId: application.id,
-        year: now.getFullYear(),
-        caseNumber: internalCaseNumber,
         statusId: caseStatus.id,
         tagId: caseTag.id,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        isLegacy: false,
-        assignedUserId: null,
         communicationStatusId: caseCommunicationStatus.id,
+        involvedPartyId: involvedParty.id,
+        departmentId: department.id,
+        advertTypeId: type.id,
+        year: now.getFullYear(),
+        caseNumber: internalCaseNumber,
+        advertTitle: application.answers.advert.title,
+        html: application.answers.advert.html,
+        requestedPublicationDate: requestedDate,
+        assignedUserId: null,
         publishedAt: null,
         price: 0,
         paid: false,
-        involvedPartyId: involvedParty.id,
         fastTrack: fastTrack,
-        advertTitle: application.answers.advert.title,
-        requestedPublicationDate: requestedDate,
-        departmentId: department.id,
-        advertTypeId: type.id,
-        html: application.answers.advert.html,
-        message: message,
+        message: message ?? null,
+        isLegacy: false,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
       },
       categories: categories,
       channels: channels,
       signature: signatureBody,
     })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  private async create(
+    body: CreateCaseBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>> {
+    const newCase = await this.caseModel.create(
+      {
+        ...body,
+      },
+      {
+        returning: ['id'],
+        transaction: transaction,
+      },
+    )
+    return ResultWrapper.ok({ id: newCase.id })
   }
 
   @LogAndHandle()
@@ -252,142 +322,109 @@ export class CaseCreateService implements ICaseCreateService {
 
   @LogAndHandle()
   async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
-    // case does not exist so we can create it
     const { application } = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
 
-    this.logger.debug('Getting create case body')
-    const values = ResultWrapper.unwrap(
-      await this.getCreateCaseBody(application),
-    )
+    const valuesResult = await this.getCreateCaseBody(application)
 
-    let caseId = null
-
-    try {
-      this.logger.debug('Creating case')
-      const newId = ResultWrapper.unwrap(
-        await withTransaction<string>(this.sequelize)(async (transaction) => {
-          const newCase = await this.caseModel.create(
-            {
-              ...values.caseBody,
-            },
-            {
-              returning: ['id'],
-              transaction: transaction,
-            },
-          )
-
-          return ResultWrapper.ok(newCase.id)
-        }),
-      )
-
-      caseId = newId
-    } catch (error) {
-      // returning the error since creation of the case is vital for the process
-      return handleException({
-        method: 'createCase',
-        message: 'Error creating case',
-        category: LOGGING_CATEGORY,
-        error,
-      })
+    if (!valuesResult.result.ok) {
+      return valuesResult
     }
 
-    try {
-      this.logger.debug('Creating case comment')
-      ResultWrapper.unwrap(
-        await withTransaction(this.sequelize)(async (transaction) => {
-          return await this.commentService.createComment(
-            caseId,
-            {
-              internal: true,
-              type: CaseCommentTypeEnum.Submit,
-              comment: null,
-              initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
-              receiver: null,
-              storeState: true,
-            },
-            transaction,
-          )
-        }),
-      )
-    } catch (error) {
-      // we dont need to return the error since the comment is not vital for the process
-      handleException({
-        method: 'createCase',
-        message: 'Error creating case comment',
-        category: LOGGING_CATEGORY,
-        error,
-      })
+    const values = valuesResult.result.value
+
+    const createCaseResult = await this.create(values.caseBody)
+
+    if (!createCaseResult.result.ok) {
+      return createCaseResult
     }
 
-    this.logger.debug('Creating case categories')
-    values.categories.forEach(async (category) => {
-      await this.createCaseCategory(caseId, category.categoryId)
+    const caseId = createCaseResult.result.value.id
+
+    const commentResults = await this.commentService.createComment(caseId, {
+      internal: true,
+      type: CaseCommentTypeEnum.Submit,
+      comment: null,
+      initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+      receiver: null,
+      storeState: true,
     })
 
-    if (values.channels) {
-      const { channels } = values
-      this.logger.debug('Creating case channels')
+    if (!commentResults.result.ok) {
+      this.logger.warn(`Failed to create comment for case<${caseId}>`, {
+        error: commentResults.result.error,
+        category: LOGGING_CATEGORY,
+        caseId: caseId,
+      })
+    }
 
-      channels.forEach(async (channel) => {
-        try {
-          ResultWrapper.unwrap(await this.createCaseChannel(caseId, channel))
-        } catch (error) {
-          handleException({
-            method: 'createCase',
-            message: 'Error creating case channel',
+    const categegoryPromises = await Promise.all(
+      values.categories.map((cat) => this.createCaseCategory(caseId, cat.id)),
+    )
+
+    categegoryPromises.forEach((result) => {
+      if (!result.result.ok) {
+        this.logger.warn(
+          `Failed to create category when creating case<${caseId}>`,
+          result.result.error,
+        )
+      }
+    })
+
+    if (values.channels.length > 0) {
+      const channelPromises = await Promise.all(
+        values.channels.map((channel) =>
+          this.createCaseChannel(caseId, channel),
+        ),
+      )
+
+      channelPromises.forEach((result) => {
+        if (!result.result.ok) {
+          this.logger.warn(`Failed to create channel for case<${caseId}>`, {
+            error: result.result.error,
             category: LOGGING_CATEGORY,
-            error,
+            caseId: caseId,
           })
         }
       })
     }
 
-    this.logger.debug('Creating case signatures')
-    values.signature.forEach(async (signatureBody) => {
-      try {
-        await this.signatureService.createCaseSignature(signatureBody)
-      } catch (error) {
-        handleException({
-          method: 'createCase',
-          message: 'Error creating case signature',
+    const signaturePromises = await Promise.all(
+      values.signature.map((signatureBody) =>
+        this.signatureService.createCaseSignature(signatureBody),
+      ),
+    )
+
+    signaturePromises.forEach((result) => {
+      if (!result.result.ok) {
+        this.logger.warn(`Failed to create signature for case<${caseId}>`, {
+          error: result.result.error,
           category: LOGGING_CATEGORY,
-          error,
+          caseId: caseId,
         })
       }
     })
 
-    try {
-      const { attachments } = ResultWrapper.unwrap(
-        await this.attachmentService.getAllAttachments(application.id),
-      )
+    const { attachments } = ResultWrapper.unwrap(
+      await this.attachmentService.getAllAttachments(application.id),
+    )
 
-      attachments.forEach(async (attachment) => {
-        try {
-          ResultWrapper.unwrap(
-            await this.attachmentService.createCaseAttachment(
-              caseId,
-              attachment.id,
-            ),
-          )
-        } catch (error) {
-          handleException({
-            method: 'createCase',
-            message: 'Error creating case attachment',
-            category: LOGGING_CATEGORY,
-            error,
-          })
-        }
-      })
-    } catch (error) {
-      handleException({
-        method: 'createCase',
-        message: 'Could not get attachments',
-        category: LOGGING_CATEGORY,
-        error,
-      })
-    }
+    const attachmentPromises = await Promise.all(
+      attachments.map((attachment) =>
+        this.attachmentService.createCaseAttachment(caseId, attachment.id),
+      ),
+    )
+
+    attachmentPromises.forEach((result) => {
+      if (!result.result.ok) {
+        this.logger.warn(`Failed to create attachment for case<${caseId}>`, {
+          error: result.result.error,
+          category: LOGGING_CATEGORY,
+          caseId: caseId,
+        })
+      }
+    })
 
     return ResultWrapper.ok()
   }

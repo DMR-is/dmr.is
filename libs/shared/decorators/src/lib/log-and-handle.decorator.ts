@@ -30,23 +30,22 @@ export function LogAndHandle(
         }
 
         if (!logArgs) {
-          logger.info(`${service}.${method}`)
+          logger.debug(`${service}.${method}`)
         }
 
         Object.assign(logData, {
           ...filteredArgs,
         })
 
-        logger.info(`${service}.${method}`, {
+        logger.debug(`${service}.${method}`, {
           ...logData,
         })
         return await originalMethod.apply(this, args)
       } catch (error) {
         return handleException({
-          category: service,
+          service: service,
           method: method,
           error: error,
-          message: message || 'Internal server error',
           info: {
             args: {
               ...filteredArgs,
