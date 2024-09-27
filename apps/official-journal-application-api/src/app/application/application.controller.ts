@@ -23,7 +23,6 @@ import 'multer'
 import {
   Body,
   Controller,
-  Header,
   HttpCode,
   Inject,
   MaxFileSizeValidator,
@@ -333,8 +332,9 @@ export class ApplicationController {
 
   @UseGuards(AuthGuard)
   @Route({
-    path: '/involved-parties',
+    path: ':id/involved-parties',
     operationId: 'getInvolvedParties',
+    params: [{ name: 'id', type: 'string', required: true }],
     responseType: ApplicationUserInvolvedPartiesResponse,
   })
   async getInvolvedParties(@CurrentUser() user: ApplicationUser) {

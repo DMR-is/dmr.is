@@ -5,7 +5,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationUser,
   ApplicationUserInvolvedPartiesResponse,
-  Institution,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
