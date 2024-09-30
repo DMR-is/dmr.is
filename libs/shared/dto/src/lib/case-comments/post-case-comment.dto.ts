@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseCommentTypeEnum } from './case-comment-constants'
-
 /**
  * Represents the body of a POST request for creating a case comment.
  */

@@ -134,7 +134,7 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     'd1e1377d-2d01-4a5a-999f-cdb1ec0cfc17',
@@ -143,7 +143,7 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     'cf8ce92b-8838-4a76-8fb3-956ce35bca3b',
@@ -152,7 +152,7 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     'bad8a244-9f02-4799-a3fc-bf652f6cf7fd',
@@ -161,7 +161,7 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     '84237319-b317-4ac4-a4cf-724b5d9bbed6',
@@ -170,7 +170,7 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     '72dbba56-6808-4344-883f-48e67783ab49',
@@ -179,66 +179,12 @@ VALUES
   );
 
 INSERT INTO
-  case_comment_title (id, title, slug)
+  case_comment_type (id, title, slug)
 VALUES
   (
     'a303587f-7cad-4f43-960d-e66d094a28b5',
     'skráir skilaboð',
     'skrair-skilabod'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    '6c28e8ff-63f6-4cfc-81f0-2835def7d021',
-    'Submit',
-    'submit'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    'be3b0ccd-51c8-4e96-8957-485bc35c8568',
-    'Assign',
-    'assign'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    '6c296957-6aab-447a-9706-9c3d54d0f03d',
-    'Assign',
-    'assign-self'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    'e34f7bf2-a7e7-4147-9b8b-1ca232f26952',
-    'Update',
-    'update'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    '755b2a15-9a64-41ef-a53e-b73688d71440',
-    'Comment',
-    'comment'
-  );
-
-INSERT INTO
-  case_comment_type (id, title, slug)
-VALUES
-  (
-    '771cffc9-cc84-42a4-8b06-6ef51ee489e4',
-    'Message',
-    'message'
   );
 
 INSERT INTO

@@ -217,7 +217,7 @@ export class CaseCreateService implements ICaseCreateService {
 
     const requestedDate = application.answers.advert.requestedDate
     const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
+    const involvedPartyId = application.answers.advert.involvedPartyId
     const message = application.answers.advert?.message ?? null
 
     return ResultWrapper.ok({
@@ -227,7 +227,7 @@ export class CaseCreateService implements ICaseCreateService {
         statusId: caseStatus.id,
         tagId: caseTag.id,
         communicationStatusId: caseCommunicationStatus.id,
-        involvedPartyId: involvedParty.id,
+        involvedPartyId: involvedPartyId,
         departmentId: department.id,
         advertTypeId: type.id,
         year: now.getFullYear(),
@@ -346,7 +346,7 @@ export class CaseCreateService implements ICaseCreateService {
       internal: true,
       type: CaseCommentTypeEnum.Submit,
       comment: null,
-      initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
+      initiator: values.caseBody.involvedPartyId,
       receiver: null,
       storeState: true,
     })

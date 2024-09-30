@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+import { CaseCommentTypeTitleEnum } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_comment_type', timestamps: false })
 @DefaultScope(() => ({
@@ -25,7 +26,7 @@ export class CaseCommentTypeModel extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: string
+  title!: CaseCommentTypeTitleEnum
 
   @Column({
     type: DataType.STRING,

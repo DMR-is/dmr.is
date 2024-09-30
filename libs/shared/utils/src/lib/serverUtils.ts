@@ -16,8 +16,10 @@ import { logger } from '@dmr.is/logging'
 import {
   ApplicationCommitteeSignature,
   ApplicationSignature,
-  CaseCommentTitleEnum,
+  CaseCommentDirectionEnum,
+  CaseCommentSourceEnum,
   CaseCommentTypeEnum,
+  CaseCommentTypeTitleEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -70,20 +72,20 @@ export function slicePagedData<T>(
 
 export const mapCommentTypeToTitle = (
   val: CaseCommentTypeEnum,
-): CaseCommentTitleEnum => {
+): CaseCommentTypeTitleEnum => {
   switch (val) {
     case CaseCommentTypeEnum.Comment:
-      return CaseCommentTitleEnum.Comment
+      return CaseCommentTypeTitleEnum.Comment
     case CaseCommentTypeEnum.Message:
-      return CaseCommentTitleEnum.Message
+      return CaseCommentTypeTitleEnum.Message
     case CaseCommentTypeEnum.Assign:
-      return CaseCommentTitleEnum.Assign
+      return CaseCommentTypeTitleEnum.Assign
     case CaseCommentTypeEnum.AssignSelf:
-      return CaseCommentTitleEnum.AssignSelf
+      return CaseCommentTypeTitleEnum.AssignSelf
     case CaseCommentTypeEnum.Submit:
-      return CaseCommentTitleEnum.Submit
+      return CaseCommentTypeTitleEnum.Submit
     case CaseCommentTypeEnum.Update:
-      return CaseCommentTitleEnum.UpdateStatus
+      return CaseCommentTypeTitleEnum.UpdateStatus
   }
 }
 
@@ -362,4 +364,41 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
       error,
     }).unwrap()
   }
+}
+
+export const convertDateToDaysAgo = (date: string): string | null => {
+  try {
+    const asDate = new Date(date)
+
+    const now = new Date()
+    const diff = now.getTime() - asDate.getTime()
+    const diffDays = Math.floor(diff / (1000 * 3600 * 24))
+
+    if (diffDays === 0) {
+      return 'Í dag'
+    }
+
+    if (diffDays === 1) {
+      return 'í gær'
+    }
+
+    return `f. ${diffDays} dögum`
+  } catch (error) {
+    logger.error(`Error converting date to days ago`, {
+      category: 'server',
+      method: 'convertDateToDaysAgo',
+      error: error,
+    })
+
+    return null
+  }
+}
+
+export const mapSourceToDirection = (
+  source: CaseCommentSourceEnum,
+  forSource: CaseCommentSourceEnum,
+): CaseCommentDirectionEnum => {
+  return source === forSource
+    ? CaseCommentDirectionEnum.Sent
+    : CaseCommentDirectionEnum.Received
 }

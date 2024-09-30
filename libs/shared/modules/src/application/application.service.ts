@@ -382,14 +382,10 @@ export class ApplicationService implements IApplicationService {
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
-    const involvedPartyId = caseLookup.involvedPartyId
-      ? caseLookup.involvedPartyId
-      : 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f'
-
     ResultWrapper.unwrap(
       await this.commentService.createComment(caseLookup.id, {
         comment: commentBody.comment,
-        initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
+        initiator: caseLookup.involvedParty.id,
         receiver: null,
         internal: false,
         type: CaseCommentTypeEnum.Comment,

@@ -1,11 +1,12 @@
-import { Type } from 'class-transformer'
-import { IsDateString, IsUUID, ValidateNested } from 'class-validator'
+import { IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseStatus } from '../cases'
-import { CaseCommentTask } from './case-comment-task.dto'
-import { CaseCommentType } from './case-comment-type.dto'
+import { CaseStatusEnum } from '../cases'
+import {
+  CaseCommentDirectionEnum,
+  CaseCommentTypeTitleEnum,
+} from './case-comment-constants'
 
 export class CaseComment {
   @ApiProperty({
@@ -17,53 +18,48 @@ export class CaseComment {
   readonly id!: string
 
   @ApiProperty({
-    type: String,
-    description:
-      'Date and time of the comment, ISO 8601 format, UTC time format.',
-    example: '2024-01-01T09:00:00Z',
+    enum: CaseCommentTypeTitleEnum,
+    enumName: 'CaseCommentType',
+    example: 'f. 2 dögum',
+    description: 'Title of the comment',
   })
-  @IsDateString()
-  readonly createdAt!: string
+  title!: CaseCommentTypeTitleEnum
 
   @ApiProperty({
-    type: Boolean,
-    description: 'Is the comment internal or external.',
-    example: false,
+    enum: CaseStatusEnum,
+    description: 'Case status of when the comment was created.',
   })
-  internal!: boolean
-
-  @ApiProperty({
-    type: CaseCommentType,
-    description: 'Type of the case task.',
-  })
-  @Type(() => CaseCommentType)
-  type!: CaseCommentType
-
-  @ApiProperty({
-    type: () => CaseStatus,
-    description: 'Status of case when comment was added.',
-  })
-  @Type(() => CaseStatus)
-  status!: CaseStatus
+  caseStatus!: CaseStatusEnum
 
   @ApiProperty({
     type: String,
-    description: 'JSON state of the application',
+    example: 'f. 2 dögum',
+    description: 'String representation of the age of the case comment.',
   })
-  state!: string | null
+  age!: string | null
 
   @ApiProperty({
-    type: CaseCommentTask,
-    example: {
-      from: 'Ármann',
-      to: null,
-      title: 'gerir athugasemd',
-      comment: `Pálína, getur
-      þú tekið við og staðfest að upplýsingarnar séu réttar?`,
-    },
-    description: 'The task itself',
+    enum: CaseCommentDirectionEnum,
+    enumName: 'CaseCommentDirection',
+    description: 'Was the comment sent or received.',
   })
-  @Type(() => CaseCommentTask)
-  @ValidateNested()
-  task!: CaseCommentTask
+  direction!: CaseCommentDirectionEnum
+
+  @ApiProperty({
+    type: String,
+    description: 'Who created the comment ',
+  })
+  creator!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'Who received the comment',
+  })
+  receiver!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'The comment itself',
+  })
+  comment!: string | null
 }

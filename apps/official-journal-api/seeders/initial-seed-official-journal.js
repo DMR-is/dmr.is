@@ -53,8 +53,6 @@ module.exports = {
         DELETE FROM case_tag;
         DELETE FROM advert_status;
         DELETE FROM case_comment;
-        DELETE FROM case_comment_task;
-        DELETE FROM case_comment_title;
         DELETE FROM case_comment_type;
         DELETE FROM case_channel;
         DELETE FROM case_status;

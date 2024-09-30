@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseCommentTitleEnum,
+  CaseCommentTypeTitleEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -25,8 +25,6 @@ import { CaseStatusModel } from '../case/models'
 import { IUtilityService } from '../utility/utility.module'
 import { caseCommentMigrate } from './migrations/case-comment.migrate'
 import { CaseCommentModel } from './models/case-comment.model'
-import { CaseCommentTaskModel } from './models/case-comment-task.model'
-import { CaseCommentTitleModel } from './models/case-comment-title.model'
 import { CaseCommentTypeModel } from './models/case-comment-type.model'
 import { CaseCommentsModel } from './models/case-comments.model'
 import { ICommentService } from './comment.service.interface'
@@ -46,12 +44,6 @@ export class CommentService implements ICommentService {
     @InjectModel(CaseCommentModel)
     private caseCommentModel: typeof CaseCommentModel,
 
-    @InjectModel(CaseCommentTaskModel)
-    private caseCommentTaskModel: typeof CaseCommentTaskModel,
-
-    @InjectModel(CaseCommentTitleModel)
-    private caseCommentTitleModel: typeof CaseCommentTitleModel,
-
     @InjectModel(CaseCommentTypeModel)
     private caseCommentTypeModel: typeof CaseCommentTypeModel,
 
@@ -63,7 +55,7 @@ export class CommentService implements ICommentService {
   @LogAndHandle()
   @Transactional()
   private async caseCommentTitleLookup(
-    type: string | CaseCommentTitleEnum,
+    type: string | CaseCommentTypeTitleEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseCommentTitleModel>> {
     const title = await this.caseCommentTitleModel.findOne({
@@ -160,8 +152,6 @@ export class CommentService implements ICommentService {
     ).unwrap()
 
     const mappedTitle = mapCommentTypeToTitle(body.type)
-
-    this.logger.debug(`Mapped title for type<${body.type}>: ${mappedTitle}`)
 
     const title = (
       await this.caseCommentTitleLookup(mappedTitle, transaction)
