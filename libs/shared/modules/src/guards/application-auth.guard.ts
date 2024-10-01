@@ -1,5 +1,4 @@
 import { isUUID } from 'class-validator'
-import { decode } from 'jsonwebtoken'
 import { Sequelize } from 'sequelize-typescript'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -15,6 +14,8 @@ import { Reflector } from '@nestjs/core'
 import { IApplicationUserService } from '../application-user/application-user.module'
 import { IUtilityService } from '../utility/utility.service.interface'
 
+const LOGGING_CATEGORY = 'auth-guard'
+
 export class ApplicationAuthGaurd implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
@@ -27,70 +28,72 @@ export class ApplicationAuthGaurd implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest()
-
-    const auth = request.headers?.authorization
-
-    if (!auth) {
-      return false
-    }
-
-    const token = auth.split(' ')[1]
-
-    // TODO: USE VERIFY HERE LATER
-    const user = decode(token)
-
-    if (!user || typeof user === 'string') {
-      return false
-    }
-
-    const nationalId = user?.nationalId
-
-    if (!nationalId) {
-      return false
-    }
-
-    request.nationalId = nationalId
-
-    // lookup user and find out if they are allowed to access the resource
     try {
-      const userLookup = await this.applicationUserService.getUser(nationalId)
-
-      if (userLookup.result.ok === false) {
-        throw new ForbiddenException()
-      }
-
-      const { user } = userLookup.result.value
-
+      const request = context.switchToHttp().getRequest()
+      const auth = request.headers?.authorization
       const applicationId = request.params?.id
-
-      if (!isUUID(applicationId)) {
-        // we have to throw to return correct status from guard
-        throw new BadRequestException()
-      }
 
       const withCase = this.reflector.get<boolean>(
         'withCase',
         context.getHandler(),
       )
 
+      if (!isUUID(applicationId)) {
+        // we have to throw to return correct status from guard
+        throw new BadRequestException()
+      }
+
+      const userLookup = await this.applicationUserService.getUserFromToken(
+        auth,
+      )
+
+      if (!userLookup.result.ok) {
+        this.logger.warn(
+          `User tried to access application with id<${applicationId}>, but the user lookup failed`,
+          {
+            applicationId,
+            code: userLookup.result.error.code,
+            message: userLookup.result.error.message,
+            category: LOGGING_CATEGORY,
+          },
+        )
+        throw new ForbiddenException()
+      }
+
+      const { user } = userLookup.result.value
+
       if (withCase) {
-        const currentCase = (
-          await this.utilityService.caseLookupByApplicationId(applicationId)
-        ).unwrap()
-
-        const caseInstitution = currentCase.involvedPartyId
-
-        const hasAccessToCase = user.involvedParties.find(
-          (party) => party.id === caseInstitution,
+        const caseLookup = await this.utilityService.caseLookupByApplicationId(
+          applicationId,
         )
 
-        if (!hasAccessToCase) {
+        if (!caseLookup.result.ok) {
           this.logger.warn(
-            `User<${user.id}> tried to access case with application id<${applicationId}> but is not allowed`,
+            `User<${user.id}> tried to access case with application id<${applicationId}> but case does not exist`,
             {
               applicationId,
-              category: 'auth-guard',
+              code: caseLookup.result.error.code,
+              message: caseLookup.result.error.message,
+              category: LOGGING_CATEGORY,
+            },
+          )
+          throw new ForbiddenException()
+        }
+
+        const hasInvolvedParty =
+          await this.applicationUserService.checkIfUserHasInvolvedParty(
+            user.nationalId,
+            caseLookup.result.value.involvedPartyId,
+          )
+
+        if (!hasInvolvedParty.result.ok) {
+          this.logger.warn(
+            `User<${user.id}> tried to access case with application id<${applicationId}>, but is not tied to institution<${caseLookup.result.value.involvedPartyId}>`,
+            {
+              applicationId,
+              code: hasInvolvedParty.result.error.code,
+              message: hasInvolvedParty.result.error.message,
+              category: LOGGING_CATEGORY,
             },
           )
           throw new ForbiddenException()
@@ -102,10 +105,11 @@ export class ApplicationAuthGaurd implements CanActivate {
       return true
     } catch (error) {
       this.logger.warn(`Auth guard denied incoming request`, {
-        category: 'auth-guard',
+        category: LOGGING_CATEGORY,
         error,
       })
-      return false
+
+      throw error
     }
   }
 }

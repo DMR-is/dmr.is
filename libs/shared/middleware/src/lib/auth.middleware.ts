@@ -5,20 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express'
-import { verify } from 'jsonwebtoken'
 
 @Injectable()
 export class WithAuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { headers } = req
 
-    if (process.env.NODE_ENV === 'development') {
-      return next()
-    }
-
     const token = headers.authorization
-
-    logger.info(`Auth middleware`, { token })
 
     if (!token) {
       throw new UnauthorizedException()
