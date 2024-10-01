@@ -9,8 +9,8 @@ import {
 import {
   Case,
   CaseComment,
-  CaseCommentTitleEnum,
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
 } from '@dmr.is/shared/dto'
@@ -29,14 +29,14 @@ describe('CaseController', () => {
 
   const comment = {
     id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-    type: CaseCommentTypeEnum.Submit,
+    type: CaseCommentTypeTitleEnum.Submit,
     createdAt: '2024-03-12T12:45:48.21Z',
     caseStatus: CaseStatusEnum.Submitted,
     internal: false,
     task: {
       from: null,
       to: 'Stofnun x',
-      title: CaseCommentTitleEnum.Submit,
+      title: CaseCommentTypeTitleEnum.Submit,
       comment: null,
     },
   }
@@ -125,20 +125,6 @@ describe('CaseController', () => {
   })
 
   describe('createComment', () => {
-    const comment = {
-      id: '76caef40-c98d-40bf-9c78-76832d2ea1d1',
-      type: { title: 'comment' },
-      createdAt: '2024-03-12T12:45:48.21Z',
-      caseStatus: 'Innsent',
-      internal: false,
-      task: {
-        initiator: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
-        receiver: 'Ármann',
-        title: 'gerir athugasemd',
-        comment: 'getur þú athugað þetta?',
-      },
-    } as unknown as CaseComment
-
     it('should create comment', async () => {
       const createSpy = jest.spyOn(commentService, 'createComment')
 
@@ -147,19 +133,23 @@ describe('CaseController', () => {
         .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
       await caseController.createComment(activeCase.id, {
-        comment: comment.task.comment,
-        initiator: `${comment.task.from}`,
-        receiver: comment.task.to,
-        internal: comment.internal,
-        type: comment.type.title,
+        comment: null,
+        creator: 'Stofnun x',
+        internal: true,
+        receiver: null,
+        source: CaseCommentSourceEnum.API,
+        type: CaseCommentTypeTitleEnum.Submit,
+        storeState: false,
       })
 
       expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
-        comment: comment.task.comment,
-        initiator: `${comment.task.from}`,
-        receiver: comment.task.to,
-        internal: comment.internal,
-        type: comment.type.title,
+        comment: null,
+        creator: 'Stofnun x',
+        internal: true,
+        receiver: null,
+        source: CaseCommentSourceEnum.API,
+        type: CaseCommentTypeTitleEnum.Submit,
+        storeState: false,
       })
     })
   })
