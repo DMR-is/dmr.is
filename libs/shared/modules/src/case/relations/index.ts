@@ -1,9 +1,4 @@
-import {
-  CaseCommentModel,
-  CaseCommentTaskModel,
-  CaseCommentTitleModel,
-  CaseCommentTypeModel,
-} from '../../comment/models'
+import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/models'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -33,14 +28,7 @@ export const CASE_RELATIONS = [
   AdvertInvolvedPartyModel,
   {
     model: CaseCommentModel,
-    include: [
-      {
-        model: CaseCommentTaskModel,
-        include: [CaseCommentTitleModel],
-      },
-      CaseStatusModel,
-      CaseCommentTypeModel,
-    ],
+    include: [CaseCommentTypeModel, CaseStatusModel],
   },
   {
     model: SignatureModel,

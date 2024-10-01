@@ -4,7 +4,8 @@ import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UpdateCaseBody,
@@ -122,11 +123,13 @@ export class CaseUpdateService implements ICaseUpdateService {
       {
         internal: true,
         type: caseRes.assignedUserId
-          ? CaseCommentTypeEnum.Assign
-          : CaseCommentTypeEnum.AssignSelf,
+          ? CaseCommentTypeTitleEnum.Assign
+          : CaseCommentTypeTitleEnum.AssignSelf,
+        source: CaseCommentSourceEnum.API,
+        storeState: false,
         comment: null,
-        initiator: caseRes.assignedUserId,
-        receiver: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
+        creator: 'Ármann Árni',
+        receiver: 'Pálina',
       },
       transaction,
     )
@@ -254,9 +257,11 @@ export class CaseUpdateService implements ICaseUpdateService {
       id,
       {
         internal: true,
-        type: CaseCommentTypeEnum.Update,
+        type: CaseCommentTypeTitleEnum.UpdateStatus,
         comment: null,
-        initiator: caseLookup.assignedUserId,
+        source: CaseCommentSourceEnum.API,
+        storeState: false,
+        creator: 'Ármann Árni',
         receiver: null,
       },
       transaction,

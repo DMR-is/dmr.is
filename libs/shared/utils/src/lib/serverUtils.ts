@@ -18,8 +18,6 @@ import {
   ApplicationSignature,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
-  CaseCommentTypeEnum,
-  CaseCommentTypeTitleEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -68,25 +66,6 @@ export function slicePagedData<T>(
   pageSize = DEFAULT_PAGE_SIZE,
 ): T[] {
   return data.slice((page - 1) * pageSize, page * pageSize)
-}
-
-export const mapCommentTypeToTitle = (
-  val: CaseCommentTypeEnum,
-): CaseCommentTypeTitleEnum => {
-  switch (val) {
-    case CaseCommentTypeEnum.Comment:
-      return CaseCommentTypeTitleEnum.Comment
-    case CaseCommentTypeEnum.Message:
-      return CaseCommentTypeTitleEnum.Message
-    case CaseCommentTypeEnum.Assign:
-      return CaseCommentTypeTitleEnum.Assign
-    case CaseCommentTypeEnum.AssignSelf:
-      return CaseCommentTypeTitleEnum.AssignSelf
-    case CaseCommentTypeEnum.Submit:
-      return CaseCommentTypeTitleEnum.Submit
-    case CaseCommentTypeEnum.Update:
-      return CaseCommentTypeTitleEnum.UpdateStatus
-  }
 }
 
 export const FILE_VALIDATORS = [

@@ -49,9 +49,7 @@ export class ApplicationUserService implements IApplicationUserService {
     })
 
     if (!user) {
-      throw new NotFoundException(
-        `User with national id<${nationalId}> not found`,
-      )
+      throw new NotFoundException(`User not found`)
     }
 
     const migrated = applicationUserMigrate(user)

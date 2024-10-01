@@ -3,10 +3,10 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   Application,
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CaseTagEnum,
@@ -342,11 +342,18 @@ export class CaseCreateService implements ICaseCreateService {
 
     const caseId = createCaseResult.result.value.id
 
+    const institution = (
+      await this.utilityService.institutionLookup(
+        application.answers.advert.involvedPartyId,
+      )
+    ).unwrap()
+
     const commentResults = await this.commentService.createComment(caseId, {
       internal: true,
-      type: CaseCommentTypeEnum.Submit,
+      type: CaseCommentTypeTitleEnum.Submit,
+      creator: institution.title,
+      source: CaseCommentSourceEnum.Application,
       comment: null,
-      initiator: values.caseBody.involvedPartyId,
       receiver: null,
       storeState: true,
     })

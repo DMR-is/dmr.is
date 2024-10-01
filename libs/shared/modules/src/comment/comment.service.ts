@@ -3,14 +3,12 @@ import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseCommentTypeTitleEnum,
+  CaseCommentSourceEnum,
   GetCaseCommentResponse,
-  GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { mapCommentTypeToTitle } from '@dmr.is/utils'
 
 import {
   forwardRef,
@@ -21,7 +19,6 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
-import { CaseStatusModel } from '../case/models'
 import { IUtilityService } from '../utility/utility.module'
 import { caseCommentMigrate } from './migrations/case-comment.migrate'
 import { CaseCommentModel } from './models/case-comment.model'
@@ -54,45 +51,10 @@ export class CommentService implements ICommentService {
 
   @LogAndHandle()
   @Transactional()
-  private async caseCommentTitleLookup(
-    type: string | CaseCommentTypeTitleEnum,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommentTitleModel>> {
-    const title = await this.caseCommentTitleModel.findOne({
-      where: { title: type },
-      transaction,
-    })
-
-    if (!title) {
-      throw new NotFoundException(`No title found for type<${type}>`)
-    }
-
-    return ResultWrapper.ok(title)
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  private async caseCommentTypeLookup(
-    type: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseCommentTypeModel>> {
-    const commentType = await this.caseCommentTypeModel.findOne({
-      where: { slug: type },
-      transaction,
-    })
-
-    if (!commentType) {
-      throw new NotFoundException(`No type found for type<${type}>`)
-    }
-
-    return ResultWrapper.ok(commentType)
-  }
-
-  @LogAndHandle()
-  @Transactional()
   async getComment(
     caseId: string,
     commentId: string,
+    forSource: CaseCommentSourceEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentResponse>> {
     const relations = getCaseCommentsRelations()
@@ -109,7 +71,7 @@ export class CommentService implements ICommentService {
       )
     }
 
-    const migrated = caseCommentMigrate(comment.caseComment)
+    const migrated = caseCommentMigrate(comment.caseComment, forSource)
 
     return ResultWrapper.ok({
       comment: migrated,
@@ -120,10 +82,11 @@ export class CommentService implements ICommentService {
   @Transactional()
   async getComments(
     caseId: string,
-    params?: GetCaseCommentsQuery,
+    internal: boolean,
+    forSource: CaseCommentSourceEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
-    const relations = getCaseCommentsRelations(params?.internal)
+    const relations = getCaseCommentsRelations(internal)
 
     const comments = await this.caseCommentsModel.findAll({
       where: { case_case_id: caseId },
@@ -132,7 +95,7 @@ export class CommentService implements ICommentService {
     })
 
     const migrated = comments.map((comment) =>
-      caseCommentMigrate(comment.caseComment),
+      caseCommentMigrate(comment.caseComment, forSource),
     )
 
     return ResultWrapper.ok({
@@ -147,66 +110,51 @@ export class CommentService implements ICommentService {
     body: PostCaseCommentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const activeCase = (
+    const caseLookup = (
       await this.utilityService.caseLookup(caseId, transaction)
     ).unwrap()
 
-    const mappedTitle = mapCommentTypeToTitle(body.type)
-
-    const title = (
-      await this.caseCommentTitleLookup(mappedTitle, transaction)
-    ).unwrap()
-
-    const newCommentTypeRef = (
-      await this.caseCommentTypeLookup(body.type, transaction)
-    ).unwrap()
-
-    const newCommentTask = await this.caseCommentTaskModel.create(
-      {
-        comment: body.comment,
-        fromId: body.initiator,
-        toId: body.receiver,
-        titleId: title.id,
+    const type = await this.caseCommentTypeModel.findOne({
+      where: {
+        title: body.type,
       },
-      {
-        transaction: transaction,
-      },
-    )
+      transaction,
+    })
 
-    let state: string | null = null
+    if (!type) {
+      throw new NotFoundException(`Type<${body.type}> not found`)
+    }
 
-    if (body.storeState) {
-      try {
-        const applicationRes = (
-          await this.applicationService.getApplication(activeCase.applicationId)
-        ).unwrap()
+    const shouldStoreState = body.storeState === true
+    let applicationState: string | null = null
 
-        const { application } = applicationRes
+    if (shouldStoreState) {
+      const { application } = (
+        await this.applicationService.getApplication(caseLookup.applicationId)
+      ).unwrap()
 
-        state = JSON.stringify(application)
-      } catch (e) {
-        this.logger.warn(
-          `Failed to store state for case<${caseId}> with application<${activeCase.applicationId}>`,
-        )
-      }
+      applicationState = JSON.stringify(application.state)
     }
 
     const newComment = await this.caseCommentModel.create(
       {
-        createdAt: new Date().toISOString(),
+        caseId: caseId,
+        typeId: type.id,
+        caseStatusId: caseLookup.statusId,
+        created: new Date().toISOString(),
+        source: body.source,
         internal: body.internal,
-        typeId: newCommentTypeRef.id,
-        statusId: activeCase.statusId,
-        taskId: newCommentTask.id,
-        state: state,
+        creator: body.creator,
+        receiver: body.receiver,
+        comment: body.comment,
+        applicationState: applicationState,
       },
       {
-        returning: true,
+        returning: ['id'],
         transaction: transaction,
       },
     )
 
-    // adding row to relation table
     await this.caseCommentsModel.create(
       {
         caseId: caseId,
@@ -216,20 +164,6 @@ export class CommentService implements ICommentService {
         transaction: transaction,
       },
     )
-
-    const withRelations = await this.caseCommentModel.findByPk(newComment.id, {
-      nest: true,
-      include: [
-        CaseCommentTypeModel,
-        CaseStatusModel,
-        { model: CaseCommentTaskModel, include: [CaseCommentTitleModel] },
-      ],
-      transaction: transaction,
-    })
-
-    if (!withRelations) {
-      throw new NotFoundException(`Comment<${newComment.id}> not found`)
-    }
 
     return ResultWrapper.ok()
   }
@@ -267,12 +201,6 @@ export class CommentService implements ICommentService {
     await this.caseCommentModel.destroy({
       where: {
         id: commentId,
-      },
-    })
-
-    await this.caseCommentTaskModel.destroy({
-      where: {
-        id: exists.caseComment.taskId,
       },
     })
 

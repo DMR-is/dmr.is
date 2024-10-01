@@ -1,7 +1,7 @@
 import { Transaction } from 'sequelize'
 import {
+  CaseCommentSourceEnum,
   GetCaseCommentResponse,
-  GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
@@ -11,11 +11,13 @@ export interface ICommentService {
   getComment(
     caseId: string,
     commentId: string,
+    forSource: CaseCommentSourceEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentResponse>>
   getComments(
     caseId: string,
-    params?: GetCaseCommentsQuery,
+    internal: boolean,
+    forSource: CaseCommentSourceEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetCaseCommentsResponse>>
 

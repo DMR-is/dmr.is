@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseCommentTypeEnum } from './case-comment-constants'
+import { CaseCommentTypeTitleEnum } from './case-comment-constants'
 
 export class CaseCommentType {
   @ApiProperty({
@@ -10,10 +10,10 @@ export class CaseCommentType {
   readonly id!: string
 
   @ApiProperty({
-    enum: CaseCommentTypeEnum,
+    enum: CaseCommentTypeTitleEnum,
     description: 'The title of the case comment type',
   })
-  title!: CaseCommentTypeEnum
+  title!: CaseCommentTypeTitleEnum
 
   @ApiProperty({
     type: String,

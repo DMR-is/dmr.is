@@ -1,3 +1,4 @@
+import { logger } from '@dmr.is/logging'
 import {
   Injectable,
   NestMiddleware,
@@ -16,6 +17,8 @@ export class WithAuthMiddleware implements NestMiddleware {
     }
 
     const token = headers.authorization
+
+    logger.info(`Auth middleware`, { token })
 
     if (!token) {
       throw new UnauthorizedException()

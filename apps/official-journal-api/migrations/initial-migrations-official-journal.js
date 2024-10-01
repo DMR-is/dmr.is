@@ -142,24 +142,6 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE case_comment (
-      id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      case_id UUID NOT NULL,
-      case_status_id UUID NOT NULL,
-      type_id UUID NOT NULL,
-      source VARCHAR NOT NULL,
-      internal BOOLEAN DEFAULT TRUE,
-      application_state JSONB,
-      creator UUID,
-      receiver UUID,
-      comment TEXT,
-      PRIMARY KEY (id),
-      CONSTRAINT fk_case_comment_case_id FOREIGN KEY (case_id) REFERENCES case_case (id),
-      CONSTRAINT fk_case_comment_case_status_id FOREIGN KEY (case_status_id) REFERENCES case_status (id),
-      CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id)
-    );
-
     CREATE TABLE case_channel (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       email VARCHAR NOT NULL,
@@ -197,6 +179,24 @@ module.exports = {
       CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       CONSTRAINT fk_case_case_advert_type_id FOREIGN KEY (advert_type_id) REFERENCES advert_type (id),
       PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comment (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      case_id UUID NOT NULL,
+      case_status_id UUID NOT NULL,
+      type_id UUID NOT NULL,
+      source VARCHAR NOT NULL,
+      internal BOOLEAN DEFAULT TRUE,
+      application_state JSONB,
+      creator TEXT,
+      receiver TEXT,
+      comment TEXT,
+      PRIMARY KEY (id),
+      CONSTRAINT fk_case_comment_case_id FOREIGN KEY (case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_comment_case_status_id FOREIGN KEY (case_status_id) REFERENCES case_status (id),
+      CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id)
     );
 
     CREATE TABLE case_categories (

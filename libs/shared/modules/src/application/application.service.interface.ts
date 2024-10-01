@@ -1,5 +1,6 @@
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
+  ApplicationUser,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationResponse,
@@ -33,6 +34,7 @@ export interface IApplicationService {
   postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
+    applicationUser: ApplicationUser,
   ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>

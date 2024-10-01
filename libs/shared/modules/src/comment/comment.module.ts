@@ -11,8 +11,6 @@ import { ICommentService } from './comment.service.interface'
 import commentModels, {
   CaseCommentModel,
   CaseCommentsModel,
-  CaseCommentTaskModel,
-  CaseCommentTitleModel,
   CaseCommentTypeModel,
 } from './models'
 
@@ -23,8 +21,6 @@ export {
   CaseCommentModel,
   CaseCommentsModel,
   CaseCommentTypeModel,
-  CaseCommentTaskModel,
-  CaseCommentTitleModel,
 }
 
 @Module({

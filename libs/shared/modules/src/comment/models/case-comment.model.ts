@@ -1,6 +1,5 @@
 import {
   BelongsTo,
-  BelongsToMany,
   Column,
   DataType,
   ForeignKey,
@@ -11,7 +10,6 @@ import { CaseCommentSourceEnum } from '@dmr.is/shared/dto'
 
 import { CaseModel, CaseStatusModel } from '../../case/models'
 import { CaseCommentTypeModel } from './case-comment-type.model'
-import { CaseCommentsModel } from './case-comments.model'
 
 @Table({ tableName: 'case_comment', timestamps: false })
 export class CaseCommentModel extends Model {
@@ -46,8 +44,9 @@ export class CaseCommentModel extends Model {
   @Column({
     type: DataType.JSONB,
     allowNull: true,
+    field: 'application_state',
   })
-  state!: string | null
+  applicationState!: string | null
 
   @Column({
     type: DataType.STRING,
@@ -93,7 +92,7 @@ export class CaseCommentModel extends Model {
     field: 'case_status_id',
   })
   @ForeignKey(() => CaseStatusModel)
-  statusId!: string
+  caseStatusId!: string
 
   @BelongsTo(() => CaseStatusModel, 'case_status_id')
   caseStatus!: CaseStatusModel
