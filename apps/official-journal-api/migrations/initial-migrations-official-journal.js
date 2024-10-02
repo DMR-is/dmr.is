@@ -25,12 +25,12 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE user_role_admin_user (
+    CREATE TABLE admin_user_role (
       user_role_id UUID NOT NULL,
       admin_user_id UUID NOT NULL,
       PRIMARY KEY (user_role_id, admin_user_id),
-      CONSTRAINT fk_user_role_admin_user_user_role_id FOREIGN KEY (user_role_id) REFERENCES user_role (id),
-      CONSTRAINT fk_user_role_admin_user_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
+      CONSTRAINT fk_admin_user_role_user_role_id FOREIGN KEY (user_role_id) REFERENCES user_role (id),
+      CONSTRAINT fk_admin_user_role_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
     );
 
     CREATE TABLE advert_department (
