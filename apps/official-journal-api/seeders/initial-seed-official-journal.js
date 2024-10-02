@@ -8,19 +8,16 @@ module.exports = {
   async up(queryInterface) {
     // eslint-disable-next-line no-console
     console.log(cwd())
-    const allSeed = await readFile('./seeders/sql/all.sql', 'utf8')
+    const allUserSeed = await readFile('./seeders/sql/all_user.sql', 'utf8')
+    const allAdvertSeed = await readFile('./seeders/sql/all_advert.sql', 'utf8')
     const allCaseSeed = await readFile('./seeders/sql/all_case.sql', 'utf8')
 
     const seed = `
       BEGIN;
 
-      ${allSeed}
-
-      COMMIT;
-
-      BEGIN;
-
+      ${allAdvertSeed}
       ${allCaseSeed}
+      ${allUserSeed}
 
       COMMIT;
       `

@@ -7,6 +7,32 @@ module.exports = {
     BEGIN;
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+    CREATE TABLE user_role (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE admin_user (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      national_id VARCHAR NOT NULL,
+      first_name VARCHAR NOT NULL,
+      last_name VARCHAR NOT NULL,
+      display_name VARCHAR NOT NULL,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE user_role_admin_user (
+      user_role_id UUID NOT NULL,
+      admin_user_id UUID NOT NULL,
+      PRIMARY KEY (user_role_id, admin_user_id),
+      CONSTRAINT fk_user_role_admin_user_user_role_id FOREIGN KEY (user_role_id) REFERENCES user_role (id),
+      CONSTRAINT fk_user_role_admin_user_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
+    );
+
     CREATE TABLE advert_department (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL UNIQUE,
