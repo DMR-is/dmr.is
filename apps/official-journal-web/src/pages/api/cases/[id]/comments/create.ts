@@ -9,7 +9,7 @@ const commentBodySchema = z.object({
   caseId: z.string(),
   internal: z.boolean(),
   comment: z.string(),
-  initator: z.string(),
+  creator: z.string(),
   receiver: z.string().optional(),
 })
 
@@ -35,7 +35,7 @@ class CreateCommentHandler {
       postCaseCommentBody: {
         comment: body.comment,
         internal: body.internal,
-        creator: body.initator,
+        creator: body.creator,
         receiver: body.receiver,
         source: CaseCommentSource.API,
         storeState: false,

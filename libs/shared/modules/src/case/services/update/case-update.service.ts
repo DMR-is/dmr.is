@@ -235,11 +235,23 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateCaseStatusBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    const caseLookup = (await this.utilityService.caseLookup(id)).unwrap()
-
     const status = (
       await this.utilityService.caseStatusLookup(body.status)
     ).unwrap()
+
+    await this.commentService.createComment(
+      id,
+      {
+        internal: true,
+        type: CaseCommentTypeTitleEnum.UpdateStatus,
+        comment: null,
+        source: CaseCommentSourceEnum.API,
+        storeState: false,
+        creator: 'Ármann Árni - (harðkóðað í bili)',
+        receiver: status.title,
+      },
+      transaction,
+    )
 
     await this.caseModel.update(
       {
@@ -251,20 +263,6 @@ export class CaseUpdateService implements ICaseUpdateService {
         },
         transaction,
       },
-    )
-
-    await this.commentService.createComment(
-      id,
-      {
-        internal: true,
-        type: CaseCommentTypeTitleEnum.UpdateStatus,
-        comment: null,
-        source: CaseCommentSourceEnum.API,
-        storeState: false,
-        creator: 'Ármann Árni',
-        receiver: null,
-      },
-      transaction,
     )
 
     return ResultWrapper.ok()

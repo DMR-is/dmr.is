@@ -158,7 +158,7 @@ export const commentToNode = (comment: CaseComment) => {
       return (
         <>
           <strong>{comment.creator}</strong> {comment.title}{' '}
-          <strong>{status}</strong>
+          <strong>{comment.receiver}</strong>
         </>
       )
     }
@@ -191,6 +191,7 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
   const displayTypes = [
     CaseCommentType.InnsentAf,
     CaseCommentType.FærirMálÍStöðuna,
+    CaseCommentType.FærirMálÁ,
   ]
   return [
     {
