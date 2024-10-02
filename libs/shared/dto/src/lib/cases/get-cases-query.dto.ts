@@ -36,7 +36,7 @@ export class GetCasesQuery {
   search?: string
 
   @ApiProperty({
-    name: 'id',
+    name: 'applicationId',
     type: String,
     description: 'Application ID',
     required: false,

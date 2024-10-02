@@ -44,7 +44,7 @@ export const CaseTableReady = () => {
   } = useCases({
     params: {
       department: department,
-      status: CaseStatusTitleEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbúið,
     },
     options: {
       refreshInterval: 1000 * 60,

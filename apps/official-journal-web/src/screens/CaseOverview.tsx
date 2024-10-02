@@ -80,11 +80,11 @@ CaseOverview.getProps = async ({ query }) => {
     const { cases, paging } = await dmrClient.getCases({
       department: tab,
       status:
-        CaseStatusTitleEnum.Tgefi +
+        CaseStatusTitleEnum.ÚTgefið +
         ',' +
-        CaseStatusTitleEnum.BirtinguHafna +
+        CaseStatusTitleEnum.BirtinguHafnað +
         ',' +
-        CaseStatusTitleEnum.TekiRBirtingu,
+        CaseStatusTitleEnum.TekiðÚrBirtingu,
     })
 
     return {

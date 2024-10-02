@@ -33,7 +33,7 @@ export const StatisticsPieCharts = ({ data }: Props) => {
         return theme.color.blue400
       case CaseStatusTitleEnum.Yfirlestur:
         return theme.color.mint600
-      case CaseStatusTitleEnum.Tilbi:
+      case CaseStatusTitleEnum.Tilbúið:
         return theme.color.roseTinted400
       default:
         return theme.color.black

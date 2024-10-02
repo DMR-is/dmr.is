@@ -1,6 +1,6 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { PostCasePublishBody } from '../gen/fetch'
+import { CaseCommentType, PostCasePublishBody } from '../gen/fetch'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104

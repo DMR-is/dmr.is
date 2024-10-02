@@ -19,6 +19,7 @@ export const caseCommentMigrate = (
     title: model.type.title,
     caseStatus: caseStatusMigrate(model.caseStatus).title,
     age: convertDateToDaysAgo(model.created),
+    ageIso: model.created,
     direction: mapSourceToDirection(model.source, forSource),
     creator: model.creator,
     receiver: model.receiver,

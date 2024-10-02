@@ -24,6 +24,7 @@ export class SignatureController {
 
   @Route({
     path: 'involved-party/:id',
+    operationId: 'getSignaturesForInvolvedParty',
     params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
@@ -42,6 +43,7 @@ export class SignatureController {
 
   @Route({
     path: 'case/:id',
+    operationId: 'getSignaturesByCaseId',
     params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
@@ -57,6 +59,7 @@ export class SignatureController {
 
   @Route({
     path: 'advert/:id',
+    operationId: 'getSignaturesByAdvertId',
     params: [{ name: 'id', type: String, required: true }],
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
     responseType: GetSignaturesResponse,
@@ -72,6 +75,7 @@ export class SignatureController {
 
   @Route({
     path: ':id',
+    operationId: 'getSignatureById',
     params: [{ name: 'id', type: String, required: true }],
     responseType: GetSignatureResponse,
   })
@@ -81,6 +85,7 @@ export class SignatureController {
 
   @Route({
     path: ':id',
+    operationId: 'deleteSignature',
     method: 'delete',
     params: [{ name: 'id', type: String, required: true }],
   })
@@ -90,6 +95,7 @@ export class SignatureController {
 
   @Route({
     path: ':id',
+    operationId: 'updateSignature',
     method: 'put',
     params: [{ name: 'id', type: String, required: true }],
     bodyType: UpdateSignatureBody,
@@ -103,6 +109,7 @@ export class SignatureController {
 
   @Route({
     path: '',
+    operationId: 'getSignatures',
     query: [{ name: 'id', type: DefaultSearchParams, required: true }],
   })
   async getSignatures(@Query() params?: DefaultSearchParams) {

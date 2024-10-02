@@ -36,7 +36,14 @@ export class CaseComment {
     example: 'f. 2 dögum',
     description: 'String representation of the age of the case comment.',
   })
-  age!: string | null
+  age!: string
+
+  @ApiProperty({
+    type: String,
+    description:
+      'ISO date format representation of the age of the case comment.',
+  })
+  ageIso!: string
 
   @ApiProperty({
     enum: CaseCommentDirectionEnum,

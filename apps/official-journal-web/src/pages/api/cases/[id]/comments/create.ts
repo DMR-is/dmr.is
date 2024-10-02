@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
-import { PostCaseCommentBodyTypeEnum } from '../../../../../gen/fetch'
+import { CaseCommentSource, CaseCommentType } from '../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../lib/api/createClient'
 
 const commentBodySchema = z.object({
@@ -35,11 +35,13 @@ class CreateCommentHandler {
       postCaseCommentBody: {
         comment: body.comment,
         internal: body.internal,
-        initiator: body.initator,
+        creator: body.initator,
         receiver: body.receiver,
+        source: CaseCommentSource.API,
+        storeState: false,
         type: body.internal
-          ? PostCaseCommentBodyTypeEnum.Comment
-          : PostCaseCommentBodyTypeEnum.Message,
+          ? CaseCommentType.GerirAthugasemd
+          : CaseCommentType.SkráirSkilaboð,
       },
     })
 

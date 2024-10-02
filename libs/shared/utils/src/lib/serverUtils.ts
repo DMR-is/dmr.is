@@ -345,12 +345,12 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
   }
 }
 
-export const convertDateToDaysAgo = (date: string): string | null => {
+export const convertDateToDaysAgo = (dateIso: string): string => {
   try {
-    const asDate = new Date(date)
+    const date = new Date(dateIso)
 
     const now = new Date()
-    const diff = now.getTime() - asDate.getTime()
+    const diff = now.getTime() - date.getTime()
     const diffDays = Math.floor(diff / (1000 * 3600 * 24))
 
     if (diffDays === 0) {
@@ -369,7 +369,7 @@ export const convertDateToDaysAgo = (date: string): string | null => {
       error: error,
     })
 
-    return null
+    return 'Ekki vitað'
   }
 }
 

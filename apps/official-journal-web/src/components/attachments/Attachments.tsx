@@ -106,7 +106,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
 
                 <Box display="flex" alignItems="center" columnGap={2}>
                   {a.type.title ===
-                    ApplicationAttachmentTypeTitleEnum.Fylgiskjl && (
+                    ApplicationAttachmentTypeTitleEnum.Fylgiskjöl && (
                     <>
                       <input
                         type="file"
