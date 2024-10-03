@@ -1,3 +1,4 @@
+import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
@@ -21,22 +22,26 @@ export class AdminUserService implements IAdminUserService {
     private readonly adminUserModel: typeof AdminUserModel,
     @InjectModel(UserRoleModel)
     private readonly userRoleModel: typeof UserRoleModel,
+    private sequelize: Sequelize,
   ) {}
 
-  @LogAndHandle()
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async checkIfUserHasRole(
-    userId: string,
+    nationalId: string,
     roleTitles: string[],
   ): Promise<ResultWrapper<{ hasRole: boolean }>> {
-    const userLookup = await this.getUser(userId)
-
+    const userLookup = await this.getUserByNationalId(nationalId)
     if (!userLookup.result.ok) {
-      this.logger.warn('Failed to get user', userLookup.result.error, {
+      this.logger.warn('Could not find user by nationalId', {
+        error: userLookup.result.error,
+        method: 'checkIfUserHasRole',
         category: LOGGING_CATEGORY,
       })
       return ResultWrapper.err(userLookup.result.error)
     }
+
+    const user = userLookup.result.value.user
 
     const rolePromises = roleTitles.map((roleTitle) =>
       this.getRoleByTitle(roleTitle),
@@ -45,23 +50,20 @@ export class AdminUserService implements IAdminUserService {
     const roles = await Promise.all(rolePromises)
 
     const hasAccess = roles.some((role) => {
-      let currentRole: AdminUserRole | null = null
       if (!role.result.ok) {
-        this.logger.warn('Failed to get role', role.result.error, {
+        this.logger.warn('Could not get user roles', {
           error: role.result.error,
+          method: 'checkIfUserHasRole',
           category: LOGGING_CATEGORY,
         })
-        return ResultWrapper.err(role.result.error)
+        return ResultWrapper.err({
+          code: 500,
+          message: 'Could not get user roles',
+        })
       }
 
-      if (!userLookup.result.ok) {
-        return false
-      }
-
-      currentRole = role.result.value.role
-      return userLookup.result.value.user.roles.some(
-        (userRole) => userRole.id === currentRole.id,
-      )
+      const currentRole = role.result.value.role
+      return user.roles.some((userRole) => userRole.id === currentRole.id)
     })
 
     return ResultWrapper.ok({
@@ -69,7 +71,7 @@ export class AdminUserService implements IAdminUserService {
     })
   }
 
-  @LogAndHandle()
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async getRoleByTitle(
     title: string,
@@ -83,6 +85,7 @@ export class AdminUserService implements IAdminUserService {
     if (!roleLookup) {
       this.logger.warn(`Role<${title}> not found`, {
         title: title,
+        method: 'getRoleByTitle',
         category: LOGGING_CATEGORY,
       })
       return ResultWrapper.err({
@@ -96,7 +99,7 @@ export class AdminUserService implements IAdminUserService {
     })
   }
 
-  @LogAndHandle()
+  @LogAndHandle({ logArgs: false })
   @Transactional()
   async getRoles(): Promise<ResultWrapper<{ roles: AdminUserRole[] }>> {
     const roles = await this.userRoleModel.findAll()
@@ -108,19 +111,47 @@ export class AdminUserService implements IAdminUserService {
     })
   }
 
-  @LogAndHandle()
+  @LogAndHandle({ logArgs: false })
   @Transactional()
-  async getUser(id: string): Promise<ResultWrapper<{ user: AdminUser }>> {
+  async getUserById(id: string): Promise<ResultWrapper<{ user: AdminUser }>> {
     const userLookup = await this.adminUserModel.findByPk(id)
 
     if (!userLookup) {
-      this.logger.warn(`User<${id}> not found`, {
+      this.logger.warn(`User not found`, {
         id: id,
+        method: 'getUserById',
         category: LOGGING_CATEGORY,
       })
       return ResultWrapper.err({
         code: 404,
-        message: `User<${id}> not found`,
+        message: `User not found`,
+      })
+    }
+
+    return ResultWrapper.ok({
+      user: adminUserMigrate(userLookup),
+    })
+  }
+
+  @LogAndHandle({ logArgs: false })
+  @Transactional()
+  async getUserByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<{ user: AdminUser }>> {
+    const userLookup = await this.adminUserModel.findOne({
+      where: {
+        nationalId: nationalId,
+      },
+    })
+
+    if (!userLookup) {
+      this.logger.warn(`User not found`, {
+        method: 'getUserByNationalId',
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 404,
+        message: `User not found`,
       })
     }
 

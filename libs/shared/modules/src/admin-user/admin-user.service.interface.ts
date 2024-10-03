@@ -2,14 +2,17 @@ import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
 import { AdminUserRoleTitle, ResultWrapper } from '@dmr.is/types'
 
 export interface IAdminUserService {
-  getUser(id: string): Promise<ResultWrapper<{ user: AdminUser }>>
+  getUserById(id: string): Promise<ResultWrapper<{ user: AdminUser }>>
+  getUserByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<{ user: AdminUser }>>
 
   getRoles(): Promise<ResultWrapper<{ roles: AdminUserRole[] }>>
 
   getRoleByTitle(title: string): Promise<ResultWrapper<{ role: AdminUserRole }>>
 
   checkIfUserHasRole(
-    userId: string,
+    nationalId: string,
     roleTitles: AdminUserRoleTitle[],
   ): Promise<ResultWrapper<{ hasRole: boolean }>>
 }

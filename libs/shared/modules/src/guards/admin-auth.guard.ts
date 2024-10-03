@@ -8,6 +8,8 @@ import {
   ExecutionContext,
   ForbiddenException,
   Inject,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
@@ -35,21 +37,52 @@ export class AdminAuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest()
-    const auth = request.headers?.authorization
+    // TODO: For now when developing locally, we dont have access to the island.is ids service (for now)
+    // so we need to bypass the auth check
 
-    const checkIfUserHasRole = await this.adminUserService.checkIfUserHasRole(
-      auth,
+    // const token = request.headers.authorization
+    // const user = await this.adminUserService.getUserByToken(token)
+    // if (!user.result.ok) {
+    //   this.logger.warn('Failed to get user by token', {
+    //     error: user.result.error,
+    //     category: LOGGING_CATEGORY,
+    //   })
+    //   throw new UnauthorizedException()
+    // }
+
+    // const nationalId = user.result.value.user.national
+
+    const nationalId = request.headers.nationalid
+
+    if (!nationalId) {
+      this.logger.warn('Missing nationalId in request headers', {
+        category: LOGGING_CATEGORY,
+      })
+      throw new UnauthorizedException()
+    }
+
+    const roleLookup = await this.adminUserService.checkIfUserHasRole(
+      nationalId,
       requiredRoles,
     )
 
-    if (!checkIfUserHasRole.result.ok) {
-      this.logger.warn('Failed to check if user has role', {
-        error: checkIfUserHasRole.result.error,
+    if (!roleLookup.result.ok) {
+      this.logger.warn('Could not get user roles', {
+        error: roleLookup.result.error,
         category: LOGGING_CATEGORY,
       })
+
+      if (roleLookup.result.error.code === 500) {
+        throw new InternalServerErrorException()
+      }
+
+      if (roleLookup.result.error.code === 404) {
+        throw new UnauthorizedException()
+      }
+
       throw new ForbiddenException()
     }
 
-    return checkIfUserHasRole.result.value.hasRole
+    return roleLookup.result.value.hasRole
   }
 }
