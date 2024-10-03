@@ -1,6 +1,9 @@
+import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
 import {
+  AdminAuthGuard,
+  IAdminUserService,
   IApplicationService,
   ICaseService,
   ICommentService,
@@ -8,7 +11,6 @@ import {
 } from '@dmr.is/modules'
 import {
   Case,
-  CaseComment,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -69,6 +71,10 @@ describe('CaseController', () => {
       controllers: [CaseController],
       providers: [
         {
+          provide: Sequelize,
+          useValue: jest.fn(),
+        },
+        {
           provide: ICaseService,
           useClass: jest.fn(() => ({
             createCase: () => ({}),
@@ -87,6 +93,10 @@ describe('CaseController', () => {
         },
         {
           provide: IApplicationService,
+          useValue: jest.fn(),
+        },
+        {
+          provide: IAdminUserService,
           useValue: jest.fn(),
         },
         {

@@ -8,6 +8,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Inject,
+  Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common'
@@ -17,6 +18,7 @@ import { IAdminUserService } from '../admin-user/admin-user.service.interface'
 
 const LOGGING_CATEGORY = 'admin-auth-guard'
 
+@Injectable()
 export class AdminAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
