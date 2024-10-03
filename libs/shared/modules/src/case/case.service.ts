@@ -490,8 +490,13 @@ export class CaseService implements ICaseService {
           model: CaseStatusModel,
           where: params?.status
             ? {
-                title: {
-                  [Op.in]: params.status,
+                [Op.or]: {
+                  title: {
+                    [Op.in]: params.status,
+                  },
+                  slug: {
+                    [Op.in]: params.status,
+                  },
                 },
               }
             : undefined,
