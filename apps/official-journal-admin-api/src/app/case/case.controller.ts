@@ -1,5 +1,11 @@
-import { Route } from '@dmr.is/decorators'
-import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
+import { USER_ROLES } from '@dmr.is/constants'
+import { Roles, Route } from '@dmr.is/decorators'
+import {
+  AdminAuthGuard,
+  ICaseService,
+  ICommentService,
+  IJournalService,
+} from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseCommentSourceEnum,
@@ -40,7 +46,14 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Inject,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 
 @Controller({
   version: '1',
@@ -400,6 +413,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
+  @UseGuards(AdminAuthGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: '',
     operationId: 'getCases',

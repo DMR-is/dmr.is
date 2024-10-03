@@ -1,5 +1,6 @@
 import { LoggingModule } from '@dmr.is/logging'
 import {
+  AdminUserModule,
   AuthController,
   AuthModule,
   CommentModule,
@@ -21,6 +22,7 @@ import { CaseController } from './case.controller'
     CommentModule,
     SignatureModule,
     AuthModule,
+    AdminUserModule,
   ],
   controllers: [CaseController, SignatureController, AuthController],
 })

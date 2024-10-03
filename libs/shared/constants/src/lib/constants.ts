@@ -1,3 +1,5 @@
+import { AdminUserRoleTitle } from '@dmr.is/types'
+
 export const DEFAULT_PAGE_SIZE = 10
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
@@ -65,3 +67,12 @@ export enum ApplicationStates {
   SUBMITTED = 'submitted',
   COMPLETE = 'complete',
 }
+
+export const ROLES_KEY = 'roles'
+
+export const WITH_CASE_KEY = 'withCase'
+
+export const USER_ROLES: Record<string, AdminUserRoleTitle> = {
+  Admin: 'Admin',
+  Editor: 'Editor',
+} as const
