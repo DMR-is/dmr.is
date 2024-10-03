@@ -26,10 +26,7 @@ type WhereClause = {
   }
 }
 
-export const caseParameters = (
-  params?: GetCasesQuery,
-  caseStatusIds?: string[],
-) => {
+export const caseParameters = (params?: GetCasesQuery) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}
 
@@ -60,10 +57,6 @@ export const caseParameters = (
 
   if (params?.employeeId !== undefined) {
     whereClause.assignedUserId = params.employeeId
-  }
-
-  if (caseStatusIds) {
-    whereClause.statusId = { [Op.in]: caseStatusIds }
   }
 
   if (params?.fastTrack !== undefined) {
