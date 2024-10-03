@@ -72,7 +72,7 @@ export const ROLES_KEY = 'roles'
 
 export const WITH_CASE_KEY = 'withCase'
 
-export const USER_ROLES: Record<string, AdminUserRoleTitle> = {
+export const USER_ROLES: Record<AdminUserRoleTitle, AdminUserRoleTitle> = {
   Admin: 'Admin',
   Editor: 'Editor',
 } as const
