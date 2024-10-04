@@ -8,6 +8,8 @@ import {
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -31,6 +33,11 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
+
+  getPublishedCases(
+    department: string,
+    query?: GetPublishedCasesQuery,
+  ): Promise<ResultWrapper<GetPublishedCasesResponse>>
   createCase(
     body: PostApplicationBody,
     transaction?: Transaction,

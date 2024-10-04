@@ -79,6 +79,7 @@ CaseOverview.getProps = async ({ query }) => {
 
     const { cases, paging } = await dmrClient.getCases({
       department: tab,
+      published: 'true',
       status:
         CaseStatusTitleEnum.ÚTgefið +
         ',' +

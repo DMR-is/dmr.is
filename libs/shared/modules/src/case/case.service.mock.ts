@@ -16,6 +16,8 @@ import {
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
@@ -49,6 +51,12 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  getPublishedCases(
+    department: string,
+    query?: GetPublishedCasesQuery,
+  ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
+    throw new Error('Method not implemented.')
   }
   updateEmployee(id: string, userId: string): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')

@@ -26,6 +26,8 @@ import {
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -424,6 +426,23 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
+  }
+
+  @Route({
+    path: '/published/:department',
+    operationId: 'getCases',
+    summary: 'Get cases',
+    responseType: GetPublishedCasesResponse,
+    params: [{ name: 'department', type: 'string', required: true }],
+    query: [{ type: GetPublishedCasesQuery, required: false }],
+  })
+  async publishedCases(
+    @Param('department') department: string,
+    @Query() query?: GetPublishedCasesQuery,
+  ): Promise<GetCasesReponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getPublishedCases(department, query),
+    )
   }
 
   @Route({
