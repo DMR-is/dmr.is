@@ -20,7 +20,8 @@ const deleteUndefined = (obj: Record<string, any> | undefined): void => {
 type Component = {
   ({ pageProps }: { pageProps: unknown }): JSX.Element
   getProps(ctx: Partial<ScreenContext>): Promise<{
-    pageProps: unknown
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pageProps: { componentProps?: any; layoutProps?: any } | null
   }>
 }
 export const getServerSidePropsWrapper: (
@@ -28,7 +29,9 @@ export const getServerSidePropsWrapper: (
 ) => GetServerSideProps = (screen) => async (ctx) => {
   try {
     const props = screen.getProps ? await screen.getProps(ctx) : ctx
-
+    if ('pageProps' in props && props.pageProps?.componentProps?.redirect) {
+      return props.pageProps?.componentProps
+    }
     deleteUndefined(props)
     return {
       props,

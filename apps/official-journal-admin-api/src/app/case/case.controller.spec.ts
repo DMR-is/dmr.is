@@ -2,7 +2,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
 import {
-  AdminAuthGuard,
   IAdminUserService,
   IApplicationService,
   ICaseService,

@@ -1,6 +1,30 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/cases/user/{nationalId}": {
+      "get": {
+        "operationId": "getUser",
+        "summary": "Return all departments",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
       "get": {
         "operationId": "getNextPublicationNumber",
@@ -1277,20 +1301,6 @@
         }
       }
     },
-    "/api/v1/statistics/test": {
-      "get": {
-        "operationId": "StatisticsController_",
-        "parameters": [
-          {
-            "name": "test",
-            "required": true,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "200": { "description": "" } }
-      }
-    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController_",
@@ -1309,6 +1319,27 @@
   "servers": [],
   "components": {
     "schemas": {
+      "AdminUserRole": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "displayName": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
+          }
+        },
+        "required": ["nationalId", "displayName", "roles"]
+      },
       "GetNextPublicationNumberResponse": {
         "type": "object",
         "properties": {

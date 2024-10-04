@@ -1,3 +1,4 @@
+import { getSession } from 'next-auth/react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -27,16 +28,15 @@ import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 import { Screen } from '../lib/types'
-import { ARMANN } from '../lib/userMock'
 
 type Props = {
-  statisticsOverview: {
+  statisticsOverview?: {
     general: GetStatisticsOverviewResponse | null
     personal: GetStatisticsOverviewResponse | null
     inactive: GetStatisticsOverviewResponse | null
     publishing: GetStatisticsOverviewResponse | null
   }
-  statisticsByDepartment: {
+  statisticsByDepartment?: {
     a: GetStatisticsDepartmentResponse | null
     b: GetStatisticsDepartmentResponse | null
     c: GetStatisticsDepartmentResponse | null
@@ -48,6 +48,10 @@ const Dashboard: Screen<Props> = ({
   statisticsByDepartment,
 }) => {
   const { formatMessage } = useFormatMessage()
+
+  if (!statisticsOverview || !statisticsByDepartment) {
+    return null
+  }
 
   const ritstjornTabs: TabType[] = [
     {
@@ -207,9 +211,18 @@ const Dashboard: Screen<Props> = ({
   )
 }
 
-Dashboard.getProps = async () => {
+Dashboard.getProps = async ({ req }) => {
+  const session = await getSession({ req })
   const dmrClient = createDmrClient()
-  const user = ARMANN
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
 
   const [general, personal, inactive, publishing] = await Promise.all(
     [
@@ -218,7 +231,7 @@ Dashboard.getProps = async () => {
       }),
       dmrClient.getStatisticsOverview({
         type: GetStatisticsOverviewTypeEnum.Personal,
-        userId: user.id,
+        userId: session.user.nationalId,
       }),
       dmrClient.getStatisticsOverview({
         type: GetStatisticsOverviewTypeEnum.Inactive,
@@ -263,6 +276,7 @@ Dashboard.getProps = async () => {
   )
 
   return {
+    session,
     statisticsOverview: {
       general,
       personal,

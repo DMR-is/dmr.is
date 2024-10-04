@@ -1,3 +1,4 @@
+import { getSession } from 'next-auth/react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -33,6 +34,7 @@ import {
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
+import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
@@ -40,12 +42,16 @@ import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
-  data: Case
-  step: CaseStep
+  data?: Case
+  step?: CaseStep
 }
 
 const CaseSingle: Screen<Props> = ({ data, step }) => {
   const { formatMessage } = useFormatMessage()
+
+  if (!data || !step) {
+    return null
+  }
 
   const {
     data: caseData,
@@ -311,7 +317,18 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     </>
   )
 }
-CaseSingle.getProps = async ({ query }): Promise<Props> => {
+CaseSingle.getProps = async ({ query, req }) => {
+  const session = await getSession({ req })
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
+
   const dmrClient = createDmrClient()
   const caseId = query.uid?.[0]
   const step = query.uid?.[1] as CaseStep | undefined
@@ -328,6 +345,7 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
     })
 
     return {
+      session,
       data: activeCase._case,
       step,
     }
