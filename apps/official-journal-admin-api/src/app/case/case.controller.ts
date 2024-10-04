@@ -413,8 +413,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
-  @UseGuards(AdminAuthGuard)
-  @Roles(USER_ROLES.Admin)
+  // @UseGuards(AdminAuthGuard)
+  // @Roles(USER_ROLES.Admin)
   @Route({
     path: '',
     operationId: 'getCases',
