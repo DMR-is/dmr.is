@@ -19,8 +19,9 @@ export const statusResMapper: StatusResMapper = {
 
 export const counterResult = (counter: CaseModel[]) => {
   const result: Result = counter.reduce((acc: Result, item) => {
-    const { caseStatusValue, count } = item.dataValues
-    const mappedStatus = statusResMapper[caseStatusValue]
+    const { count, caseStatusTitle } = item.dataValues
+
+    const mappedStatus = statusResMapper[caseStatusTitle]
     if (mappedStatus) {
       acc[mappedStatus] = (acc[mappedStatus] || 0) + parseInt(count, 10)
     }

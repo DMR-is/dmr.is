@@ -107,6 +107,7 @@ export class StatisticsService implements IStatisticsService {
     const casesRes = (
       await this.casesService.getCases({
         pageSize: '1000',
+        year: new Date().getFullYear().toString(),
         status: [
           CaseStatusEnum.Submitted,
           CaseStatusEnum.InProgress,

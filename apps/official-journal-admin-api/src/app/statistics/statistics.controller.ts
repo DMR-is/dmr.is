@@ -61,17 +61,4 @@ export class StatisticsController {
       await this.statisticsService.getOverview(type, userId),
     )
   }
-
-  @Route({
-    path: 'test',
-    query: [
-      {
-        type: 'string',
-        name: 'test',
-      },
-    ],
-  })
-  async test(@Query() test: string): Promise<string> {
-    return test
-  }
 }
