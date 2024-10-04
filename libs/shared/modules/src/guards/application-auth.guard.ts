@@ -8,6 +8,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Inject,
+  Injectable,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
@@ -16,6 +17,7 @@ import { IUtilityService } from '../utility/utility.service.interface'
 
 const LOGGING_CATEGORY = 'auth-guard'
 
+@Injectable()
 export class ApplicationAuthGaurd implements CanActivate {
   constructor(
     private readonly reflector: Reflector,

@@ -22,8 +22,8 @@ export function LogAndHandle(
     const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: any[]) {
-      const filteredArgs = filterArgs(args, service, method)
       try {
+        const filteredArgs = filterArgs(args, service, method)
         const logData = {
           method: method,
           category: service,
@@ -33,24 +33,20 @@ export function LogAndHandle(
           logger.debug(`${service}.${method}`)
         }
 
-        Object.assign(logData, {
-          ...filteredArgs,
-        })
-
-        logger.debug(`${service}.${method}`, {
-          ...logData,
-        })
+        if (logArgs) {
+          Object.assign(logData, {
+            ...filteredArgs,
+          })
+          logger.debug(`${service}.${method}`, {
+            ...logData,
+          })
+        }
         return await originalMethod.apply(this, args)
       } catch (error) {
         return handleException({
           service: service,
           method: method,
           error: error,
-          info: {
-            args: {
-              ...filteredArgs,
-            },
-          },
         })
       }
     }
