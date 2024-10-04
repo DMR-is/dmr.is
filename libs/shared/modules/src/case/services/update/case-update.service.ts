@@ -247,7 +247,7 @@ export class CaseUpdateService implements ICaseUpdateService {
         comment: null,
         source: CaseCommentSourceEnum.API,
         storeState: false,
-        creator: 'Ármann Árni - (harðkóðað í bili)',
+        creator: 'Ármann Árni', // TODO: Update this when auth is implemented
         receiver: status.title,
       },
       transaction,
