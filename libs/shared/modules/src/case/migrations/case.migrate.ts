@@ -1,5 +1,5 @@
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { Case } from '@dmr.is/shared/dto'
+import { Case, CaseCommentSourceEnum } from '@dmr.is/shared/dto'
 import { withTryCatch } from '@dmr.is/utils'
 
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
@@ -51,7 +51,9 @@ export const caseMigrate = (model: CaseModel): Case => {
         ? model.signatures.map((s) => signatureMigrate(s))
         : [],
       comments: model.comments
-        ? model.comments.map((c) => caseCommentMigrate(c))
+        ? model.comments.map((c) =>
+            caseCommentMigrate(c, CaseCommentSourceEnum.API),
+          )
         : [],
       attachments: model.attachments
         ? model.attachments.map((a) => attachmentMigrate(a))

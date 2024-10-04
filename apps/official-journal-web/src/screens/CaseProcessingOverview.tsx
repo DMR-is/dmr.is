@@ -188,7 +188,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
       ),
     },
     {
-      id: CaseStatusTitleEnum.Tilbi,
+      id: CaseStatusTitleEnum.Tilbúið,
       label: formatMessage(caseProccessingMessages.tabs.ready, {
         count: casesResponse.totalItems.ready,
       }),

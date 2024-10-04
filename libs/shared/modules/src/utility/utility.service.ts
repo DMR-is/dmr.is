@@ -40,9 +40,6 @@ export class UtilityService implements IUtilityService {
     @InjectModel(AdvertDepartmentModel)
     private departmentModel: typeof AdvertDepartmentModel,
     @InjectModel(AdvertTypeModel) private typeModel: typeof AdvertTypeModel,
-
-    @InjectModel(AdvertInvolvedPartyModel)
-    private involvedPartyModel: typeof AdvertInvolvedPartyModel,
     @InjectModel(AdvertCategoryModel)
     private categoryModel: typeof AdvertCategoryModel,
 
@@ -54,11 +51,28 @@ export class UtilityService implements IUtilityService {
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
     @InjectModel(CaseCategoriesModel)
     private caseCategoriesModel: typeof CaseCategoriesModel,
+
+    @InjectModel(AdvertInvolvedPartyModel)
+    private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
+
     @InjectModel(AdvertStatusModel)
     private advertStatusModel: typeof AdvertStatusModel,
     private sequelize: Sequelize,
   ) {
     this.logger.info('Using UtilityService')
+  }
+  async institutionLookup(
+    institutionId: string,
+  ): Promise<ResultWrapper<AdvertInvolvedPartyModel>> {
+    const institution = await this.advertInvolvedPartyModel.findByPk(
+      institutionId,
+    )
+
+    if (!institution) {
+      throw new NotFoundException(`Institution<${institutionId}> not found`)
+    }
+
+    return ResultWrapper.ok(institution)
   }
 
   @LogAndHandle()

@@ -1,8 +1,15 @@
-import { Route } from '@dmr.is/decorators'
-import { ICaseService, ICommentService, IJournalService } from '@dmr.is/modules'
+import { USER_ROLES } from '@dmr.is/constants'
+import { Roles, Route } from '@dmr.is/decorators'
+import {
+  AdminAuthGuard,
+  ICaseService,
+  ICommentService,
+  IJournalService,
+} from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CreateCaseResponse,
   DefaultSearchParams,
@@ -39,7 +46,14 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Inject,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 
 @Controller({
   version: '1',
@@ -399,6 +413,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
+  @UseGuards(AdminAuthGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: '',
     operationId: 'getCases',
@@ -431,10 +447,13 @@ export class CaseController {
   })
   async getComments(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Query() params?: GetCaseCommentsQuery,
   ): Promise<GetCaseCommentsResponse> {
     return ResultWrapper.unwrap(
-      await this.commentService.getComments(id, params),
+      await this.commentService.getComments(
+        id,
+        false,
+        CaseCommentSourceEnum.API,
+      ),
     )
   }
 
@@ -453,7 +472,11 @@ export class CaseController {
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
   ): Promise<GetCaseCommentResponse> {
     return ResultWrapper.unwrap(
-      await this.commentService.getComment(id, commentId),
+      await this.commentService.getComment(
+        id,
+        commentId,
+        CaseCommentSourceEnum.API,
+      ),
     )
   }
 
@@ -472,7 +495,7 @@ export class CaseController {
     ResultWrapper.unwrap(await this.commentService.createComment(id, body))
 
     //If it's a message, update the application status to "waiting for answers"
-    if (body.type === CaseCommentTypeEnum.Message) {
+    if (body.type === CaseCommentTypeTitleEnum.Message) {
       ResultWrapper.unwrap(
         await this.caseService.updateCaseCommunicationStatusByStatus(
           id,

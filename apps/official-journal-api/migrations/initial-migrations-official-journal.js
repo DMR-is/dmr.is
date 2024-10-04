@@ -7,6 +7,32 @@ module.exports = {
     BEGIN;
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+    CREATE TABLE user_role (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE admin_user (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      national_id VARCHAR NOT NULL,
+      first_name VARCHAR NOT NULL,
+      last_name VARCHAR NOT NULL,
+      display_name VARCHAR NOT NULL,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE admin_user_role (
+      user_role_id UUID NOT NULL,
+      admin_user_id UUID NOT NULL,
+      PRIMARY KEY (user_role_id, admin_user_id),
+      CONSTRAINT fk_admin_user_role_user_role_id FOREIGN KEY (user_role_id) REFERENCES user_role (id),
+      CONSTRAINT fk_admin_user_role_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
+    );
+
     CREATE TABLE advert_department (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL UNIQUE,
@@ -135,41 +161,10 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE case_comment_title (
-      id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      title VARCHAR NOT NULL,
-      slug VARCHAR NOT NULL,
-      PRIMARY KEY (id)
-    );
-
     CREATE TABLE case_comment_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
-      PRIMARY KEY (id)
-    );
-
-    CREATE TABLE case_comment_task (
-      id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      from_id UUID,
-      to_id UUID,
-      title_id UUID NOT NULL,
-      comment TEXT,
-      CONSTRAINT fk_case_comment_title_id FOREIGN KEY (title_id) REFERENCES case_comment_title (id),
-      PRIMARY KEY (id)
-    );
-
-    CREATE TABLE case_comment (
-      id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      internal BOOLEAN DEFAULT TRUE,
-      type_id UUID NOT NULL,
-      status_id UUID NOT NULL,
-      task_id UUID NOT NULL,
-      state JSONB,
-      CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id),
-      CONSTRAINT fk_case_comment_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
-      CONSTRAINT fk_case_comment_task_id FOREIGN KEY (task_id) REFERENCES case_comment_task (id),
       PRIMARY KEY (id)
     );
 
@@ -210,6 +205,24 @@ module.exports = {
       CONSTRAINT fk_case_case_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       CONSTRAINT fk_case_case_advert_type_id FOREIGN KEY (advert_type_id) REFERENCES advert_type (id),
       PRIMARY KEY (id)
+    );
+
+    CREATE TABLE case_comment (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      case_id UUID NOT NULL,
+      case_status_id UUID NOT NULL,
+      type_id UUID NOT NULL,
+      source VARCHAR NOT NULL,
+      internal BOOLEAN DEFAULT TRUE,
+      application_state JSONB,
+      creator TEXT,
+      receiver TEXT,
+      comment TEXT,
+      PRIMARY KEY (id),
+      CONSTRAINT fk_case_comment_case_id FOREIGN KEY (case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_case_comment_case_status_id FOREIGN KEY (case_status_id) REFERENCES case_status (id),
+      CONSTRAINT fk_case_comment_type_id FOREIGN KEY (type_id) REFERENCES case_comment_type (id)
     );
 
     CREATE TABLE case_categories (

@@ -1,4 +1,3 @@
-import { logger } from '@dmr.is/logging'
 import { Sequelize } from 'sequelize-typescript'
 import { Transaction } from 'sequelize'
 
@@ -30,17 +29,11 @@ export function Transactional() {
       const transaction = await sequelize.transaction()
       try {
         const applyWithTransaction = originalMethod.bind(this)
-        logger.debug(
-          `Applying transaction to method: ${propertyKey} with args: ${args}`,
-        )
         const result = await applyWithTransaction(...args, transaction)
 
         await transaction.commit()
         return result
       } catch (error) {
-        logger.debug(
-          `Transaction for method: ${propertyKey} failed, rolling back`,
-        )
         await transaction.rollback()
         throw error
       }

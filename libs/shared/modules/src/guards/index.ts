@@ -1,1 +1,2 @@
-export * from './auth.guard'
+export * from './application-auth.guard'
+export * from './admin-auth.guard'

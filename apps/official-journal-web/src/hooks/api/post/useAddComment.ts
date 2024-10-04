@@ -4,7 +4,7 @@ export type AddCommentTriggerArgs = {
   caseId: string
   internal: boolean
   comment: string
-  initator: string
+  creator: string
   receiver?: string
 }
 

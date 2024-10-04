@@ -57,7 +57,7 @@ export const CasePublishingList = ({
       refreshInterval: 0,
     },
     params: {
-      status: CaseStatusTitleEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbúið,
       id: ids,
     },
   })

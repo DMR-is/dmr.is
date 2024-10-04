@@ -3,10 +3,10 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { REYKJAVIKUR_BORG } from '@dmr.is/mocks'
 import {
   Application,
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CaseTagEnum,
@@ -217,7 +217,7 @@ export class CaseCreateService implements ICaseCreateService {
 
     const requestedDate = application.answers.advert.requestedDate
     const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedParty = { id: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' } // dómsmálaráðuneytið
+    const involvedPartyId = application.answers.advert.involvedPartyId
     const message = application.answers.advert?.message ?? null
 
     return ResultWrapper.ok({
@@ -227,7 +227,7 @@ export class CaseCreateService implements ICaseCreateService {
         statusId: caseStatus.id,
         tagId: caseTag.id,
         communicationStatusId: caseCommunicationStatus.id,
-        involvedPartyId: involvedParty.id,
+        involvedPartyId: involvedPartyId,
         departmentId: department.id,
         advertTypeId: type.id,
         year: now.getFullYear(),
@@ -342,11 +342,18 @@ export class CaseCreateService implements ICaseCreateService {
 
     const caseId = createCaseResult.result.value.id
 
+    const institution = (
+      await this.utilityService.institutionLookup(
+        application.answers.advert.involvedPartyId,
+      )
+    ).unwrap()
+
     const commentResults = await this.commentService.createComment(caseId, {
       internal: true,
-      type: CaseCommentTypeEnum.Submit,
+      type: CaseCommentTypeTitleEnum.Submit,
+      creator: institution.title,
+      source: CaseCommentSourceEnum.Application,
       comment: null,
-      initiator: REYKJAVIKUR_BORG.id, // TODO: REPLACE WITH ACTUAL USER
       receiver: null,
       storeState: true,
     })

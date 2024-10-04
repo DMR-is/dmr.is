@@ -11,6 +11,7 @@ import {
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
   AdvertStatusModel,
   AdvertTypeModel,
 } from '../journal/models'
@@ -79,6 +80,10 @@ export interface IUtilityService {
     departmentId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<number>>
+
+  institutionLookup(
+    institutionId: string,
+  ): Promise<ResultWrapper<AdvertInvolvedPartyModel>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

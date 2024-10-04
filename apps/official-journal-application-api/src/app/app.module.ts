@@ -3,6 +3,7 @@ import {
   ApplicationUserModule,
   HealthModule,
   PdfModule,
+  UtilityModule,
 } from '@dmr.is/modules'
 import {
   MiddlewareConsumer,
@@ -24,6 +25,7 @@ import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
     HealthModule,
     PdfModule,
     ApplicationUserModule,
+    UtilityModule,
   ],
   controllers: [ApplicationController],
   providers: [],
@@ -32,13 +34,13 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LogRequestMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL })
-      .apply(WithAuthMiddleware)
-      .exclude({
-        method: RequestMethod.ALL,
-        path: '/health',
-        version: '1',
-      })
-      .forRoutes({ path: '*', method: RequestMethod.ALL })
+      .forRoutes({ path: '/**', method: RequestMethod.ALL })
+    // .apply(WithAuthMiddleware)
+    // .exclude({
+    //   method: RequestMethod.ALL,
+    //   path: '/health',
+    //   version: '1',
+    // })
+    // .forRoutes({ path: '/**', method: RequestMethod.ALL })
   }
 }

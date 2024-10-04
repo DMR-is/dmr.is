@@ -1,10 +1,6 @@
 import { CaseStatusModel } from '../../case/models'
-import {
-  CaseCommentModel,
-  CaseCommentTaskModel,
-  CaseCommentTitleModel,
-  CaseCommentTypeModel,
-} from '../models'
+import { CASE_RELATIONS } from '../../case/relations'
+import { CaseCommentModel, CaseCommentTypeModel } from '../models'
 
 /**
  * Get case comments relations
@@ -19,14 +15,10 @@ export const getCaseCommentsRelations = (internal?: boolean) => {
     {
       model: CaseCommentModel,
       where: whereParams,
-      include: [
-        CaseCommentTypeModel,
-        CaseStatusModel,
-        {
-          model: CaseCommentTaskModel,
-          include: [CaseCommentTitleModel],
-        },
-      ],
+      include: [CaseCommentTypeModel, CaseStatusModel],
+    },
+    {
+      ...CASE_RELATIONS,
     },
   ]
 }

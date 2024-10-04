@@ -1,16 +1,15 @@
 import {
   BelongsTo,
-  BelongsToMany,
   Column,
   DataType,
+  ForeignKey,
   Model,
   Table,
 } from 'sequelize-typescript'
+import { CaseCommentSourceEnum } from '@dmr.is/shared/dto'
 
 import { CaseModel, CaseStatusModel } from '../../case/models'
-import { CaseCommentTaskModel } from './case-comment-task.model'
 import { CaseCommentTypeModel } from './case-comment-type.model'
-import { CaseCommentsModel } from './case-comments.model'
 
 @Table({ tableName: 'case_comment', timestamps: false })
 export class CaseCommentModel extends Model {
@@ -23,11 +22,18 @@ export class CaseCommentModel extends Model {
   override id!: string
 
   @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  @ForeignKey(() => CaseModel)
+  caseId!: string
+
+  @Column({
     type: DataType.STRING,
     allowNull: false,
     field: 'created_at',
   })
-  override createdAt!: string
+  created!: string
 
   @Column({
     type: DataType.BOOLEAN,
@@ -38,14 +44,43 @@ export class CaseCommentModel extends Model {
   @Column({
     type: DataType.JSONB,
     allowNull: true,
+    field: 'application_state',
   })
-  state!: string | null
+  applicationState!: string | null
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'source',
+  })
+  source!: CaseCommentSourceEnum
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'creator',
+  })
+  creator!: string | null
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'receiver',
+  })
+  receiver!: string | null
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  comment!: string | null
 
   @Column({
     type: DataType.UUID,
     allowNull: false,
     field: 'type_id',
   })
+  @ForeignKey(() => CaseCommentTypeModel)
   typeId!: string
 
   @BelongsTo(() => CaseCommentTypeModel, 'type_id')
@@ -54,25 +89,14 @@ export class CaseCommentModel extends Model {
   @Column({
     type: DataType.UUID,
     allowNull: false,
-    field: 'status_id',
+    field: 'case_status_id',
   })
-  statusId!: string
+  @ForeignKey(() => CaseStatusModel)
+  caseStatusId!: string
 
-  @BelongsTo(() => CaseStatusModel, 'status_id')
-  status!: CaseStatusModel
+  @BelongsTo(() => CaseStatusModel, 'case_status_id')
+  caseStatus!: CaseStatusModel
 
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'task_id',
-  })
-  taskId!: string
-
-  @BelongsTo(() => CaseCommentTaskModel, 'task_id')
-  task!: CaseCommentTaskModel
-
-  @BelongsToMany(() => CaseModel, {
-    through: () => CaseCommentsModel,
-  })
-  cases!: CaseModel[]
+  @BelongsTo(() => CaseModel, 'caseId')
+  case!: CaseModel
 }

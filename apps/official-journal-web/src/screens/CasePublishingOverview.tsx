@@ -51,7 +51,7 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
     const revalidate = `${
       APIRotues.GetCases
     }?department=${selectedTab}&status=${encodeURIComponent(
-      CaseStatusTitleEnum.Tilbi,
+      CaseStatusTitleEnum.Tilbúið,
     )}`
     mutate(revalidate)
   }
@@ -165,7 +165,7 @@ CasePublishingOverview.getProps = async ({ query }) => {
 
     const { cases, paging } = await dmrClient.getCases({
       department,
-      status: CaseStatusTitleEnum.Tilbi,
+      status: CaseStatusTitleEnum.Tilbúið,
     })
 
     return {

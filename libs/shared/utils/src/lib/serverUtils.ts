@@ -16,8 +16,8 @@ import { logger } from '@dmr.is/logging'
 import {
   ApplicationCommitteeSignature,
   ApplicationSignature,
-  CaseCommentTitleEnum,
-  CaseCommentTypeEnum,
+  CaseCommentDirectionEnum,
+  CaseCommentSourceEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -66,25 +66,6 @@ export function slicePagedData<T>(
   pageSize = DEFAULT_PAGE_SIZE,
 ): T[] {
   return data.slice((page - 1) * pageSize, page * pageSize)
-}
-
-export const mapCommentTypeToTitle = (
-  val: CaseCommentTypeEnum,
-): CaseCommentTitleEnum => {
-  switch (val) {
-    case CaseCommentTypeEnum.Comment:
-      return CaseCommentTitleEnum.Comment
-    case CaseCommentTypeEnum.Message:
-      return CaseCommentTitleEnum.Message
-    case CaseCommentTypeEnum.Assign:
-      return CaseCommentTitleEnum.Assign
-    case CaseCommentTypeEnum.AssignSelf:
-      return CaseCommentTitleEnum.AssignSelf
-    case CaseCommentTypeEnum.Submit:
-      return CaseCommentTitleEnum.Submit
-    case CaseCommentTypeEnum.Update:
-      return CaseCommentTitleEnum.UpdateStatus
-  }
 }
 
 export const FILE_VALIDATORS = [
@@ -362,4 +343,41 @@ export const withTryCatch = <T>(cb: () => T, message: string): T => {
       error,
     }).unwrap()
   }
+}
+
+export const convertDateToDaysAgo = (dateIso: string): string => {
+  try {
+    const date = new Date(dateIso)
+
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diff / (1000 * 3600 * 24))
+
+    if (diffDays === 0) {
+      return 'Í dag'
+    }
+
+    if (diffDays === 1) {
+      return 'í gær'
+    }
+
+    return `f. ${diffDays} dögum`
+  } catch (error) {
+    logger.error(`Error converting date to days ago`, {
+      category: 'server',
+      method: 'convertDateToDaysAgo',
+      error: error,
+    })
+
+    return 'Ekki vitað'
+  }
+}
+
+export const mapSourceToDirection = (
+  source: CaseCommentSourceEnum,
+  forSource: CaseCommentSourceEnum,
+): CaseCommentDirectionEnum => {
+  return source === forSource
+    ? CaseCommentDirectionEnum.Sent
+    : CaseCommentDirectionEnum.Received
 }

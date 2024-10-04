@@ -4,7 +4,8 @@ import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CaseCommentTypeEnum,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UpdateCaseBody,
@@ -122,11 +123,13 @@ export class CaseUpdateService implements ICaseUpdateService {
       {
         internal: true,
         type: caseRes.assignedUserId
-          ? CaseCommentTypeEnum.Assign
-          : CaseCommentTypeEnum.AssignSelf,
+          ? CaseCommentTypeTitleEnum.Assign
+          : CaseCommentTypeTitleEnum.AssignSelf,
+        source: CaseCommentSourceEnum.API,
+        storeState: false,
         comment: null,
-        initiator: caseRes.assignedUserId,
-        receiver: employeeLookup.id, // TODO: REPLACE WITH ACTUAL USER
+        creator: 'Ármann Árni',
+        receiver: 'Pálina',
       },
       transaction,
     )
@@ -232,11 +235,23 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateCaseStatusBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    const caseLookup = (await this.utilityService.caseLookup(id)).unwrap()
-
     const status = (
       await this.utilityService.caseStatusLookup(body.status)
     ).unwrap()
+
+    await this.commentService.createComment(
+      id,
+      {
+        internal: true,
+        type: CaseCommentTypeTitleEnum.UpdateStatus,
+        comment: null,
+        source: CaseCommentSourceEnum.API,
+        storeState: false,
+        creator: 'Ármann Árni - (harðkóðað í bili)',
+        receiver: status.title,
+      },
+      transaction,
+    )
 
     await this.caseModel.update(
       {
@@ -248,18 +263,6 @@ export class CaseUpdateService implements ICaseUpdateService {
         },
         transaction,
       },
-    )
-
-    await this.commentService.createComment(
-      id,
-      {
-        internal: true,
-        type: CaseCommentTypeEnum.Update,
-        comment: null,
-        initiator: caseLookup.assignedUserId,
-        receiver: null,
-      },
-      transaction,
     )
 
     return ResultWrapper.ok()

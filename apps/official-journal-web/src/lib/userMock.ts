@@ -27,3 +27,5 @@ export const INACTIVE: User = {
   lastName: 'Jónsson',
   active: false,
 }
+
+export const ALL_USERS: User[] = [ARMANN, REYKJAVIKUR_BORG, PALINA, INACTIVE]

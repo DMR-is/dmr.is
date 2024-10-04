@@ -1,6 +1,6 @@
-import { CurrentUser, LogMethod, Route } from '@dmr.is/decorators'
+import { CurrentUser, LogMethod, Route, WithCase } from '@dmr.is/decorators'
 import {
-  AuthGuard,
+  ApplicationAuthGaurd,
   IApplicationService,
   IApplicationUserService,
 } from '@dmr.is/modules'
@@ -77,6 +77,8 @@ export class ApplicationController {
    * @param applicationId The ID of the application.
    * @returns A promise that resolves to the price of the application.
    */
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/price',
     operationId: 'getPrice',
@@ -96,6 +98,8 @@ export class ApplicationController {
    * @param id The ID of the application.
    * @returns A promise that resolves to the application.
    */
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id',
     operationId: 'getApplication',
@@ -115,6 +119,8 @@ export class ApplicationController {
    * @param applicationId The ID of the application.
    * @returns A promise that resolves when the application is posted.
    */
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(false)
   @Route({
     method: 'post',
     path: ':id/post',
@@ -134,7 +140,8 @@ export class ApplicationController {
    * @param applicationId The ID of the application.
    * @returns A promise that resolves to the comments of the application.
    */
-  @UseGuards(AuthGuard)
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/comments',
     operationId: 'getComments',
@@ -156,6 +163,8 @@ export class ApplicationController {
    * @param commentBody The body of the comment.
    * @returns A promise that resolves when the comment is posted.
    */
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     method: 'post',
     path: ':id/comments',
@@ -166,9 +175,14 @@ export class ApplicationController {
   async postComment(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Body() commentBody: PostApplicationComment,
+    @CurrentUser() user: ApplicationUser,
   ): Promise<void> {
     ResultWrapper.unwrap(
-      await this.applicationService.postComment(applicationId, commentBody),
+      await this.applicationService.postComment(
+        applicationId,
+        commentBody,
+        user,
+      ),
     )
   }
 
@@ -235,6 +249,8 @@ export class ApplicationController {
     )
   }
 
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/presigned-url/:type',
     method: 'post',
@@ -259,6 +275,8 @@ export class ApplicationController {
     )
   }
 
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/attachments/:type',
     method: 'post',
@@ -284,6 +302,8 @@ export class ApplicationController {
     )
   }
 
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/attachments/:type',
     params: [
@@ -311,6 +331,8 @@ export class ApplicationController {
    * @param applicationId id of the application
    * @param key location of the attachment in s3
    */
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/attachments/',
     method: 'delete',
@@ -330,7 +352,8 @@ export class ApplicationController {
     )
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
   @Route({
     path: ':id/involved-parties',
     operationId: 'getInvolvedParties',

@@ -9,7 +9,9 @@ import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Application,
-  CaseCommentTypeEnum,
+  ApplicationUser,
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
@@ -319,9 +321,10 @@ export class ApplicationService implements IApplicationService {
           caseLookup.id,
           {
             internal: true,
-            type: CaseCommentTypeEnum.Submit,
+            type: CaseCommentTypeTitleEnum.Submit,
+            source: CaseCommentSourceEnum.Application,
+            creator: caseLookup.involvedParty.title,
             comment: null,
-            initiator: caseLookup.involvedPartyId,
             receiver: null,
           },
           transaction,
@@ -357,9 +360,11 @@ export class ApplicationService implements IApplicationService {
     ).unwrap()
 
     const commentsResult = (
-      await this.commentService.getComments(caseResponse.id, {
-        internal: false,
-      })
+      await this.commentService.getComments(
+        caseResponse.id,
+        false,
+        CaseCommentSourceEnum.Application,
+      )
     ).unwrap()
 
     return ResultWrapper.ok({
@@ -377,22 +382,28 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
+    applicationUser: ApplicationUser,
   ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
-    const involvedPartyId = caseLookup.involvedPartyId
-      ? caseLookup.involvedPartyId
-      : 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f'
+    const institution = applicationUser.involvedParties.find(
+      (party) => party.id === caseLookup.involvedPartyId,
+    )
+
+    const creator = `${applicationUser.firstName} ${applicationUser.lastName}${
+      institution ? ` (${institution.title})` : ''
+    }`
 
     ResultWrapper.unwrap(
       await this.commentService.createComment(caseLookup.id, {
+        creator: creator,
+        source: CaseCommentSourceEnum.Application,
+        type: CaseCommentTypeTitleEnum.Message,
         comment: commentBody.comment,
-        initiator: involvedPartyId, // TODO: REPLACE WITH ACTUAL USER
         receiver: null,
         internal: false,
-        type: CaseCommentTypeEnum.Comment,
         storeState: true,
       }),
     )

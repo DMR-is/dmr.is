@@ -213,7 +213,7 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "id",
+            "name": "applicationId",
             "description": "Application ID",
             "required": false,
             "in": "query",
@@ -748,7 +748,7 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "id",
+            "name": "applicationId",
             "description": "Application ID",
             "required": false,
             "in": "query",
@@ -988,7 +988,7 @@
     },
     "/api/v1/signatures/involved-party/{id}": {
       "get": {
-        "operationId": "SignatureController_",
+        "operationId": "getSignaturesForInvolvedParty",
         "parameters": [
           {
             "name": "id",
@@ -1034,7 +1034,7 @@
     },
     "/api/v1/signatures/case/{id}": {
       "get": {
-        "operationId": "SignatureController_",
+        "operationId": "getSignaturesByCaseId",
         "parameters": [
           {
             "name": "id",
@@ -1080,7 +1080,7 @@
     },
     "/api/v1/signatures/advert/{id}": {
       "get": {
-        "operationId": "SignatureController_",
+        "operationId": "getSignaturesByAdvertId",
         "parameters": [
           {
             "name": "id",
@@ -1126,7 +1126,7 @@
     },
     "/api/v1/signatures/{id}": {
       "get": {
-        "operationId": "SignatureController_",
+        "operationId": "getSignatureById",
         "parameters": [
           {
             "name": "id",
@@ -1149,7 +1149,7 @@
         }
       },
       "delete": {
-        "operationId": "SignatureController_",
+        "operationId": "deleteSignature",
         "parameters": [
           {
             "name": "id",
@@ -1161,7 +1161,7 @@
         "responses": { "204": { "description": "" } }
       },
       "put": {
-        "operationId": "SignatureController_",
+        "operationId": "updateSignature",
         "parameters": [
           {
             "name": "id",
@@ -1183,7 +1183,7 @@
     },
     "/api/v1/signatures": {
       "get": {
-        "operationId": "SignatureController_",
+        "operationId": "getSignatures",
         "parameters": [
           {
             "name": "search",
@@ -1208,6 +1208,13 @@
           }
         ],
         "responses": { "200": { "description": "" } }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "parameters": [],
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {
@@ -1659,84 +1666,20 @@
         "required": ["id", "email", "phone"]
       },
       "CaseCommentType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The title of the case comment type"
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "submit",
-              "assign",
-              "assign-self",
-              "update",
-              "comment",
-              "message"
-            ],
-            "description": "The title of the case comment type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the case comment type"
-          }
-        },
-        "required": ["id", "title", "slug"]
+        "type": "string",
+        "enum": [
+          "Innsent af:",
+          "færir mál á",
+          "merkir sér málið.",
+          "færir mál í stöðuna:",
+          "gerir athugasemd.",
+          "skráir skilaboð"
+        ]
       },
-      "CaseCommentTitle": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The title of the case comment type"
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Innsent af:",
-              "færir mál á",
-              "merkir sér málið.",
-              "færir mál í stöðuna:",
-              "gerir athugasemd.",
-              "skráir skilaboð"
-            ],
-            "description": "The title of the case comment type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the case comment type"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "CaseCommentTask": {
-        "type": "object",
-        "properties": {
-          "from": {
-            "type": "string",
-            "description": "From who or what initied the task, used by client to show who inited the task.",
-            "example": "Ármann",
-            "nullable": true
-          },
-          "to": {
-            "type": "string",
-            "description": "To whom or what the task is assigned to.",
-            "example": "Pálina J",
-            "nullable": true
-          },
-          "title": {
-            "description": "Title for the task action",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTitle" }]
-          },
-          "comment": {
-            "type": "string",
-            "description": "The comment itself",
-            "example": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?",
-            "nullable": true
-          }
-        },
-        "required": ["from", "to", "title", "comment"]
+      "CaseCommentDirection": {
+        "type": "string",
+        "description": "Was the comment sent or received.",
+        "enum": ["sent", "received"]
       },
       "CaseComment": {
         "type": "object",
@@ -1746,47 +1689,53 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
             "description": "Id of the case comment."
           },
-          "createdAt": {
+          "title": {
+            "example": "f. 2 dögum",
+            "$ref": "#/components/schemas/CaseCommentType"
+          },
+          "caseStatus": {
             "type": "string",
-            "description": "Date and time of the comment, ISO 8601 format, UTC time format.",
-            "example": "2024-01-01T09:00:00Z"
+            "enum": [
+              "Innsent",
+              "Grunnvinnsla",
+              "Yfirlestur",
+              "Tilbúið",
+              "Útgefið",
+              "Tekið úr birtingu",
+              "Birtingu hafnað"
+            ],
+            "description": "Case status of when the comment was created."
           },
-          "internal": {
-            "type": "boolean",
-            "description": "Is the comment internal or external.",
-            "example": false
-          },
-          "type": {
-            "description": "Type of the case task.",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentType" }]
-          },
-          "status": {
-            "description": "Status of case when comment was added.",
-            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
-          },
-          "state": {
+          "age": {
             "type": "string",
-            "description": "JSON state of the application"
+            "example": "f. 2 dögum",
+            "description": "String representation of the age of the case comment."
           },
-          "task": {
-            "example": {
-              "from": "Ármann",
-              "to": null,
-              "title": "gerir athugasemd",
-              "comment": "Pálína, getur\n      þú tekið við og staðfest að upplýsingarnar séu réttar?"
-            },
-            "description": "The task itself",
-            "allOf": [{ "$ref": "#/components/schemas/CaseCommentTask" }]
-          }
+          "ageIso": {
+            "type": "string",
+            "description": "ISO date format representation of the age of the case comment."
+          },
+          "direction": { "$ref": "#/components/schemas/CaseCommentDirection" },
+          "creator": {
+            "type": "string",
+            "description": "Who created the comment "
+          },
+          "receiver": {
+            "type": "string",
+            "description": "Who received the comment"
+          },
+          "comment": { "type": "string", "description": "The comment itself" }
         },
         "required": [
           "id",
-          "createdAt",
-          "internal",
-          "type",
-          "status",
-          "state",
-          "task"
+          "title",
+          "caseStatus",
+          "age",
+          "ageIso",
+          "direction",
+          "creator",
+          "receiver",
+          "comment"
         ]
       },
       "SignatureType": {
@@ -2323,6 +2272,7 @@
         },
         "required": ["comment"]
       },
+      "CaseCommentSource": { "type": "string", "enum": ["API", "Application"] },
       "PostCaseCommentBody": {
         "type": "object",
         "properties": {
@@ -2330,36 +2280,20 @@
             "type": "boolean",
             "description": "Is the comment internal"
           },
-          "type": {
-            "type": "string",
-            "enum": [
-              "submit",
-              "assign",
-              "assign-self",
-              "update",
-              "comment",
-              "message"
-            ],
-            "description": "Type of the comment"
-          },
+          "type": { "$ref": "#/components/schemas/CaseCommentType" },
+          "source": { "$ref": "#/components/schemas/CaseCommentSource" },
           "comment": {
             "type": "string",
             "description": "The case comment itself"
           },
-          "initiator": {
-            "type": "string",
-            "description": "Id of the user who created the comment"
-          },
-          "receiver": {
-            "type": "string",
-            "description": "To whom or what the task is assigned to."
-          },
+          "creator": { "type": "string" },
+          "receiver": { "type": "string" },
           "storeState": {
             "type": "boolean",
             "description": "Store the state of the application"
           }
         },
-        "required": ["internal", "type", "comment", "initiator"]
+        "required": ["internal", "type", "source", "comment", "creator"]
       },
       "GetSignaturesResponse": {
         "type": "object",

@@ -18,7 +18,7 @@ export const CaseTag = ({ tag }: Props) => {
 
   switch (tag) {
     case CaseStatusTitleEnum.Innsent:
-    case CaseTagTitleEnum.EkkiHafi:
+    case CaseTagTitleEnum.EkkiHafið:
       return (
         <Tag disabled variant="blue">
           {tag}
@@ -26,19 +26,19 @@ export const CaseTag = ({ tag }: Props) => {
       )
     case CaseStatusTitleEnum.Grunnvinnsla:
     case CaseStatusTitleEnum.Yfirlestur:
-    case CaseTagTitleEnum.Yfirlestri:
+    case CaseTagTitleEnum.ÍYfirlestri:
       return (
         <Tag disabled variant="darkerBlue">
           {tag}
         </Tag>
       )
-    case CaseStatusTitleEnum.Tilbi:
+    case CaseStatusTitleEnum.Tilbúið:
       return (
         <Tag disabled variant="mint">
           {tag}
         </Tag>
       )
-    case CaseTagTitleEnum.ArfSkoun:
+    case CaseTagTitleEnum.ÞArfSkoðun:
       return (
         <Tag disabled variant="rose">
           {tag}

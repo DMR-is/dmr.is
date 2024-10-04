@@ -27,6 +27,14 @@ export class ApplicationAdvert {
   @ApiProperty({
     type: String,
     example: 'a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0',
+    description: 'Id of the involved party',
+  })
+  @IsUUID()
+  involvedPartyId!: string
+
+  @ApiProperty({
+    type: String,
+    example: 'a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0',
     description: 'Id of the selected department',
   })
   @IsUUID()

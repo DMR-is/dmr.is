@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseCommentTypeEnum } from './case-comment-constants'
+import {
+  CaseCommentSourceEnum,
+  CaseCommentTypeTitleEnum,
+} from './case-comment-constants'
 
 /**
  * Represents the body of a POST request for creating a case comment.
@@ -16,15 +19,19 @@ export class PostCaseCommentBody {
   })
   internal!: boolean
 
-  /**
-   * The type of the comment.
-   */
   @ApiProperty({
-    enum: CaseCommentTypeEnum,
-    description: 'Type of the comment',
+    enum: CaseCommentTypeTitleEnum,
+    enumName: 'CaseCommentType',
     required: true,
   })
-  type!: CaseCommentTypeEnum
+  type!: CaseCommentTypeTitleEnum
+
+  @ApiProperty({
+    enum: CaseCommentSourceEnum,
+    enumName: 'CaseCommentSource',
+    required: true,
+  })
+  source!: CaseCommentSourceEnum
 
   /**
    * The content of the comment.
@@ -37,21 +44,19 @@ export class PostCaseCommentBody {
   comment!: string | null
 
   /**
-   * The ID of the user or instituion who created the comment.
+   * The creator of the comment
    */
   @ApiProperty({
     type: String,
-    description: 'Id of the user who created the comment',
     required: true,
   })
-  initiator!: string | null
+  creator!: string | null
 
   /**
-   * The recipient user or institution of the task.
+   * The receiver of the comment
    */
   @ApiProperty({
     type: String,
-    description: 'To whom or what the task is assigned to.',
     required: false,
   })
   receiver!: string | null

@@ -2,15 +2,14 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 
+import type { IconMapIcon } from '@island.is/island-ui/core'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
   Case,
   CaseComment,
-  CaseCommentTask,
-  CaseCommentTitleTitleEnum,
-  CaseCommentTypeTitleEnum,
-  CaseStatus,
+  CaseCommentCaseStatusEnum,
+  CaseCommentType,
   CaseStatusTitleEnum,
   CaseTagTitleEnum,
   Signature,
@@ -58,10 +57,10 @@ export const mapTabIdToCaseStatus = (param?: string) => {
       return CaseStatusTitleEnum.Grunnvinnsla
     case CaseStatusTitleEnum.Yfirlestur:
       return CaseStatusTitleEnum.Yfirlestur
-    case CaseStatusTitleEnum.Tilbi:
-      return CaseStatusTitleEnum.Tilbi
+    case CaseStatusTitleEnum.Tilbúið:
+      return CaseStatusTitleEnum.Tilbúið
     default:
-      return CaseStatusTitleEnum.Tilbi
+      return CaseStatusTitleEnum.Tilbúið
   }
 }
 
@@ -78,10 +77,10 @@ const caseStatusToIndex: Record<CaseStatusTitleEnum, number> = {
   [CaseStatusTitleEnum.Innsent]: 0,
   [CaseStatusTitleEnum.Grunnvinnsla]: 1,
   [CaseStatusTitleEnum.Yfirlestur]: 2,
-  [CaseStatusTitleEnum.Tilbi]: 3,
-  [CaseStatusTitleEnum.Tgefi]: 4,
-  [CaseStatusTitleEnum.TekiRBirtingu]: 5,
-  [CaseStatusTitleEnum.BirtinguHafna]: 6,
+  [CaseStatusTitleEnum.Tilbúið]: 3,
+  [CaseStatusTitleEnum.ÚTgefið]: 4,
+  [CaseStatusTitleEnum.TekiðÚrBirtingu]: 5,
+  [CaseStatusTitleEnum.BirtinguHafnað]: 6,
 }
 
 export const generateCaseLink = (
@@ -91,9 +90,9 @@ export const generateCaseLink = (
   let route = Routes.OverviewDetail
 
   if (
-    status === CaseStatusTitleEnum.Tgefi ||
-    status === CaseStatusTitleEnum.BirtinguHafna ||
-    status === CaseStatusTitleEnum.TekiRBirtingu
+    status === CaseStatusTitleEnum.ÚTgefið ||
+    status === CaseStatusTitleEnum.BirtinguHafnað ||
+    status === CaseStatusTitleEnum.TekiðÚrBirtingu
   ) {
     route = Routes.OverviewDetail
   }
@@ -107,7 +106,7 @@ export const generateCaseLink = (
   if (status === CaseStatusTitleEnum.Yfirlestur) {
     route = Routes.ProcessingDetailInReview
   }
-  if (status === CaseStatusTitleEnum.Tilbi) {
+  if (status === CaseStatusTitleEnum.Tilbúið) {
     route = Routes.ProcessingDetailReady
   }
 
@@ -131,59 +130,56 @@ type StepsType = {
   isComplete: boolean
 }
 
-export const commentTaskToNode = (
-  task: CaseCommentTask,
-  status: CaseStatusTitleEnum,
-) => {
-  switch (task.title.title) {
-    case CaseCommentTitleTitleEnum.InnsentAf: {
+export const commentToNode = (comment: CaseComment) => {
+  switch (comment.title) {
+    case CaseCommentType.InnsentAf: {
       return (
         <>
-          {task.title.title} <strong>{task.from}</strong>
+          {comment.title} <strong>{comment.creator}</strong>
         </>
       )
     }
-    case CaseCommentTitleTitleEnum.MerkirSrMli: {
+    case CaseCommentType.MerkirSérMálið: {
       return (
         <>
-          <strong>{task.to}</strong> {task.title.title}
+          <strong>{comment.creator}</strong> {comment.title}
         </>
       )
     }
-    case CaseCommentTitleTitleEnum.FrirMl: {
+    case CaseCommentType.FærirMálÁ: {
       return (
         <>
-          <strong>{task.from ? task.from : 'Óþekktur notandi'}</strong>{' '}
-          {task.title.title} <strong>{task.to}</strong>
+          <strong>{comment.creator}</strong> {comment.title}{' '}
+          <strong>{comment.receiver}</strong>
         </>
       )
     }
-    case CaseCommentTitleTitleEnum.FrirMlStuna: {
+    case CaseCommentType.FærirMálÍStöðuna: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title.title}{' '}
-          <strong>{status}</strong>
+          <strong>{comment.creator}</strong> {comment.title}{' '}
+          <strong>{comment.receiver}</strong>
         </>
       )
     }
-    case CaseCommentTitleTitleEnum.GerirAthugasemd: {
+    case CaseCommentType.GerirAthugasemd: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title.title}
+          <strong>{comment.creator}</strong> {comment.title}
         </>
       )
     }
-    case CaseCommentTitleTitleEnum.SkrirSkilabo: {
+    case CaseCommentType.SkráirSkilaboð: {
       return (
         <>
-          <strong>{task.from}</strong> {task.title.title}
+          <strong>{comment.creator}</strong> {comment.title}
         </>
       )
     }
     default: {
       return (
         <>
-          <strong>{task.from ?? ''}</strong> {task.title.title ?? ''}
+          <strong>{comment.creator ?? ''}</strong> {comment.title ?? ''}
         </>
       )
     }
@@ -193,8 +189,9 @@ export const commentTaskToNode = (
 export const generateSteps = (activeCase: Case): StepsType[] => {
   const statusIndex = caseStatusToIndex[activeCase.status.title]
   const displayTypes = [
-    CaseCommentTypeTitleEnum.Submit,
-    CaseCommentTypeTitleEnum.Assign,
+    CaseCommentType.InnsentAf,
+    CaseCommentType.FærirMálÍStöðuna,
+    CaseCommentType.FærirMálÁ,
   ]
   return [
     {
@@ -205,10 +202,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.status.title === CaseStatusTitleEnum.Innsent &&
-            displayTypes.includes(c.type.title),
+            c.caseStatus === CaseCommentCaseStatusEnum.Innsent &&
+            displayTypes.includes(c.title),
         )
-        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
+        ?.map((c) => commentToNode(c)),
     },
     {
       step: 'grunnvinnsla',
@@ -218,10 +215,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.status.title === CaseStatusTitleEnum.Grunnvinnsla &&
-            displayTypes.includes(c.type.title),
+            c.caseStatus === CaseCommentCaseStatusEnum.Grunnvinnsla &&
+            displayTypes.includes(c.title),
         )
-        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
+        ?.map((c) => commentToNode(c)),
     },
     {
       step: 'yfirlestur',
@@ -231,10 +228,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.status.title === CaseStatusTitleEnum.Yfirlestur &&
-            displayTypes.includes(c.type.title),
+            c.caseStatus === CaseCommentCaseStatusEnum.Yfirlestur &&
+            displayTypes.includes(c.title),
         )
-        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
+        ?.map((c) => commentToNode(c)),
     },
     {
       step: 'tilbuid',
@@ -244,10 +241,10 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
       notes: activeCase.comments
         .filter(
           (c) =>
-            c.status.title === CaseStatusTitleEnum.Tilbi &&
-            displayTypes.includes(c.type.title),
+            c.caseStatus === CaseCommentCaseStatusEnum.Tilbúið &&
+            displayTypes.includes(c.title),
         )
-        ?.map(({ task, status }) => commentTaskToNode(task, status.title)),
+        ?.map((c) => commentToNode(c)),
     },
   ]
 }
@@ -297,4 +294,16 @@ export const getSignatureDate = (signatures: Signature[]) => {
   }
 
   return signatures[0].date
+}
+
+export const getCommentIcon = (comment: CaseComment): IconMapIcon => {
+  if (comment.title === CaseCommentType.GerirAthugasemd) {
+    return 'pencil'
+  }
+
+  if (comment.title === CaseCommentType.SkráirSkilaboð) {
+    return 'arrowBack'
+  }
+
+  return 'arrowForward'
 }

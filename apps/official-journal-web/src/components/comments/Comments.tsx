@@ -1,13 +1,12 @@
-import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 import { Fragment, useState } from 'react'
 
 import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
 
-import { Case, CaseCommentTypeTitleEnum } from '../../gen/fetch'
+import { Case, CaseCommentType } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { APIRotues } from '../../lib/constants'
-import { commentTaskToNode } from '../../lib/utils'
+import { commentToNode, getCommentIcon } from '../../lib/utils'
 import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
 import { messages } from './messages'
@@ -19,8 +18,6 @@ export const Comments = ({ activeCase }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const [expanded, setExpanded] = useState(activeCase.comments.length < 6)
-
-  const now = new Date()
 
   const { mutate: refetchCase, isLoading: isRefetchingCase } = useCase({
     caseId: activeCase.id,
@@ -44,12 +41,6 @@ export const Comments = ({ activeCase }: Props) => {
         <Text>Engar athugasemdir fundust fyrir þetta mál</Text>
       ) : (
         activeCase.comments.map((c, i) => {
-          const daysAgo = differenceInCalendarDays(now, new Date(c.createdAt))
-          const suffix =
-            String(daysAgo).slice(-1) === '1'
-              ? formatMessage(messages.comments.day)
-              : formatMessage(messages.comments.days)
-
           if (!expanded && i !== 0 && i < activeCase.comments.length - 4) {
             return null
           }
@@ -65,19 +56,15 @@ export const Comments = ({ activeCase }: Props) => {
                 borderColor="purple200"
               >
                 <Icon
-                  icon={
-                    c.type.title === CaseCommentTypeTitleEnum.Comment
-                      ? 'pencil'
-                      : 'arrowForward'
-                  }
+                  icon={getCommentIcon(c)}
                   color="purple400"
                   size="medium"
                   className={styles.icon}
                 />
 
                 <div className={styles.text}>
-                  <Text>{commentTaskToNode(c.task, c.status.title)}</Text>
-                  {c.task.comment ? <Text>{c.task.comment}</Text> : null}
+                  <Text>{commentToNode(c)}</Text>
+                  {c.comment ? <Text>{c.comment}</Text> : null}
                   <Button
                     loading={isLoading}
                     variant="text"
@@ -100,13 +87,7 @@ export const Comments = ({ activeCase }: Props) => {
                   </Button>
                 </div>
 
-                <Text whiteSpace="nowrap">
-                  {daysAgo === 0
-                    ? formatMessage(messages.comments.today)
-                    : daysAgo === 1
-                    ? formatMessage(messages.comments.yesterday)
-                    : 'f. ' + daysAgo + ' ' + suffix}
-                </Text>
+                <Text whiteSpace="nowrap">{c.age}</Text>
               </Box>
 
               {!expanded && i === 0 ? (

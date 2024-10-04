@@ -2,8 +2,6 @@ import { SequelizeConfigService } from '@dmr.is/db'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
-  AuthController,
-  AuthModule,
   HealthModule,
   SharedJournalModule,
   SignatureModule,

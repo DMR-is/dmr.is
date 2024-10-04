@@ -8,19 +8,16 @@ module.exports = {
   async up(queryInterface) {
     // eslint-disable-next-line no-console
     console.log(cwd())
-    const allSeed = await readFile('./seeders/sql/all.sql', 'utf8')
+    const allUserSeed = await readFile('./seeders/sql/all_user.sql', 'utf8')
+    const allAdvertSeed = await readFile('./seeders/sql/all_advert.sql', 'utf8')
     const allCaseSeed = await readFile('./seeders/sql/all_case.sql', 'utf8')
 
     const seed = `
       BEGIN;
 
-      ${allSeed}
-
-      COMMIT;
-
-      BEGIN;
-
+      ${allAdvertSeed}
       ${allCaseSeed}
+      ${allUserSeed}
 
       COMMIT;
       `
@@ -53,8 +50,6 @@ module.exports = {
         DELETE FROM case_tag;
         DELETE FROM advert_status;
         DELETE FROM case_comment;
-        DELETE FROM case_comment_task;
-        DELETE FROM case_comment_title;
         DELETE FROM case_comment_type;
         DELETE FROM case_channel;
         DELETE FROM case_status;
