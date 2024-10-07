@@ -19,6 +19,16 @@ export class GetPublishedCasesQuery {
   page!: number
 
   @ApiProperty({
+    type: String,
+    description: 'Search for advert title',
+    required: false,
+    default: '',
+  })
+  @Expose()
+  @Transform(({ value }) => (value ? value : ''))
+  search!: string
+
+  @ApiProperty({
     description: 'Page size',
     type: Number,
     required: false,

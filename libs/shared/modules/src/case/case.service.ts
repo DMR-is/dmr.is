@@ -521,6 +521,20 @@ export class CaseService implements ICaseService {
     department: string,
     params: GetPublishedCasesQuery,
   ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
+    const whereParams = {
+      publishedAt: {
+        [Op.ne]: null,
+      },
+    }
+
+    if (params.search.length) {
+      Object.assign(whereParams, {
+        advertTitle: {
+          [Op.like]: params.search,
+        },
+      })
+    }
+
     const counterResultsPromise = this.caseModel.findAll({
       attributes: [
         [Sequelize.literal(`"department"."slug"`), 'departmentSlug'],
@@ -535,11 +549,7 @@ export class CaseService implements ICaseService {
           as: `department`,
         },
       ],
-      where: {
-        publishedAt: {
-          [Op.ne]: null,
-        },
-      },
+      where: whereParams,
       group: [`"department"."slug"`, `"department"."id"`],
       replacements: {
         department,
@@ -548,6 +558,11 @@ export class CaseService implements ICaseService {
 
     const casesPromise = this.getCases({
       department: [department],
+      status: [
+        CaseStatusEnum.Published,
+        CaseStatusEnum.Rejected,
+        CaseStatusEnum.Unpublished,
+      ],
       page: params.page.toString(),
       pageSize: params.pageSize.toString(),
       published: 'true',
@@ -570,22 +585,29 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const totalItems = (
+    const totalCases = (
       counterResults as unknown as PublishedCaseCounterResults[]
-    ).reduce((r, current) => {
-      const key = current.departmentSlug.split('-')[0]
-      const value = parseInt(current.totalCases, 10)
+    ).reduce(
+      (r, current) => {
+        const key = current.departmentSlug.split('-')[0]
+        const value = parseInt(current.totalCases, 10)
 
-      return {
-        ...r,
-        [key]: value,
-      }
-    }, {} as GetPublishedCasesResponse['totalItems'])
+        return {
+          ...r,
+          [key]: value,
+        }
+      },
+      {
+        a: 0,
+        b: 0,
+        c: 0,
+      } as GetPublishedCasesResponse['totalCases'],
+    )
 
     return ResultWrapper.ok({
       cases: casesLookup.result.value.cases,
       paging: casesLookup.result.value.paging,
-      totalItems,
+      totalCases,
     })
   }
 

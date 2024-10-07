@@ -33,7 +33,7 @@ export class GetPublishedCasesResponse {
     description: 'Total items',
     type: PublishedCasesTotalItems,
   })
-  totalItems!: PublishedCasesTotalItems
+  totalCases!: PublishedCasesTotalItems
 
   @ApiProperty({
     description: 'Paging info',

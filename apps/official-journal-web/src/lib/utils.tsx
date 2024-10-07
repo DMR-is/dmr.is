@@ -307,3 +307,9 @@ export const getCommentIcon = (comment: CaseComment): IconMapIcon => {
 
   return 'arrowForward'
 }
+
+export const mapLetterToDepartmentSlug = (letter: string) =>
+  letter === 'a' ? 'a-deild' : letter === 'b' ? 'b-deild' : 'c-deild'
+
+export const mapDepartmentSlugToLetter = (slug: string) =>
+  slug === 'a-deild' ? 'a' : slug === 'b-deild' ? 'b' : 'c'

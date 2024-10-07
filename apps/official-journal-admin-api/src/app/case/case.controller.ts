@@ -430,7 +430,7 @@ export class CaseController {
 
   @Route({
     path: '/published/:department',
-    operationId: 'getCases',
+    operationId: 'getPublishedCases',
     summary: 'Get cases',
     responseType: GetPublishedCasesResponse,
     params: [{ name: 'department', type: 'string', required: true }],
