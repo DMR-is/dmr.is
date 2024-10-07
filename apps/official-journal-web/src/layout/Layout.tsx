@@ -1,6 +1,4 @@
 import Head from 'next/head'
-import { Session } from 'next-auth'
-import { SessionProvider } from 'next-auth/react'
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
@@ -15,25 +13,24 @@ import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
-import type { Screen } from '../lib/types'
 
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }
 
-type LayoutProps = {
+export type LayoutProps = {
   children?: React.ReactNode
   headerWhite?: boolean
   showFooter?: boolean
   bannerProps?: BannerProps
 }
 
-const Layout: Screen<LayoutProps> = ({
+export const Layout = ({
   children,
   headerWhite,
   showFooter = false,
   bannerProps = { showBanner: true },
-}) => {
+}: LayoutProps) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -173,57 +170,4 @@ const Layout: Screen<LayoutProps> = ({
       </SWRConfig>
     </IntlProvider>
   )
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-Layout.getProps = async ({ req, res, query }) => {
-  return {}
-}
-
-type LayoutWrapper<T> = Screen<{ layoutProps: LayoutProps; componentProps: T }>
-
-export const withMainLayout = <T,>(
-  Component: Screen<T>,
-  layoutConfig: Partial<LayoutProps> = {},
-): LayoutWrapper<T> => {
-  const WithMainLayout: LayoutWrapper<T> = ({
-    layoutProps,
-    componentProps,
-  }) => {
-    const props = componentProps as T & { session: Session }
-    return (
-      <SessionProvider session={props.session} refetchInterval={5 * 60}>
-        <Layout {...layoutProps}>
-          <Component {...props} />
-        </Layout>
-      </SessionProvider>
-    )
-  }
-
-  WithMainLayout.getProps = async (ctx) => {
-    // Configure default full-page caching.
-    // if (ctx.res) {
-    //   ctx.res.setHeader('Cache-Control', CACHE_CONTROL_HEADER)
-    // }
-
-    const getLayoutProps = Layout.getProps as Exclude<
-      typeof Layout.getProps,
-      undefined
-    >
-
-    const [layoutProps, componentProps] = await Promise.all([
-      getLayoutProps(ctx),
-      Component.getProps ? Component.getProps(ctx) : ({} as T),
-    ])
-
-    return {
-      layoutProps: {
-        ...layoutProps,
-        ...layoutConfig,
-      },
-      componentProps,
-    }
-  }
-
-  return WithMainLayout
 }
