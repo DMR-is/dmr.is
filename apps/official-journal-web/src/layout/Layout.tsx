@@ -19,10 +19,10 @@ type BannerProps = ComponentProps<typeof Banner> & {
 }
 
 export type LayoutProps = {
-  children?: React.ReactNode | null
-  headerWhite?: boolean | null
-  showFooter?: boolean | null
-  bannerProps?: BannerProps | null
+  children?: React.ReactNode
+  headerWhite?: boolean
+  showFooter?: boolean
+  bannerProps?: BannerProps
 }
 
 export const Layout = ({
@@ -84,9 +84,9 @@ export const Layout = ({
                     )
                   })}
                 </Head>
-                <Header headerWhite={headerWhite ?? undefined} />
+                <Header headerWhite={headerWhite} />
                 <Main>
-                  {bannerProps?.showBanner && (
+                  {bannerProps.showBanner && (
                     <Banner
                       title={bannerProps.title}
                       description={bannerProps.description}

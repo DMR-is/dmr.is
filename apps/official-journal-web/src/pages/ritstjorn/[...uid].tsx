@@ -42,8 +42,8 @@ import { CaseStep, caseSteps, generateSteps } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  thisCase: Case | null
-  step: CaseStep | null
+  thisCase: Case
+  step: CaseStep
 }
 
 export default function CaseSingle(
@@ -51,10 +51,6 @@ export default function CaseSingle(
 ) {
   const { thisCase, step } = data
   const { formatMessage } = useFormatMessage()
-
-  if (!thisCase || !step) {
-    return null
-  }
 
   const {
     data: caseData,

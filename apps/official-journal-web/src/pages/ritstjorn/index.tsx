@@ -27,14 +27,14 @@ import {
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  cases: Case[] | null
-  paging: Paging | null
+  cases: Case[]
+  paging: Paging
   totalItems: {
     submitted: number
     inProgress: number
     inReview: number
     ready: number
-  } | null
+  }
 }
 
 export default function CaseProccessingOverviewScreen(

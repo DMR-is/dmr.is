@@ -32,29 +32,28 @@ import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 
 type Props = {
-  session: Session | null
+  session: Session
   statisticsOverview: {
     general: GetStatisticsOverviewResponse | null
     personal: GetStatisticsOverviewResponse | null
     inactive: GetStatisticsOverviewResponse | null
     publishing: GetStatisticsOverviewResponse | null
-  } | null
+  }
   statisticsByDepartment: {
     a: GetStatisticsDepartmentResponse | null
     b: GetStatisticsDepartmentResponse | null
     c: GetStatisticsDepartmentResponse | null
-  } | null
+  }
 }
+
+const LOG_CATEGORY = 'dashboard'
 
 export default function Dashboard(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const { formatMessage } = useFormatMessage()
   const { statisticsOverview, statisticsByDepartment } = data
 
-  if (!statisticsOverview || !statisticsByDepartment) {
-    return null
-  }
+  const { formatMessage } = useFormatMessage()
 
   const ritstjornTabs: TabType[] = [
     {
@@ -248,11 +247,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       promise.catch(async (err) => {
         if (isResponse(err)) {
           const json = await err.json()
-          // eslint-disable-next-line no-console
-          console.error(`${json.error}: ${json.message}`, {
+          logger.error(`Error fetching data`, {
             statusCode: json.statusCode,
             message: json.message,
             error: json.error,
+            category: LOG_CATEGORY,
           })
         }
         return null
@@ -275,7 +274,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       promise.catch((error) => {
         logger.error('Error fetching statistics', {
           error,
-          category: 'statistics',
+          category: LOG_CATEGORY,
         })
         return null
       }),

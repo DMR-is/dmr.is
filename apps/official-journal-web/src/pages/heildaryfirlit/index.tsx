@@ -19,8 +19,8 @@ import { getCaseProcessingSearchParams } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  cases: Case[] | null
-  paging: Paging | null
+  cases: Case[]
+  paging: Paging
 }
 
 const DEFAULT_TAB = 'a-deild'
@@ -33,10 +33,6 @@ export default function CaseOverview(
   const { add, get } = useQueryParams()
 
   const [selectedTab, setSelectedTab] = useState(get('tab') || DEFAULT_TAB)
-
-  if (!cases || !paging) {
-    return null
-  }
 
   const onTabChange = (id: string) => {
     setSelectedTab(id)

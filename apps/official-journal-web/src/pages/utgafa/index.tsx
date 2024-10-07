@@ -23,17 +23,15 @@ import { getStringFromQueryString } from '../../lib/types'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  cases: Case[] | null
-  paging: Paging | null
+  cases: Case[]
+  paging: Paging
 }
 
 export default function CasePublishingOverview(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
   const { cases, paging } = data
-  if (!cases || !paging) {
-    return null
-  }
+
   const router = useRouter()
   const { formatMessage } = useFormatMessage()
 
