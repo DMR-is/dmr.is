@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import { getSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { mutate } from 'swr'
 
@@ -21,11 +22,14 @@ import { getStringFromQueryString, Screen } from '../lib/types'
 import { CustomNextError } from '../units/error'
 
 type Props = {
-  cases: Case[]
-  paging: Paging
+  cases?: Case[]
+  paging?: Paging
 }
 
 const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
+  if (!cases || !paging) {
+    return null
+  }
   const router = useRouter()
   const { formatMessage } = useFormatMessage()
 
@@ -158,7 +162,18 @@ const CasePublishingOverview: Screen<Props> = ({ cases, paging }) => {
   )
 }
 
-CasePublishingOverview.getProps = async ({ query }) => {
+CasePublishingOverview.getProps = async ({ query, req }) => {
+  const session = await getSession({ req })
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
+
   try {
     const dmrClient = createDmrClient()
     const department = getStringFromQueryString(query.tab) || 'a-deild'
@@ -169,6 +184,7 @@ CasePublishingOverview.getProps = async ({ query }) => {
     })
 
     return {
+      session,
       cases,
       paging,
     }

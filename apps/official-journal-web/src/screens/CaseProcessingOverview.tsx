@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import { getSession } from 'next-auth/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
@@ -24,10 +25,11 @@ import {
   Screen,
 } from '../lib/types'
 import { CustomNextError } from '../units/error'
+
 type Props = {
-  data: Case[]
-  paging: Paging
-  totalItems: {
+  data?: Case[]
+  paging?: Paging
+  totalItems?: {
     submitted: number
     inProgress: number
     inReview: number
@@ -220,7 +222,18 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   )
 }
 
-CaseProccessingOverviewScreen.getProps = async ({ query }) => {
+CaseProccessingOverviewScreen.getProps = async ({ query, req }) => {
+  const session = await getSession({ req })
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
+
   try {
     const dmrClient = createDmrClient()
     const caseData = await dmrClient.editorialOverview({
@@ -232,6 +245,7 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
     })
 
     return {
+      session,
       data: caseData.cases,
       paging: caseData.paging,
       totalItems: caseData.totalItems,

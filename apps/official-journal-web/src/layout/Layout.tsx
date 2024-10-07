@@ -1,4 +1,6 @@
 import Head from 'next/head'
+import { Session } from 'next-auth'
+import { SessionProvider } from 'next-auth/react'
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
@@ -14,7 +16,6 @@ import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
 import type { Screen } from '../lib/types'
-import { ARMANN } from '../lib/userMock'
 
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
@@ -86,7 +87,7 @@ const Layout: Screen<LayoutProps> = ({
                     )
                   })}
                 </Head>
-                <Header headerWhite={headerWhite} user={ARMANN} />
+                <Header headerWhite={headerWhite} />
                 <Main>
                   {bannerProps.showBanner && (
                     <Banner
@@ -189,13 +190,13 @@ export const withMainLayout = <T,>(
     layoutProps,
     componentProps,
   }) => {
+    const props = componentProps as T & { session: Session }
     return (
-      <Layout {...layoutProps}>
-        {/**
-         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-         // @ts-expect-error make web strict */}
-        <Component {...componentProps} />
-      </Layout>
+      <SessionProvider session={props.session} refetchInterval={5 * 60}>
+        <Layout {...layoutProps}>
+          <Component {...props} />
+        </Layout>
+      </SessionProvider>
     )
   }
 

@@ -1,3 +1,4 @@
+import { getSession } from 'next-auth/react'
 import { useState } from 'react'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
@@ -18,8 +19,8 @@ import { getCaseProcessingSearchParams } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
-  cases: Case[]
-  paging: Paging
+  cases?: Case[]
+  paging?: Paging
 }
 
 const DEFAULT_TAB = 'a-deild'
@@ -29,6 +30,10 @@ const CaseOverview: Screen<Props> = ({ cases, paging }) => {
   const { add, get } = useQueryParams()
 
   const [selectedTab, setSelectedTab] = useState(get('tab') || DEFAULT_TAB)
+
+  if (!cases || !paging) {
+    return null
+  }
 
   const onTabChange = (id: string) => {
     setSelectedTab(id)
@@ -72,7 +77,18 @@ const CaseOverview: Screen<Props> = ({ cases, paging }) => {
   )
 }
 
-CaseOverview.getProps = async ({ query }) => {
+CaseOverview.getProps = async ({ query, req }) => {
+  const session = await getSession({ req })
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
+
   try {
     const { tab } = getCaseProcessingSearchParams(query) || DEFAULT_TAB
     const dmrClient = createDmrClient()
@@ -88,6 +104,7 @@ CaseOverview.getProps = async ({ query }) => {
     })
 
     return {
+      session,
       cases,
       paging,
     }

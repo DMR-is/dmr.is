@@ -1,6 +1,6 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { CaseCommentType, PostCasePublishBody } from '../gen/fetch'
+import { PostCasePublishBody } from '../gen/fetch'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -25,6 +25,7 @@ export enum Routes {
   PublishingDetail = '/utgafa/:caseId',
   Overview = '/heildaryfirlit',
   OverviewDetail = '/heildaryfirlit/:caseId',
+  Login = '/innskraning',
 }
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
