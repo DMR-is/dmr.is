@@ -1,6 +1,7 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { Session } from 'next-auth'
 import { getSession } from 'next-auth/react'
+import { logger } from '@dmr.is/logging'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -271,9 +272,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         slug: 'c-deild',
       }),
     ].map((promise) =>
-      promise.catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error(err)
+      promise.catch((error) => {
+        logger.error('Error fetching statistics', {
+          error,
+          category: 'statistics',
+        })
         return null
       }),
     ),

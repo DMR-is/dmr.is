@@ -83,7 +83,9 @@ export class ApplicationService implements IApplicationService {
 
     const xroadClient = process.env.XROAD_DMR_CLIENT
     if (!xroadClient) {
-      this.logger.error('Missing required environment')
+      this.logger.error('Missing required environment', {
+        category: LOGGING_CATEGORY,
+      })
       throw new Error('Missing required environment')
     }
 
