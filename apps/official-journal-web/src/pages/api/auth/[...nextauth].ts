@@ -14,6 +14,8 @@ const SESION_TIMEOUT = 30 * 60 // 30 min
 
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
+const LOGGING_CATEGORY = 'next-auth'
+
 export const authOptions: AuthOptions = {
   pages: {
     signIn: '/innskraning',
@@ -63,8 +65,6 @@ export const authOptions: AuthOptions = {
       }
     },
     jwt: ({ token, user }) => {
-      //TODO: do proper return
-
       if (user) {
         return {
           ...token,
@@ -87,7 +87,7 @@ export const authOptions: AuthOptions = {
 
         try {
           if (credentials?.nationalId) {
-            const member = await dmrClient?.getUser({
+            const member = await dmrClient.getUser({
               nationalId: credentials.nationalId,
             })
 
@@ -108,7 +108,10 @@ export const authOptions: AuthOptions = {
           if ((e as ErrorWithPotentialReqRes).response) {
             delete (e as ErrorWithPotentialReqRes).response
           }
-          logger.error('Failure authenticating', { exception: e as Error })
+          logger.error('Failure authenticating', {
+            exception: e as Error,
+            category: LOGGING_CATEGORY,
+          })
         }
         // Return null if user data could not be retrieved
         return null
