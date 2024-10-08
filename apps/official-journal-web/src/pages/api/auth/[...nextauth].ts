@@ -1,8 +1,10 @@
 import NextAuth, { AuthOptions, User } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { identityServerConfig } from '../../../lib/identityProvider'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -15,6 +17,14 @@ const SESION_TIMEOUT = 30 * 60 // 30 min
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
+
+import {
+  AuthSession,
+  AuthUser,
+  jwt as handleJwt,
+  session as handleSession,
+  signIn as handleSignIn,
+} from '@island.is/next-ids-auth'
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -75,6 +85,19 @@ export const authOptions: AuthOptions = {
     },
   },
   providers: [
+    IdentityServer4({
+      id: identityServerConfig.id,
+      name: identityServerConfig.name,
+      clientId: identityServerConfig.clientId,
+      clientSecret: process.env.IDENTITY_SERVER_SECRET ?? '',
+      authorization: {
+        params: {
+          scope: `${identityServerConfig.scope}`,
+          domain: process.env.IDENTITY_SERVER_DOMAIN ?? '',
+          protection: 'pkce',
+        },
+      },
+    }),
     CredentialsProvider({
       id: 'kennitala',
       name: 'kennitala',
