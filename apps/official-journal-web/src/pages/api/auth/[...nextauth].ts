@@ -109,7 +109,7 @@ export const authOptions: AuthOptions = {
             delete (e as ErrorWithPotentialReqRes).response
           }
           logger.error('Failure authenticating', {
-            exception: e as Error,
+            error: e as Error,
             category: LOGGING_CATEGORY,
           })
         }

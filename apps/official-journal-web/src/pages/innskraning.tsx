@@ -1,9 +1,78 @@
-import withDmr from '../lib/api/withDmr'
-import { getServerSidePropsWrapper } from '../lib/getServerSidePropsWrapper'
-import Login from '../screens/Login'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { signIn } from 'next-auth/react'
 
-const Screen = withDmr(Login)
+import {
+  Box,
+  Button,
+  GridColumn,
+  GridContainer,
+  GridRow,
+} from '@island.is/island-ui/core'
 
-export default Screen
+import { LayoutProps } from '../layout/Layout'
+import { Routes } from '../lib/constants'
+import { messages } from '../lib/messages/caseOverview'
 
-export const getServerSideProps = getServerSidePropsWrapper(Screen)
+// eslint-disable-next-line @typescript-eslint/ban-types
+type Props = {}
+
+export default function Login(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  data: InferGetServerSidePropsType<typeof getServerSideProps>,
+) {
+  const handleLogin = (id: string) => {
+    signIn('kennitala', {
+      callbackUrl: '/',
+      nationalId: id,
+    })
+  }
+
+  return (
+    <GridContainer>
+      <GridRow rowGap={['p2', 3]}>
+        <GridColumn
+          paddingTop={2}
+          offset={['0', '0', '0', '1/12']}
+          span={['12/12', '12/12', '12/12', '10/12']}
+        >
+          <Box display="flex" columnGap={2}>
+            <Button onClick={() => handleLogin('0101857799')}>Ármann</Button>
+            <Button onClick={() => handleLogin('0101876689')}>Pálína</Button>
+          </Box>
+        </GridColumn>
+      </GridRow>
+    </GridContainer>
+  )
+}
+
+export const getServerSideProps: GetServerSideProps<Props> = async () => {
+  if (process.env.NODE_ENV !== 'development') {
+    // TODO: Disable this in production
+    // return {
+    //   notFound: true,
+    // }
+  }
+  const layout: LayoutProps = {
+    showFooter: true,
+    bannerProps: {
+      showBanner: false,
+      showFilters: false,
+      imgSrc: '/assets/banner-publish-image.svg',
+      title: messages.banner.title,
+      description: messages.banner.description,
+      variant: 'small',
+      contentColumnSpan: ['12/12', '12/12', '5/12'],
+      imageColumnSpan: ['12/12', '12/12', '5/12'],
+      breadcrumbs: [
+        {
+          title: messages.breadcrumbs.dashboard,
+          href: Routes.Dashboard,
+        },
+        {
+          title: messages.breadcrumbs.casePublishing,
+        },
+      ],
+    },
+  }
+  return { props: { layout } }
+}
