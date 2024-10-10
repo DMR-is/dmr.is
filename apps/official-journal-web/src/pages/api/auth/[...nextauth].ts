@@ -1,4 +1,5 @@
 import NextAuth, { AuthOptions, User } from 'next-auth'
+import { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
@@ -25,6 +26,34 @@ import {
   session as handleSession,
   signIn as handleSignIn,
 } from '@island.is/next-ids-auth'
+
+async function signIn(
+  user: AuthUser,
+  account: Record<string, unknown>,
+  profile: Record<string, unknown>,
+): Promise<boolean> {
+  return handleSignIn(user, account, profile, identityServerConfig.id)
+}
+
+async function jwt(token: JWT, user: AuthUser) {
+  if (user) {
+    token = {
+      nationalId: user.nationalId,
+      name: user.name,
+      accessToken: user.accessToken,
+      refreshToken: user.refreshToken,
+      idToken: user.idToken,
+      isRefreshTokenExpired: false,
+    }
+  }
+  return await handleJwt(
+    token,
+    identityServerConfig.clientId,
+    process.env.IDENTITY_SERVER_SECRET,
+    process.env.NEXTAUTH_URL,
+    process.env.IDENTITY_SERVER_DOMAIN,
+  )
+}
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -68,21 +97,9 @@ export const authOptions: AuthOptions = {
     },
   },
   callbacks: {
-    session: ({ session, token }) => {
-      return {
-        ...session,
-        user: token.user,
-      }
-    },
-    jwt: ({ token, user }) => {
-      if (user) {
-        return {
-          ...token,
-          user,
-        }
-      }
-      return token
-    },
+    signIn: signIn,
+    jwt: jwt,
+    session: session,
   },
   providers: [
     IdentityServer4({
