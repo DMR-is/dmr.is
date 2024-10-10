@@ -84,4 +84,33 @@ export const messages = {
       description: '',
     },
   }),
+
+  leidretting: defineMessages({
+    warningTitle: {
+      id: 'web.components.steps.leidretting:warningTitle',
+      defaultMessage: 'ATH! Mál er útgefið',
+    },
+    warningMessage: {
+      id: 'web.components.steps.leidretting:warningMessage',
+      defaultMessage:
+        'Málum sem er breytt eftir útgáfu eru leiðrétt á ytri vef og þeim fylgir athugasemd sem undirstrikar breytingar',
+    },
+    errorFetching: {
+      id: 'web.components.steps.leidretting:errorFetching',
+      defaultMessage: 'Villa við að sækja gögn',
+    },
+    errorFetchingMessage: {
+      id: 'web.components.steps.leidretting:errorFetchingMessage',
+      defaultMessage:
+        'Ekki tókst að sækja gögn um málið, vinsamlegast reyndu aftur síðar',
+    },
+    noData: {
+      id: 'web.components.steps.leidretting:noData',
+      defaultMessage: 'Engin gögn',
+    },
+    noDataMessage: {
+      id: 'web.components.steps.leidretting:noDataMessage',
+      defaultMessage: 'Engin gögn fundust um málið',
+    },
+  }),
 }

@@ -21,6 +21,7 @@ export enum Routes {
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
+  ProccessingDetailCorrection = '/ritstjorn/:caseId/leidretting',
   PublishingOverview = '/utgafa',
   PublishingDetail = '/utgafa/:caseId',
   Overview = '/heildaryfirlit',

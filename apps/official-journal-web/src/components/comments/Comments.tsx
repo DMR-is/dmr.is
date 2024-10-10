@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 
 import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
 
-import { Case, CaseCommentType } from '../../gen/fetch'
+import { Case } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { APIRotues } from '../../lib/constants'
@@ -12,9 +12,10 @@ import * as styles from './Comments.css'
 import { messages } from './messages'
 type Props = {
   activeCase: Case
+  onAddCommentSuccess?: () => void
 }
 
-export const Comments = ({ activeCase }: Props) => {
+export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const [expanded, setExpanded] = useState(activeCase.comments.length < 6)
@@ -133,7 +134,10 @@ export const Comments = ({ activeCase }: Props) => {
                       inputPlaceholder={formatMessage(
                         messages.comments.internalCommentsInputPlaceholder,
                       )}
-                      onAddCommentSuccess={refetchCase}
+                      onAddCommentSuccess={() => {
+                        refetchCase()
+                        onAddCommentSuccess && onAddCommentSuccess()
+                      }}
                       onUpdateStatusSuccess={refetchCase}
                       currentStatus={activeCase.communicationStatus}
                     />

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -20,6 +21,7 @@ import { Section } from '../components/form-stepper/Section'
 import { FormStepperThemes } from '../components/form-stepper/types'
 import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
+import { StepLeidretting } from '../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
 import { Meta } from '../components/meta/Meta'
@@ -58,6 +60,9 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
       fallback: data,
     },
   })
+
+  const [isFixing, setIsFixing] = useState(false)
+  const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
@@ -125,6 +130,8 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     caseSteps.indexOf(step) < 3
       ? caseSteps[caseSteps.indexOf(step) + 1]
       : undefined
+
+  const fixStep = caseSteps.indexOf(step) > 3
 
   const employeesMock = [
     {
@@ -257,12 +264,26 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
           {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
           {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
+          {step === 'leidretting' && (
+            <StepLeidretting
+              isFixing={isFixing}
+              canPublish={canPublishFixedChanges}
+              data={activeCase}
+            />
+          )}
 
           {activeCase.attachments.length > 0 && (
             <Attachments activeCase={activeCase} refetchCase={refetchCase} />
           )}
 
-          <Comments activeCase={activeCase} />
+          <Comments
+            onAddCommentSuccess={() => {
+              if (isFixing) {
+                setCanPublishFixedChanges(true)
+              }
+            }}
+            activeCase={activeCase}
+          />
 
           <Box
             display="flex"
@@ -304,6 +325,39 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
                   {formatMessage(messages.paging.nextStep)}
                 </Button>
               </LinkV2>
+            ) : fixStep && !isFixing ? (
+              <Button
+                colorScheme="destructive"
+                icon="arrowForward"
+                onClick={() => setIsFixing(true)}
+              >
+                {formatMessage(messages.paging.fixStep)}
+              </Button>
+            ) : fixStep && isFixing ? (
+              <Box display="flex" columnGap={2} flexWrap="wrap">
+                <Button
+                  colorScheme="destructive"
+                  icon="eyeOff"
+                  disabled={!canPublishFixedChanges}
+                  title={
+                    canPublishFixedChanges &&
+                    formatMessage(messages.paging.unpublishDisabledExplanation)
+                  }
+                >
+                  {formatMessage(messages.paging.unpublish)}
+                </Button>
+                <Button
+                  colorScheme="destructive"
+                  icon="arrowForward"
+                  disabled={!canPublishFixedChanges}
+                  title={
+                    canPublishFixedChanges &&
+                    formatMessage(messages.paging.unpublishDisabledExplanation)
+                  }
+                >
+                  {formatMessage(messages.paging.confirmFixStep)}
+                </Button>
+              </Box>
             ) : null}
           </Box>
         </Stack>
@@ -322,7 +376,6 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   }
 
   try {
-    // TODO: getCase should return null if no case is found
     activeCase = await dmrClient.getCase({
       id: caseId,
     })

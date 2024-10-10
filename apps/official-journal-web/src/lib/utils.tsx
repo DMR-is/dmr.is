@@ -94,7 +94,7 @@ export const generateCaseLink = (
     status === CaseStatusTitleEnum.BirtinguHafnað ||
     status === CaseStatusTitleEnum.TekiðÚrBirtingu
   ) {
-    route = Routes.OverviewDetail
+    route = Routes.ProccessingDetailCorrection
   }
 
   if (status === CaseStatusTitleEnum.Innsent) {
@@ -113,13 +113,19 @@ export const generateCaseLink = (
   return route.replace(':caseId', caseId)
 }
 
-export type CaseStep = 'innsending' | 'grunnvinnsla' | 'yfirlestur' | 'tilbuid'
+export type CaseStep =
+  | 'innsending'
+  | 'grunnvinnsla'
+  | 'yfirlestur'
+  | 'tilbuid'
+  | 'leidretting'
 
 export const caseSteps: Array<CaseStep> = [
   'innsending',
   'grunnvinnsla',
   'yfirlestur',
   'tilbuid',
+  'leidretting',
 ]
 
 type StepsType = {
@@ -242,6 +248,21 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         .filter(
           (c) =>
             c.caseStatus === CaseCommentCaseStatusEnum.Tilbúið &&
+            displayTypes.includes(c.title),
+        )
+        ?.map((c) => commentToNode(c)),
+    },
+    {
+      step: 'leidretting',
+      title: 'Leiðrétta mál',
+      isActive: statusIndex > 3,
+      isComplete: statusIndex > 3,
+      notes: activeCase.comments
+        .filter(
+          (c) =>
+            (c.caseStatus === CaseCommentCaseStatusEnum.Tilbúið ||
+              c.caseStatus === CaseCommentCaseStatusEnum.TekiðÚrBirtingu ||
+              c.caseStatus === CaseCommentCaseStatusEnum.BirtinguHafnað) &&
             displayTypes.includes(c.title),
         )
         ?.map((c) => commentToNode(c)),
