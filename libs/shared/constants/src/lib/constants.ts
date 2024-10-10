@@ -1,6 +1,8 @@
 import { AdminUserRoleTitle } from '@dmr.is/types'
 
 export const DEFAULT_PAGE_SIZE = 10
+
+export const DEFAULT_PAGE_NUMBER = 1
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
 export const ONE_MINUTE = 60

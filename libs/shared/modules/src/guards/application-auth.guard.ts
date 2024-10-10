@@ -30,6 +30,22 @@ export class ApplicationAuthGaurd implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const env = process.env.NODE_ENV || 'development'
+    if (env === 'development') {
+      this.logger.debug(`Running in development mode, skipping auth guard`, {
+        category: LOGGING_CATEGORY,
+      })
+      const userLookup = await this.applicationUserService.getUser('0101307789')
+
+      if (userLookup.result.ok) {
+        context.switchToHttp().getRequest().user = userLookup.result.value.user
+
+        return true
+      }
+
+      return false
+    }
+
     try {
       const request = context.switchToHttp().getRequest()
       const auth = request.headers?.authorization

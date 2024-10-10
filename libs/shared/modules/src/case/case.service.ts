@@ -1,5 +1,5 @@
 import { Op, Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
+import { Model, Sequelize } from 'sequelize-typescript'
 import { AttachmentTypeParam, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -14,11 +14,14 @@ import {
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -32,7 +35,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
 import { enumMapper, generatePaging } from '@dmr.is/utils'
 
 import {
@@ -72,6 +75,8 @@ import {
   CaseTagModel,
 } from './models'
 import { CASE_RELATIONS } from './relations'
+
+const LOGGING_CATEGORY = 'case-service'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -238,6 +243,16 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateAdvert(caseId, body, transaction)
   }
 
   @LogAndHandle()
@@ -509,6 +524,101 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok({
       cases: mapped,
       paging: generatePaging(mapped, page, pageSize, cases.count),
+    })
+  }
+
+  @LogAndHandle()
+  async getPublishedCases(
+    department: string,
+    params: GetPublishedCasesQuery,
+  ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
+    const whereParams = {
+      publishedAt: {
+        [Op.ne]: null,
+      },
+    }
+
+    if (params.search.length) {
+      Object.assign(whereParams, {
+        advertTitle: {
+          [Op.like]: params.search,
+        },
+      })
+    }
+
+    const counterResultsPromise = this.caseModel.findAll({
+      attributes: [
+        [Sequelize.literal(`"department"."slug"`), 'departmentSlug'],
+        [Sequelize.literal(`COUNT("CaseModel"."department_id")`), 'totalCases'],
+      ],
+      raw: true,
+      offset: (params.page - 1) * params.pageSize,
+      limit: params.pageSize,
+      include: [
+        {
+          model: AdvertDepartmentModel,
+          as: `department`,
+        },
+      ],
+      where: whereParams,
+      group: [`"department"."slug"`, `"department"."id"`],
+      replacements: {
+        department,
+      },
+    })
+
+    const casesPromise = this.getCases({
+      department: [department],
+      status: [
+        CaseStatusEnum.Published,
+        CaseStatusEnum.Rejected,
+        CaseStatusEnum.Unpublished,
+      ],
+      page: params.page.toString(),
+      pageSize: params.pageSize.toString(),
+      published: 'true',
+    })
+
+    const [counterResults, casesLookup] = await Promise.all([
+      counterResultsPromise,
+      casesPromise,
+    ])
+
+    if (!casesLookup.result.ok) {
+      this.logger.warn('Failed to get cases for published cases', {
+        error: casesLookup.result.error,
+        cateory: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Internal server error',
+      })
+    }
+
+    const totalCases = (
+      counterResults as unknown as PublishedCaseCounterResults[]
+    ).reduce(
+      (r, current) => {
+        const key = current.departmentSlug.split('-')[0]
+        const value = parseInt(current.totalCases, 10)
+
+        return {
+          ...r,
+          [key]: value,
+        }
+      },
+      {
+        a: 0,
+        b: 0,
+        c: 0,
+      } as GetPublishedCasesResponse['totalCases'],
+    )
+
+    return ResultWrapper.ok({
+      cases: casesLookup.result.value.cases,
+      paging: casesLookup.result.value.paging,
+      totalCases,
     })
   }
 

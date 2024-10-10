@@ -26,12 +26,15 @@ import {
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -390,6 +393,21 @@ export class CaseController {
   }
 
   @Route({
+    method: 'put',
+    path: ':id/html',
+    operationId: 'updateAdvertHtml',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html',
+    bodyType: UpdateAdvertHtmlBody,
+  })
+  async updateAdvertHtml(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+  }
+
+  @Route({
     path: ':id',
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -424,6 +442,23 @@ export class CaseController {
   })
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
+  }
+
+  @Route({
+    path: '/published/:department',
+    operationId: 'getPublishedCases',
+    summary: 'Get cases',
+    responseType: GetPublishedCasesResponse,
+    params: [{ name: 'department', type: 'string', required: true }],
+    query: [{ type: GetPublishedCasesQuery, required: false }],
+  })
+  async publishedCases(
+    @Param('department') department: string,
+    @Query() query?: GetPublishedCasesQuery,
+  ): Promise<GetCasesReponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getPublishedCases(department, query),
+    )
   }
 
   @Route({

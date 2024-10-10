@@ -8,6 +8,7 @@ import {
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseCommunicationBody,
   UpdateCaseDepartmentBody,
@@ -578,6 +579,28 @@ export class CaseUpdateService implements ICaseUpdateService {
     await this.caseModel.update(
       {
         tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseModel.update(
+      {
+        html: body.advertHtml,
       },
       {
         where: {
