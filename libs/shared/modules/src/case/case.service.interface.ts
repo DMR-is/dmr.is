@@ -15,6 +15,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -128,6 +129,12 @@ export interface ICaseService {
     newAttachment: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>>
+
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')

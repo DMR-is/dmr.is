@@ -32,13 +32,14 @@ import {
   useUpdateEmployee,
   useUpdateNextCaseStatus,
 } from '../hooks/api'
+import { useUpdateAdvertHtml } from '../hooks/api/update/useUpdateAdvertHtml'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
-import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
+import { CaseStep, caseSteps, generateSteps, getTimestamp } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
@@ -48,6 +49,10 @@ type Props = {
 
 const CaseSingle: Screen<Props> = ({ data, step }) => {
   const { formatMessage } = useFormatMessage()
+  const [isFixing, setIsFixing] = useState(false)
+  const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
+  const [updatedAdvertHtml, setUpdatedAdvertHtml] = useState('')
+  const [timestamp, setTimestamp] = useState(getTimestamp())
 
   const {
     data: caseData,
@@ -61,14 +66,28 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     },
   })
 
-  const [isFixing, setIsFixing] = useState(false)
-  const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
+  const { trigger: updateAdvertHtmlTrigger, isMutating: isUpdatingAdvertHTml } =
+    useUpdateAdvertHtml({
+      caseId: data.id,
+      options: {
+        onSuccess: () => {
+          setIsFixing(false)
+          setCanPublishFixedChanges(false)
+          refetchCase()
+          setTimeout(() => {
+            setTimestamp(getTimestamp())
+          }, 250)
+        },
+      },
+    })
 
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
@@ -76,7 +95,9 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     useUpdateCaseStatus({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
@@ -84,7 +105,9 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     useUpdateNextCaseStatus({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
@@ -269,6 +292,8 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
               isFixing={isFixing}
               canPublish={canPublishFixedChanges}
               data={activeCase}
+              timestamp={timestamp}
+              onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
             />
           )}
 
@@ -340,8 +365,11 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
                   icon="eyeOff"
                   disabled={!canPublishFixedChanges}
                   title={
-                    canPublishFixedChanges &&
-                    formatMessage(messages.paging.unpublishDisabledExplanation)
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
                   }
                 >
                   {formatMessage(messages.paging.unpublish)}
@@ -350,10 +378,19 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
                   colorScheme="destructive"
                   icon="arrowForward"
                   disabled={!canPublishFixedChanges}
+                  loading={isUpdatingAdvertHTml}
                   title={
-                    canPublishFixedChanges &&
-                    formatMessage(messages.paging.unpublishDisabledExplanation)
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
                   }
+                  onClick={() => {
+                    updateAdvertHtmlTrigger({
+                      advertHtml: updatedAdvertHtml,
+                    })
+                  }}
                 >
                   {formatMessage(messages.paging.confirmFixStep)}
                 </Button>

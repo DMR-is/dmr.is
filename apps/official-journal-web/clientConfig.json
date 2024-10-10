@@ -681,6 +681,29 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/html": {
+      "put": {
+        "operationId": "updateAdvertHtml",
+        "summary": "Update advert html",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertHtmlBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -2236,6 +2259,13 @@
           }
         },
         "required": ["status"]
+      },
+      "UpdateAdvertHtmlBody": {
+        "type": "object",
+        "properties": {
+          "advertHtml": { "type": "string", "description": "Advert HTML" }
+        },
+        "required": ["advertHtml"]
       },
       "GetCaseResponse": {
         "type": "object",

@@ -21,6 +21,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -242,6 +243,16 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateAdvert(caseId, body, transaction)
   }
 
   @LogAndHandle()

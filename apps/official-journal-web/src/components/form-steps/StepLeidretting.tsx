@@ -18,9 +18,16 @@ type Props = {
   data: Case
   isFixing: boolean
   canPublish: boolean
+  timestamp: string
+  onAdvertHtmlChange?: (html: string) => void
 }
 
-export const StepLeidretting = ({ data, isFixing }: Props) => {
+export const StepLeidretting = ({
+  data,
+  isFixing,
+  timestamp,
+  onAdvertHtmlChange,
+}: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const {
@@ -84,21 +91,18 @@ export const StepLeidretting = ({ data, isFixing }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <Box className={editorWrapper({ error: false })}>
-            <Box position="relative" zIndex={20}>
-              <HTMLEditor
-                key={`is-fixing=${isFixing}`}
-                readonly={!isFixing}
-                defaultValue={activeCase.html}
-              />
-            </Box>
-            <Box position="relative" zIndex={10}>
-              <HTMLEditor
-                readonly={true}
-                defaultValue={activeCase.signatures
-                  .map((signature) => signature.html)
-                  .join(' ')}
-              />
-            </Box>
+            <HTMLEditor
+              key={timestamp}
+              readonly={!isFixing}
+              defaultValue={activeCase.html}
+              onChange={onAdvertHtmlChange}
+            />
+            <HTMLEditor
+              readonly={true}
+              defaultValue={activeCase.signatures
+                .map((signature) => signature.html)
+                .join(' ')}
+            />
           </Box>
         </GridColumn>
       </GridRow>

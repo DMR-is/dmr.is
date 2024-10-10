@@ -11,11 +11,19 @@ type Props = {
   readonly?: boolean
 }
 
-export const HTMLEditor = ({ defaultValue = '', readonly = false }: Props) => {
+export const HTMLEditor = ({
+  defaultValue = '',
+  readonly = false,
+  onChange,
+}: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
 
   const handleUpload = () => {
     throw new Error('Function not implemented.')
+  }
+
+  const handleChange = (value: HTMLText) => {
+    onChange && onChange(value)
   }
 
   return (
@@ -28,6 +36,10 @@ export const HTMLEditor = ({ defaultValue = '', readonly = false }: Props) => {
         editor: classes.editorNoMinHeight,
       }}
       config={readonly ? { toolbar: `` } : undefined}
+      /**
+       * Delayed onChange to prevent the editor from reading the value before it has been updated
+       */
+      onChange={() => setTimeout(() => handleChange(valueRef.current()), 100)}
     />
   )
 }

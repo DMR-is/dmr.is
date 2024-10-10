@@ -334,3 +334,5 @@ export const mapLetterToDepartmentSlug = (letter: string) =>
 
 export const mapDepartmentSlugToLetter = (slug: string) =>
   slug === 'a-deild' ? 'a' : slug === 'b-deild' ? 'b' : 'c'
+
+export const getTimestamp = () => new Date().toISOString()

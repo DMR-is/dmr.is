@@ -34,6 +34,7 @@ import {
   PostCaseCommentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -389,6 +390,21 @@ export class CaseController {
     @Body() body: UpdateCaseStatusBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCaseStatus(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/html',
+    operationId: 'updateAdvertHtml',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html',
+    bodyType: UpdateAdvertHtmlBody,
+  })
+  async updateAdvertHtml(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
   @Route({
