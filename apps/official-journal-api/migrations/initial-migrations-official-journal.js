@@ -25,7 +25,7 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE admin_user_role (
+    CREATE TABLE admin_user_roles (
       user_role_id UUID NOT NULL,
       admin_user_id UUID NOT NULL,
       PRIMARY KEY (user_role_id, admin_user_id),
@@ -354,7 +354,7 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE application_user_involved_party (
+    CREATE TABLE application_user_involved_parties (
       application_user_id UUID NOT NULL,
       involved_party_id UUID NOT NULL,
       PRIMARY KEY (application_user_id, involved_party_id),

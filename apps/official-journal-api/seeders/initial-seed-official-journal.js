@@ -28,36 +28,46 @@ module.exports = {
   async down(queryInterface) {
     return await queryInterface.sequelize.query(`
       BEGIN;
-        DELETE FROM advert_categories;
-        DELETE FROM advert_attachments;
-        DELETE FROM case_categories;
-        DELETE FROM case_channels;
-        DELETE FROM case_comments;
-        DELETE FROM signature_members;
-        DELETE FROM case_signatures;
-        DELETE FROM advert_signatures;
-        DELETE FROM application_attachments;
-        DELETE FROM case_attachments;
-        DELETE FROM advert;
-        DELETE FROM case_case;
-        DELETE FROM signature;
-        DELETE FROM advert_type;
-        DELETE FROM advert_department;
-        DELETE FROM advert_main_category;
-        DELETE FROM advert_category;
-        DELETE FROM category_department;
-        DELETE FROM advert_involved_party;
-        DELETE FROM case_tag;
-        DELETE FROM advert_status;
-        DELETE FROM case_comment;
-        DELETE FROM case_comment_type;
-        DELETE FROM case_channel;
-        DELETE FROM case_status;
-        DELETE FROM signature_type;
-        DELETE FROM signature_member;
-        DELETE FROM case_communication_status;
-        DELETE FROM application_attachment_type;
-        DELETE FROM application_attachment;
+        -- RELATIONAL TABLES
+        DROP TABLE IF EXISTS advert_categories;
+        DROP TABLE IF EXISTS advert_attachments;
+        DROP TABLE IF EXISTS case_categories;
+        DROP TABLE IF EXISTS case_channels;
+        DROP TABLE IF EXISTS case_comments;
+        DROP TABLE IF EXISTS signature_members;
+        DROP TABLE IF EXISTS case_signatures;
+        DROP TABLE IF EXISTS advert_signatures;
+        DROP TABLE IF EXISTS case_attachments;
+        DROP TABLE IF EXISTS application_attachments;
+        DROP TABLE IF EXISTS application_user_involved_parties;
+        DROP TABLE IF EXISTS admin_user_roles;
+
+        -- TABLES WITH FOREIGN KEYS
+        DROP TABLE IF EXISTS category_department;
+        DROP TABLE IF EXISTS application_attachment;
+        DROP TABLE IF EXISTS case_comment;
+        DROP TABLE IF EXISTS advert;
+        DROP TABLE IF EXISTS advert_category;
+        DROP TABLE IF EXISTS case_case;
+        DROP TABLE IF EXISTS signature;
+        DROP TABLE IF EXISTS signature_member;
+        DROP TABLE IF EXISTS advert_type;
+
+        -- REGULAR TABLES
+        DROP TABLE IF EXISTS application_attachment_type;
+        DROP TABLE IF EXISTS signature_type;
+        DROP TABLE IF EXISTS advert_status;
+        DROP TABLE IF EXISTS advert_department;
+        DROP TABLE IF EXISTS advert_main_category;
+        DROP TABLE IF EXISTS case_tag;
+        DROP TABLE IF EXISTS case_status;
+        DROP TABLE IF EXISTS case_channel;
+        DROP TABLE IF EXISTS case_comment_type;
+        DROP TABLE IF EXISTS case_communication_status;
+        DROP TABLE IF EXISTS application_user;
+        DROP TABLE IF EXISTS admin_user;
+        DROP TABLE IF EXISTS user_role;
+        DROP TABLE IF EXISTS advert_involved_party;
       COMMIT;
     `)
   },

@@ -1,7 +1,7 @@
 import { AdminUserModel } from './admin-user.model'
-import { AdminUserRoleModel } from './admin-user-role.model'
+import { AdminUserRolesModel } from './admin-user-roles.model'
 import { UserRoleModel } from './user-role.model'
 
-export const models = [AdminUserModel, AdminUserRoleModel, UserRoleModel]
+export const models = [AdminUserModel, AdminUserRolesModel, UserRoleModel]
 
 export default models
