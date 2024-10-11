@@ -8,19 +8,24 @@ import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
 import { CaseTableOverview } from '../../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../../components/tabs/Tabs'
-import { Case, CaseStatusTitleEnum, Paging } from '../../gen/fetch'
+import { Case, GetPublishedCasesResponse, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useQueryParams } from '../../hooks/useQueryParams'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseOverview'
-import { getCaseProcessingSearchParams } from '../../lib/utils'
+import {
+  deleteUndefined,
+  getCaseProcessingSearchParams,
+  mapDepartmentSlugToLetter,
+} from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
   cases: Case[]
   paging: Paging
+  totalCases: GetPublishedCasesResponse['totalCases']
 }
 
 const DEFAULT_TAB = 'a-deild'
@@ -28,7 +33,8 @@ const DEFAULT_TAB = 'a-deild'
 export default function CaseOverview(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const { cases, paging } = data
+  const { cases, paging, totalCases } = data
+
   const { formatMessage } = useFormatMessage()
   const { add, get } = useQueryParams()
 
@@ -41,11 +47,14 @@ export default function CaseOverview(
     })
   }
 
-  const tabs: Tab[] = CaseDepartmentTabs.map((tab) => ({
-    id: tab.value,
-    label: tab.label,
-    content: <CaseTableOverview data={cases} paging={paging} />,
-  }))
+  const tabs: Tab[] = CaseDepartmentTabs.map((tab) => {
+    const countKey = mapDepartmentSlugToLetter(tab.value)
+    return {
+      id: tab.value,
+      label: `${tab.label} ${tab ? `(${totalCases[countKey]})` : ''}`,
+      content: <CaseTableOverview data={cases} paging={paging} />,
+    }
+  })
 
   return (
     <>
@@ -115,25 +124,22 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   try {
     const { tab } = getCaseProcessingSearchParams(query) || DEFAULT_TAB
+    const search = query.search as string | undefined
     const dmrClient = createDmrClient()
 
-    const { cases, paging } = await dmrClient.getCases({
-      department: tab,
-      status:
-        CaseStatusTitleEnum.ÚTgefið +
-        ',' +
-        CaseStatusTitleEnum.BirtinguHafnað +
-        ',' +
-        CaseStatusTitleEnum.TekiðÚrBirtingu,
+    const { cases, paging, totalCases } = await dmrClient.getPublishedCases({
+      department: tab ? tab : CaseDepartmentTabs[0].value,
+      search: search,
     })
 
     return {
-      props: {
+      props: deleteUndefined({
         session,
         layout,
         cases,
         paging,
-      },
+        totalCases,
+      }),
     }
   } catch (error) {
     throw new CustomNextError(

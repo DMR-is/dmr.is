@@ -30,6 +30,7 @@ import { LayoutProps } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
+import { deleteUndefined } from '../lib/utils'
 
 type Props = {
   session: Session
@@ -314,7 +315,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   }
 
   return {
-    props: {
+    props: deleteUndefined({
       session,
       layout,
       statisticsOverview: {
@@ -328,6 +329,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         b: bStatistics,
         c: cStatistics,
       },
-    },
+    }),
   }
 }

@@ -45,6 +45,7 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import {
   CaseStep,
   caseSteps,
+  deleteUndefined,
   generateSteps,
   getTimestamp,
 } from '../../lib/utils'
@@ -465,12 +466,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     })
 
     return {
-      props: {
+      props: deleteUndefined({
         session,
         layout,
         thisCase: activeCase._case,
         step,
-      },
+      }),
     }
   } catch (error) {
     if (isResponse(error)) {
