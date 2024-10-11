@@ -164,4 +164,5 @@ export enum APIRotues {
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
+  UnpublishCase = '/api/cases/:id/unpublish',
 }

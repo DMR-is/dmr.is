@@ -11,6 +11,7 @@ import {
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
+  CaseStatusEnum,
   CreateCaseResponse,
   DefaultSearchParams,
   EditorialOverviewResponse,
@@ -470,6 +471,23 @@ export class CaseController {
   })
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
+  }
+
+  @Route({
+    method: 'post',
+    path: ':id/unpublish',
+    operationId: 'unpublish',
+    params: [{ name: 'id', type: 'string', required: true }],
+    description: 'Unpublish case',
+  })
+  async unpublish(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseStatus(id, {
+        status: CaseStatusEnum.Unpublished,
+      }),
+    )
   }
 
   @Route({

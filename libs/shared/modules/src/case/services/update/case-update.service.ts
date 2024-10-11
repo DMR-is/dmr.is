@@ -248,7 +248,7 @@ export class CaseUpdateService implements ICaseUpdateService {
         comment: null,
         source: CaseCommentSourceEnum.API,
         storeState: false,
-        creator: 'Ármann Árni - (harðkóðað í bili)',
+        creator: 'Ármann Árni',
         receiver: status.title,
       },
       transaction,
@@ -444,7 +444,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await Promise.all(
       toRemove.map(async (c) => {
-        await c.destroy()
+        await c.destroy({ transaction: transaction })
       }),
     )
 

@@ -4,7 +4,7 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
+import { AdvertStatus, GetApplicationResponse, User } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
@@ -315,7 +315,6 @@ export class UtilityService implements IUtilityService {
 
     return ResultWrapper.ok(tagLookup)
   }
-
   @LogAndHandle()
   @Transactional()
   async caseStatusLookup(

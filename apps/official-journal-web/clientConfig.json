@@ -951,6 +951,20 @@
         "responses": { "201": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/unpublish": {
+      "post": {
+        "operationId": "unpublish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "201": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/comments": {
       "get": {
         "operationId": "getComments",

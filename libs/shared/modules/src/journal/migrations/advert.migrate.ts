@@ -8,7 +8,6 @@ import { advertStatusMigrate } from './advert-status.migrate'
 import { advertTypesMigrate } from './advert-types.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
-  const status = advertStatusMigrate(model.status)
   const attachmentsmodel = model.attachments.map<AdvertAttachment>((item) => {
     const result: AdvertAttachment = {
       type: item.type,
@@ -26,7 +25,7 @@ export function advertMigrate(model: AdvertModel): Advert {
       : null,
     type: model.type ? advertTypesMigrate(model.type) : null,
     subject: model.subject,
-    status: status,
+    status: advertStatusMigrate(model.status),
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
       number: model.serialNumber,

@@ -32,6 +32,7 @@ import {
   useUpdateEmployee,
   useUpdateNextCaseStatus,
 } from '../hooks/api'
+import { useUnpublishCase } from '../hooks/api/post/useUnpublish'
 import { useUpdateAdvertHtml } from '../hooks/api/update/useUpdateAdvertHtml'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
@@ -110,6 +111,15 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
         },
       },
     })
+
+  const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
+    caseId: data.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
 
   if (isLoading) {
     return (
@@ -361,6 +371,8 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
             ) : fixStep && isFixing ? (
               <Box display="flex" columnGap={2} flexWrap="wrap">
                 <Button
+                  loading={isUnpublishing}
+                  onClick={() => unpublish()}
                   colorScheme="destructive"
                   icon="eyeOff"
                   disabled={!canPublishFixedChanges}
