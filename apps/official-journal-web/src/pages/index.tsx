@@ -2,7 +2,7 @@ import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { Session } from 'next-auth'
 import { getSession } from 'next-auth/react'
 import { logger } from '@dmr.is/logging'
-import { isResponse } from '@dmr.is/utils/client'
+import { deleteUndefined, isResponse } from '@dmr.is/utils/client'
 
 import {
   Box,
@@ -314,7 +314,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   }
 
   return {
-    props: {
+    props: deleteUndefined({
       session,
       layout,
       statisticsOverview: {
@@ -328,6 +328,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         b: bStatistics,
         c: cStatistics,
       },
-    },
+    }),
   }
 }
