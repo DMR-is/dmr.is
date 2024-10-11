@@ -195,7 +195,9 @@ export class SignatureService implements ISignatureService {
     })
 
     if (!type) {
-      this.logger.error('Signature type not found')
+      this.logger.error('Signature type not found', {
+        category: 'Signature',
+      })
       throw new InternalServerErrorException()
     }
 

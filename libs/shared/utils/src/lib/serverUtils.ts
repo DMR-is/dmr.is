@@ -280,6 +280,7 @@ export const handleException = <T>({
   }
 
   logger.error(`Unknown error in ${service}.${method}`, {
+    category: service,
     error: error,
   })
 

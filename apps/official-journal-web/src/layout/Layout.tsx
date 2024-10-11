@@ -13,26 +13,24 @@ import { FilterContextProvider } from '../context/filterContext'
 import { NotificationContextProvider } from '../context/notificationContext'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
-import type { Screen } from '../lib/types'
-import { ARMANN } from '../lib/userMock'
 
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }
 
-type LayoutProps = {
+export type LayoutProps = {
   children?: React.ReactNode
   headerWhite?: boolean
   showFooter?: boolean
   bannerProps?: BannerProps
 }
 
-const Layout: Screen<LayoutProps> = ({
+export const Layout = ({
   children,
   headerWhite,
   showFooter = false,
   bannerProps = { showBanner: true },
-}) => {
+}: LayoutProps) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -86,7 +84,7 @@ const Layout: Screen<LayoutProps> = ({
                     )
                   })}
                 </Head>
-                <Header headerWhite={headerWhite} user={ARMANN} />
+                <Header headerWhite={headerWhite} />
                 <Main>
                   {bannerProps.showBanner && (
                     <Banner
@@ -172,57 +170,4 @@ const Layout: Screen<LayoutProps> = ({
       </SWRConfig>
     </IntlProvider>
   )
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-Layout.getProps = async ({ req, res, query }) => {
-  return {}
-}
-
-type LayoutWrapper<T> = Screen<{ layoutProps: LayoutProps; componentProps: T }>
-
-export const withMainLayout = <T,>(
-  Component: Screen<T>,
-  layoutConfig: Partial<LayoutProps> = {},
-): LayoutWrapper<T> => {
-  const WithMainLayout: LayoutWrapper<T> = ({
-    layoutProps,
-    componentProps,
-  }) => {
-    return (
-      <Layout {...layoutProps}>
-        {/**
-         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-         // @ts-expect-error make web strict */}
-        <Component {...componentProps} />
-      </Layout>
-    )
-  }
-
-  WithMainLayout.getProps = async (ctx) => {
-    // Configure default full-page caching.
-    // if (ctx.res) {
-    //   ctx.res.setHeader('Cache-Control', CACHE_CONTROL_HEADER)
-    // }
-
-    const getLayoutProps = Layout.getProps as Exclude<
-      typeof Layout.getProps,
-      undefined
-    >
-
-    const [layoutProps, componentProps] = await Promise.all([
-      getLayoutProps(ctx),
-      Component.getProps ? Component.getProps(ctx) : ({} as T),
-    ])
-
-    return {
-      layoutProps: {
-        ...layoutProps,
-        ...layoutConfig,
-      },
-      componentProps,
-    }
-  }
-
-  return WithMainLayout
 }

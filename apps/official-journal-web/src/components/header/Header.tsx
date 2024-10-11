@@ -1,4 +1,5 @@
 import cn from 'classnames'
+import { signOut, useSession } from 'next-auth/react'
 
 import {
   Box,
@@ -13,19 +14,19 @@ import {
   Logo,
 } from '@island.is/island-ui/core'
 
-import { User } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 import { messages } from './messages'
 
 type HeaderType = {
   headerWhite?: boolean
-  user?: User
 }
 
-export const Header = ({ headerWhite, user }: HeaderType) => {
+export const Header = ({ headerWhite }: HeaderType) => {
   const { formatMessage } = useFormatMessage()
+  const { data: session } = useSession()
 
   return (
     <header className={cn(styles.header, { white: headerWhite })}>
@@ -58,20 +59,20 @@ export const Header = ({ headerWhite, user }: HeaderType) => {
                     justifyContent="flexEnd"
                     width="full"
                   >
-                    {user ? (
+                    {session?.user ? (
                       <DropdownMenu
-                        title={user?.name}
+                        title={session.user.displayName}
                         icon="chevronDown"
                         menuLabel={formatMessage(messages.auth.user)}
                         items={[
                           {
-                            // href: '#',
                             title: formatMessage(messages.auth.logout),
                             onClick: (e) => {
                               e.preventDefault()
-                              // TODO: implement logout
-                              // eslint-disable-next-line no-console
-                              console.log('not implemented!')
+                              signOut({
+                                callbackUrl: Routes.Login,
+                                redirect: true,
+                              })
                             },
                           },
                         ]}

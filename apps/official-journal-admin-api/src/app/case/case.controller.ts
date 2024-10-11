@@ -2,12 +2,14 @@ import { USER_ROLES } from '@dmr.is/constants'
 import { Roles, Route } from '@dmr.is/decorators'
 import {
   AdminAuthGuard,
+  IAdminUserService,
   ICaseService,
   ICommentService,
   IJournalService,
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
+  AdminUser,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -73,7 +75,23 @@ export class CaseController {
 
     @Inject(ICommentService)
     private readonly commentService: ICommentService,
+
+    @Inject(IAdminUserService)
+    private readonly adminAuthService: IAdminUserService,
   ) {}
+
+  @Route({
+    path: 'user/:nationalId',
+    operationId: 'getUser',
+    summary: 'Return a user for national id',
+    responseType: AdminUser,
+    params: [{ name: 'nationalId', type: 'string', required: true }],
+  })
+  async getUser(@Param('nationalId') nationalId: string) {
+    return ResultWrapper.unwrap(
+      await this.adminAuthService.getUserByNationalId(nationalId),
+    ).user
+  }
 
   @Route({
     path: 'nextPublicationNumber/:departmentId',

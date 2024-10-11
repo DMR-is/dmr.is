@@ -1,31 +1,33 @@
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useRouter } from 'next/router'
+import { getSession } from 'next-auth/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
 
-import { CaseOverviewGrid } from '../components/case-overview-grid/CaseOverviewGrid'
-import { Meta } from '../components/meta/Meta'
-import { CaseTableInProgress } from '../components/tables/CaseTableInProgress'
-import { CaseTableInReview } from '../components/tables/CaseTableInReview'
-import { CaseTableSubmitted } from '../components/tables/CaseTableSubmitted'
-import { Tab, Tabs } from '../components/tabs/Tabs'
-import { Case, CaseStatusTitleEnum, Paging } from '../gen/fetch'
-import { useCaseOverview } from '../hooks/api'
-import { useFilterContext } from '../hooks/useFilterContext'
-import { useFormatMessage } from '../hooks/useFormatMessage'
-import { withMainLayout } from '../layout/Layout'
-import { createDmrClient } from '../lib/api/createClient'
-import { Routes } from '../lib/constants'
-import { messages as caseProccessingMessages } from '../lib/messages/caseProcessingOverview'
-import { messages as errorMessages } from '../lib/messages/errors'
+import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
+import { Meta } from '../../components/meta/Meta'
+import { CaseTableInProgress } from '../../components/tables/CaseTableInProgress'
+import { CaseTableInReview } from '../../components/tables/CaseTableInReview'
+import { CaseTableSubmitted } from '../../components/tables/CaseTableSubmitted'
+import { Tab, Tabs } from '../../components/tabs/Tabs'
+import { Case, CaseStatusTitleEnum, Paging } from '../../gen/fetch'
+import { useCaseOverview } from '../../hooks/api'
+import { useFilterContext } from '../../hooks/useFilterContext'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { LayoutProps } from '../../layout/Layout'
+import { createDmrClient } from '../../lib/api/createClient'
+import { Routes } from '../../lib/constants'
+import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
+import { messages as errorMessages } from '../../lib/messages/errors'
 import {
   CaseOverviewSearchParams,
   getStringFromQueryString,
-  Screen,
-} from '../lib/types'
-import { CustomNextError } from '../units/error'
+} from '../../lib/types'
+import { CustomNextError } from '../../units/error'
+
 type Props = {
-  data: Case[]
+  cases: Case[]
   paging: Paging
   totalItems: {
     submitted: number
@@ -35,11 +37,10 @@ type Props = {
   }
 }
 
-const CaseProccessingOverviewScreen: Screen<Props> = ({
-  data,
-  paging,
-  totalItems,
-}) => {
+export default function CaseProccessingOverviewScreen(
+  data: InferGetServerSidePropsType<typeof getServerSideProps>,
+) {
+  const { cases, paging, totalItems } = data
   const { formatMessage } = useFormatMessage()
   const router = useRouter()
 
@@ -93,7 +94,7 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
     options: {
       keepPreviousData: true,
       fallback: {
-        cases: data,
+        cases,
         paging: paging,
         totalItems,
       },
@@ -220,7 +221,41 @@ const CaseProccessingOverviewScreen: Screen<Props> = ({
   )
 }
 
-CaseProccessingOverviewScreen.getProps = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps<Props> = async ({
+  req,
+  query,
+}) => {
+  const session = await getSession({ req })
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: Routes.Login,
+        permanent: false,
+      },
+    }
+  }
+
+  const layout: LayoutProps = {
+    bannerProps: {
+      showBanner: true,
+      showFilters: true,
+      imgSrc: '/assets/banner-small-image.svg',
+      title: caseProccessingMessages.banner.title,
+      description: caseProccessingMessages.banner.description,
+      variant: 'small',
+      breadcrumbs: [
+        {
+          title: caseProccessingMessages.breadcrumbs.home,
+          href: Routes.Dashboard,
+        },
+        {
+          title: caseProccessingMessages.breadcrumbs.cases,
+        },
+      ],
+    },
+  }
+
   try {
     const dmrClient = createDmrClient()
     const caseData = await dmrClient.editorialOverview({
@@ -232,9 +267,13 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
     })
 
     return {
-      data: caseData.cases,
-      paging: caseData.paging,
-      totalItems: caseData.totalItems,
+      props: {
+        session,
+        layout,
+        cases: caseData.cases,
+        paging: caseData.paging,
+        totalItems: caseData.totalItems,
+      },
     }
   } catch (error) {
     throw new CustomNextError(
@@ -244,23 +283,3 @@ CaseProccessingOverviewScreen.getProps = async ({ query }) => {
     )
   }
 }
-
-export default withMainLayout(CaseProccessingOverviewScreen, {
-  bannerProps: {
-    showBanner: true,
-    showFilters: true,
-    imgSrc: '/assets/banner-small-image.svg',
-    title: caseProccessingMessages.banner.title,
-    description: caseProccessingMessages.banner.description,
-    variant: 'small',
-    breadcrumbs: [
-      {
-        title: caseProccessingMessages.breadcrumbs.home,
-        href: Routes.Dashboard,
-      },
-      {
-        title: caseProccessingMessages.breadcrumbs.cases,
-      },
-    ],
-  },
-})

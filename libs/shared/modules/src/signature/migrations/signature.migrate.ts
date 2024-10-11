@@ -22,7 +22,7 @@ export const signatureMigrate = (model: SignatureModel): Signature => {
       html: model.html ?? null,
     }
   } catch (error) {
-    logger.error('Error migrating signature', error)
+    logger.error('Error migrating signature', { error, category: 'Signature' })
     throw error
   }
 }

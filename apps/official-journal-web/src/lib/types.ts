@@ -1,12 +1,6 @@
-import { GetServerSidePropsContext, NextApiHandler } from 'next'
+import { NextApiHandler } from 'next'
 import { z } from 'zod'
 export type HandlerDecorator = (handler: NextApiHandler) => NextApiHandler
-
-export type ScreenContext = {
-  query: GetServerSidePropsContext['query']
-  req: GetServerSidePropsContext['req']
-  res: GetServerSidePropsContext['res']
-}
 
 export const overrideAttachmentSchema = z.object({
   fileName: z.string(),
@@ -16,11 +10,6 @@ export const overrideAttachmentSchema = z.object({
   fileLocation: z.string(),
   fileSize: z.number(),
 })
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type Screen<Props = {}> = React.ComponentType<Props> & {
-  getProps?: (ctx: ScreenContext) => Promise<Props>
-}
 
 export type SearchParams = {
   search?: string
