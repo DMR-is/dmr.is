@@ -71,7 +71,7 @@ import { counterResult } from './case.utils'
 import {
   CaseCommunicationStatusModel,
   CaseModel,
-  CasePublishedAdverts,
+  CasePublishedAdvertsModel,
   CaseStatusModel,
   CaseTagModel,
 } from './models'
@@ -103,8 +103,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
 
-    @InjectModel(CasePublishedAdverts)
-    private readonly casePublishedAdvertsModel: typeof CasePublishedAdverts,
+    @InjectModel(CasePublishedAdvertsModel)
+    private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')

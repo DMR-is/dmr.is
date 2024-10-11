@@ -24,6 +24,7 @@ import {
   CaseChannelsModel,
   CaseCommunicationStatusModel,
   CaseModel,
+  CasePublishedAdvertsModel,
   CaseStatusModel,
   CaseTagModel,
 } from './models'
@@ -148,6 +149,10 @@ describe('CaseService', () => {
         },
         {
           provide: getModelToken(CaseCategoriesModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CasePublishedAdvertsModel),
           useClass: jest.fn(() => ({})),
         },
         {

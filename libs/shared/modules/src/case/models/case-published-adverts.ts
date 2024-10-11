@@ -18,7 +18,7 @@ import { CaseModel } from './case.model'
     exclude: ['created', 'updated'],
   },
 }))
-export class CasePublishedAdverts extends Model {
+export class CasePublishedAdvertsModel extends Model {
   @PrimaryKey
   @ForeignKey(() => CaseModel)
   @Column({
