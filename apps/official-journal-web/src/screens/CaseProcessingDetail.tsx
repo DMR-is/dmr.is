@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -20,6 +21,7 @@ import { Section } from '../components/form-stepper/Section'
 import { FormStepperThemes } from '../components/form-stepper/types'
 import { StepGrunnvinnsla } from '../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../components/form-steps/StepInnsending'
+import { StepLeidretting } from '../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../components/form-steps/StepYfirlestur'
 import { Meta } from '../components/meta/Meta'
@@ -30,13 +32,15 @@ import {
   useUpdateEmployee,
   useUpdateNextCaseStatus,
 } from '../hooks/api'
+import { useUnpublishCase } from '../hooks/api/post/useUnpublish'
+import { useUpdateAdvertHtml } from '../hooks/api/update/useUpdateAdvertHtml'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { withMainLayout } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { messages } from '../lib/messages/caseSingle'
 import { messages as errorMessages } from '../lib/messages/errors'
 import { Screen } from '../lib/types'
-import { CaseStep, caseSteps, generateSteps } from '../lib/utils'
+import { CaseStep, caseSteps, generateSteps, getTimestamp } from '../lib/utils'
 import { CustomNextError } from '../units/error'
 
 type Props = {
@@ -46,6 +50,10 @@ type Props = {
 
 const CaseSingle: Screen<Props> = ({ data, step }) => {
   const { formatMessage } = useFormatMessage()
+  const [isFixing, setIsFixing] = useState(false)
+  const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
+  const [updatedAdvertHtml, setUpdatedAdvertHtml] = useState('')
+  const [timestamp, setTimestamp] = useState(getTimestamp())
 
   const {
     data: caseData,
@@ -59,11 +67,28 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     },
   })
 
+  const { trigger: updateAdvertHtmlTrigger, isMutating: isUpdatingAdvertHTml } =
+    useUpdateAdvertHtml({
+      caseId: data.id,
+      options: {
+        onSuccess: () => {
+          setIsFixing(false)
+          setCanPublishFixedChanges(false)
+          refetchCase()
+          setTimeout(() => {
+            setTimestamp(getTimestamp())
+          }, 250)
+        },
+      },
+    })
+
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
@@ -71,7 +96,9 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     useUpdateCaseStatus({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
@@ -79,9 +106,20 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     useUpdateNextCaseStatus({
       caseId: data.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
+
+  const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
+    caseId: data.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
 
   if (isLoading) {
     return (
@@ -125,6 +163,8 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
     caseSteps.indexOf(step) < 3
       ? caseSteps[caseSteps.indexOf(step) + 1]
       : undefined
+
+  const fixStep = caseSteps.indexOf(step) > 3
 
   const employeesMock = [
     {
@@ -257,12 +297,28 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
           {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
           {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
+          {step === 'leidretting' && (
+            <StepLeidretting
+              isFixing={isFixing}
+              canPublish={canPublishFixedChanges}
+              data={activeCase}
+              timestamp={timestamp}
+              onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
+            />
+          )}
 
           {activeCase.attachments.length > 0 && (
             <Attachments activeCase={activeCase} refetchCase={refetchCase} />
           )}
 
-          <Comments activeCase={activeCase} />
+          <Comments
+            onAddCommentSuccess={() => {
+              if (isFixing) {
+                setCanPublishFixedChanges(true)
+              }
+            }}
+            activeCase={activeCase}
+          />
 
           <Box
             display="flex"
@@ -304,6 +360,53 @@ const CaseSingle: Screen<Props> = ({ data, step }) => {
                   {formatMessage(messages.paging.nextStep)}
                 </Button>
               </LinkV2>
+            ) : fixStep && !isFixing ? (
+              <Button
+                colorScheme="destructive"
+                icon="arrowForward"
+                onClick={() => setIsFixing(true)}
+              >
+                {formatMessage(messages.paging.fixStep)}
+              </Button>
+            ) : fixStep && isFixing ? (
+              <Box display="flex" columnGap={2} flexWrap="wrap">
+                <Button
+                  loading={isUnpublishing}
+                  onClick={() => unpublish()}
+                  colorScheme="destructive"
+                  icon="eyeOff"
+                  disabled={!canPublishFixedChanges}
+                  title={
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
+                  }
+                >
+                  {formatMessage(messages.paging.unpublish)}
+                </Button>
+                <Button
+                  colorScheme="destructive"
+                  icon="arrowForward"
+                  disabled={!canPublishFixedChanges}
+                  loading={isUpdatingAdvertHTml}
+                  title={
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
+                  }
+                  onClick={() => {
+                    updateAdvertHtmlTrigger({
+                      advertHtml: updatedAdvertHtml,
+                    })
+                  }}
+                >
+                  {formatMessage(messages.paging.confirmFixStep)}
+                </Button>
+              </Box>
             ) : null}
           </Box>
         </Stack>
@@ -322,7 +425,6 @@ CaseSingle.getProps = async ({ query }): Promise<Props> => {
   }
 
   try {
-    // TODO: getCase should return null if no case is found
     activeCase = await dmrClient.getCase({
       id: caseId,
     })

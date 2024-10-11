@@ -24,6 +24,7 @@ import {
   GetMainCategoryResponse,
   Institution,
   MainCategory,
+  UpdateAdvertBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -36,7 +37,10 @@ export interface IJournalService {
     model: CreateAdvert,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertResponse>>
-  updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>>
+  updateAdvert(
+    advertId: string,
+    body: UpdateAdvertBody,
+  ): Promise<ResultWrapper<GetAdvertResponse>>
 
   getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>>
   getDepartments(

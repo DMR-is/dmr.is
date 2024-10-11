@@ -11,6 +11,7 @@ import {
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
+  CaseStatusEnum,
   CreateCaseResponse,
   DefaultSearchParams,
   EditorialOverviewResponse,
@@ -26,12 +27,15 @@ import {
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -390,6 +394,21 @@ export class CaseController {
   }
 
   @Route({
+    method: 'put',
+    path: ':id/html',
+    operationId: 'updateAdvertHtml',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html',
+    bodyType: UpdateAdvertHtmlBody,
+  })
+  async updateAdvertHtml(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+  }
+
+  @Route({
     path: ':id',
     operationId: 'getCase',
     summary: 'Get case by ID.',
@@ -427,6 +446,23 @@ export class CaseController {
   }
 
   @Route({
+    path: '/published/:department',
+    operationId: 'getPublishedCases',
+    summary: 'Get cases',
+    responseType: GetPublishedCasesResponse,
+    params: [{ name: 'department', type: 'string', required: true }],
+    query: [{ type: GetPublishedCasesQuery, required: false }],
+  })
+  async publishedCases(
+    @Param('department') department: string,
+    @Query() query?: GetPublishedCasesQuery,
+  ): Promise<GetCasesReponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getPublishedCases(department, query),
+    )
+  }
+
+  @Route({
     method: 'post',
     path: 'publish',
     operationId: 'publish',
@@ -435,6 +471,23 @@ export class CaseController {
   })
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
+  }
+
+  @Route({
+    method: 'post',
+    path: ':id/unpublish',
+    operationId: 'unpublish',
+    params: [{ name: 'id', type: 'string', required: true }],
+    description: 'Unpublish case',
+  })
+  async unpublish(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseStatus(id, {
+        status: CaseStatusEnum.Unpublished,
+      }),
+    )
   }
 
   @Route({

@@ -681,6 +681,29 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/html": {
+      "put": {
+        "operationId": "updateAdvertHtml",
+        "summary": "Update advert html",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertHtmlBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -865,6 +888,53 @@
         }
       }
     },
+    "/api/v1/cases/published/{department}": {
+      "get": {
+        "operationId": "getPublishedCases",
+        "summary": "Get cases",
+        "parameters": [
+          {
+            "name": "department",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "description": "Page number",
+            "required": false,
+            "name": "page",
+            "in": "query",
+            "schema": { "default": 1, "type": "number" }
+          },
+          {
+            "description": "Search for advert title",
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "default": "", "type": "string" }
+          },
+          {
+            "description": "Page size",
+            "required": false,
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "default": 10, "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPublishedCasesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/publish": {
       "post": {
         "operationId": "publish",
@@ -878,6 +948,20 @@
             }
           }
         },
+        "responses": { "201": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/unpublish": {
+      "post": {
+        "operationId": "unpublish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": { "201": { "description": "" } }
       }
     },
@@ -1275,20 +1359,6 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/statistics/test": {
-      "get": {
-        "operationId": "StatisticsController_",
-        "parameters": [
-          {
-            "name": "test",
-            "required": true,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "200": { "description": "" } }
       }
     },
     "/api/v1/health": {
@@ -2204,6 +2274,13 @@
         },
         "required": ["status"]
       },
+      "UpdateAdvertHtmlBody": {
+        "type": "object",
+        "properties": {
+          "advertHtml": { "type": "string", "description": "Advert HTML" }
+        },
+        "required": ["advertHtml"]
+      },
       "GetCaseResponse": {
         "type": "object",
         "properties": { "case": { "$ref": "#/components/schemas/Case" } },
@@ -2239,6 +2316,35 @@
           }
         },
         "required": ["cases", "paging"]
+      },
+      "PublishedCasesTotalItems": {
+        "type": "object",
+        "properties": {
+          "a": { "type": "number" },
+          "b": { "type": "number" },
+          "c": { "type": "number" }
+        },
+        "required": ["a", "b", "c"]
+      },
+      "GetPublishedCasesResponse": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Case" }
+          },
+          "totalCases": {
+            "description": "Total items",
+            "allOf": [
+              { "$ref": "#/components/schemas/PublishedCasesTotalItems" }
+            ]
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["cases", "totalCases", "paging"]
       },
       "PostCasePublishBody": {
         "type": "object",

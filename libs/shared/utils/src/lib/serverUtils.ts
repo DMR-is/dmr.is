@@ -11,6 +11,7 @@ import {
   DEFAULT_PRICE,
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
+  PAGING_MAXIMUM_PAGE_SIZE,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
@@ -380,4 +381,14 @@ export const mapSourceToDirection = (
   return source === forSource
     ? CaseCommentDirectionEnum.Sent
     : CaseCommentDirectionEnum.Received
+}
+
+export const getPageSize = (pageSize: number | undefined): number => {
+  if (!pageSize || pageSize <= 0) return DEFAULT_PAGE_SIZE
+
+  if (pageSize > PAGING_MAXIMUM_PAGE_SIZE) {
+    return PAGING_MAXIMUM_PAGE_SIZE
+  }
+
+  return pageSize
 }

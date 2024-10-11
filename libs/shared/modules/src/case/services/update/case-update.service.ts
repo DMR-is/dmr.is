@@ -8,6 +8,7 @@ import {
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseCommunicationBody,
   UpdateCaseDepartmentBody,
@@ -247,7 +248,7 @@ export class CaseUpdateService implements ICaseUpdateService {
         comment: null,
         source: CaseCommentSourceEnum.API,
         storeState: false,
-        creator: 'Ármann Árni', // TODO: Update this when auth is implemented
+        creator: 'Ármann Árni',
         receiver: status.title,
       },
       transaction,
@@ -443,7 +444,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await Promise.all(
       toRemove.map(async (c) => {
-        await c.destroy()
+        await c.destroy({ transaction: transaction })
       }),
     )
 
@@ -578,6 +579,28 @@ export class CaseUpdateService implements ICaseUpdateService {
     await this.caseModel.update(
       {
         tagId: body.tagId,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseModel.update(
+      {
+        html: body.advertHtml,
       },
       {
         where: {

@@ -21,6 +21,7 @@ export enum Routes {
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
+  ProccessingDetailCorrection = '/ritstjorn/:caseId/leidretting',
   PublishingOverview = '/utgafa',
   PublishingDetail = '/utgafa/:caseId',
   Overview = '/heildaryfirlit',
@@ -152,6 +153,7 @@ export enum APIRotues {
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
+  UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
   UpdateType = '/api/cases/:id/updateType',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
@@ -162,4 +164,5 @@ export enum APIRotues {
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
+  UnpublishCase = '/api/cases/:id/unpublish',
 }
