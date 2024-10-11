@@ -39,6 +39,7 @@ import {
   GetMainCategoryResponse,
   Institution,
   MainCategory,
+  UpdateAdvertBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
@@ -58,7 +59,10 @@ export class MockJournalService implements IJournalService {
   create(model: CreateAdvert): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
+  updateAdvert(
+    id: string,
+    body: UpdateAdvertBody,
+  ): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
   }
   getDepartment(id: string): Promise<ResultWrapper<GetDepartmentResponse>> {

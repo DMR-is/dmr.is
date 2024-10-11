@@ -98,5 +98,25 @@ export const messages = {
       defaultMessage: 'Staða',
       description: '',
     },
+    fixStep: {
+      id: 'web.page.caseSingle:actions.fixStep',
+      defaultMessage: 'Leiðrétta',
+      description: '',
+    },
+    confirmFixStep: {
+      id: 'web.page.caseSingle:actions.confirmFixStep',
+      defaultMessage: 'Birta leiðréttingu',
+      description: '',
+    },
+    unpublish: {
+      id: 'web.page.caseSingle:actions.unpublish',
+      defaultMessage: 'Taka mál úr birtingu',
+      description: '',
+    },
+    unpublishDisabledExplanation: {
+      id: 'web.page.caseSingle:actions.unpublishDisabledExplanation',
+      defaultMessage: 'Bæta þarf við athugasemd til þess að leiðrétta mál',
+      description: '',
+    },
   }),
 }

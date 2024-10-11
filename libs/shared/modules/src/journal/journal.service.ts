@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  Advert,
   AdvertType,
   Category,
   CreateAdvert,
@@ -28,6 +27,7 @@ import {
   GetMainCategoryResponse,
   Institution,
   MainCategory,
+  UpdateAdvertBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -45,6 +45,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -135,8 +136,8 @@ export class JournalService implements IJournalService {
     })
 
     await Promise.all(
-      categories.map(async (c) => {
-        await this.advertCategoriesModel.create(
+      categories.map((c) => {
+        this.advertCategoriesModel.create(
           {
             advert_id: ad.id,
             category_id: c.id,
@@ -166,32 +167,38 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  async updateAdvert(model: Advert): Promise<ResultWrapper<GetAdvertResponse>> {
-    if (!model) {
-      throw new BadRequestException()
+  async updateAdvert(
+    advertId: string,
+    body: UpdateAdvertBody,
+  ): Promise<ResultWrapper<GetAdvertResponse>> {
+    if (!body) {
+      return ResultWrapper.err({
+        message: 'No body provided',
+        code: 400,
+      })
     }
 
-    const ad = await this.advertModel.update(
-      {
-        title: model.title,
-        departmentId: model.department?.id,
-        typeId: model.type?.id,
-        subject: model.subject,
-        serialNumber: model.publicationNumber?.number,
-        publicationYear: model.publicationNumber?.year,
-        signatureDate: model.signatureDate,
-        publicationDate: model.publicationDate,
-        documentHtml: model.document.html,
-        documentPdfUrl: model.document.pdfUrl,
-        isLegacy: model.document.isLegacy,
-        attachments: model.attachments,
-        involvedPartyId: model.involvedParty?.id,
-        status: model.status,
-      },
-      { where: { id: model.id }, returning: true },
-    )
+    const updateParams = advertUpdateParametersMapper(body)
 
-    return ResultWrapper.ok({ advert: advertMigrate(ad[1][0]) })
+    await this.advertModel.update(updateParams, {
+      where: { id: advertId },
+    })
+
+    const advert = await this.getAdvert(advertId)
+
+    if (!advert.result.ok) {
+      this.logger.error('Failed to get updated advert', {
+        category: 'JournalService',
+        metadata: { advertId },
+      })
+
+      return ResultWrapper.err({
+        message: 'Failed to get updated advert',
+        code: 500,
+      })
+    }
+
+    return ResultWrapper.ok({ advert: advert.result.value.advert })
   }
 
   @LogAndHandle()

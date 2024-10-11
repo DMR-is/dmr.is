@@ -25,7 +25,7 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE admin_user_role (
+    CREATE TABLE admin_user_roles (
       user_role_id UUID NOT NULL,
       admin_user_id UUID NOT NULL,
       PRIMARY KEY (user_role_id, admin_user_id),
@@ -354,12 +354,20 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE application_user_involved_party (
+    CREATE TABLE application_user_involved_parties (
       application_user_id UUID NOT NULL,
       involved_party_id UUID NOT NULL,
       PRIMARY KEY (application_user_id, involved_party_id),
       CONSTRAINT fk_application_user_involved_party_user_id FOREIGN KEY (application_user_id) REFERENCES application_user (id),
       CONSTRAINT fk_application_user_involved_party_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id)
+    );
+
+    CREATE TABLE published_case_adverts (
+      case_id UUID NOT NULL,
+      advert_id UUID NOT NULL,
+      PRIMARY KEY (case_id, advert_id),
+      CONSTRAINT fk_published_case_advert_case_id FOREIGN KEY (case_id) REFERENCES case_case (id),
+      CONSTRAINT fk_published_case_advert_advert_id FOREIGN KEY (advert_id) REFERENCES advert (id)
     );
 
   COMMIT;

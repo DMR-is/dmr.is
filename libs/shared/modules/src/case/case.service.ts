@@ -14,11 +14,14 @@ import {
   GetCasesReponse,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPublishedCasesQuery,
+  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -32,7 +35,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
 import { enumMapper, generatePaging } from '@dmr.is/utils'
 
 import {
@@ -68,10 +71,13 @@ import { counterResult } from './case.utils'
 import {
   CaseCommunicationStatusModel,
   CaseModel,
+  CasePublishedAdvertsModel,
   CaseStatusModel,
   CaseTagModel,
 } from './models'
 import { CASE_RELATIONS } from './relations'
+
+const LOGGING_CATEGORY = 'case-service'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -96,6 +102,9 @@ export class CaseService implements ICaseService {
 
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
+
+    @InjectModel(CasePublishedAdvertsModel)
+    private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -120,12 +129,75 @@ export class CaseService implements ICaseService {
   }
   @LogAndHandle()
   @Transactional()
-  updateCaseStatus(
+  async updateCaseStatus(
     caseId: string,
     body: UpdateCaseStatusBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseStatus(caseId, body, transaction)
+    await this.updateService.updateCaseStatus(caseId, body, transaction)
+
+    if (body.status !== CaseStatusEnum.Unpublished) {
+      return ResultWrapper.ok()
+    }
+
+    const casePublishedAdvert = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: caseId,
+      },
+    })
+
+    if (!casePublishedAdvert) {
+      return ResultWrapper.ok()
+    }
+
+    const statusLookup = await this.utilityService.advertStatusLookup(
+      AdvertStatus.Revoked,
+    )
+
+    if (!statusLookup.result.ok) {
+      this.logger.error(
+        `Failed to get advert status, when unpublishing case<${caseId}>`,
+        {
+          caseId: caseId,
+          advertId: casePublishedAdvert.advertId,
+          advertStatus: AdvertStatus.Revoked,
+          error: statusLookup.result.error,
+          category: LOGGING_CATEGORY,
+        },
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get advert status',
+      })
+    }
+
+    const updatedAdvertStatusResult = await this.journalService.updateAdvert(
+      casePublishedAdvert.advertId,
+      {
+        statusId: statusLookup.result.value.id,
+      },
+    )
+
+    if (!updatedAdvertStatusResult.result.ok) {
+      this.logger.error(
+        `Failed to update advert status<${AdvertStatus.Revoked}, when unpublishing case<${caseId}>`,
+        {
+          caseId: caseId,
+          advertId: casePublishedAdvert.advertId,
+          advertStatus: AdvertStatus.Revoked,
+          error: updatedAdvertStatusResult.result.error,
+          category: LOGGING_CATEGORY,
+        },
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert status',
+      })
+    }
+
+    return ResultWrapper.ok()
   }
   @LogAndHandle()
   @Transactional()
@@ -242,6 +314,65 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
+  async updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const [updatedCaseResult, hasAdvertResult] = await Promise.all([
+      this.updateService.updateAdvert(caseId, body, transaction),
+      this.casePublishedAdvertsModel.findOne({
+        where: {
+          caseId: caseId,
+        },
+      }),
+    ])
+
+    if (!updatedCaseResult.result.ok) {
+      this.logger.error(`Failed to update html on case<${caseId}>`, {
+        error: updatedCaseResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update case',
+      })
+    }
+
+    if (!hasAdvertResult) {
+      return ResultWrapper.ok()
+    }
+
+    const updateResult = await this.journalService.updateAdvert(
+      hasAdvertResult.advertId,
+      {
+        documentHtml: body.advertHtml,
+      },
+    )
+
+    if (!updateResult.result.ok) {
+      this.logger.error(
+        `Failed to update advert<${hasAdvertResult.advertId}>, when updating case<${caseId}.html`,
+        {
+          caseId: caseId,
+          advertId: hasAdvertResult.advertId,
+          error: updateResult.result.error,
+          category: LOGGING_CATEGORY,
+        },
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert',
+      })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   createCaseChannel(
     caseId: string,
     body: CreateCaseChannelBody,
@@ -289,7 +420,7 @@ export class CaseService implements ICaseService {
       await this.utilityService.advertStatusLookup(AdvertStatus.Published)
     ).unwrap()
 
-    await this.journalService.create(
+    const advertCreateResult = await this.journalService.create(
       {
         departmentId: activeCase.departmentId,
         typeId: activeCase.advertTypeId,
@@ -310,8 +441,23 @@ export class CaseService implements ICaseService {
       transaction,
     )
 
-    ResultWrapper.unwrap(
-      await this.utilityService.approveApplication(activeCase.applicationId),
+    if (!advertCreateResult.result.ok) {
+      this.logger.error('Failed to create advert', {
+        error: advertCreateResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to create advert',
+      })
+    }
+
+    await this.casePublishedAdvertsModel.create(
+      {
+        caseId: caseId,
+        advertId: advertCreateResult.result.value.advert.id,
+      },
+      { transaction: transaction },
     )
 
     return ResultWrapper.ok()
@@ -509,6 +655,101 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok({
       cases: mapped,
       paging: generatePaging(mapped, page, pageSize, cases.count),
+    })
+  }
+
+  @LogAndHandle()
+  async getPublishedCases(
+    department: string,
+    params: GetPublishedCasesQuery,
+  ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
+    const whereParams = {
+      publishedAt: {
+        [Op.ne]: null,
+      },
+    }
+
+    if (params.search.length) {
+      Object.assign(whereParams, {
+        advertTitle: {
+          [Op.like]: params.search,
+        },
+      })
+    }
+
+    const counterResultsPromise = this.caseModel.findAll({
+      attributes: [
+        [Sequelize.literal(`"department"."slug"`), 'departmentSlug'],
+        [Sequelize.literal(`COUNT("CaseModel"."department_id")`), 'totalCases'],
+      ],
+      raw: true,
+      offset: (params.page - 1) * params.pageSize,
+      limit: params.pageSize,
+      include: [
+        {
+          model: AdvertDepartmentModel,
+          as: `department`,
+        },
+      ],
+      where: whereParams,
+      group: [`"department"."slug"`, `"department"."id"`],
+      replacements: {
+        department,
+      },
+    })
+
+    const casesPromise = this.getCases({
+      department: [department],
+      status: [
+        CaseStatusEnum.Published,
+        CaseStatusEnum.Rejected,
+        CaseStatusEnum.Unpublished,
+      ],
+      page: params.page.toString(),
+      pageSize: params.pageSize.toString(),
+      published: 'true',
+    })
+
+    const [counterResults, casesLookup] = await Promise.all([
+      counterResultsPromise,
+      casesPromise,
+    ])
+
+    if (!casesLookup.result.ok) {
+      this.logger.warn('Failed to get cases for published cases', {
+        error: casesLookup.result.error,
+        cateory: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Internal server error',
+      })
+    }
+
+    const totalCases = (
+      counterResults as unknown as PublishedCaseCounterResults[]
+    ).reduce(
+      (r, current) => {
+        const key = current.departmentSlug.split('-')[0]
+        const value = parseInt(current.totalCases, 10)
+
+        return {
+          ...r,
+          [key]: value,
+        }
+      },
+      {
+        a: 0,
+        b: 0,
+        c: 0,
+      } as GetPublishedCasesResponse['totalCases'],
+    )
+
+    return ResultWrapper.ok({
+      cases: casesLookup.result.value.cases,
+      paging: casesLookup.result.value.paging,
+      totalCases,
     })
   }
 

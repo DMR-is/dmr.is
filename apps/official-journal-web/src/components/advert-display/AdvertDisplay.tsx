@@ -49,7 +49,7 @@ export const AdvertDisplay = ({
         </Box>
       )}
       <Box textAlign="center" marginBottom={[2, 3, 4]}>
-        <Text variant="h3">{advertType}</Text>
+        <Text variant="intro">{advertType}</Text>
         <Text variant="h4">{advertSubject}</Text>
       </Box>
       <Box
