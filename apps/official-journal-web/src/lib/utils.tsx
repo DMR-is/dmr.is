@@ -336,3 +336,18 @@ export const mapDepartmentSlugToLetter = (slug: string) =>
   slug === 'a-deild' ? 'a' : slug === 'b-deild' ? 'b' : 'c'
 
 export const getTimestamp = () => new Date().toISOString()
+
+export const deleteUndefined = <T,>(
+  obj: Record<string, any> | undefined,
+): T => {
+  if (obj) {
+    Object.keys(obj).forEach((key: string) => {
+      if (obj[key] && typeof obj[key] === 'object') {
+        deleteUndefined(obj[key])
+      } else if (typeof obj[key] === 'undefined') {
+        delete obj[key]
+      }
+    })
+  }
+  return obj as T
+}

@@ -24,6 +24,7 @@ import {
   CaseOverviewSearchParams,
   getStringFromQueryString,
 } from '../../lib/types'
+import { deleteUndefined } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -267,13 +268,13 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     })
 
     return {
-      props: {
+      props: deleteUndefined({
         session,
         layout,
         cases: caseData.cases,
         paging: caseData.paging,
         totalItems: caseData.totalItems,
-      },
+      }),
     }
   } catch (error) {
     throw new CustomNextError(

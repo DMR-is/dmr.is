@@ -20,6 +20,7 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { APIRotues, CaseDepartmentTabs, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/casePublishOverview'
 import { getStringFromQueryString } from '../../lib/types'
+import { deleteUndefined } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -211,12 +212,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     })
 
     return {
-      props: {
+      props: deleteUndefined({
         session,
         layout,
         cases,
         paging,
-      },
+      }),
     }
   } catch (error) {
     throw new CustomNextError(

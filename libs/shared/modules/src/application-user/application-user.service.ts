@@ -17,6 +17,8 @@ import { applicationUserMigrate } from './migrations/application-user.migrate'
 import { IApplicationUserService } from './application-user.service.interface'
 import { ApplicationUserModel } from './models'
 
+const LOGGING_CATEGORY = 'application-user-service'
+
 @Injectable()
 export class ApplicationUserService implements IApplicationUserService {
   constructor(
@@ -70,7 +72,19 @@ export class ApplicationUserService implements IApplicationUserService {
     token: string | undefined,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ user: ApplicationUser }>> {
-    if (!token) {
+    let localToken = token
+    if (localToken?.startsWith('Bearer ')) {
+      localToken = localToken.slice(7)
+    }
+
+    if (!localToken) {
+      this.logger.warn(
+        `Tried to get user from token but no token was provided`,
+        {
+          category: LOGGING_CATEGORY,
+        },
+      )
+
       return ResultWrapper.err({
         code: 400,
         message: 'Invalid token',
@@ -78,9 +92,13 @@ export class ApplicationUserService implements IApplicationUserService {
     }
 
     // TODO USE VERIFY LATER
-    const tokenUser = decode(token)
+    const tokenUser = decode(localToken)
 
     if (!tokenUser || typeof tokenUser === 'string') {
+      this.logger.warn(`Tried to get user from token but token was invalid`, {
+        category: LOGGING_CATEGORY,
+      })
+
       return ResultWrapper.err({
         code: 400,
         message: 'Invalid token',
@@ -88,6 +106,13 @@ export class ApplicationUserService implements IApplicationUserService {
     }
 
     if (!tokenUser?.nationalId) {
+      this.logger.warn(
+        `Tried to get user from token but no nationalId was found in token`,
+        {
+          category: LOGGING_CATEGORY,
+        },
+      )
+
       return ResultWrapper.err({
         code: 400,
         message: 'Invalid token',

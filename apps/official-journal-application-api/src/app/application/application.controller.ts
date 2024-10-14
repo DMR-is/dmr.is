@@ -353,7 +353,7 @@ export class ApplicationController {
   }
 
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id/involved-parties',
     operationId: 'getInvolvedParties',
