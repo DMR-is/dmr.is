@@ -78,7 +78,7 @@ export const StepYfirlestur = ({ data }: Props) => {
                 ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertTitle}
+            advertType={activeCase.advertType.title}
             advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
             isLegacy={activeCase.isLegacy}

@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 
 import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
 
@@ -19,6 +19,7 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const [expanded, setExpanded] = useState(activeCase.comments.length < 6)
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc')
 
   const { mutate: refetchCase, isLoading: isRefetchingCase } = useCase({
     caseId: activeCase.id,
@@ -35,14 +36,33 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
 
   const isLoading = isRefetchingCase || isDeletingComment
 
+  const sortedComments = useMemo(() => {
+    return activeCase.comments.sort((a, b) => {
+      if (order === 'asc') {
+        return new Date(a.ageIso).getTime() - new Date(b.ageIso).getTime()
+      } else {
+        return new Date(b.ageIso).getTime() - new Date(a.ageIso).getTime()
+      }
+    })
+  }, [activeCase.comments, order])
+
   return (
     <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
-      <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
-      {activeCase.comments.length === 0 ? (
+      <Box display="flex" justifyContent="spaceBetween" alignItems="center">
+        <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
+
+        <button
+          className={styles.orderButton({ order: order })}
+          onClick={() => setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+        >
+          <Icon icon="arrowUp" color="blue400" size="medium" />
+        </button>
+      </Box>
+      {sortedComments.length === 0 ? (
         <Text>Engar athugasemdir fundust fyrir þetta mál</Text>
       ) : (
-        activeCase.comments.map((c, i) => {
-          if (!expanded && i !== 0 && i < activeCase.comments.length - 4) {
+        sortedComments.map((c, i) => {
+          if (!expanded && i !== 0 && i < sortedComments.length - 4) {
             return null
           }
 

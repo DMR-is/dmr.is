@@ -351,3 +351,16 @@ export const deleteUndefined = <T,>(
   }
   return obj as T
 }
+
+export const getOverviewStatusColor = (status: string) => {
+  switch (status) {
+    case CaseStatusTitleEnum.ÚTgefið:
+      return 'mint'
+    case CaseStatusTitleEnum.BirtinguHafnað:
+      return 'red'
+    case CaseStatusTitleEnum.TekiðÚrBirtingu:
+      return 'rose'
+    default:
+      return 'blue'
+  }
+}

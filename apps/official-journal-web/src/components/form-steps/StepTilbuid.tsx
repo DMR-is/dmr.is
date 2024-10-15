@@ -39,7 +39,7 @@ export const StepTilbuid = ({ activeCase }: Props) => {
                 ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertTitle}
+            advertType={activeCase.advertType.title}
             advertSubject={activeCase.advertType.title}
             advertText={activeCase.html}
             isLegacy={activeCase.isLegacy}

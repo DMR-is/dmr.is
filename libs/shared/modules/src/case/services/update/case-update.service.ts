@@ -24,7 +24,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack } from '@dmr.is/utils'
+import { getFastTrack, getNextStatus } from '@dmr.is/utils'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -33,6 +33,7 @@ import { IApplicationService } from '../../../application/application.service.in
 import { ICommentService } from '../../../comment/comment.service.interface'
 import { IUtilityService } from '../../../utility/utility.service.interface'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
+import { caseStatusMigrate } from '../../migrations/case-status.migrate'
 import { CaseCategoriesModel, CaseModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
 
@@ -276,22 +277,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateNextStatusBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    const { currentStatus } = body
-
-    const status = (
-      await this.utilityService.caseStatusLookup(currentStatus, transaction)
+    const currentStatus = (
+      await this.utilityService.caseStatusLookup(
+        body.currentStatus,
+        transaction,
+      )
     ).unwrap()
 
-    const nextStatus =
-      status.title === CaseStatusEnum.Submitted
-        ? CaseStatusEnum.InProgress
-        : status.title === CaseStatusEnum.InProgress
-        ? CaseStatusEnum.InReview
-        : status.title === CaseStatusEnum.InReview
-        ? CaseStatusEnum.ReadyForPublishing
-        : status.title === CaseStatusEnum.ReadyForPublishing
-        ? CaseStatusEnum.Published
-        : status.title
+    const allowedStatuses = [
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+    ]
+
+    if (!allowedStatuses.includes(currentStatus.title)) {
+      /**
+       * Case status not in a state where it can be updated, so we return early
+       */
+      this.logger.debug(
+        `Case status<${currentStatus.title}> is not in allowed statuses`,
+      )
+      return ResultWrapper.ok()
+    }
+
+    const nextStatus = getNextStatus(currentStatus.title)
 
     ResultWrapper.unwrap(
       await this.utilityService.caseStatusLookup(nextStatus, transaction),

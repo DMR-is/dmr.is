@@ -179,6 +179,12 @@ export class CaseModel extends Model {
   })
   html!: string
 
+  @Column({
+    type: DataType.TEXT,
+    field: 'publication_number',
+  })
+  publicationNumber!: string | null
+
   @BelongsTo(() => AdvertTypeModel, 'advert_type_id')
   advertType!: AdvertTypeModel
 

@@ -2110,6 +2110,10 @@
             "example": "Additional message from sender"
           },
           "html": { "type": "string", "description": "The case html content." },
+          "publicationNumber": {
+            "type": "string",
+            "description": "Publication number of the case."
+          },
           "channels": {
             "description": "Channels for the case.",
             "example": {
@@ -2169,6 +2173,7 @@
           "paid",
           "message",
           "html",
+          "publicationNumber",
           "channels",
           "comments",
           "signatures",

@@ -41,6 +41,7 @@ export const caseMigrate = (model: CaseModel): Case => {
       advertType: model.advertType,
       message: model.message,
       html: model.html,
+      publicationNumber: model.publicationNumber,
       advertCategories: model.categories
         ? model.categories.map((c) => advertCategoryMigrate(c)) ?? []
         : [],

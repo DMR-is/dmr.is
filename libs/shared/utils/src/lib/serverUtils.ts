@@ -19,6 +19,7 @@ import {
   ApplicationSignature,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
+  CaseStatusEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -110,7 +111,8 @@ export const getFastTrack = (date: Date) => {
   const diff = date.getTime() - now.getTime()
   const diffDays = diff / (1000 * 3600 * 24)
   let fastTrack = false
-  if (diffDays > FAST_TRACK_DAYS) {
+
+  if (diffDays <= FAST_TRACK_DAYS) {
     fastTrack = true
   }
   return {
@@ -181,6 +183,19 @@ export const getSignatureBody = (
         }
       : undefined,
   }
+}
+
+export const getNextStatus = (status: CaseStatusEnum): CaseStatusEnum => {
+  switch (status) {
+    case CaseStatusEnum.Submitted:
+      return CaseStatusEnum.InProgress
+    case CaseStatusEnum.InProgress:
+      return CaseStatusEnum.InReview
+    case CaseStatusEnum.InReview:
+      return CaseStatusEnum.ReadyForPublishing
+  }
+
+  return status
 }
 
 export const handleException = <T>({
