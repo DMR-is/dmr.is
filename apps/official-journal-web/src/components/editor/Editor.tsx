@@ -31,11 +31,9 @@ export const HTMLEditor = ({
       readOnly={readonly}
       valueRef={valueRef}
       fileUploader={handleUpload}
-      classes={{
-        ...classes,
-        editor: classes.editorNoMinHeight,
-      }}
-      config={readonly ? { toolbar: `` } : undefined}
+      classes={classes}
+      key={readonly ? 'readonly' : 'editable'}
+      config={readonly ? { toolbar: `` } : {}}
       /**
        * Delayed onChange to prevent the editor from reading the value before it has been updated
        */
