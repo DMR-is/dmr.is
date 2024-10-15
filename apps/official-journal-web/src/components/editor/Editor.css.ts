@@ -158,7 +158,6 @@ export const classes: EditorClasses & { editorNoMinHeight: string } = {
 
   editor: style({
     position: 'relative',
-    maxHeight: 'calc(100vh - 10rem)',
     width: '100%',
     caretColor: theme.color.blue400,
     padding: spacing[3],
