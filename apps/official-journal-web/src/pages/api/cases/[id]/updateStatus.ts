@@ -16,13 +16,13 @@ class UpdateStatusHandler {
     const { id } = req.query as { id?: string }
 
     if (!id) {
-      return res.status(400).end()
+      return void res.status(400).end()
     }
 
     const parsed = bodySchema.safeParse(req.body)
 
     if (!parsed.success) {
-      return res.status(400).end()
+      return void res.status(400).end()
     }
 
     const client = createDmrClient()
@@ -34,7 +34,7 @@ class UpdateStatusHandler {
       },
     })
 
-    return res.status(204).end()
+    return void res.status(204).end()
   }
 }
 

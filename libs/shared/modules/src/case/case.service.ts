@@ -452,13 +452,27 @@ export class CaseService implements ICaseService {
       })
     }
 
-    await this.casePublishedAdvertsModel.create(
+    const updatePromise = this.caseModel.update(
+      {
+        publicationNumber: number,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    const relationPromise = this.casePublishedAdvertsModel.create(
       {
         caseId: caseId,
         advertId: advertCreateResult.result.value.advert.id,
       },
       { transaction: transaction },
     )
+
+    await Promise.all([updatePromise, relationPromise])
 
     return ResultWrapper.ok()
   }
@@ -599,7 +613,7 @@ export class CaseService implements ICaseService {
       limit: pageSize,
       where: whereParams,
       distinct: true,
-      order: [['createdAt', 'DESC']],
+      order: [['requestedPublicationDate', 'DESC']],
       include: [
         ...CASE_RELATIONS,
         {

@@ -1,4 +1,5 @@
 import {
+  Box,
   GridColumn,
   GridContainer,
   GridRow,
@@ -9,6 +10,7 @@ import {
 import { Case } from '../../gen/fetch'
 import { formatDate, getSignatureDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
+import { HTMLEditor } from '../editor/Editor'
 type Props = {
   activeCase: Case
 }
@@ -34,7 +36,7 @@ export const StepInnsending = ({ activeCase }: Props) => {
 
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
-          <AdvertDisplay
+          {/* <AdvertDisplay
             advertNumber={`${activeCase.caseNumber}`} // TODO: add publication number to case
             signatureDate={
               signatureDate
@@ -45,7 +47,10 @@ export const StepInnsending = ({ activeCase }: Props) => {
             advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
             isLegacy={activeCase.isLegacy}
-          />
+          /> */}
+          <Box borderRadius="large" border="standard">
+            <HTMLEditor defaultValue={activeCase.html} readonly />
+          </Box>
         </GridColumn>
       </GridRow>
     </GridContainer>

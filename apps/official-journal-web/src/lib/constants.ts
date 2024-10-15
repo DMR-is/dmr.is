@@ -29,6 +29,34 @@ export enum Routes {
   Login = '/innskraning',
 }
 
+export enum PageTitles {
+  Dashboard = 'Stjórnborð',
+  CaseProcessing = 'Ritstjórn',
+  CasePublishing = 'Útgáfa',
+  CaseOverview = 'Heildaryfirlit',
+}
+
+type Path = {
+  pathname: string
+  title: string
+  order: number
+}
+
+export const PagePaths: Array<Path> = [
+  { pathname: Routes.Overview, title: PageTitles.CaseOverview, order: 4 },
+  {
+    pathname: Routes.ProcessingOverview,
+    title: PageTitles.CaseProcessing,
+    order: 2,
+  },
+  {
+    pathname: Routes.PublishingOverview,
+    title: PageTitles.CasePublishing,
+    order: 3,
+  },
+  { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
+]
+
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'A deild', value: 'a-deild', key: 'department' },
   { label: 'B deild', value: 'b-deild', key: 'department' },

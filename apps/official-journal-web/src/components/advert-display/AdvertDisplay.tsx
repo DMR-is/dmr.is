@@ -1,5 +1,6 @@
 import { Box, ResponsiveSpace, Text } from '@island.is/island-ui/core'
 
+import { HTMLEditor } from '../editor/Editor'
 import * as s from './AdvertDisplay.css'
 
 export type AdvertDisplayProps = {
@@ -52,10 +53,11 @@ export const AdvertDisplay = ({
         <Text variant="intro">{advertType}</Text>
         <Text variant="h4">{advertSubject}</Text>
       </Box>
-      <Box
+      {/* <Box
         className={isLegacy ? s.bodyText : s.bodyText}
         dangerouslySetInnerHTML={{ __html: advertText }}
-      ></Box>
+      ></Box> */}
+      <HTMLEditor defaultValue={advertText} readonly={true} />
     </Box>
   )
 }

@@ -198,6 +198,7 @@ module.exports = {
       advert_requested_publication_date TIMESTAMP WITH TIME ZONE,
       advert_type_id UUID NOT NULL,
       advert_html TEXT NOT NULL,
+      publication_number VARCHAR,
       CONSTRAINT fk_case_case_status_id FOREIGN KEY (status_id) REFERENCES case_status (id),
       CONSTRAINT fk_case_case_tag_id FOREIGN KEY (tag_id) REFERENCES case_tag (id),
       CONSTRAINT fk_case_case_involved_party_id FOREIGN KEY (involved_party_id) REFERENCES advert_involved_party (id),

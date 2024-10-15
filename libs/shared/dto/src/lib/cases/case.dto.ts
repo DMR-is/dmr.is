@@ -216,6 +216,14 @@ export class Case {
   html!: string
 
   @ApiProperty({
+    type: String,
+    description: 'Publication number of the case.',
+  })
+  @IsString()
+  @ValidateIf((o) => o.publicationNumber !== null)
+  publicationNumber!: string | null
+
+  @ApiProperty({
     type: [CaseChannel],
     description: 'Channels for the case.',
     example: {
