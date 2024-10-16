@@ -40,7 +40,7 @@ export const StepTilbuid = ({ activeCase }: Props) => {
                 : undefined
             }
             advertType={activeCase.advertType.title}
-            advertSubject={activeCase.advertType.title}
+            advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
             isLegacy={activeCase.isLegacy}
           />
