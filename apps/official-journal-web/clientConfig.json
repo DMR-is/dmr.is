@@ -547,7 +547,7 @@
       }
     },
     "/api/v1/cases/{id}/type": {
-      "get": {
+      "put": {
         "operationId": "updateType",
         "summary": "Update type of case and application",
         "parameters": [
@@ -566,7 +566,7 @@
             }
           }
         },
-        "responses": { "200": { "description": "" } }
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/{id}/publishDate": {

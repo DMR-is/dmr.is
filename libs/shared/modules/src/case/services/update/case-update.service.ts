@@ -33,9 +33,10 @@ import { IApplicationService } from '../../../application/application.service.in
 import { ICommentService } from '../../../comment/comment.service.interface'
 import { IUtilityService } from '../../../utility/utility.service.interface'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
-import { caseStatusMigrate } from '../../migrations/case-status.migrate'
 import { CaseCategoriesModel, CaseModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
+
+const LOGGING_CATEGORY = 'case-update-service'
 
 @Injectable()
 export class CaseUpdateService implements ICaseUpdateService {
@@ -103,10 +104,6 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseRes = (await this.utilityService.caseLookup(id)).unwrap()
-
-    const employeeLookup = (
-      await this.utilityService.userLookup(userId)
-    ).unwrap()
 
     await this.caseModel.update(
       {
@@ -607,7 +604,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.caseModel.update(
+    const [_, updatedRows] = await this.caseModel.update(
       {
         html: body.advertHtml,
       },
@@ -616,8 +613,46 @@ export class CaseUpdateService implements ICaseUpdateService {
           id: caseId,
         },
         transaction: transaction,
+        returning: true,
       },
     )
+
+    if (!updatedRows.length) {
+      this.logger.error(`Failed to update advert for case<${caseId}>`, {
+        category: 'CaseUpdateService',
+        error: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert',
+      })
+    }
+
+    const applicationId = updatedRows[0].applicationId
+
+    const advertUpdate = await this.applicationService.updateApplication(
+      applicationId,
+      {
+        answers: {
+          advert: {
+            html: body.advertHtml,
+          },
+        },
+      },
+    )
+
+    if (!advertUpdate.result.ok) {
+      this.logger.error(`Failed to update advert for case<${caseId}>`, {
+        category: 'CaseUpdateService',
+        error: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert',
+      })
+    }
 
     return ResultWrapper.ok()
   }
