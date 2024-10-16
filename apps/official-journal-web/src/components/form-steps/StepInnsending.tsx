@@ -72,6 +72,10 @@ export const StepInnsending = ({ activeCase }: Props) => {
               defaultValue={original}
               onChange={debouncedHtmlHandler}
             />
+            <HTMLEditor
+              defaultValue={activeCase.signatures.map((s) => s.html).join('')}
+              readonly
+            />
           </Box>
         </GridColumn>
       </GridRow>

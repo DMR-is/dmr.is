@@ -81,6 +81,7 @@ export const StepYfirlestur = ({ data }: Props) => {
             advertType={activeCase.advertType.title}
             advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
+            signatureHtml={activeCase.signatures.map((s) => s.html).join('')}
             isLegacy={activeCase.isLegacy}
           />
         </GridColumn>

@@ -9,6 +9,7 @@ export type AdvertDisplayProps = {
   advertType: string
   advertSubject: string
   advertText: string
+  signatureHtml?: string
   isLegacy: boolean
   paddingTop?: ResponsiveSpace
 }
@@ -20,6 +21,7 @@ export const AdvertDisplay = ({
   advertSubject,
   advertText,
   isLegacy,
+  signatureHtml,
   paddingTop,
 }: AdvertDisplayProps) => {
   if (!advertText) {
@@ -53,11 +55,8 @@ export const AdvertDisplay = ({
         <Text variant="intro">{advertType}</Text>
         <Text variant="h4">{advertSubject}</Text>
       </Box>
-      {/* <Box
-        className={isLegacy ? s.bodyText : s.bodyText}
-        dangerouslySetInnerHTML={{ __html: advertText }}
-      ></Box> */}
       <HTMLEditor defaultValue={advertText} readonly={true} />
+      <HTMLEditor defaultValue={signatureHtml} readonly={true} />
     </Box>
   )
 }
