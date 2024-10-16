@@ -276,7 +276,7 @@ export class ApplicationController {
   }
 
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(flase)
+  @WithCase(false)
   @Route({
     path: ':id/attachments/:type',
     method: 'post',
