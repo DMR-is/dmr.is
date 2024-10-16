@@ -304,6 +304,7 @@ export class CaseController {
   }
 
   @Route({
+    method: 'put',
     path: ':id/type',
     operationId: 'updateType',
     summary: 'Update type of case and application',

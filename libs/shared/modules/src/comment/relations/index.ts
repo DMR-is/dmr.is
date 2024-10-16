@@ -1,5 +1,4 @@
 import { CaseStatusModel } from '../../case/models'
-import { CASE_RELATIONS } from '../../case/relations'
 import { CaseCommentModel, CaseCommentTypeModel } from '../models'
 
 /**
@@ -16,9 +15,6 @@ export const getCaseCommentsRelations = (internal?: boolean) => {
       model: CaseCommentModel,
       where: whereParams,
       include: [CaseCommentTypeModel, CaseStatusModel],
-    },
-    {
-      ...CASE_RELATIONS,
     },
   ]
 }

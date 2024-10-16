@@ -78,7 +78,7 @@ export class ApplicationController {
    * @returns A promise that resolves to the price of the application.
    */
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id/price',
     operationId: 'getPrice',
@@ -99,7 +99,7 @@ export class ApplicationController {
    * @returns A promise that resolves to the application.
    */
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id',
     operationId: 'getApplication',
@@ -250,7 +250,7 @@ export class ApplicationController {
   }
 
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id/presigned-url/:type',
     method: 'post',
@@ -276,7 +276,7 @@ export class ApplicationController {
   }
 
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(flase)
   @Route({
     path: ':id/attachments/:type',
     method: 'post',
@@ -303,7 +303,7 @@ export class ApplicationController {
   }
 
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id/attachments/:type',
     params: [
@@ -332,7 +332,7 @@ export class ApplicationController {
    * @param key location of the attachment in s3
    */
   @UseGuards(ApplicationAuthGaurd)
-  @WithCase(true)
+  @WithCase(false)
   @Route({
     path: ':id/attachments/',
     method: 'delete',

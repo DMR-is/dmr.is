@@ -1,3 +1,6 @@
+import debounce from 'lodash/debounce'
+import { useState } from 'react'
+
 import {
   Box,
   GridColumn,
@@ -6,17 +9,45 @@ import {
   Inline,
   Tag,
 } from '@island.is/island-ui/core'
+import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { Case } from '../../gen/fetch'
-import { formatDate, getSignatureDate } from '../../lib/utils'
-import { AdvertDisplay } from '../advert-display/AdvertDisplay'
+import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { HTMLEditor } from '../editor/Editor'
 type Props = {
   activeCase: Case
 }
-
 export const StepInnsending = ({ activeCase }: Props) => {
-  const signatureDate = getSignatureDate(activeCase.signatures)
+  const original = activeCase.html as HTMLText
+  const { trigger: updateHtml } = useUpdateAdvertHtml({
+    caseId: activeCase.id,
+  })
+
+  const [localHtml, setLocalHtml] = useState<HTMLText>(original)
+
+  const handleHtmlChange = async (value: HTMLText) => {
+    setLocalHtml(value)
+
+    const dirtyClean = (
+      await import('@island.is/regulations-tools/dirtyClean-browser')
+    ).default
+
+    const localClean = dirtyClean(value)
+    const originalClean = dirtyClean(original)
+
+    if (localClean !== originalClean) {
+      updateHtml({
+        advertHtml: value,
+      })
+    }
+  }
+
+  const debouncedHtmlChange = debounce(handleHtmlChange, 300)
+
+  const debouncedHtmlHandler = (value: HTMLText) => {
+    debouncedHtmlChange.cancel()
+    debouncedHtmlChange(value)
+  }
 
   return (
     <GridContainer>
@@ -36,20 +67,15 @@ export const StepInnsending = ({ activeCase }: Props) => {
 
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
-          {/* <AdvertDisplay
-            advertNumber={`${activeCase.caseNumber}`} // TODO: add publication number to case
-            signatureDate={
-              signatureDate
-                ? formatDate(signatureDate, 'dd. MMMM yyyy')
-                : undefined
-            }
-            advertType={activeCase.advertType.title}
-            advertSubject={activeCase.advertTitle}
-            advertText={activeCase.html}
-            isLegacy={activeCase.isLegacy}
-          /> */}
           <Box borderRadius="large" border="standard">
-            <HTMLEditor defaultValue={activeCase.html} readonly />
+            <HTMLEditor
+              defaultValue={original}
+              onChange={debouncedHtmlHandler}
+            />
+            <HTMLEditor
+              defaultValue={activeCase.signatures.map((s) => s.html).join('')}
+              readonly
+            />
           </Box>
         </GridColumn>
       </GridRow>
