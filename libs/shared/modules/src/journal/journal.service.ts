@@ -692,15 +692,35 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
+
+    const whereParams = {}
+    if (params?.dateFrom) {
+      Object.assign(whereParams, {
+        publicationDate: {
+          [Op.gte]: params.dateFrom,
+        },
+      })
+    }
+
+    if (params?.dateTo) {
+      Object.assign(whereParams, {
+        publicationDate: {
+          [Op.lte]: params.dateTo,
+        },
+      })
+    }
+
+    if (params?.search) {
+      Object.assign(whereParams, {
+        subject: { [Op.iLike]: searchCondition },
+      })
+    }
+
     const adverts = await this.advertModel.findAndCountAll({
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      where: {
-        [Op.and]: [
-          searchCondition ? { subject: { [Op.iLike]: searchCondition } } : {},
-        ],
-      },
+      where: whereParams,
       include: [
         {
           model: AdvertTypeModel,
@@ -742,6 +762,7 @@ export class JournalService implements IJournalService {
       order: [
         // [{ model: AdvertTypeModel, as: 'type' }, 'title', 'ASC'],
         ['publicationDate', 'DESC'],
+        ['serialNumber', 'DESC'],
       ],
     })
 
