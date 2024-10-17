@@ -82,21 +82,21 @@ export class GetAdvertsQueryParams {
     name: 'dateFrom',
     description:
       'Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
-    type: Date,
+    type: String,
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  dateFrom?: Date
+  dateFrom?: string
 
   @ApiProperty({
     name: 'dateTo',
     description:
       'Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
-    type: Date,
+    type: String,
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  dateTo?: Date
+  dateTo?: string
 }
