@@ -759,10 +759,10 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
+      subQuery: false,
       order: [
-        // [{ model: AdvertTypeModel, as: 'type' }, 'title', 'ASC'],
-        ['publicationDate', 'DESC'],
-        ['serialNumber', 'DESC'],
+        [Sequelize.literal('"AdvertModel"."publication_date"::date'), 'DESC'],
+        [Sequelize.literal('"AdvertModel"."serial_number"'), 'DESC'],
       ],
     })
 
