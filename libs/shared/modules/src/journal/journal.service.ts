@@ -721,6 +721,12 @@ export class JournalService implements IJournalService {
       limit: pageSize,
       offset: (page - 1) * pageSize,
       where: whereParams,
+      attributes: {
+        include: [
+          ['publication_date', 'customPublicationDate'],
+          ['serial_number', 'customSerialNumber'],
+        ],
+      },
       include: [
         {
           model: AdvertTypeModel,
@@ -759,14 +765,14 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
-      subQuery: false,
       order: [
-        [Sequelize.literal('"AdvertModel"."publication_date"::date'), 'DESC'],
-        [Sequelize.literal('"AdvertModel"."serial_number"'), 'DESC'],
+        [Sequelize.literal('"customPublicationDate"'), 'DESC'],
+        [Sequelize.literal('"customSerialNumber"'), 'DESC'],
       ],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))
+
     const paging = generatePaging(mapped, page, pageSize, adverts.count)
 
     return ResultWrapper.ok({
