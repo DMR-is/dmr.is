@@ -110,7 +110,7 @@ export default function CaseProccessingOverviewScreen(
         ...searchParams,
         status: tabId,
       })
-      router.push(
+      router.replace(
         {
           query: { ...router.query, status: tabId },
         },

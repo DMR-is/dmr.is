@@ -338,6 +338,7 @@ export const mapDepartmentSlugToLetter = (slug: string) =>
 export const getTimestamp = () => new Date().toISOString()
 
 export const deleteUndefined = <T,>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any> | undefined,
 ): T => {
   if (obj) {
