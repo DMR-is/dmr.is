@@ -66,7 +66,7 @@ export default function CasePublishingOverview(
   const onTabChange = (id: string) => {
     setSelectedTab(id)
 
-    router.push(
+    router.replace(
       {
         query: {
           ...router.query,

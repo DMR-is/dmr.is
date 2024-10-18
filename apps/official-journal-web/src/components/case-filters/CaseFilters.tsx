@@ -59,7 +59,7 @@ export const CaseFilters = () => {
       }
     })
 
-    router.push(
+    router.replace(
       {
         query: { ...filterParams },
       },
