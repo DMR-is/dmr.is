@@ -6,8 +6,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserRoleModel } from './admin-user-role.model'
-import { UserRoleModel } from './user-role.model'
+import { AdminUserRolesModel } from './admin-user-role.model'
+import { AdminUserRoleModel } from './user-role.model'
 
 @Table({ tableName: 'admin_user', timestamps: false })
 export class AdminUserModel extends Model {
@@ -43,7 +43,7 @@ export class AdminUserModel extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'last_name',
+    field: 'display_name',
   })
   displayName!: string
 
@@ -59,8 +59,8 @@ export class AdminUserModel extends Model {
   })
   updated!: string
 
-  @BelongsToMany(() => UserRoleModel, {
-    through: () => AdminUserRoleModel,
+  @BelongsToMany(() => AdminUserRoleModel, {
+    through: () => AdminUserRolesModel,
   })
-  roles!: UserRoleModel[]
+  roles!: AdminUserRoleModel[]
 }

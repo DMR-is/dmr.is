@@ -6,6 +6,6 @@ export const signOutUrl = (window: Window, idToken: string) =>
 export const identityServerConfig = {
   id: identityServerId,
   name: 'Iceland authentication service',
-  scope: `openid profile offline_access @dmr.is/ojoi`,
-  clientId: '@dmr.is/ojoi',
+  scope: `openid profile @skra.is/individuals`,
+  clientId: '@dmr.is/ojoi/web',
 }

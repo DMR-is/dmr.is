@@ -59,6 +59,35 @@ VALUES
   );
 
 INSERT INTO
+  ADMIN_USER (
+    ID,
+    NATIONAL_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    DISPLAY_NAME,
+    CREATED,
+    UPDATED
+  )
+VALUES
+  (
+    '115e5c5d-e257-4e9a-ad57-e26f4bb890ef',
+    '0101302399',
+    'Gervimaður',
+    'Færeyjar',
+    'GM Færeyjar',
+    '2024-10-02T14:11:01.646Z',
+    '2024-10-02T14:11:01.646Z'
+  );
+
+INSERT INTO
+  ADMIN_USER_ROLE (USER_ROLE_ID, ADMIN_USER_ID)
+VALUES
+  (
+    '66f472c1-f133-48ba-a74b-318e1920dc24',
+    '115e5c5d-e257-4e9a-ad57-e26f4bb890ef'
+  );
+
+INSERT INTO
   ADMIN_USER_ROLE (USER_ROLE_ID, ADMIN_USER_ID)
 VALUES
   (
