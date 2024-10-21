@@ -4,7 +4,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
-  CaseStatus,
   CaseStatusEnum,
   DefaultSearchParams,
   GetAdvertResponse,
@@ -15,7 +14,7 @@ import {
   GetAdvertTypeResponse,
   GetAdvertTypesQueryParams,
   GetAdvertTypesResponse,
-  GetCasesReponse,
+  GetCasesInProgressReponse,
   GetCategoriesResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
@@ -175,12 +174,12 @@ export class JournalController {
     path: '/cases',
     operationId: 'getCasesInProgress',
     query: [{ type: DefaultSearchParams, required: false }],
-    responseType: GetCasesReponse,
+    responseType: GetCasesInProgressReponse,
   })
   async getCasesInProgress(
     @Query()
     params?: DefaultSearchParams,
-  ): Promise<GetCasesReponse> {
+  ): Promise<GetCasesInProgressReponse> {
     const statuses = [
       CaseStatusEnum.Submitted,
       CaseStatusEnum.InProgress,
@@ -188,13 +187,26 @@ export class JournalController {
       CaseStatusEnum.ReadyForPublishing,
     ]
 
-    return ResultWrapper.unwrap(
+    const casesResponse = await ResultWrapper.unwrap(
       await this.caseService.getCases({
         page: `${params?.page ?? 1}`,
         pageSize: `${params?.pageSize ?? DEFAULT_PAGE_SIZE}`,
         status: statuses,
       }),
     )
+
+    return {
+      cases: casesResponse.cases.map((c) => ({
+        id: c.id,
+        title: c.advertType.title + ' ' + c.advertTitle,
+        status: c.status.title,
+        involvedParty: c.involvedParty.title,
+        fastTrack: c.fastTrack,
+        createdAt: c.createdAt,
+        requestedPublicationDate: c.requestedPublicationDate,
+      })),
+      paging: casesResponse.paging,
+    }
   }
 
   @Route({
