@@ -30,9 +30,9 @@ import { Meta } from '../../components/meta/Meta'
 import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
 import {
   useCase,
-  useUpdateCaseStatus,
   useUpdateEmployee,
   useUpdateNextCaseStatus,
+  useUpdatePreviousCaseStatus,
 } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
@@ -104,16 +104,6 @@ export default function CaseSingle(
       },
     })
 
-  const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
-    useUpdateCaseStatus({
-      caseId: data.thisCase.id,
-      options: {
-        onSuccess: () => {
-          refetchCase()
-        },
-      },
-    })
-
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
       caseId: data.thisCase.id,
@@ -124,6 +114,18 @@ export default function CaseSingle(
       },
     })
 
+  const {
+    trigger: onUpdatePreviousStatus,
+    isMutating: isUpdatingPreviousStatus,
+  } = useUpdatePreviousCaseStatus({
+    caseId: data.thisCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
   const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
     caseId: data.thisCase.id,
     options: {
@@ -132,6 +134,22 @@ export default function CaseSingle(
       },
     },
   })
+
+  const onRejectCaseHandler = () => {
+    const proceed = confirm('Viltu hafna málinu?')
+
+    if (proceed) {
+      // TODO: reject case
+    }
+  }
+
+  const onUnpublishCaseHandler = () => {
+    const proceed = confirm('Viltu hafna málinu?')
+
+    if (proceed) {
+      unpublish()
+    }
+  }
 
   if (isLoading) {
     return (
@@ -191,16 +209,7 @@ export default function CaseSingle(
 
   const activeCase = caseData._case
 
-  const caseStatusOptions = Object.values(CaseStatusTitleEnum).map((c) => ({
-    label: c,
-    value: c,
-  }))
-
-  const selectedCaseStatus = caseStatusOptions.find(
-    (c) => c.value === activeCase.status.title,
-  )
-
-  const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus
+  const isUpdatingStatus = isUpdatingNextStatus || isUpdatingPreviousStatus
 
   return (
     <>
@@ -272,25 +281,12 @@ export default function CaseSingle(
                 })
               }}
             />
-            <Select
-              isDisabled={isUpdatingCaseStatus}
-              isLoading={isUpdatingCaseStatus}
+            <Input
+              disabled
               name="status"
-              options={caseStatusOptions.map((c) => ({
-                label: c.label,
-                value: c.value,
-                disabled: c.value === activeCase.status.title,
-              }))}
-              defaultValue={selectedCaseStatus}
-              value={selectedCaseStatus}
+              value={activeCase.status.title}
               label={formatMessage(messages.actions.status)}
               size="sm"
-              onChange={(e) => {
-                if (!e) return
-                onUpdateCaseStatus({
-                  statusId: e.value,
-                })
-              }}
             />
             <Input
               name="status"
@@ -301,6 +297,26 @@ export default function CaseSingle(
               size="sm"
               backgroundColor={'blue'}
             />
+
+            <Button
+              fluid
+              disabled={!(activeCase.publishedAt === null && isFixing)}
+              size="medium"
+              colorScheme="destructive"
+              onClick={onUnpublishCaseHandler}
+            >
+              Taka mál úr birtingu
+            </Button>
+
+            <Button
+              fluid
+              size="medium"
+              colorScheme="destructive"
+              disabled={!(activeCase.publishedAt === null && isFixing)}
+              onClick={onRejectCaseHandler}
+            >
+              Hafna máli
+            </Button>
           </Stack>
         }
       >
@@ -341,7 +357,16 @@ export default function CaseSingle(
           >
             {prevStep ? (
               <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
-                <Button as="span" variant="ghost" unfocusable>
+                <Button
+                  as="span"
+                  variant="ghost"
+                  unfocusable
+                  onClick={() =>
+                    onUpdatePreviousStatus({
+                      currentStatus: activeCase.status.title,
+                    })
+                  }
+                >
                   {formatMessage(messages.paging.goBack)}
                 </Button>
               </LinkV2>
@@ -359,7 +384,7 @@ export default function CaseSingle(
             ) : nextStep ? (
               <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
                 <Button
-                  loading={isUpdatingNextStatus}
+                  loading={isUpdatingStatus}
                   as="span"
                   icon="arrowForward"
                   onClick={() =>

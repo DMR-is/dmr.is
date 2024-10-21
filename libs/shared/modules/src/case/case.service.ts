@@ -199,6 +199,7 @@ export class CaseService implements ICaseService {
 
     return ResultWrapper.ok()
   }
+
   @LogAndHandle()
   @Transactional()
   updateCaseNextStatus(
@@ -208,6 +209,21 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  updateCasePreviousStatus(
+    caseId: string,
+    body: UpdateNextStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateCasePreviousStatus(
+      caseId,
+      body,
+      transaction,
+    )
+  }
+
   @LogAndHandle()
   @Transactional()
   updateCasePrice(

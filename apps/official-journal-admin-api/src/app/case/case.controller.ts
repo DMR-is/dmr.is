@@ -382,6 +382,23 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/status/previous',
+    operationId: 'updatePreviousStatus',
+    summary: 'Update case status to previous.',
+    bodyType: UpdateNextStatusBody,
+    params: [{ name: 'id', type: 'string', required: true }],
+  })
+  async updatePreviousStatus(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateNextStatusBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateCasePreviousStatus(id, body),
+    )
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/assign/:userId',
     operationId: 'assignEmployee',
     summary: 'Updates assigned user on the case.',

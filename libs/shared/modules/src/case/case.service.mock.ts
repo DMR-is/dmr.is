@@ -34,6 +34,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -52,6 +53,12 @@ import { ICaseService } from './case.service.interface'
 export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
+  }
+  updateCasePreviousStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
   }
   updateAdvert(
     caseId: string,

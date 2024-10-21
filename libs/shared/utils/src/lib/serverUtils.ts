@@ -198,6 +198,19 @@ export const getNextStatus = (status: CaseStatusEnum): CaseStatusEnum => {
   return status
 }
 
+export const getPreviousStatus = (status: CaseStatusEnum): CaseStatusEnum => {
+  switch (status) {
+    case CaseStatusEnum.InProgress:
+      return CaseStatusEnum.Submitted
+    case CaseStatusEnum.InReview:
+      return CaseStatusEnum.InProgress
+    case CaseStatusEnum.ReadyForPublishing:
+      return CaseStatusEnum.InReview
+  }
+
+  return status
+}
+
 export const handleException = <T>({
   method,
   service,

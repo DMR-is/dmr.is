@@ -69,6 +69,11 @@ export interface ICaseService {
     body: UpdateNextStatusBody,
   ): Promise<ResultWrapper>
 
+  updateCasePreviousStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+  ): Promise<ResultWrapper>
+
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,

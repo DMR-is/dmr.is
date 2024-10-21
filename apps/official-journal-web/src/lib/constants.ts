@@ -180,6 +180,7 @@ export enum APIRotues {
   UpdateEmployee = '/api/cases/:id/updateEmployee',
   UpdateCaseStatus = '/api/cases/:id/updateStatus',
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
+  UpdatePreviousCaseStatus = '/api/cases/:id/updatePreviousStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
