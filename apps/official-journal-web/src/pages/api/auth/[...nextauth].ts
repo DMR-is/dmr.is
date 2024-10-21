@@ -101,7 +101,6 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     jwt: async ({ token, user }) => {
-      logger.info('jwt callback', user)
       if (user) {
         // On first sign-in, user will be available
         token.nationalId = user.nationalId
@@ -173,7 +172,6 @@ export const authOptions: AuthOptions = {
 
         // Custom auth member from DB.
         const authMember = await authorize(user.nationalId)
-        logger.info('authMember', authMember)
 
         if (!authMember) {
           return false
