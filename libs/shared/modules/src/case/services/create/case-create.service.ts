@@ -217,7 +217,9 @@ export class CaseCreateService implements ICaseCreateService {
 
     const requestedDate = application.answers.advert.requestedDate
     const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedPartyId = application.answers.advert.involvedPartyId
+    const involvedPartyId =
+      application.answers.advert.involvedPartyId ??
+      'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' // TODO REMOVE THIS
     const message = application.answers.advert?.message ?? null
 
     return ResultWrapper.ok({
@@ -344,7 +346,7 @@ export class CaseCreateService implements ICaseCreateService {
 
     const institution = (
       await this.utilityService.institutionLookup(
-        application.answers.advert.involvedPartyId,
+        values.caseBody.involvedPartyId,
       )
     ).unwrap()
 
@@ -413,9 +415,23 @@ export class CaseCreateService implements ICaseCreateService {
       }
     })
 
-    const { attachments } = ResultWrapper.unwrap(
-      await this.attachmentService.getAllAttachments(application.id),
+    const attachmentsLookup = await this.attachmentService.getAllAttachments(
+      application.id,
     )
+
+    if (!attachmentsLookup.result.ok) {
+      this.logger.warn(
+        `Failed to get attachments for application<${application.id}>`,
+        {
+          error: attachmentsLookup.result.error,
+          category: LOGGING_CATEGORY,
+          applicationId: application.id,
+        },
+      )
+      return attachmentsLookup
+    }
+
+    const attachments = attachmentsLookup.result.value.attachments
 
     const attachmentPromises = await Promise.all(
       attachments.map((attachment) =>

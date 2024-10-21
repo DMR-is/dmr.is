@@ -182,6 +182,11 @@ export const messages = {
           defaultMessage: 'Staða',
           description: 'Status column',
         },
+        publicationNumber: {
+          id: 'web.components.tables:overview.columns.publicationNumber',
+          defaultMessage: 'Útgáfunúmer',
+          description: 'Publication number column',
+        },
         title: {
           id: 'web.components.tables:overview.columns.title',
           defaultMessage: 'Heiti',

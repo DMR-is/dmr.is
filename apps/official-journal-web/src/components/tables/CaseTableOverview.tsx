@@ -1,7 +1,7 @@
-import { Text } from '@island.is/island-ui/core'
+import { Tag, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { formatDate } from '../../lib/utils'
+import { formatDate, getOverviewStatusColor } from '../../lib/utils'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -21,12 +21,19 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.publishDate),
     },
-
     {
       name: 'caseStatus',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.status),
+    },
+    {
+      name: 'publicationNumber',
+      sortable: false,
+      size: 'tiny',
+      children: formatMessage(
+        messages.tables.overview.columns.publicationNumber,
+      ),
     },
     {
       name: 'caseTitle',
@@ -54,7 +61,14 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
         ),
       },
       {
-        children: <Text variant="medium">{row.status.title}</Text>, // TODO: Add publication number to case
+        children: (
+          <Tag variant={getOverviewStatusColor(row.status.title)}>
+            {row.status.title}
+          </Tag>
+        ),
+      },
+      {
+        children: <Text variant="medium">{row.publicationNumber}</Text>,
       },
       {
         children: (

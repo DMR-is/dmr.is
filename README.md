@@ -74,7 +74,7 @@ To play around with the automation script you can modify the the config file and
 
 - AWS CLI installed
 - AWS credentials
-- AWS credentials configured in a terminal session (e.g. login to AWS console and copy the programmatic access key and secret key credentials and export them in the terminal session)
+- AWS credentials configured in a terminal session (e.g. login to [AWS console](https://dmr-is.awsapps.com/start/#) and copy the programmatic access key and secret key credentials and export them in the terminal session)
 
 ### Connection to DEV Database
 
@@ -86,6 +86,18 @@ Database should be exposed on port 5432 on the bastion, but you can expose it to
 # Example using port 5432
 export INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
 aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["5432"],"localPortNumber":["5432"]}'
+```
+
+or
+
+```shell
+sh ./scripts/run-pg-proxy.sh
+```
+
+## To generate a database with demo data
+
+```Shell
+nx run official-journal-api:dev-init
 ```
 
 #### Connect to database
@@ -109,6 +121,12 @@ XRoad should be exposed on port 8000 on the bastion, but you can expose it to an
 # Example using port 8000
 export INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
 aws ssm start-session --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8000"],"localPortNumber":["8000"]}'
+```
+
+or
+
+```shell
+sh ./scripts/run-xroad-proxy.sh
 ```
 
 #### Set environment variables for island-is XRoad in application

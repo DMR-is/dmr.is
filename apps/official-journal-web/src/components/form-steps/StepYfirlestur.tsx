@@ -78,9 +78,10 @@ export const StepYfirlestur = ({ data }: Props) => {
                 ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertTitle}
+            advertType={activeCase.advertType.title}
             advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
+            signatureHtml={activeCase.signatures.map((s) => s.html).join('')}
             isLegacy={activeCase.isLegacy}
           />
         </GridColumn>

@@ -458,7 +458,17 @@ export class ApplicationService implements IApplicationService {
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    ResultWrapper.unwrap(
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+      transaction,
+    )
+
+    let caseId: string | null = null
+    if (caseLookup.result.ok) {
+      caseId = caseLookup.result.value.id
+    }
+
+    const applicationAttachmentCreation =
       await this.attachmentService.createAttachment({
         params: {
           applicationId: applicationId,
@@ -466,8 +476,26 @@ export class ApplicationService implements IApplicationService {
           body: body,
         },
         transaction,
-      }),
-    )
+      })
+
+    if (!applicationAttachmentCreation.result.ok) {
+      this.logger.error('Could not create attachment', {
+        category: LOGGING_CATEGORY,
+        error: applicationAttachmentCreation.result.error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not create attachment',
+      })
+    }
+
+    if (caseId) {
+      await this.attachmentService.createCaseAttachment(
+        caseId,
+        applicationAttachmentCreation.result.value.id,
+        transaction,
+      )
+    }
 
     return ResultWrapper.ok()
   }

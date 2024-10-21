@@ -6,6 +6,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+import { CaseStatusEnum } from '@dmr.is/shared/dto'
 
 import { CaseCommentModel } from '../../comment/models'
 
@@ -28,7 +29,7 @@ export class CaseStatusModel extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: string
+  title!: CaseStatusEnum
 
   @Column({
     type: DataType.STRING,

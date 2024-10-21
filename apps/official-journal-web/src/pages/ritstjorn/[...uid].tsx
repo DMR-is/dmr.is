@@ -1,5 +1,6 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getSession } from 'next-auth/react'
+import { useState } from 'react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -22,6 +23,7 @@ import { Section } from '../../components/form-stepper/Section'
 import { FormStepperThemes } from '../../components/form-stepper/types'
 import { StepGrunnvinnsla } from '../../components/form-steps/StepGrunnvinnsla'
 import { StepInnsending } from '../../components/form-steps/StepInnsending'
+import { StepLeidretting } from '../../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../../components/form-steps/StepYfirlestur'
 import { Meta } from '../../components/meta/Meta'
@@ -32,13 +34,21 @@ import {
   useUpdateEmployee,
   useUpdateNextCaseStatus,
 } from '../../hooks/api'
+import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
+import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseSingle'
 import { messages as errorMessages } from '../../lib/messages/errors'
-import { CaseStep, caseSteps, generateSteps } from '../../lib/utils'
+import {
+  CaseStep,
+  caseSteps,
+  deleteUndefined,
+  generateSteps,
+  getTimestamp,
+} from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -49,8 +59,13 @@ type Props = {
 export default function CaseSingle(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const { thisCase, step } = data
+  const { step } = data
+
   const { formatMessage } = useFormatMessage()
+  const [isFixing, setIsFixing] = useState(false)
+  const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
+  const [updatedAdvertHtml, setUpdatedAdvertHtml] = useState('')
+  const [timestamp, setTimestamp] = useState(getTimestamp())
 
   const {
     data: caseData,
@@ -58,35 +73,65 @@ export default function CaseSingle(
     isLoading,
     mutate: refetchCase,
   } = useCase({
-    caseId: thisCase.id,
+    caseId: data.thisCase.id,
     options: {
-      fallback: thisCase,
+      fallback: data,
     },
   })
 
+  const { trigger: updateAdvertHtmlTrigger, isMutating: isUpdatingAdvertHTml } =
+    useUpdateAdvertHtml({
+      caseId: data.thisCase.id,
+      options: {
+        onSuccess: () => {
+          setIsFixing(false)
+          setCanPublishFixedChanges(false)
+          refetchCase()
+          setTimeout(() => {
+            setTimestamp(getTimestamp())
+          }, 250)
+        },
+      },
+    })
+
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      caseId: thisCase.id,
+      caseId: data.thisCase.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
   const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
     useUpdateCaseStatus({
-      caseId: thisCase.id,
+      caseId: data.thisCase.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
 
   const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
     useUpdateNextCaseStatus({
-      caseId: thisCase.id,
+      caseId: data.thisCase.id,
       options: {
-        onSuccess: () => refetchCase(),
+        onSuccess: () => {
+          refetchCase()
+        },
       },
     })
+
+  const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
+    caseId: data.thisCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
 
   if (isLoading) {
     return (
@@ -130,6 +175,8 @@ export default function CaseSingle(
     caseSteps.indexOf(step) < 3
       ? caseSteps[caseSteps.indexOf(step) + 1]
       : undefined
+
+  const fixStep = caseSteps.indexOf(step) > 3
 
   const employeesMock = [
     {
@@ -262,12 +309,28 @@ export default function CaseSingle(
           {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
           {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
+          {step === 'leidretting' && (
+            <StepLeidretting
+              isFixing={isFixing}
+              canPublish={canPublishFixedChanges}
+              data={activeCase}
+              timestamp={timestamp}
+              onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
+            />
+          )}
 
           {activeCase.attachments.length > 0 && (
             <Attachments activeCase={activeCase} refetchCase={refetchCase} />
           )}
 
-          <Comments activeCase={activeCase} />
+          <Comments
+            onAddCommentSuccess={() => {
+              if (isFixing) {
+                setCanPublishFixedChanges(true)
+              }
+            }}
+            activeCase={activeCase}
+          />
 
           <Box
             display="flex"
@@ -309,6 +372,53 @@ export default function CaseSingle(
                   {formatMessage(messages.paging.nextStep)}
                 </Button>
               </LinkV2>
+            ) : fixStep && !isFixing ? (
+              <Button
+                colorScheme="destructive"
+                icon="arrowForward"
+                onClick={() => setIsFixing(true)}
+              >
+                {formatMessage(messages.paging.fixStep)}
+              </Button>
+            ) : fixStep && isFixing ? (
+              <Box display="flex" columnGap={2} flexWrap="wrap">
+                <Button
+                  loading={isUnpublishing}
+                  onClick={() => unpublish()}
+                  colorScheme="destructive"
+                  icon="eyeOff"
+                  disabled={!canPublishFixedChanges}
+                  title={
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
+                  }
+                >
+                  {formatMessage(messages.paging.unpublish)}
+                </Button>
+                <Button
+                  colorScheme="destructive"
+                  icon="arrowForward"
+                  disabled={!canPublishFixedChanges}
+                  loading={isUpdatingAdvertHTml}
+                  title={
+                    canPublishFixedChanges
+                      ? formatMessage(
+                          messages.paging.unpublishDisabledExplanation,
+                        )
+                      : undefined
+                  }
+                  onClick={() => {
+                    updateAdvertHtmlTrigger({
+                      advertHtml: updatedAdvertHtml,
+                    })
+                  }}
+                >
+                  {formatMessage(messages.paging.confirmFixStep)}
+                </Button>
+              </Box>
             ) : null}
           </Box>
         </Stack>
@@ -356,12 +466,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     })
 
     return {
-      props: {
+      props: deleteUndefined({
         session,
         layout,
         thisCase: activeCase._case,
         step,
-      },
+      }),
     }
   } catch (error) {
     if (isResponse(error)) {

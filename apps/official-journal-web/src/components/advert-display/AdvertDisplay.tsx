@@ -1,5 +1,6 @@
 import { Box, ResponsiveSpace, Text } from '@island.is/island-ui/core'
 
+import { HTMLEditor } from '../editor/Editor'
 import * as s from './AdvertDisplay.css'
 
 export type AdvertDisplayProps = {
@@ -8,6 +9,7 @@ export type AdvertDisplayProps = {
   advertType: string
   advertSubject: string
   advertText: string
+  signatureHtml?: string
   isLegacy: boolean
   paddingTop?: ResponsiveSpace
 }
@@ -19,6 +21,7 @@ export const AdvertDisplay = ({
   advertSubject,
   advertText,
   isLegacy,
+  signatureHtml,
   paddingTop,
 }: AdvertDisplayProps) => {
   if (!advertText) {
@@ -49,13 +52,11 @@ export const AdvertDisplay = ({
         </Box>
       )}
       <Box textAlign="center" marginBottom={[2, 3, 4]}>
-        <Text variant="h3">{advertType}</Text>
+        <Text variant="intro">{advertType}</Text>
         <Text variant="h4">{advertSubject}</Text>
       </Box>
-      <Box
-        className={isLegacy ? s.bodyText : s.bodyText}
-        dangerouslySetInnerHTML={{ __html: advertText }}
-      ></Box>
+      <HTMLEditor defaultValue={advertText} readonly={true} />
+      <HTMLEditor defaultValue={signatureHtml} readonly={true} />
     </Box>
   )
 }

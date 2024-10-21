@@ -11,6 +11,7 @@ import {
   DEFAULT_PRICE,
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
+  PAGING_MAXIMUM_PAGE_SIZE,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
@@ -18,6 +19,7 @@ import {
   ApplicationSignature,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
+  CaseStatusEnum,
   CreateSignatureBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -109,7 +111,8 @@ export const getFastTrack = (date: Date) => {
   const diff = date.getTime() - now.getTime()
   const diffDays = diff / (1000 * 3600 * 24)
   let fastTrack = false
-  if (diffDays > FAST_TRACK_DAYS) {
+
+  if (diffDays <= FAST_TRACK_DAYS) {
     fastTrack = true
   }
   return {
@@ -180,6 +183,19 @@ export const getSignatureBody = (
         }
       : undefined,
   }
+}
+
+export const getNextStatus = (status: CaseStatusEnum): CaseStatusEnum => {
+  switch (status) {
+    case CaseStatusEnum.Submitted:
+      return CaseStatusEnum.InProgress
+    case CaseStatusEnum.InProgress:
+      return CaseStatusEnum.InReview
+    case CaseStatusEnum.InReview:
+      return CaseStatusEnum.ReadyForPublishing
+  }
+
+  return status
 }
 
 export const handleException = <T>({
@@ -381,4 +397,14 @@ export const mapSourceToDirection = (
   return source === forSource
     ? CaseCommentDirectionEnum.Sent
     : CaseCommentDirectionEnum.Received
+}
+
+export const getPageSize = (pageSize: number | undefined): number => {
+  if (!pageSize || pageSize <= 0) return DEFAULT_PAGE_SIZE
+
+  if (pageSize > PAGING_MAXIMUM_PAGE_SIZE) {
+    return PAGING_MAXIMUM_PAGE_SIZE
+  }
+
+  return pageSize
 }

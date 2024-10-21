@@ -39,9 +39,10 @@ export const StepTilbuid = ({ activeCase }: Props) => {
                 ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertTitle}
-            advertSubject={activeCase.advertType.title}
+            advertType={activeCase.advertType.title}
+            advertSubject={activeCase.advertTitle}
             advertText={activeCase.html}
+            signatureHtml={activeCase.signatures.map((s) => s.html).join('')}
             isLegacy={activeCase.isLegacy}
           />
         </GridColumn>

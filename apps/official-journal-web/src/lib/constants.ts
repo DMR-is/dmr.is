@@ -21,12 +21,41 @@ export enum Routes {
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
+  ProccessingDetailCorrection = '/ritstjorn/:caseId/leidretting',
   PublishingOverview = '/utgafa',
   PublishingDetail = '/utgafa/:caseId',
   Overview = '/heildaryfirlit',
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
 }
+
+export enum PageTitles {
+  Dashboard = 'Stjórnborð',
+  CaseProcessing = 'Ritstjórn',
+  CasePublishing = 'Útgáfa',
+  CaseOverview = 'Heildaryfirlit',
+}
+
+type Path = {
+  pathname: string
+  title: string
+  order: number
+}
+
+export const PagePaths: Array<Path> = [
+  { pathname: Routes.Overview, title: PageTitles.CaseOverview, order: 4 },
+  {
+    pathname: Routes.ProcessingOverview,
+    title: PageTitles.CaseProcessing,
+    order: 2,
+  },
+  {
+    pathname: Routes.PublishingOverview,
+    title: PageTitles.CasePublishing,
+    order: 3,
+  },
+  { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
+]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'A deild', value: 'a-deild', key: 'department' },
@@ -153,6 +182,7 @@ export enum APIRotues {
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
+  UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
   UpdateType = '/api/cases/:id/updateType',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
@@ -163,4 +193,5 @@ export enum APIRotues {
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
+  UnpublishCase = '/api/cases/:id/unpublish',
 }

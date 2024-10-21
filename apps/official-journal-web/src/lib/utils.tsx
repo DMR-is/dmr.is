@@ -94,7 +94,7 @@ export const generateCaseLink = (
     status === CaseStatusTitleEnum.BirtinguHafnað ||
     status === CaseStatusTitleEnum.TekiðÚrBirtingu
   ) {
-    route = Routes.OverviewDetail
+    route = Routes.ProccessingDetailCorrection
   }
 
   if (status === CaseStatusTitleEnum.Innsent) {
@@ -113,13 +113,19 @@ export const generateCaseLink = (
   return route.replace(':caseId', caseId)
 }
 
-export type CaseStep = 'innsending' | 'grunnvinnsla' | 'yfirlestur' | 'tilbuid'
+export type CaseStep =
+  | 'innsending'
+  | 'grunnvinnsla'
+  | 'yfirlestur'
+  | 'tilbuid'
+  | 'leidretting'
 
 export const caseSteps: Array<CaseStep> = [
   'innsending',
   'grunnvinnsla',
   'yfirlestur',
   'tilbuid',
+  'leidretting',
 ]
 
 type StepsType = {
@@ -246,6 +252,21 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
         )
         ?.map((c) => commentToNode(c)),
     },
+    {
+      step: 'leidretting',
+      title: 'Leiðrétta mál',
+      isActive: statusIndex > 3,
+      isComplete: statusIndex > 3,
+      notes: activeCase.comments
+        .filter(
+          (c) =>
+            (c.caseStatus === CaseCommentCaseStatusEnum.Tilbúið ||
+              c.caseStatus === CaseCommentCaseStatusEnum.TekiðÚrBirtingu ||
+              c.caseStatus === CaseCommentCaseStatusEnum.BirtinguHafnað) &&
+            displayTypes.includes(c.title),
+        )
+        ?.map((c) => commentToNode(c)),
+    },
   ]
 }
 
@@ -306,4 +327,41 @@ export const getCommentIcon = (comment: CaseComment): IconMapIcon => {
   }
 
   return 'arrowForward'
+}
+
+export const mapLetterToDepartmentSlug = (letter: string) =>
+  letter === 'a' ? 'a-deild' : letter === 'b' ? 'b-deild' : 'c-deild'
+
+export const mapDepartmentSlugToLetter = (slug: string) =>
+  slug === 'a-deild' ? 'a' : slug === 'b-deild' ? 'b' : 'c'
+
+export const getTimestamp = () => new Date().toISOString()
+
+export const deleteUndefined = <T,>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any> | undefined,
+): T => {
+  if (obj) {
+    Object.keys(obj).forEach((key: string) => {
+      if (obj[key] && typeof obj[key] === 'object') {
+        deleteUndefined(obj[key])
+      } else if (typeof obj[key] === 'undefined') {
+        delete obj[key]
+      }
+    })
+  }
+  return obj as T
+}
+
+export const getOverviewStatusColor = (status: string) => {
+  switch (status) {
+    case CaseStatusTitleEnum.ÚTgefið:
+      return 'mint'
+    case CaseStatusTitleEnum.BirtinguHafnað:
+      return 'red'
+    case CaseStatusTitleEnum.TekiðÚrBirtingu:
+      return 'rose'
+    default:
+      return 'blue'
+  }
 }

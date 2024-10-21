@@ -8,6 +8,7 @@ import {
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseCommunicationBody,
   UpdateCaseDepartmentBody,
@@ -23,7 +24,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack } from '@dmr.is/utils'
+import { getFastTrack, getNextStatus } from '@dmr.is/utils'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -34,6 +35,8 @@ import { IUtilityService } from '../../../utility/utility.service.interface'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
 import { CaseCategoriesModel, CaseModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
+
+const LOGGING_CATEGORY = 'case-update-service'
 
 @Injectable()
 export class CaseUpdateService implements ICaseUpdateService {
@@ -101,10 +104,6 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseRes = (await this.utilityService.caseLookup(id)).unwrap()
-
-    const employeeLookup = (
-      await this.utilityService.userLookup(userId)
-    ).unwrap()
 
     await this.caseModel.update(
       {
@@ -247,7 +246,7 @@ export class CaseUpdateService implements ICaseUpdateService {
         comment: null,
         source: CaseCommentSourceEnum.API,
         storeState: false,
-        creator: 'Ármann Árni - (harðkóðað í bili)',
+        creator: 'Ármann Árni',
         receiver: status.title,
       },
       transaction,
@@ -275,22 +274,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateNextStatusBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    const { currentStatus } = body
-
-    const status = (
-      await this.utilityService.caseStatusLookup(currentStatus, transaction)
+    const currentStatus = (
+      await this.utilityService.caseStatusLookup(
+        body.currentStatus,
+        transaction,
+      )
     ).unwrap()
 
-    const nextStatus =
-      status.title === CaseStatusEnum.Submitted
-        ? CaseStatusEnum.InProgress
-        : status.title === CaseStatusEnum.InProgress
-        ? CaseStatusEnum.InReview
-        : status.title === CaseStatusEnum.InReview
-        ? CaseStatusEnum.ReadyForPublishing
-        : status.title === CaseStatusEnum.ReadyForPublishing
-        ? CaseStatusEnum.Published
-        : status.title
+    const allowedStatuses = [
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+    ]
+
+    if (!allowedStatuses.includes(currentStatus.title)) {
+      /**
+       * Case status not in a state where it can be updated, so we return early
+       */
+      this.logger.debug(
+        `Case status<${currentStatus.title}> is not in allowed statuses`,
+      )
+      return ResultWrapper.ok()
+    }
+
+    const nextStatus = getNextStatus(currentStatus.title)
 
     ResultWrapper.unwrap(
       await this.utilityService.caseStatusLookup(nextStatus, transaction),
@@ -443,7 +450,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await Promise.all(
       toRemove.map(async (c) => {
-        await c.destroy()
+        await c.destroy({ transaction: transaction })
       }),
     )
 
@@ -586,6 +593,66 @@ export class CaseUpdateService implements ICaseUpdateService {
         transaction: transaction,
       },
     )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const [_, updatedRows] = await this.caseModel.update(
+      {
+        html: body.advertHtml,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+        returning: true,
+      },
+    )
+
+    if (!updatedRows.length) {
+      this.logger.error(`Failed to update advert for case<${caseId}>`, {
+        category: 'CaseUpdateService',
+        error: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert',
+      })
+    }
+
+    const applicationId = updatedRows[0].applicationId
+
+    const advertUpdate = await this.applicationService.updateApplication(
+      applicationId,
+      {
+        answers: {
+          advert: {
+            html: body.advertHtml,
+          },
+        },
+      },
+    )
+
+    if (!advertUpdate.result.ok) {
+      this.logger.error(`Failed to update advert for case<${caseId}>`, {
+        category: 'CaseUpdateService',
+        error: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert',
+      })
+    }
 
     return ResultWrapper.ok()
   }

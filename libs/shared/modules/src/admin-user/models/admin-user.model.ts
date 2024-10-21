@@ -6,7 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserRolesModel } from './admin-user-role.model'
+import { AdminUserRolesModel } from './admin-user-roles.model'
 import { AdminUserRoleModel } from './user-role.model'
 
 @Table({ tableName: 'admin_user', timestamps: false })
