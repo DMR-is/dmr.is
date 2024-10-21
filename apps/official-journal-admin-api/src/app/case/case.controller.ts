@@ -29,7 +29,7 @@ import {
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery,
+  GetPublishedCasesQuery as GetFinishedCasesQuery,
   GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
@@ -487,14 +487,14 @@ export class CaseController {
     summary: 'Get cases',
     responseType: GetPublishedCasesResponse,
     params: [{ name: 'department', type: 'string', required: true }],
-    query: [{ type: GetPublishedCasesQuery, required: false }],
+    query: [{ type: GetFinishedCasesQuery, required: false }],
   })
-  async publishedCases(
+  async getFinishedCases(
     @Param('department') department: string,
-    @Query() query?: GetPublishedCasesQuery,
+    @Query() query?: GetFinishedCasesQuery,
   ): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(
-      await this.caseService.getPublishedCases(department, query),
+      await this.caseService.getFinishedCases(department, query),
     )
   }
 
@@ -519,11 +519,20 @@ export class CaseController {
   async unpublish(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCaseStatus(id, {
-        status: CaseStatusEnum.Unpublished,
-      }),
-    )
+    ResultWrapper.unwrap(await this.caseService.unpublishCase(id))
+  }
+
+  @Route({
+    method: 'post',
+    path: ':id/reject',
+    operationId: 'rejectCase',
+    params: [{ name: 'id', type: 'string', required: true }],
+    description: 'Reject case',
+  })
+  async reject(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.rejectCase(id))
   }
 
   @Route({

@@ -17,7 +17,7 @@ export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 export enum Routes {
   Dashboard = '/',
   ProcessingOverview = '/ritstjorn',
-  ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsending',
+  ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
@@ -195,4 +195,5 @@ export enum APIRotues {
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
+  RejectCase = '/api/cases/:id/reject',
 }

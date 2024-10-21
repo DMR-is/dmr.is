@@ -70,6 +70,14 @@ export const messages = {
       defaultMessage: 'Samskiptastaða',
       description: '',
     },
+    rejectCase: {
+      id: 'web.page.caseSingle:actions.rejectCase',
+      defaultMessage: 'Hafna máli',
+    },
+    unpublishCase: {
+      id: 'web.page.caseSingle:actions.unpublishCase',
+      defaultMessage: 'Taka mál úr birtingu',
+    },
   }),
 
   paging: defineMessages({
