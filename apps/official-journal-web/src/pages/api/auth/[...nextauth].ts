@@ -4,12 +4,12 @@ import { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
+import { AdminUserRole } from '@dmr.is/shared/dto'
 
 import { checkExpiry, refreshAccessToken } from '@island.is/next-ids-auth'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
-import { AdminUserRole } from '@dmr.is/shared/dto'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
