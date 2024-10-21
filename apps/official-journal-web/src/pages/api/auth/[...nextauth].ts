@@ -6,7 +6,7 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 import { AdminUserRole } from '@dmr.is/shared/dto'
 
-import { checkExpiry, refreshAccessToken } from '@island.is/next-ids-auth'
+import { checkExpiry, refreshAccessToken } from '@island.is/next-ids-auth/utils'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'

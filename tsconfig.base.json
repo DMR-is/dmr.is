@@ -44,8 +44,8 @@
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
       ],
-      "@island.is/next-ids-auth": [
-        "submodules/island.is/libs/next-ids-auth/src/index.ts"
+      "@island.is/next-ids-auth/utils": [
+        "submodules/island.is/libs/next-ids-auth/src/lib/utils.ts"
       ],
     },
     "sourceMap": true,
