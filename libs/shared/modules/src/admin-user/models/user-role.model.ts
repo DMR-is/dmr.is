@@ -1,7 +1,7 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
 @Table({ tableName: 'user_role', timestamps: false })
-export class UserRoleModel extends Model {
+export class AdminUserRoleModel extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,

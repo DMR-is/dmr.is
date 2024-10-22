@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript'
 
 import { AdminUserModel } from './admin-user.model'
-import { UserRoleModel } from './user-role.model'
+import { AdminUserRoleModel } from './user-role.model'
 
 @Table({ tableName: 'admin_user_roles', timestamps: false })
 export class AdminUserRolesModel extends Model {
@@ -23,7 +23,7 @@ export class AdminUserRolesModel extends Model {
   adminUserId!: string
 
   @PrimaryKey
-  @ForeignKey(() => UserRoleModel)
+  @ForeignKey(() => AdminUserRoleModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,
@@ -34,6 +34,6 @@ export class AdminUserRolesModel extends Model {
   @BelongsTo(() => AdminUserModel)
   adminUser!: AdminUserModel
 
-  @BelongsTo(() => UserRoleModel)
-  role!: UserRoleModel
+  @BelongsTo(() => AdminUserRoleModel)
+  role!: AdminUserRoleModel
 }

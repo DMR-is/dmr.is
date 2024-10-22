@@ -1,3 +1,4 @@
+import { logger } from '@dmr.is/logging'
 import { AdminUser } from '@dmr.is/shared/dto'
 
 import { AdminUserModel } from '../models/admin-user.model'
