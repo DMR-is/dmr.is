@@ -1,6 +1,7 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
+import { CaseStatus } from '@dmr.is/shared/dto'
 
 import type { IconMapIcon } from '@island.is/island-ui/core'
 import { StringOption } from '@island.is/island-ui/core'
@@ -114,19 +115,42 @@ export const generateCaseLink = (
 }
 
 export type CaseStep =
-  | 'innsending'
+  | 'innsent'
   | 'grunnvinnsla'
   | 'yfirlestur'
   | 'tilbuid'
   | 'leidretting'
 
 export const caseSteps: Array<CaseStep> = [
-  'innsending',
+  'innsent',
   'grunnvinnsla',
   'yfirlestur',
   'tilbuid',
   'leidretting',
 ]
+
+export const caseStatusToCaseStep = (
+  status: string | CaseStep,
+): CaseStep | null => {
+  if (
+    status === 'innsent' ||
+    status === 'grunnvinnsla' ||
+    status === 'yfirlestur' ||
+    status === 'tilbuid'
+  ) {
+    return status
+  }
+
+  if (
+    status === 'utgefid' ||
+    status === 'birtingu-hafnad' ||
+    status === 'tekid-ur-birtingu'
+  ) {
+    return 'leidretting'
+  }
+
+  return null
+}
 
 type StepsType = {
   step: CaseStep
@@ -201,8 +225,8 @@ export const generateSteps = (activeCase: Case): StepsType[] => {
   ]
   return [
     {
-      step: 'innsending',
-      title: 'Innsending',
+      step: 'innsent',
+      title: 'innsent',
       isActive: statusIndex === 0,
       isComplete: statusIndex > 0,
       notes: activeCase.comments

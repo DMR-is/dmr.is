@@ -7,7 +7,7 @@ import {
   SkeletonLoader,
 } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCase } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { HTMLEditor } from '../editor/Editor'
@@ -74,15 +74,26 @@ export const StepLeidretting = ({
 
   const activeCase = caseData._case
 
+  const isRejected =
+    activeCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
+
   return (
     <GridContainer>
       <GridRow>
         <GridColumn span={['12/12']}>
           <Box marginBottom={5}>
             <AlertMessage
-              type={isFixing ? 'error' : 'warning'}
-              title={formatMessage(messages.leidretting.warningTitle)}
-              message={formatMessage(messages.leidretting.warningMessage)}
+              type={isRejected || isFixing ? 'error' : 'warning'}
+              title={formatMessage(
+                isRejected
+                  ? messages.leidretting.warningRejectTitle
+                  : messages.leidretting.warningTitle,
+              )}
+              message={formatMessage(
+                isRejected
+                  ? messages.leidretting.warningRejectMessage
+                  : messages.leidretting.warningMessage,
+              )}
             />
           </Box>
         </GridColumn>

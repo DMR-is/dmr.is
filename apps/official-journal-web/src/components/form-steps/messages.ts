@@ -86,6 +86,15 @@ export const messages = {
   }),
 
   leidretting: defineMessages({
+    warningRejectTitle: {
+      id: 'web.components.steps.leidretting:warningRejectTitle',
+      defaultMessage: 'ATH! Mál er hafnað',
+    },
+    warningRejectMessage: {
+      id: 'web.components.steps.leidretting:warningRejectMessage',
+      defaultMessage:
+        'Málum sem er hafnað er ekki breytt og þeim fylgir athugasemd sem undirstrikar hvers vegna málinu var hafnað',
+    },
     warningTitle: {
       id: 'web.components.steps.leidretting:warningTitle',
       defaultMessage: 'ATH! Mál er útgefið',

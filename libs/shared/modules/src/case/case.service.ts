@@ -112,6 +112,78 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
+  async unpublishCase(id: string): Promise<ResultWrapper> {
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Unpublished)
+    ).unwrap()
+
+    const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: id,
+      },
+    })
+
+    const updateCasePromise = this.caseModel.update(
+      {
+        statusId: caseStatus.id,
+        publishedAt: null,
+      },
+      {
+        where: {
+          id: id,
+        },
+      },
+    )
+
+    const [_, hasAdvert] = await Promise.all([
+      updateCasePromise,
+      hasAdvertPromise,
+    ])
+
+    if (!hasAdvert) {
+      return ResultWrapper.ok()
+    }
+
+    const statusLookup = await this.utilityService.advertStatusLookup(
+      AdvertStatus.Revoked,
+    )
+
+    if (!statusLookup.result.ok) {
+      this.logger.error('Failed to get advert status', {
+        error: statusLookup.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get advert status',
+      })
+    }
+
+    const updateResult = await this.journalService.updateAdvert(
+      hasAdvert.advertId,
+      {
+        statusId: statusLookup.result.value.id,
+      },
+    )
+
+    if (!updateResult.result.ok) {
+      this.logger.error('Failed to update advert status', {
+        error: updateResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert status',
+      })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   updateEmployee(
     caseId: string,
     userId: string,
@@ -199,6 +271,7 @@ export class CaseService implements ICaseService {
 
     return ResultWrapper.ok()
   }
+
   @LogAndHandle()
   @Transactional()
   updateCaseNextStatus(
@@ -208,6 +281,21 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  updateCasePreviousStatus(
+    caseId: string,
+    body: UpdateNextStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateCasePreviousStatus(
+      caseId,
+      body,
+      transaction,
+    )
+  }
+
   @LogAndHandle()
   @Transactional()
   updateCasePrice(
@@ -673,15 +761,85 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async getPublishedCases(
+  @Transactional()
+  async rejectCase(caseId: string): Promise<ResultWrapper> {
+    const caseStatus = (
+      await this.utilityService.caseStatusLookup(CaseStatusEnum.Rejected)
+    ).unwrap()
+
+    const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: caseId,
+      },
+    })
+
+    const updateCasePromise = this.caseModel.update(
+      {
+        statusId: caseStatus.id,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+      },
+    )
+
+    const [_, hasAdvert] = await Promise.all([
+      updateCasePromise,
+      hasAdvertPromise,
+    ])
+
+    if (!hasAdvert) {
+      return ResultWrapper.ok()
+    }
+
+    const statusLookup = await this.utilityService.advertStatusLookup(
+      AdvertStatus.Rejected,
+    )
+
+    if (!statusLookup.result.ok) {
+      this.logger.error('Failed to get advert status', {
+        error: statusLookup.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get advert status',
+      })
+    }
+
+    const updateResult = await this.journalService.updateAdvert(
+      hasAdvert.advertId,
+      {
+        statusId: statusLookup.result.value.id,
+      },
+    )
+
+    if (!updateResult.result.ok) {
+      this.logger.error('Failed to update advert status', {
+        error: updateResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update advert status',
+      })
+    }
+
+    // TODO: Close the application in the application syste
+    // await this.utilityService.rejectApplication(caseId)
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async getFinishedCases(
     department: string,
     params: GetPublishedCasesQuery,
   ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
-    const whereParams = {
-      publishedAt: {
-        [Op.ne]: null,
-      },
-    }
+    const whereParams = {}
 
     if (params.search.length) {
       Object.assign(whereParams, {
@@ -690,6 +848,12 @@ export class CaseService implements ICaseService {
         },
       })
     }
+
+    const finishedStatuses = [
+      CaseStatusEnum.Published,
+      CaseStatusEnum.Rejected,
+      CaseStatusEnum.Unpublished,
+    ]
 
     const counterResultsPromise = this.caseModel.findAll({
       attributes: [
@@ -701,8 +865,18 @@ export class CaseService implements ICaseService {
       limit: params.pageSize,
       include: [
         {
+          attributes: [],
           model: AdvertDepartmentModel,
           as: `department`,
+        },
+        {
+          model: CaseStatusModel,
+          attributes: [],
+          where: {
+            title: {
+              [Op.in]: finishedStatuses,
+            },
+          },
         },
       ],
       where: whereParams,
@@ -714,14 +888,9 @@ export class CaseService implements ICaseService {
 
     const casesPromise = this.getCases({
       department: [department],
-      status: [
-        CaseStatusEnum.Published,
-        CaseStatusEnum.Rejected,
-        CaseStatusEnum.Unpublished,
-      ],
+      status: finishedStatuses,
       page: params.page.toString(),
       pageSize: params.pageSize.toString(),
-      published: 'true',
     })
 
     const [counterResults, casesLookup] = await Promise.all([
