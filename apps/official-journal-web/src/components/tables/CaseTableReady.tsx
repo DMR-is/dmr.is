@@ -182,7 +182,7 @@ export const CaseTableReady = () => {
     <CaseTable
       columns={columns}
       rows={rows}
-      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
     />
   )
 }

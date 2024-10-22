@@ -1,11 +1,11 @@
 import { Fragment, useMemo, useState } from 'react'
 
-import { Box, Button, Icon, Tabs, Text } from '@island.is/island-ui/core'
+import { Box, Button, Icon, Tabs, Tag, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { APIRotues } from '../../lib/constants'
+import { APIRotues, COMMENTS_TO_HIDE } from '../../lib/constants'
 import { commentToNode, getCommentIcon } from '../../lib/utils'
 import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
@@ -29,6 +29,11 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
       basePath: APIRotues.DeleteComment.replace(':id', activeCase.id),
       options: {
         onSuccess: () => {
+          const currentCommentCount = activeCase.comments.length - 1
+          if (currentCommentCount <= COMMENTS_TO_HIDE) {
+            setExpanded(true)
+          }
+
           refetchCase()
         },
       },
@@ -62,7 +67,11 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
         <Text>Engar athugasemdir fundust fyrir þetta mál</Text>
       ) : (
         sortedComments.map((c, i) => {
-          if (!expanded && i !== 0 && i < sortedComments.length - 4) {
+          if (
+            !expanded &&
+            i !== 0 &&
+            i < sortedComments.length - COMMENTS_TO_HIDE
+          ) {
             return null
           }
 
@@ -70,22 +79,31 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
             <Fragment key={c.id}>
               <Box
                 display="flex"
-                justifyContent="spaceBetween"
-                alignItems="center"
+                flexDirection="column"
+                rowGap={1}
                 padding={[1, 2, 3]}
                 borderBottomWidth="standard"
                 borderColor="purple200"
               >
-                <Icon
-                  icon={getCommentIcon(c)}
-                  color="purple400"
-                  size="medium"
-                  className={styles.icon}
-                />
+                <Box
+                  display="flex"
+                  justifyContent="spaceBetween"
+                  alignItems="center"
+                >
+                  <Icon
+                    icon={getCommentIcon(c)}
+                    color="purple400"
+                    size="medium"
+                    className={styles.icon}
+                  />
 
-                <div className={styles.text}>
-                  <Text>{commentToNode(c)}</Text>
-                  {c.comment ? <Text>{c.comment}</Text> : null}
+                  <div className={styles.text}>
+                    <Text>{commentToNode(c)}</Text>
+                    {c.comment ? <Text>{c.comment}</Text> : null}
+                  </div>
+                  <Text whiteSpace="nowrap">{c.age}</Text>
+                </Box>
+                <Box display="flex" justifyContent="spaceBetween">
                   <Button
                     loading={isLoading}
                     variant="text"
@@ -106,9 +124,16 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
                       <Icon icon="trash" type="outline" size="small" />
                     </Box>
                   </Button>
-                </div>
-
-                <Text whiteSpace="nowrap">{c.age}</Text>
+                  <Box>
+                    <Tag variant={c.internal ? 'mint' : 'darkerBlue'}>
+                      {formatMessage(
+                        c.internal
+                          ? messages.comments.internalComment
+                          : messages.comments.externalComment,
+                      )}
+                    </Tag>
+                  </Box>
+                </Box>
               </Box>
 
               {!expanded && i === 0 ? (
@@ -126,7 +151,7 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
                     onClick={() => setExpanded(true)}
                   >
                     {formatMessage(messages.comments.seeAll)} (
-                    {activeCase.comments.length - 5})
+                    {activeCase.comments.length - COMMENTS_TO_HIDE})
                   </Button>
                 </Box>
               ) : null}

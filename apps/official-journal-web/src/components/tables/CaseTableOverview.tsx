@@ -96,7 +96,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
       columns={columns}
       rows={rows}
       paging={paging}
-      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
     />
   )
 }
