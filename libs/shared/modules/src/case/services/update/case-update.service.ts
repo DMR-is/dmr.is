@@ -24,7 +24,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack, getNextStatus } from '@dmr.is/utils'
+import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -304,6 +304,45 @@ export class CaseUpdateService implements ICaseUpdateService {
     )
 
     return this.updateCaseStatus(id, { status: nextStatus }, transaction)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCasePreviousStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<undefined>> {
+    const currentStatus = (
+      await this.utilityService.caseStatusLookup(
+        body.currentStatus,
+        transaction,
+      )
+    ).unwrap()
+
+    const allowedStatuses = [
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+      CaseStatusEnum.ReadyForPublishing,
+    ]
+
+    if (!allowedStatuses.includes(currentStatus.title)) {
+      /**
+       * Case status not in a state where it can be updated, so we return early
+       */
+      this.logger.debug(
+        `Case status<${currentStatus.title}> is not in allowed statuses`,
+      )
+      return ResultWrapper.ok()
+    }
+
+    const prevStatus = getPreviousStatus(currentStatus.title)
+
+    ResultWrapper.unwrap(
+      await this.utilityService.caseStatusLookup(prevStatus, transaction),
+    )
+
+    return this.updateCaseStatus(id, { status: prevStatus }, transaction)
   }
 
   @LogAndHandle()

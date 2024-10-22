@@ -65,7 +65,9 @@ export const caseParameters = (params?: GetCasesQuery) => {
 
   if (params?.published === 'true') {
     whereClause.publishedAt = { [Op.not]: null }
-  } else if (params?.published === 'false') {
+  }
+
+  if (params?.published === 'false') {
     whereClause.publishedAt = { [Op.is]: null }
   }
 
@@ -73,13 +75,6 @@ export const caseParameters = (params?: GetCasesQuery) => {
     whereClause.createdAt = {
       ...(params?.fromDate && { [Op.gte]: params?.fromDate }),
       ...(params?.toDate && { [Op.lte]: params?.toDate }),
-    }
-  }
-
-  // When no params were set we were stting the publishedAt as null. Keeping in for now.
-  if (Object.keys(whereClause).length === 0) {
-    return {
-      publishedAt: null,
     }
   }
   return whereClause

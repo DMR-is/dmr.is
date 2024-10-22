@@ -57,6 +57,16 @@ export const messages = {
       defaultMessage: 'Innri athugasemdir',
       description: '',
     },
+    internalComment: {
+      id: 'web.components.comments:internalComment',
+      defaultMessage: 'Innri athugasemd',
+      description: '',
+    },
+    externalComment: {
+      id: 'web.components.comments:externalComment',
+      defaultMessage: 'Aðgengilegt auglýsanda',
+      description: '',
+    },
     internalCommentsInputPlaceholder: {
       id: 'web.components.comments:internalCommentsInputPlaceholder',
       defaultMessage: 'Bættu við innri athugasemd',

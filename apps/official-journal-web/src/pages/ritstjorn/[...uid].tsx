@@ -1,4 +1,5 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { useRouter } from 'next/router'
 import { getSession } from 'next-auth/react'
 import { useState } from 'react'
 import { isResponse } from '@dmr.is/utils/client'
@@ -30,9 +31,10 @@ import { Meta } from '../../components/meta/Meta'
 import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
 import {
   useCase,
-  useUpdateCaseStatus,
+  useRejectCase,
   useUpdateEmployee,
   useUpdateNextCaseStatus,
+  useUpdatePreviousCaseStatus,
 } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
@@ -43,6 +45,7 @@ import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseSingle'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import {
+  caseStatusToCaseStep,
   CaseStep,
   caseSteps,
   deleteUndefined,
@@ -60,6 +63,8 @@ export default function CaseSingle(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
   const { step } = data
+
+  const router = useRouter()
 
   const { formatMessage } = useFormatMessage()
   const [isFixing, setIsFixing] = useState(false)
@@ -94,18 +99,17 @@ export default function CaseSingle(
       },
     })
 
+  const { trigger: rejectCase } = useRejectCase({
+    caseId: data.thisCase.id,
+    options: {
+      onSuccess: () => {
+        router.push(Routes.ProcessingOverview)
+      },
+    },
+  })
+
   const { trigger: onAssignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
-      caseId: data.thisCase.id,
-      options: {
-        onSuccess: () => {
-          refetchCase()
-        },
-      },
-    })
-
-  const { trigger: onUpdateCaseStatus, isMutating: isUpdatingStatus } =
-    useUpdateCaseStatus({
       caseId: data.thisCase.id,
       options: {
         onSuccess: () => {
@@ -124,6 +128,18 @@ export default function CaseSingle(
       },
     })
 
+  const {
+    trigger: onUpdatePreviousStatus,
+    isMutating: isUpdatingPreviousStatus,
+  } = useUpdatePreviousCaseStatus({
+    caseId: data.thisCase.id,
+    options: {
+      onSuccess: () => {
+        refetchCase()
+      },
+    },
+  })
+
   const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
     caseId: data.thisCase.id,
     options: {
@@ -132,6 +148,26 @@ export default function CaseSingle(
       },
     },
   })
+
+  const onRejectCaseHandler = () => {
+    const proceed = confirm(
+      'Viltu hafna málinu? Þetta eyðir málinu og umsókninni sem fylgir því.',
+    )
+
+    if (proceed) {
+      rejectCase()
+    }
+  }
+
+  const onUnpublishCaseHandler = () => {
+    const proceed = confirm(
+      'Viltu taka málið úr birtingu? Það verður óaðgengilegt á vefnum.',
+    )
+
+    if (proceed) {
+      unpublish()
+    }
+  }
 
   if (isLoading) {
     return (
@@ -191,16 +227,10 @@ export default function CaseSingle(
 
   const activeCase = caseData._case
 
-  const caseStatusOptions = Object.values(CaseStatusTitleEnum).map((c) => ({
-    label: c,
-    value: c,
-  }))
+  const isUpdatingStatus = isUpdatingNextStatus || isUpdatingPreviousStatus
 
-  const selectedCaseStatus = caseStatusOptions.find(
-    (c) => c.value === activeCase.status.title,
-  )
-
-  const isUpdatingCaseStatus = isUpdatingStatus || isUpdatingNextStatus
+  const isCaseRejected =
+    activeCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
 
   return (
     <>
@@ -249,7 +279,7 @@ export default function CaseSingle(
               isOptionDisabled={(option) =>
                 activeCase.assignedTo?.id === option.value
               }
-              isDisabled={isAssigning}
+              isDisabled={isAssigning || isCaseRejected}
               isLoading={isAssigning}
               name="assignedTo"
               options={employeesMock.map((e) => ({
@@ -272,25 +302,12 @@ export default function CaseSingle(
                 })
               }}
             />
-            <Select
-              isDisabled={isUpdatingCaseStatus}
-              isLoading={isUpdatingCaseStatus}
+            <Input
+              disabled
               name="status"
-              options={caseStatusOptions.map((c) => ({
-                label: c.label,
-                value: c.value,
-                disabled: c.value === activeCase.status.title,
-              }))}
-              defaultValue={selectedCaseStatus}
-              value={selectedCaseStatus}
+              value={activeCase.status.title}
               label={formatMessage(messages.actions.status)}
               size="sm"
-              onChange={(e) => {
-                if (!e) return
-                onUpdateCaseStatus({
-                  statusId: e.value,
-                })
-              }}
             />
             <Input
               name="status"
@@ -301,11 +318,50 @@ export default function CaseSingle(
               size="sm"
               backgroundColor={'blue'}
             />
+
+            {!fixStep && isCaseRejected && (
+              <Button
+                colorScheme="destructive"
+                size="medium"
+                fluid
+                disabled={activeCase.publishedAt !== null}
+                onClick={onRejectCaseHandler}
+              >
+                {formatMessage(messages.actions.rejectCase)}
+              </Button>
+            )}
+
+            {fixStep && !isCaseRejected && (
+              <>
+                {!isFixing ? (
+                  <Button
+                    fluid
+                    colorScheme="destructive"
+                    size="medium"
+                    disabled={!fixStep}
+                    onClick={() => setIsFixing(true)}
+                  >
+                    {formatMessage(messages.paging.fixStep)}
+                  </Button>
+                ) : (
+                  <Button
+                    fluid
+                    disabled={activeCase.publishedAt === null}
+                    size="medium"
+                    colorScheme="destructive"
+                    loading={isUnpublishing}
+                    onClick={onUnpublishCaseHandler}
+                  >
+                    {formatMessage(messages.actions.unpublishCase)}
+                  </Button>
+                )}
+              </>
+            )}
           </Stack>
         }
       >
         <Stack space={[2, 3, 4]}>
-          {step === 'innsending' && <StepInnsending activeCase={activeCase} />}
+          {step === 'innsent' && <StepInnsending activeCase={activeCase} />}
           {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
           {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
           {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
@@ -341,7 +397,16 @@ export default function CaseSingle(
           >
             {prevStep ? (
               <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
-                <Button as="span" variant="ghost" unfocusable>
+                <Button
+                  as="span"
+                  variant="ghost"
+                  unfocusable
+                  onClick={() =>
+                    onUpdatePreviousStatus({
+                      currentStatus: activeCase.status.title,
+                    })
+                  }
+                >
                   {formatMessage(messages.paging.goBack)}
                 </Button>
               </LinkV2>
@@ -359,7 +424,7 @@ export default function CaseSingle(
             ) : nextStep ? (
               <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
                 <Button
-                  loading={isUpdatingNextStatus}
+                  loading={isUpdatingStatus}
                   as="span"
                   icon="arrowForward"
                   onClick={() =>
@@ -372,53 +437,27 @@ export default function CaseSingle(
                   {formatMessage(messages.paging.nextStep)}
                 </Button>
               </LinkV2>
-            ) : fixStep && !isFixing ? (
+            ) : fixStep && isFixing ? (
               <Button
                 colorScheme="destructive"
                 icon="arrowForward"
-                onClick={() => setIsFixing(true)}
+                disabled={!canPublishFixedChanges}
+                loading={isUpdatingAdvertHTml}
+                title={
+                  canPublishFixedChanges
+                    ? formatMessage(
+                        messages.paging.unpublishDisabledExplanation,
+                      )
+                    : undefined
+                }
+                onClick={() => {
+                  updateAdvertHtmlTrigger({
+                    advertHtml: updatedAdvertHtml,
+                  })
+                }}
               >
-                {formatMessage(messages.paging.fixStep)}
+                {formatMessage(messages.paging.confirmFixStep)}
               </Button>
-            ) : fixStep && isFixing ? (
-              <Box display="flex" columnGap={2} flexWrap="wrap">
-                <Button
-                  loading={isUnpublishing}
-                  onClick={() => unpublish()}
-                  colorScheme="destructive"
-                  icon="eyeOff"
-                  disabled={!canPublishFixedChanges}
-                  title={
-                    canPublishFixedChanges
-                      ? formatMessage(
-                          messages.paging.unpublishDisabledExplanation,
-                        )
-                      : undefined
-                  }
-                >
-                  {formatMessage(messages.paging.unpublish)}
-                </Button>
-                <Button
-                  colorScheme="destructive"
-                  icon="arrowForward"
-                  disabled={!canPublishFixedChanges}
-                  loading={isUpdatingAdvertHTml}
-                  title={
-                    canPublishFixedChanges
-                      ? formatMessage(
-                          messages.paging.unpublishDisabledExplanation,
-                        )
-                      : undefined
-                  }
-                  onClick={() => {
-                    updateAdvertHtmlTrigger({
-                      advertHtml: updatedAdvertHtml,
-                    })
-                  }}
-                >
-                  {formatMessage(messages.paging.confirmFixStep)}
-                </Button>
-              </Box>
             ) : null}
           </Box>
         </Stack>
@@ -443,10 +482,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const dmrClient = createDmrClient()
   const caseId = query.uid?.[0]
-  const step = query.uid?.[1] as CaseStep | undefined
+  // const step = query.uid?.[1] as CaseStep | undefined
 
-  if (!caseId || !step || !caseSteps.includes(step)) {
-    throw new CustomNextError(404, 'Slóð inniheldur ekki rétt gögn!')
+  if (!caseId) {
+    throw new CustomNextError(404, 'Slóð inniheldur ekki auðkenni (id)!')
   }
 
   const layout: LayoutProps = {
@@ -465,12 +504,29 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       id: caseId,
     })
 
+    const queryStep = query.uid?.[1] as CaseStep | undefined
+
+    const caseStep = caseStatusToCaseStep(activeCase._case.status.slug)
+
+    if (!caseStep) {
+      throw new CustomNextError(404, 'Slóð inniheldur ekki rétt gögn!')
+    }
+
+    if (!queryStep || queryStep !== caseStep) {
+      return {
+        redirect: {
+          destination: `/ritstjorn/${caseId}/${caseStep}`,
+          permanent: false,
+        },
+      }
+    }
+
     return {
       props: deleteUndefined({
         session,
         layout,
         thisCase: activeCase._case,
-        step,
+        step: caseStep,
       }),
     }
   } catch (error) {

@@ -35,7 +35,7 @@ export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
 
-  getPublishedCases(
+  getFinishedCases(
     department: string,
     query?: GetPublishedCasesQuery,
   ): Promise<ResultWrapper<GetPublishedCasesResponse>>
@@ -69,6 +69,14 @@ export interface ICaseService {
     body: UpdateNextStatusBody,
   ): Promise<ResultWrapper>
 
+  updateCasePreviousStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+  ): Promise<ResultWrapper>
+
+  rejectCase(id: string): Promise<ResultWrapper>
+
+  unpublishCase(id: string): Promise<ResultWrapper>
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,

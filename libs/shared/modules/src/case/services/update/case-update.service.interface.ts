@@ -38,6 +38,12 @@ export interface ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
+  updateCasePreviousStatus(
+    caseId: string,
+    body: UpdateNextStatusBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,

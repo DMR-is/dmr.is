@@ -14,10 +14,12 @@ export const JSON_ENDING = '.json'
 
 export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 
+export const COMMENTS_TO_HIDE = 4
+
 export enum Routes {
   Dashboard = '/',
   ProcessingOverview = '/ritstjorn',
-  ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsending',
+  ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
@@ -180,6 +182,7 @@ export enum APIRotues {
   UpdateEmployee = '/api/cases/:id/updateEmployee',
   UpdateCaseStatus = '/api/cases/:id/updateStatus',
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
+  UpdatePreviousCaseStatus = '/api/cases/:id/updatePreviousStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
@@ -194,4 +197,5 @@ export enum APIRotues {
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
+  RejectCase = '/api/cases/:id/reject',
 }

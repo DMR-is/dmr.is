@@ -34,6 +34,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -53,6 +54,18 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  unpublishCase(id: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  rejectCase(id: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateCasePreviousStatus(
+    id: string,
+    body: UpdateNextStatusBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
   updateAdvert(
     caseId: string,
     body: UpdateAdvertHtmlBody,
@@ -60,7 +73,7 @@ export class CaseServiceMock implements ICaseService {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-  getPublishedCases(
+  getFinishedCases(
     department: string,
     query?: GetPublishedCasesQuery,
   ): Promise<ResultWrapper<GetPublishedCasesResponse>> {

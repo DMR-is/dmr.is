@@ -661,6 +661,29 @@
         "responses": { "204": { "description": "" } }
       }
     },
+    "/api/v1/cases/{id}/status/previous": {
+      "put": {
+        "operationId": "updatePreviousStatus",
+        "summary": "Update case status to previous.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateNextStatusBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/cases/{id}/assign/{userId}": {
       "put": {
         "operationId": "assignEmployee",
@@ -978,6 +1001,20 @@
     "/api/v1/cases/{id}/unpublish": {
       "post": {
         "operationId": "unpublish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "201": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/{id}/reject": {
+      "post": {
+        "operationId": "rejectCase",
         "parameters": [
           {
             "name": "id",
@@ -1804,6 +1841,10 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
             "description": "Id of the case comment."
           },
+          "internal": {
+            "type": "boolean",
+            "description": "Is the comment internal."
+          },
           "title": {
             "example": "f. 2 dögum",
             "$ref": "#/components/schemas/CaseCommentType"
@@ -1843,6 +1884,7 @@
         },
         "required": [
           "id",
+          "internal",
           "title",
           "caseStatus",
           "age",
