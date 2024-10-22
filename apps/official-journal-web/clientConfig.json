@@ -1841,6 +1841,10 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
             "description": "Id of the case comment."
           },
+          "internal": {
+            "type": "boolean",
+            "description": "Is the comment internal."
+          },
           "title": {
             "example": "f. 2 dögum",
             "$ref": "#/components/schemas/CaseCommentType"
@@ -1880,6 +1884,7 @@
         },
         "required": [
           "id",
+          "internal",
           "title",
           "caseStatus",
           "age",

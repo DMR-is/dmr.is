@@ -16,6 +16,7 @@ export const caseCommentMigrate = (
 ): CaseComment => {
   return {
     id: model.id,
+    internal: model.internal,
     title: model.type.title,
     caseStatus: caseStatusMigrate(model.caseStatus).title,
     age: convertDateToDaysAgo(model.created),

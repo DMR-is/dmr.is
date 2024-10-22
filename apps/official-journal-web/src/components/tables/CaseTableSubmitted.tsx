@@ -3,7 +3,6 @@ import { Text } from '@island.is/island-ui/core'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import {
   CaseTable,
   CaseTableHeadCellProps,
@@ -101,7 +100,7 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
       paging={paging}
       columns={columns}
       rows={rows}
-      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
     />
   )
 }

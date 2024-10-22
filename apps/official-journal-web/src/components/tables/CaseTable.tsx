@@ -8,7 +8,6 @@ import {
   LinkV2,
   ModalBase,
   Pagination,
-  SkeletonLoader,
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
@@ -72,7 +71,6 @@ export const CaseTable = ({
 
   const { add } = useQueryParams()
 
-  const [mounted, setMounted] = useState(false)
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   const breakpoints = useBreakpoints()
@@ -124,14 +122,6 @@ export const CaseTable = ({
   const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
     e.preventDefault()
     setModalActive(activeCase)
-  }
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return <SkeletonLoader height={45} repeat={5} />
   }
 
   return (

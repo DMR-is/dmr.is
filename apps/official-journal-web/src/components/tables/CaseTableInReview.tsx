@@ -110,7 +110,7 @@ export const CaseTableInReview = ({ data, paging }: TableProps) => {
       columns={columns}
       rows={rows}
       paging={paging}
-      defaultSort={{ direction: 'desc', key: 'casePublishDate' }}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
     />
   )
 }

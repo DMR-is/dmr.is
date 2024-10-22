@@ -18,6 +18,12 @@ export class CaseComment {
   readonly id!: string
 
   @ApiProperty({
+    type: Boolean,
+    description: 'Is the comment internal.',
+  })
+  internal!: boolean
+
+  @ApiProperty({
     enum: CaseCommentTypeTitleEnum,
     enumName: 'CaseCommentType',
     example: 'f. 2 dögum',
