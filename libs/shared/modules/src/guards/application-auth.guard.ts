@@ -15,7 +15,7 @@ import { Reflector } from '@nestjs/core'
 import { IApplicationUserService } from '../application-user/application-user.module'
 import { IUtilityService } from '../utility/utility.service.interface'
 
-const LOGGING_CATEGORY = 'auth-guard'
+const LOGGING_CATEGORY = 'application-auth-guard'
 
 @Injectable()
 export class ApplicationAuthGaurd implements CanActivate {
@@ -122,7 +122,7 @@ export class ApplicationAuthGaurd implements CanActivate {
 
       return true
     } catch (error) {
-      this.logger.warn(`Auth guard denied incoming request`, {
+      this.logger.error(`Error occurred in application auth guard`, {
         category: LOGGING_CATEGORY,
         error,
       })
