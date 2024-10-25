@@ -4,7 +4,7 @@ import { ApplicationCase } from './application-case.dto'
 
 export class GetApplicationCaseResponse {
   @ApiProperty({
-    type: [ApplicationCase],
+    type: ApplicationCase,
   })
-  applicationCase!: ApplicationCase[]
+  applicationCase!: ApplicationCase
 }

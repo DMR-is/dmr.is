@@ -4,7 +4,7 @@ import { caseCommunicationStatusMigrate } from '../../case/migrations/case-commu
 import { CaseModel } from '../../case/models'
 import { advertCategoryMigrate } from '../../journal/migrations'
 
-export const caseToApplicationCase = (model: CaseModel): ApplicationCase => {
+export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   const fullHtml = `
     ${model.html}
     ${model.signatures?.map((signature) => signature.html).join('')}

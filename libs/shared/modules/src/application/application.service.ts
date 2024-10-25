@@ -43,8 +43,8 @@ import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
-import { caseToApplicationCase } from './mappers/case-to-application-case'
 import { IApplicationService } from './application.service.interface'
+import { applicationCaseMigrate } from './migrations'
 
 const LOGGING_CATEGORY = 'application-service'
 
@@ -82,8 +82,10 @@ export class ApplicationService implements IApplicationService {
       })
     }
 
+    const migrated = applicationCaseMigrate(caseLookup.result.value)
+
     return ResultWrapper.ok({
-      applicationCase: caseToApplicationCase(caseLookup.result.value),
+      applicationCase: migrated,
     })
   }
 
