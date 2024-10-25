@@ -13,7 +13,7 @@ export class ApplicationCase {
   categories!: Category[]
 
   @ApiProperty({
-    type: CaseStatus,
+    enum: CaseStatus,
   })
   status!: CaseStatus
 
