@@ -9,6 +9,7 @@ import {
   ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   GetPresignedUrlBody,
@@ -363,6 +364,22 @@ export class ApplicationController {
   async getInvolvedParties(@CurrentUser() user: ApplicationUser) {
     return ResultWrapper.unwrap(
       await this.applicationUserService.getUserInvolvedParties(user.nationalId),
+    )
+  }
+
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(true)
+  @Route({
+    path: ':id/case',
+    operationId: 'getApplicationCase',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetApplicationCaseResponse,
+  })
+  async getApplicationCase(
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplicationCase(applicationId),
     )
   }
 }
