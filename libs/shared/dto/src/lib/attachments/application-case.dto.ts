@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-types'
-import { CaseStatus } from '../cases'
+import { CaseStatus } from '../cases/case-status.dto'
 import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments'
@@ -13,7 +13,8 @@ export class ApplicationCase {
   categories!: Category[]
 
   @ApiProperty({
-    enum: CaseStatus,
+    type: CaseStatus,
+    description: 'Current status of the case',
   })
   status!: CaseStatus
 
