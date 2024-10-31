@@ -11,6 +11,9 @@ export const ONE_HOUR = ONE_MINUTE * 60
 export const ONE_KILO_BYTE = 1000
 export const ONE_MEGA_BYTE = 1000 * 1000
 
+export const PDF_RETRY_ATTEMPTS = 3
+export const PDF_RETRY_DELAY = 5000
+
 export const APPLICATION_FILES_BUCKET =
   'official-journal-application-files-bucket-dev'
 
