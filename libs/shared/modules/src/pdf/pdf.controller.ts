@@ -1,9 +1,10 @@
 import { Route } from '@dmr.is/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { GetPdfUrlResponse } from '@dmr.is/shared/dto'
+import { GetPdfRespone, GetPdfUrlResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, StreamableFile } from '@nestjs/common'
+import { Controller, Inject, Param, Res, StreamableFile } from '@nestjs/common'
+import {} from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IPdfService } from './pdf.service.interface'
@@ -28,17 +29,17 @@ export class PdfController {
         required: true,
       },
     ],
-    responseType: StreamableFile,
+    responseType: GetPdfRespone,
   })
   async getPdfByCaseId(
     @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<StreamableFile> {
+  ): Promise<GetPdfRespone> {
     const pdf = (await this.pdfService.getPdfByCaseId(id)).unwrap()
 
-    return new StreamableFile(pdf, {
-      type: 'application/pdf',
-      disposition: 'inline',
-    })
+    const result = pdf.toString('base64')
+    return {
+      content: result,
+    }
   }
 
   @Route({
@@ -51,17 +52,17 @@ export class PdfController {
         required: true,
       },
     ],
-    responseType: StreamableFile,
+    responseType: GetPdfRespone,
   })
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<StreamableFile> {
+  ): Promise<GetPdfRespone> {
     const pdf = (await this.pdfService.getPdfByApplicationId(id)).unwrap()
 
-    return new StreamableFile(pdf, {
-      type: 'application/pdf',
-      disposition: 'inline',
-    })
+    const result = pdf.toString('base64')
+    return {
+      content: result,
+    }
   }
 
   @Route({
