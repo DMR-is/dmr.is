@@ -1,51 +1,74 @@
-import { S3Client, UploadPartCommand } from '@aws-sdk/client-s3'
-import { SignatureType, SignatureTypeSlug } from '@dmr.is/constants'
+import { Browser } from 'puppeteer'
+import { Browser as CoreBrowser } from 'puppeteer-core'
+import {
+  PDF_RETRY_ATTEMPTS,
+  PDF_RETRY_DELAY,
+  SignatureType,
+} from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
-import { Result, ResultWrapper } from '@dmr.is/types'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ResultWrapper } from '@dmr.is/types'
+import { retryAsync } from '@dmr.is/utils'
 
 import {
   Inject,
   Injectable,
-  InternalServerErrorException,
+  OnModuleDestroy,
+  OnModuleInit,
 } from '@nestjs/common'
-
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
+import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
 
-@Injectable()
-export class PdfService implements IPdfService {
-  private s3: S3Client | null = null
+const LOGGING_CATEGORY = 'pdf-service'
 
+type PdfBrowser = Browser | CoreBrowser
+
+@Injectable()
+export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
+  private browser: PdfBrowser | null = null
   constructor(
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+  async onModuleInit() {
+    this.browser = await getBrowser()
+  }
+  async onModuleDestroy() {
+    await this.browser?.close()
+  }
 
   async getPdfByApplicationId(
     applicationId: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const applicationLookup = (
-      await this.utilityService.applicationLookup(applicationId)
-    ).unwrap()
+    const applicationLookup = await this.utilityService.applicationLookup(
+      applicationId,
+    )
 
-    const { application } = applicationLookup
-    const { answers } = application
+    if (!applicationLookup.result.ok) {
+      this.logger.error(
+        `Could not find application<${applicationId}>, when trying to generate PDF`,
+        {
+          category: LOGGING_CATEGORY,
+          error: applicationLookup.result.error,
+        },
+      )
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Application not found',
+      })
+    }
 
-    const type = (
-      await this.utilityService.typeLookup(answers.advert.typeId)
-    ).unwrap()
-
-    const { signatureType } = answers.misc
+    const { answers } = applicationLookup.result.value.application
 
     let signatureHtml = ''
 
-    switch (signatureType) {
+    switch (answers.misc.signatureType) {
       case SignatureType.Committee:
         signatureHtml += answers.signatures.committee?.html
         break
@@ -56,116 +79,84 @@ export class PdfService implements IPdfService {
         break
     }
 
-    const pdf = (
-      await this.generatePdfFromHtml(
-        type.title,
-        answers.advert.title,
-        answers.advert.html,
-        signatureHtml,
-      )
-    ).unwrap()
+    const markup = advertPdfTemplate({
+      title: answers.advert.title,
+      type: answers.advert.typeName,
+      content: answers.advert.html,
+      signature: signatureHtml,
+    })
+
+    const pdf = (await this.generatePdfFromHtml(markup)).unwrap()
 
     return ResultWrapper.ok(pdf)
   }
 
   @LogAndHandle({ logArgs: false })
   private async generatePdfFromHtml(
-    type?: string,
-    title?: string,
-    advert?: string,
-    signature?: string,
+    htmlContent: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const browser = await getBrowser()
+    try {
+      return retryAsync(
+        async () => {
+          if (this.browser === null) {
+            this.logger.warn(`Tried to use browser before it was initialized`, {
+              category: LOGGING_CATEGORY,
+            })
+            throw new Error('Browser not initialized')
+          }
 
-    const page = await browser.newPage()
+          const page = await this.browser.newPage()
+          await page.setContent(htmlContent)
+          await page.addStyleTag({
+            content: pdfCss,
+          })
 
-    const pdfTitle = `${type || ''} ${title || ''}`.trim() || 'Untitled'
-
-    const htmlTemplate = `
-    <!DOCTYPE html>
-    <html lang="is">
-    <head>
-      <meta charset="UTF-8">
-      <title>${pdfTitle}</title>
-      <style>${pdfCss}</style>
-    </head>
-    <body>
-      ${type ? `${type}` : ''}
-      ${title ? `${title}` : ''}}
-      ${advert ? `${advert}` : ''}}
-      ${signature ? `${signature}` : ''}
-    </body>
-    </html>
-    `
-    await page.setContent(htmlTemplate)
-
-    const pdf = await page.pdf()
-
-    await browser.close()
-
-    return ResultWrapper.ok(pdf)
-  }
-
-  @LogAndHandle()
-  private async uploadPdfToS3(
-    pdf: Buffer,
-    caseId: string,
-  ): Promise<Result<undefined>> {
-    if (!this.s3) {
-      throw new InternalServerErrorException('S3 client not initialized')
-    }
-
-    const bucket = process.env.AWS_BUCKET_NAME
-
-    if (!bucket) {
-      throw new InternalServerErrorException('AWS_BUCKET_NAME not set')
-    }
-
-    const command = new UploadPartCommand({
-      Bucket: bucket,
-      Key: `case-${caseId}.pdf`,
-      Body: pdf,
-      PartNumber: 1,
-      UploadId: 'uploadId',
-    })
-
-    await this.s3.send(command)
-
-    return {
-      ok: true,
-      value: undefined,
+          const pdf = await page.pdf()
+          await page.close()
+          return ResultWrapper.ok(pdf)
+        },
+        PDF_RETRY_ATTEMPTS,
+        PDF_RETRY_DELAY,
+      )
+    } catch (error) {
+      this.logger.error(`Failed to generate PDF`, {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to generate PDF',
+      })
     }
   }
 
   @LogAndHandle()
   async getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
-
     const activeCase = caseMigrate(caseLookup)
 
-    if (!activeCase.publishedAt) {
-      const pdf = (
-        await this.generatePdfFromHtml(
-          activeCase.advertType.title,
-          activeCase.advertTitle,
-          activeCase.html,
-          '', // TODO: Add signature
-        )
-      ).unwrap()
+    const markup = advertPdfTemplate({
+      title: activeCase.advertTitle,
+      type: activeCase.advertType.title,
+      content: activeCase.html,
+      signature: activeCase.signatures
+        .map((signature) => signature.html)
+        .join(''),
+    })
 
-      return ResultWrapper.ok(pdf)
+    const pdfResults = await this.generatePdfFromHtml(markup)
+
+    if (!pdfResults.result.ok) {
+      this.logger.error(`Failed to generate PDF`, {
+        category: LOGGING_CATEGORY,
+        error: pdfResults.result.error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to generate PDF',
+      })
     }
 
-    const pdf = (
-      await this.generatePdfFromHtml(
-        activeCase.advertType.title,
-        activeCase.advertTitle,
-        activeCase.isLegacy
-          ? dirtyClean(activeCase.html as HTMLText)
-          : activeCase.html,
-      )
-    ).unwrap()
-
-    return ResultWrapper.ok(pdf)
+    return ResultWrapper.ok(pdfResults.result.value)
   }
 }
