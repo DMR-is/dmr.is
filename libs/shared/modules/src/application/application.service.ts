@@ -188,8 +188,6 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    console.log(res)
-
     if (!res.ok) {
       this.logger.error(
         `Appliction.service.getApplication, could not get application<${id}>`,
