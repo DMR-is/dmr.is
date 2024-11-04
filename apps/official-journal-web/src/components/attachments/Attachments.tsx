@@ -58,6 +58,15 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
     })
   }
 
+  if (activeCase.attachments.length === 0) {
+    return (
+      <AlertMessage
+        type="warning"
+        title={formatMessage(messages.attachments.noAttachments)}
+      />
+    )
+  }
+
   return (
     <Box>
       <Text variant="h5">{formatMessage(messages.attachments.title)}</Text>

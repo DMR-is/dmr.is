@@ -508,6 +508,8 @@ export class CaseService implements ICaseService {
       await this.utilityService.advertStatusLookup(AdvertStatus.Published)
     ).unwrap()
 
+    const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
+
     const advertCreateResult = await this.journalService.create(
       {
         departmentId: activeCase.departmentId,
@@ -522,7 +524,7 @@ export class CaseService implements ICaseService {
         publicationDate: now,
         signatureDate: now, // TODO: Replace with signature
         isLegacy: activeCase.isLegacy,
-        documentHtml: activeCase.html,
+        documentHtml: activeCase.html + signatureHtml,
         documentPdfUrl: '', // TODO: Replace with pdf url and add advert attachments s3 keys
         attachments: [],
       },
