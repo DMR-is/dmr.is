@@ -9,10 +9,10 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
-import { CategoryMainCategory } from '@dmr.is/shared/dto'
 
 import { AdvertModel } from './advert.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
+import { AdvertCategoryCategoriesModel } from './advert-category-categories.model'
 import { AdvertMainCategoryModel } from './advert-main-category.model'
 
 @Table({ tableName: 'advert_category', timestamps: false })
@@ -31,18 +31,16 @@ export class AdvertCategoryModel extends Model {
   @Column({ allowNull: false })
   slug!: string
 
-  @ForeignKey(() => AdvertMainCategoryModel)
-  @Column({ type: DataType.UUIDV4, field: 'main_category_id' })
-  mainCategoryID!: string | null
-
   @CreatedAt
   created!: Date
 
   @UpdatedAt
   updated!: Date
 
-  @BelongsTo(() => AdvertMainCategoryModel, 'main_category_id')
-  mainCategory!: CategoryMainCategory
+  @BelongsToMany(() => AdvertMainCategoryModel, {
+    through: () => AdvertCategoryCategoriesModel,
+  })
+  mainCategories!: AdvertMainCategoryModel[]
 
   @BelongsToMany(() => AdvertModel, {
     through: () => AdvertCategoriesModel,

@@ -46,6 +46,7 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { categoryCategoriesMigrate } from './migrations/category-categories.migrate'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -58,6 +59,7 @@ import {
 import {
   AdvertAttachmentsModel,
   AdvertCategoriesModel,
+  AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
@@ -89,11 +91,12 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertCategoryModel)
     private advertCategoryModel: typeof AdvertCategoryModel,
     @InjectModel(AdvertStatusModel)
-    private advertStatusModel: typeof AdvertStatusModel /* @InjectModel(AdvertStatusHistoryModel)
-    private advertStatusHistoryModel: typeof AdvertStatusHistoryModel,*/,
+    private advertStatusModel: typeof AdvertStatusModel,
 
     @InjectModel(AdvertCategoriesModel)
     private advertCategoriesModel: typeof AdvertCategoriesModel,
+    @InjectModel(AdvertCategoryCategoriesModel)
+    private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
@@ -389,7 +392,6 @@ export class JournalService implements IJournalService {
       {
         title: model.title,
         slug: model.slug,
-        mainCategoryID: model.mainCategory?.id,
       },
       {
         transaction,
@@ -411,7 +413,6 @@ export class JournalService implements IJournalService {
       {
         title: model.title,
         slug: model.slug,
-        mainCategoryID: model.mainCategory?.id,
       },
       { where: { id: model.id }, returning: true },
     )
@@ -429,22 +430,17 @@ export class JournalService implements IJournalService {
   ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-    const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
-      distinct: true,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
-      where: params?.search
-        ? {
-            title: { [Op.iLike]: `%${params?.search}%` },
-          }
-        : undefined,
-    })
 
-    const mapped = mainCategories.rows.map((item) =>
-      advertMainCategoryMigrate(item),
-    )
-    const paging = generatePaging(mapped, page, pageSize, mainCategories.count)
+    const mainCategories =
+      await this.advertCategoryCategoriesModel.findAndCountAll({
+        distinct: true,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        include: [AdvertCategoryModel, AdvertMainCategoryModel],
+      })
+
+    const mapped = categoryCategoriesMigrate(mainCategories.rows)
+    const paging = generatePaging([], page, pageSize, mainCategories.count)
 
     return ResultWrapper.ok({
       mainCategories: mapped,
@@ -642,10 +638,36 @@ export class JournalService implements IJournalService {
     })
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
-    const paging = generatePaging(mapped, page, pageSize, categories.count)
+
+    // TODO: do this better????
+    const withMainCategories = await Promise.all(
+      mapped.map(async (c) => {
+        const mainCategory = await this.advertCategoryCategoriesModel.findAll({
+          where: { advert_category_id: c.id },
+          include: [AdvertMainCategoryModel],
+        })
+
+        return {
+          ...c,
+          mainCategories: mainCategory.map((m) => ({
+            id: m.mainCategory.id,
+            title: m.mainCategory.title,
+            slug: m.mainCategory.slug,
+            description: m.mainCategory.description,
+          })),
+        }
+      }),
+    )
+
+    const paging = generatePaging(
+      withMainCategories,
+      page,
+      pageSize,
+      categories.count,
+    )
 
     return ResultWrapper.ok({
-      categories: mapped,
+      categories: withMainCategories,
       paging,
     })
   }

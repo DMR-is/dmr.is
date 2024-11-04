@@ -68,14 +68,13 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
-      main_category_id UUID NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id),
-      CONSTRAINT fk_advert_category_main_category_id FOREIGN KEY (main_category_id) REFERENCES advert_main_category (id)
     );
 
-    CREATE TABLE categories (
+    -- "Main category" to "Category" relation
+    CREATE TABLE category_categories (
       advert_category_id UUID NOT NULL,
       advert_main_category_id UUID NOT NULL,
       PRIMARY KEY (advert_category_id, advert_main_category_id),
