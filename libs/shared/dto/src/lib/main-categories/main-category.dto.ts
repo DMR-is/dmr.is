@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Category } from '../categories'
+
 export class MainCategory {
   @ApiProperty({
     description: 'Unique ID for the main category, GUID format.',
@@ -33,4 +35,11 @@ export class MainCategory {
     type: String,
   })
   readonly description!: string
+
+  @ApiProperty({
+    type: [Category],
+    description: 'List of sub categories under this main category.',
+    required: true,
+  })
+  readonly categories!: Category[]
 }

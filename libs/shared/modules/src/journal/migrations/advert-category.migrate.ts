@@ -1,7 +1,6 @@
 import { Category } from '@dmr.is/shared/dto'
 
 import { AdvertCategoryModel } from '../models/advert-category.model'
-import { advertMainCategoryMigrate } from './advert-main-category.migrate'
 
 export function advertCategoryMigrate(model: AdvertCategoryModel): Category {
   const result: Category = {
@@ -9,7 +8,12 @@ export function advertCategoryMigrate(model: AdvertCategoryModel): Category {
     slug: model.slug,
     title: model.title,
     mainCategory: model.mainCategory
-      ? advertMainCategoryMigrate(model.mainCategory)
+      ? {
+          id: model.mainCategory.id,
+          slug: model.mainCategory.slug,
+          title: model.mainCategory.title,
+          description: model.mainCategory.description,
+        }
       : null,
   }
   return result

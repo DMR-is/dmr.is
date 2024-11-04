@@ -18,6 +18,7 @@ export const COMMENTS_TO_HIDE = 4
 
 export enum Routes {
   Dashboard = '/',
+  MainCategories = '/yfirflokkar',
   ProcessingOverview = '/ritstjorn',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
@@ -57,6 +58,7 @@ export const PagePaths: Array<Path> = [
     order: 3,
   },
   { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
+  { pathname: Routes.MainCategories, title: 'Yfirflokkar', order: 5 },
 ]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -176,6 +178,7 @@ export enum APIRotues {
   GetDepartments = '/api/cases/departments',
   GetTypes = '/api/cases/types',
   GetCategories = '/api/cases/categories',
+  GetMainCategories = '/api/cases/mainCategories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
   GetCommunicationStatuses = '/api/cases/communicationStatuses',

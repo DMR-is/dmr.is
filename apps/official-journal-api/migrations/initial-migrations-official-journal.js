@@ -75,6 +75,14 @@ module.exports = {
       CONSTRAINT fk_advert_category_main_category_id FOREIGN KEY (main_category_id) REFERENCES advert_main_category (id)
     );
 
+    CREATE TABLE categories (
+      advert_category_id UUID NOT NULL,
+      advert_main_category_id UUID NOT NULL,
+      PRIMARY KEY (advert_category_id, advert_main_category_id),
+      CONSTRAINT fk_categories_advert_category_id FOREIGN KEY (advert_category_id) REFERENCES advert_category (id),
+      CONSTRAINT fk_categories_advert_main_category_id FOREIGN KEY (advert_main_category_id) REFERENCES advert_main_category (id)
+    );
+
     CREATE TABLE advert_status (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { MainCategory } from './maincategory.dto'
+import { MainCategory } from './main-category.dto'
 
 export class GetMainCategoryResponse {
   @ApiProperty({

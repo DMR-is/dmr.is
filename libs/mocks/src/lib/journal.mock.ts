@@ -182,6 +182,7 @@ export const ALL_MOCK_JOURNAL_TYPES = [
 const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d281',
   title: 'Dómstólar og réttarfar',
+  categories: [],
   slug: 'domstolar',
   description:
     'Hæstiréttur, lögmenn, lögreglumál, lögfræði, kjaradómur, refsilög, hegningarög, dómsmál og landsdómur.',
@@ -190,6 +191,7 @@ const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
 const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d282',
   title: 'Sjávarútvegur, fiskveiðar og fiskirækt',
+  categories: [],
   slug: 'sjavarutvegur',
   description: 'Sjávarútvegur, Veiði - friðun, fiskeldi og hafnarmál.',
 }
@@ -197,6 +199,7 @@ const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
 const MOCK_MAIN_CATEGORY_LANDBUNADUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d283',
   title: 'Landbúnaður',
+  categories: [],
   slug: 'landbunadur',
   description: 'Fóður, hross, hundar, dýravernd og landbúnaður.',
 }

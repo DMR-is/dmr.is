@@ -28,6 +28,7 @@ import {
   GetCategoriesResponse,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
+  GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetPublishedCasesQuery as GetFinishedCasesQuery,
   GetPublishedCasesResponse,
@@ -171,6 +172,17 @@ export class CaseController {
     params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
+  }
+
+  @Route({
+    path: 'main-categories',
+    operationId: 'getMainCategories',
+    summary: 'Get main categories',
+    query: [{ type: DefaultSearchParams }],
+    responseType: GetMainCategoriesResponse,
+  })
+  async mainCategories(): Promise<GetMainCategoriesResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getMainCategories())
   }
 
   @Route({

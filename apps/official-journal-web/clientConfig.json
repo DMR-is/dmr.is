@@ -217,6 +217,47 @@
         }
       }
     },
+    "/api/v1/cases/main-categories": {
+      "get": {
+        "operationId": "getMainCategories",
+        "summary": "Get main categories",
+        "parameters": [
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMainCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/overview": {
       "get": {
         "operationId": "editorialOverview",
@@ -1648,6 +1689,21 @@
         },
         "required": ["types", "paging"]
       },
+      "GetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "description": "List of advert categories",
+            "type": "array",
+            "items": { "type": "array" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["categories", "paging"]
+      },
       "MainCategory": {
         "type": "object",
         "properties": {
@@ -1671,52 +1727,29 @@
             "type": "string",
             "description": "Description of the main category, used on front page.",
             "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
-          }
-        },
-        "required": ["id", "title", "slug", "description"]
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
           },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert category.",
-            "example": "Evrópska efnahagssvæðið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert category, used in URLs and API requests.",
-            "example": "evropska-efnahagssvaedid"
-          },
-          "mainCategory": {
-            "description": "The main category this category belongs to.",
-            "nullable": true,
-            "example": "Dómstólar og réttarfar",
-            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetCategoriesResponse": {
-        "type": "object",
-        "properties": {
           "categories": {
-            "description": "List of advert categories",
+            "description": "List of sub categories under this main category.",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Category" }
+            "items": { "type": "array" }
+          }
+        },
+        "required": ["id", "title", "slug", "description", "categories"]
+      },
+      "GetMainCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "mainCategories": {
+            "description": "List of main categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MainCategory" }
           },
           "paging": {
             "description": "Paging info",
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["categories", "paging"]
+        "required": ["mainCategories", "paging"]
       },
       "CaseStatus": {
         "type": "object",
@@ -1795,6 +1828,34 @@
           }
         },
         "required": ["id", "name", "lastName", "active"]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert category.",
+            "example": "Evrópska efnahagssvæðið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert category, used in URLs and API requests.",
+            "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategory": {
+            "description": "The main category this category belongs to.",
+            "nullable": true,
+            "example": "Dómstólar og réttarfar",
+            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
+          }
+        },
+        "required": ["id", "title", "slug"]
       },
       "CaseChannel": {
         "type": "object",
