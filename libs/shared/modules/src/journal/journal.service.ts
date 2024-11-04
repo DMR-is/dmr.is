@@ -431,12 +431,24 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
+    const whereParams = {}
+
+    if (params?.search) {
+      Object.assign(whereParams, {
+        title: { [Op.iLike]: `%${params.search}%` },
+      })
+    }
+
     const mainCategories =
       await this.advertCategoryCategoriesModel.findAndCountAll({
         distinct: true,
         limit: pageSize,
         offset: (page - 1) * pageSize,
-        include: [AdvertCategoryModel, AdvertMainCategoryModel],
+        logging: (sql) => this.logger.debug(sql),
+        include: [
+          AdvertCategoryModel,
+          { model: AdvertMainCategoryModel, where: whereParams },
+        ],
       })
 
     const mapped = categoryCategoriesMigrate(mainCategories.rows)
