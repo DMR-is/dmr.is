@@ -1689,13 +1689,69 @@
         },
         "required": ["types", "paging"]
       },
+      "CategoryMainCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the main category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the main category.",
+            "example": "Dómstólar og réttarfar"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the main category, used in URLs and API requests.",
+            "example": "domstolar-og-rettarfar"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category, used on front page.",
+            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
+          }
+        },
+        "required": ["id", "title", "slug", "description"]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert category.",
+            "example": "Evrópska efnahagssvæðið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert category, used in URLs and API requests.",
+            "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategories": {
+            "description": "The main category this category belongs to.",
+            "nullable": true,
+            "example": "Dómstólar og réttarfar",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
       "GetCategoriesResponse": {
         "type": "object",
         "properties": {
           "categories": {
             "description": "List of advert categories",
             "type": "array",
-            "items": { "type": "array" }
+            "items": { "$ref": "#/components/schemas/Category" }
           },
           "paging": {
             "description": "Paging info",
@@ -1731,7 +1787,7 @@
           "categories": {
             "description": "List of sub categories under this main category.",
             "type": "array",
-            "items": { "type": "array" }
+            "items": { "$ref": "#/components/schemas/Category" }
           }
         },
         "required": ["id", "title", "slug", "description", "categories"]
@@ -1828,34 +1884,6 @@
           }
         },
         "required": ["id", "name", "lastName", "active"]
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert category.",
-            "example": "Evrópska efnahagssvæðið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert category, used in URLs and API requests.",
-            "example": "evropska-efnahagssvaedid"
-          },
-          "mainCategory": {
-            "description": "The main category this category belongs to.",
-            "nullable": true,
-            "example": "Dómstólar og réttarfar",
-            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
-          }
-        },
-        "required": ["id", "title", "slug"]
       },
       "CaseChannel": {
         "type": "object",

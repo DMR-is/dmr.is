@@ -7,7 +7,7 @@ export class GetMainCategoriesResponse {
   @ApiProperty({
     description: 'List of main categories',
     required: true,
-    type: [MainCategory],
+    type: () => [MainCategory],
   })
   readonly mainCategories!: Array<MainCategory>
 
