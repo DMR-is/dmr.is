@@ -444,7 +444,6 @@ export class JournalService implements IJournalService {
         distinct: true,
         limit: pageSize,
         offset: (page - 1) * pageSize,
-        logging: (sql) => this.logger.debug(sql),
         include: [
           AdvertCategoryModel,
           { model: AdvertMainCategoryModel, where: whereParams },

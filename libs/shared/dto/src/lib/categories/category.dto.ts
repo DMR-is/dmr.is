@@ -30,9 +30,9 @@ export class Category {
 
   @ApiProperty({
     description: 'The main category this category belongs to.',
-    required: false,
-    nullable: true,
-    type: [CategoryMainCategory],
+    required: true,
+    isArray: true,
+    type: () => CategoryMainCategory,
     example: 'Dómstólar og réttarfar',
   })
   readonly mainCategories?: CategoryMainCategory[]

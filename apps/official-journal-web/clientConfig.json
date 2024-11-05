@@ -1737,13 +1737,12 @@
           },
           "mainCategories": {
             "description": "The main category this category belongs to.",
-            "nullable": true,
             "example": "Dómstólar og réttarfar",
             "type": "array",
             "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": ["id", "title", "slug", "mainCategories"]
       },
       "GetCategoriesResponse": {
         "type": "object",

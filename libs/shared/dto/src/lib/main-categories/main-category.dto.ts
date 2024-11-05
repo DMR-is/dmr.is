@@ -37,7 +37,8 @@ export class MainCategory {
   readonly description!: string
 
   @ApiProperty({
-    type: () => [Category],
+    isArray: true,
+    type: () => Category,
     description: 'List of sub categories under this main category.',
     required: true,
   })

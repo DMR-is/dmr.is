@@ -1,24 +1,31 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { GetDepartmentsResponse } from '../../../gen/fetch'
+import { GetMainCategoriesResponse } from '../../../gen/fetch'
 import { APIRotues, fetcher } from '../../../lib/constants'
 import { generateQueryFromParams, SearchParams } from '../../../lib/types'
 
-type SWRDepartmentsOptions = SWRConfiguration<GetDepartmentsResponse, Error>
+type SWRMainCategoriesOptions = SWRConfiguration<
+  GetMainCategoriesResponse,
+  Error
+>
 
-type UseDepartmentsParams = {
-  options?: SWRDepartmentsOptions
+type UseMainCategoriesParams = {
+  options?: SWRMainCategoriesOptions
   params?: SearchParams
 }
 
 export const useMainCategories = ({
   options,
   params,
-}: UseDepartmentsParams = {}) => {
+}: UseMainCategoriesParams = {}) => {
+  const query = generateQueryFromParams(params)
+  const url = query
+    ? `${APIRotues.GetMainCategories}?${query}`
+    : APIRotues.GetMainCategories
   const { data, error, isLoading, mutate, isValidating } = useSWR<
-    GetDepartmentsResponse,
+    GetMainCategoriesResponse,
     Error
-  >(APIRotues.GetMainCategories, fetcher, options)
+  >(url, fetcher, options)
 
   return {
     data,

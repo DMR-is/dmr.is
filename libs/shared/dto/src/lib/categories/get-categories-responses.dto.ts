@@ -7,7 +7,8 @@ export class GetCategoriesResponse {
   @ApiProperty({
     description: 'List of advert categories',
     required: true,
-    type: () => [Category],
+    isArray: true,
+    type: () => Category,
   })
   readonly categories!: Category[]
 

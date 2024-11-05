@@ -1,5 +1,3 @@
-import { InferGetServerSidePropsType } from 'next'
-
 import {
   GridColumn,
   GridContainer,
@@ -11,10 +9,14 @@ import { Section } from '../../components/section/Section'
 import { useMainCategories } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 
-export default function CasePublishingOverview(
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
-  // const { mainCategories } = useMainCategories()
+export default function CasePublishingOverview() {
+  const { data } = useMainCategories({
+    params: {
+      pageSize: 100,
+    },
+  })
+
+  console.log(data)
 
   // const mainCategoryOptions = mainCategories.map((category) => ({
   //   label: category.title,
@@ -44,7 +46,6 @@ export const getServerSideProps = async () => {
 
   return {
     props: {
-      data: 'data',
       layout,
     },
   }

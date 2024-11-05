@@ -4,9 +4,9 @@ import { Category } from './category.dto'
 
 export class GetCategoryResponse {
   @ApiProperty({
+    type: Category,
     description: 'Categor',
     required: true,
-    type: Category,
   })
   readonly category!: Category
 }
