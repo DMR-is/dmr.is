@@ -7,7 +7,6 @@ export function advertCategoryMigrate(model: AdvertCategoryModel): Category {
     id: model.id,
     slug: model.slug,
     title: model.title,
-    mainCategories: [],
   }
   return result
 }

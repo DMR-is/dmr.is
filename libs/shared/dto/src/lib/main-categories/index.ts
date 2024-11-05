@@ -1,5 +1,5 @@
+export * from './main-category.dto'
 export * from './get-main-categories-query.dto'
 export * from './get-main-categories-response.dto'
 export * from './get-main-category-response.dto'
-export * from './main-category.dto'
 export * from './category-main-category.dto'

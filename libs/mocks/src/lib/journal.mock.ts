@@ -214,7 +214,7 @@ export const MOCK_CATEGORY_GAELUDYR: Category = {
   id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
   title: 'Gæludýr',
   slug: 'gaeludyr',
-  mainCategories: [],
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_B, // category does not have a department, should it?
 }
 
@@ -222,7 +222,7 @@ const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
   id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
   title: 'Skipulagsmál',
   slug: 'skipulagsmal',
-  mainCategories: [],
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_A, // category does not have a department, should it?
 }
 
@@ -230,7 +230,7 @@ const MOCK_CATEGORY_REYKJAVIK: Category = {
   id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
   title: 'Reykjavík',
   slug: 'reykjavik',
-  mainCategories: [],
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_C, // category does not have a department, should it?
 }
 
