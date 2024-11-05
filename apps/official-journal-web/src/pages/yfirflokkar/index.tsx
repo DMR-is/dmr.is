@@ -14,18 +14,19 @@ import {
   Select,
   Stack,
   Tag,
-  Text,
 } from '@island.is/island-ui/core'
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
-import { MainCategory } from '../../gen/fetch'
+import { Category, MainCategory } from '../../gen/fetch'
 import { useCategories, useMainCategories } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 
 export default function CasePublishingOverview() {
   const [selectedMainCategory, setSelectedMainCategory] =
     useState<MainCategory | null>(null)
+
+  const [categoriesToBeAdded, setCategoriesToBeAdded] = useState<Category[]>([])
 
   const [newMainCategory, setNewMainCategory] = useState({
     title: '',
@@ -60,14 +61,49 @@ export default function CasePublishingOverview() {
     setSelectedMainCategory(mainCategory || null)
   }
 
+  const onCategoryChange = (id: string | undefined) => {
+    if (!id) {
+      return
+    }
+
+    const found = categoriesData?.categories.find(
+      (category) => category.id === id,
+    )
+
+    const isAlreadyAdded = categoriesToBeAdded.find(
+      (category) => category.id === id,
+    )
+
+    if (isAlreadyAdded && found) {
+      const filteredCategories = categoriesToBeAdded.filter(
+        (cat) => cat.id !== found.id,
+      )
+      setCategoriesToBeAdded([...filteredCategories])
+    }
+
+    if (!isAlreadyAdded && found) {
+      setCategoriesToBeAdded([...categoriesToBeAdded, found])
+    }
+  }
+
+  const onCategoryRemove = (id: string) => {
+    const filteredCategories = categoriesToBeAdded.filter(
+      (category) => category.id !== id,
+    )
+
+    setCategoriesToBeAdded([...filteredCategories])
+  }
+
   return (
     <Section>
       <GridContainer>
-        <GridRow rowGap={2}>
-          <GridColumn span={['12/12', '6/12']} paddingBottom={2}>
-            <ContentWrapper background="white">
-              <Stack space={2}>
-                <Text variant="h2">Yfirflokkar</Text>
+        <GridRow rowGap={[2, 2, 3]}>
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[0, 2, 3]}
+          >
+            <Stack space={[2, 2, 3]}>
+              <ContentWrapper title="Yfirflokkar" background="white">
                 <Box display="flex" justifyContent="flexStart">
                   <Select
                     backgroundColor="blue"
@@ -78,12 +114,13 @@ export default function CasePublishingOverview() {
                     onChange={(option) => onMainCategoryChange(option?.value)}
                   />
                 </Box>
-
-                {selectedMainCategory !== null && (
-                  <Stack space={2}>
-                    <Text variant="h3">
-                      Breyta flokki {selectedMainCategory.title}
-                    </Text>
+              </ContentWrapper>
+              {selectedMainCategory !== null && (
+                <ContentWrapper
+                  title={`Breyta yfirflokki ${selectedMainCategory?.title}`}
+                  background="white"
+                >
+                  <Stack space={[2, 2, 3]}>
                     <Box
                       display="flex"
                       rowGap={2}
@@ -151,135 +188,173 @@ export default function CasePublishingOverview() {
                       </Button>
                     </Box>
                   </Stack>
-                )}
-              </Stack>
-            </ContentWrapper>
+                </ContentWrapper>
+              )}
+              <ContentWrapper
+                title="Búa til nýjan yfirflokk"
+                background="white"
+              >
+                <Stack space={[2, 2, 3]}>
+                  <Box display="flex" rowGap={2} columnGap={2} flexWrap="wrap">
+                    <Box flexGrow={1}>
+                      <Input
+                        backgroundColor="blue"
+                        size="sm"
+                        name="maincategory-name"
+                        placeholder="Heiti yfirflokks"
+                        label="Heiti yfirflokks"
+                        onChange={(e) =>
+                          setNewMainCategory({
+                            ...newMainCategory,
+                            title: e.target.value,
+                            slug: slugify(e.target.value, { lower: true }),
+                          })
+                        }
+                        value={newMainCategory.title}
+                      />
+                    </Box>
+                    <Box flexGrow={1}>
+                      <Input
+                        backgroundColor="blue"
+                        size="sm"
+                        readOnly
+                        name="maincategory-name"
+                        placeholder="Slóð"
+                        label="Slóð"
+                        value={newMainCategory.slug}
+                      />
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Input
+                      backgroundColor="blue"
+                      name="maincategory-description"
+                      size="sm"
+                      placeholder="Lýsing á yfirflokk"
+                      label="Lýsing á yfirflokk"
+                      rows={3}
+                      textarea
+                      onChange={(e) =>
+                        setNewMainCategory({
+                          ...newMainCategory,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </Box>
+                  <Box>
+                    <Button
+                      size="small"
+                      variant="ghost"
+                      icon="add"
+                      iconType="outline"
+                    >
+                      Búa til yfirflokk
+                    </Button>
+                  </Box>
+                </Stack>
+              </ContentWrapper>
+            </Stack>
           </GridColumn>
-          <GridColumn span={['12/12', '6/12']} paddingBottom={2}>
-            <ContentWrapper background="white">
-              <Stack space={2}>
-                <Text variant="h2">Undirflokkar</Text>
-                {selectedMainCategory === null && (
-                  <AlertMessage
-                    type="info"
-                    title="Enginn yfirflokkur valinn"
-                    message="Veldu yfirflokk til að sjá undirflokka"
-                  />
-                )}
-
-                {selectedMainCategory &&
-                  selectedMainCategory.categories.length === 0 && (
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[2, 2, 3]}
+          >
+            <Stack space={[2, 2, 3]}>
+              <ContentWrapper
+                title={`Undirflokkar${
+                  selectedMainCategory ? ` ${selectedMainCategory.title}` : ''
+                }`}
+                background="white"
+              >
+                <Stack space={[2, 2, 3]}>
+                  {selectedMainCategory === null && (
                     <AlertMessage
                       type="info"
-                      title="Engir undirflokkar"
-                      message="Engir undirflokkar fyrir valinn yfirflokk"
+                      title="Enginn yfirflokkur valinn"
+                      message="Veldu yfirflokk til að sjá undirflokka"
                     />
                   )}
-                <Inline space={2}>
+
                   {selectedMainCategory &&
-                    selectedMainCategory.categories.map((category) => (
-                      <Tag key={category.id}>
+                    selectedMainCategory.categories.length === 0 && (
+                      <AlertMessage
+                        type="info"
+                        title="Engir undirflokkar"
+                        message="Engir undirflokkar fyrir valinn yfirflokk"
+                      />
+                    )}
+                  <Inline space={2}>
+                    {selectedMainCategory &&
+                      selectedMainCategory.categories.map((category) => (
+                        <Tag variant="mint" key={category.id}>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            rowGap={2}
+                            columnGap={2}
+                          >
+                            {category.title}
+                            <Icon size="small" icon="trash" type="outline" />
+                          </Box>
+                        </Tag>
+                      ))}
+                  </Inline>
+                </Stack>
+              </ContentWrapper>
+              <ContentWrapper
+                title="Bæta flokk við yfirflokk"
+                background="white"
+              >
+                <Stack space={[2, 2, 3]}>
+                  <Box display="flex" justifyContent="flexStart">
+                    <Select
+                      backgroundColor="blue"
+                      isDisabled={selectedMainCategory === null}
+                      size="sm"
+                      placeholder="Veldu flokka"
+                      label="Veldu þá flokka sem á að bæta við"
+                      options={categoriesData?.categories.map((category) => ({
+                        label: category.title,
+                        value: category.id,
+                      }))}
+                      onChange={(option) => onCategoryChange(option?.value)}
+                    />
+                  </Box>
+                  <Inline space={2}>
+                    {categoriesToBeAdded.map((category) => (
+                      <Tag
+                        key={category.id}
+                        outlined
+                        onClick={() => onCategoryRemove(category.id)}
+                      >
                         <Box
                           display="flex"
                           alignItems="center"
                           rowGap={2}
                           columnGap={2}
                         >
-                          <Text variant="eyebrow">{category.title}</Text>
+                          {category.title}
                           <Icon size="small" icon="trash" type="outline" />
                         </Box>
                       </Tag>
                     ))}
-                </Inline>
-              </Stack>
-            </ContentWrapper>
-          </GridColumn>
-        </GridRow>
-        <GridRow direction={['columnReverse', 'row']} rowGap={2}>
-          <GridColumn span={['12/12', '6/12']}>
-            <ContentWrapper background="white">
-              <Stack space={2}>
-                <Text variant="h3">Búa til nýjan yfirflokk</Text>
-                <Box display="flex" rowGap={2} columnGap={2} flexWrap="wrap">
-                  <Box flexGrow={1}>
-                    <Input
-                      backgroundColor="blue"
-                      size="sm"
-                      name="maincategory-name"
-                      placeholder="Heiti yfirflokks"
-                      label="Heiti yfirflokks"
-                      onChange={(e) =>
-                        setNewMainCategory({
-                          ...newMainCategory,
-                          title: e.target.value,
-                          slug: slugify(e.target.value, { lower: true }),
-                        })
-                      }
-                      value={newMainCategory.title}
-                    />
-                  </Box>
-                  <Box flexGrow={1}>
-                    <Input
-                      backgroundColor="blue"
-                      size="sm"
-                      readOnly
-                      name="maincategory-name"
-                      placeholder="Slóð"
-                      label="Slóð"
-                      value={newMainCategory.slug}
-                    />
-                  </Box>
-                </Box>
-                <Box>
-                  <Input
-                    backgroundColor="blue"
-                    name="maincategory-description"
-                    size="sm"
-                    placeholder="Lýsing á yfirflokk"
-                    label="Lýsing á yfirflokk"
-                    rows={3}
-                    textarea
-                    onChange={(e) =>
-                      setNewMainCategory({
-                        ...newMainCategory,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </Box>
-                <Box>
+                  </Inline>
                   <Button
                     size="small"
                     variant="ghost"
                     icon="add"
                     iconType="outline"
                   >
-                    Búa til yfirflokk
+                    Bæta við flokkum
                   </Button>
-                </Box>
-              </Stack>
-            </ContentWrapper>
+                </Stack>
+              </ContentWrapper>
+            </Stack>
           </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <ContentWrapper background="white">
-              <Stack space={2}>
-                <Text variant="h3">Bæta flokk við yfirflokk</Text>
-                <Box display="flex" justifyContent="flexStart">
-                  <Select
-                    backgroundColor="blue"
-                    isDisabled={selectedMainCategory === null}
-                    size="sm"
-                    placeholder="Bæta við flokk"
-                    label="Bæta við flokk"
-                    options={categoriesData?.categories.map((category) => ({
-                      label: category.title,
-                      value: category.id,
-                    }))}
-                  />
-                </Box>
-              </Stack>
-            </ContentWrapper>
-          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={[2, 2, 3]}>
+          <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
         </GridRow>
       </GridContainer>
     </Section>
