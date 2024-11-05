@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
 
-import { createDmrClient } from '../../../lib/api/createClient'
-import { SearchParams } from '../../../lib/types'
+import { createDmrClient } from '../../../../lib/api/createClient'
+import { SearchParams } from '../../../../lib/types'
 
 const LOG_CATEGORY = 'get-main-categories-handler'
 
