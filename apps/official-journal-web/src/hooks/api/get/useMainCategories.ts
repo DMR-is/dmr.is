@@ -15,6 +15,7 @@ type UseMainCategoriesParams = {
   onDeleteMainCategorySuccess?: () => void
   onDeleteMainCategoryCategorySuccess?: () => void
   onCreateMainCategoryCategoriesSuccess?: () => void
+  onUpdateMainCategorySuccess?: () => void
   onGetMainCategoriesSuccess?: (data: GetMainCategoriesResponse) => void
   options?: SWRMainCategoriesOptions
   params?: SearchParams
@@ -24,6 +25,12 @@ type CreateMainCategoryParams = {
   title: string
   description: string
   categories: string[]
+}
+
+type UpdateMainCategoryParams = {
+  mainCategoryId: string
+  title?: string
+  description?: string
 }
 
 type CreateMainCategoryCategoriesTriggerArgs = {
@@ -46,6 +53,7 @@ export const useMainCategories = ({
   onCreateMainCategorySuccess,
   onCreateMainCategoryCategoriesSuccess,
   onGetMainCategoriesSuccess,
+  onUpdateMainCategorySuccess,
   options,
   params,
 }: UseMainCategoriesParams = {}) => {
@@ -107,7 +115,10 @@ export const useMainCategories = ({
   const { trigger: deleteMainCategoryTrigger, isMutating: isDeleting } =
     useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
       APIRotues.DeleteMainCategory,
-      (url: string) => fetcher(url, { arg: { method: 'DELETE' } }),
+      (url: string, { arg }: { arg: { mainCategoryId: string } }) =>
+        fetcher(url.replace(':id', arg.mainCategoryId), {
+          arg: { method: 'DELETE' },
+        }),
       {
         onSuccess: () => {
           refetchMainCategories()
@@ -143,6 +154,23 @@ export const useMainCategories = ({
     },
   )
 
+  const {
+    trigger: updateMainCategoryTrigger,
+    isMutating: isUpdatingMainCategory,
+  } = useSWRMutation<Response, Error, Key, UpdateMainCategoryParams>(
+    APIRotues.UpdateMainCategory,
+    (url: string, { arg }: { arg: UpdateMainCategoryParams }) =>
+      updateFetcher(url.replace(':id', arg.mainCategoryId), {
+        arg: { method: 'PUT', title: arg.title, description: arg.description },
+      }),
+    {
+      onSuccess: () => {
+        refetchMainCategories()
+        onUpdateMainCategorySuccess && onUpdateMainCategorySuccess()
+      },
+    },
+  )
+
   const deleteMainCategory = (id: string) => {
     deleteMainCategoryTrigger({ mainCategoryId: id })
   }
@@ -171,6 +199,10 @@ export const useMainCategories = ({
     })
   }
 
+  const updateMainCategory = (params: UpdateMainCategoryParams) => {
+    updateMainCategoryTrigger(params)
+  }
+
   return {
     mainCategories: data?.mainCategories,
     error,
@@ -180,10 +212,12 @@ export const useMainCategories = ({
     isValidating,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
+    isUpdatingMainCategory,
     deleteMainCategoryCategory,
     refetchMainCategories,
     createMainCategory,
     createMainCategoryCategories,
     deleteMainCategory,
+    updateMainCategory,
   }
 }

@@ -196,6 +196,7 @@ export enum APIRotues {
   UpdatePaid = '/api/cases/:id/updatePaid',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
+  UpdateMainCategory = '/api/cases/mainCategories/:id/update',
   CreateMainCategory = '/api/cases/mainCategories/create',
   CreateMainCategoryCategories = '/api/cases/mainCategories/:id/categories/create',
   CreateComment = '/api/cases/:id/comments/create',

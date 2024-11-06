@@ -40,6 +40,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
@@ -108,7 +109,8 @@ export class MockJournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(
-    model: MainCategory,
+    id: string,
+    body: UpdateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }

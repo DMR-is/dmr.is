@@ -1,5 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -28,6 +29,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -426,28 +428,45 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async updateMainCategory(
-    model: MainCategory,
+    id: string,
+    body: UpdateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
-    if (!model || !model.id) {
-      throw new BadRequestException()
+    const updateTransaction = await this.sequelize.transaction()
+    try {
+      const found = await this.advertMainCategoryModel.findByPk(id, {
+        transaction: updateTransaction,
+      })
+
+      if (!found) {
+        return ResultWrapper.err({
+          message: `Main category<${id}> not found`,
+          code: 404,
+        })
+      }
+
+      const updateBody = {
+        title: body.title ? body.title : found.title,
+        slug: body.title ? slugify(body.title, { lower: true }) : found.slug,
+        description: body.description ? body.description : found.description,
+      }
+
+      await found.update(updateBody, {
+        transaction: updateTransaction,
+      })
+
+      await updateTransaction.commit()
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(`Failed to update MainCategory<${id}>`, {
+        category: LOGGING_CATEGORY,
+        error: error,
+      })
+      await updateTransaction.rollback()
+      return ResultWrapper.err({
+        message: 'Failed to update MainCategory',
+        code: 500,
+      })
     }
-
-    const mainCat = await this.advertMainCategoryModel.update(
-      {
-        title: model.title,
-        description: model.description,
-        slug: model.slug,
-      },
-      { where: { id: model.id }, returning: true },
-    )
-
-    if (!mainCat) {
-      throw new NotFoundException(`Main category<${model.id}> not found`)
-    }
-
-    return ResultWrapper.ok({
-      mainCategory: advertMainCategoryMigrate(mainCat[1][0]),
-    })
   }
 
   @LogAndHandle()

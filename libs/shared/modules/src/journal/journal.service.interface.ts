@@ -25,6 +25,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -72,8 +73,9 @@ export interface IJournalService {
     categoryIds: string[],
   ): Promise<ResultWrapper>
   updateMainCategory(
-    model: MainCategory,
-  ): Promise<ResultWrapper<GetMainCategoryResponse>>
+    id: string,
+    body: UpdateMainCategory,
+  ): Promise<ResultWrapper>
 
   deleteMainCategory(id: string): Promise<ResultWrapper>
 

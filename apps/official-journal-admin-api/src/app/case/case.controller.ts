@@ -51,6 +51,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateMainCategory,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -285,6 +286,21 @@ export class CaseController {
         body.categories,
       ),
     )
+  }
+
+  @Route({
+    method: 'put',
+    path: 'main-categories/:id',
+    operationId: 'updateMainCategory',
+    summary: 'Update main category',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateMainCategory,
+  })
+  async updateMainCategory(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateMainCategory,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
   @Route({

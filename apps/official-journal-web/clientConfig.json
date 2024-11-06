@@ -315,6 +315,27 @@
           }
         ],
         "responses": { "204": { "description": "" } }
+      },
+      "put": {
+        "operationId": "updateMainCategory",
+        "summary": "Update main category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateMainCategory" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
@@ -1946,6 +1967,19 @@
           }
         },
         "required": ["categories"]
+      },
+      "UpdateMainCategory": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the main category."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category"
+          }
+        }
       },
       "CaseStatus": {
         "type": "object",

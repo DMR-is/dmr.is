@@ -18,7 +18,7 @@ import {
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
-import { Category, MainCategory } from '../../gen/fetch'
+import { Category, MainCategory, UpdateMainCategory } from '../../gen/fetch'
 import { useCategories, useMainCategories } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 
@@ -42,15 +42,22 @@ export default function CasePublishingOverview() {
     categories: [],
   })
 
+  const [updateBody, setUpdateBody] = useState<UpdateMainCategory>({
+    description: '',
+    title: '',
+  })
+
   const {
     mainCategories,
     isLoading,
     isCreating,
     isDeleting,
+    isUpdatingMainCategory,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     createMainCategory,
     deleteMainCategory,
+    updateMainCategory,
     deleteMainCategoryCategory,
     createMainCategoryCategories,
   } = useMainCategories({
@@ -137,7 +144,30 @@ export default function CasePublishingOverview() {
   const onMainCategoryChange = (id: string | undefined) => {
     const mainCategory = mainCategories?.find((category) => category.id === id)
 
-    setSelectedMainCategory(mainCategory || null)
+    if (!mainCategory) {
+      setSelectedMainCategory(null)
+      return
+    }
+
+    setUpdateBody({
+      description: mainCategory.description,
+      title: mainCategory.title,
+    })
+    setSelectedMainCategory(mainCategory)
+  }
+
+  const onDeleteMainCategory = (mainCategoryId: string) => {
+    if (!selectedMainCategory) {
+      return
+    }
+
+    const confirmed = confirm(
+      `Ertu viss um að þú viljir eyða flokkinum "${selectedMainCategory.title}"?`,
+    )
+
+    if (confirmed) {
+      deleteMainCategory(mainCategoryId)
+    }
   }
 
   const onCategoryChange = (id: string | undefined) => {
@@ -181,6 +211,13 @@ export default function CasePublishingOverview() {
     })
   }
 
+  const onDeleteMainCategoryCategory = (
+    mainCategoryId: string,
+    categoryId: string,
+  ) => {
+    deleteMainCategoryCategory(mainCategoryId, categoryId)
+  }
+
   const canCreateMainCategory =
     newMainCategory.title.length > 0 && newMainCategory.description.length > 0
 
@@ -196,11 +233,18 @@ export default function CasePublishingOverview() {
               <ContentWrapper title="Yfirflokkar" background="white">
                 <Box display="flex" justifyContent="flexStart">
                   <Select
+                    key={selectedMainCategory?.title}
                     isLoading={isLoading}
                     backgroundColor="blue"
                     placeholder="Veldu yfirflokk"
                     label="Veldu yfirflokk"
                     size="sm"
+                    defaultValue={
+                      selectedMainCategory && {
+                        label: selectedMainCategory?.title,
+                        value: selectedMainCategory?.id,
+                      }
+                    }
                     options={mainCategoryOptions}
                     onChange={(option) => onMainCategoryChange(option?.value)}
                   />
@@ -225,7 +269,14 @@ export default function CasePublishingOverview() {
                           name="current-category-name"
                           placeholder="Heiti yfirflokks"
                           label="Heiti yfirflokks"
-                          value={selectedMainCategory.title}
+                          defaultValue={selectedMainCategory.title}
+                          value={updateBody.title}
+                          onChange={(e) =>
+                            setUpdateBody({
+                              ...updateBody,
+                              title: e.target.value,
+                            })
+                          }
                         />
                       </Box>
                       <Box flexGrow={1}>
@@ -236,7 +287,11 @@ export default function CasePublishingOverview() {
                           name="current-category-name"
                           placeholder="Slóð"
                           label="Slóð"
-                          value={selectedMainCategory.slug}
+                          value={
+                            updateBody.title
+                              ? slugify(updateBody.title, { lower: true })
+                              : ''
+                          }
                         />
                       </Box>
                     </Box>
@@ -249,7 +304,14 @@ export default function CasePublishingOverview() {
                         placeholder="Lýsing á yfirflokk"
                         label="Lýsing á yfirflokk"
                         rows={3}
-                        value={selectedMainCategory.description}
+                        defaultValue={selectedMainCategory.description}
+                        value={updateBody.description}
+                        onChange={(e) =>
+                          setUpdateBody({
+                            ...updateBody,
+                            description: e.target.value,
+                          })
+                        }
                       />
                     </Box>
                     <Box
@@ -265,6 +327,13 @@ export default function CasePublishingOverview() {
                         variant="ghost"
                         icon="pencil"
                         iconType="outline"
+                        loading={isUpdatingMainCategory}
+                        onClick={() =>
+                          updateMainCategory({
+                            mainCategoryId: selectedMainCategory.id,
+                            ...updateBody,
+                          })
+                        }
                       >
                         Uppfæra flokk
                       </Button>
@@ -276,7 +345,7 @@ export default function CasePublishingOverview() {
                         icon="trash"
                         iconType="outline"
                         onClick={() =>
-                          deleteMainCategory(selectedMainCategory.id)
+                          onDeleteMainCategory(selectedMainCategory.id)
                         }
                       >
                         Eyða flokk
@@ -441,7 +510,7 @@ export default function CasePublishingOverview() {
                               rowGap={2}
                               columnGap={2}
                               onClick={() =>
-                                deleteMainCategoryCategory(
+                                onDeleteMainCategoryCategory(
                                   selectedMainCategory.id,
                                   category.id,
                                 )
