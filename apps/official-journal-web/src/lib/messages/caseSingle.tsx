@@ -126,5 +126,10 @@ export const messages = {
       defaultMessage: 'Bæta þarf við athugasemd til þess að leiðrétta mál',
       description: '',
     },
+    toPublishing: {
+      id: 'web.page.caseSingle:actions.toPublishing',
+      defaultMessage: 'Fara í útgáfu',
+      description: '',
+    },
   }),
 }

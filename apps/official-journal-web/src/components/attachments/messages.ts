@@ -42,5 +42,10 @@ export const messages = {
       defaultMessage: 'Hætta við',
       description: '',
     },
+    noAttachments: {
+      id: 'web.components.comments:noAttachments',
+      defaultMessage: 'Engin fylgiskjöl fundust á þessu máli',
+      description: '',
+    },
   }),
 }
