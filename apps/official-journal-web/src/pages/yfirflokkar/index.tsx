@@ -22,19 +22,67 @@ import { Category, MainCategory } from '../../gen/fetch'
 import { useCategories, useMainCategories } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 
+type NewMainCategory = {
+  title: string
+  slug: string
+  description: string
+  categories: Category[]
+}
+
 export default function CasePublishingOverview() {
   const [selectedMainCategory, setSelectedMainCategory] =
     useState<MainCategory | null>(null)
 
   const [categoriesToBeAdded, setCategoriesToBeAdded] = useState<Category[]>([])
 
-  const [newMainCategory, setNewMainCategory] = useState({
+  const [newMainCategory, setNewMainCategory] = useState<NewMainCategory>({
     title: '',
     slug: '',
     description: '',
+    categories: [],
   })
 
-  const { data: mainCategoriesData } = useMainCategories({
+  const {
+    mainCategories,
+    isLoading,
+    isCreating,
+    isDeleting,
+    isDeletingMainCategoryCategory,
+    isCreatingMainCategoryCategories,
+    createMainCategory,
+    deleteMainCategory,
+    deleteMainCategoryCategory,
+    createMainCategoryCategories,
+  } = useMainCategories({
+    onGetMainCategoriesSuccess: (data) => {
+      if (!selectedMainCategory) {
+        return
+      }
+
+      const found = data?.mainCategories.find(
+        (category) => category.id === selectedMainCategory.id,
+      )
+
+      if (!found) {
+        return
+      }
+
+      setSelectedMainCategory(found)
+    },
+    onCreateMainCategorySuccess: () => {
+      setNewMainCategory({
+        title: '',
+        slug: '',
+        description: '',
+        categories: [],
+      })
+    },
+    onDeleteMainCategorySuccess: () => {
+      setSelectedMainCategory(null)
+    },
+    onCreateMainCategoryCategoriesSuccess: () => {
+      setCategoriesToBeAdded([])
+    },
     params: {
       pageSize: 100,
     },
@@ -46,17 +94,48 @@ export default function CasePublishingOverview() {
     },
   })
 
-  const mainCategoryOptions = mainCategoriesData?.mainCategories.map(
-    (category) => ({
-      label: category.title,
-      value: category.id,
-    }),
-  )
+  const mainCategoryOptions = mainCategories?.map((category) => ({
+    label: category.title,
+    value: category.id,
+  }))
 
-  const onMainCategoryChange = (id: string | undefined) => {
-    const mainCategory = mainCategoriesData?.mainCategories.find(
+  const onNewMainCategoryCategoriesChange = (id: string | undefined) => {
+    if (!id) {
+      return
+    }
+
+    const found = categoriesData?.categories.find(
       (category) => category.id === id,
     )
+
+    const isAlreadyAdded = newMainCategory.categories.find(
+      (category) => category.id === id,
+    )
+
+    if (isAlreadyAdded && found) {
+      const filteredCategories = newMainCategory.categories.filter(
+        (cat) => cat.id !== found.id,
+      )
+      setNewMainCategory({ ...newMainCategory, categories: filteredCategories })
+    }
+
+    if (!isAlreadyAdded && found) {
+      setNewMainCategory({
+        ...newMainCategory,
+        categories: [...newMainCategory.categories, found],
+      })
+    }
+  }
+
+  const onRemoveNewMainCategoryCategory = (categoryId: string) => {
+    const filteredCategories = newMainCategory.categories.filter(
+      (category) => category.id !== categoryId,
+    )
+    setNewMainCategory({ ...newMainCategory, categories: filteredCategories })
+  }
+
+  const onMainCategoryChange = (id: string | undefined) => {
+    const mainCategory = mainCategories?.find((category) => category.id === id)
 
     setSelectedMainCategory(mainCategory || null)
   }
@@ -94,6 +173,17 @@ export default function CasePublishingOverview() {
     setCategoriesToBeAdded([...filteredCategories])
   }
 
+  const onCreateMainCategory = () => {
+    createMainCategory({
+      title: newMainCategory.title,
+      description: newMainCategory.description,
+      categories: newMainCategory.categories.map((category) => category.id),
+    })
+  }
+
+  const canCreateMainCategory =
+    newMainCategory.title.length > 0 && newMainCategory.description.length > 0
+
   return (
     <Section>
       <GridContainer>
@@ -106,6 +196,7 @@ export default function CasePublishingOverview() {
               <ContentWrapper title="Yfirflokkar" background="white">
                 <Box display="flex" justifyContent="flexStart">
                   <Select
+                    isLoading={isLoading}
                     backgroundColor="blue"
                     placeholder="Veldu yfirflokk"
                     label="Veldu yfirflokk"
@@ -178,11 +269,15 @@ export default function CasePublishingOverview() {
                         Uppfæra flokk
                       </Button>
                       <Button
+                        loading={isDeleting}
                         size="small"
                         variant="ghost"
                         colorScheme="destructive"
                         icon="trash"
                         iconType="outline"
+                        onClick={() =>
+                          deleteMainCategory(selectedMainCategory.id)
+                        }
                       >
                         Eyða flokk
                       </Button>
@@ -243,11 +338,58 @@ export default function CasePublishingOverview() {
                     />
                   </Box>
                   <Box>
+                    <Stack space={[2, 2, 3]}>
+                      <Select
+                        backgroundColor="blue"
+                        size="sm"
+                        placeholder="Veldu flokka"
+                        label="Veldu flokka sem á að bæta við"
+                        options={categoriesData?.categories.map((category) => ({
+                          label: category.title,
+                          value: category.id,
+                        }))}
+                        onChange={(option) =>
+                          onNewMainCategoryCategoriesChange(option?.value)
+                        }
+                      />
+                      {newMainCategory.categories.length > 0 && (
+                        <Inline space={2}>
+                          {newMainCategory.categories.map((category) => (
+                            <Tag
+                              key={category.id}
+                              outlined
+                              onClick={() =>
+                                onRemoveNewMainCategoryCategory(category.id)
+                              }
+                            >
+                              <Box
+                                display="flex"
+                                alignItems="center"
+                                rowGap={2}
+                                columnGap={2}
+                              >
+                                {category.title}
+                                <Icon
+                                  size="small"
+                                  icon="trash"
+                                  type="outline"
+                                />
+                              </Box>
+                            </Tag>
+                          ))}
+                        </Inline>
+                      )}
+                    </Stack>
+                  </Box>
+                  <Box>
                     <Button
+                      disabled={!canCreateMainCategory}
                       size="small"
                       variant="ghost"
                       icon="add"
+                      loading={isCreating}
                       iconType="outline"
+                      onClick={() => onCreateMainCategory()}
                     >
                       Búa til yfirflokk
                     </Button>
@@ -287,17 +429,29 @@ export default function CasePublishingOverview() {
                   <Inline space={2}>
                     {selectedMainCategory &&
                       selectedMainCategory.categories.map((category) => (
-                        <Tag variant="mint" key={category.id}>
-                          <Box
-                            display="flex"
-                            alignItems="center"
-                            rowGap={2}
-                            columnGap={2}
+                        <Box cursor="pointer">
+                          <Tag
+                            variant="mint"
+                            key={category.id}
+                            disabled={isDeletingMainCategoryCategory}
                           >
-                            {category.title}
-                            <Icon size="small" icon="trash" type="outline" />
-                          </Box>
-                        </Tag>
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              rowGap={2}
+                              columnGap={2}
+                              onClick={() =>
+                                deleteMainCategoryCategory(
+                                  selectedMainCategory.id,
+                                  category.id,
+                                )
+                              }
+                            >
+                              {category.title}
+                              <Icon size="small" icon="trash" type="outline" />
+                            </Box>
+                          </Tag>
+                        </Box>
                       ))}
                   </Inline>
                 </Stack>
@@ -310,7 +464,10 @@ export default function CasePublishingOverview() {
                   <Box display="flex" justifyContent="flexStart">
                     <Select
                       backgroundColor="blue"
-                      isDisabled={selectedMainCategory === null}
+                      isDisabled={
+                        selectedMainCategory === null ||
+                        isCreatingMainCategoryCategories
+                      }
                       size="sm"
                       placeholder="Veldu flokka"
                       label="Veldu þá flokka sem á að bæta við"
@@ -321,30 +478,45 @@ export default function CasePublishingOverview() {
                       onChange={(option) => onCategoryChange(option?.value)}
                     />
                   </Box>
-                  <Inline space={2}>
-                    {categoriesToBeAdded.map((category) => (
-                      <Tag
-                        key={category.id}
-                        outlined
-                        onClick={() => onCategoryRemove(category.id)}
-                      >
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          rowGap={2}
-                          columnGap={2}
-                        >
-                          {category.title}
-                          <Icon size="small" icon="trash" type="outline" />
+                  {categoriesToBeAdded.length > 0 && (
+                    <Inline space={2}>
+                      {categoriesToBeAdded.map((category) => (
+                        <Box cursor="pointer">
+                          <Tag
+                            key={category.id}
+                            outlined
+                            onClick={() => onCategoryRemove(category.id)}
+                          >
+                            <Box
+                              display="flex"
+                              alignItems="center"
+                              rowGap={2}
+                              columnGap={2}
+                            >
+                              {category.title}
+                              <Icon size="small" icon="trash" type="outline" />
+                            </Box>
+                          </Tag>
                         </Box>
-                      </Tag>
-                    ))}
-                  </Inline>
+                      ))}
+                    </Inline>
+                  )}
                   <Button
+                    disabled={
+                      categoriesToBeAdded.length === 0 ||
+                      selectedMainCategory === null
+                    }
                     size="small"
                     variant="ghost"
                     icon="add"
                     iconType="outline"
+                    onClick={() => {
+                      if (!selectedMainCategory) return
+                      createMainCategoryCategories(
+                        selectedMainCategory.id,
+                        categoriesToBeAdded.map((category) => category.id),
+                      )
+                    }}
                   >
                     Bæta við flokkum
                   </Button>
@@ -352,9 +524,6 @@ export default function CasePublishingOverview() {
               </ContentWrapper>
             </Stack>
           </GridColumn>
-        </GridRow>
-        <GridRow rowGap={[2, 2, 3]}>
-          <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
         </GridRow>
       </GridContainer>
     </Section>

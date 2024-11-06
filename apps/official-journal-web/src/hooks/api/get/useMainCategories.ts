@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -12,6 +11,11 @@ type SWRMainCategoriesOptions = SWRConfiguration<
 >
 
 type UseMainCategoriesParams = {
+  onCreateMainCategorySuccess?: () => void
+  onDeleteMainCategorySuccess?: () => void
+  onDeleteMainCategoryCategorySuccess?: () => void
+  onCreateMainCategoryCategoriesSuccess?: () => void
+  onGetMainCategoriesSuccess?: (data: GetMainCategoriesResponse) => void
   options?: SWRMainCategoriesOptions
   params?: SearchParams
 }
@@ -19,17 +23,32 @@ type UseMainCategoriesParams = {
 type CreateMainCategoryParams = {
   title: string
   description: string
+  categories: string[]
 }
 
-type DeleteMainCategoryParams = {
-  id: string
+type CreateMainCategoryCategoriesTriggerArgs = {
+  mainCategoryId: string
+  categoryIds: string[]
+}
+
+type DeleteMainCategoryTriggerArgs = {
+  mainCategoryId: string
+}
+
+type DeleteMainCategoryCategoryTriggerArgs = {
+  mainCategoryId: string
+  categoryId: string
 }
 
 export const useMainCategories = ({
+  onDeleteMainCategorySuccess,
+  onDeleteMainCategoryCategorySuccess,
+  onCreateMainCategorySuccess,
+  onCreateMainCategoryCategoriesSuccess,
+  onGetMainCategoriesSuccess,
   options,
   params,
 }: UseMainCategoriesParams = {}) => {
-  const [deleteUrl, setDeleteUrl] = useState<string | null>(null)
   const getQuery = generateQueryFromParams(params)
   const getUrl = getQuery
     ? `${APIRotues.GetMainCategories}?${getQuery}`
@@ -40,43 +59,131 @@ export const useMainCategories = ({
     isLoading,
     mutate: refetchMainCategories,
     isValidating,
-  } = useSWR<GetMainCategoriesResponse, Error>(getUrl, fetcher, options)
-
-  const createUrl = APIRotues.CreateMainCategory
-
-  const { trigger, isMutating: isCreating } = useSWRMutation<
-    Response,
-    Error,
-    Key,
-    CreateMainCategoryParams
-  >(createUrl, updateFetcher, {
-    onSuccess: () => {
-      refetchMainCategories()
+  } = useSWR<GetMainCategoriesResponse, Error>(getUrl, fetcher, {
+    ...options,
+    onSuccess: (data) => {
+      onGetMainCategoriesSuccess && onGetMainCategoriesSuccess(data)
     },
   })
 
-  const { trigger: deleteTrigger, isMutating: isDeleting } = useSWRMutation<
+  const { trigger: createMainCategoryTrigger, isMutating: isCreating } =
+    useSWRMutation<Response, Error, Key, CreateMainCategoryParams>(
+      APIRotues.CreateMainCategory,
+      updateFetcher,
+      {
+        onSuccess: () => {
+          refetchMainCategories()
+          onCreateMainCategorySuccess && onCreateMainCategorySuccess()
+        },
+      },
+    )
+
+  const {
+    trigger: createMainCategoryCategoriesTrigger,
+    isMutating: isCreatingMainCategoryCategories,
+  } = useSWRMutation<
     Response,
     Error,
     Key,
-    DeleteMainCategoryParams
-  >(deleteUrl, updateFetcher, {
-    onSuccess: () => {
-      setDeleteUrl(null)
-      refetchMainCategories()
+    CreateMainCategoryCategoriesTriggerArgs
+  >(
+    APIRotues.CreateMainCategoryCategories,
+    (
+      url: string,
+      { arg }: { arg: { mainCategoryId: string; categoryIds: string[] } },
+    ) =>
+      updateFetcher(url.replace(':id', arg.mainCategoryId), {
+        arg: { method: 'POST', categoryIds: arg.categoryIds },
+      }),
+    {
+      onSuccess: () => {
+        refetchMainCategories()
+        onCreateMainCategoryCategoriesSuccess &&
+          onCreateMainCategoryCategoriesSuccess()
+      },
     },
-  })
+  )
+
+  const { trigger: deleteMainCategoryTrigger, isMutating: isDeleting } =
+    useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
+      APIRotues.DeleteMainCategory,
+      (url: string) => fetcher(url, { arg: { method: 'DELETE' } }),
+      {
+        onSuccess: () => {
+          refetchMainCategories()
+          onDeleteMainCategorySuccess && onDeleteMainCategorySuccess()
+        },
+      },
+    )
+
+  const {
+    trigger: deleteMainCategoryCategoryTrigger,
+    isMutating: isDeletingMainCategoryCategory,
+  } = useSWRMutation<
+    Response,
+    Error,
+    Key,
+    DeleteMainCategoryCategoryTriggerArgs
+  >(
+    APIRotues.DeleteMainCategoryCategory,
+    (
+      url: string,
+      { arg }: { arg: { mainCategoryId: string; categoryId: string } },
+    ) =>
+      fetcher(
+        url.replace(':id', arg.mainCategoryId).replace(':cid', arg.categoryId),
+        { arg: { method: 'DELETE' } },
+      ),
+    {
+      onSuccess: () => {
+        onDeleteMainCategoryCategorySuccess &&
+          onDeleteMainCategoryCategorySuccess()
+        refetchMainCategories()
+      },
+    },
+  )
 
   const deleteMainCategory = (id: string) => {
-    setDeleteUrl(APIRotues.DeleteMainCategory.replace(':id', id))
-    deleteTrigger({ id })
+    deleteMainCategoryTrigger({ mainCategoryId: id })
+  }
+
+  const deleteMainCategoryCategory = (
+    mainCategoryId: string,
+    categoryId: string,
+  ) => {
+    deleteMainCategoryCategoryTrigger({
+      mainCategoryId,
+      categoryId,
+    })
+  }
+
+  const createMainCategory = (params: CreateMainCategoryParams) => {
+    createMainCategoryTrigger(params)
+  }
+
+  const createMainCategoryCategories = (
+    mainCategoryId: string,
+    categoryIds: string[],
+  ) => {
+    createMainCategoryCategoriesTrigger({
+      mainCategoryId,
+      categoryIds,
+    })
   }
 
   return {
-    data,
+    mainCategories: data?.mainCategories,
     error,
     isLoading,
+    isDeleting,
+    isCreating,
     isValidating,
-    mutate: refetchMainCategories,
+    isDeletingMainCategoryCategory,
+    isCreatingMainCategoryCategories,
+    deleteMainCategoryCategory,
+    refetchMainCategories,
+    createMainCategory,
+    createMainCategoryCategories,
+    deleteMainCategory,
   }
 }

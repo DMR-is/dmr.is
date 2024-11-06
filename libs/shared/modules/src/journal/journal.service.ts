@@ -70,6 +70,7 @@ import {
 } from './models'
 
 const DEFAULT_PAGE_SIZE = 20
+const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
 export class JournalService implements IJournalService {
   constructor(
@@ -348,9 +349,79 @@ export class JournalService implements IJournalService {
       description: model.description,
     })
 
+    const relations = model.categories.map((cat) =>
+      this.advertCategoryCategoriesModel.create({
+        mainCategoryId: mainCategory.id,
+        categoryId: cat.id,
+      }),
+    )
+
+    await Promise.all(relations)
+
     return ResultWrapper.ok({
       mainCategory: advertMainCategoryMigrate(mainCategory),
     })
+  }
+
+  @LogAndHandle()
+  async deleteMainCategory(id: string): Promise<ResultWrapper> {
+    if (!id) {
+      return ResultWrapper.err({
+        message: 'No id provided',
+        code: 400,
+      })
+    }
+
+    const mainCategory = await this.advertMainCategoryModel.findByPk(id)
+
+    const relations = await this.advertCategoryCategoriesModel.findAll({
+      where: { mainCategoryId: id },
+    })
+
+    await Promise.all(relations.map((r) => r.destroy()))
+
+    if (!mainCategory) {
+      this.logger.warn(`Delete main category<${id}> not found`, {
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        message: `Main category<${id}> not found`,
+        code: 404,
+      })
+    }
+
+    await mainCategory.destroy()
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async deleteMainCategoryCategory(
+    mainCategoryId: string,
+    categoryId: string,
+  ): Promise<ResultWrapper> {
+    await this.advertCategoryCategoriesModel.destroy({
+      where: { mainCategoryId, categoryId },
+    })
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async insertMainCategoryCategories(
+    mainCategoryId: string,
+    categoryIds: string[],
+  ): Promise<ResultWrapper> {
+    const promises = categoryIds.map((id) =>
+      this.advertCategoryCategoriesModel.create({
+        mainCategoryId: mainCategoryId,
+        categoryId: id,
+      }),
+    )
+
+    await Promise.all(promises)
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -439,19 +510,18 @@ export class JournalService implements IJournalService {
       })
     }
 
-    const mainCategories =
-      await this.advertCategoryCategoriesModel.findAndCountAll({
-        distinct: true,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        include: [
-          AdvertCategoryModel,
-          { model: AdvertMainCategoryModel, where: whereParams },
-        ],
-      })
+    const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
+      distinct: true,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      where: whereParams,
+      include: [AdvertCategoryModel],
+    })
 
-    const mapped = categoryCategoriesMigrate(mainCategories.rows)
-    const paging = generatePaging([], page, pageSize, mainCategories.count)
+    const mapped = mainCategories.rows.map((cat) =>
+      advertMainCategoryMigrate(cat),
+    )
+    const paging = generatePaging(mapped, page, pageSize, mainCategories.count)
 
     return ResultWrapper.ok({
       mainCategories: mapped,
@@ -635,16 +705,26 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
+    const whereParams = {}
+
+    if (params?.search) {
+      Object.assign(whereParams, {
+        title: { [Op.iLike]: `%${params.search}%` },
+      })
+    }
+
+    if (params?.ids) {
+      Object.assign(whereParams, {
+        id: params.ids,
+      })
+    }
+
     const categories = await this.advertCategoryModel.findAndCountAll({
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
-      where: params?.search
-        ? {
-            title: { [Op.iLike]: `%${params?.search}%` },
-          }
-        : undefined,
+      where: whereParams,
       include: AdvertMainCategoryModel,
     })
 

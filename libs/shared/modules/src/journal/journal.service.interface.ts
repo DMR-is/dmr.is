@@ -66,9 +66,21 @@ export interface IJournalService {
   insertMainCategory(
     model: MainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>>
+
+  insertMainCategoryCategories(
+    mainCategoryId: string,
+    categoryIds: string[],
+  ): Promise<ResultWrapper>
   updateMainCategory(
     model: MainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>>
+
+  deleteMainCategory(id: string): Promise<ResultWrapper>
+
+  deleteMainCategoryCategory(
+    mainCategoryId: string,
+    categoryId: string,
+  ): Promise<ResultWrapper>
 
   getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>>
   getCategories(

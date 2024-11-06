@@ -64,6 +64,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -189,6 +199,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -230,6 +250,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -256,6 +286,80 @@
             }
           }
         }
+      },
+      "post": {
+        "operationId": "createMainCategory",
+        "summary": "Create main category",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMainCategory" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{id}": {
+      "delete": {
+        "operationId": "deleteMainCategory",
+        "summary": "Delete main category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
+      "delete": {
+        "operationId": "deleteMainCategoryCategory",
+        "summary": "Delete main category category",
+        "parameters": [
+          {
+            "name": "mainCategoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{mainCategoryId}/categories": {
+      "post": {
+        "operationId": "createMainCategoryCategories",
+        "parameters": [
+          {
+            "name": "mainCategoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMainCategoryCategories"
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/cases/overview": {
@@ -1190,6 +1294,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -1236,6 +1350,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -1280,6 +1404,16 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           {
             "name": "page",
@@ -1377,6 +1511,16 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           {
             "name": "page",
@@ -1772,6 +1916,36 @@
           }
         },
         "required": ["mainCategories", "paging"]
+      },
+      "CreateMainCategory": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the main category."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category"
+          },
+          "categories": {
+            "description": "Sub categories under this main category",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["title", "description", "categories"]
+      },
+      "CreateMainCategoryCategories": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "description": "Sub categories under this main category",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["categories"]
       },
       "CaseStatus": {
         "type": "object",
