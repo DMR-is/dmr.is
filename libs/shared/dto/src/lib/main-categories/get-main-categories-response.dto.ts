@@ -1,13 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
-import { MainCategory } from './maincategory.dto'
+import { MainCategory } from './main-category.dto'
 
 export class GetMainCategoriesResponse {
   @ApiProperty({
     description: 'List of main categories',
     required: true,
-    type: [MainCategory],
+    isArray: true,
+    type: () => MainCategory,
   })
   readonly mainCategories!: Array<MainCategory>
 

@@ -1,4 +1,13 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript'
+import {
+  BelongsToMany,
+  Column,
+  DataType,
+  Model,
+  Table,
+} from 'sequelize-typescript'
+
+import { AdvertCategoryModel } from './advert-category.model'
+import { AdvertCategoryCategoriesModel } from './advert-category-categories.model'
 
 @Table({ tableName: 'advert_main_category', timestamps: false })
 export class AdvertMainCategoryModel extends Model {
@@ -18,4 +27,9 @@ export class AdvertMainCategoryModel extends Model {
 
   @Column
   description!: string
+
+  @BelongsToMany(() => AdvertCategoryModel, {
+    through: { model: () => AdvertCategoryCategoriesModel },
+  })
+  categories?: AdvertCategoryModel[]
 }

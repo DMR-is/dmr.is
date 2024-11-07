@@ -182,6 +182,7 @@ export const ALL_MOCK_JOURNAL_TYPES = [
 const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d281',
   title: 'Dómstólar og réttarfar',
+  categories: [],
   slug: 'domstolar',
   description:
     'Hæstiréttur, lögmenn, lögreglumál, lögfræði, kjaradómur, refsilög, hegningarög, dómsmál og landsdómur.',
@@ -190,6 +191,7 @@ const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
 const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d282',
   title: 'Sjávarútvegur, fiskveiðar og fiskirækt',
+  categories: [],
   slug: 'sjavarutvegur',
   description: 'Sjávarútvegur, Veiði - friðun, fiskeldi og hafnarmál.',
 }
@@ -197,6 +199,7 @@ const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
 const MOCK_MAIN_CATEGORY_LANDBUNADUR: MainCategory = {
   id: '70aebd7e-dcf5-4718-9cb6-512bddf4d283',
   title: 'Landbúnaður',
+  categories: [],
   slug: 'landbunadur',
   description: 'Fóður, hross, hundar, dýravernd og landbúnaður.',
 }
@@ -211,7 +214,7 @@ export const MOCK_CATEGORY_GAELUDYR: Category = {
   id: 'e6bb8e18-40f7-4b30-be21-581ec5da5c92',
   title: 'Gæludýr',
   slug: 'gaeludyr',
-  mainCategory: MOCK_MAIN_CATEGORY_LANDBUNADUR,
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_B, // category does not have a department, should it?
 }
 
@@ -219,7 +222,7 @@ const MOCK_CATEGORY_SKIPULAGSMAL: Category = {
   id: 'b113e386-bdf1-444f-a2ed-72807038cff1',
   title: 'Skipulagsmál',
   slug: 'skipulagsmal',
-  mainCategory: MOCK_MAIN_CATEGORY_DOMSTOLAR,
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_A, // category does not have a department, should it?
 }
 
@@ -227,7 +230,7 @@ const MOCK_CATEGORY_REYKJAVIK: Category = {
   id: '62cb4baf-5c3c-4664-88aa-d90b5b3b3b2e',
   title: 'Reykjavík',
   slug: 'reykjavik',
-  mainCategory: MOCK_MAIN_CATEGORY_SJAVARUTVEGUR,
+  // mainCategories: [],
   // department: JOURNAL_DEPARTMENT_C, // category does not have a department, should it?
 }
 

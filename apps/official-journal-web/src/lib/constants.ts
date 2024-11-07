@@ -18,6 +18,7 @@ export const COMMENTS_TO_HIDE = 4
 
 export enum Routes {
   Dashboard = '/',
+  MainCategories = '/yfirflokkar',
   ProcessingOverview = '/ritstjorn',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
@@ -57,6 +58,7 @@ export const PagePaths: Array<Path> = [
     order: 3,
   },
   { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
+  { pathname: Routes.MainCategories, title: 'Yfirflokkar', order: 5 },
 ]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -176,6 +178,7 @@ export enum APIRotues {
   GetDepartments = '/api/cases/departments',
   GetTypes = '/api/cases/types',
   GetCategories = '/api/cases/categories',
+  GetMainCategories = '/api/cases/mainCategories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
   GetCommunicationStatuses = '/api/cases/communicationStatuses',
@@ -193,8 +196,13 @@ export enum APIRotues {
   UpdatePaid = '/api/cases/:id/updatePaid',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
+  UpdateMainCategory = '/api/cases/mainCategories/:id/update',
+  CreateMainCategory = '/api/cases/mainCategories/create',
+  CreateMainCategoryCategories = '/api/cases/mainCategories/:id/categories/create',
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
+  DeleteMainCategory = '/api/cases/mainCategories/:id/delete',
+  DeleteMainCategoryCategory = '/api/cases/mainCategories/:id/categories/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',

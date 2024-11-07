@@ -40,6 +40,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
@@ -55,6 +56,21 @@ const LOGGING_CATEGORY = 'MockJournalService'
 export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
+  }
+  insertMainCategoryCategories(
+    mainCategoryId: string,
+    categoryIds: string[],
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  deleteMainCategoryCategory(
+    mainCategoryId: string,
+    categoryId: string,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  deleteMainCategory(id: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
   }
   create(model: CreateAdvert): Promise<ResultWrapper<GetAdvertResponse>> {
     throw new Error('Method not implemented.')
@@ -93,7 +109,8 @@ export class MockJournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(
-    model: MainCategory,
+    id: string,
+    body: UpdateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
