@@ -1,4 +1,4 @@
-export default `@media print {
+export const pdfCss = `
   :root {
     --font-family: 'Times New Roman', serif;
     --font-family--monospaced: 'Courier New', monospace;
@@ -540,5 +540,4 @@ export default `@media print {
   }
   .disclaimer__text {
   }
-}
 `

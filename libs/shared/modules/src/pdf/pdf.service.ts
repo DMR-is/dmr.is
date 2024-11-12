@@ -10,16 +10,11 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 import { retryAsync } from '@dmr.is/utils'
 
-import {
-  Inject,
-  Injectable,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 
 import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
-import PdfCSS from './pdf.css'
+import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
@@ -29,7 +24,7 @@ const LOGGING_CATEGORY = 'pdf-service'
 type PdfBrowser = Browser | CoreBrowser
 
 @Injectable()
-export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
+export class PdfService implements OnModuleInit, IPdfService {
   private browser: PdfBrowser | null = null
   constructor(
     @Inject(IUtilityService)
@@ -38,9 +33,6 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
   ) {}
   async onModuleInit() {
     this.browser = await getBrowser()
-  }
-  async onModuleDestroy() {
-    await this.browser?.close()
   }
 
   async getPdfByApplicationId(
@@ -86,7 +78,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
         .map(
           (addition) => `
           <section class="appendix">
-            <h2 class="appendix__title>${addition.title}</h2>
+            <h2 class="appendix__title">${addition.title}</h2>
             <div class="appendix__text">
               ${addition.content}
             </div>
@@ -126,7 +118,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
           const page = await this.browser.newPage()
           await page.setContent(htmlContent)
           await page.addStyleTag({
-            content: PdfCSS,
+            content: pdfCss,
           })
 
           const pdf = await page.pdf()
@@ -161,7 +153,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
         .map(
           (addition) => `
         <section class="appendix">
-          <h2 class="appendix__title>${addition.title}</h2>
+          <h2 class="appendix__title">${addition.title}</h2>
           <div class="appendix__text">
             ${addition.html}
           </div>

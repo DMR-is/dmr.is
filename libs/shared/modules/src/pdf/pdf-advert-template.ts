@@ -15,8 +15,8 @@ export const advertPdfTemplate = ({
 }: AdvertTemplateProps) => {
   return `
     <div class="regulation__prefix">${type?.toUpperCase()}</div>
-    <h1 class="regulation__title>${title}</h1>
-    <div class="regulation__text>
+    <h1 class="regulation__title">${title}</h1>
+    <div class="regulation__text">
       ${content}
       <section class="regulation__signature">
         ${signature}
