@@ -19,7 +19,7 @@ import {
 
 import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
-import { pdfCss } from './pdf.css'
+import PdfCSS from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
@@ -83,7 +83,16 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
 
     if (answers.advert.additions) {
       additionHtml = answers.advert.additions
-        .map((addition) => addition.content ?? '')
+        .map(
+          (addition) => `
+          <section class="appendix">
+            <h2 class="appendix__title>${addition.title}</h2>
+            <div class="appendix__text">
+              ${addition.content}
+            </div>
+          </section>
+        `,
+        )
         .join('')
     }
 
@@ -117,7 +126,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
           const page = await this.browser.newPage()
           await page.setContent(htmlContent)
           await page.addStyleTag({
-            content: pdfCss,
+            content: PdfCSS,
           })
 
           const pdf = await page.pdf()
@@ -148,7 +157,18 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
       content: activeCase.html,
-      additions: activeCase.additions.map((addition) => addition.html).join(''),
+      additions: activeCase.additions
+        .map(
+          (addition) => `
+        <section class="appendix">
+          <h2 class="appendix__title>${addition.title}</h2>
+          <div class="appendix__text">
+            ${addition.html}
+          </div>
+        </section>
+      `,
+        )
+        .join(''),
       signature: activeCase.signatures
         .map((signature) => signature.html)
         .join(''),
