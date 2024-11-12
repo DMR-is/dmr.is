@@ -11,6 +11,7 @@ import {
   SignatureTypeModel,
 } from '../../signature/models'
 import {
+  CaseAdditionModel,
   CaseChannelModel,
   CaseCommunicationStatusModel,
   CaseStatusModel,
@@ -26,6 +27,7 @@ export const CASE_RELATIONS = [
   AdvertCategoryModel,
   CaseChannelModel,
   AdvertInvolvedPartyModel,
+  CaseAdditionModel,
   {
     model: CaseCommentModel,
     include: [CaseCommentTypeModel, CaseStatusModel],

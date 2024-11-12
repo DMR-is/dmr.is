@@ -21,3 +21,8 @@ export enum CaseTagEnum {
   MultipleReviewers = 'Samlesin',
   RequiresReview = 'Þarf skoðun',
 }
+
+export enum AdditionType {
+  Html = 'html',
+  File = 'file',
+}

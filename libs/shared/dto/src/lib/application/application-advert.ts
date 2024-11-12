@@ -1,6 +1,14 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { AdditionType } from '../cases'
 
 export class ApplicationCommunicationChannel {
   @ApiProperty({
@@ -18,6 +26,40 @@ export class ApplicationCommunicationChannel {
   })
   @IsOptional()
   phone!: string
+}
+
+export class ApplicationAddition {
+  @ApiProperty({
+    type: String,
+    description: 'Id of the addition',
+  })
+  @IsUUID()
+  @IsOptional()
+  id!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Title of the addition',
+  })
+  @IsString()
+  @IsOptional()
+  title!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Content of the addition (html)',
+  })
+  @IsString()
+  @IsOptional()
+  content?: string
+
+  @ApiProperty({
+    enum: AdditionType,
+    description: 'Type of the addition',
+  })
+  @IsEnum(AdditionType)
+  @IsOptional()
+  type!: AdditionType
 }
 
 /**
@@ -92,6 +134,13 @@ export class ApplicationAdvert {
   })
   @IsOptional()
   channels?: ApplicationCommunicationChannel[]
+
+  @ApiProperty({
+    type: [ApplicationAddition],
+    description: 'Additions to the advert',
+  })
+  @IsOptional()
+  additions?: ApplicationAddition[]
 
   @ApiProperty({
     type: String,

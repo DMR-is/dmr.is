@@ -243,6 +243,7 @@ export class CaseController {
 
     const subCategoriesLookup = await this.journalService.getCategories({
       ids: body.categories,
+      pageSize: body.categories.length,
     })
 
     if (!subCategoriesLookup.result.ok) {

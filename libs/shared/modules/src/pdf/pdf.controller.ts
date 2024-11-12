@@ -3,7 +3,7 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { GetPdfRespone, GetPdfUrlResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, Res, StreamableFile } from '@nestjs/common'
+import { Controller, Inject, Param } from '@nestjs/common'
 import {} from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'

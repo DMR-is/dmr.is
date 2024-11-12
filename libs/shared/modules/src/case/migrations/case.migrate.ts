@@ -8,6 +8,7 @@ import { advertCategoryMigrate } from '../../journal/migrations/advert-category.
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
 import { CaseModel } from '../models'
+import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status.migrate'
 import { caseStatusMigrate } from './case-status.migrate'
@@ -58,6 +59,9 @@ export const caseMigrate = (model: CaseModel): Case => {
         : [],
       attachments: model.attachments
         ? model.attachments.map((a) => attachmentMigrate(a))
+        : [],
+      additions: model.additions
+        ? model.additions.map((add) => caseAdditionMigrate(add))
         : [],
     }
   }, `Error migrating case ${model.id}`)
