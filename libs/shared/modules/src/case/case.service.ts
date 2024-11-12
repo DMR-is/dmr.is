@@ -769,6 +769,15 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Rejected)
     ).unwrap()
 
+    const caseModel = await this.caseModel.findByPk(caseId)
+
+    if (!caseModel) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
     const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
       where: {
         caseId: caseId,
@@ -830,8 +839,7 @@ export class CaseService implements ICaseService {
       })
     }
 
-    // TODO: Close the application in the application syste
-    // await this.utilityService.rejectApplication(caseId)
+    await this.utilityService.rejectApplication(caseModel.applicationId)
 
     return ResultWrapper.ok()
   }

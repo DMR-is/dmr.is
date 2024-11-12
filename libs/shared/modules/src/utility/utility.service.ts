@@ -100,6 +100,14 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
+  editApplication(applicationId: string): Promise<ResultWrapper> {
+    return this.applicationService.submitApplication(
+      applicationId,
+      ApplicationEvent.Edit,
+    )
+  }
+
+  @LogAndHandle()
   async applicationLookup(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
