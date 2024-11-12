@@ -2306,6 +2306,18 @@
           "deleted"
         ]
       },
+      "CaseAddition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": { "type": "string", "description": "Title of the addition" },
+          "html": { "type": "string", "description": "HTML of the addition" }
+        },
+        "required": ["id", "title", "html"]
+      },
       "Case": {
         "type": "object",
         "properties": {
@@ -2452,6 +2464,10 @@
           "attachments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ApplicationAttachment" }
+          },
+          "additions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseAddition" }
           }
         },
         "required": [
@@ -2482,7 +2498,8 @@
           "channels",
           "comments",
           "signatures",
-          "attachments"
+          "attachments",
+          "additions"
         ]
       },
       "CaseOverviewTotalItems": {

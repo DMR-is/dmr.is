@@ -79,10 +79,19 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
         break
     }
 
+    let additionHtml = ''
+
+    if (answers.advert.additions) {
+      additionHtml = answers.advert.additions
+        .map((addition) => addition.content ?? '')
+        .join('')
+    }
+
     const markup = advertPdfTemplate({
       title: answers.advert.title,
       type: answers.advert.typeName,
       content: answers.advert.html,
+      additions: additionHtml,
       signature: signatureHtml,
     })
 
@@ -139,6 +148,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy, IPdfService {
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
       content: activeCase.html,
+      additions: activeCase.additions.map((addition) => addition.html).join(''),
       signature: activeCase.signatures
         .map((signature) => signature.html)
         .join(''),

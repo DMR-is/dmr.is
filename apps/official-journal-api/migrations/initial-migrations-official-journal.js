@@ -378,6 +378,22 @@ module.exports = {
       CONSTRAINT fk_published_case_advert_advert_id FOREIGN KEY (advert_id) REFERENCES advert (id)
     );
 
+    CREATE TABLE case_addition (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      content TEXT NOT NULL,
+      type VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE CASE_ADDITIONS (
+      CASE_CASE_ID UUID NOT NULL,
+      ADDITION_ID UUID NOT NULL,
+      PRIMARY KEY (CASE_CASE_ID, ADDITION_ID),
+      CONSTRAINT FK_CASE_ADDITIONS_CASE_ID FOREIGN KEY (CASE_CASE_ID) REFERENCES CASE_CASE (ID),
+      CONSTRAINT FK_CASE_ADDITIONS_ADDITION_ID FOREIGN KEY (ADDITION_ID) REFERENCES CASE_ADDITION (ID)
+    );
+
   COMMIT;
     `)
   },

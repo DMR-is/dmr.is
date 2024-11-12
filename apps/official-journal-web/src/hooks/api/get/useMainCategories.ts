@@ -65,8 +65,8 @@ export const useMainCategories = ({
     data,
     error,
     isLoading,
+    isValidating: isFetchingMainCategories,
     mutate: refetchMainCategories,
-    isValidating,
   } = useSWR<GetMainCategoriesResponse, Error>(getUrl, fetcher, {
     ...options,
     onSuccess: (data) => {
@@ -209,7 +209,7 @@ export const useMainCategories = ({
     isLoading,
     isDeleting,
     isCreating,
-    isValidating,
+    isFetchingMainCategories,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     isUpdatingMainCategory,

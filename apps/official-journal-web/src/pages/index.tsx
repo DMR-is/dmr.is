@@ -172,7 +172,6 @@ export default function Dashboard(
             <GridColumn span={['1/1', '1/1', '5/12']}>
               <ContentWrapper
                 title={messages.general.statistics}
-                link="#"
                 linkText={messages.general.openStatistics}
               >
                 <Tabs
@@ -192,7 +191,6 @@ export default function Dashboard(
           title={formatMessage(messages.imageWithText.new.title)}
           image="/assets/image-with-text-1.svg"
           linkText={formatMessage(messages.imageWithText.new.linkText)}
-          link="#"
           linkIcon="open"
           linkIconType="outline"
           intro={formatMessage(messages.imageWithText.new.description)}
@@ -203,7 +201,6 @@ export default function Dashboard(
           title={formatMessage(messages.imageWithText.print.title)}
           image="/assets/image-with-text-2.svg"
           linkText={formatMessage(messages.imageWithText.print.linkText)}
-          link="#"
           linkIcon="arrowForward"
           linkIconType="outline"
           align="rtl"

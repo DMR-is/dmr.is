@@ -3,12 +3,14 @@ type AdvertTemplateProps = {
   title?: string
   content?: string
   signature?: string
+  additions?: string
 }
 
 export const advertPdfTemplate = ({
   type,
   title,
   content,
+  additions,
   signature,
 }: AdvertTemplateProps) => {
   const typeMarkup = type
@@ -22,6 +24,7 @@ export const advertPdfTemplate = ({
     ${typeMarkup}
     ${titleMarkup}
     ${content}
+    ${additions}
     ${signature}
   `
 }
