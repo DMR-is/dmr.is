@@ -20,6 +20,7 @@ export interface IUtilityService {
   approveApplication(applicationId: string): Promise<ResultWrapper>
 
   rejectApplication(applicationId: string): Promise<ResultWrapper>
+  editApplication(applicationId: string): Promise<ResultWrapper>
   applicationLookup(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationResponse>>
