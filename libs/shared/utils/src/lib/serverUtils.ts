@@ -82,7 +82,7 @@ export const FILE_VALIDATORS = [
   }),
 ]
 
-export const getApplicationBucket = () =>
+export const getS3Bucket = () =>
   process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
 
 /**

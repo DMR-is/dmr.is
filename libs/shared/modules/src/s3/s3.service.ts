@@ -14,7 +14,7 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getApplicationBucket } from '@dmr.is/utils'
+import { getS3Bucket } from '@dmr.is/utils'
 
 import {
   Inject,
@@ -23,6 +23,8 @@ import {
 } from '@nestjs/common'
 
 import { IS3Service } from './s3.service.interface'
+
+const LOGGING_CATEGORY = 's3-service'
 
 /**
  * Service class for interacting with the S3 bucket. Handles all S3-related operations.
@@ -149,6 +151,35 @@ export class S3Service implements IS3Service {
     })
   }
 
+  @LogAndHandle({ logArgs: false })
+  async uploadObject(
+    bucket: string,
+    key: string,
+    fileName: string,
+    data: Buffer,
+  ): Promise<ResultWrapper<string>> {
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: data,
+    })
+
+    this.logger.debug(
+      `Uploading object to S3 bucket<${bucket}> with key<${key}>`,
+      {
+        category: LOGGING_CATEGORY,
+        bucket,
+        key,
+        url: `${bucket}/${key}`,
+      },
+    )
+    await this.client.send(command)
+
+    const url = `${process.env.ADVERTS_CDN_URL}/${fileName}`
+
+    return ResultWrapper.ok(url)
+  }
+
   /**
    * Uploads an attachment sent from the application system to S3 bucket.
    * @param applicationId The ID of the application.
@@ -159,7 +190,7 @@ export class S3Service implements IS3Service {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<Array<S3UploadFileResponse>>> {
-    const bucket = getApplicationBucket()
+    const bucket = getS3Bucket()
     const now = new Date().toISOString()
     const promises = files.map((file) => {
       const key = `applications/${applicationId}/${now}-${file.originalname}`
@@ -188,7 +219,7 @@ export class S3Service implements IS3Service {
   async getPresignedUrl(
     key: string,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
-    const bucket = getApplicationBucket()
+    const bucket = getS3Bucket()
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -209,7 +240,7 @@ export class S3Service implements IS3Service {
   @LogAndHandle()
   async deleteObject(key: string): Promise<ResultWrapper> {
     const command = new DeleteObjectCommand({
-      Bucket: getApplicationBucket(),
+      Bucket: getS3Bucket(),
       Key: key,
     })
 
@@ -225,7 +256,7 @@ export class S3Service implements IS3Service {
    */
   @LogAndHandle()
   async getObject(key: string): Promise<ResultWrapper<string>> {
-    const bucket = getApplicationBucket()
+    const bucket = getS3Bucket()
 
     // check if key starts with slash
     if (key.startsWith('/')) {

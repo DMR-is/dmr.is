@@ -36,7 +36,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
-import { enumMapper, generatePaging } from '@dmr.is/utils'
+import { enumMapper, generatePaging, getS3Bucket } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -58,6 +58,7 @@ import {
   AdvertDepartmentModel,
   AdvertTypeModel,
 } from '../journal/models'
+import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
@@ -91,6 +92,8 @@ export class CaseService implements ICaseService {
 
     @Inject(forwardRef(() => IAttachmentService))
     private readonly attachmentService: IAttachmentService,
+    @Inject(forwardRef(() => IPdfService))
+    private readonly pdfService: IPdfService,
 
     @Inject(ICaseUpdateService)
     private readonly updateService: ICaseUpdateService,
@@ -475,6 +478,17 @@ export class CaseService implements ICaseService {
     caseId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    const activeCase = await this.caseModel.findByPk(caseId, {
+      include: [...CASE_RELATIONS],
+    })
+
+    if (!activeCase) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
     const now = new Date()
 
     const caseStatus = (
@@ -495,8 +509,6 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const activeCase = (await this.utilityService.caseLookup(caseId)).unwrap()
-
     const number = (
       await this.utilityService.getNextPublicationNumber(
         activeCase.departmentId,
@@ -509,6 +521,39 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
+    const advertPdf = await this.pdfService.getPdfByCaseId(caseId)
+
+    if (!advertPdf.result.ok) {
+      this.logger.warn('Failed to get pdf for case', {
+        error: advertPdf.result.error,
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
+    const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
+    if (advertPdf.result.ok) {
+      const bucket = getS3Bucket()
+      const key = `adverts/${pdfFileName}`
+      const upload = await this.s3.uploadObject(
+        bucket,
+        key,
+        pdfFileName,
+        advertPdf.result.value,
+      )
+
+      if (!upload.result.ok) {
+        this.logger.warn('Failed to upload pdf to s3', {
+          error: upload.result.error,
+          category: LOGGING_CATEGORY,
+        })
+      } else {
+        this.logger.debug('Uploaded pdf to s3', {
+          url: upload.result.value,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
 
     const advertCreateResult = await this.journalService.create(
       {
@@ -525,7 +570,7 @@ export class CaseService implements ICaseService {
         signatureDate: now, // TODO: Replace with signature
         isLegacy: activeCase.isLegacy,
         documentHtml: activeCase.html + signatureHtml,
-        documentPdfUrl: '', // TODO: Replace with pdf url and add advert attachments s3 keys
+        documentPdfUrl: pdfFileName,
         attachments: [],
       },
       transaction,

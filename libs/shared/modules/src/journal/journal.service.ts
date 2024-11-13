@@ -813,7 +813,7 @@ export class JournalService implements IJournalService {
           html: advert.isLegacy
             ? dirtyClean(advert.documentHtml as HTMLText)
             : advert.documentHtml,
-          pdfUrl: advert.documentPdfUrl,
+          pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
         },
       },
     })
