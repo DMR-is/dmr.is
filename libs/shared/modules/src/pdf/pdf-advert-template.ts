@@ -22,6 +22,8 @@ export const advertPdfTemplate = ({
         ${signature}
       </section>
     </div>
-    ${additions}
+    <div class="appendixes">
+      ${additions}
+    </div>
   `
 }

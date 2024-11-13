@@ -12,6 +12,9 @@ import { retryAsync } from '@dmr.is/utils'
 
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 
+import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
+import { HTMLText } from '@island.is/regulations-tools/types'
+
 import { caseMigrate } from '../case/migrations/case.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
@@ -62,11 +65,12 @@ export class PdfService implements OnModuleInit, IPdfService {
 
     switch (answers.misc.signatureType) {
       case SignatureType.Committee:
-        signatureHtml += answers.signatures.committee?.html
+        signatureHtml += `<section class="regulation__signature">${answers.signatures.committee?.html}</section>`
         break
       case SignatureType.Regular:
         signatureHtml += answers.signatures.regular?.map(
-          (signature) => signature.html,
+          (signature) =>
+            `<section class="regulation__signature">${signature.html}</section>`,
         )
         break
     }
@@ -80,7 +84,7 @@ export class PdfService implements OnModuleInit, IPdfService {
           <section class="appendix">
             <h2 class="appendix__title">${addition.title}</h2>
             <div class="appendix__text">
-              ${addition.content}
+              ${cleanupSingleEditorOutput(addition.content as HTMLText)}
             </div>
           </section>
         `,
@@ -91,7 +95,7 @@ export class PdfService implements OnModuleInit, IPdfService {
     const markup = advertPdfTemplate({
       title: answers.advert.title,
       type: answers.advert.typeName,
-      content: answers.advert.html,
+      content: cleanupSingleEditorOutput(answers.advert.html as HTMLText),
       additions: additionHtml,
       signature: signatureHtml,
     })
@@ -162,7 +166,10 @@ export class PdfService implements OnModuleInit, IPdfService {
         )
         .join(''),
       signature: activeCase.signatures
-        .map((signature) => signature.html)
+        .map(
+          (signature) =>
+            `<section class="regulation__signature">${signature.html}</section>`,
+        )
         .join(''),
     })
 
