@@ -508,21 +508,10 @@ export const pdfCss = `
   /* ======================================================================= */
 
   .regulation__signature {
+    margin-top: 2em;
     page-break-inside: avoid;
     page-break-before: avoid;
   }
-
-  /* TODO: Maybe we need this later
-  .signature {
-    text-align: center;
-    margin-top: 2em;
-    page-break-inside: avoid;
-    padding: 0.75em 1em;
-    font-size: 1em;
-    font-style: italic;
-    page-break-before: avoid;
-    }
-  */
 
   /* ======================================================================= */
 
