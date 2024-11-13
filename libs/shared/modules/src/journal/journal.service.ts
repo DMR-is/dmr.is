@@ -136,7 +136,9 @@ export class JournalService implements IJournalService {
 
     const categories = await this.advertCategoryModel.findAll({
       where: {
-        id: model.categoryIds,
+        id: {
+          [Op.in]: model.categoryIds,
+        },
       },
       transaction,
     })
