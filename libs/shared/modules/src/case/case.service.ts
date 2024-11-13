@@ -473,7 +473,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle({ logArgs: false })
-  @Transactional()
   private async publishCase(
     caseId: string,
     transaction?: Transaction,
@@ -1005,11 +1004,47 @@ export class CaseService implements ICaseService {
     })
   }
 
+  private async processCaseToPublish(
+    ids: string[],
+  ): Promise<ResultWrapper<undefined>> {
+    const transaction = await this.sequelize.transaction()
+    let success = true
+    for (const id of ids) {
+      this.logger.debug(`Publishing case<${id}>`, {
+        id: id,
+        category: LOGGING_CATEGORY,
+      })
+      const publishResult = await this.publishCase(id, transaction)
+
+      if (!publishResult.result.ok) {
+        this.logger.error(`Failed to publish case<${id}>`, {
+          id: id,
+          error: publishResult.result.error,
+          category: LOGGING_CATEGORY,
+        })
+        success = false
+        break
+      }
+    }
+
+    if (!success) {
+      this.logger.error('Failed to publish cases', {
+        category: LOGGING_CATEGORY,
+      })
+      await transaction.rollback()
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to publish cases',
+      })
+    }
+
+    await transaction.commit()
+    return ResultWrapper.ok()
+  }
+
   @LogAndHandle()
-  @Transactional()
   async publishCases(
     body: PostCasePublishBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
@@ -1017,13 +1052,7 @@ export class CaseService implements ICaseService {
       throw new BadRequestException()
     }
 
-    await Promise.all(
-      caseIds.map(async (caseId) =>
-        ResultWrapper.unwrap(await this.publishCase(caseId, transaction)),
-      ),
-    )
-
-    return ResultWrapper.ok()
+    return await this.processCaseToPublish(caseIds)
   }
 
   @LogAndHandle()
