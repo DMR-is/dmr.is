@@ -11,6 +11,7 @@ import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
 import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
+import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -45,6 +46,7 @@ describe('CaseService', () => {
   let caseChannelsModel: CaseChannelsModel
   let caseCreateService: ICaseCreateService
   let caseUpdateService: ICaseUpdateService
+  let pdfService: IPdfService
   let sequelize: Sequelize
 
   beforeAll(async () => {
@@ -93,6 +95,10 @@ describe('CaseService', () => {
         },
         {
           provide: ICaseUpdateService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IPdfService,
           useClass: jest.fn(() => ({})),
         },
         {

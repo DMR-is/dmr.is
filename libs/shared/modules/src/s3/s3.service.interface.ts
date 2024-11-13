@@ -26,6 +26,13 @@ export interface IS3Service {
   deleteObject(key: string): Promise<ResultWrapper>
 
   getObject(key: string): Promise<ResultWrapper<string>>
+
+  uploadObject(
+    bucket: string,
+    key: string,
+    fileName: string,
+    data: Buffer,
+  ): Promise<ResultWrapper<string>>
 }
 
 export const IS3Service = Symbol('IS3Service')

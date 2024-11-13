@@ -10,7 +10,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 import { retryAsync } from '@dmr.is/utils'
 
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
@@ -27,15 +27,19 @@ const LOGGING_CATEGORY = 'pdf-service'
 type PdfBrowser = Browser | CoreBrowser
 
 @Injectable()
-export class PdfService implements OnModuleInit, IPdfService {
+export class PdfService implements OnModuleDestroy, IPdfService {
   private browser: PdfBrowser | null = null
   constructor(
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
-  async onModuleInit() {
-    this.browser = await getBrowser()
+
+  async onModuleDestroy() {
+    if (this.browser) {
+      await this.browser.close()
+      this.browser = null
+    }
   }
 
   async getPdfByApplicationId(
@@ -113,10 +117,10 @@ export class PdfService implements OnModuleInit, IPdfService {
       return retryAsync(
         async () => {
           if (this.browser === null) {
-            this.logger.warn(`Tried to use browser before it was initialized`, {
+            this.logger.debug('Creating new browser instance', {
               category: LOGGING_CATEGORY,
             })
-            throw new Error('Browser not initialized')
+            this.browser = await getBrowser()
           }
 
           const page = await this.browser.newPage()
@@ -137,6 +141,7 @@ export class PdfService implements OnModuleInit, IPdfService {
         category: LOGGING_CATEGORY,
         error,
       })
+
       return ResultWrapper.err({
         code: 500,
         message: 'Failed to generate PDF',
@@ -152,14 +157,14 @@ export class PdfService implements OnModuleInit, IPdfService {
     const markup = advertPdfTemplate({
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
-      content: activeCase.html,
+      content: cleanupSingleEditorOutput(activeCase.html as HTMLText),
       additions: activeCase.additions
         .map(
           (addition) => `
         <section class="appendix">
           <h2 class="appendix__title">${addition.title}</h2>
           <div class="appendix__text">
-            ${addition.html}
+            ${cleanupSingleEditorOutput(addition.html as HTMLText)}
           </div>
         </section>
       `,
