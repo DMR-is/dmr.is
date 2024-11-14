@@ -39,7 +39,7 @@ export class CaseAdditionModel extends Model {
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'title',
+    field: 'type',
   })
   type!: AdditionType
 }
