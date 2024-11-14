@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdditionType,
   Application,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
@@ -474,28 +475,57 @@ export class CaseCreateService implements ICaseCreateService {
       }
     })
 
-    if (values.additions.length > 0) {
-      await Promise.all(
-        values.additions.map((addition) =>
-          this.caseAdditionModel.create({
-            id: addition.id,
-            title: addition.title,
-            content: addition.content,
-            type: 'html',
-          }),
-        ),
-      )
-
-      await Promise.all(
-        values.additions.map((addition) =>
-          this.caseAdditionsModel.create({
-            caseId,
-            additionId: addition.id,
-          }),
-        ),
-      )
-    }
+    await Promise.all(
+      values.additions.map((addition) =>
+        this.createCaseAddition(caseId, addition.title, addition.content),
+      ),
+    )
 
     return ResultWrapper.ok()
+  }
+
+  async createCaseAddition(
+    caseId: string,
+    title: string,
+    content: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const additionId = uuid()
+
+    try {
+      await this.caseAdditionModel.create(
+        {
+          id: additionId,
+          title,
+          content,
+          type: AdditionType.Html,
+        },
+        {
+          transaction,
+        },
+      )
+
+      await this.caseAdditionsModel.create(
+        {
+          caseId,
+          additionId,
+        },
+        {
+          transaction,
+        },
+      )
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(`Failed to create addition for case<${caseId}>`, {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to create addition',
+      })
+    }
   }
 }
