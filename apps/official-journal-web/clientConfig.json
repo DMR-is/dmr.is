@@ -22,7 +22,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
@@ -48,7 +49,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/departments": {
@@ -99,7 +101,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/communicationStatuses": {
@@ -118,7 +121,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/tags": {
@@ -135,7 +139,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/types": {
@@ -183,7 +188,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/categories": {
@@ -234,7 +240,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories": {
@@ -519,7 +526,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{caseId}/attachments/{attachmentId}": {
@@ -551,7 +559,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "put": {
         "operationId": "overwriteCaseAttachment",
@@ -591,7 +600,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/price": {
@@ -614,7 +624,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/paid": {
@@ -637,7 +648,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/tag": {
@@ -660,7 +672,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/department": {
@@ -685,7 +698,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/communicationStatus": {
@@ -709,7 +723,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/type": {
@@ -732,7 +747,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/publishDate": {
@@ -755,7 +771,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/title": {
@@ -778,7 +795,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/categories": {
@@ -801,7 +819,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/status/next": {
@@ -824,7 +843,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/status/previous": {
@@ -847,7 +867,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/assign/{userId}": {
@@ -868,7 +889,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/status": {
@@ -891,7 +913,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/html": {
@@ -914,7 +937,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}": {
@@ -927,12 +951,6 @@
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "description": "Bearer token authorization",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -944,7 +962,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases": {
@@ -969,7 +988,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "get": {
         "operationId": "getCases",
@@ -1104,7 +1124,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/published/{department}": {
@@ -1151,7 +1172,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/publish": {
@@ -1167,7 +1189,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/unpublish": {
@@ -1181,7 +1204,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/reject": {
@@ -1195,7 +1219,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/comments": {
@@ -1228,7 +1253,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "post": {
         "operationId": "createComment",
@@ -1249,7 +1275,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/{id}/comments/{commentId}": {
@@ -1281,7 +1308,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "delete": {
         "operationId": "deleteComment",
@@ -1300,7 +1328,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/signatures/involved-party/{id}": {
@@ -1644,6 +1673,9 @@
   "tags": [],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
+    },
     "schemas": {
       "AdminUserRole": {
         "type": "object",
