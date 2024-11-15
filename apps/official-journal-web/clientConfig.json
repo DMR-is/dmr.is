@@ -761,6 +761,12 @@
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "description": "Bearer token authorization",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1353,13 +1359,6 @@
           }
         ],
         "responses": { "200": { "description": "" } }
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "operationId": "login",
-        "parameters": [],
-        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/statistics/department": {

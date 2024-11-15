@@ -13,6 +13,7 @@ import {
   CaseCommentType,
   CaseStatusTitleEnum,
   CaseTagTitleEnum,
+  Middleware,
   Signature,
 } from '../gen/fetch'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
@@ -387,5 +388,18 @@ export const getOverviewStatusColor = (status: string) => {
       return 'rose'
     default:
       return 'blue'
+  }
+}
+
+export const addAuthHeader = (token?: string): Middleware => {
+  return {
+    pre: async (request) => {
+      request.init.headers = {
+        ...request.init.headers,
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+      return request
+    },
   }
 }

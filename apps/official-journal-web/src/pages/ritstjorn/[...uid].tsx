@@ -45,6 +45,7 @@ import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseSingle'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import {
+  addAuthHeader,
   caseStatusToCaseStep,
   CaseStep,
   caseSteps,
@@ -500,9 +501,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   try {
     // TODO: getCase should return null if no case is found
-    const activeCase = await dmrClient.getCase({
-      id: caseId,
-    })
+    const activeCase = await dmrClient
+      .withMiddleware(addAuthHeader(session.accessToken))
+      .getCase({
+        id: caseId,
+      })
 
     const queryStep = query.uid?.[1] as CaseStep | undefined
 

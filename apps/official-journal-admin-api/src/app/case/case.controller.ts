@@ -1,11 +1,11 @@
 import { USER_ROLES } from '@dmr.is/constants'
 import { Roles, Route } from '@dmr.is/decorators'
 import {
-  AdminAuthGuard,
   IAdminUserService,
   ICaseService,
   ICommentService,
   IJournalService,
+  SimpleJwtAuthGuard,
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
@@ -13,7 +13,6 @@ import {
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
-  CaseStatusEnum,
   CreateCaseResponse,
   DefaultSearchParams,
   EditorialOverviewResponse,
@@ -58,9 +57,12 @@ import {
   Inject,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
+@ApiBearerAuth()
 @Controller({
   version: '1',
   path: 'cases',
@@ -444,6 +446,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
+  @Roles(USER_ROLES.Admin)
+  @UseGuards(SimpleJwtAuthGuard)
   @Route({
     path: ':id',
     operationId: 'getCase',
@@ -468,7 +472,6 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
-  // @UseGuards(AdminAuthGuard)
   // @Roles(USER_ROLES.Admin)
   @Route({
     path: '',

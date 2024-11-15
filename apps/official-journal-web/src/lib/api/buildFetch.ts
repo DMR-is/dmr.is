@@ -9,15 +9,22 @@ import { EnhancedFetchAPI } from './types'
 
 export function buildFetch(actualFetch: NodeFetchAPI) {
   let nextMiddleware: MiddlewareAPI = actualFetch
+
   const result = {
     getFetch(): EnhancedFetchAPI {
       const firstMiddleware = nextMiddleware
 
-      // Maps between DOM fetch API types and Node Fetch API types.
-      return (input, init) => {
-        // Normalize Request.
+      return async (input, init = {}, token?: string) => {
+        // Normalize Request
         const request = new Request(input as RequestInfo, init as RequestInit)
-        const response = firstMiddleware(request)
+
+        // If a token is provided, add it to the Authorization header
+        if (token) {
+          request.headers.set('Authorization', `Bearer ${token}`)
+        }
+
+        // Pass the request to the first middleware in the chain
+        const response = await firstMiddleware(request)
         return response as unknown as Promise<Response>
       }
     },
