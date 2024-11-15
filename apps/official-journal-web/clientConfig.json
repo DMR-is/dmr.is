@@ -64,6 +64,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -189,6 +199,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -215,6 +235,152 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/cases/main-categories": {
+      "get": {
+        "operationId": "getMainCategories",
+        "summary": "Get main categories",
+        "parameters": [
+          {
+            "name": "search",
+            "description": "String to search for",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
+            "name": "page",
+            "description": "Page number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "description": "Page size number to return.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMainCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMainCategory",
+        "summary": "Create main category",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMainCategory" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{id}": {
+      "delete": {
+        "operationId": "deleteMainCategory",
+        "summary": "Delete main category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      },
+      "put": {
+        "operationId": "updateMainCategory",
+        "summary": "Update main category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateMainCategory" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
+      "delete": {
+        "operationId": "deleteMainCategoryCategory",
+        "summary": "Delete main category category",
+        "parameters": [
+          {
+            "name": "mainCategoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/cases/main-categories/{mainCategoryId}/categories": {
+      "post": {
+        "operationId": "createMainCategoryCategories",
+        "parameters": [
+          {
+            "name": "mainCategoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMainCategoryCategories"
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/cases/overview": {
@@ -1155,6 +1321,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -1201,6 +1377,16 @@
             "schema": { "type": "string" }
           },
           {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          {
             "name": "page",
             "description": "Page number to return.",
             "required": false,
@@ -1245,6 +1431,16 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           {
             "name": "page",
@@ -1342,6 +1538,16 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "ids",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": [],
+              "type": "array",
+              "items": { "type": "string" }
+            }
           },
           {
             "name": "page",
@@ -1647,6 +1853,43 @@
         },
         "required": ["types", "paging"]
       },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert category.",
+            "example": "Evrópska efnahagssvæðið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert category, used in URLs and API requests.",
+            "example": "evropska-efnahagssvaedid"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "description": "List of advert categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["categories", "paging"]
+      },
       "MainCategory": {
         "type": "object",
         "properties": {
@@ -1670,52 +1913,72 @@
             "type": "string",
             "description": "Description of the main category, used on front page.",
             "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
-          }
-        },
-        "required": ["id", "title", "slug", "description"]
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the advert category, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
           },
-          "title": {
-            "type": "string",
-            "description": "Title of the advert category.",
-            "example": "Evrópska efnahagssvæðið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the advert category, used in URLs and API requests.",
-            "example": "evropska-efnahagssvaedid"
-          },
-          "mainCategory": {
-            "description": "The main category this category belongs to.",
-            "nullable": true,
-            "example": "Dómstólar og réttarfar",
-            "allOf": [{ "$ref": "#/components/schemas/MainCategory" }]
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetCategoriesResponse": {
-        "type": "object",
-        "properties": {
           "categories": {
-            "description": "List of advert categories",
+            "description": "List of sub categories under this main category.",
             "type": "array",
             "items": { "$ref": "#/components/schemas/Category" }
+          }
+        },
+        "required": ["id", "title", "slug", "description", "categories"]
+      },
+      "GetMainCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "mainCategories": {
+            "description": "List of main categories",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MainCategory" }
           },
           "paging": {
             "description": "Paging info",
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["categories", "paging"]
+        "required": ["mainCategories", "paging"]
+      },
+      "CreateMainCategory": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the main category."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category"
+          },
+          "categories": {
+            "description": "Sub categories under this main category",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["title", "description", "categories"]
+      },
+      "CreateMainCategoryCategories": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "description": "Sub categories under this main category",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["categories"]
+      },
+      "UpdateMainCategory": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the main category."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category"
+          }
+        }
       },
       "CaseStatus": {
         "type": "object",
@@ -2042,6 +2305,18 @@
           "deleted"
         ]
       },
+      "CaseAddition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": { "type": "string", "description": "Title of the addition" },
+          "html": { "type": "string", "description": "HTML of the addition" }
+        },
+        "required": ["id", "title", "html"]
+      },
       "Case": {
         "type": "object",
         "properties": {
@@ -2188,6 +2463,10 @@
           "attachments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ApplicationAttachment" }
+          },
+          "additions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseAddition" }
           }
         },
         "required": [
@@ -2218,7 +2497,8 @@
           "channels",
           "comments",
           "signatures",
-          "attachments"
+          "attachments",
+          "additions"
         ]
       },
       "CaseOverviewTotalItems": {

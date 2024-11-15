@@ -73,10 +73,9 @@ export class CaseUpdateService implements ICaseUpdateService {
         await this.applicationService.getApplication(caseLookup.applicationId)
       ).unwrap()
 
-      // we should only reject the application if the state of the application is submitted
       if (application.state === ApplicationStates.SUBMITTED) {
         ResultWrapper.unwrap(
-          await this.utilityService.rejectApplication(caseLookup.applicationId),
+          await this.utilityService.editApplication(caseLookup.applicationId),
         )
       }
     }

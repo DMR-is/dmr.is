@@ -3,6 +3,7 @@ import {
   ApplicationUser,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
@@ -75,6 +76,10 @@ export interface IApplicationService {
     applicationId: string,
     key: string,
   ): Promise<ResultWrapper>
+
+  getApplicationCase(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetApplicationCaseResponse>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

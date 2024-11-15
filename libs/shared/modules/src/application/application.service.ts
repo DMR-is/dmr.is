@@ -15,6 +15,7 @@ import {
   CaseCommunicationStatus,
   CasePriceResponse,
   GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
   GetApplicationResponse,
   GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
@@ -43,6 +44,7 @@ import { ICommentService } from '../comment/comment.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
+import { applicationCaseMigrate } from './migrations'
 
 const LOGGING_CATEGORY = 'application-service'
 
@@ -65,6 +67,26 @@ export class ApplicationService implements IApplicationService {
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
+  }
+  async getApplicationCase(
+    applicationId: string,
+  ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
+    const caseLookup = await this.utilityService.caseLookupByApplicationId(
+      applicationId,
+    )
+
+    if (!caseLookup.result.ok) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const migrated = applicationCaseMigrate(caseLookup.result.value)
+
+    return ResultWrapper.ok({
+      applicationCase: migrated,
+    })
   }
 
   @LogMethod()
@@ -144,7 +166,7 @@ export class ApplicationService implements IApplicationService {
         price: price,
       })
     } catch (error) {
-      ResultWrapper.unwrap(await this.getApplication(applicationId))
+      // ResultWrapper.unwrap(await this.getApplication(applicationId))
 
       // case does not exist, calculate price
       const price = calculatePriceForApplication()

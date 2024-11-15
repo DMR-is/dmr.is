@@ -1,5 +1,8 @@
+import slugify from 'slugify'
+import { v4 as uuid } from 'uuid'
 import { USER_ROLES } from '@dmr.is/constants'
 import { Roles, Route } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   IAdminUserService,
   ICaseService,
@@ -14,6 +17,8 @@ import {
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CreateCaseResponse,
+  CreateMainCategory,
+  CreateMainCategoryCategories,
   DefaultSearchParams,
   EditorialOverviewResponse,
   GetAdvertTypesQueryParams,
@@ -27,10 +32,12 @@ import {
   GetCategoriesResponse,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
+  GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetPublishedCasesQuery as GetFinishedCasesQuery,
   GetPublishedCasesResponse,
   GetTagsResponse,
+  MainCategory,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
@@ -43,6 +50,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateMainCategory,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -52,6 +60,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
+  BadRequestException,
   Body,
   Controller,
   Inject,
@@ -61,6 +70,8 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
+
+const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
 @Controller({
@@ -80,6 +91,8 @@ export class CaseController {
 
     @Inject(IAdminUserService)
     private readonly adminAuthService: IAdminUserService,
+
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Route({
@@ -173,6 +186,125 @@ export class CaseController {
     params?: DefaultSearchParams,
   ): Promise<GetCategoriesResponse> {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
+  }
+
+  @Route({
+    path: 'main-categories',
+    operationId: 'getMainCategories',
+    summary: 'Get main categories',
+    query: [{ type: DefaultSearchParams }],
+    responseType: GetMainCategoriesResponse,
+  })
+  async mainCategories(): Promise<GetMainCategoriesResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getMainCategories())
+  }
+
+  @Route({
+    method: 'delete',
+    path: 'main-categories/:id',
+    params: [{ name: 'id', type: 'string', required: true }],
+    operationId: 'deleteMainCategory',
+    summary: 'Delete main category',
+  })
+  async deleteMainCategory(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.deleteMainCategory(id))
+  }
+
+  @Route({
+    method: 'delete',
+    path: 'main-categories/:mainCategoryId/categories/:categoryId',
+    params: [
+      { name: 'mainCategoryId', type: 'string', required: true },
+      { name: 'categoryId', type: 'string', required: true },
+    ],
+    operationId: 'deleteMainCategoryCategory',
+    summary: 'Delete main category category',
+  })
+  async deleteMainCategoryCategory(
+    @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
+    @Param('categoryId', new UUIDValidationPipe()) categoryId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.journalService.deleteMainCategoryCategory(
+        mainCategoryId,
+        categoryId,
+      ),
+    )
+  }
+
+  @Route({
+    method: 'post',
+    path: 'main-categories',
+    operationId: 'createMainCategory',
+    summary: 'Create main category',
+    bodyType: CreateMainCategory,
+  })
+  async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
+    const id = uuid()
+
+    const subCategoriesLookup = await this.journalService.getCategories({
+      ids: body.categories,
+      pageSize: body.categories.length,
+    })
+
+    if (!subCategoriesLookup.result.ok) {
+      this.logger.warn(
+        `Failed to get sub categories for main category creation`,
+        {
+          error: subCategoriesLookup.result.error,
+          category: LOG_CATEGORY,
+        },
+      )
+      throw new BadRequestException('Invalid sub categories')
+    }
+
+    const newCategory: MainCategory = {
+      id: id,
+      title: body.title,
+      slug: slugify(body.title, { lower: true }),
+      description: body.description,
+      categories: subCategoriesLookup.result.value.categories,
+    }
+
+    ResultWrapper.unwrap(
+      await this.journalService.insertMainCategory(newCategory),
+    )
+  }
+
+  @Route({
+    method: 'post',
+    path: 'main-categories/:mainCategoryId/categories',
+    operationId: 'createMainCategoryCategories',
+    params: [{ name: 'mainCategoryId', type: 'string', required: true }],
+    bodyType: CreateMainCategoryCategories,
+  })
+  async createMainCategoryCategories(
+    @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
+    @Body() body: CreateMainCategoryCategories,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.journalService.insertMainCategoryCategories(
+        mainCategoryId,
+        body.categories,
+      ),
+    )
+  }
+
+  @Route({
+    method: 'put',
+    path: 'main-categories/:id',
+    operationId: 'updateMainCategory',
+    summary: 'Update main category',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateMainCategory,
+  })
+  async updateMainCategory(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateMainCategory,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
   @Route({

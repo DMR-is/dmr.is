@@ -1,5 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -28,6 +29,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -46,6 +48,7 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { categoryCategoriesMigrate } from './migrations/category-categories.migrate'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -58,6 +61,7 @@ import {
 import {
   AdvertAttachmentsModel,
   AdvertCategoriesModel,
+  AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
@@ -68,6 +72,7 @@ import {
 } from './models'
 
 const DEFAULT_PAGE_SIZE = 20
+const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
 export class JournalService implements IJournalService {
   constructor(
@@ -89,11 +94,12 @@ export class JournalService implements IJournalService {
     @InjectModel(AdvertCategoryModel)
     private advertCategoryModel: typeof AdvertCategoryModel,
     @InjectModel(AdvertStatusModel)
-    private advertStatusModel: typeof AdvertStatusModel /* @InjectModel(AdvertStatusHistoryModel)
-    private advertStatusHistoryModel: typeof AdvertStatusHistoryModel,*/,
+    private advertStatusModel: typeof AdvertStatusModel,
 
     @InjectModel(AdvertCategoriesModel)
     private advertCategoriesModel: typeof AdvertCategoriesModel,
+    @InjectModel(AdvertCategoryCategoriesModel)
+    private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
@@ -130,7 +136,9 @@ export class JournalService implements IJournalService {
 
     const categories = await this.advertCategoryModel.findAll({
       where: {
-        id: model.categoryIds,
+        id: {
+          [Op.in]: model.categoryIds,
+        },
       },
       transaction,
     })
@@ -345,35 +353,122 @@ export class JournalService implements IJournalService {
       description: model.description,
     })
 
+    const relations = model.categories.map((cat) =>
+      this.advertCategoryCategoriesModel.create({
+        mainCategoryId: mainCategory.id,
+        categoryId: cat.id,
+      }),
+    )
+
+    await Promise.all(relations)
+
     return ResultWrapper.ok({
       mainCategory: advertMainCategoryMigrate(mainCategory),
     })
   }
 
   @LogAndHandle()
-  async updateMainCategory(
-    model: MainCategory,
-  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
-    if (!model || !model.id) {
-      throw new BadRequestException()
+  async deleteMainCategory(id: string): Promise<ResultWrapper> {
+    if (!id) {
+      return ResultWrapper.err({
+        message: 'No id provided',
+        code: 400,
+      })
     }
 
-    const mainCat = await this.advertMainCategoryModel.update(
-      {
-        title: model.title,
-        description: model.description,
-        slug: model.slug,
-      },
-      { where: { id: model.id }, returning: true },
+    const mainCategory = await this.advertMainCategoryModel.findByPk(id)
+
+    const relations = await this.advertCategoryCategoriesModel.findAll({
+      where: { mainCategoryId: id },
+    })
+
+    await Promise.all(relations.map((r) => r.destroy()))
+
+    if (!mainCategory) {
+      this.logger.warn(`Delete main category<${id}> not found`, {
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        message: `Main category<${id}> not found`,
+        code: 404,
+      })
+    }
+
+    await mainCategory.destroy()
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async deleteMainCategoryCategory(
+    mainCategoryId: string,
+    categoryId: string,
+  ): Promise<ResultWrapper> {
+    await this.advertCategoryCategoriesModel.destroy({
+      where: { mainCategoryId, categoryId },
+    })
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async insertMainCategoryCategories(
+    mainCategoryId: string,
+    categoryIds: string[],
+  ): Promise<ResultWrapper> {
+    const promises = categoryIds.map((id) =>
+      this.advertCategoryCategoriesModel.create({
+        mainCategoryId: mainCategoryId,
+        categoryId: id,
+      }),
     )
 
-    if (!mainCat) {
-      throw new NotFoundException(`Main category<${model.id}> not found`)
-    }
+    await Promise.all(promises)
 
-    return ResultWrapper.ok({
-      mainCategory: advertMainCategoryMigrate(mainCat[1][0]),
-    })
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async updateMainCategory(
+    id: string,
+    body: UpdateMainCategory,
+  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
+    const updateTransaction = await this.sequelize.transaction()
+    try {
+      const found = await this.advertMainCategoryModel.findByPk(id, {
+        transaction: updateTransaction,
+      })
+
+      if (!found) {
+        return ResultWrapper.err({
+          message: `Main category<${id}> not found`,
+          code: 404,
+        })
+      }
+
+      const updateBody = {
+        title: body.title ? body.title : found.title,
+        slug: body.title ? slugify(body.title, { lower: true }) : found.slug,
+        description: body.description ? body.description : found.description,
+      }
+
+      await found.update(updateBody, {
+        transaction: updateTransaction,
+      })
+
+      await updateTransaction.commit()
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(`Failed to update MainCategory<${id}>`, {
+        category: LOGGING_CATEGORY,
+        error: error,
+      })
+      await updateTransaction.rollback()
+      return ResultWrapper.err({
+        message: 'Failed to update MainCategory',
+        code: 500,
+      })
+    }
   }
 
   @LogAndHandle()
@@ -389,7 +484,6 @@ export class JournalService implements IJournalService {
       {
         title: model.title,
         slug: model.slug,
-        mainCategoryID: model.mainCategory?.id,
       },
       {
         transaction,
@@ -411,7 +505,6 @@ export class JournalService implements IJournalService {
       {
         title: model.title,
         slug: model.slug,
-        mainCategoryID: model.mainCategory?.id,
       },
       { where: { id: model.id }, returning: true },
     )
@@ -429,20 +522,25 @@ export class JournalService implements IJournalService {
   ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
+    const whereParams = {}
+
+    if (params?.search) {
+      Object.assign(whereParams, {
+        title: { [Op.iLike]: `%${params.search}%` },
+      })
+    }
+
     const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
-      where: params?.search
-        ? {
-            title: { [Op.iLike]: `%${params?.search}%` },
-          }
-        : undefined,
+      where: whereParams,
+      include: [AdvertCategoryModel],
     })
 
-    const mapped = mainCategories.rows.map((item) =>
-      advertMainCategoryMigrate(item),
+    const mapped = mainCategories.rows.map((cat) =>
+      advertMainCategoryMigrate(cat),
     )
     const paging = generatePaging(mapped, page, pageSize, mainCategories.count)
 
@@ -628,24 +726,60 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
+    const whereParams = {}
+
+    if (params?.search) {
+      Object.assign(whereParams, {
+        title: { [Op.iLike]: `%${params.search}%` },
+      })
+    }
+
+    if (params?.ids) {
+      Object.assign(whereParams, {
+        id: params.ids,
+      })
+    }
+
     const categories = await this.advertCategoryModel.findAndCountAll({
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
-      where: params?.search
-        ? {
-            title: { [Op.iLike]: `%${params?.search}%` },
-          }
-        : undefined,
+      where: whereParams,
       include: AdvertMainCategoryModel,
     })
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
-    const paging = generatePaging(mapped, page, pageSize, categories.count)
+
+    // TODO: do this better????
+    const withMainCategories = await Promise.all(
+      mapped.map(async (c) => {
+        const mainCategory = await this.advertCategoryCategoriesModel.findAll({
+          where: { advert_category_id: c.id },
+          include: [AdvertMainCategoryModel],
+        })
+
+        return {
+          ...c,
+          mainCategories: mainCategory.map((m) => ({
+            id: m.mainCategory.id,
+            title: m.mainCategory.title,
+            slug: m.mainCategory.slug,
+            description: m.mainCategory.description,
+          })),
+        }
+      }),
+    )
+
+    const paging = generatePaging(
+      withMainCategories,
+      page,
+      pageSize,
+      categories.count,
+    )
 
     return ResultWrapper.ok({
-      categories: mapped,
+      categories: withMainCategories,
       paging,
     })
   }
@@ -679,7 +813,7 @@ export class JournalService implements IJournalService {
           html: advert.isLegacy
             ? dirtyClean(advert.documentHtml as HTMLText)
             : advert.documentHtml,
-          pdfUrl: advert.documentPdfUrl,
+          pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
         },
       },
     })

@@ -187,7 +187,7 @@ export class JournalController {
       CaseStatusEnum.ReadyForPublishing,
     ]
 
-    const casesResponse = await ResultWrapper.unwrap(
+    const casesResponse = ResultWrapper.unwrap(
       await this.caseService.getCases({
         page: `${params?.page ?? 1}`,
         pageSize: `${params?.pageSize ?? DEFAULT_PAGE_SIZE}`,

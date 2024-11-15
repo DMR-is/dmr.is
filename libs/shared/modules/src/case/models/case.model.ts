@@ -19,6 +19,8 @@ import {
   AdvertTypeModel,
 } from '../../journal/models'
 import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
+import { CaseAdditionModel } from './case-addition.model'
+import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
 import { CaseChannelModel } from './case-channel.model'
 import { CaseChannelsModel } from './case-channels.model'
@@ -212,4 +214,9 @@ export class CaseModel extends Model {
     through: { model: () => CaseAttachmentsModel },
   })
   attachments?: ApplicationAttachmentModel[]
+
+  @BelongsToMany(() => CaseAdditionModel, {
+    through: { model: () => CaseAdditionsModel },
+  })
+  additions?: CaseAdditionModel[]
 }

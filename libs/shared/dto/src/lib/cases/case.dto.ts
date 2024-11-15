@@ -24,6 +24,7 @@ import { Institution } from '../institutions'
 import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
+import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseStatus } from './case-status.dto'
 
@@ -273,4 +274,12 @@ export class Case {
   @ValidateNested({ each: true })
   @Type(() => ApplicationAttachment)
   attachments!: ApplicationAttachment[]
+
+  @ApiProperty({
+    type: [CaseAddition],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CaseAddition)
+  additions!: CaseAddition[]
 }

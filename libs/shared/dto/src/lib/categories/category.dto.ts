@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { MainCategory } from '../main-categories/maincategory.dto'
+import { CategoryMainCategory } from '../main-categories/category-main-category.dto'
 
 export class Category {
   @ApiProperty({
@@ -28,12 +28,12 @@ export class Category {
   })
   readonly slug!: string
 
-  @ApiProperty({
-    description: 'The main category this category belongs to.',
-    required: false,
-    nullable: true,
-    type: MainCategory,
-    example: 'Dómstólar og réttarfar',
-  })
-  readonly mainCategory?: MainCategory | null
+  // @ApiProperty({
+  //   description: 'The main category this category belongs to.',
+  //   required: true,
+  //   isArray: true,
+  //   type: () => CategoryMainCategory,
+  //   example: 'Dómstólar og réttarfar',
+  // })
+  // readonly mainCategories?: CategoryMainCategory[]
 }

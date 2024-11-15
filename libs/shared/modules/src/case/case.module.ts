@@ -10,6 +10,7 @@ import commentModels from '../comment/models'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
+import { PdfModule } from '../pdf/pdf.module'
 import { S3Module } from '../s3/s3.module'
 import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
@@ -52,6 +53,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     LoggingModule,
     SharedJournalModule,
     SignatureModule,
+    forwardRef(() => PdfModule),
     forwardRef(() => S3Module),
     forwardRef(() => AttachmentsModule),
     forwardRef(() => CommentModule),

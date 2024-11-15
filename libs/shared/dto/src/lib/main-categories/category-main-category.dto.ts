@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class MainCategory {
+export class CategoryMainCategory {
   @ApiProperty({
     description: 'Unique ID for the main category, GUID format.',
     example: '00000000-0000-0000-0000-000000000000',

@@ -12,6 +12,8 @@ import {
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
   PAGING_MAXIMUM_PAGE_SIZE,
+  PDF_RETRY_ATTEMPTS,
+  PDF_RETRY_DELAY,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
@@ -80,7 +82,7 @@ export const FILE_VALIDATORS = [
   }),
 ]
 
-export const getApplicationBucket = () =>
+export const getS3Bucket = () =>
   process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
 
 /**
@@ -420,4 +422,26 @@ export const getPageSize = (pageSize: number | undefined): number => {
   }
 
   return pageSize
+}
+
+export const retryAsync = async <T>(
+  asyncFn: () => Promise<T>,
+  retries: number | undefined = PDF_RETRY_ATTEMPTS,
+  delay: number | undefined = PDF_RETRY_DELAY,
+): Promise<T> => {
+  let attempt = 0
+
+  while (attempt < retries) {
+    try {
+      return await asyncFn()
+    } catch (error) {
+      attempt++
+      if (attempt >= retries) {
+        throw error
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+
+  throw new Error('Retry attempts exceeded')
 }

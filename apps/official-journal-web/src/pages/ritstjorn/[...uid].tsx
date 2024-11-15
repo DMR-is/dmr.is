@@ -6,10 +6,8 @@ import { isResponse } from '@dmr.is/utils/client'
 
 import {
   AlertMessage,
-  Box,
   Button,
   Input,
-  LinkV2,
   Select,
   SkeletonLoader,
   Stack,
@@ -20,6 +18,7 @@ import { Attachments } from '../../components/attachments/Attachments'
 import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
 import { Comments } from '../../components/comments/Comments'
 import { FormShell } from '../../components/form/FormShell'
+import { FormFooter } from '../../components/form-footer/FormFooter'
 import { Section } from '../../components/form-stepper/Section'
 import { FormStepperThemes } from '../../components/form-stepper/types'
 import { StepGrunnvinnsla } from '../../components/form-steps/StepGrunnvinnsla'
@@ -29,13 +28,7 @@ import { StepTilbuid } from '../../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../../components/form-steps/StepYfirlestur'
 import { Meta } from '../../components/meta/Meta'
 import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
-import {
-  useCase,
-  useRejectCase,
-  useUpdateEmployee,
-  useUpdateNextCaseStatus,
-  useUpdatePreviousCaseStatus,
-} from '../../hooks/api'
+import { useCase, useRejectCase, useUpdateEmployee } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -48,7 +41,6 @@ import {
   addAuthHeader,
   caseStatusToCaseStep,
   CaseStep,
-  caseSteps,
   deleteUndefined,
   generateSteps,
   getTimestamp,
@@ -85,20 +77,23 @@ export default function CaseSingle(
     },
   })
 
-  const { trigger: updateAdvertHtmlTrigger, isMutating: isUpdatingAdvertHTml } =
-    useUpdateAdvertHtml({
-      caseId: data.thisCase.id,
-      options: {
-        onSuccess: () => {
-          setIsFixing(false)
-          setCanPublishFixedChanges(false)
-          refetchCase()
-          setTimeout(() => {
-            setTimestamp(getTimestamp())
-          }, 250)
-        },
+  const { trigger: updateAdvertHtmlTrigger } = useUpdateAdvertHtml({
+    caseId: data.thisCase.id,
+    options: {
+      onSuccess: () => {
+        setIsFixing(false)
+        setCanPublishFixedChanges(false)
+        refetchCase()
+        setTimeout(() => {
+          setTimestamp(getTimestamp())
+        }, 250)
       },
-    })
+      onError: () => {
+        setIsFixing(false)
+        setCanPublishFixedChanges(false)
+      },
+    },
+  })
 
   const { trigger: rejectCase } = useRejectCase({
     caseId: data.thisCase.id,
@@ -118,28 +113,6 @@ export default function CaseSingle(
         },
       },
     })
-
-  const { trigger: onUpdateNextCaseStatus, isMutating: isUpdatingNextStatus } =
-    useUpdateNextCaseStatus({
-      caseId: data.thisCase.id,
-      options: {
-        onSuccess: () => {
-          refetchCase()
-        },
-      },
-    })
-
-  const {
-    trigger: onUpdatePreviousStatus,
-    isMutating: isUpdatingPreviousStatus,
-  } = useUpdatePreviousCaseStatus({
-    caseId: data.thisCase.id,
-    options: {
-      onSuccess: () => {
-        refetchCase()
-      },
-    },
-  })
 
   const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
     caseId: data.thisCase.id,
@@ -203,17 +176,6 @@ export default function CaseSingle(
   }
 
   const stepper = generateSteps(caseData._case)
-  const prevStep =
-    caseSteps.indexOf(step) > 0
-      ? caseSteps[caseSteps.indexOf(step) - 1]
-      : undefined
-
-  const nextStep =
-    caseSteps.indexOf(step) < 3
-      ? caseSteps[caseSteps.indexOf(step) + 1]
-      : undefined
-
-  const fixStep = caseSteps.indexOf(step) > 3
 
   const employeesMock = [
     {
@@ -226,9 +188,9 @@ export default function CaseSingle(
     },
   ]
 
-  const activeCase = caseData._case
+  const fixStep = step === 'leidretting'
 
-  const isUpdatingStatus = isUpdatingNextStatus || isUpdatingPreviousStatus
+  const activeCase = caseData._case
 
   const isCaseRejected =
     activeCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
@@ -376,9 +338,7 @@ export default function CaseSingle(
             />
           )}
 
-          {activeCase.attachments.length > 0 && (
-            <Attachments activeCase={activeCase} refetchCase={refetchCase} />
-          )}
+          <Attachments activeCase={activeCase} refetchCase={refetchCase} />
 
           <Comments
             onAddCommentSuccess={() => {
@@ -388,79 +348,15 @@ export default function CaseSingle(
             }}
             activeCase={activeCase}
           />
-
-          <Box
-            display="flex"
-            justifyContent="spaceBetween"
-            borderTopWidth="standard"
-            borderColor="purple200"
-            paddingTop={[2, 3, 4]}
-          >
-            {prevStep ? (
-              <LinkV2 href={`/ritstjorn/${activeCase.id}/${prevStep}`}>
-                <Button
-                  as="span"
-                  variant="ghost"
-                  unfocusable
-                  onClick={() =>
-                    onUpdatePreviousStatus({
-                      currentStatus: activeCase.status.title,
-                    })
-                  }
-                >
-                  {formatMessage(messages.paging.goBack)}
-                </Button>
-              </LinkV2>
-            ) : (
-              <LinkV2 href={`/ritstjorn`}>
-                <Button as="span" variant="ghost" unfocusable>
-                  {formatMessage(messages.paging.goBackOverview)}
-                </Button>
-              </LinkV2>
-            )}
-            {nextStep && activeCase.assignedTo === null ? (
-              <Button icon="arrowForward" disabled>
-                {formatMessage(messages.paging.nextStep)}
-              </Button>
-            ) : nextStep ? (
-              <LinkV2 href={`/ritstjorn/${activeCase.id}/${nextStep}`}>
-                <Button
-                  loading={isUpdatingStatus}
-                  as="span"
-                  icon="arrowForward"
-                  onClick={() =>
-                    onUpdateNextCaseStatus({
-                      currentStatus: activeCase.status.title,
-                    })
-                  }
-                  unfocusable
-                >
-                  {formatMessage(messages.paging.nextStep)}
-                </Button>
-              </LinkV2>
-            ) : fixStep && isFixing ? (
-              <Button
-                colorScheme="destructive"
-                icon="arrowForward"
-                disabled={!canPublishFixedChanges}
-                loading={isUpdatingAdvertHTml}
-                title={
-                  canPublishFixedChanges
-                    ? formatMessage(
-                        messages.paging.unpublishDisabledExplanation,
-                      )
-                    : undefined
-                }
-                onClick={() => {
-                  updateAdvertHtmlTrigger({
-                    advertHtml: updatedAdvertHtml,
-                  })
-                }}
-              >
-                {formatMessage(messages.paging.confirmFixStep)}
-              </Button>
-            ) : null}
-          </Box>
+          <FormFooter
+            activeCase={activeCase}
+            caseStep={step}
+            canPublishFix={canPublishFixedChanges}
+            updateAdvertHtmlTrigger={() =>
+              updateAdvertHtmlTrigger({ advertHtml: updatedAdvertHtml })
+            }
+            refetch={refetchCase}
+          />
         </Stack>
       </FormShell>
     </>

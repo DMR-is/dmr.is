@@ -1,7 +1,6 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
-import { CaseStatus } from '@dmr.is/shared/dto'
 
 import type { IconMapIcon } from '@island.is/island-ui/core'
 import { StringOption } from '@island.is/island-ui/core'

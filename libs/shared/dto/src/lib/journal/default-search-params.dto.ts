@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer'
+import { Expose, Transform } from 'class-transformer'
 import { IsOptional, IsString, MaxLength, Min } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -13,6 +13,16 @@ export class DefaultSearchParams {
   @MaxLength(1024)
   @IsString()
   search?: string
+
+  @ApiProperty({
+    name: 'ids',
+    type: [String],
+    default: [],
+    required: false,
+  })
+  @IsOptional()
+  @Expose()
+  ids?: string[]
 
   @ApiProperty({
     name: 'page',

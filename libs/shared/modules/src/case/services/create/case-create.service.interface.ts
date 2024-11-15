@@ -19,6 +19,13 @@ export interface ICaseCreateService {
     categoryId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  createCaseAddition(
+    caseId: string,
+    title: string,
+    content: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseCreateService = Symbol('ICaseCreateService')

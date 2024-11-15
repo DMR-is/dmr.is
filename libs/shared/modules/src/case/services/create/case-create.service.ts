@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdditionType,
   Application,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
@@ -28,6 +29,8 @@ import { AdvertCategoryModel } from '../../../journal/models'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import {
+  CaseAdditionModel,
+  CaseAdditionsModel,
   CaseCategoriesModel,
   CaseChannelModel,
   CaseChannelsModel,
@@ -36,6 +39,12 @@ import {
 import { ICaseCreateService } from './case-create.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCreateService'
+
+type CreateAddtionBody = {
+  id: string
+  title: string
+  content: string
+}
 
 interface CreateCaseBodyValues {
   caseBody: {
@@ -65,6 +74,7 @@ interface CreateCaseBodyValues {
   categories: AdvertCategoryModel[]
   channels: CreateCaseChannelBody[]
   signature: CreateSignatureBody[]
+  additions: CreateAddtionBody[]
 }
 
 @Injectable()
@@ -88,6 +98,11 @@ export class CaseCreateService implements ICaseCreateService {
 
     @InjectModel(CaseCategoriesModel)
     private readonly caseCategoriesModel: typeof CaseCategoriesModel,
+
+    @InjectModel(CaseAdditionModel)
+    private readonly caseAdditionModel: typeof CaseAdditionModel,
+    @InjectModel(CaseAdditionsModel)
+    private readonly caseAdditionsModel: typeof CaseAdditionsModel,
 
     private readonly sequelize: Sequelize,
   ) {}
@@ -217,10 +232,20 @@ export class CaseCreateService implements ICaseCreateService {
 
     const requestedDate = application.answers.advert.requestedDate
     const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedPartyId =
-      application.answers.advert.involvedPartyId ??
-      'e5a35cf9-dc87-4da7-85a2-06eb5d43812f' // TODO REMOVE THIS
+    const involvedPartyId = application.answers.advert.involvedPartyId
     const message = application.answers.advert?.message ?? null
+
+    const additions = (application.answers.advert.additions?.filter(
+      (addition) => addition.content !== undefined,
+    ) ?? []) as CreateAddtionBody[]
+
+    const additionsBody = additions.map((addition) => {
+      return {
+        id: addition.id,
+        title: addition.title,
+        content: addition.content,
+      }
+    })
 
     return ResultWrapper.ok({
       caseBody: {
@@ -250,6 +275,7 @@ export class CaseCreateService implements ICaseCreateService {
       categories: categories,
       channels: channels,
       signature: signatureBody,
+      additions: additionsBody,
     })
   }
 
@@ -449,6 +475,57 @@ export class CaseCreateService implements ICaseCreateService {
       }
     })
 
+    await Promise.all(
+      values.additions.map((addition) =>
+        this.createCaseAddition(caseId, addition.title, addition.content),
+      ),
+    )
+
     return ResultWrapper.ok()
+  }
+
+  async createCaseAddition(
+    caseId: string,
+    title: string,
+    content: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const additionId = uuid()
+
+    try {
+      await this.caseAdditionModel.create(
+        {
+          id: additionId,
+          title,
+          content,
+          type: AdditionType.Html,
+        },
+        {
+          transaction,
+        },
+      )
+
+      await this.caseAdditionsModel.create(
+        {
+          caseId,
+          additionId,
+        },
+        {
+          transaction,
+        },
+      )
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(`Failed to create addition for case<${caseId}>`, {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to create addition',
+      })
+    }
   }
 }

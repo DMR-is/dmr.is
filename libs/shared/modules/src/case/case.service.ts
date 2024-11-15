@@ -36,7 +36,7 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
-import { enumMapper, generatePaging } from '@dmr.is/utils'
+import { enumMapper, generatePaging, getS3Bucket } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -58,6 +58,7 @@ import {
   AdvertDepartmentModel,
   AdvertTypeModel,
 } from '../journal/models'
+import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
@@ -91,6 +92,8 @@ export class CaseService implements ICaseService {
 
     @Inject(forwardRef(() => IAttachmentService))
     private readonly attachmentService: IAttachmentService,
+    @Inject(forwardRef(() => IPdfService))
+    private readonly pdfService: IPdfService,
 
     @Inject(ICaseUpdateService)
     private readonly updateService: ICaseUpdateService,
@@ -470,11 +473,21 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle({ logArgs: false })
-  @Transactional()
   private async publishCase(
     caseId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
+    const activeCase = await this.caseModel.findByPk(caseId, {
+      include: [...CASE_RELATIONS],
+    })
+
+    if (!activeCase) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
     const now = new Date()
 
     const caseStatus = (
@@ -495,8 +508,6 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const activeCase = (await this.utilityService.caseLookup(caseId)).unwrap()
-
     const number = (
       await this.utilityService.getNextPublicationNumber(
         activeCase.departmentId,
@@ -507,6 +518,41 @@ export class CaseService implements ICaseService {
     const advertStatus = (
       await this.utilityService.advertStatusLookup(AdvertStatus.Published)
     ).unwrap()
+
+    const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
+    const advertPdf = await this.pdfService.getPdfByCaseId(caseId)
+
+    if (!advertPdf.result.ok) {
+      this.logger.warn('Failed to get pdf for case', {
+        error: advertPdf.result.error,
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
+    const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
+    if (advertPdf.result.ok) {
+      const bucket = getS3Bucket()
+      const key = `adverts/${pdfFileName}`
+      const upload = await this.s3.uploadObject(
+        bucket,
+        key,
+        pdfFileName,
+        advertPdf.result.value,
+      )
+
+      if (!upload.result.ok) {
+        this.logger.warn('Failed to upload pdf to s3', {
+          error: upload.result.error,
+          category: LOGGING_CATEGORY,
+        })
+      } else {
+        this.logger.debug('Uploaded pdf to s3', {
+          url: upload.result.value,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
 
     const advertCreateResult = await this.journalService.create(
       {
@@ -522,8 +568,8 @@ export class CaseService implements ICaseService {
         publicationDate: now,
         signatureDate: now, // TODO: Replace with signature
         isLegacy: activeCase.isLegacy,
-        documentHtml: activeCase.html,
-        documentPdfUrl: '', // TODO: Replace with pdf url and add advert attachments s3 keys
+        documentHtml: activeCase.html + signatureHtml,
+        documentPdfUrl: pdfFileName,
         attachments: [],
       },
       transaction,
@@ -767,6 +813,15 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Rejected)
     ).unwrap()
 
+    const caseModel = await this.caseModel.findByPk(caseId)
+
+    if (!caseModel) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
     const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
       where: {
         caseId: caseId,
@@ -828,8 +883,7 @@ export class CaseService implements ICaseService {
       })
     }
 
-    // TODO: Close the application in the application syste
-    // await this.utilityService.rejectApplication(caseId)
+    await this.utilityService.rejectApplication(caseModel.applicationId)
 
     return ResultWrapper.ok()
   }
@@ -950,11 +1004,47 @@ export class CaseService implements ICaseService {
     })
   }
 
+  private async processCaseToPublish(
+    ids: string[],
+  ): Promise<ResultWrapper<undefined>> {
+    const transaction = await this.sequelize.transaction()
+    let success = true
+    for (const id of ids) {
+      this.logger.debug(`Publishing case<${id}>`, {
+        id: id,
+        category: LOGGING_CATEGORY,
+      })
+      const publishResult = await this.publishCase(id, transaction)
+
+      if (!publishResult.result.ok) {
+        this.logger.error(`Failed to publish case<${id}>`, {
+          id: id,
+          error: publishResult.result.error,
+          category: LOGGING_CATEGORY,
+        })
+        success = false
+        break
+      }
+    }
+
+    if (!success) {
+      this.logger.error('Failed to publish cases', {
+        category: LOGGING_CATEGORY,
+      })
+      await transaction.rollback()
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to publish cases',
+      })
+    }
+
+    await transaction.commit()
+    return ResultWrapper.ok()
+  }
+
   @LogAndHandle()
-  @Transactional()
   async publishCases(
     body: PostCasePublishBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
@@ -962,13 +1052,7 @@ export class CaseService implements ICaseService {
       throw new BadRequestException()
     }
 
-    await Promise.all(
-      caseIds.map(async (caseId) =>
-        ResultWrapper.unwrap(await this.publishCase(caseId, transaction)),
-      ),
-    )
-
-    return ResultWrapper.ok()
+    return await this.processCaseToPublish(caseIds)
   }
 
   @LogAndHandle()

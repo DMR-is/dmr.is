@@ -68,11 +68,18 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
-      main_category_id UUID NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id),
-      CONSTRAINT fk_advert_category_main_category_id FOREIGN KEY (main_category_id) REFERENCES advert_main_category (id)
+    );
+
+    -- "Main category" to "Category" relation
+    CREATE TABLE category_categories (
+      advert_category_id UUID NOT NULL,
+      advert_main_category_id UUID NOT NULL,
+      PRIMARY KEY (advert_category_id, advert_main_category_id),
+      CONSTRAINT fk_categories_advert_category_id FOREIGN KEY (advert_category_id) REFERENCES advert_category (id),
+      CONSTRAINT fk_categories_advert_main_category_id FOREIGN KEY (advert_main_category_id) REFERENCES advert_main_category (id)
     );
 
     CREATE TABLE advert_status (
@@ -369,6 +376,22 @@ module.exports = {
       PRIMARY KEY (case_id, advert_id),
       CONSTRAINT fk_published_case_advert_case_id FOREIGN KEY (case_id) REFERENCES case_case (id),
       CONSTRAINT fk_published_case_advert_advert_id FOREIGN KEY (advert_id) REFERENCES advert (id)
+    );
+
+    CREATE TABLE case_addition (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      content TEXT NOT NULL,
+      type VARCHAR NOT NULL,
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE CASE_ADDITIONS (
+      CASE_CASE_ID UUID NOT NULL,
+      ADDITION_ID UUID NOT NULL,
+      PRIMARY KEY (CASE_CASE_ID, ADDITION_ID),
+      CONSTRAINT FK_CASE_ADDITIONS_CASE_ID FOREIGN KEY (CASE_CASE_ID) REFERENCES CASE_CASE (ID),
+      CONSTRAINT FK_CASE_ADDITIONS_ADDITION_ID FOREIGN KEY (ADDITION_ID) REFERENCES CASE_ADDITION (ID)
     );
 
   COMMIT;
