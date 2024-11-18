@@ -1,7 +1,6 @@
 import { decode } from 'jsonwebtoken'
 import NextAuth, { AuthOptions, User } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
-import CredentialsProvider from 'next-auth/providers/credentials'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 import { AdminUserRole } from '@dmr.is/shared/dto'
@@ -17,7 +16,6 @@ type ErrorWithPotentialReqRes = Error & {
 }
 
 const NODE_ENV = process.env.NODE_ENV
-const SESION_TIMEOUT = 30 * 60 // 30 min
 
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
@@ -65,10 +63,6 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: SESION_TIMEOUT,
-  },
-  jwt: {
-    maxAge: SESION_TIMEOUT,
   },
   cookies: {
     sessionToken: {
@@ -156,6 +150,18 @@ export const authOptions: AuthOptions = {
       session.accessToken = token.accessToken as string
       session.idToken = token.idToken as string
 
+      const decoded = decode(token.accessToken)
+
+      if (
+        decoded &&
+        !(typeof decoded === 'string') &&
+        decoded['exp'] &&
+        decoded['scope']
+      ) {
+        session.expires = JSON.stringify(new Date(decoded.exp * 1000))
+        session.scope = decoded.scope
+      }
+
       return session
     },
     signIn: async ({ user, account }) => {
@@ -201,48 +207,6 @@ export const authOptions: AuthOptions = {
         },
       },
     }),
-    // CredentialsProvider({
-    //   id: 'kennitala',
-    //   name: 'kennitala',
-    //   credentials: {
-    //     nationalId: { type: 'text' },
-    //   },
-    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //   async authorize(credentials, req) {
-    //     const dmrClient = createDmrClient()
-
-    //     try {
-    //       if (credentials?.nationalId) {
-    //         const member = await dmrClient.getUser({
-    //           nationalId: credentials.nationalId,
-    //         })
-
-    //         if (!member) {
-    //           throw new Error('Member not found')
-    //         }
-
-    //         return member as User
-    //       }
-
-    //       return null
-    //     } catch (e) {
-    //       e as ErrorWithPotentialReqRes
-    //       if ((e as ErrorWithPotentialReqRes).request) {
-    //         delete (e as ErrorWithPotentialReqRes).request
-    //       }
-
-    //       if ((e as ErrorWithPotentialReqRes).response) {
-    //         delete (e as ErrorWithPotentialReqRes).response
-    //       }
-    //       logger.error('Failure authenticating', {
-    //         error: e as Error,
-    //         category: LOGGING_CATEGORY,
-    //       })
-    //     }
-    //     // Return null if user data could not be retrieved
-    //     return null
-    //   },
-    // }),
   ],
 }
 
