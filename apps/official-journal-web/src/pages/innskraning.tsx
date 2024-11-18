@@ -21,13 +21,6 @@ export default function Login(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const handleLogin = (id: string) => {
-    signIn('kennitala', {
-      callbackUrl: '/',
-      nationalId: id,
-    })
-  }
-
   return (
     <GridContainer>
       <GridRow rowGap={['p2', 3]}>
