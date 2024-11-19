@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { getToken } from 'next-auth/jwt'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
-import { addAuthHeader } from '../../../../lib/utils'
 
 class GetCaseHandler {
   @LogMethod(false)
@@ -19,7 +19,7 @@ class GetCaseHandler {
     }
 
     const caseResponse = await dmrClient
-      .withMiddleware(addAuthHeader(auth?.accessToken))
+      .withMiddleware(new AuthMiddleware(auth?.accessToken))
       .getCase({
         id,
       })

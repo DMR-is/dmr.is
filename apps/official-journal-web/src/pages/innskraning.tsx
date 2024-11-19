@@ -35,8 +35,6 @@ export default function Login(
             >
               IDS
             </Button>
-            {/* <Button onClick={() => handleLogin('0101857799')}>Ármann</Button>
-            <Button onClick={() => handleLogin('0101876689')}>Pálína</Button> */}
           </Box>
         </GridColumn>
       </GridRow>

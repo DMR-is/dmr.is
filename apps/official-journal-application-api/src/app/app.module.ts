@@ -14,7 +14,7 @@ import {
 import { ApplicationController } from './application/application.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { SequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
+import { LogRequestMiddleware } from '@dmr.is/middleware'
 
 @Module({
   imports: [

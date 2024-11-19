@@ -389,16 +389,3 @@ export const getOverviewStatusColor = (status: string) => {
       return 'blue'
   }
 }
-
-export const addAuthHeader = (token?: string): Middleware => {
-  return {
-    pre: async (request) => {
-      request.init.headers = {
-        ...request.init.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      }
-      return request
-    },
-  }
-}
