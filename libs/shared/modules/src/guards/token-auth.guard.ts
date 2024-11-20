@@ -14,7 +14,7 @@ import {
 export class TokenJwtAuthGuard implements CanActivate {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
   private jwksClient = jwksRsa({
-    jwksUri: `${process.env.IDENTITY_SERVER_DOMAIN}/.well-known/openid-configuration/jwks`,
+    jwksUri: `https://${process.env.IDENTITY_SERVER_DOMAIN}/.well-known/openid-configuration/jwks`,
     cache: true,
     rateLimit: true,
   })

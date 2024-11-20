@@ -144,7 +144,7 @@ export const authOptions: AuthOptions = {
 
         user.nationalId = decodedAccessToken?.nationalId as string
         user.accessToken = account.access_token
-        user.refreshToken = account?.refresh_token
+        user.refreshToken = decodedAccessToken?.refreshToken
         user.idToken = account?.id_token
 
         // Custom auth member from DB.
@@ -169,11 +169,11 @@ export const authOptions: AuthOptions = {
       name: identityServerConfig.name,
       clientId: identityServerConfig.clientId,
       clientSecret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
-      issuer: process.env.IDENTITY_SERVER_DOMAIN,
+      issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {
         params: {
           scope: `${identityServerConfig.scope}`,
-          domain: process.env.IDENTITY_SERVER_DOMAIN ?? '',
+          domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}` ?? '',
           protection: 'pkce',
         },
       },
