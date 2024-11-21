@@ -62,21 +62,18 @@ export class AdvertTypeService implements IAdvertTypeService {
       distinct: true,
       limit: limit,
       offset: offset,
-      logging: (sql) => {
-        this.logger.debug(sql, { category: LOGGING_CATEGORY })
-      },
-      // where: whereParams,
-      // include: [
-      //   {
-      //     model: AdvertMainTypeModel,
-      //     include: [
-      //       {
-      //         model: AdvertDepartmentModel,
-      //         where: departmentWhereParams,
-      //       },
-      //     ],
-      //   },
-      // ],
+      where: whereParams,
+      include: [
+        {
+          model: AdvertMainTypeModel,
+          include: [
+            {
+              model: AdvertDepartmentModel,
+              where: departmentWhereParams,
+            },
+          ],
+        },
+      ],
     })
 
     const mapped = typesLookup.rows.map(advertTypeMigrate)

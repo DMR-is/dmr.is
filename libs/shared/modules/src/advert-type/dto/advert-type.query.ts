@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsNumberString, IsOptional, IsString, IsUUID } from 'class-validator'
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -11,6 +17,7 @@ export class AdvertTypeQuery {
     description: 'Search by id',
   })
   @IsOptional()
+  @ValidateIf((o) => o.id)
   @IsUUID()
   id?: string
 
@@ -47,7 +54,7 @@ export class AdvertTypeQuery {
     description: 'The page number',
   })
   @IsOptional()
-  @IsNumberString()
+  @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : DEFAULT_PAGE_NUMBER))
   page!: number
 
@@ -57,7 +64,7 @@ export class AdvertTypeQuery {
     description: 'The page size',
   })
   @IsOptional()
-  @IsNumberString()
+  @IsNumber()
   @Transform(({ value }) => (value ? parseInt(value, 10) : DEFAULT_PAGE_SIZE))
   pageSize!: number
 }

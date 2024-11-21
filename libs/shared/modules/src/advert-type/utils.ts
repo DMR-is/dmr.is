@@ -21,7 +21,7 @@ type AdvertTypeDepartmentParams = {
   }
   [Op.or]?: [
     {
-      name: {
+      title: {
         [Op.iLike]: string
       }
     },
@@ -80,7 +80,7 @@ export const getAdvertTypeDepartmentWhereParams = (
       Object.assign(whereParams, {
         [Op.or]: [
           {
-            name: {
+            title: {
               [Op.iLike]: `%${query}%`,
             },
           },
