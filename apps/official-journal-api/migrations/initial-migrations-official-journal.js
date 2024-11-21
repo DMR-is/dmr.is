@@ -45,8 +45,8 @@ module.exports = {
 
     CREATE TABLE advert_main_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      title VARCHAR NOT NULL,
-      slug VARCHAR NOT NULL,
+      title VARCHAR NOT NULL UNIQUE,
+      slug VARCHAR NOT NULL UNIQUE,
       department_id UUID NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -56,8 +56,8 @@ module.exports = {
 
     CREATE TABLE advert_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
-      title VARCHAR NOT NULL,
-      slug VARCHAR NOT NULL,
+      title VARCHAR NOT NULL UNIQUE,
+      slug VARCHAR NOT NULL UNIQUE,
       main_type_id UUID NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),

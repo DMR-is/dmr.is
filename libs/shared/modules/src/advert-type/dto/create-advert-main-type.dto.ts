@@ -2,7 +2,7 @@ import { IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-export class CreateMainAdvertTypeBody {
+export class CreateAdvertMainTypeBody {
   @ApiProperty({
     description: 'The department id',
     type: 'string',

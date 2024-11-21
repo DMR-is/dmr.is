@@ -1,6 +1,7 @@
 import { LoggingModule } from '@dmr.is/logging'
 import {
   AdminUserModule,
+  AdvertTypeAdminController,
   AdvertTypeModule,
   AuthController,
   AuthModule,
@@ -26,6 +27,11 @@ import { CaseController } from './case.controller'
     AdminUserModule,
     AdvertTypeModule,
   ],
-  controllers: [CaseController, SignatureController, AuthController],
+  controllers: [
+    CaseController,
+    SignatureController,
+    AuthController,
+    AdvertTypeAdminController,
+  ],
 })
 export class CaseModule {}

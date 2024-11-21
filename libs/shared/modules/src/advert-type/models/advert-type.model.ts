@@ -32,6 +32,13 @@ export class AdvertTypeModelNew extends Model {
   @Column
   slug!: string
 
+  @Column({
+    type: DataType.UUIDV4,
+    allowNull: false,
+    field: 'main_type_id',
+  })
+  mainTypeId!: string
+
   @BelongsTo(() => AdvertMainTypeModel, 'main_type_id')
   mainType!: AdvertMainTypeModel
 

@@ -1,8 +1,9 @@
+import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
@@ -13,8 +14,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { IAdvertTypeService } from './advert-type.service.interface'
 import {
   AdvertTypeQuery,
+  CreateAdvertMainTypeBody,
   CreateAdvertTypeBody,
-  CreateMainAdvertTypeBody,
   GetAdvertMainType,
   GetAdvertMainTypes,
   GetAdvertType,
@@ -89,8 +90,9 @@ export class AdvertTypeService implements IAdvertTypeService {
   async getMainTypes(
     query?: AdvertTypeQuery,
   ): Promise<ResultWrapper<GetAdvertMainTypes>> {
-    const offset = query?.page || DEFAULT_PAGE_NUMBER
-    const limit = query?.pageSize || DEFAULT_PAGE_SIZE
+    const page = query?.page ? query.page : DEFAULT_PAGE_NUMBER
+    const pageSize = query?.pageSize ? query.pageSize : DEFAULT_PAGE_SIZE
+    const offset = (page - 1) * pageSize
 
     const whereParams = getAdvertTypeWhereParams(query)
     const departmentWhereParams = getAdvertTypeDepartmentWhereParams(
@@ -99,9 +101,8 @@ export class AdvertTypeService implements IAdvertTypeService {
 
     const mainTypesLookup = await this.advertMainTypeModel.findAndCountAll({
       distinct: true,
-      limit: limit,
-      offset: offset,
       where: whereParams,
+      order: [['title', 'DESC']],
       include: [
         {
           model: AdvertTypeModelNew,
@@ -111,10 +112,12 @@ export class AdvertTypeService implements IAdvertTypeService {
           where: departmentWhereParams,
         },
       ],
+      offset: offset,
+      limit: pageSize,
     })
 
     const mapped = mainTypesLookup.rows.map(advertMainTypeMigrate)
-    const paging = generatePaging(mapped, offset, limit, mainTypesLookup.count)
+    const paging = generatePaging(mapped, page, pageSize, mainTypesLookup.count)
 
     return ResultWrapper.ok({
       mainTypes: mapped,
@@ -139,28 +142,14 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
-  async getTypeBySlug(slug: string): Promise<ResultWrapper<GetAdvertType>> {
-    const type = await this.advertTypeModel.findOne({
-      where: {
-        slug,
-      },
+  async getMainTypeById(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertMainType>> {
+    const mainType = await this.advertMainTypeModel.findByPk(id, {
+      include: [AdvertTypeModelNew, AdvertDepartmentModel],
+      transaction,
     })
-
-    if (!type) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `Advert type<${slug}> not found`,
-      })
-    }
-
-    return ResultWrapper.ok({
-      type: advertTypeMigrate(type),
-    })
-  }
-
-  @LogAndHandle()
-  async getMainTypeById(id: string): Promise<ResultWrapper<GetAdvertMainType>> {
-    const mainType = await this.advertMainTypeModel.findByPk(id)
 
     if (!mainType) {
       return ResultWrapper.err({
@@ -175,33 +164,22 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
-  async getMainTypeBySlug(
-    slug: string,
+  @Transactional()
+  async createMainType(
+    body: CreateAdvertMainTypeBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>> {
-    const mainType = await this.advertMainTypeModel.findOne({
-      where: {
-        slug,
-      },
-    })
+    const id = uuid()
+    const department = await AdvertDepartmentModel.findByPk(body.departmentId)
 
-    if (!mainType) {
+    if (!department) {
       return ResultWrapper.err({
         code: 404,
-        message: `Main advert type<${slug}> not found`,
+        message: `Department<${body.departmentId}> not found`,
       })
     }
 
-    return ResultWrapper.ok({
-      mainType: advertMainTypeMigrate(mainType),
-    })
-  }
-
-  @LogAndHandle()
-  async createMainType(
-    body: CreateMainAdvertTypeBody,
-  ): Promise<ResultWrapper<GetAdvertMainType>> {
-    const id = uuid()
-    const slug = slugify(body.title, { lower: true })
+    const slug = slugify(`${department.slug}-${body.title}`, { lower: true })
 
     const createBody = {
       id: id,
@@ -210,9 +188,11 @@ export class AdvertTypeService implements IAdvertTypeService {
       departmentId: body.departmentId,
     }
 
-    const mainType = await this.advertMainTypeModel.create(createBody)
+    await this.advertMainTypeModel.create(createBody, {
+      transaction: transaction,
+    })
 
-    const mapped = await this.getMainTypeById(mainType.id)
+    const mapped = await this.getMainTypeById(id, transaction)
 
     if (!mapped.result.ok) {
       return ResultWrapper.err({
@@ -221,12 +201,13 @@ export class AdvertTypeService implements IAdvertTypeService {
       })
     }
 
-    await this.advertTypeModel.create({
-      id: uuid(),
-      title: mainType.title,
-      slug: mainType.slug,
-      mainTypeId: mainType.id,
-    })
+    await this.createType(
+      {
+        title: body.title,
+        mainTypeId: id,
+      },
+      transaction,
+    )
 
     return ResultWrapper.ok({
       mainType: mapped.result.value.mainType,
@@ -234,11 +215,30 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async createType(
     body: CreateAdvertTypeBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertType>> {
     const id = uuid()
-    const slug = slugify(body.title, { lower: true })
+
+    const mainType = await this.getMainTypeById(body.mainTypeId, transaction)
+
+    if (!mainType.result.ok) {
+      return ResultWrapper.err({
+        code: 404,
+        message: `Main advert type<${body.mainTypeId}> not found`,
+      })
+    }
+
+    let slug = ''
+    if (mainType.result.value.mainType.types.length > 0) {
+      slug = slugify(`${mainType.result.value.mainType.slug}-${body.title}`, {
+        lower: true,
+      })
+    } else {
+      slug = mainType.result.value.mainType.slug
+    }
 
     const createBody = {
       id: id,
@@ -247,7 +247,9 @@ export class AdvertTypeService implements IAdvertTypeService {
       mainTypeId: body.mainTypeId,
     }
 
-    const type = await this.advertTypeModel.create(createBody)
+    const type = await this.advertTypeModel.create(createBody, {
+      transaction: transaction,
+    })
 
     const mapped = await this.getTypeById(type.id)
 

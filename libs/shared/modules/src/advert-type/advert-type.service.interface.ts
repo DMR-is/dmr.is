@@ -1,9 +1,10 @@
+import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
   AdvertTypeQuery,
+  CreateAdvertMainTypeBody,
   CreateAdvertTypeBody,
-  CreateMainAdvertTypeBody,
   GetAdvertMainType,
   GetAdvertMainTypes,
   GetAdvertType,
@@ -21,17 +22,17 @@ export interface IAdvertTypeService {
 
   getTypeById(id: string): Promise<ResultWrapper<GetAdvertType>>
 
-  getTypeBySlug(slug: string): Promise<ResultWrapper<GetAdvertType>>
-
   getMainTypeById(id: string): Promise<ResultWrapper<GetAdvertMainType>>
 
-  getMainTypeBySlug(slug: string): Promise<ResultWrapper<GetAdvertMainType>>
-
   createMainType(
-    body: CreateMainAdvertTypeBody,
+    body: CreateAdvertMainTypeBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>>
 
-  createType(body: CreateAdvertTypeBody): Promise<ResultWrapper<GetAdvertType>>
+  createType(
+    body: CreateAdvertTypeBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertType>>
 
   updateMainType(
     id: string,

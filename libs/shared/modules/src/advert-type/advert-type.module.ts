@@ -8,6 +8,8 @@ import { AdvertTypeService } from './advert-type.service'
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { models } from './models'
 
+export { AdvertTypeAdminController } from './advert-type-admin.controller'
+
 @Module({
   imports: [SequelizeModule.forFeature([...models]), LoggingModule],
   providers: [
