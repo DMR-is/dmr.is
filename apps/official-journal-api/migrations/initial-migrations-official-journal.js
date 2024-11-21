@@ -33,6 +33,7 @@ module.exports = {
       CONSTRAINT fk_admin_user_role_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
     );
 
+    -- "Deildir og tegundir"
     CREATE TABLE advert_department (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL UNIQUE,
@@ -42,17 +43,26 @@ module.exports = {
       PRIMARY KEY (id)
     );
 
-    CREATE TABLE advert_type (
+    CREATE TABLE advert_main_type (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL,
       slug VARCHAR NOT NULL,
       department_id UUID NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      legacy_id UUID,
-      PRIMARY KEY (id),
-      CONSTRAINT fk_advert_type_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
-      CONSTRAINT advert_type_title_slug_department_id_unique UNIQUE (title, slug, department_id)
+      CONSTRAINT fk_advert_main_type_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE advert_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL,
+      slug VARCHAR NOT NULL,
+      main_type_id UUID NOT NULL,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT fk_advert_type_main_type_id FOREIGN KEY (main_type_id) REFERENCES advert_main_type (id),
+      PRIMARY KEY (id)
     );
 
     -- "Yfirflokkur"
@@ -70,7 +80,7 @@ module.exports = {
       slug VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      PRIMARY KEY (id),
+      PRIMARY KEY (id)
     );
 
     -- "Main category" to "Category" relation
