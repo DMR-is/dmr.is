@@ -1,7 +1,6 @@
-import { Department } from '@dmr.is/shared/dto'
-
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Department } from '../departments'
 import { AdvertType } from './advert-type.dto'
 
 export class AdvertMainType {

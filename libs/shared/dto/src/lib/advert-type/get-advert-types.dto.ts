@@ -1,7 +1,6 @@
-import { Paging } from '@dmr.is/shared/dto'
-
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Paging } from '../paging'
 import { AdvertType } from './advert-type.dto'
 
 export class GetAdvertTypes {
