@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertType } from '../advert-types'
+import { AdvertType } from '../advert-type'
 import { CaseStatus } from '../cases/case-status.dto'
 import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'

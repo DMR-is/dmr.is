@@ -17,7 +17,7 @@ import { AdvertMainTypeModel } from './advert-main-type.model'
     exclude: ['created', 'updated'],
   },
 }))
-export class AdvertTypeModelNew extends Model {
+export class AdvertTypeModel extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,

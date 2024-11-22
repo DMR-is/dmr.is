@@ -5,7 +5,6 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  AdvertType,
   Category,
   CreateAdvert,
   DefaultSearchParams,
@@ -15,9 +14,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAdvertTypeResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
@@ -47,8 +43,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { AdvertTypeModel } from '../advert-type/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
-import { categoryCategoriesMigrate } from './migrations/category-categories.migrate'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -56,7 +52,6 @@ import {
   advertInvolvedPartyMigrate,
   advertMainCategoryMigrate,
   advertMigrate,
-  advertTypesMigrate,
 } from './migrations'
 import {
   AdvertAttachmentsModel,
@@ -68,7 +63,6 @@ import {
   AdvertMainCategoryModel,
   AdvertModel,
   AdvertStatusModel,
-  AdvertTypeModel,
 } from './models'
 
 const DEFAULT_PAGE_SIZE = 20
@@ -80,9 +74,6 @@ export class JournalService implements IJournalService {
 
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
-
-    @InjectModel(AdvertTypeModel)
-    private advertTypeModel: typeof AdvertTypeModel,
 
     @InjectModel(AdvertMainCategoryModel)
     private advertMainCategoryModel: typeof AdvertMainCategoryModel,
@@ -296,47 +287,6 @@ export class JournalService implements IJournalService {
   @LogAndHandle()
   error(): void {
     throw new NotImplementedException()
-  }
-
-  @LogAndHandle()
-  async insertType(
-    model: AdvertType,
-  ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    if (!model) {
-      throw new BadRequestException()
-    }
-
-    const type = await this.advertTypeModel.create({
-      title: model.title,
-      slug: model.slug,
-      departmentId: model.department?.id,
-    })
-
-    return ResultWrapper.ok({ type: advertTypesMigrate(type) })
-  }
-
-  @LogAndHandle()
-  async updateType(
-    model: AdvertType,
-  ): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    if (!model || !model.id) {
-      throw new BadRequestException()
-    }
-
-    const type = await this.advertTypeModel.update(
-      {
-        title: model.title,
-        slug: model.slug,
-        departmentId: model.department?.id,
-      },
-      { where: { id: model.id }, returning: true },
-    )
-
-    if (!type) {
-      throw new NotFoundException(`Type<${model.id}> not found`)
-    }
-
-    return ResultWrapper.ok({ type: advertTypesMigrate(type[1][0]) })
   }
 
   @LogAndHandle()
@@ -600,58 +550,6 @@ export class JournalService implements IJournalService {
 
     return ResultWrapper.ok({
       departments: mapped,
-      paging,
-    })
-  }
-
-  @LogAndHandle()
-  async getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    const type = await this.advertTypeModel.findOne<AdvertTypeModel>({
-      include: AdvertDepartmentModel,
-      where: {
-        id: id,
-      },
-    })
-
-    if (!type) {
-      throw new NotFoundException(`Type<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ type: advertTypesMigrate(type) })
-  }
-
-  @LogAndHandle()
-  async getTypes(
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<ResultWrapper<GetAdvertTypesResponse>> {
-    const page = params?.page ?? 1
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const types = await this.advertTypeModel.findAndCountAll<AdvertTypeModel>({
-      distinct: true,
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          where: params?.department
-            ? {
-                id: params?.department,
-              }
-            : undefined,
-        },
-      ],
-      order: [['title', 'ASC']],
-      where: params?.search
-        ? { title: { [Op.iLike]: `%${params.search}%` } }
-        : {},
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    })
-
-    const mapped = types.rows.map((item) => advertTypesMigrate(item))
-    const paging = generatePaging(mapped, page, pageSize, types.count)
-
-    return ResultWrapper.ok({
-      types: mapped,
       paging,
     })
   }

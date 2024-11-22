@@ -1,6 +1,6 @@
 export * from './advert-signatures'
-export * from './advert-types'
 export * from './adverts'
+export * from './advert-type'
 export * from './application'
 export * from './case-comments'
 export * from './cases'

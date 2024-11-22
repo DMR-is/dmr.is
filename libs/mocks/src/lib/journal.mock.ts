@@ -38,49 +38,42 @@ export const DEPT_A_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be0',
   title: 'AUGLÝSING',
   slug: 'auglysing',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_FJARAUKALOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be1',
   title: 'FJÁRAUKALÖG',
   slug: 'fjaraukalog',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_FJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be2',
   title: 'FJÁRLOG',
   slug: 'fjarlog',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_FORSETABREF: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be3',
   title: 'FORSETABRÉF',
   slug: 'forsetabref',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_FORSETAURSKURDUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be4',
   title: 'FORSETAÚRSKURÐUR',
   slug: 'forsetaurskurdur',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_LOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be5',
   title: 'LÖG',
   slug: 'log',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 const DEPT_A_LOKAFJARLOG: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be6',
   title: 'LOKAFJÁRLÖG',
   slug: 'lokafjarlog',
-  department: JOURNAL_DEPARTMENT_A,
 }
 
 export const DEPT_A_TYPES = [
@@ -97,49 +90,42 @@ export const DEPT_B_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be7',
   title: 'AUGLÝSING',
   slug: 'auglysing',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_GJALDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'GJALDSKRÁ',
   slug: 'gjaldskra',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_ARDSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be9',
   title: 'ARÐSKRÁ',
   slug: 'ardskra',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_REGLUGERD: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bea',
   title: 'REGULUGERÐ',
   slug: 'reglugerd',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_SKIPULAGSSKRA: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402beb',
   title: 'SKIPULAGSSKRÁ',
   slug: 'skipulagsskra',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_SAMTHYKKT: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bec',
   title: 'SAMÞYKKT',
   slug: 'samthykkt',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 const DEPT_B_REGLUR: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402bed',
   title: 'REGLUR',
   slug: 'reglur',
-  department: JOURNAL_DEPARTMENT_B,
 }
 
 /*
@@ -168,7 +154,6 @@ export const DEPT_C_AUGLYSING: AdvertType = {
   id: 'faabd8a8-b327-4084-94bc-6001b0402be8',
   title: 'AUGLÝSING',
   slug: 'auglysing',
-  department: JOURNAL_DEPARTMENT_C,
 }
 
 export const DEPT_C_TYPES = [DEPT_C_AUGLYSING]
@@ -264,11 +249,6 @@ export const emptyAdvert: Advert = {
     id: '',
     title: '',
     slug: '',
-    department: {
-      title: '',
-      slug: '',
-      id: '',
-    },
   },
   subject: '',
   title: '',

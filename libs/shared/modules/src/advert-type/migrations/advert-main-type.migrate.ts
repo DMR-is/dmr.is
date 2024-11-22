@@ -1,4 +1,5 @@
-import { AdvertMainType } from '../dto'
+import { AdvertMainType } from '@dmr.is/shared/dto'
+
 import { AdvertMainTypeModel } from '../models/advert-main-type.model'
 
 export const advertMainTypeMigrate = (

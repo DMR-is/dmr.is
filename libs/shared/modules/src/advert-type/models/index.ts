@@ -1,11 +1,11 @@
 import { AdvertDepartmentModel } from '../../journal/models'
 import { AdvertMainTypeModel } from './advert-main-type.model'
-import { AdvertTypeModelNew } from './advert-type.model'
+import { AdvertTypeModel } from './advert-type.model'
 
 export const models = [
-  AdvertTypeModelNew,
+  AdvertTypeModel,
   AdvertMainTypeModel,
   AdvertDepartmentModel,
 ]
 
-export { AdvertTypeModelNew, AdvertMainTypeModel, AdvertDepartmentModel }
+export { AdvertTypeModel, AdvertMainTypeModel, AdvertDepartmentModel }

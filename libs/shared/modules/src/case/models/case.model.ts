@@ -7,6 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
@@ -16,7 +17,6 @@ import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
-  AdvertTypeModel,
 } from '../../journal/models'
 import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
 import { CaseAdditionModel } from './case-addition.model'

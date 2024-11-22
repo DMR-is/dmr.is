@@ -2,6 +2,7 @@ import { Transaction } from 'sequelize'
 import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { AdvertTypeModel } from '../advert-type/models'
 import {
   CaseCommunicationStatusModel,
   CaseModel,
@@ -13,7 +14,6 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertStatusModel,
-  AdvertTypeModel,
 } from '../journal/models'
 
 export interface IUtilityService {

@@ -1,16 +1,16 @@
 import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { Controller, HttpException, Inject, Param, Query } from '@nestjs/common'
-
-import { IAdvertTypeService } from './advert-type.service.interface'
 import {
   AdvertTypeQuery,
   GetAdvertMainType,
   GetAdvertMainTypes,
   GetAdvertType,
   GetAdvertTypes,
-} from './dto'
+} from '@dmr.is/shared/dto'
+
+import { Controller, HttpException, Inject, Param, Query } from '@nestjs/common'
+
+import { IAdvertTypeService } from './advert-type.service.interface'
 
 @Controller({ path: 'advert-types', version: '1' })
 export class AdvertTypeController {

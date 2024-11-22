@@ -1,6 +1,4 @@
 import { Transaction } from 'sequelize'
-import { ResultWrapper } from '@dmr.is/types'
-
 import {
   AdvertTypeQuery,
   CreateAdvertMainTypeBody,
@@ -11,7 +9,8 @@ import {
   GetAdvertTypes,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from './dto'
+} from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface IAdvertTypeService {
   getTypes(query?: AdvertTypeQuery): Promise<ResultWrapper<GetAdvertTypes>>

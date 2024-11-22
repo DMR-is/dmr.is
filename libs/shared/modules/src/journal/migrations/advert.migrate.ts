@@ -1,11 +1,11 @@
 import { Advert, AdvertAttachment } from '@dmr.is/shared/dto'
 
+import { advertTypeMigrate } from '../../advert-type/migrations'
 import { AdvertModel } from '../models'
 import { advertCategoryMigrate } from './advert-category.migrate'
 import { advertDepartmentMigrate } from './advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
 import { advertStatusMigrate } from './advert-status.migrate'
-import { advertTypesMigrate } from './advert-types.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
   const attachmentsmodel = model.attachments.map<AdvertAttachment>((item) => {
@@ -23,7 +23,7 @@ export function advertMigrate(model: AdvertModel): Advert {
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
-    type: model.type ? advertTypesMigrate(model.type) : null,
+    type: model.type ? advertTypeMigrate(model.type) : null,
     subject: model.subject,
     status: advertStatusMigrate(model.status),
     publicationNumber: {

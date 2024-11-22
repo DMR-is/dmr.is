@@ -1,10 +1,6 @@
 import { Sequelize } from 'sequelize-typescript'
 import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { Body, Controller, HttpException, Inject, Param } from '@nestjs/common'
-
-import { IAdvertTypeService } from './advert-type.service.interface'
 import {
   CreateAdvertMainTypeBody,
   CreateAdvertMainTypeBulk,
@@ -13,7 +9,11 @@ import {
   GetAdvertType,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from './dto'
+} from '@dmr.is/shared/dto'
+
+import { Body, Controller, HttpException, Inject, Param } from '@nestjs/common'
+
+import { IAdvertTypeService } from './advert-type.service.interface'
 
 const LOGGING_CATEGORY = 'advert-type-admin-controller'
 

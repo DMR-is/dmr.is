@@ -11,7 +11,7 @@ import {
 } from 'sequelize-typescript'
 
 import { AdvertDepartmentModel } from '../../journal/models'
-import { AdvertTypeModelNew } from './advert-type.model'
+import { AdvertTypeModel } from './advert-type.model'
 
 @Table({ tableName: 'advert_main_type', timestamps: true })
 @DefaultScope(() => ({
@@ -40,8 +40,8 @@ export class AdvertMainTypeModel extends Model {
   @BelongsTo(() => AdvertDepartmentModel, 'department_id')
   department!: AdvertDepartmentModel
 
-  @HasMany(() => AdvertTypeModelNew, 'main_type_id')
-  types?: AdvertTypeModelNew[]
+  @HasMany(() => AdvertTypeModel, 'main_type_id')
+  types?: AdvertTypeModel[]
 
   @CreatedAt
   created!: Date

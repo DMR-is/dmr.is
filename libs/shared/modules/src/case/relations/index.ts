@@ -1,9 +1,9 @@
+import { AdvertTypeModel } from '../../advert-type/models'
 import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/models'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
-  AdvertTypeModel,
 } from '../../journal/models'
 import {
   SignatureMemberModel,

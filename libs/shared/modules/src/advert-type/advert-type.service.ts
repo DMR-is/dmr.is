@@ -5,13 +5,6 @@ import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
-
-import { Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
-import { IAdvertTypeService } from './advert-type.service.interface'
 import {
   AdvertTypeQuery,
   CreateAdvertMainTypeBody,
@@ -22,12 +15,19 @@ import {
   GetAdvertTypes,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from './dto'
+} from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging } from '@dmr.is/utils'
+
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { IAdvertTypeService } from './advert-type.service.interface'
 import { advertMainTypeMigrate, advertTypeMigrate } from './migrations'
 import {
   AdvertDepartmentModel,
   AdvertMainTypeModel,
-  AdvertTypeModelNew,
+  AdvertTypeModel,
 } from './models'
 import {
   getAdvertTypeDepartmentWhereParams,
@@ -40,8 +40,8 @@ const LOGGING_CATEGORY = 'advert-type-service'
 export class AdvertTypeService implements IAdvertTypeService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @InjectModel(AdvertTypeModelNew)
-    private readonly advertTypeModel: typeof AdvertTypeModelNew,
+    @InjectModel(AdvertTypeModel)
+    private readonly advertTypeModel: typeof AdvertTypeModel,
     @InjectModel(AdvertMainTypeModel)
     private readonly advertMainTypeModel: typeof AdvertMainTypeModel,
     private sequelize: Sequelize,
@@ -105,7 +105,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       order: [['title', 'DESC']],
       include: [
         {
-          model: AdvertTypeModelNew,
+          model: AdvertTypeModel,
         },
         {
           model: AdvertDepartmentModel,
@@ -159,7 +159,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>> {
     const mainType = await this.advertMainTypeModel.findByPk(id, {
-      include: [AdvertTypeModelNew, AdvertDepartmentModel],
+      include: [AdvertTypeModel, AdvertDepartmentModel],
       transaction,
     })
 
@@ -286,7 +286,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const mainType = await this.advertMainTypeModel.findByPk(id, {
       include: [
         {
-          model: AdvertTypeModelNew,
+          model: AdvertTypeModel,
         },
         { model: AdvertDepartmentModel },
       ],
