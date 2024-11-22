@@ -12,6 +12,7 @@ import {
   CaseCommentType,
   CaseStatusTitleEnum,
   CaseTagTitleEnum,
+  Middleware,
   Signature,
 } from '../gen/fetch'
 import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'

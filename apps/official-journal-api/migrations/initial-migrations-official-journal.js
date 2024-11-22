@@ -70,7 +70,7 @@ module.exports = {
       slug VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
-      PRIMARY KEY (id),
+      PRIMARY KEY (id)
     );
 
     -- "Main category" to "Category" relation
