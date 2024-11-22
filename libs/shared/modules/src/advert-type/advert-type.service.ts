@@ -20,8 +20,8 @@ import {
   GetAdvertMainTypes,
   GetAdvertType,
   GetAdvertTypes,
+  UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-  UpdateMainAdvertTypeBody,
 } from './dto'
 import { advertMainTypeMigrate, advertTypeMigrate } from './migrations'
 import {
@@ -126,10 +126,22 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
-  async getTypeById(id: string): Promise<ResultWrapper<GetAdvertType>> {
-    const type = await this.advertTypeModel.findByPk(id)
+  @Transactional()
+  async getTypeById(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetAdvertType>> {
+    const type = await this.advertTypeModel.findByPk(id, {
+      include: [
+        { model: AdvertMainTypeModel, include: [AdvertDepartmentModel] },
+      ],
+      transaction,
+    })
 
     if (!type) {
+      this.logger.warn(`Advert type<${id}> not found`, {
+        category: LOGGING_CATEGORY,
+      })
       return ResultWrapper.err({
         code: 404,
         message: `Advert type<${id}> not found`,
@@ -221,7 +233,6 @@ export class AdvertTypeService implements IAdvertTypeService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertType>> {
     const id = uuid()
-
     const mainType = await this.getMainTypeById(body.mainTypeId, transaction)
 
     if (!mainType.result.ok) {
@@ -251,7 +262,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       transaction: transaction,
     })
 
-    const mapped = await this.getTypeById(type.id)
+    const mapped = await this.getTypeById(type.id, transaction)
 
     if (!mapped.result.ok) {
       return ResultWrapper.err({
@@ -266,16 +277,20 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async updateMainType(
     id: string,
-    body: UpdateMainAdvertTypeBody,
+    body: UpdateAdvertMainType,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>> {
     const mainType = await this.advertMainTypeModel.findByPk(id, {
       include: [
         {
           model: AdvertTypeModelNew,
         },
+        { model: AdvertDepartmentModel },
       ],
+      transaction,
     })
 
     if (!mainType) {
@@ -284,19 +299,67 @@ export class AdvertTypeService implements IAdvertTypeService {
         message: `Main advert type<${id}> not found`,
       })
     }
-
-    const updateBody = {
+    const oldSlug = mainType.slug
+    const slug = slugify(`${mainType.department.slug}-${body.title}`, {
+      lower: true,
+    })
+    const updateMainTypeBody = {
       title: body.title,
-      slug: slugify(body.title, { lower: true }),
+      slug: slug,
     }
 
-    const updated = await mainType.update(updateBody, {
-      returning: true,
+    await mainType.update(updateMainTypeBody, {
+      transaction,
     })
 
-    return ResultWrapper.ok({
-      mainType: advertMainTypeMigrate(updated),
-    })
+    if (mainType.types) {
+      const typesToUpdate = mainType.types.filter(
+        (type) => type.slug !== oldSlug,
+      )
+      const typeWithSameSlug = mainType.types.find(
+        (type) => type.slug === oldSlug,
+      )
+
+      // this should always run
+      if (typeWithSameSlug) {
+        await typeWithSameSlug.update(
+          {
+            slug: slug,
+          },
+          {
+            transaction,
+          },
+        )
+      }
+
+      const updatedTypePromises = typesToUpdate.map(async (type) => {
+        const subTypeSlug = slugify(`${slug}-${type.title}`, { lower: true })
+        return this.advertTypeModel.update(
+          {
+            slug: subTypeSlug,
+          },
+          {
+            where: {
+              id: type.id,
+            },
+            transaction,
+          },
+        )
+      })
+
+      await Promise.all(updatedTypePromises)
+    }
+
+    const mapped = await this.getMainTypeById(id, transaction)
+
+    if (!mapped.result.ok) {
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update main advert type',
+      })
+    }
+
+    return ResultWrapper.ok({ mainType: mapped.result.value.mainType })
   }
 
   @LogAndHandle()

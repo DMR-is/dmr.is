@@ -9,8 +9,8 @@ import {
   GetAdvertMainTypes,
   GetAdvertType,
   GetAdvertTypes,
+  UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-  UpdateMainAdvertTypeBody,
 } from './dto'
 
 export interface IAdvertTypeService {
@@ -36,7 +36,7 @@ export interface IAdvertTypeService {
 
   updateMainType(
     id: string,
-    body: UpdateMainAdvertTypeBody,
+    body: UpdateAdvertMainType,
   ): Promise<ResultWrapper<GetAdvertMainType>>
 
   updateType(
