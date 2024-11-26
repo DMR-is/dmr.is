@@ -1,10 +1,8 @@
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { USER_ROLES } from '@dmr.is/constants'
-import { Roles, Route } from '@dmr.is/decorators'
+import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  AdminAuthGuard,
   IAdminUserService,
   ICaseService,
   ICommentService,
@@ -16,14 +14,11 @@ import {
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
-  CaseStatusEnum,
   CreateCaseResponse,
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
   EditorialOverviewResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -67,7 +62,6 @@ import {
   Inject,
   Param,
   Query,
-  UseGuards,
 } from '@nestjs/common'
 
 const LOG_CATEGORY = 'case-controller'
@@ -155,20 +149,6 @@ export class CaseController {
   })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
-  }
-
-  @Route({
-    path: 'types',
-    operationId: 'getTypes',
-    summary: 'Get advert types',
-    responseType: GetAdvertTypesResponse,
-    query: [{ type: GetAdvertTypesQueryParams }],
-  })
-  async types(
-    @Query()
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
   @Route({
@@ -432,21 +412,6 @@ export class CaseController {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseCommunicationStatus(id, body),
     )
-  }
-
-  @Route({
-    method: 'put',
-    path: ':id/type',
-    operationId: 'updateType',
-    summary: 'Update type of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCaseTypeBody,
-  })
-  async updateType(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseTypeBody,
-  ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
   }
 
   @Route({

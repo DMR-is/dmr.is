@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Delete, HandleApiException, LogMethod } from '@dmr.is/decorators'
 
-import { createDmrClient } from '../../../../../../../lib/api/createClient'
+import { createDmrClient } from '../../../../../../lib/api/createClient'
 
 class DeleteMainCategoryCategoryHandler {
   @LogMethod(false)

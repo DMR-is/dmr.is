@@ -9,11 +9,6 @@ export const advertMainTypeMigrate = (
     id: model.id,
     title: model.title,
     slug: model.slug,
-    department: {
-      id: model.department.id,
-      title: model.department.title,
-      slug: model.department.slug,
-    },
     types:
       model.types?.map((type) => ({
         id: type.id,

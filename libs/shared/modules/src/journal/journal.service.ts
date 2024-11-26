@@ -43,7 +43,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { AdvertTypeModel } from '../advert-type/models'
+import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -542,6 +542,9 @@ export class JournalService implements IJournalService {
       limit: pageSize,
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
+      include: [
+        { model: AdvertMainTypeModel, include: [{ model: AdvertTypeModel }] },
+      ],
       where: whereParams,
     })
 

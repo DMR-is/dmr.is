@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertMainType } from '../advert-type'
-
-export class Department {
+export class DepartmentSmall {
   @ApiProperty({
     description: 'Unique ID for the advert department, GUID format.',
     example: '00000000-0000-0000-0000-000000000000',
@@ -28,12 +26,4 @@ export class Department {
     type: String,
   })
   readonly slug!: string
-
-  @ApiProperty({
-    type: [AdvertMainType],
-    description: 'Description of the advert department.',
-    example: 'A deild er fyrsta deildin.',
-    required: false,
-  })
-  mainTypes!: AdvertMainType[]
 }

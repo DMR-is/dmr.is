@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
-import { createDmrClient } from '../../../../../../lib/api/createClient'
+import { createDmrClient } from '../../../../../lib/api/createClient'
 
 const createMainCategoryCategoriesSchema = z.object({
   categoryIds: z.array(z.string()),

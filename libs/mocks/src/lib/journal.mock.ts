@@ -14,18 +14,21 @@ const JOURNAL_DEPARTMENT_A: Department = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
   title: 'A deild',
   slug: 'a-deild',
+  mainTypes: [],
 }
 
 export const JOURNAL_DEPARTMENT_B: Department = {
   id: '637291f2-f7f4-405d-8586-ef88b59cab00',
   title: 'B deild',
   slug: 'b-deild',
+  mainTypes: [],
 }
 
 const JOURNAL_DEPARTMENT_C: Department = {
   id: 'a9bb9a6a-61aa-42a4-8638-e9e5f5f2b676',
   title: 'C deild',
   slug: 'c-deild',
+  mainTypes: [],
 }
 
 export const ALL_MOCK_JOURNAL_DEPARTMENTS = [

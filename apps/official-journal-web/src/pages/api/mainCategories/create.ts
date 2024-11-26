@@ -1,28 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 
-import { Put } from '@nestjs/common'
-
-import { createDmrClient } from '../../../../../lib/api/createClient'
+import { createDmrClient } from '../../../lib/api/createClient'
 
 const createMainCategorySchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
+  title: z.string(),
+  description: z.string(),
+  categories: z.array(z.string()),
 })
 
-class UpdateMainCategoryHandler {
+class CreateMainCategoryHandler {
   @LogMethod(false)
   @HandleApiException()
-  @Put()
+  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query
-
-    if (!id) {
-      return void res.status(400).json({
-        message: 'id is required',
-      })
-    }
     const parsed = createMainCategorySchema.safeParse(req.body)
 
     if (!parsed.success) {
@@ -31,11 +23,11 @@ class UpdateMainCategoryHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateMainCategory({
-      id: id as string,
-      updateMainCategory: {
+    await dmrClient.createMainCategory({
+      createMainCategory: {
         title: parsed.data.title,
         description: parsed.data.description,
+        categories: parsed.data.categories,
       },
     })
 
@@ -43,6 +35,6 @@ class UpdateMainCategoryHandler {
   }
 }
 
-const instance = new UpdateMainCategoryHandler()
+const instance = new CreateMainCategoryHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

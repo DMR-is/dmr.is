@@ -1,7 +1,5 @@
 import { StringOption } from '@island.is/island-ui/core'
 
-import { PostCasePublishBody } from '../gen/fetch'
-
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
 export const BLEED_HEIGHT = 56
@@ -19,6 +17,7 @@ export const COMMENTS_TO_HIDE = 4
 export enum Routes {
   Dashboard = '/',
   MainCategories = '/yfirflokkar',
+  MainTypes = '/tegundir',
   ProcessingOverview = '/ritstjorn',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
@@ -59,6 +58,11 @@ export const PagePaths: Array<Path> = [
   },
   { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
   { pathname: Routes.MainCategories, title: 'Yfirflokkar', order: 5 },
+  {
+    pathname: Routes.MainTypes,
+    title: 'Tegundir',
+    order: 6,
+  },
 ]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -69,63 +73,6 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
 
 export const defaultFetcher = (url: string) =>
   fetch(url).then((res) => res.json())
-
-export async function publishCases(
-  url: string,
-  { arg }: { arg: PostCasePublishBody },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((res) => res)
-    .catch((error) => {
-      throw error
-    })
-}
-
-export async function getCase(url: string) {
-  return fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    const error = new Error('Error occured while fetching data')
-    if (!res.ok) {
-      // eslint-disable-next-line no-console
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res.json()
-  })
-}
-
-export async function deleteComment(
-  url: string,
-  { arg }: { arg: { caseId: string; commentId: string } },
-) {
-  const fullUrl = `${url}?caseId=${arg.caseId}&commentId=${arg.commentId}`
-  return fetch(fullUrl, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    if (!res.ok) {
-      throw new Error('Error occured while fetching data')
-    }
-
-    return res
-  })
-}
 
 export async function fetcher(
   url: string,
@@ -140,45 +87,59 @@ export async function fetcher(
     },
   })
 
-  if (!res.ok) {
-    const message = await res.text()
-
-    throw new Error(message)
+  if (res.status === 204) {
+    return
   }
 
-  try {
-    return await res.json()
-  } catch (error) {
-    return res
-  }
+  return await res.json()
 }
 
-export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
-  const res = await fetch(url, {
-    method: 'POST',
+export async function updateFetcher<T>(
+  url: string,
+  { arg, method }: { arg: T; method?: 'PUT' | 'POST' },
+) {
+  const response = await fetch(url, {
+    method: method ? method : 'POST',
     body: JSON.stringify(arg),
     headers: {
       'Content-Type': 'application/json',
     },
   })
 
-  if (!res.ok) {
-    const message = await res.text()
-
-    throw new Error(message)
+  if (response.status === 204) {
+    return
   }
 
-  return res
+  if (!response.ok) {
+    let message = null
+    const error = await response.json()
+
+    if (error.message === 'Validation failed') {
+      message = 'Titill þarf að vera einkvæmur'
+    }
+
+    throw new Error(message ? message : error.message)
+  }
+
+  try {
+    return await response.json()
+  } catch (error) {
+    console.log('wtf', error)
+    return null
+  }
 }
 
 export enum APIRotues {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
+  MainTypes = '/api/mainTypes',
+  MainType = '/api/mainTypes/:id',
+  Types = '/api/types',
+  Type = '/api/types/:id',
   GetEditorialOverview = '/api/cases/editorialOverview',
   GetDepartments = '/api/cases/departments',
-  GetTypes = '/api/cases/types',
   GetCategories = '/api/cases/categories',
-  GetMainCategories = '/api/cases/mainCategories',
+  GetMainCategories = '/api/mainCategories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
   GetCommunicationStatuses = '/api/cases/communicationStatuses',
@@ -189,20 +150,19 @@ export enum APIRotues {
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
-  UpdateType = '/api/cases/:id/updateType',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
   UpdatePaid = '/api/cases/:id/updatePaid',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
-  UpdateMainCategory = '/api/cases/mainCategories/:id/update',
-  CreateMainCategory = '/api/cases/mainCategories/create',
-  CreateMainCategoryCategories = '/api/cases/mainCategories/:id/categories/create',
+  UpdateMainCategory = '/api/mainCategories/:id/update',
+  CreateMainCategory = '/api/mainCategories/create',
+  CreateMainCategoryCategories = '/api/mainCategories/:id/categories/create',
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
-  DeleteMainCategory = '/api/cases/mainCategories/:id/delete',
-  DeleteMainCategoryCategory = '/api/cases/mainCategories/:id/categories/:cid/delete',
+  DeleteMainCategory = '/api/mainCategories/:id/delete',
+  DeleteMainCategoryCategory = '/api/mainCategories/:id/categories/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',

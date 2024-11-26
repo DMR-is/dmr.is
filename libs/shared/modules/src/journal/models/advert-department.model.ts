@@ -19,5 +19,5 @@ export class AdvertDepartmentModel extends Model {
   slug!: string
 
   @HasMany(() => AdvertMainTypeModel, 'department_id')
-  adTypes?: AdvertMainTypeModel[]
+  mainTypes?: AdvertMainTypeModel[]
 }

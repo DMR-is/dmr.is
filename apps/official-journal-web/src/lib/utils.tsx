@@ -388,3 +388,21 @@ export const getOverviewStatusColor = (status: string) => {
       return 'blue'
   }
 }
+
+/**
+ *
+ * @param val String value tipically from query params
+ * @param defaultValue if the value is not a number, return this value
+ * @returns the parsed integer or the default value
+ */
+export const tryParseInt = (
+  val: string | undefined,
+  defaultValue = 0,
+): number => {
+  if (!val) {
+    return defaultValue
+  }
+  const parsed = parseInt(val, 10)
+
+  return !Number.isNaN(parsed) ? parsed : defaultValue
+}

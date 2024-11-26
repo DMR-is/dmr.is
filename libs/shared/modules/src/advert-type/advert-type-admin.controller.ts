@@ -31,6 +31,7 @@ export class AdvertTypeAdminController {
     path: '/types',
     operationId: 'createType',
     bodyType: CreateAdvertTypeBody,
+    responseType: GetAdvertType,
   })
   async createType(@Body() body: CreateAdvertTypeBody): Promise<GetAdvertType> {
     const result = await this.advertTypeService.createType(body)
@@ -55,7 +56,7 @@ export class AdvertTypeAdminController {
   })
   async updateType(
     @Param('id') id: string,
-    @Body() body: CreateAdvertTypeBody,
+    @Body() body: UpdateAdvertTypeBody,
   ): Promise<GetAdvertType> {
     const result = await this.advertTypeService.updateType(id, body)
 
@@ -63,7 +64,10 @@ export class AdvertTypeAdminController {
       this.logger.warn('Failed to update advert type', {
         category: LOGGING_CATEGORY,
       })
-      throw new HttpException(result.result.error, result.result.error.code)
+      throw new HttpException(
+        result.result.error.message,
+        result.result.error.code,
+      )
     }
 
     return result.result.value
@@ -90,6 +94,8 @@ export class AdvertTypeAdminController {
     method: 'post',
     path: '/main-types',
     operationId: 'createMainType',
+    bodyType: CreateAdvertMainTypeBody,
+    responseType: GetAdvertMainType,
   })
   async createMainType(
     @Body() body: CreateAdvertMainTypeBody,
@@ -110,6 +116,7 @@ export class AdvertTypeAdminController {
     method: 'post',
     path: '/main-types/bulk',
     operationId: 'createMainTypesBulk',
+    bodyType: CreateAdvertMainTypeBulk,
   })
   async createMainTypesBulk(
     @Body() body: CreateAdvertMainTypeBulk,

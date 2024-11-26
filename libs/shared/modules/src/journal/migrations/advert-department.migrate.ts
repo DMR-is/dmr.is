@@ -1,5 +1,6 @@
 import { Department } from '@dmr.is/shared/dto'
 
+import { advertMainTypeMigrate } from '../../advert-type/migrations'
 import { AdvertDepartmentModel } from '../models/advert-department.model'
 
 export function advertDepartmentMigrate(
@@ -9,6 +10,9 @@ export function advertDepartmentMigrate(
     id: model.id,
     slug: model.slug,
     title: model.title,
+    mainTypes: model.mainTypes
+      ? model.mainTypes.map((t) => advertMainTypeMigrate(t))
+      : [],
   }
   return result
 }
