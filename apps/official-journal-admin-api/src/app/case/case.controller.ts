@@ -581,8 +581,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
-  // @Roles(USER_ROLES.Admin)
-  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
   @Route({
     path: ':id',
     operationId: 'getCase',
