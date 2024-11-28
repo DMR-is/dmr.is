@@ -8,8 +8,8 @@ import {
   ICaseService,
   ICommentService,
   IJournalService,
-  RoleGuard,
-  TokenJwtAuthGuard,
+  // RoleGuard,
+  // TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
@@ -175,8 +175,8 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  // @Roles(USER_ROLES.Admin)
   @Route({
     path: 'categories',
     operationId: 'getCategories',
@@ -581,8 +581,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
-  @Roles(USER_ROLES.Admin)
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  // @Roles(USER_ROLES.Admin)
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
   @Route({
     path: ':id',
     operationId: 'getCase',
