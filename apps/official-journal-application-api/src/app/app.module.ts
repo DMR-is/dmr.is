@@ -1,4 +1,6 @@
 import {
+  AdvertTypeController,
+  AdvertTypeModule,
   ApplicationModule,
   ApplicationUserModule,
   HealthModule,
@@ -14,7 +16,7 @@ import {
 import { ApplicationController } from './application/application.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { SequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
+import { LogRequestMiddleware } from '@dmr.is/middleware'
 
 @Module({
   imports: [
@@ -26,8 +28,9 @@ import { LogRequestMiddleware, WithAuthMiddleware } from '@dmr.is/middleware'
     PdfModule,
     ApplicationUserModule,
     UtilityModule,
+    AdvertTypeModule,
   ],
-  controllers: [ApplicationController],
+  controllers: [ApplicationController, AdvertTypeController],
   providers: [],
 })
 export class AppModule implements NestModule {
