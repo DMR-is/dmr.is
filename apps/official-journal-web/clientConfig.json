@@ -1592,6 +1592,7 @@
     "/api/v1/advert-types/types": {
       "get": {
         "operationId": "getTypes",
+        "summary": "",
         "parameters": [
           {
             "required": false,
@@ -1637,11 +1638,27 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertTypes" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1649,6 +1666,7 @@
       },
       "post": {
         "operationId": "createType",
+        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1659,11 +1677,27 @@
           }
         },
         "responses": {
-          "default": {
+          "201": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1673,6 +1707,7 @@
     "/api/v1/advert-types/main-types": {
       "get": {
         "operationId": "getMainTypes",
+        "summary": "",
         "parameters": [
           {
             "required": false,
@@ -1718,11 +1753,27 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertMainTypes" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1730,6 +1781,7 @@
       },
       "post": {
         "operationId": "createMainType",
+        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1742,11 +1794,27 @@
           }
         },
         "responses": {
-          "default": {
+          "201": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1756,6 +1824,7 @@
     "/api/v1/advert-types/types/{id}": {
       "get": {
         "operationId": "getTypeById",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1765,11 +1834,35 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1777,6 +1870,7 @@
       },
       "put": {
         "operationId": "updateType",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1794,11 +1888,35 @@
           }
         },
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1806,20 +1924,7 @@
       },
       "delete": {
         "operationId": "deleteType",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } }
-      }
-    },
-    "/api/v1/advert-types/main-types/{id}": {
-      "get": {
-        "operationId": "getMainTypeById",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1829,11 +1934,76 @@
           }
         ],
         "responses": {
-          "default": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/advert-types/main-types/{id}": {
+      "get": {
+        "operationId": "getMainTypeById",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -1895,6 +2065,7 @@
       },
       "delete": {
         "operationId": "deleteMainType",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1903,12 +2074,39 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/advert-types/main-types/bulk": {
       "post": {
         "operationId": "createMainTypesBulk",
+        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1920,7 +2118,25 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": {
+          "200": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/statistics/department": {
@@ -3220,6 +3436,19 @@
         },
         "required": ["types", "paging"]
       },
+      "AdvertTypeError": {
+        "type": "object",
+        "properties": {
+          "errorType": {
+            "type": "string",
+            "enum": ["DuplicateError", "ValidationError", "NotFoundError"]
+          },
+          "name": { "type": "string" },
+          "message": { "type": "string" },
+          "severity": { "type": "string", "enum": ["info", "warning", "error"] }
+        },
+        "required": ["errorType", "name", "message", "severity"]
+      },
       "GetAdvertMainTypes": {
         "type": "object",
         "properties": {
@@ -3312,19 +3541,6 @@
           }
         },
         "required": ["title"]
-      },
-      "AdvertTypeError": {
-        "type": "object",
-        "properties": {
-          "errorType": {
-            "type": "string",
-            "enum": ["DuplicateError", "ValidationError", "NotFoundError"]
-          },
-          "name": { "type": "string" },
-          "message": { "type": "string" },
-          "severity": { "type": "string", "enum": ["info", "warning", "error"] }
-        },
-        "required": ["errorType", "name", "message", "severity"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

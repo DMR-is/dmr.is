@@ -1,16 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { z } from 'zod'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
+import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { OJOIWebException } from '../../../lib/constants'
 import { tryParseInt } from '../../../lib/utils'
-
-const createTypeSchema = z.object({
-  mainTypeId: z.string(),
-  title: z.string(),
-})
 
 class TypesHandler {
   private readonly client = createDmrClient()
@@ -25,15 +20,14 @@ class TypesHandler {
         case 'POST':
           return void (await this.create(req, res))
         default:
-          return void res.status(405).json({ message: 'Method not allowed' })
+          return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error('Failed to handle request', {
-        error: error,
-        category: 'api-types-handler',
-      })
-
-      return void res.status(500).json({ message: 'Internal server error' })
+      if (isResponse(error)) {
+        const parsed = await error.json()
+        return res.status(error.status).json(parsed)
+      }
+      return void res.status(500).json(OJOIWebException.serverError())
     }
   }
 
@@ -65,14 +59,11 @@ class TypesHandler {
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const parsed = createTypeSchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      return res.status(400).json({ message: 'Invalid request body' })
-    }
-
     const type = await this.client.createType({
-      createAdvertTypeBody: parsed.data,
+      createAdvertTypeBody: {
+        mainTypeId: req.body.mainTypeId,
+        title: req.body.title,
+      },
     })
 
     return res.status(201).json(type)

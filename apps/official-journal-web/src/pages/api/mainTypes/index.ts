@@ -1,40 +1,33 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { z } from 'zod'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
+import { LogMethod } from '@dmr.is/decorators'
+import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { OJOIWebException } from '../../../lib/constants'
 import { tryParseInt } from '../../../lib/utils'
-
-const createMainTypeSchema = z.object({
-  departmentId: z.string(),
-  title: z.string(),
-})
 
 class GetMainTypesHandler {
   private readonly client = createDmrClient()
 
   @LogMethod(false)
-  @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
         case 'GET':
-          return void this.get(req, res)
+          return void (await this.get(req, res))
         case 'POST':
-          return void this.create(req, res)
+          return void (await this.create(req, res))
         default:
-          return void res.status(405).end()
+          return void res.status(405).end(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error('Failed to handle request', {
-        error: error,
-        method: req.method,
-        url: req.url,
-        category: 'api-main-types-handler',
-      })
-      return void res.status(500).end('Internal server')
+      if (isResponse(error)) {
+        const parsed = await error.json()
+        return res.status(error.status).json(parsed)
+      }
+
+      return void res.status(500).end(OJOIWebException.serverError())
     }
   }
 
@@ -66,16 +59,10 @@ class GetMainTypesHandler {
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const parsed = createMainTypeSchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      return res.status(400).json({ message: 'Invalid request body' })
-    }
-
     const type = await this.client.createMainType({
       createAdvertMainTypeBody: {
-        departmentId: parsed.data.departmentId,
-        title: parsed.data.title,
+        departmentId: req.body.departmentId,
+        title: req.body.title,
       },
     })
 

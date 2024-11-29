@@ -26,7 +26,7 @@ export class OJOIExceptionFilter implements ExceptionFilter {
     }
 
     return response.status(status).json({
-      statusCode: status,
+      status: status,
       message: exception.message,
       timestamp: new Date().toISOString(),
       path: request.url,

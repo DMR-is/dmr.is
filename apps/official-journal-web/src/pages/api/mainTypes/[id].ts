@@ -1,10 +1,10 @@
 import { isUUID } from 'class-validator'
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { OJOIWebException } from '../../../lib/constants'
 import { getStringFromQueryString } from '../../../lib/types'
 
 class MainTypeHandler {
@@ -16,7 +16,13 @@ class MainTypeHandler {
     try {
       const id = getStringFromQueryString(req.query.id)
       if (!id || !isUUID(id)) {
-        return void res.status(400).json({ message: 'Bad request' })
+        return void res
+          .status(400)
+          .json(
+            OJOIWebException.badRequest(
+              `Ógild fyrirspurn, breytan "id" vantar eða er ekki gild`,
+            ),
+          )
       }
 
       switch (req.method) {
@@ -27,29 +33,22 @@ class MainTypeHandler {
         case 'DELETE':
           return void (await this.delete(id, req, res))
         default:
-          return void res.status(405).end()
+          return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error('Failed to handle request', {
-        error: error,
-        method: req.method,
-        url: req.url,
-        category: 'api-main-type-handler',
-      })
-
       if (isResponse(error)) {
         const parsed = await error.json()
         return res.status(error.status).json(parsed)
       }
 
-      return res.status(500).json({ message: 'Internal server error' })
+      return res.status(500).json(OJOIWebException.serverError())
     }
   }
 
   @LogMethod(false)
   private async get(id: string, req: NextApiRequest, res: NextApiResponse) {
     const type = await this.client.getMainTypeById({
-      id: id as string,
+      id: id,
     })
 
     return res.status(200).json(type)

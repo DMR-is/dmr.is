@@ -180,4 +180,36 @@ export class OJOIWebException extends Error {
   constructor(message: string) {
     super(message)
   }
+
+  static serverError(message = 'Ekki tókst að vinna beiðni'): OJOIWebException {
+    const error = new OJOIWebException(message)
+    error.status = 500
+    error.name = 'Villa kom upp í vefþjón'
+    error.type = 'error'
+
+    return error
+  }
+
+  static badRequest(
+    message = 'Fyrirspurn er ekki á réttu formi',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+
+    error.status = 400
+    error.name = 'Ógild beiðni'
+    error.type = 'warning'
+
+    return error
+  }
+
+  static methodNotAllowed(
+    message = 'Þessi fyrirspurn tekur ekki við þessari aðferð',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+    error.status = 405
+    error.name = 'Aðferð ekki leyfð'
+    error.type = 'warning'
+
+    return error
+  }
 }

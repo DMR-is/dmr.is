@@ -9,7 +9,7 @@ import {
 } from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
@@ -66,7 +66,7 @@ export class AdvertTypeController {
 
   @Get('/types/:id')
   @ApiOperation({ operationId: 'getTypeById' })
-  @ApiQuery({ type: AdvertTypeQuery })
+  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, type: GetAdvertType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
@@ -87,7 +87,7 @@ export class AdvertTypeController {
 
   @Get('/main-types/:id')
   @ApiOperation({ operationId: 'getMainTypeById' })
-  @ApiQuery({ type: AdvertTypeQuery })
+  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
