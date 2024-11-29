@@ -315,41 +315,59 @@ export default function AdvertTypesPage({
                   {isGettingDepartments ? (
                     <SkeletonLoader height="40px" />
                   ) : (
-                    <Select
-                      backgroundColor="blue"
-                      isDisabled={mainTypeOptions.length <= 1}
-                      key={`yfirflokkur-${selectedMainType?.slug}`}
-                      defaultValue={
-                        selectedMainType && {
-                          label: selectedMainType?.title,
-                          value: selectedMainType?.slug,
+                    <>
+                      <Select
+                        backgroundColor="blue"
+                        isDisabled={mainTypeOptions.length <= 1}
+                        key={`yfirflokkur-${selectedMainType?.slug}`}
+                        defaultValue={
+                          selectedMainType && {
+                            label: selectedMainType?.title,
+                            value: selectedMainType?.slug,
+                          }
                         }
-                      }
-                      size="sm"
-                      label="Yfirflokkur"
-                      options={mainTypeOptions}
-                      onChange={(opt) => onMainTypeChange(opt?.value)}
-                    />
+                        size="sm"
+                        label="Yfirflokkur"
+                        options={mainTypeOptions}
+                        onChange={(opt) => onMainTypeChange(opt?.value)}
+                      />
+                      <Input
+                        name="main-type-slug"
+                        readOnly
+                        value={selectedMainType?.slug}
+                        label="Slóð yfirflokk"
+                        size="sm"
+                      />
+                    </>
                   )}
 
                   {isGettingDepartments ? (
                     <SkeletonLoader height="40px" />
                   ) : (
-                    <Select
-                      backgroundColor="blue"
-                      key={`tegund-${selectedType?.slug}`}
-                      isDisabled={typeOptions.length <= 1}
-                      defaultValue={
-                        selectedType && {
-                          label: selectedType?.title,
-                          value: selectedType?.slug,
+                    <>
+                      <Select
+                        backgroundColor="blue"
+                        key={`tegund-${selectedType?.slug}`}
+                        isDisabled={typeOptions.length <= 1}
+                        defaultValue={
+                          selectedType && {
+                            label: selectedType?.title,
+                            value: selectedType?.slug,
+                          }
                         }
-                      }
-                      size="sm"
-                      label="Tegund"
-                      options={typeOptions}
-                      onChange={(opt) => onTypeChange(opt?.value)}
-                    />
+                        size="sm"
+                        label="Tegund"
+                        options={typeOptions}
+                        onChange={(opt) => onTypeChange(opt?.value)}
+                      />
+                      <Input
+                        name="type-slug"
+                        readOnly
+                        value={selectedType?.slug}
+                        label="Slóð tegundar"
+                        size="sm"
+                      />
+                    </>
                   )}
                 </Stack>
               </ContentWrapper>
@@ -477,7 +495,7 @@ export default function AdvertTypesPage({
                     value={
                       updatedMainTypeTitle &&
                       slugify(
-                        `${selectedMainType?.slug}-${updatedMainTypeTitle}`,
+                        `${selectedDepartment?.slug}-${updatedMainTypeTitle}`,
                         {
                           lower: true,
                         },
