@@ -1,45 +1,31 @@
-import { logger } from '@dmr.is/logging'
-import {
-  Injectable,
-  NestMiddleware,
-  UnauthorizedException,
-} from '@nestjs/common'
-import { Request, Response, NextFunction } from 'express'
+import { JWT } from 'next-auth/jwt'
 
-@Injectable()
-export class WithAuthMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
-    const { headers } = req
+type FetchAPI = WindowOrWorkerGlobalScope['fetch']
 
-    const token = headers.authorization
+interface FetchParams {
+  url: string
+  init: RequestInit
+}
 
-    if (!token) {
-      throw new UnauthorizedException()
+interface RequestContext {
+  fetch: FetchAPI
+  url: string
+  init: RequestInit
+}
+
+interface Middleware {
+  pre?(context: RequestContext): Promise<FetchParams | void>
+}
+
+export class AuthMiddleware implements Middleware {
+  constructor(private token?: string) {}
+
+  async pre(context: RequestContext) {
+    context.init.headers = {
+      ...context.init.headers,
+      Authorization: `Bearer ${this.token}`,
+      'Content-Type': 'application/json',
     }
-
-    const auth = token.split(' ')[1]
-
-    if (!auth) {
-      throw new UnauthorizedException(`No token provided`)
-    }
-
-    req.headers.token = auth
-
-    // TODO: Get verify token later, we need a secret from island.is team to verify the token
-    // const verified = verify(auth, process.env.ISLAND_IS_CLIENT_SECRET!, {
-    //   algorithms: ['RS256'],
-    // })
-
-    // if (!verified) {
-    //   throw new UnauthorizedException(`Invalid token`)
-    // }
-
-    // if (typeof verified === 'string') {
-    //   throw new UnauthorizedException(`Invalid token`)
-    // }
-
-    // for now we just return the token for the @Auth decorator to decode
-
-    next()
+    return context
   }
 }

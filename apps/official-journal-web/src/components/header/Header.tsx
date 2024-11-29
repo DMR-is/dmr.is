@@ -1,5 +1,5 @@
 import cn from 'classnames'
-import { signOut, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 
 import {
   Box,
@@ -15,7 +15,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { Routes } from '../../lib/constants'
+import { useLogOut } from '../../hooks/useLogOut'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 import { messages } from './messages'
@@ -27,6 +27,7 @@ type HeaderType = {
 export const Header = ({ headerWhite }: HeaderType) => {
   const { formatMessage } = useFormatMessage()
   const { data: session } = useSession()
+  const logOut = useLogOut()
 
   return (
     <header className={cn(styles.header, { white: headerWhite })}>
@@ -69,10 +70,7 @@ export const Header = ({ headerWhite }: HeaderType) => {
                             title: formatMessage(messages.auth.logout),
                             onClick: (e) => {
                               e.preventDefault()
-                              signOut({
-                                callbackUrl: Routes.Login,
-                                redirect: true,
-                              })
+                              logOut()
                             },
                           },
                         ]}

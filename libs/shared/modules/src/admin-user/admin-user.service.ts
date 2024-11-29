@@ -10,7 +10,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { adminUserMigrate } from './migrations/admin-user.migrate'
 import { adminUserRoleMigrate } from './migrations/admin-user-role.migrate'
 import { AdminUserModel } from './models/admin-user.model'
-import { UserRoleModel } from './models/user-role.model'
+import { AdminUserRoleModel } from './models/user-role.model'
 import { IAdminUserService } from './admin-user.service.interface'
 
 const LOGGING_CATEGORY = 'admin-user-service'
@@ -20,8 +20,8 @@ export class AdminUserService implements IAdminUserService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdminUserModel)
     private readonly adminUserModel: typeof AdminUserModel,
-    @InjectModel(UserRoleModel)
-    private readonly userRoleModel: typeof UserRoleModel,
+    @InjectModel(AdminUserRoleModel)
+    private readonly userRoleModel: typeof AdminUserRoleModel,
     private sequelize: Sequelize,
   ) {}
 
@@ -139,6 +139,11 @@ export class AdminUserService implements IAdminUserService {
     nationalId: string,
   ): Promise<ResultWrapper<{ user: AdminUser }>> {
     const userLookup = await this.adminUserModel.findOne({
+      include: [
+        {
+          model: AdminUserRoleModel,
+        },
+      ],
       where: {
         nationalId: nationalId,
       },

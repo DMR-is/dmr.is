@@ -1,12 +1,15 @@
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { Route } from '@dmr.is/decorators'
+import { USER_ROLES } from '@dmr.is/constants'
+import { Roles, Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   IAdminUserService,
   ICaseService,
   ICommentService,
   IJournalService,
+  RoleGuard,
+  TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
@@ -62,9 +65,13 @@ import {
   Inject,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 const LOG_CATEGORY = 'case-controller'
+
+@ApiBearerAuth()
 @Controller({
   version: '1',
   path: 'cases',
@@ -151,6 +158,8 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: 'categories',
     operationId: 'getCategories',
@@ -540,6 +549,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
+  // @Roles(USER_ROLES.Admin)
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
   @Route({
     path: ':id',
     operationId: 'getCase',
@@ -564,7 +575,6 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
-  // @UseGuards(AdminAuthGuard)
   // @Roles(USER_ROLES.Admin)
   @Route({
     path: '',

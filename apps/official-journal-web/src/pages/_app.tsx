@@ -22,7 +22,11 @@ export default function App({
   pageProps,
 }: AppProps<InheritedPageProps>) {
   return (
-    <SessionProvider session={pageProps.session} refetchInterval={5 * 60}>
+    <SessionProvider
+      session={pageProps.session}
+      refetchInterval={5 * 60}
+      basePath="/api/auth"
+    >
       <Layout {...pageProps.layout}>
         <Component {...pageProps} />
       </Layout>

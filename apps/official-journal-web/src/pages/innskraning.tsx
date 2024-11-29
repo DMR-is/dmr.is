@@ -11,6 +11,7 @@ import {
 
 import { LayoutProps } from '../layout/Layout'
 import { Routes } from '../lib/constants'
+import { identityServerId } from '../lib/identityProvider'
 import { messages } from '../lib/messages/caseOverview'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -20,13 +21,6 @@ export default function Login(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const handleLogin = (id: string) => {
-    signIn('kennitala', {
-      callbackUrl: '/',
-      nationalId: id,
-    })
-  }
-
   return (
     <GridContainer>
       <GridRow rowGap={['p2', 3]}>
@@ -36,8 +30,11 @@ export default function Login(
           span={['12/12', '12/12', '12/12', '10/12']}
         >
           <Box display="flex" columnGap={2}>
-            <Button onClick={() => handleLogin('0101857799')}>Ármann</Button>
-            <Button onClick={() => handleLogin('0101876689')}>Pálína</Button>
+            <Button
+              onClick={() => signIn(identityServerId, { callbackUrl: '/' })}
+            >
+              IDS
+            </Button>
           </Box>
         </GridColumn>
       </GridRow>

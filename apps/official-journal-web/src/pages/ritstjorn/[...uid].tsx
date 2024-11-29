@@ -2,6 +2,7 @@ import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useRouter } from 'next/router'
 import { getSession } from 'next-auth/react'
 import { useState } from 'react'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -396,9 +397,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   try {
     // TODO: getCase should return null if no case is found
-    const activeCase = await dmrClient.getCase({
-      id: caseId,
-    })
+    const activeCase = await dmrClient
+      .withMiddleware(new AuthMiddleware(session.accessToken))
+      .getCase({
+        id: caseId,
+      })
 
     const queryStep = query.uid?.[1] as CaseStep | undefined
 

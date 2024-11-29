@@ -43,7 +43,13 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
-      ]
+      ],
+      "@island.is/next-ids-auth/utils": [
+        "submodules/island.is/libs/next-ids-auth/src/lib/utils.ts"
+      ],
+      "@island.is/auth-nest-tools/user-guard": [
+        "submodules/island.is/libs/auth-nest-tools/src/lib/ids-user.guard.ts"
+      ],
     },
     "sourceMap": true,
     "importHelpers": true,
