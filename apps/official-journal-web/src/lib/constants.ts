@@ -182,6 +182,7 @@ export enum APIRotues {
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
+  UpdateCaseType = '/api/cases/:id/updateType',
 }
 
 export class OJOIWebException extends Error {

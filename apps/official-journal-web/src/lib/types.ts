@@ -44,9 +44,9 @@ export function generateQueryFromParams(params?: {
 }) {
   if (!params) return undefined
 
-  const p: { [key: string]: string | number | string[] } = {}
+  const p: { [key: string]: string } = {}
   Object.entries(params).forEach(([key, value]) => {
-    const v = value !== undefined && value !== null ? value : undefined
+    const v = value && String(value) ? String(value) : undefined
     if (v) {
       p[key] = v
     }

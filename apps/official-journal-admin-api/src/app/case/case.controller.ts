@@ -409,6 +409,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/type',
+    operationId: 'updateCaseType',
+    summary: 'Update type of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCaseTypeBody,
+  })
+  async updateType(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/communicationStatus',
     operationId: 'updateCommunicationStatus',
     params: [{ name: 'id', type: 'string', required: true }],

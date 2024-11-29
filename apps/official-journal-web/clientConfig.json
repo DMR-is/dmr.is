@@ -751,6 +751,30 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/type": {
+      "put": {
+        "operationId": "updateCaseType",
+        "summary": "Update type of case and application",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCaseTypeBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/communicationStatus": {
       "put": {
         "operationId": "updateCommunicationStatus",
@@ -3221,6 +3245,13 @@
           "departmentId": { "type": "string", "description": "Department id" }
         },
         "required": ["departmentId"]
+      },
+      "UpdateCaseTypeBody": {
+        "type": "object",
+        "properties": {
+          "typeId": { "type": "string", "description": "Type id" }
+        },
+        "required": ["typeId"]
       },
       "UpdateCommunicationStatusBody": {
         "type": "object",
