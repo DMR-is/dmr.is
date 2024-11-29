@@ -357,9 +357,10 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Tegund fannst ekki`,
+          message: `Yfirflokkur fannst ekki`,
         })
       }
+
       const oldSlug = mainType.slug
       const slug = slugify(`${mainType.department.slug}-${body.title}`, {
         lower: true,
@@ -458,6 +459,35 @@ export class AdvertTypeService implements IAdvertTypeService {
         return ResultWrapper.err({
           code: 404,
           message: `Tegund fannst ekki`,
+        })
+      }
+
+      // we need to check if the main type has the same slug if so then we cant update the slug
+      const mainType = await this.advertMainTypeModel.findByPk(type.mainTypeId)
+
+      if (!mainType) {
+        this.logger.warn(`Main advert type<${type.mainTypeId}> not found`, {
+          id: type.mainTypeId,
+          category: LOGGING_CATEGORY,
+        })
+        return ResultWrapper.err({
+          code: 404,
+          message: `Yfirflokkur fannst ekki`,
+        })
+      }
+
+      if (mainType.slug === type.slug) {
+        this.logger.warn(
+          `Main advert type<${type.mainTypeId}> has the same slug as the type<${id}>`,
+          {
+            id: type.mainTypeId,
+            category: LOGGING_CATEGORY,
+          },
+        )
+
+        return ResultWrapper.err({
+          code: 400,
+          message: `Ekki er hægt að uppfæra þessa tegund`,
         })
       }
 
@@ -570,6 +600,32 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
+      const mainType = await this.advertMainTypeModel.findByPk(type.mainTypeId)
+      if (!mainType) {
+        this.logger.warn(`Main advert type<${type.mainTypeId}> not found`, {
+          id: type.mainTypeId,
+          category: LOGGING_CATEGORY,
+        })
+        return ResultWrapper.err({
+          code: 404,
+          message: `Yfirflokkur fannst ekki`,
+        })
+      }
+
+      if (mainType.slug === type.slug) {
+        this.logger.warn(
+          `Main advert type<${type.mainTypeId}> has the same slug as the type<${id}>`,
+          {
+            id: type.mainTypeId,
+            category: LOGGING_CATEGORY,
+          },
+        )
+
+        return ResultWrapper.err({
+          code: 400,
+          message: `Ekki er hægt að eyða þessari tegund`,
+        })
+      }
       await type.destroy({ transaction: transaction })
       await transaction.commit()
 

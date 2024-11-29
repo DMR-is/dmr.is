@@ -44,24 +44,3 @@ export class AdvertTypeError extends HttpException {
     this.name = status >= 500 ? 'Villa kom upp í vefþjóni' : 'Ógild beiðni'
   }
 }
-
-export class AdvertTypeDuplicateError extends AdvertTypeError {
-  constructor(message: string) {
-    super(message, 409)
-    this.errorType = ErrType.DuplicateError
-  }
-}
-
-export class AdvertTypeValidationError extends AdvertTypeError {
-  constructor(message: string) {
-    super(message, 400)
-    this.errorType = ErrType.ValidationError
-  }
-}
-
-export class AdvertTypeNotFoundError extends AdvertTypeError {
-  constructor(message: string) {
-    super(message, 404)
-    this.errorType = ErrType.NotFoundError
-  }
-}

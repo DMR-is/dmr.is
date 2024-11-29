@@ -116,6 +116,10 @@ export default function AdvertTypesPage({
     },
     onCreateTypeSuccess: (data) => {
       getDepartments()
+      setUpdatedMainTypeTitle('')
+      setUpdatedTypeTitle('')
+      setNewMainType('')
+      setNewType('')
       setSelectedType(data.type)
     },
     onUpdateMainTypeSuccess: (data) => {
@@ -282,6 +286,8 @@ export default function AdvertTypesPage({
 
     deleteType({ id: selectedType.id })
   }
+
+  const isDefaultType = selectedMainType?.slug === selectedType?.slug
 
   return (
     <Section>
@@ -538,6 +544,13 @@ export default function AdvertTypesPage({
                 title={`Breyta tegund ${selectedType?.title ?? ''}`}
               >
                 <Stack space={[2, 2, 3]}>
+                  {isDefaultType && (
+                    <AlertMessage
+                      type="info"
+                      title="Tegund er læst"
+                      message="Ekki er hægt að breyta eða eyða þessari tegund"
+                    />
+                  )}
                   {updateTypeError && (
                     <AlertMessage
                       type="warning"
@@ -553,7 +566,7 @@ export default function AdvertTypesPage({
                     />
                   )}
                   <Input
-                    disabled={!selectedType}
+                    disabled={!selectedType || isDefaultType}
                     backgroundColor="blue"
                     name="update-main-type-title"
                     label="Nýtt heiti tegundar"
@@ -583,7 +596,7 @@ export default function AdvertTypesPage({
                     <Button
                       onClick={onUpdateType}
                       loading={isUpdatingType}
-                      disabled={!updatedTypeTitle}
+                      disabled={!updatedTypeTitle || isDefaultType}
                       variant="ghost"
                       size="small"
                       icon="pencil"
@@ -592,7 +605,7 @@ export default function AdvertTypesPage({
                     </Button>
                     <Button
                       loading={isDeletingType}
-                      disabled={!selectedType}
+                      disabled={!selectedType || isDefaultType}
                       variant="ghost"
                       colorScheme="destructive"
                       size="small"

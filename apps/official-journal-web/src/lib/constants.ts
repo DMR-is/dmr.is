@@ -91,6 +91,18 @@ export async function fetcher(
     },
   })
 
+  if (!res.ok) {
+    const parsedError = await res.json()
+
+    const error = new OJOIWebException(parsedError.message)
+
+    error.status = res.status
+    error.name = parsedError.name
+    error.type = parsedError.severity
+
+    throw error
+  }
+
   if (res.status === 204) {
     return
   }
