@@ -58,21 +58,10 @@ class TypeHandler {
 
   @LogMethod(false)
   private async update(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const title = req.body.title
-
-    if (!title) {
-      logger.warn('Failed to update type', {
-        id: id,
-        title: title,
-        category: 'api-type-handler',
-      })
-      return res.status(400).json({ message: 'Bad request' })
-    }
-
     const response = await this.client.updateType({
       id: id,
       updateAdvertTypeBody: {
-        title: title,
+        title: req.body.title,
       },
     })
 

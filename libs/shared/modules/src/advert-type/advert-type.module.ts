@@ -10,6 +10,8 @@ import { models } from './models'
 export { AdvertTypeAdminController } from './advert-type-admin.controller'
 export { AdvertTypeController } from './advert-type.controller'
 
+export { AdvertTypeError } from './advert-type-error'
+
 @Module({
   imports: [SequelizeModule.forFeature([...models]), LoggingModule],
   providers: [

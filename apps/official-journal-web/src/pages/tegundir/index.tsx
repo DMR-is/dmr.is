@@ -449,8 +449,8 @@ export default function AdvertTypesPage({
                 <Stack space={[2, 2, 3]}>
                   {updateMainTypeError && (
                     <AlertMessage
-                      type="warning"
-                      title="Villa kom upp við að breyta yfirflokk"
+                      type={updateMainTypeError.type}
+                      title={updateMainTypeError.name}
                       message={updateMainTypeError.message}
                     />
                   )}

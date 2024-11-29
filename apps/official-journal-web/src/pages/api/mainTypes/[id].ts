@@ -1,15 +1,11 @@
 import { isUUID } from 'class-validator'
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
+import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { getStringFromQueryString } from '../../../lib/types'
-
-const updateMainTypeSchema = z.object({
-  title: z.string(),
-})
 
 class MainTypeHandler {
   private readonly client = createDmrClient()
@@ -25,11 +21,11 @@ class MainTypeHandler {
 
       switch (req.method) {
         case 'GET':
-          return void this.get(id, req, res)
+          return void (await this.get(id, req, res))
         case 'PUT':
-          return void this.update(id, req, res)
+          return void (await this.update(id, req, res))
         case 'DELETE':
-          return void this.delete(id, req, res)
+          return void (await this.delete(id, req, res))
         default:
           return void res.status(405).end()
       }
@@ -40,7 +36,13 @@ class MainTypeHandler {
         url: req.url,
         category: 'api-main-type-handler',
       })
-      return void res.status(500).end('Internal server error')
+
+      if (isResponse(error)) {
+        const parsed = await error.json()
+        return res.status(error.status).json(parsed)
+      }
+
+      return res.status(500).json({ message: 'Internal server error' })
     }
   }
 
@@ -55,16 +57,14 @@ class MainTypeHandler {
 
   @LogMethod(false)
   private async update(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const title = req.body.title
-
-    const result = await this.client.updateMainType({
+    const response = await this.client.updateMainType({
       id: id,
       updateAdvertMainType: {
-        title: title,
+        title: req.body.title,
       },
     })
 
-    return res.status(200).json(result)
+    return res.status(200).json(response)
   }
 
   @LogMethod(false)

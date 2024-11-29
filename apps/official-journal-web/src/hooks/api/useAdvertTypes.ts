@@ -2,7 +2,12 @@ import { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { GetAdvertMainType, GetAdvertType } from '../../gen/fetch'
-import { APIRotues, fetcher, updateFetcher } from '../../lib/constants'
+import {
+  APIRotues,
+  fetcher,
+  OJOIWebException,
+  updateFetcher,
+} from '../../lib/constants'
 
 type AdvertTypeIdParam = {
   id: string
@@ -42,7 +47,12 @@ export const useAdvertTypes = ({
     trigger: createMainTypeTrigger,
     isMutating: isCreatingMainType,
     error: createMainTypeError,
-  } = useSWRMutation<GetAdvertMainType, Error, Key, CreateAdvertMainTypeParams>(
+  } = useSWRMutation<
+    GetAdvertMainType,
+    OJOIWebException,
+    Key,
+    CreateAdvertMainTypeParams
+  >(
     APIRotues.MainTypes,
     async (url: string, { arg }: { arg: CreateAdvertMainTypeParams }) =>
       updateFetcher<CreateAdvertMainTypeParams>(url, {
@@ -60,7 +70,12 @@ export const useAdvertTypes = ({
     trigger: createTypeTrigger,
     isMutating: isCreatingType,
     error: createTypeError,
-  } = useSWRMutation<GetAdvertType, Error, Key, CreateAdvertTypeParams>(
+  } = useSWRMutation<
+    GetAdvertType,
+    OJOIWebException,
+    Key,
+    CreateAdvertTypeParams
+  >(
     APIRotues.Types,
     async (url: string, { arg }: { arg: CreateAdvertTypeParams }) =>
       updateFetcher<CreateAdvertTypeParams>(url, {
@@ -78,7 +93,12 @@ export const useAdvertTypes = ({
     trigger: updateMainTypeTrigger,
     isMutating: isUpdatingMainType,
     error: updateMainTypeError,
-  } = useSWRMutation<GetAdvertMainType, Error, Key, UpdateTypeParams>(
+  } = useSWRMutation<
+    GetAdvertMainType,
+    OJOIWebException,
+    Key,
+    UpdateTypeParams
+  >(
     APIRotues.MainType,
     async (url: string, { arg }: { arg: UpdateTypeParams }) =>
       updateFetcher(url.replace(':id', arg.id), {
@@ -96,7 +116,7 @@ export const useAdvertTypes = ({
     trigger: updateTypeTrigger,
     isMutating: isUpdatingType,
     error: updateTypeError,
-  } = useSWRMutation<GetAdvertType, Error, Key, UpdateTypeParams>(
+  } = useSWRMutation<GetAdvertType, OJOIWebException, Key, UpdateTypeParams>(
     APIRotues.Type,
     (url: string, { arg }: { arg: UpdateTypeParams }) =>
       updateFetcher(url.replace(':id', arg.id), {
@@ -115,7 +135,7 @@ export const useAdvertTypes = ({
     trigger: deleteMainTypeTrigger,
     isMutating: isDeletingMainType,
     error: deleteMainTypeError,
-  } = useSWRMutation<Response, Error, Key, AdvertTypeIdParam>(
+  } = useSWRMutation<Response, OJOIWebException, Key, AdvertTypeIdParam>(
     APIRotues.MainType,
     (url: string, { arg }: { arg: { id: string } }) =>
       fetcher(url.replace(':id', arg.id), {
@@ -132,7 +152,7 @@ export const useAdvertTypes = ({
     trigger: deleteTypeTrigger,
     isMutating: isDeletingType,
     error: deleteTypeError,
-  } = useSWRMutation<Response, Error, Key, AdvertTypeIdParam>(
+  } = useSWRMutation<Response, OJOIWebException, Key, AdvertTypeIdParam>(
     APIRotues.Type,
     (url: string, { arg }: { arg: { id: string } }) =>
       fetcher(url.replace(':id', arg.id), {

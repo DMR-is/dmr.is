@@ -1841,6 +1841,7 @@
       },
       "put": {
         "operationId": "updateMainType",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1858,11 +1859,35 @@
           }
         },
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
               }
             }
           }
@@ -3287,6 +3312,19 @@
           }
         },
         "required": ["title"]
+      },
+      "AdvertTypeError": {
+        "type": "object",
+        "properties": {
+          "errorType": {
+            "type": "string",
+            "enum": ["DuplicateError", "ValidationError", "NotFoundError"]
+          },
+          "name": { "type": "string" },
+          "message": { "type": "string" },
+          "severity": { "type": "string", "enum": ["info", "warning", "error"] }
+        },
+        "required": ["errorType", "name", "message", "severity"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript'
-import { Route } from '@dmr.is/decorators'
+import { LogMethod, Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateAdvertMainTypeBody,
@@ -11,11 +11,11 @@ import {
   UpdateAdvertTypeBody,
 } from '@dmr.is/shared/dto'
 
-import { Body, Controller, HttpException, Inject, Param } from '@nestjs/common'
+import { Body, Controller, Inject, Param, Put } from '@nestjs/common'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
-
-const LOGGING_CATEGORY = 'advert-type-admin-controller'
+import { AdvertTypeError } from './advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
 export class AdvertTypeAdminController {
@@ -37,10 +37,10 @@ export class AdvertTypeAdminController {
     const result = await this.advertTypeService.createType(body)
 
     if (!result.result.ok) {
-      this.logger.warn('Failed to create advert type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(result.result.error, result.result.error.code)
+      throw new AdvertTypeError(
+        result.result.error.message,
+        result.result.error.code,
+      )
     }
 
     return result.result.value
@@ -61,10 +61,7 @@ export class AdvertTypeAdminController {
     const result = await this.advertTypeService.updateType(id, body)
 
     if (!result.result.ok) {
-      this.logger.warn('Failed to update advert type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(
+      throw new AdvertTypeError(
         result.result.error.message,
         result.result.error.code,
       )
@@ -83,13 +80,12 @@ export class AdvertTypeAdminController {
     const result = await this.advertTypeService.deleteType(id)
 
     if (!result.result.ok) {
-      this.logger.warn('Failed to delete advert type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(result.result.error, result.result.error.code)
+      throw new AdvertTypeError(
+        result.result.error.message,
+        result.result.error.code,
+      )
     }
   }
-
   @Route({
     method: 'post',
     path: '/main-types',
@@ -103,15 +99,14 @@ export class AdvertTypeAdminController {
     const results = await this.advertTypeService.createMainType(body)
 
     if (!results.result.ok) {
-      this.logger.warn('Failed to create advert main type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(results.result.error, results.result.error.code)
+      throw new AdvertTypeError(
+        results.result.error.message,
+        results.result.error.code,
+      )
     }
 
     return results.result.value
   }
-
   @Route({
     method: 'post',
     path: '/main-types/bulk',
@@ -132,24 +127,22 @@ export class AdvertTypeAdminController {
     if (errors.length > 0) {
       await transaction.rollback()
 
-      this.logger.warn('Failed to bulk create advert main types', {
-        category: LOGGING_CATEGORY,
-      })
-
-      throw new HttpException('Failed to bulk create advert main types', 500)
+      throw new AdvertTypeError('Ekki tókst að búa til allar tegundir', 500)
     }
 
     await transaction.commit()
   }
-
-  @Route({
-    method: 'put',
-    path: '/main-types/:id',
+  @Put('/main-types/:id')
+  @ApiOperation({
     operationId: 'updateMainType',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateAdvertMainType,
-    responseType: GetAdvertMainType,
   })
+  @ApiParam({ name: 'id', type: String })
+  @ApiBody({ type: UpdateAdvertMainType })
+  @ApiResponse({ status: 200, type: GetAdvertMainType })
+  @ApiResponse({ status: 400, type: AdvertTypeError })
+  @ApiResponse({ status: 404, type: AdvertTypeError })
+  @ApiResponse({ status: 500, type: AdvertTypeError })
+  @LogMethod()
   async updateMainType(
     @Param('id') id: string,
     @Body() body: UpdateAdvertMainType,
@@ -157,15 +150,14 @@ export class AdvertTypeAdminController {
     const results = await this.advertTypeService.updateMainType(id, body)
 
     if (!results.result.ok) {
-      this.logger.warn('Failed to update advert main type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(results.result.error, results.result.error.code)
+      throw new AdvertTypeError(
+        results.result.error.message,
+        results.result.error.code,
+      )
     }
 
     return results.result.value
   }
-
   @Route({
     method: 'delete',
     path: '/main-types/:id',
@@ -176,10 +168,10 @@ export class AdvertTypeAdminController {
     const results = await this.advertTypeService.deleteMainType(id)
 
     if (!results.result.ok) {
-      this.logger.warn('Failed to delete advert main type', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new HttpException(results.result.error, results.result.error.code)
+      throw new AdvertTypeError(
+        results.result.error.message,
+        results.result.error.code,
+      )
     }
   }
 }

@@ -1,4 +1,8 @@
-import { StringOption } from '@island.is/island-ui/core'
+import {
+  AlertMessageProps,
+  AlertMessageType,
+  StringOption,
+} from '@island.is/island-ui/core'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -106,25 +110,25 @@ export async function updateFetcher<T>(
     },
   })
 
-  if (response.status === 204) {
-    return
+  if (!response.ok) {
+    const parsedError = await response.json()
+
+    const error = new OJOIWebException(parsedError.message)
+
+    error.status = response.status
+    error.name = parsedError.name
+    error.type = parsedError.severity
+
+    throw error
   }
 
-  if (!response.ok) {
-    let message = null
-    const error = await response.json()
-
-    if (error.message === 'Validation failed') {
-      message = 'Titill þarf að vera einkvæmur'
-    }
-
-    throw new Error(message ? message : error.message)
+  if (response.status === 204) {
+    return
   }
 
   try {
     return await response.json()
   } catch (error) {
-    console.log('wtf', error)
     return null
   }
 }
@@ -166,4 +170,14 @@ export enum APIRotues {
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
+}
+
+export class OJOIWebException extends Error {
+  public status!: number
+  public name!: string
+  public type!: Extract<AlertMessageType, 'error' | 'info' | 'warning'>
+
+  constructor(message: string) {
+    super(message)
+  }
 }
