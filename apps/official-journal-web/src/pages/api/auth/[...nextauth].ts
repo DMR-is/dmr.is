@@ -16,6 +16,7 @@ type ErrorWithPotentialReqRes = Error & {
 }
 
 const NODE_ENV = process.env.NODE_ENV
+const SESION_TIMEOUT = 60 * 60 // 1 hour
 
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
@@ -63,6 +64,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: SESION_TIMEOUT,
   },
   callbacks: {
     jwt: async ({ token, user }) => {
