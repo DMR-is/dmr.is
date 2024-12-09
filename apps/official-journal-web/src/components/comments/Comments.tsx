@@ -66,10 +66,12 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
         >
           <button
             className={styles.orderButton({ order: 'asc' })}
-            title={hiddenComments ? 'Sýna athugasemdir' : 'Fela athugasemdir'}
-            onClick={
-              () => setHiddenComments(!hiddenComments) // TODO: implement
+            title={
+              hiddenComments
+                ? formatMessage(messages.comments.commentsShow)
+                : formatMessage(messages.comments.commentsHide)
             }
+            onClick={() => setHiddenComments(!hiddenComments)}
           >
             <Icon
               icon={hiddenComments ? 'eye' : 'eyeOff'}
