@@ -4,7 +4,7 @@ export const messages = {
   general: defineMessages({
     fasttrack: {
       id: 'web.components.tooltips:caseLabelTooltip.fasttrack',
-      defaultMessage: 'Harðbirting',
+      defaultMessage: 'Hraðbirting',
       description: 'Fast track label',
     },
     feedback: {
