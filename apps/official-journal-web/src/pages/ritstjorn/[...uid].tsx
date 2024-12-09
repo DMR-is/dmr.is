@@ -18,6 +18,7 @@ import {
 import { Attachments } from '../../components/attachments/Attachments'
 import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
 import { Comments } from '../../components/comments/Comments'
+import { EditorMessageDisplay } from '../../components/editor-message/EditorMessageDisplay'
 import { FormShell } from '../../components/form/FormShell'
 import { FormFooter } from '../../components/form-footer/FormFooter'
 import { Section } from '../../components/form-stepper/Section'
@@ -339,6 +340,10 @@ export default function CaseSingle(
           )}
 
           <Attachments activeCase={activeCase} refetchCase={refetchCase} />
+
+          {activeCase.message && (
+            <EditorMessageDisplay message={activeCase.message} />
+          )}
 
           <Comments
             onAddCommentSuccess={() => {
