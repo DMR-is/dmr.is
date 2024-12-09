@@ -22,6 +22,11 @@ export class CreateAdminUser {
   displayName!: string
 
   @ApiProperty({
+    type: String,
+  })
+  email!: string
+
+  @ApiProperty({
     type: [String],
   })
   roleIds!: string[]

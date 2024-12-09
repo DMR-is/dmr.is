@@ -10,6 +10,7 @@ export const adminUserMigrate = (model: AdminUserModel): AdminUser => {
     lastName: model.lastName,
     fullName: `${model.firstName} ${model.lastName}`,
     displayName: model.displayName,
+    email: model.email,
     roles: model.roles?.map((role) => adminUserRoleMigrate(role)) ?? [],
   }
 }

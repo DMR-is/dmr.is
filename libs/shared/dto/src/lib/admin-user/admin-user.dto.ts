@@ -26,10 +26,22 @@ export class AdminUser {
   @ApiProperty({
     type: String,
   })
+  email!: string
+
+  @ApiProperty({
+    type: String,
+  })
   displayName!: string
 
   @ApiProperty({
     type: [AdminUserRole],
   })
   roles!: AdminUserRole[]
+}
+
+export class GetAdminUser {
+  @ApiProperty({
+    type: AdminUser,
+  })
+  user!: AdminUser
 }

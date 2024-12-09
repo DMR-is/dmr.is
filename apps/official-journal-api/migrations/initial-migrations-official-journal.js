@@ -20,6 +20,7 @@ module.exports = {
       first_name VARCHAR NOT NULL,
       last_name VARCHAR NOT NULL,
       display_name VARCHAR NOT NULL,
+      email VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id)

@@ -1767,6 +1767,31 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/admin-users/users/nationalId/{nationalId}": {
+      "get": {
+        "operationId": "getUserByNationalId",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdminUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/department": {
       "get": {
         "operationId": "getStatisticsForDepartment",
@@ -3059,6 +3084,7 @@
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "fullName": { "type": "string" },
+          "email": { "type": "string" },
           "displayName": { "type": "string" },
           "roles": {
             "type": "array",
@@ -3070,6 +3096,7 @@
           "firstName",
           "lastName",
           "fullName",
+          "email",
           "displayName",
           "roles"
         ]
@@ -3081,6 +3108,7 @@
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "displayName": { "type": "string" },
+          "email": { "type": "string" },
           "roleIds": { "type": "array", "items": { "type": "string" } }
         },
         "required": [
@@ -3088,8 +3116,14 @@
           "firstName",
           "lastName",
           "displayName",
+          "email",
           "roleIds"
         ]
+      },
+      "GetAdminUser": {
+        "type": "object",
+        "properties": { "user": { "$ref": "#/components/schemas/AdminUser" } },
+        "required": ["user"]
       },
       "StatisticsDepartmentItem": {
         "type": "object",

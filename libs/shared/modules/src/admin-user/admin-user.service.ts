@@ -5,6 +5,7 @@ import {
   AdminUser,
   AdminUserRole,
   CreateAdminUser,
+  GetAdminUser,
   UpdateAdminUser,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -142,7 +143,7 @@ export class AdminUserService implements IAdminUserService {
   @Transactional()
   async getUserByNationalId(
     nationalId: string,
-  ): Promise<ResultWrapper<{ user: AdminUser }>> {
+  ): Promise<ResultWrapper<GetAdminUser>> {
     const userLookup = await this.adminUserModel.findOne({
       include: [
         {

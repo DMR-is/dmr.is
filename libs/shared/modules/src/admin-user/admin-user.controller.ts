@@ -4,6 +4,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminUser,
   CreateAdminUser,
+  GetAdminUser,
   GetAdminUserRoles,
   UpdateAdminUser,
 } from '@dmr.is/shared/dto'
@@ -97,6 +98,22 @@ export class AdminUserController {
   @LogMethod()
   async getUserById(@Param('id') id: string) {
     const results = await this.adminUserService.getUserById(id)
+
+    if (!results.result.ok) {
+      throw new InternalServerErrorException('Could not find user')
+    }
+
+    return results.result.value
+  }
+
+  @Roles(USER_ROLES.Admin)
+  @Get('/users/nationalId/:nationalId')
+  @ApiParam({ name: 'nationalId', type: 'string' })
+  @ApiOperation({ operationId: 'getUserByNationalId' })
+  @ApiResponse({ status: 200, type: GetAdminUser })
+  @LogMethod()
+  async getUserByNationalId(@Param('nationalId') nationalId: string) {
+    const results = await this.adminUserService.getUserByNationalId(nationalId)
 
     if (!results.result.ok) {
       throw new InternalServerErrorException('Could not find user')
