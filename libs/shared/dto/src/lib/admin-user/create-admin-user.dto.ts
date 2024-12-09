@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdminUserRole } from './admin-user-role.dto'
-
-export class AdminUser {
+export class CreateAdminUser {
   @ApiProperty({
     type: String,
   })
@@ -21,15 +19,10 @@ export class AdminUser {
   @ApiProperty({
     type: String,
   })
-  fullName!: string
-
-  @ApiProperty({
-    type: String,
-  })
   displayName!: string
 
   @ApiProperty({
-    type: [AdminUserRole],
+    type: [String],
   })
-  roles!: AdminUserRole[]
+  roleIds!: string[]
 }

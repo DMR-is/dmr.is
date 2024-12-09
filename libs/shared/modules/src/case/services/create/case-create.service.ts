@@ -128,11 +128,11 @@ export class CaseCreateService implements ICaseCreateService {
       ),
       this.utilityService.generateInternalCaseNumber(transaction),
       this.utilityService.typeLookup(
-        application.answers.advert.typeId,
+        application.answers.advert.type.id,
         transaction,
       ),
       this.utilityService.departmentLookup(
-        application.answers.advert.departmentId,
+        application.answers.advert.department.id,
         transaction,
       ),
       this.utilityService.categoriesLookup(

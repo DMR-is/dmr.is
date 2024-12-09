@@ -1,7 +1,12 @@
 import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
+import {
+  AdminUser,
+  AdminUserRole,
+  CreateAdminUser,
+  UpdateAdminUser,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject } from '@nestjs/common'
@@ -21,7 +26,7 @@ export class AdminUserService implements IAdminUserService {
     @InjectModel(AdminUserModel)
     private readonly adminUserModel: typeof AdminUserModel,
     @InjectModel(AdminUserRoleModel)
-    private readonly userRoleModel: typeof AdminUserRoleModel,
+    private readonly adminUserRoleModel: typeof AdminUserRoleModel,
     private sequelize: Sequelize,
   ) {}
 
@@ -76,7 +81,7 @@ export class AdminUserService implements IAdminUserService {
   async getRoleByTitle(
     title: string,
   ): Promise<ResultWrapper<{ role: AdminUserRole }>> {
-    const roleLookup = await this.userRoleModel.findOne({
+    const roleLookup = await this.adminUserRoleModel.findOne({
       where: {
         title,
       },
@@ -102,7 +107,7 @@ export class AdminUserService implements IAdminUserService {
   @LogAndHandle({ logArgs: false })
   @Transactional()
   async getRoles(): Promise<ResultWrapper<{ roles: AdminUserRole[] }>> {
-    const roles = await this.userRoleModel.findAll()
+    const roles = await this.adminUserRoleModel.findAll()
 
     const migrated = roles.map((role) => adminUserRoleMigrate(role))
 
@@ -163,5 +168,95 @@ export class AdminUserService implements IAdminUserService {
     return ResultWrapper.ok({
       user: adminUserMigrate(userLookup),
     })
+  }
+
+  async createAdminUser(body: CreateAdminUser): Promise<ResultWrapper> {
+    const transaction = await this.sequelize.transaction()
+    const adminUser = await this.adminUserModel.create(
+      {
+        nationalId: body.nationalId,
+        displayName: body.displayName,
+        firstName: body.firstName,
+        lastName: body.lastName,
+      },
+      {
+        transaction: transaction,
+        returning: true,
+      },
+    )
+
+    await this.adminUserRoleModel.bulkCreate(
+      body.roleIds.map((roleId) => ({
+        adminUserId: adminUser.id,
+        roleId: roleId,
+      })),
+      {
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async getUsers(): Promise<ResultWrapper<{ users: AdminUser[] }>> {
+    const users = await this.adminUserModel.findAll({
+      include: [
+        {
+          model: AdminUserRoleModel,
+        },
+      ],
+    })
+
+    const mapped = users.map((user) => adminUserMigrate(user))
+
+    return ResultWrapper.ok({
+      users: mapped,
+    })
+  }
+
+  async updateUser(id: string, body: UpdateAdminUser): Promise<ResultWrapper> {
+    const user = await this.adminUserModel.findByPk(id)
+
+    if (!user) {
+      this.logger.warn(`User not found`, {
+        id: id,
+        method: 'updateUser',
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 404,
+        message: `User not found`,
+      })
+    }
+
+    await user.update(body)
+
+    return ResultWrapper.ok()
+  }
+  async deleteUser(id: string): Promise<ResultWrapper> {
+    const transaction = await this.sequelize.transaction()
+
+    const user = await this.adminUserModel.findByPk(id, { transaction })
+
+    if (!user) {
+      this.logger.warn(`User not found`, {
+        id: id,
+        method: 'deleteUser',
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 404,
+        message: `User not found`,
+      })
+    }
+
+    await user.destroy({
+      transaction,
+    })
+
+    return ResultWrapper.ok()
   }
 }

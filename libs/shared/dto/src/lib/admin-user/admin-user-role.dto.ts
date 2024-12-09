@@ -16,3 +16,10 @@ export class AdminUserRole {
   })
   slug!: string
 }
+
+export class GetAdminUserRoles {
+  @ApiProperty({
+    type: [AdminUserRole],
+  })
+  roles!: AdminUserRole[]
+}

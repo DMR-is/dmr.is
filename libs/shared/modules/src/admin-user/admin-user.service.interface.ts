@@ -1,4 +1,9 @@
-import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
+import {
+  AdminUser,
+  AdminUserRole,
+  CreateAdminUser,
+  UpdateAdminUser,
+} from '@dmr.is/shared/dto'
 import { AdminUserRoleTitle, ResultWrapper } from '@dmr.is/types'
 
 export interface IAdminUserService {
@@ -15,6 +20,14 @@ export interface IAdminUserService {
     nationalId: string,
     roleTitles: AdminUserRoleTitle[],
   ): Promise<ResultWrapper<{ hasRole: boolean }>>
+
+  createAdminUser(body: CreateAdminUser): Promise<ResultWrapper>
+
+  getUsers(): Promise<ResultWrapper<{ users: AdminUser[] }>>
+
+  updateUser(id: string, body: UpdateAdminUser): Promise<ResultWrapper>
+
+  deleteUser(id: string): Promise<ResultWrapper>
 }
 
 export const IAdminUserService = Symbol('IAdminUserService')

@@ -9,6 +9,8 @@ import models from './models'
 
 export * from './admin-user.service.interface'
 
+export { AdminUserController } from './admin-user.controller'
+
 @Module({
   imports: [SequelizeModule.forFeature([...models]), LoggingModule],
   controllers: [],
