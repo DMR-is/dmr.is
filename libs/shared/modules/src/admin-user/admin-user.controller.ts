@@ -3,7 +3,6 @@ import { Delete, LogMethod, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminUser,
-  AdminUserRole,
   CreateAdminUser,
   GetAdminUserRoles,
   UpdateAdminUser,
@@ -92,9 +91,9 @@ export class AdminUserController {
 
   @Roles(USER_ROLES.Admin)
   @Get('/users/:id')
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiOperation({ operationId: 'getUserById' })
   @ApiResponse({ status: 200, type: AdminUser })
-  @ApiParam({ name: 'id', type: 'string' })
   @LogMethod()
   async getUserById(@Param('id') id: string) {
     const results = await this.adminUserService.getUserById(id)
@@ -108,6 +107,7 @@ export class AdminUserController {
 
   @Roles(USER_ROLES.Admin)
   @Put('/users/:id')
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiOperation({ operationId: 'updateUser' })
   @ApiNoContentResponse()
   @ApiBody({ type: AdminUser })
@@ -122,6 +122,7 @@ export class AdminUserController {
 
   @Roles(USER_ROLES.Admin)
   @Delete('/users/:id')
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiOperation({ operationId: 'deleteUser' })
   @ApiNoContentResponse()
   @LogMethod()

@@ -1,13 +1,12 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/cases/user/{nationalId}": {
+    "/api/v1/pdf/case/{id}": {
       "get": {
-        "operationId": "getUser",
-        "summary": "Return a user for national id",
+        "operationId": "getPdfByCaseId",
         "parameters": [
           {
-            "name": "nationalId",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -18,12 +17,80 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminUser" }
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
               }
             }
           }
-        },
-        "security": [{ "bearer": [] }]
+        }
+      }
+    },
+    "/api/v1/pdf/application/{id}": {
+      "get": {
+        "operationId": "getPdfByApplicationId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf/case/{id}/url": {
+      "get": {
+        "operationId": "getPdfUrlByCaseId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf/application/{id}/url": {
+      "get": {
+        "operationId": "getPdfUrlByApplicationId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
@@ -292,7 +359,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "post": {
         "operationId": "createMainCategory",
@@ -306,7 +374,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{id}": {
@@ -321,7 +390,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       },
       "put": {
         "operationId": "updateMainCategory",
@@ -342,7 +412,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
@@ -363,7 +434,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories": {
@@ -387,7 +459,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/overview": {
@@ -1596,6 +1669,104 @@
         "responses": { "200": { "description": "" } }
       }
     },
+    "/api/v1/admin-users/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdminUserRoles" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/admin-users/users": {
+      "get": {
+        "operationId": "getUsers",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAdminUser" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/admin-users/users/{id}": {
+      "get": {
+        "operationId": "getUserById",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "put": {
+        "operationId": "updateUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminUser" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/department": {
       "get": {
         "operationId": "getStatisticsForDepartment",
@@ -1677,26 +1848,17 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "AdminUserRole": {
+      "GetPdfRespone": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "slug": { "type": "string" }
+          "content": { "type": "string", "description": "Base64 encoded PDF" }
         },
-        "required": ["id", "title", "slug"]
+        "required": ["content"]
       },
-      "AdminUser": {
+      "GetPdfUrlResponse": {
         "type": "object",
-        "properties": {
-          "nationalId": { "type": "string" },
-          "displayName": { "type": "string" },
-          "roles": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUserRole" }
-          }
-        },
-        "required": ["nationalId", "displayName", "roles"]
+        "properties": { "url": { "type": "string" } },
+        "required": ["url"]
       },
       "GetNextPublicationNumberResponse": {
         "type": "object",
@@ -2869,6 +3031,64 @@
           "members",
           "caseId",
           "advertId"
+        ]
+      },
+      "AdminUserRole": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetAdminUserRoles": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
+          }
+        },
+        "required": ["roles"]
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "fullName": { "type": "string" },
+          "displayName": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
+          }
+        },
+        "required": [
+          "nationalId",
+          "firstName",
+          "lastName",
+          "fullName",
+          "displayName",
+          "roles"
+        ]
+      },
+      "CreateAdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "displayName": { "type": "string" },
+          "roleIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [
+          "nationalId",
+          "firstName",
+          "lastName",
+          "displayName",
+          "roleIds"
         ]
       },
       "StatisticsDepartmentItem": {
