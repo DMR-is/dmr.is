@@ -211,7 +211,7 @@ export class AdminUserService implements IAdminUserService {
 
       return ResultWrapper.ok()
     } catch (error) {
-      transaction.rollback()
+      await transaction.rollback()
       return ResultWrapper.err({
         code: 500,
         message: 'Could not create user',
@@ -258,26 +258,45 @@ export class AdminUserService implements IAdminUserService {
   }
   async deleteUser(id: string): Promise<ResultWrapper> {
     const transaction = await this.sequelize.transaction()
+    try {
+      const user = await this.adminUserModel.findByPk(id, { transaction })
 
-    const user = await this.adminUserModel.findByPk(id, { transaction })
+      if (!user) {
+        this.logger.warn(`User not found`, {
+          id: id,
+          method: 'deleteUser',
+          category: LOGGING_CATEGORY,
+        })
 
-    if (!user) {
-      this.logger.warn(`User not found`, {
-        id: id,
-        method: 'deleteUser',
-        category: LOGGING_CATEGORY,
+        return ResultWrapper.err({
+          code: 404,
+          message: `User not found`,
+        })
+      }
+
+      const userRoles = await this.adminUserRolesModel.findAll({
+        where: {
+          adminUserId: id,
+        },
+        transaction,
       })
 
+      await Promise.all(
+        userRoles.map((userRole) => userRole.destroy({ transaction })),
+      )
+
+      await user.destroy({
+        transaction,
+      })
+
+      await transaction.commit()
+      return ResultWrapper.ok()
+    } catch (error) {
+      await transaction.rollback()
       return ResultWrapper.err({
-        code: 404,
-        message: `User not found`,
+        code: 500,
+        message: 'Could not delete user',
       })
     }
-
-    await user.destroy({
-      transaction,
-    })
-
-    return ResultWrapper.ok()
   }
 }

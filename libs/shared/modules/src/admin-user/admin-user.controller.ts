@@ -88,7 +88,6 @@ export class AdminUserController {
     const results = await this.adminUserService.createAdminUser(body)
 
     if (!results.result.ok) {
-      console.log(results.result.error)
       throw new InternalServerErrorException('Could not create user')
     }
   }
