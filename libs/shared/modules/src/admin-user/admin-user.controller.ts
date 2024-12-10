@@ -1,17 +1,19 @@
 import { USER_ROLES } from '@dmr.is/constants'
-import { Delete, LogMethod, Roles } from '@dmr.is/decorators'
+import { LogMethod, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminUser,
   CreateAdminUser,
   GetAdminUser,
   GetAdminUserRoles,
+  GetAdminUsers,
   UpdateAdminUser,
 } from '@dmr.is/shared/dto'
 
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   InternalServerErrorException,
@@ -64,7 +66,7 @@ export class AdminUserController {
   @Roles(USER_ROLES.Admin)
   @Get('/users')
   @ApiOperation({ operationId: 'getUsers' })
-  @ApiResponse({ status: 200, type: AdminUser })
+  @ApiResponse({ status: 200, type: GetAdminUsers })
   @LogMethod()
   async getAllUsers() {
     const results = await this.adminUserService.getUsers()
@@ -85,7 +87,8 @@ export class AdminUserController {
   async createAdminUser(@Body() body: CreateAdminUser) {
     const results = await this.adminUserService.createAdminUser(body)
 
-    if (results.result.ok) {
+    if (!results.result.ok) {
+      console.log(results.result.error)
       throw new InternalServerErrorException('Could not create user')
     }
   }
@@ -127,12 +130,12 @@ export class AdminUserController {
   @ApiParam({ name: 'id', type: 'string' })
   @ApiOperation({ operationId: 'updateUser' })
   @ApiNoContentResponse()
-  @ApiBody({ type: AdminUser })
+  @ApiBody({ type: UpdateAdminUser })
   @LogMethod()
   async updateUser(@Param('id') id: string, @Body() body: UpdateAdminUser) {
     const results = await this.adminUserService.updateUser(id, body)
 
-    if (results.result.ok) {
+    if (!results.result.ok) {
       throw new InternalServerErrorException('Could not update user')
     }
   }
@@ -146,7 +149,7 @@ export class AdminUserController {
   async deleteUser(@Param('id') id: string) {
     const results = await this.adminUserService.deleteUser(id)
 
-    if (results.result.ok) {
+    if (!results.result.ok) {
       throw new InternalServerErrorException('Could not delete user')
     }
   }

@@ -6,6 +6,11 @@ export class AdminUser {
   @ApiProperty({
     type: String,
   })
+  id!: string
+
+  @ApiProperty({
+    type: String,
+  })
   nationalId!: string
 
   @ApiProperty({
@@ -44,4 +49,11 @@ export class GetAdminUser {
     type: AdminUser,
   })
   user!: AdminUser
+}
+
+export class GetAdminUsers {
+  @ApiProperty({
+    type: [AdminUser],
+  })
+  users!: AdminUser[]
 }

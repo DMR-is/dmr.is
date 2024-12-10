@@ -5,6 +5,7 @@ import { adminUserRoleMigrate } from './admin-user-role.migrate'
 
 export const adminUserMigrate = (model: AdminUserModel): AdminUser => {
   return {
+    id: model.id,
     nationalId: model.nationalId,
     firstName: model.firstName,
     lastName: model.lastName,

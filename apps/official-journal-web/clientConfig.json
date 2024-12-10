@@ -1697,7 +1697,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminUser" }
+                "schema": { "$ref": "#/components/schemas/GetAdminUsers" }
               }
             }
           }
@@ -1759,10 +1759,24 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AdminUser" }
+              "schema": { "$ref": "#/components/schemas/UpdateAdminUser" }
             }
           }
         },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }]
       }
@@ -3080,6 +3094,7 @@
       "AdminUser": {
         "type": "object",
         "properties": {
+          "id": { "type": "string" },
           "nationalId": { "type": "string" },
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
@@ -3092,6 +3107,7 @@
           }
         },
         "required": [
+          "id",
           "nationalId",
           "firstName",
           "lastName",
@@ -3100,6 +3116,16 @@
           "displayName",
           "roles"
         ]
+      },
+      "GetAdminUsers": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUser" }
+          }
+        },
+        "required": ["users"]
       },
       "CreateAdminUser": {
         "type": "object",
@@ -3124,6 +3150,17 @@
         "type": "object",
         "properties": { "user": { "$ref": "#/components/schemas/AdminUser" } },
         "required": ["user"]
+      },
+      "UpdateAdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "displayName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleIds": { "type": "array", "items": { "type": "string" } }
+        }
       },
       "StatisticsDepartmentItem": {
         "type": "object",

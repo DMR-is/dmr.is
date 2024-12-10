@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 
-class UserHandler {
+class UsersHandler {
   private readonly client = createDmrClient()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -20,28 +21,32 @@ class UserHandler {
   }
 
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const users = await this.client.getUsers()
+    const users = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getUsers()
 
     return res.status(200).json(users)
   }
 
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const user = await this.client.createUser({
-      createAdminUser: {
-        displayName: req.body.displayName,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        nationalId: req.body.nationalId,
-        roleIds: req.body.roleIds,
-      },
-    })
+    const user = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .createUser({
+        createAdminUser: {
+          displayName: req.body.displayName,
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          email: req.body.email,
+          nationalId: req.body.nationalId,
+          roleIds: req.body.roleIds,
+        },
+      })
 
     return res.status(201).json(user)
   }
 }
 
-const instance = new UserHandler()
+const instance = new UsersHandler()
 
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

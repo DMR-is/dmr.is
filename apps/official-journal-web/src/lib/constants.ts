@@ -1,3 +1,5 @@
+import { getSession } from 'next-auth/react'
+
 import { StringOption } from '@island.is/island-ui/core'
 
 import { PostCasePublishBody } from '../gen/fetch'
@@ -153,6 +155,51 @@ export async function fetcher(
   }
 }
 
+type FetcherArgs<T> =
+  | {
+      withAuth?: boolean
+      method: 'POST' | 'PUT'
+      body: T
+    }
+  | {
+      withAuth?: boolean
+      method: 'GET' | 'DELETE'
+      body?: undefined
+    }
+export const fetcherV2 = async <TData, TBody = never>(
+  url: string,
+  { arg }: { arg: FetcherArgs<TBody> },
+): Promise<TData> => {
+  const withBody = arg.method === 'POST' || arg.method === 'PUT'
+
+  const withAuth = arg.withAuth ?? true
+  let authHeader = ''
+
+  if (withAuth) {
+    const session = await getSession()
+    authHeader = session ? `${session.accessToken}` : ''
+  }
+
+  const res = await fetch(url, {
+    method: arg.method,
+    body: withBody ? JSON.stringify(arg.body) : undefined,
+    headers: {
+      'Content-Type': 'application/json',
+      authorization: authHeader,
+    },
+  })
+
+  if (res.status === 204) {
+    return {} as TData
+  }
+
+  if (!res.ok) {
+    throw new Error('Error occured while fetching data')
+  }
+
+  return res.json()
+}
+
 export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
   const res = await fetch(url, {
     method: 'POST',
@@ -206,4 +253,6 @@ export enum APIRotues {
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
+  Users = '/api/users',
+  User = '/api/users/:id',
 }
