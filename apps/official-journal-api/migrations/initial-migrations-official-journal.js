@@ -356,8 +356,7 @@ module.exports = {
       national_id VARCHAR NOT NULL,
       first_name VARCHAR NOT NULL,
       last_name VARCHAR NOT NULL,
-      email VARCHAR,
-      phone VARCHAR,
+      email VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id)

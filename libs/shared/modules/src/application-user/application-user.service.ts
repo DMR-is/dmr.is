@@ -1,11 +1,13 @@
 import { decode } from 'jsonwebtoken'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  ApplicationUser,
   ApplicationUserInvolvedPartiesResponse,
+  ApplicationUserQuery,
+  GetApplicationUser,
+  GetApplicationUsers,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -27,6 +29,53 @@ export class ApplicationUserService implements IApplicationUserService {
     private readonly userModel: typeof ApplicationUserModel,
     private readonly sequelize: Sequelize,
   ) {}
+
+  @LogMethod()
+  async getUsers(
+    query: ApplicationUserQuery,
+  ): Promise<ResultWrapper<GetApplicationUsers>> {
+    const whereParams = {}
+
+    if (query?.involvedParty) {
+      Object.assign(whereParams, {
+        id: query.involvedParty,
+      })
+    }
+
+    const users = await this.userModel.findAll({
+      include: [{ model: AdvertInvolvedPartyModel, where: whereParams }],
+    })
+
+    const mapped = users.map((user) => applicationUserMigrate(user))
+
+    return ResultWrapper.ok({ users: mapped })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getUser(
+    nationalId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationUser>> {
+    const user = await this.userModel.findOne({
+      where: {
+        id: nationalId,
+      },
+      include: [AdvertInvolvedPartyModel],
+      transaction: transaction,
+    })
+
+    if (!user) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'User not found',
+      })
+    }
+
+    const migrated = applicationUserMigrate(user)
+
+    return ResultWrapper.ok({ user: migrated })
+  }
 
   @LogAndHandle()
   @Transactional()
@@ -64,93 +113,5 @@ export class ApplicationUserService implements IApplicationUserService {
     )
 
     return ResultWrapper.ok({ hasInvolvedParty })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getUserFromToken(
-    token: string | undefined,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<{ user: ApplicationUser }>> {
-    let localToken = token
-    if (localToken?.startsWith('Bearer ')) {
-      localToken = localToken.slice(7)
-    }
-
-    if (!localToken) {
-      this.logger.warn(
-        `Tried to get user from token but no token was provided`,
-        {
-          category: LOGGING_CATEGORY,
-        },
-      )
-
-      return ResultWrapper.err({
-        code: 400,
-        message: 'Invalid token',
-      })
-    }
-
-    // TODO USE VERIFY LATER
-    const tokenUser = decode(localToken)
-
-    if (!tokenUser || typeof tokenUser === 'string') {
-      this.logger.warn(`Tried to get user from token but token was invalid`, {
-        category: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 400,
-        message: 'Invalid token',
-      })
-    }
-
-    if (!tokenUser?.nationalId) {
-      this.logger.warn(
-        `Tried to get user from token but no nationalId was found in token`,
-        {
-          category: LOGGING_CATEGORY,
-        },
-      )
-
-      return ResultWrapper.err({
-        code: 400,
-        message: 'Invalid token',
-      })
-    }
-
-    const userLookup = await this.getUser(tokenUser.nationalId, transaction)
-
-    if (!userLookup.result.ok) {
-      return userLookup
-    }
-
-    return ResultWrapper.ok({ user: userLookup.result.value.user })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getUser(
-    nationalId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<{ user: ApplicationUser }>> {
-    const user = await this.userModel.findOne({
-      where: {
-        nationalId: nationalId,
-      },
-      include: [AdvertInvolvedPartyModel],
-      transaction: transaction,
-    })
-
-    if (!user) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'User not found',
-      })
-    }
-
-    const migrated = applicationUserMigrate(user)
-
-    return ResultWrapper.ok({ user: migrated })
   }
 }

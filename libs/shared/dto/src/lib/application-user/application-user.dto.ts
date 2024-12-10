@@ -51,3 +51,17 @@ export class ApplicationUser {
   })
   involvedParties!: Institution[]
 }
+
+export class GetApplicationUser {
+  @ApiProperty({
+    type: ApplicationUser,
+  })
+  user!: ApplicationUser
+}
+
+export class GetApplicationUsers {
+  @ApiProperty({
+    type: [ApplicationUser],
+  })
+  users!: ApplicationUser[]
+}

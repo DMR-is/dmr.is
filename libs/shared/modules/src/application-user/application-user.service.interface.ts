@@ -1,4 +1,9 @@
-import { ApplicationUser, Institution } from '@dmr.is/shared/dto'
+import {
+  ApplicationUserQuery,
+  GetApplicationUser,
+  GetApplicationUsers,
+  Institution,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface IApplicationUserService {
@@ -7,11 +12,11 @@ export interface IApplicationUserService {
     institutionId: string,
   ): Promise<ResultWrapper<{ hasInvolvedParty: boolean }>>
 
-  getUser(nationalId: string): Promise<ResultWrapper<{ user: ApplicationUser }>>
+  getUsers(
+    query: ApplicationUserQuery,
+  ): Promise<ResultWrapper<GetApplicationUsers>>
 
-  getUserFromToken(
-    token?: string,
-  ): Promise<ResultWrapper<{ user: ApplicationUser }>>
+  getUser(nationalId: string): Promise<ResultWrapper<GetApplicationUser>>
 
   getUserInvolvedParties(
     nationalId: string,
