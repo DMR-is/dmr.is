@@ -359,6 +359,7 @@ module.exports = {
       email VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT application_user_national_id_unique UNIQUE (national_id),
       PRIMARY KEY (id)
     );
 

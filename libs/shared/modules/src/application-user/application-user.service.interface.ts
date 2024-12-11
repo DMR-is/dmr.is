@@ -1,8 +1,10 @@
 import {
   ApplicationUserQuery,
+  CreateApplicationUser,
   GetApplicationUser,
   GetApplicationUsers,
   Institution,
+  UpdateApplicationUser,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -21,6 +23,17 @@ export interface IApplicationUserService {
   getUserInvolvedParties(
     nationalId: string,
   ): Promise<ResultWrapper<{ involvedParties: Institution[] }>>
+
+  createUser(
+    body: CreateApplicationUser,
+  ): Promise<ResultWrapper<GetApplicationUser>>
+
+  updateUser(
+    id: string,
+    body: UpdateApplicationUser,
+  ): Promise<ResultWrapper<GetApplicationUser>>
+
+  deleteUser(id: string): Promise<ResultWrapper>
 }
 
 export const IApplicationUserService = Symbol('IApplicationUserService')

@@ -3,21 +3,30 @@ import { LogMethod, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationUserQuery,
+  CreateApplicationUser,
   GetApplicationUser,
   GetApplicationUsers,
+  UpdateApplicationUser,
 } from '@dmr.is/shared/dto'
 
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   Inject,
   Param,
+  Post,
+  Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiNoContentResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -45,7 +54,7 @@ export class ApplicationUserController {
   ) {}
 
   @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
-  @Get('/users')
+  @Get()
   @ApiOperation({
     operationId: 'getApplicationUsers',
   })
@@ -72,7 +81,7 @@ export class ApplicationUserController {
   }
 
   @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
-  @Get('users/:id')
+  @Get('/:id')
   @ApiOperation({
     operationId: 'getApplicationUser',
   })
@@ -84,6 +93,80 @@ export class ApplicationUserController {
   @LogMethod()
   async getApplicationUser(@Param('id') id: string) {
     const results = await this.applicationUserService.getUser(id)
+
+    if (!results.result.ok) {
+      throw new HttpException(
+        results.result.error.message,
+        results.result.error.code,
+      )
+    }
+
+    return results.result.value
+  }
+
+  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
+  @Post('/')
+  @ApiOperation({
+    operationId: 'createApplicationUser',
+  })
+  @ApiBody({
+    type: CreateApplicationUser,
+  })
+  @ApiResponse({
+    status: 201,
+    type: GetApplicationUser,
+  })
+  @LogMethod()
+  async createApplicationUser(@Body() body: CreateApplicationUser) {
+    const results = await this.applicationUserService.createUser(body)
+
+    if (!results.result.ok) {
+      throw new HttpException(
+        results.result.error.message,
+        results.result.error.code,
+      )
+    }
+
+    return results.result.value
+  }
+
+  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
+  @Delete('/:id')
+  @ApiOperation({
+    operationId: 'deleteApplicationUser',
+  })
+  @ApiParam({ type: 'string', name: 'id' })
+  @ApiNoContentResponse()
+  @LogMethod()
+  async deleteApplicationUser(@Param('id') id: string) {
+    const results = await this.applicationUserService.deleteUser(id)
+
+    if (!results.result.ok) {
+      throw new HttpException(
+        results.result.error.message,
+        results.result.error.code,
+      )
+    }
+  }
+
+  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
+  @Put('/:id')
+  @ApiOperation({
+    operationId: 'updateApplicationUser',
+  })
+  @ApiBody({
+    type: UpdateApplicationUser,
+  })
+  @ApiParam({ type: 'string', name: 'id' })
+  @ApiResponse({
+    type: GetApplicationUser,
+  })
+  @LogMethod()
+  async updateApplicationUser(
+    @Param('id') id: string,
+    @Body() body: UpdateApplicationUser,
+  ) {
+    const results = await this.applicationUserService.updateUser(id, body)
 
     if (!results.result.ok) {
       throw new HttpException(

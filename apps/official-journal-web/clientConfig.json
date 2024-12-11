@@ -1806,7 +1806,7 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/application-users/users": {
+    "/api/v1/application-users": {
       "get": {
         "operationId": "getApplicationUsers",
         "summary": "",
@@ -1829,9 +1829,33 @@
           }
         },
         "security": [{ "bearer": [] }]
+      },
+      "post": {
+        "operationId": "createApplicationUser",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApplicationUser" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/application-users/users/{id}": {
+    "/api/v1/application-users/{id}": {
       "get": {
         "operationId": "getApplicationUser",
         "summary": "",
@@ -1845,6 +1869,51 @@
         ],
         "responses": {
           "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "put": {
+        "operationId": "updateApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateApplicationUser" }
+            }
+          }
+        },
+        "responses": {
+          "default": {
             "description": "",
             "content": {
               "application/json": {
@@ -3357,7 +3426,6 @@
           },
           "lastName": { "type": "string", "description": "The user last name" },
           "email": { "type": "string", "description": "The user email" },
-          "phone": { "type": "string", "description": "The user phone" },
           "involvedParties": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/Institution" }
@@ -3387,6 +3455,35 @@
           "user": { "$ref": "#/components/schemas/ApplicationUser" }
         },
         "required": ["user"]
+      },
+      "CreateApplicationUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": {
+            "type": "string",
+            "description": "The user national id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["nationalId", "firstName", "lastName", "involvedPartyIds"]
+      },
+      "UpdateApplicationUser": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
+        }
       },
       "GetInstitution": {
         "type": "object",

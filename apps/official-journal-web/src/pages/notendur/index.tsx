@@ -21,9 +21,10 @@ import {
   AdminUser,
   AdminUserRole,
   CreateAdminUser as CreateAdminUserDto,
+  Institution,
   UpdateAdminUser as UpdateAdminUserDto,
 } from '../../gen/fetch'
-import { useAdminUsers } from '../../hooks/api'
+import { useAdminUsers, useInstitutions } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
@@ -57,6 +58,14 @@ export default function UsersPage({ currentUser, roles }: Props) {
       getUsers()
     },
   })
+
+  const { institutions } = useInstitutions({
+    page: 1,
+    pageSize: 1000,
+  })
+
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null)
 
   const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
     nationalId: '',
@@ -110,6 +119,13 @@ export default function UsersPage({ currentUser, roles }: Props) {
       value: user,
     }
   })
+
+  const institutionsOptions = institutions?.institutions?.map(
+    (institution) => ({
+      label: institution.title,
+      value: institution,
+    }),
+  )
 
   return (
     <Section variant="blue">
@@ -184,7 +200,22 @@ export default function UsersPage({ currentUser, roles }: Props) {
         </GridRow>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '6/12']}>
-            <ContentWrapper title="Notendur umsóknarkerfis"></ContentWrapper>
+            <ContentWrapper title="Notendur umsóknarkerfis">
+              <Stack space={[2, 2, 3]}>
+                <Select
+                  size="sm"
+                  label="Stofnun"
+                  placeholder="Veldu stofnun"
+                  backgroundColor="blue"
+                  options={institutionsOptions}
+                  onChange={(opt) => {
+                    if (!opt?.value) return
+
+                    setSelectedInstitution(opt.value)
+                  }}
+                />
+              </Stack>
+            </ContentWrapper>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
         </GridRow>

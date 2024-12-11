@@ -1,13 +1,15 @@
-import { decode } from 'jsonwebtoken'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { v4 as uuid } from 'uuid'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationUserInvolvedPartiesResponse,
   ApplicationUserQuery,
+  CreateApplicationUser,
   GetApplicationUser,
   GetApplicationUsers,
+  UpdateApplicationUser,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -17,7 +19,10 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertInvolvedPartyModel } from '../journal/models'
 import { applicationUserMigrate } from './migrations/application-user.migrate'
 import { IApplicationUserService } from './application-user.service.interface'
-import { ApplicationUserModel } from './models'
+import {
+  ApplicationUserInvolvedPartyModel,
+  ApplicationUserModel,
+} from './models'
 
 const LOGGING_CATEGORY = 'application-user-service'
 
@@ -26,9 +31,190 @@ export class ApplicationUserService implements IApplicationUserService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(ApplicationUserModel)
-    private readonly userModel: typeof ApplicationUserModel,
+    private readonly applicationUserModel: typeof ApplicationUserModel,
+
+    @InjectModel(ApplicationUserInvolvedPartyModel)
+    private readonly userInvolvedPartyModel: typeof ApplicationUserInvolvedPartyModel,
     private readonly sequelize: Sequelize,
   ) {}
+  async createUser(
+    body: CreateApplicationUser,
+  ): Promise<ResultWrapper<GetApplicationUser>> {
+    const transaction = await this.sequelize.transaction()
+    try {
+      const userId = uuid()
+
+      await this.applicationUserModel.create(
+        {
+          id: userId,
+          nationalId: body.nationalId,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+        },
+        { transaction },
+      )
+
+      await this.userInvolvedPartyModel.bulkCreate(
+        body.involvedPartyIds.map((party) => ({
+          applicationUserId: userId,
+          involvedPartyId: party,
+        })),
+        { transaction },
+      )
+
+      const user = await this.applicationUserModel.findByPk(userId, {
+        include: [AdvertInvolvedPartyModel],
+        transaction,
+      })
+
+      if (!user) {
+        this.logger.error('Error creating user', {
+          category: LOGGING_CATEGORY,
+        })
+        await transaction.rollback()
+        return ResultWrapper.err({
+          code: 500,
+          message: 'Error creating user',
+        })
+      }
+
+      const migrated = applicationUserMigrate(user)
+
+      await transaction.commit()
+      return ResultWrapper.ok({ user: migrated })
+    } catch (error) {
+      await transaction.rollback()
+      this.logger.error('Error creating user', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Error creating user',
+      })
+    }
+  }
+  async updateUser(
+    id: string,
+    body: UpdateApplicationUser,
+  ): Promise<ResultWrapper<GetApplicationUser>> {
+    const transaction = await this.sequelize.transaction()
+    try {
+      const user = await this.applicationUserModel.findByPk(id, {
+        transaction,
+      })
+
+      if (!user) {
+        await transaction.rollback()
+        return ResultWrapper.err({
+          code: 404,
+          message: 'User not found',
+        })
+      }
+
+      await user.update(
+        {
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+        },
+        { transaction },
+      )
+
+      if (body.involvedPartyIds && body.involvedPartyIds?.length > 0) {
+        await this.userInvolvedPartyModel.destroy({
+          where: {
+            applicationUserId: id,
+          },
+          transaction,
+        })
+
+        await this.userInvolvedPartyModel.bulkCreate(
+          body.involvedPartyIds.map((party) => ({
+            applicationUserId: id,
+            involvedPartyId: party,
+          })),
+          { transaction },
+        )
+      }
+
+      await transaction.commit()
+
+      const updatedUser = await this.applicationUserModel.findByPk(id, {
+        include: [AdvertInvolvedPartyModel],
+        transaction,
+      })
+
+      if (!updatedUser) {
+        await transaction.rollback()
+        this.logger.error('Error updating user', {
+          category: LOGGING_CATEGORY,
+        })
+        return ResultWrapper.err({
+          code: 500,
+          message: 'Error updating user',
+        })
+      }
+
+      const migrated = applicationUserMigrate(updatedUser)
+      return ResultWrapper.ok({ user: migrated })
+    } catch (error) {
+      await transaction.rollback()
+      this.logger.error('Error updating user', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Error updating user',
+      })
+    }
+  }
+  async deleteUser(id: string): Promise<ResultWrapper> {
+    const transaction = await this.sequelize.transaction()
+    try {
+      const user = await this.applicationUserModel.findByPk(id, {
+        transaction,
+      })
+
+      if (!user) {
+        await transaction.rollback()
+        return ResultWrapper.err({
+          code: 404,
+          message: 'User not found',
+        })
+      }
+
+      await Promise.all([
+        await this.userInvolvedPartyModel.destroy({
+          where: {
+            applicationUserId: id,
+          },
+          transaction,
+        }),
+        await this.applicationUserModel.destroy({
+          where: {
+            id,
+          },
+          transaction,
+        }),
+      ])
+
+      await transaction.commit()
+      return ResultWrapper.ok()
+    } catch (error) {
+      await transaction.rollback()
+      this.logger.error('Error deleting user', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Error deleting user',
+      })
+    }
+  }
 
   @LogMethod()
   async getUsers(
@@ -42,7 +228,7 @@ export class ApplicationUserService implements IApplicationUserService {
       })
     }
 
-    const users = await this.userModel.findAll({
+    const users = await this.applicationUserModel.findAll({
       include: [{ model: AdvertInvolvedPartyModel, where: whereParams }],
     })
 
@@ -57,7 +243,7 @@ export class ApplicationUserService implements IApplicationUserService {
     nationalId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationUser>> {
-    const user = await this.userModel.findOne({
+    const user = await this.applicationUserModel.findOne({
       where: {
         id: nationalId,
       },

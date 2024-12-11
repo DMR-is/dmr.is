@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger'
 
 import { Institution } from '../institutions'
 
@@ -36,14 +36,7 @@ export class ApplicationUser {
     required: false,
     description: 'The user email',
   })
-  email?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: 'The user phone',
-  })
-  phone?: string
+  email!: string
 
   @ApiProperty({
     type: [Institution],
@@ -51,6 +44,20 @@ export class ApplicationUser {
   })
   involvedParties!: Institution[]
 }
+
+export class CreateApplicationUser extends OmitType(ApplicationUser, [
+  'id',
+  'involvedParties',
+]) {
+  @ApiProperty({
+    type: [String],
+  })
+  involvedPartyIds!: string[]
+}
+
+export class UpdateApplicationUser extends PartialType(
+  OmitType(CreateApplicationUser, ['nationalId']),
+) {}
 
 export class GetApplicationUser {
   @ApiProperty({
