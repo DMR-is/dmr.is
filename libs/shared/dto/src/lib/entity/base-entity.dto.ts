@@ -23,7 +23,7 @@ export class BaseEntity {
 
   @ApiProperty({
     type: String,
-    description: 'Description of the entity',
+    description: 'Slug of the entity',
   })
   slug!: string
 }

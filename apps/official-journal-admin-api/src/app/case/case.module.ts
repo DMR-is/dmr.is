@@ -5,6 +5,9 @@ import {
   ApplicationUserController,
   ApplicationUserModule,
   CommentModule,
+  InstitutionAdminController,
+  InstitutionController,
+  InstitutionModule,
   SharedCaseModule,
   SharedJournalModule,
   SignatureController,
@@ -24,12 +27,15 @@ import { CaseController } from './case.controller'
     SignatureModule,
     AdminUserModule,
     ApplicationUserModule,
+    InstitutionModule,
   ],
   controllers: [
     CaseController,
     SignatureController,
     AdminUserController,
     ApplicationUserController,
+    InstitutionController,
+    InstitutionAdminController,
   ],
 })
 export class CaseModule {}
