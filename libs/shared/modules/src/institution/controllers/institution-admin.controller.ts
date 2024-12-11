@@ -1,7 +1,11 @@
 import { USER_ROLES } from '@dmr.is/constants'
 import { LogMethod, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { CreateInstitution, GetInstitution } from '@dmr.is/shared/dto'
+import {
+  CreateInstitution,
+  GetInstitution,
+  UpdateInstitution,
+} from '@dmr.is/shared/dto'
 
 import {
   Body,
@@ -18,6 +22,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiNoContentResponse,
+  ApiOperation,
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
@@ -40,6 +45,9 @@ export class InstitutionAdminController {
 
   @Roles(USER_ROLES.Admin)
   @Post('/')
+  @ApiOperation({
+    operationId: 'createInstitution',
+  })
   @ApiBody({
     type: CreateInstitution,
   })
@@ -67,8 +75,12 @@ export class InstitutionAdminController {
 
   @Roles(USER_ROLES.Admin)
   @Put('/:id')
+  @ApiOperation({
+    operationId: 'updateInstitution',
+  })
+  @ApiParam({ type: String, name: 'id' })
   @ApiBody({
-    type: CreateInstitution,
+    type: UpdateInstitution,
   })
   @ApiResponse({
     status: 200,
@@ -77,11 +89,11 @@ export class InstitutionAdminController {
   @LogMethod()
   async updateInstitution(
     @Param('id') id: string,
-    @Body() createInstitution: CreateInstitution,
+    @Body() updateInstitution: UpdateInstitution,
   ): Promise<GetInstitution> {
     const results = await this.institutionService.updateInstitution(
       id,
-      createInstitution,
+      updateInstitution,
     )
 
     if (!results.result.ok) {
@@ -96,6 +108,9 @@ export class InstitutionAdminController {
 
   @Roles(USER_ROLES.Admin)
   @Delete('/:id')
+  @ApiOperation({
+    operationId: 'deleteInstitution',
+  })
   @ApiParam({ type: String, name: 'id' })
   @ApiNoContentResponse()
   @LogMethod()

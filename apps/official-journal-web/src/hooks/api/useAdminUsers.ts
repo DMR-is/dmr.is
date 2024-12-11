@@ -39,7 +39,7 @@ export const useAdminUsers = ({
     isLoading: isLoadingUsers,
     error: usersError,
     mutate: refetchUsers,
-  } = useSWR<GetAdminUsers, Error>(APIRotues.Users, (url: string) =>
+  } = useSWR<GetAdminUsers, Error>(APIRotues.AdminUsers, (url: string) =>
     fetcherV2<GetAdminUsers>(url, {
       arg: { method: 'GET' },
     }),
@@ -50,7 +50,7 @@ export const useAdminUsers = ({
     isMutating: isCreatingUser,
     error: createUserError,
   } = useSWRMutation<Response, Error, Key, CreateAdminUser>(
-    APIRotues.Users,
+    APIRotues.AdminUsers,
     (url: string, { arg }: { arg: CreateAdminUser }) =>
       fetcherV2<Response, CreateAdminUser>(url, {
         arg: { method: 'POST', body: arg },
@@ -70,7 +70,7 @@ export const useAdminUsers = ({
     isMutating: isUpdatingUser,
     error: updateUserError,
   } = useSWRMutation<Response, Error, Key, UpdateUser>(
-    APIRotues.User,
+    APIRotues.AdminUser,
     (url: string, { arg }: { arg: UpdateUser }) =>
       fetcherV2<Response, UpdateAdminUser>(url.replace(':id', arg.id), {
         arg: { method: 'PUT', body: arg.body },
@@ -90,7 +90,7 @@ export const useAdminUsers = ({
     isMutating: isDeletingUser,
     error: deleteUserError,
   } = useSWRMutation<Response, Error, Key, DeleteUser>(
-    APIRotues.User,
+    APIRotues.AdminUser,
     (url: string, { arg }: { arg: DeleteUser }) =>
       fetcherV2<Response>(url.replace(':id', arg.id), {
         arg: { method: 'DELETE' },

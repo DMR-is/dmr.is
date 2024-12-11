@@ -50,6 +50,7 @@ export class InstitutionService implements IInstitutionService {
       offset: (query.page - 1) * query.pageSize,
       limit: query.pageSize,
       where: whereParams,
+      order: [['title', 'ASC']],
     })
 
     const mapped = institutions.rows.map(institutionMigrate)

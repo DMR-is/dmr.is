@@ -16,7 +16,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
 import { IApplicationUserService } from './application-user.service.interface'
@@ -40,6 +46,9 @@ export class ApplicationUserController {
 
   @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Get('/users')
+  @ApiOperation({
+    operationId: 'getApplicationUsers',
+  })
   @ApiQuery({
     type: ApplicationUserQuery,
   })
@@ -64,6 +73,9 @@ export class ApplicationUserController {
 
   @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Get('users/:id')
+  @ApiOperation({
+    operationId: 'getApplicationUser',
+  })
   @ApiParam({ type: 'string', name: 'id' })
   @ApiResponse({
     status: 200,

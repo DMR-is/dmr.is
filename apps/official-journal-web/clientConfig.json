@@ -1806,6 +1806,187 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/application-users/users": {
+      "get": {
+        "operationId": "getApplicationUsers",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "involvedParty",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get application users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUsers" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/application-users/users/{id}": {
+      "get": {
+        "operationId": "getApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/institutions/{id}": {
+      "get": {
+        "operationId": "getInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateInstitution" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/institutions": {
+      "get": {
+        "operationId": "getInstitutions",
+        "summary": "",
+        "parameters": [
+          {
+            "required": false,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "example": 10,
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitutions" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createInstitution",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInstitution" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/department": {
       "get": {
         "operationId": "getStatisticsForDepartment",
@@ -3160,6 +3341,82 @@
           "displayName": { "type": "string" },
           "email": { "type": "string" },
           "roleIds": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ApplicationUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "The user id" },
+          "nationalId": {
+            "type": "string",
+            "description": "The user national id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "phone": { "type": "string", "description": "The user phone" },
+          "involvedParties": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "involvedParties"
+        ]
+      },
+      "GetApplicationUsers": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationUser" }
+          }
+        },
+        "required": ["users"]
+      },
+      "GetApplicationUser": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/ApplicationUser" }
+        },
+        "required": ["user"]
+      },
+      "GetInstitution": {
+        "type": "object",
+        "properties": {
+          "institution": { "$ref": "#/components/schemas/Institution" }
+        },
+        "required": ["institution"]
+      },
+      "GetInstitutions": {
+        "type": "object",
+        "properties": {
+          "institutions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["institutions", "paging"]
+      },
+      "CreateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" }
+        },
+        "required": ["title"]
+      },
+      "UpdateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" }
         }
       },
       "StatisticsDepartmentItem": {

@@ -14,7 +14,7 @@ import {
   Param,
   Query,
 } from '@nestjs/common'
-import { ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
 
 import { IInstitutionService } from '../institution.service.interface'
 
@@ -30,6 +30,9 @@ export class InstitutionController {
   ) {}
 
   @Get('/:id')
+  @ApiOperation({
+    operationId: 'getInstitution',
+  })
   @ApiParam({ type: String, name: 'id' })
   @ApiResponse({
     status: 200,
@@ -49,6 +52,9 @@ export class InstitutionController {
   }
 
   @Get()
+  @ApiOperation({
+    operationId: 'getInstitutions',
+  })
   @ApiQuery({
     type: InstitutionQuery,
     required: false,

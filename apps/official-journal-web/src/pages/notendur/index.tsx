@@ -10,6 +10,7 @@ import {
   Select,
   SkeletonLoader,
   Stack,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
@@ -23,6 +24,7 @@ import {
   UpdateAdminUser as UpdateAdminUserDto,
 } from '../../gen/fetch'
 import { useAdminUsers } from '../../hooks/api'
+import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 
@@ -110,19 +112,27 @@ export default function UsersPage({ currentUser, roles }: Props) {
   })
 
   return (
-    <Section>
+    <Section variant="blue">
       <GridContainer>
+        <GridRow>
+          <GridColumn span={['12/12']} paddingBottom={[2, 2, 3]}>
+            <Text variant="h3">Notendaumsjón</Text>
+          </GridColumn>
+        </GridRow>
         <GridRow rowGap={[2, 2, 3]}>
-          <GridColumn span={['12/12', '12/12', '6/12']}>
-            <ContentWrapper title="Breyta ritstjóra">
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[2, 2, 3]}
+          >
+            <ContentWrapper title="Notendur ritstjórnar">
               {isLoadingUsers ? (
                 <SkeletonLoader space={[2, 2, 3]} repeat={5} height={40} />
               ) : (
                 <Stack space={[2, 2, 3]}>
                   <Select
                     size="sm"
-                    label="Ritstjóri"
-                    placeholder="Veldu ritstjóra"
+                    label="Notandi"
+                    placeholder="Veldu ristjóra"
                     backgroundColor="blue"
                     options={usersOptions}
                     onChange={(opt) => {
@@ -153,7 +163,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
               )}
             </ContentWrapper>
           </GridColumn>
-          <GridColumn span={['12/12', '12/12', '6/12']}>
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[2, 2, 3]}
+          >
             <ContentWrapper title="Stofna nýjan ritstjóra">
               {isLoadingUsers ? (
                 <SkeletonLoader height={40} />
@@ -170,7 +183,9 @@ export default function UsersPage({ currentUser, roles }: Props) {
           </GridColumn>
         </GridRow>
         <GridRow>
-          <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
+          <GridColumn span={['12/12', '12/12', '6/12']}>
+            <ContentWrapper title="Notendur umsóknarkerfis"></ContentWrapper>
+          </GridColumn>
           <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
         </GridRow>
       </GridContainer>
@@ -181,6 +196,14 @@ export default function UsersPage({ currentUser, roles }: Props) {
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const session = await getSession({ req })
   const client = createDmrClient()
+
+  const layout: LayoutProps = {
+    showFooter: false,
+    headerWhite: true,
+    bannerProps: {
+      showBanner: false,
+    },
+  }
 
   if (!session) {
     return {
@@ -197,6 +220,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
   return {
     props: {
+      layout,
       currentUser: session.user,
       roles: roles.roles,
     },
