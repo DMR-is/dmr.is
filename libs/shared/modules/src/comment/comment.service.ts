@@ -133,7 +133,7 @@ export class CommentService implements ICommentService {
         await this.applicationService.getApplication(caseLookup.applicationId)
       ).unwrap()
 
-      applicationState = JSON.stringify(application.state)
+      applicationState = JSON.stringify(application)
     }
 
     const newComment = await this.caseCommentModel.create(

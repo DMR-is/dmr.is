@@ -2174,7 +2174,8 @@
             "type": "string",
             "description": "Who received the comment"
           },
-          "comment": { "type": "string", "description": "The comment itself" }
+          "comment": { "type": "string", "description": "The comment itself" },
+          "state": { "type": "string", "description": "The comment itself" }
         },
         "required": [
           "id",
@@ -2186,7 +2187,8 @@
           "direction",
           "creator",
           "receiver",
-          "comment"
+          "comment",
+          "state"
         ]
       },
       "SignatureType": {

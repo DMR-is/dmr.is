@@ -75,4 +75,10 @@ export class CaseComment {
     description: 'The comment itself',
   })
   comment!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'The comment itself',
+  })
+  state!: string | null
 }
