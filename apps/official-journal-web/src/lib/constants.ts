@@ -161,11 +161,13 @@ type FetcherArgs<T> =
   | {
       withAuth?: boolean
       method: 'POST' | 'PUT'
+      query?: URLSearchParams
       body: T
     }
   | {
       withAuth?: boolean
       method: 'GET' | 'DELETE'
+      query?: URLSearchParams
       body?: undefined
     }
 export const fetcherV2 = async <TData, TBody = never>(
@@ -182,7 +184,11 @@ export const fetcherV2 = async <TData, TBody = never>(
     authHeader = session ? `${session.accessToken}` : ''
   }
 
-  const res = await fetch(url, {
+  const fullUrl = arg.query ? `${url}?${arg.query.toString()}` : url
+
+  console.log('fetcherV2', arg.method, fullUrl)
+
+  const res = await fetch(fullUrl, {
     method: arg.method,
     body: withBody ? JSON.stringify(arg.body) : undefined,
     headers: {

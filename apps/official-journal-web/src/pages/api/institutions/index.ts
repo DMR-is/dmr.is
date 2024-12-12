@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -16,12 +17,17 @@ class InstitutionsHandler {
           return void res.status(405).end()
       }
     } catch (error) {
+      logger.error('Error in InstitutionsHandler', {
+        context: 'InstitutionsHandler',
+        category: 'InstitutionsHandler',
+        error: error,
+      })
       return res.status(500).json({ message: 'Internal server error' })
     }
   }
 
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const search = req.query?.search as string
+    const search = req.query?.search as string | undefined
     const page = parseInt(req.query.page as string) || undefined
     const pageSize = parseInt(req.query.pageSize as string) || undefined
 
@@ -39,7 +45,9 @@ class InstitutionsHandler {
   private async create(req: NextApiRequest, res: NextApiResponse) {
     const institution = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createInstitution(req.body)
+      .createInstitution({
+        createInstitution: req.body,
+      })
 
     return res.status(201).json(institution)
   }

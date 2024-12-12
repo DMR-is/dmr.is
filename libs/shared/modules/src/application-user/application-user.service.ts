@@ -25,6 +25,7 @@ import {
 } from './models'
 
 const LOGGING_CATEGORY = 'application-user-service'
+const LOGGING_CONTEXT = 'ApplicationUserService'
 
 @Injectable()
 export class ApplicationUserService implements IApplicationUserService {
@@ -71,6 +72,7 @@ export class ApplicationUserService implements IApplicationUserService {
       if (!user) {
         this.logger.error('Error creating user', {
           category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
         })
         await transaction.rollback()
         return ResultWrapper.err({
@@ -87,6 +89,7 @@ export class ApplicationUserService implements IApplicationUserService {
       await transaction.rollback()
       this.logger.error('Error creating user', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
         error,
       })
       return ResultWrapper.err({
@@ -139,8 +142,6 @@ export class ApplicationUserService implements IApplicationUserService {
         )
       }
 
-      await transaction.commit()
-
       const updatedUser = await this.applicationUserModel.findByPk(id, {
         include: [AdvertInvolvedPartyModel],
         transaction,
@@ -150,6 +151,7 @@ export class ApplicationUserService implements IApplicationUserService {
         await transaction.rollback()
         this.logger.error('Error updating user', {
           category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
         })
         return ResultWrapper.err({
           code: 500,
@@ -157,12 +159,15 @@ export class ApplicationUserService implements IApplicationUserService {
         })
       }
 
+      await transaction.commit()
+
       const migrated = applicationUserMigrate(updatedUser)
       return ResultWrapper.ok({ user: migrated })
     } catch (error) {
       await transaction.rollback()
       this.logger.error('Error updating user', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
         error,
       })
       return ResultWrapper.err({
@@ -206,6 +211,7 @@ export class ApplicationUserService implements IApplicationUserService {
     } catch (error) {
       await transaction.rollback()
       this.logger.error('Error deleting user', {
+        context: LOGGING_CONTEXT,
         category: LOGGING_CATEGORY,
         error,
       })

@@ -1,10 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { LogMethod } from '@dmr.is/decorators'
+import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 
 class ApplicationUsersHandler {
   private readonly client = createDmrClient()
+
+  @LogMethod(false)
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
@@ -16,12 +20,18 @@ class ApplicationUsersHandler {
           return void res.status(405).end()
       }
     } catch (error) {
+      logger.error('Error in ApplicationUsersHandler', {
+        context: 'ApplicationUsersHandler',
+        category: 'ApplicationUsersHandler',
+        error: error,
+      })
       return res.status(500).json({ message: 'Internal server error' })
     }
   }
 
+  @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const involvedPartyId = req.query.involvedPartyId as string
+    const involvedPartyId = req.query.involvedParty as string | undefined
 
     const applicationUser = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
@@ -32,10 +42,13 @@ class ApplicationUsersHandler {
     return res.status(200).json(applicationUser)
   }
 
+  @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
     const applicationUser = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createInstitution(req.body)
+      .createApplicationUser({
+        createApplicationUser: req.body,
+      })
 
     return res.status(201).json(applicationUser)
   }

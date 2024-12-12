@@ -5,6 +5,7 @@ import { ApiProperty } from '@nestjs/swagger'
 export class ApplicationUserQuery {
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsUUID()

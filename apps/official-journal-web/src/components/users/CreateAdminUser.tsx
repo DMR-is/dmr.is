@@ -112,7 +112,6 @@ export const CreateAdminUser = ({
         label="Hlutverk"
         backgroundColor="blue"
         options={rolesOptions}
-        defaultValue={rolesOptions[0]}
         onChange={(opt) => {
           if (!opt?.value) return
 

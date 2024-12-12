@@ -43,6 +43,8 @@ export const UpdateAdminUser = ({
     value: role,
   }))
 
+  const isDisabled = !user.id
+
   return (
     <Stack space={[2, 2, 3]}>
       {updateError && (
@@ -60,6 +62,7 @@ export const UpdateAdminUser = ({
         />
       )}
       <Input
+        disabled={isDisabled}
         name="update-user-email"
         size="sm"
         type="email"
@@ -74,6 +77,7 @@ export const UpdateAdminUser = ({
         }
       />
       <Input
+        disabled={isDisabled}
         name="update-user-first-name"
         size="sm"
         label="Fornafn"
@@ -87,6 +91,7 @@ export const UpdateAdminUser = ({
         }
       />
       <Input
+        disabled={isDisabled}
         name="update-user-last-name"
         size="sm"
         label="Eftirnafn"
@@ -100,6 +105,7 @@ export const UpdateAdminUser = ({
         }
       />
       <Input
+        disabled={isDisabled}
         name="update-user-user-name"
         size="sm"
         label="Notendanafn"
@@ -113,11 +119,11 @@ export const UpdateAdminUser = ({
         }
       />
       <Select
+        isDisabled={isDisabled}
         size="sm"
         label="Hlutverk"
         backgroundColor="blue"
         options={rolesOptions}
-        defaultValue={rolesOptions[0]}
         onChange={(opt) => {
           if (!opt?.value) return
 

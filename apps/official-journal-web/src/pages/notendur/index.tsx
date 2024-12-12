@@ -16,15 +16,20 @@ import {
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
 import { CreateAdminUser } from '../../components/users/CreateAdminUser'
+import { CreateApplicationUser } from '../../components/users/CreateApplicationUser'
 import { UpdateAdminUser } from '../../components/users/UpdateAdminUser'
+import { UpdateApplicationUser } from '../../components/users/UpdateApplicationUser'
 import {
   AdminUser,
   AdminUserRole,
   CreateAdminUser as CreateAdminUserDto,
+  CreateApplicationUser as CreateApplicationUserDto,
   Institution,
   UpdateAdminUser as UpdateAdminUserDto,
+  UpdateApplicationUser as UpdateApplicationUserDto,
 } from '../../gen/fetch'
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
+import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
@@ -35,6 +40,48 @@ type Props = {
 }
 
 export default function UsersPage({ currentUser, roles }: Props) {
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null)
+
+  const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
+    nationalId: '',
+    firstName: '',
+    lastName: '',
+    displayName: '',
+    email: '',
+    roleIds: [],
+  })
+
+  const [updateUserState, setUpdateUserState] = useState<
+    UpdateAdminUserDto & { id: string }
+  >({
+    id: '',
+    email: '',
+    displayName: '',
+    firstName: '',
+    lastName: '',
+    roleIds: [],
+  })
+
+  const [createApplicationUserState, setCreateApplicationUserState] =
+    useState<CreateApplicationUserDto>({
+      nationalId: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      involvedPartyIds: [],
+    })
+
+  const [updateApplicationUserState, setUpdateApplicationUserState] = useState<
+    UpdateApplicationUserDto & { id: string }
+  >({
+    id: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    involvedPartyIds: [],
+  })
+
   const {
     users,
     getUsers,
@@ -48,6 +95,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
   } = useAdminUsers({
     onUpdateSuccess: () => {
       resetUpdateState()
+      getUsers()
     },
     onCreateSuccess: () => {
       resetCreateState()
@@ -57,23 +105,58 @@ export default function UsersPage({ currentUser, roles }: Props) {
       resetUpdateState()
       getUsers()
     },
+    config: {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
+  })
+
+  const {
+    applicationUsers,
+    applicationUsersLoading,
+    createApplicationUser,
+    isCreatingApplicationUser,
+    updateApplicationUser,
+    isUpdatingApplicationUser,
+    deleteApplicationUser,
+    isDeletingApplicationUser,
+  } = useApplicationUsers({
+    searchParams: {
+      involvedParty: selectedInstitution?.id,
+    },
+    config: {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
+    onUpdateSuccess: ({ user }) => {
+      setUpdateApplicationUserState({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        involvedPartyIds: user.involvedParties.map((inst) => inst.id),
+      })
+    },
+    onCreateSuccess: () => {
+      resetCreateApplicationUserState()
+      getUsers()
+    },
+    onDeleteSuccess: () => {
+      resetUpdateApplicationUserState()
+      getUsers()
+    },
   })
 
   const { institutions } = useInstitutions({
-    page: 1,
-    pageSize: 1000,
-  })
-
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<Institution | null>(null)
-
-  const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
-    nationalId: '',
-    firstName: '',
-    lastName: '',
-    displayName: '',
-    email: '',
-    roleIds: [],
+    config: {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
+    searchParams: {
+      search: undefined,
+      page: 1,
+      pageSize: 1000,
+    },
   })
 
   const resetCreateState = () => {
@@ -87,17 +170,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
     })
   }
 
-  const [updateUserState, setUpdateUserState] = useState<
-    UpdateAdminUserDto & { id: string }
-  >({
-    id: '',
-    email: '',
-    displayName: '',
-    firstName: '',
-    lastName: '',
-    roleIds: [],
-  })
-
   const resetUpdateState = () => {
     setUpdateUserState({
       id: '',
@@ -106,6 +178,26 @@ export default function UsersPage({ currentUser, roles }: Props) {
       firstName: '',
       lastName: '',
       roleIds: [],
+    })
+  }
+
+  const resetUpdateApplicationUserState = () => {
+    setUpdateApplicationUserState({
+      id: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      involvedPartyIds: [],
+    })
+  }
+
+  const resetCreateApplicationUserState = () => {
+    setCreateApplicationUserState({
+      nationalId: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      involvedPartyIds: [],
     })
   }
 
@@ -127,12 +219,17 @@ export default function UsersPage({ currentUser, roles }: Props) {
     }),
   )
 
+  const applicationUsersOptions = applicationUsers?.map((user) => ({
+    label: `${user.firstName} (${user.lastName})`,
+    value: user,
+  }))
+
   return (
     <Section variant="blue">
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12']} paddingBottom={[2, 2, 3]}>
-            <Text variant="h3">Notendaumsjón</Text>
+            <Text variant="h3">Notendaumsjón og stofnanir</Text>
           </GridColumn>
         </GridRow>
         <GridRow rowGap={[2, 2, 3]}>
@@ -146,6 +243,9 @@ export default function UsersPage({ currentUser, roles }: Props) {
               ) : (
                 <Stack space={[2, 2, 3]}>
                   <Select
+                    filterConfig={{
+                      matchFrom: 'start',
+                    }}
                     size="sm"
                     label="Notandi"
                     placeholder="Veldu ristjóra"
@@ -183,7 +283,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
             span={['12/12', '12/12', '6/12']}
             paddingBottom={[2, 2, 3]}
           >
-            <ContentWrapper title="Stofna nýjan ritstjóra">
+            <ContentWrapper title="Stofna ritstjóra">
               {isLoadingUsers ? (
                 <SkeletonLoader height={40} />
               ) : (
@@ -203,21 +303,78 @@ export default function UsersPage({ currentUser, roles }: Props) {
             <ContentWrapper title="Notendur umsóknarkerfis">
               <Stack space={[2, 2, 3]}>
                 <Select
+                  filterConfig={{
+                    matchFrom: 'start',
+                  }}
+                  isClearable
                   size="sm"
                   label="Stofnun"
-                  placeholder="Veldu stofnun"
+                  placeholder="Veldu stofnun til þess að sjá notendur"
                   backgroundColor="blue"
                   options={institutionsOptions}
                   onChange={(opt) => {
-                    if (!opt?.value) return
+                    if (!opt?.value) {
+                      setSelectedInstitution(null)
+                      resetUpdateApplicationUserState()
+                      return
+                    }
 
                     setSelectedInstitution(opt.value)
                   }}
                 />
+                <Select
+                  filterConfig={{
+                    matchFrom: 'start',
+                  }}
+                  isDisabled={!selectedInstitution}
+                  isClearable
+                  noOptionsMessage="Engir notendur eru skráðir fyrir þessa stofnun"
+                  isLoading={applicationUsersLoading}
+                  size="sm"
+                  label="Notandi"
+                  placeholder="Veldu notanda"
+                  backgroundColor="blue"
+                  options={applicationUsersOptions}
+                  onChange={(opt) => {
+                    if (!opt?.value) {
+                      resetUpdateApplicationUserState()
+                      return
+                    }
+                    const institutionIds = opt.value.involvedParties.map(
+                      (inst) => inst.id,
+                    )
+                    setUpdateApplicationUserState({
+                      id: opt.value.id,
+                      email: opt.value.email,
+                      firstName: opt.value.firstName,
+                      lastName: opt.value.lastName,
+                      involvedPartyIds: institutionIds,
+                    })
+                  }}
+                />
+                <UpdateApplicationUser
+                  user={updateApplicationUserState}
+                  institutions={institutions?.institutions || []}
+                  isUpdatingUser={isUpdatingApplicationUser}
+                  isDeletingUser={isDeletingApplicationUser}
+                  onChangeUser={(user) => setUpdateApplicationUserState(user)}
+                  onUpdateUser={(user) => updateApplicationUser(user)}
+                  onDeleteUser={(user) => deleteApplicationUser(user.id)}
+                />
               </Stack>
             </ContentWrapper>
           </GridColumn>
-          <GridColumn span={['12/12', '12/12', '6/12']}></GridColumn>
+          <GridColumn span={['12/12', '12/12', '6/12']}>
+            <ContentWrapper title="Stofna innsendanda">
+              <CreateApplicationUser
+                user={createApplicationUserState}
+                institutions={institutions?.institutions || []}
+                isCreatingUser={isCreatingApplicationUser}
+                onUpdateUser={(user) => setCreateApplicationUserState(user)}
+                onCreateUser={(user) => createApplicationUser(user)}
+              />
+            </ContentWrapper>
+          </GridColumn>
         </GridRow>
       </GridContainer>
     </Section>

@@ -1,3 +1,4 @@
+import { Request } from 'express'
 import { USER_ROLES } from '@dmr.is/constants'
 import { LogMethod, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'

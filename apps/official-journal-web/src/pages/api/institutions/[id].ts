@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -18,6 +19,11 @@ class InstitutionHandler {
           return void res.status(405).end()
       }
     } catch (error) {
+      logger.error('Error in InstitutionHandler', {
+        context: 'InstitutionHandler',
+        category: 'InstitutionHandler',
+        error: error,
+      })
       return void res.status(500).json({ message: 'Internal server error' })
     }
   }

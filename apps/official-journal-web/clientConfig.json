@@ -1812,9 +1812,9 @@
         "summary": "",
         "parameters": [
           {
+            "required": false,
             "name": "involvedParty",
             "in": "query",
-            "required": true,
             "schema": { "type": "string" }
           }
         ],

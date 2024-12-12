@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -16,6 +17,11 @@ class UsersHandler {
           return void res.status(405).end()
       }
     } catch (error) {
+      logger.error('Error in UsersHandler', {
+        context: 'UsersHandler',
+        category: 'UsersHandler',
+        error: error,
+      })
       return res.status(500).json({ message: 'Internal server error' })
     }
   }
@@ -32,14 +38,7 @@ class UsersHandler {
     const user = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .createUser({
-        createAdminUser: {
-          displayName: req.body.displayName,
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          email: req.body.email,
-          nationalId: req.body.nationalId,
-          roleIds: req.body.roleIds,
-        },
+        createAdminUser: req.body,
       })
 
     return res.status(201).json(user)

@@ -1,4 +1,4 @@
-import useSWR, { Key } from 'swr'
+import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
@@ -24,6 +24,7 @@ type Props = {
   onUpdateError?: (error: Error) => void
   onDeleteSuccess?: () => void
   onDeleteError?: (error: Error) => void
+  config?: SWRConfiguration
 }
 
 export const useAdminUsers = ({
@@ -33,16 +34,20 @@ export const useAdminUsers = ({
   onDeleteSuccess,
   onUpdateError,
   onUpdateSuccess,
+  config,
 }: Props = {}) => {
   const {
     data,
     isLoading: isLoadingUsers,
     error: usersError,
     mutate: refetchUsers,
-  } = useSWR<GetAdminUsers, Error>(APIRotues.AdminUsers, (url: string) =>
-    fetcherV2<GetAdminUsers>(url, {
-      arg: { method: 'GET' },
-    }),
+  } = useSWR<GetAdminUsers, Error>(
+    APIRotues.AdminUsers,
+    (url: string) =>
+      fetcherV2<GetAdminUsers>(url, {
+        arg: { method: 'GET' },
+      }),
+    config,
   )
 
   const {
