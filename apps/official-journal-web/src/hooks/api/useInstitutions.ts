@@ -1,6 +1,12 @@
-import useSWR, { SWRConfiguration } from 'swr'
+import useSWR, { Key, SWRConfiguration } from 'swr'
+import useSWRMutation from 'swr/mutation'
+import { GetInstitutionResponse, UpdateInstitution } from '@dmr.is/shared/dto'
 
-import { GetInstitutions, GetInstitutionsRequest } from '../../gen/fetch'
+import {
+  CreateInstitution,
+  GetInstitutions,
+  GetInstitutionsRequest,
+} from '../../gen/fetch'
 import { APIRotues, fetcherV2 } from '../../lib/constants'
 
 type Props = {
@@ -9,9 +15,22 @@ type Props = {
     string | number | undefined
   >
   config: SWRConfiguration
+  onCreateSuccess?: () => void
+  onUpdateSuccess?: () => void
+  onDeleteSuccess?: () => void
 }
 
-export const useInstitutions = ({ searchParams, config }: Props) => {
+type UpdateInstitutionParams = UpdateInstitution & { id: string }
+
+type DeleteInstitution = { id: string }
+
+export const useInstitutions = ({
+  searchParams,
+  onCreateSuccess,
+  onDeleteSuccess,
+  onUpdateSuccess,
+  config,
+}: Props) => {
   const {
     data,
     isLoading: isLoadingInstitutions,
@@ -33,8 +52,85 @@ export const useInstitutions = ({ searchParams, config }: Props) => {
         arg: { method: 'GET', query: qsp },
       })
     },
-    config,
+    {
+      ...config,
+    },
   )
+
+  const {
+    trigger: createInstitutionTrigger,
+    isMutating: isCreatingInstitution,
+    error: createInstitutionError,
+  } = useSWRMutation<GetInstitutionResponse, Error, Key, CreateInstitution>(
+    APIRotues.Institutions,
+    (url: string, { arg }: { arg: CreateInstitution }) => {
+      return fetcherV2<GetInstitutionResponse, CreateInstitution>(url, {
+        arg: { method: 'POST', body: arg },
+      })
+    },
+    {
+      onSuccess: () => {
+        onCreateSuccess && onCreateSuccess()
+      },
+    },
+  )
+
+  const {
+    trigger: udpateInstitutionTrigger,
+    isMutating: isUpdatingInstitution,
+    error: updateInstitutionError,
+  } = useSWRMutation<
+    GetInstitutionResponse,
+    Error,
+    Key,
+    UpdateInstitutionParams
+  >(
+    APIRotues.Institution,
+    (url: string, { arg }: { arg: UpdateInstitutionParams }) => {
+      const { id, ...body } = arg
+      return fetcherV2<GetInstitutionResponse, UpdateInstitution>(
+        url.replace(':id', arg.id),
+        {
+          arg: { method: 'PUT', body: body },
+        },
+      )
+    },
+    {
+      onSuccess: () => {
+        onUpdateSuccess && onUpdateSuccess()
+      },
+    },
+  )
+
+  const {
+    trigger: deleteInstitutionTrigger,
+    isMutating: isDeletingInstitution,
+    error: deleteInstitutionError,
+  } = useSWRMutation<Response, Error, Key, DeleteInstitution>(
+    APIRotues.Institution,
+    (url: string, { arg }: { arg: DeleteInstitution }) => {
+      return fetcherV2<Response, string>(url.replace(':id', arg.id), {
+        arg: { method: 'DELETE' },
+      })
+    },
+    {
+      onSuccess: () => {
+        onDeleteSuccess && onDeleteSuccess()
+      },
+    },
+  )
+
+  const createInstitution = (body: CreateInstitution) => {
+    createInstitutionTrigger(body)
+  }
+
+  const updateInstitution = (body: UpdateInstitutionParams) => {
+    udpateInstitutionTrigger(body)
+  }
+
+  const deleteInstitution = (params: DeleteInstitution) => {
+    deleteInstitutionTrigger(params)
+  }
 
   return {
     institutions: {
@@ -44,5 +140,14 @@ export const useInstitutions = ({ searchParams, config }: Props) => {
     isLoadingInstitutions,
     institutionError,
     getInstitutions,
+    createInstitution,
+    isCreatingInstitution,
+    createInstitutionError,
+    updateInstitution,
+    isUpdatingInstitution,
+    updateInstitutionError,
+    deleteInstitution,
+    isDeletingInstitution,
+    deleteInstitutionError,
   }
 }

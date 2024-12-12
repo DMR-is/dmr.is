@@ -95,6 +95,7 @@ module.exports = {
       slug VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT advert_involved_party_title_slug_unique UNIQUE (title, slug),
       PRIMARY KEY (id)
     );
 

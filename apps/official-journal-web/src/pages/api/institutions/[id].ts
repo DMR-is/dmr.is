@@ -53,7 +53,7 @@ class InstitutionHandler {
     const id = req.query.id as string
     await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteUser({
+      .deleteInstitution({
         id: id,
       })
 

@@ -17,13 +17,16 @@ import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
 import { CreateAdminUser } from '../../components/users/CreateAdminUser'
 import { CreateApplicationUser } from '../../components/users/CreateApplicationUser'
+import { CreateInstitution } from '../../components/users/CreateInstitution'
 import { UpdateAdminUser } from '../../components/users/UpdateAdminUser'
 import { UpdateApplicationUser } from '../../components/users/UpdateApplicationUser'
+import { UpdateInstitution } from '../../components/users/UpdateInstitution'
 import {
   AdminUser,
   AdminUserRole,
   CreateAdminUser as CreateAdminUserDto,
   CreateApplicationUser as CreateApplicationUserDto,
+  CreateInstitution as CreateInstitutionDto,
   Institution,
   UpdateAdminUser as UpdateAdminUserDto,
   UpdateApplicationUser as UpdateApplicationUserDto,
@@ -40,8 +43,10 @@ type Props = {
 }
 
 export default function UsersPage({ currentUser, roles }: Props) {
-  const [selectedInstitution, setSelectedInstitution] =
-    useState<Institution | null>(null)
+  const [
+    selectedApplicationUserInstitution,
+    setSelectedApplicationUserInstitution,
+  ] = useState<Institution | null>(null)
 
   const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
     nationalId: '',
@@ -81,6 +86,18 @@ export default function UsersPage({ currentUser, roles }: Props) {
     lastName: '',
     involvedPartyIds: [],
   })
+
+  const [createInstitutionState, setCreateInstitutionState] =
+    useState<CreateInstitutionDto>({
+      title: '',
+    })
+
+  const [updateInstitutionState, setUpdateInstitutionState] =
+    useState<Institution>({
+      id: '',
+      title: '',
+      slug: '',
+    })
 
   const {
     users,
@@ -122,7 +139,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
     isDeletingApplicationUser,
   } = useApplicationUsers({
     searchParams: {
-      involvedParty: selectedInstitution?.id,
+      involvedParty: selectedApplicationUserInstitution?.id,
     },
     config: {
       refreshInterval: 0,
@@ -147,7 +164,17 @@ export default function UsersPage({ currentUser, roles }: Props) {
     },
   })
 
-  const { institutions } = useInstitutions({
+  const {
+    institutions,
+    createInstitution,
+    deleteInstitution,
+    getInstitutions,
+    isCreatingInstitution,
+    isDeletingInstitution,
+    isLoadingInstitutions,
+    isUpdatingInstitution,
+    updateInstitution,
+  } = useInstitutions({
     config: {
       refreshInterval: 0,
       revalidateOnFocus: false,
@@ -156,6 +183,18 @@ export default function UsersPage({ currentUser, roles }: Props) {
       search: undefined,
       page: 1,
       pageSize: 1000,
+    },
+    onCreateSuccess: () => {
+      setCreateInstitutionState({ title: '' })
+      getInstitutions()
+    },
+    onDeleteSuccess: () => {
+      setUpdateInstitutionState({ id: '', title: '', slug: '' })
+      getInstitutions()
+    },
+    onUpdateSuccess: () => {
+      setUpdateInstitutionState({ id: '', title: '', slug: '' })
+      getInstitutions()
     },
   })
 
@@ -229,7 +268,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12']} paddingBottom={[2, 2, 3]}>
-            <Text variant="h3">Notendaumsjón og stofnanir</Text>
+            <Text variant="h3">Umsjón notenda og stofnana</Text>
           </GridColumn>
         </GridRow>
         <GridRow rowGap={[2, 2, 3]}>
@@ -299,7 +338,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
           </GridColumn>
         </GridRow>
         <GridRow>
-          <GridColumn span={['12/12', '12/12', '6/12']}>
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[2, 2, 3]}
+          >
             <ContentWrapper title="Notendur umsóknarkerfis">
               <Stack space={[2, 2, 3]}>
                 <Select
@@ -314,19 +356,19 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   options={institutionsOptions}
                   onChange={(opt) => {
                     if (!opt?.value) {
-                      setSelectedInstitution(null)
+                      setSelectedApplicationUserInstitution(null)
                       resetUpdateApplicationUserState()
                       return
                     }
 
-                    setSelectedInstitution(opt.value)
+                    setSelectedApplicationUserInstitution(opt.value)
                   }}
                 />
                 <Select
                   filterConfig={{
                     matchFrom: 'start',
                   }}
-                  isDisabled={!selectedInstitution}
+                  isDisabled={!selectedApplicationUserInstitution}
                   isClearable
                   noOptionsMessage="Engir notendur eru skráðir fyrir þessa stofnun"
                   isLoading={applicationUsersLoading}
@@ -364,7 +406,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
               </Stack>
             </ContentWrapper>
           </GridColumn>
-          <GridColumn span={['12/12', '12/12', '6/12']}>
+          <GridColumn
+            span={['12/12', '12/12', '6/12']}
+            paddingBottom={[2, 2, 3]}
+          >
             <ContentWrapper title="Stofna innsendanda">
               <CreateApplicationUser
                 user={createApplicationUserState}
@@ -372,6 +417,64 @@ export default function UsersPage({ currentUser, roles }: Props) {
                 isCreatingUser={isCreatingApplicationUser}
                 onUpdateUser={(user) => setCreateApplicationUserState(user)}
                 onCreateUser={(user) => createApplicationUser(user)}
+              />
+            </ContentWrapper>
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={[2, 2, 3]}>
+          <GridColumn span={['12/12', '12/12', '6/12']}>
+            <ContentWrapper title="Stofnanir">
+              <Stack space={[2, 2, 3]}>
+                <Select
+                  isClearable
+                  isLoading={isLoadingInstitutions}
+                  filterConfig={{
+                    matchFrom: 'start',
+                  }}
+                  size="sm"
+                  label="Stofnun"
+                  placeholder="Veldu stofnun"
+                  backgroundColor="blue"
+                  options={institutionsOptions}
+                  onChange={(opt) => {
+                    if (!opt?.value) {
+                      setSelectedApplicationUserInstitution(null)
+                      resetUpdateApplicationUserState()
+                      return
+                    }
+
+                    setUpdateInstitutionState(opt.value)
+                  }}
+                />
+                <UpdateInstitution
+                  isUpdating={isUpdatingInstitution}
+                  isDeleting={isDeletingInstitution}
+                  institution={updateInstitutionState}
+                  onChange={(institution) =>
+                    setUpdateInstitutionState(institution)
+                  }
+                  onUpdate={() =>
+                    updateInstitution({
+                      id: updateInstitutionState.id,
+                      title: updateInstitutionState.title,
+                    })
+                  }
+                  onDelete={() =>
+                    deleteInstitution({ id: updateInstitutionState.id })
+                  }
+                />
+              </Stack>
+            </ContentWrapper>
+          </GridColumn>
+          <GridColumn span={['12/12', '12/12', '6/12']}>
+            <ContentWrapper title="Stofna stofnun">
+              <CreateInstitution
+                institution={createInstitutionState}
+                isCreating={isCreatingInstitution}
+                onUpdate={(institution) =>
+                  setCreateInstitutionState(institution)
+                }
+                onCreate={(institution) => createInstitution(institution)}
               />
             </ContentWrapper>
           </GridColumn>
