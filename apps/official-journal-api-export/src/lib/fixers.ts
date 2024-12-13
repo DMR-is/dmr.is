@@ -88,22 +88,27 @@ export async function fixTypes(
   // Legacy ids of removed types
   const removedTypes: Array<string> = []
 
-  const withSlugs: Array<Type> = types.map((type) => {
+  const withSlugs: Type[] = []
+
+  types.forEach((type) => {
     const mainType = mainTypes.find(
       (mainType) => mainType.id === type.main_type_id,
     )
 
     if (!mainType) {
-      throw new Error(`Main type not found for type ${type.title}`)
+      console.error(`Main type not found for type ${type.title}`)
+      return
     }
 
     // department-maintype-type
     const slug = slugit(`${mainType.slug}-${type.title}`)
 
-    return {
+    const t = {
       ...type,
       slug: slug,
     }
+
+    withSlugs.push(t)
   })
 
   const withFixedSlugs = withSlugs.map((type) => {
