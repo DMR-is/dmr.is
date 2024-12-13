@@ -11,6 +11,7 @@ import {
   getCategories,
   getDepartments,
   getInvolvedParties,
+  getMainTypes,
   getTypes,
 } from './lib/db.js'
 import { getEnv } from './lib/environment.js'
@@ -22,6 +23,7 @@ import {
   generateCategoryInserts,
   generateDepartmentInserts,
   generateInvolvedPartiesInserts,
+  generateMainTypeInserts,
   generateSuperCategoryInserts,
   generateTypeInserts,
 } from './lib/inserts.js'
@@ -72,7 +74,10 @@ async function main() {
 
   // Step 1.1: Select all legacy data from GoPro
   const dbDepartments = await exec('get departments', getDepartments)
-  const dbTypes = await exec('get types', getTypes)
+  const dbMainTypes = await exec('get main types', () =>
+    getMainTypes(dbDepartments),
+  )
+  const dbTypes = await exec('get types', () => getTypes(dbMainTypes))
   const dbCategories = await exec('get categories', getCategories)
   const dbAdvertStatuses = await exec('get advert statuses', getAdvertStatuses)
   const dbInvolvedParties = await exec(
@@ -93,7 +98,9 @@ async function main() {
   //const superCategories = await exec('get super categories', getSuperCategories)
   // Step 2: Fix, map and wrangle the data
   const departments = await exec('fix deps', () => fixDeps(dbDepartments))
-  const fixedTypes = await exec('fix types', () => fixTypes(dbTypes))
+  const fixedTypes = await exec('fix types', () =>
+    fixTypes(dbTypes, dbMainTypes),
+  )
   const cats = await exec('fix cats', () => fixCats(dbCategories))
   const parties = await exec('fix involved parties', () =>
     fixInvolvedParties(dbInvolvedParties),
@@ -115,6 +122,7 @@ async function main() {
     'generating inserts',
     () => {
       inserts.departments = generateDepartmentInserts(departments)
+      inserts.mainTypes = generateMainTypeInserts(dbMainTypes)
       inserts.types = generateTypeInserts(fixedTypes.types)
       //inserts.superCategories = generateSuperCategoryInserts(superCategories)
       inserts.categories = generateCategoryInserts(cats)

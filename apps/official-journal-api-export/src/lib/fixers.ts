@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
+
 import {
   Advert,
   AdvertCategory,
@@ -11,6 +13,7 @@ import {
   DbType,
   Department,
   InvolvedParty,
+  MainType,
   SuperCategory,
   Type,
 } from '../types'
@@ -71,7 +74,10 @@ const SKIP_TYPES = [
   'ÞETTA ER PRUFUAUGLÝSING',
 ]
 
-export async function fixTypes(types: Array<DbType>): Promise<{
+export async function fixTypes(
+  types: Array<DbType>,
+  mainTypes: Array<MainType>,
+): Promise<{
   types: Array<Type>
   typeLegacyMap: Map<string, string>
   removedTypes: Array<string>
@@ -83,13 +89,42 @@ export async function fixTypes(types: Array<DbType>): Promise<{
   const removedTypes: Array<string> = []
 
   const withSlugs: Array<Type> = types.map((type) => {
+    const mainType = mainTypes.find(
+      (mainType) => mainType.id === type.main_type_id,
+    )
+
+    if (!mainType) {
+      throw new Error(`Main type not found for type ${type.title}`)
+    }
+
+    // department-maintype-type
+    const slug = slugit(`${mainType.slug}-${type.title}`)
+
     return {
       ...type,
-      slug: slugit(type.title),
+      slug: slug,
     }
   })
 
-  const withoutSkippedTypes = withSlugs.filter((type) => {
+  const withFixedSlugs = withSlugs.map((type) => {
+    const mainType = withSlugs.filter(
+      (t) => t.main_type_id === type.main_type_id,
+    )
+
+    // only one type for this main type, we need to have the same slug for main type and type (default type)
+    if (mainType.length === 1) {
+      const slug = mainType[0].slug
+
+      return {
+        ...type,
+        slug: slug,
+      }
+    }
+
+    return type
+  })
+
+  const withoutSkippedTypes = withFixedSlugs.filter((type) => {
     const skip = SKIP_TYPES.indexOf(type.title) === -1
 
     if (!skip) {
@@ -222,27 +257,40 @@ export function fixAdverts(
     typeLegacyMap: Map<string, string>
     removedTypes: Array<string>
   },
+  mainTypes: Array<MainType>,
   adverts: DbAdverts,
 ): Promise<Array<Advert>> {
   const mapped = adverts.adverts.map((advert) => {
-    let typeId =
-      types.types
-        .filter(
-          (x) =>
-            x.title.toLowerCase() ===
-            advert.typeName.toLocaleLowerCase().trim(),
-        )
-        .find((x) => x.department_id === advert.department_id)?.id ?? null
-    if (!typeId && types.typeLegacyMap.get(advert.typeName)) {
+    const advertTypeName = advert.type_id
+
+    // search for the type by name -> could be multiple types with the same name
+    const filteredTypes = types.types.filter(
+      (type) => type.title.toLowerCase() === advertTypeName?.toLowerCase(),
+    )
+
+    // all main types under the department
+    const filteredMainTypes = mainTypes.filter(
+      (mainType) => mainType.department_id === advert.department_id,
+    )
+
+    const type = filteredTypes.find((type) =>
+      filteredMainTypes.find((mainType) => mainType.id === type.main_type_id),
+    )
+
+    let typeId: string | null = type?.id ?? null
+    if (!type?.id && types.typeLegacyMap.get(advert.typeName)) {
       typeId =
         types.types.find((x) => types.typeLegacyMap.get(advert.typeName))?.id ??
         null
     }
 
+    if (!typeId) {
+      console.error('Type not found for advert', advert.id)
+    }
+
     return {
       ...advert,
       document_html: fixHtml(advert.document_html),
-
       type_id: typeId,
       document_pdf_url: advert.document_pdf_url, //fixPdfUrl() //need to take in attachments here
     }

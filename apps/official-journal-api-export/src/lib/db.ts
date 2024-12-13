@@ -21,7 +21,10 @@ import {
   AdvertCategory,
   DbDocuments,
   Document,
+  MainType,
+  DbMainType,
 } from '../types'
+import { slugit } from './slug'
 
 const DEPARTMENT_QUERY =
   'SELECT typename AS name, typeid AS id, COUNT(*) AS count FROM Adverts GROUP BY typename, typeid'
@@ -144,14 +147,134 @@ export async function getDepartments(): Promise<Array<DbDepartment>> {
   return deps
 }
 
-export async function getTypes() {
+export async function getMainTypes(
+  departments: Array<DbDepartment>,
+): Promise<Array<MainType>> {
+  const mainTypes = [
+    {
+      id: 'e448ed42-df5e-4eba-824b-c11a7d144281',
+      title: 'FORSETAÚRSKURÐUR',
+      slug: 'a-deild-forsetaurskurdur',
+    },
+    {
+      id: 'e5c4c23c-7da2-4a21-8688-f1a50842605a',
+      title: 'AUGLÝSING',
+      slug: 'a-deild-auglysing',
+    },
+    {
+      id: 'e595541e-44f2-487d-8726-e78cf1f8cea2',
+      title: 'FORSETABRÉF',
+      slug: 'a-deild-forsetabref',
+    },
+    {
+      id: '7703e365-894d-4b3c-bcd6-e8550025d7b9',
+      title: 'REGLUGERÐ',
+      slug: 'a-deild-reglugerd',
+    },
+    {
+      id: 'ca1c4a13-e1de-4e91-a8c7-94ad70112aba',
+      title: 'REGLUR',
+      slug: 'a-deild-reglur',
+    },
+    {
+      id: '9dfa19d9-2cfc-46d1-9e0a-230efe13968a',
+      title: 'ARÐSKRÁ',
+      slug: 'b-deild-ardskra',
+    },
+    {
+      id: '2646ff85-997e-4640-98ef-cfdf263feada',
+      title: 'SAMÞYKKT',
+      slug: 'b-deild-samthykkt',
+    },
+    {
+      id: 'd63db4fd-8e99-4773-b176-6b9b28d48e13',
+      title: 'FYRIRMÆLI',
+      slug: 'b-deild-fyrirmaeli',
+    },
+    {
+      id: 'b7576d53-cc3a-47c5-b156-604873690ae5',
+      title: 'GJALDSKRÁ',
+      slug: 'b-deild-gjaldskra',
+    },
+    {
+      id: '5de250c0-b8c3-438b-82bb-6c1f20d3e8bf',
+      title: 'LEIÐBEININGAR',
+      slug: 'b-deild-leidbeiningar',
+    },
+    {
+      id: 'cde19be1-430a-4bee-9259-2645c12e71ee',
+      title: 'REIKNINGUR',
+      slug: 'b-deild-reikningur',
+    },
+    {
+      id: '37360fa4-2296-4154-a007-08a2dc947e64',
+      title: 'SKIPULAGSSKRÁ',
+      slug: 'b-deild-skipulagsskra',
+    },
+    {
+      id: '8cfbcca0-9f21-477d-8f2a-7d0cf2cc423a',
+      title: 'LÖG',
+      slug: 'a-deild-log',
+    },
+    {
+      id: '317c862c-925e-4855-82f3-f848a3c9a8ff',
+      title: 'AUGLÝSING',
+      slug: 'c-deild-auglysing',
+    },
+    {
+      id: 'f0b37828-dd64-4e68-a093-7fe58f7b5d35',
+      title: 'REGLUGERÐ',
+      slug: 'c-deild-reglugerd',
+    },
+  ]
+
+  const mapped: MainType[] = []
+
+  mainTypes.forEach((type) => {
+    const mainTypeDepartmentSlug = type.slug.split('-').slice(0, 2).join('-')
+
+    const department = departments.find((dep) => {
+      const departmentSlug = slugit(dep.title)
+
+      return departmentSlug === mainTypeDepartmentSlug
+    })
+
+    if (!department) {
+      console.error(
+        `Department not found for ${type.title}, when mapping main types`,
+      )
+
+      return
+    }
+
+    const mt = {
+      ...type,
+      department_id: department.id,
+    }
+
+    mapped.push(mt)
+  })
+
+  return mapped
+}
+
+export async function getTypes(mainTypes: Array<MainType>) {
   const typesFromDb = await mssql.query(TYPE_QUERY)
   const records = typesFromDb.recordset as Array<any>
   const types: Array<DbType> = []
 
   records.forEach((type) => {
+    const mainType = mainTypes.find((mainType) => {
+      return mainType.department_id === type.departmentId
+    })
+
+    if (!mainType) {
+      console.error(`Main type not found for ${type.name}, when mapping types`)
+      return
+    }
+
     const t = {
-      department_id: type.departmentId,
+      main_type_id: mainType.department_id,
       title: type.name,
       id: type.id,
       legacy_id: type.id,

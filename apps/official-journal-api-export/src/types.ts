@@ -6,8 +6,17 @@ export type Department = {
 
 export type DbDepartment = Omit<Department, 'slug'>
 
-export type Type = {
+export type MainType = {
+  id: string
+  title: string
+  slug: string
   department_id: string
+}
+
+export type DbMainType = Omit<MainType, 'main_type_id'>
+
+export type Type = {
+  main_type_id: string
   title: string
   slug: string
   id: string

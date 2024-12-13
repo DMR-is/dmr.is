@@ -9,6 +9,7 @@ import {
   Advert,
   AdvertCategory,
   CategoryDepartment,
+  MainType,
 } from '../types'
 
 export function generateDepartmentInserts(departments: Array<Department>) {
@@ -19,9 +20,17 @@ export function generateDepartmentInserts(departments: Array<Department>) {
   return inserts
 }
 
+export function generateMainTypeInserts(mainTypes: Array<MainType>) {
+  const inserts = mainTypes.map((mainType) => {
+    return `INSERT INTO advert_main_type (id, title, slug, department_id) VALUES ('${mainType.id}', '${mainType.title}', '${mainType.slug}', ${mainType.department_id});`
+  })
+
+  return inserts
+}
+
 export function generateTypeInserts(types: Array<Type>) {
   const inserts = types.map((type) => {
-    return `INSERT INTO advert_type (id, title, slug, department_id, legacy_id) VALUES ('${type.id}', '${type.title}', '${type.slug}', '${type.department_id}', '${type.legacy_id}');`
+    return `INSERT INTO advert_type (id, title, slug, main_type_id, legacy_id) VALUES ('${type.id}', '${type.title}', '${type.slug}', '${type.main_type_id}', '${type.legacy_id}');`
   })
 
   return inserts
