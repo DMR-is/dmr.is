@@ -82,5 +82,15 @@ export const messages = {
       defaultMessage: 'Bættu við skilaboðum til auglýsanda',
       description: '',
     },
+    commentsHide: {
+      id: 'web.components.comments:comments-hide',
+      defaultMessage: 'Fela athugasemdir',
+      description: '',
+    },
+    commentsShow: {
+      id: 'web.components.comments:comments-show',
+      defaultMessage: 'Sýna athugasemdir',
+      description: '',
+    },
   }),
 }
