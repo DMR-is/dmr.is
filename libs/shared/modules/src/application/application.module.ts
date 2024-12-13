@@ -20,6 +20,7 @@ import caseModels from '../case/models'
 import commentModels from '../comment/models'
 import advertModels from '../journal/models'
 import { S3Module } from '../s3/s3.module'
+import { SignatureModule } from '../signature/signature.module'
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { S3Module } from '../s3/s3.module'
     AuthModule,
     AttachmentsModule,
     ApplicationUserModule,
+    SignatureModule,
     forwardRef(() => SharedCaseModule),
     forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),

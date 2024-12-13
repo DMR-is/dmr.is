@@ -25,7 +25,7 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { calculatePriceForApplication } from '@dmr.is/utils'
+import { calculatePriceForApplication, signatureMapper } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -42,6 +42,7 @@ import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
+import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 import { applicationCaseMigrate } from './migrations'
@@ -62,6 +63,8 @@ export class ApplicationService implements IApplicationService {
     private readonly caseService: ICaseService,
     @Inject(IAuthService)
     private readonly authService: IAuthService,
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
     private readonly sequelize: Sequelize,
@@ -305,6 +308,35 @@ export class ApplicationService implements IApplicationService {
 
       const { application } = ResultWrapper.unwrap(
         await this.getApplication(applicationId),
+      )
+
+      const { signatures } = ResultWrapper.unwrap(
+        await this.signatureService.getSignaturesByCaseId(
+          caseLookup.id,
+          undefined,
+          transaction,
+        ),
+      )
+
+      Promise.all(
+        signatures.map(async (signature) => {
+          this.signatureService.deleteSignature(signature.id, transaction)
+        }),
+      )
+
+      const signatureArray = signatureMapper(
+        application.answers.signatures,
+        application.answers.misc.signatureType,
+        caseLookup.id,
+        caseLookup.involvedPartyId,
+      )
+      Promise.all(
+        signatureArray.map(async (signature) => {
+          await this.signatureService.createCaseSignature(
+            signature,
+            transaction,
+          )
+        }),
       )
 
       ResultWrapper.unwrap(
