@@ -5,10 +5,9 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 import { AdminUserRole } from '@dmr.is/shared/dto'
 
-import { checkExpiry, refreshAccessToken } from '@island.is/next-ids-auth/utils'
-
 import { createDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
+import { checkTokenExpiry, TokenService } from '../../../lib/token-service'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -81,21 +80,20 @@ export const authOptions: AuthOptions = {
         token.isRefreshTokenExpired = false
       }
 
+      if (token.isRefreshTokenExpired) {
+        return token
+      }
+
       // Handle token expiry and refresh logic
       if (
-        checkExpiry(
+        checkTokenExpiry(
           token.accessToken as string,
           token.isRefreshTokenExpired as boolean,
         )
       ) {
         try {
-          const [accessToken, refreshToken] = await refreshAccessToken(
-            token.refreshToken as string,
-            identityServerConfig.clientId,
-            process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET,
-            process.env.NEXTAUTH_URL,
-            process.env.IDENTITY_SERVER_DOMAIN,
-          )
+          const [accessToken, refreshToken] =
+            await TokenService.refreshAccessToken(token.refreshToken as string)
 
           token.accessToken = accessToken
           token.refreshToken = refreshToken
@@ -146,7 +144,7 @@ export const authOptions: AuthOptions = {
 
         user.nationalId = decodedAccessToken?.nationalId as string
         user.accessToken = account.access_token
-        user.refreshToken = decodedAccessToken?.refreshToken
+        user.refreshToken = account.refresh_token
         user.idToken = account?.id_token
 
         // Custom auth member from DB.
