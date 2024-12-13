@@ -35,7 +35,6 @@ import { useAdminUsers, useInstitutions } from '../../hooks/api'
 import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
-import { Routes } from '../../lib/constants'
 import { loginRedirect } from '../../lib/utils'
 
 type Props = {

@@ -186,8 +186,6 @@ export const fetcherV2 = async <TData, TBody = never>(
 
   const fullUrl = arg.query ? `${url}?${arg.query.toString()}` : url
 
-  console.log('fetcherV2', arg.method, fullUrl)
-
   const res = await fetch(fullUrl, {
     method: arg.method,
     body: withBody ? JSON.stringify(arg.body) : undefined,
