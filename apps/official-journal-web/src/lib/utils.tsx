@@ -389,3 +389,18 @@ export const getOverviewStatusColor = (status: string) => {
       return 'blue'
   }
 }
+
+export const loginRedirect = (callbackUrl?: string) => {
+  let fullUrl: string = Routes.Login
+
+  if (callbackUrl) {
+    fullUrl = `${Routes.Login}?callbackUrl=${callbackUrl}`
+  }
+
+  return {
+    redirect: {
+      destination: fullUrl,
+      permanent: false,
+    },
+  }
+}

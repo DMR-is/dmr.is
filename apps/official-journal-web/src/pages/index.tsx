@@ -30,7 +30,7 @@ import { LayoutProps } from '../layout/Layout'
 import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
-import { deleteUndefined } from '../lib/utils'
+import { deleteUndefined, loginRedirect } from '../lib/utils'
 
 type Props = {
   session: Session
@@ -213,17 +213,13 @@ export default function Dashboard(
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
   const dmrClient = createDmrClient()
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const [general, personal, inactive, publishing] = await Promise.all(

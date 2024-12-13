@@ -24,7 +24,7 @@ import {
   CaseOverviewSearchParams,
   getStringFromQueryString,
 } from '../../lib/types'
-import { deleteUndefined } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -225,16 +225,12 @@ export default function CaseProccessingOverviewScreen(
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const layout: LayoutProps = {

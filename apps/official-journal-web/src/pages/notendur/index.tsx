@@ -36,6 +36,7 @@ import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
+import { loginRedirect } from '../../lib/utils'
 
 type Props = {
   currentUser: AdminUser
@@ -484,7 +485,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  resolvedUrl,
+}) => {
   const session = await getSession({ req })
   const client = createDmrClient()
 
@@ -497,12 +501,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   }
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const roles = await client

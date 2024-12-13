@@ -20,7 +20,7 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { APIRotues, CaseDepartmentTabs, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/casePublishOverview'
 import { getStringFromQueryString } from '../../lib/types'
-import { deleteUndefined } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -168,16 +168,12 @@ export default function CasePublishingOverview(
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   query,
   req,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const layout: LayoutProps = {
