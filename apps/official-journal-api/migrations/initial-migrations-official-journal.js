@@ -20,6 +20,7 @@ module.exports = {
       first_name VARCHAR NOT NULL,
       last_name VARCHAR NOT NULL,
       display_name VARCHAR NOT NULL,
+      email VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
       PRIMARY KEY (id)
@@ -33,12 +34,24 @@ module.exports = {
       CONSTRAINT fk_admin_user_role_admin_user_id FOREIGN KEY (admin_user_id) REFERENCES admin_user (id)
     );
 
+    -- "Deildir og tegundir"
     CREATE TABLE advert_department (
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL UNIQUE,
       slug VARCHAR NOT NULL UNIQUE,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      PRIMARY KEY (id)
+    );
+
+    CREATE TABLE advert_main_type (
+      id UUID NOT NULL DEFAULT uuid_generate_v4(),
+      title VARCHAR NOT NULL UNIQUE,
+      slug VARCHAR NOT NULL UNIQUE,
+      department_id UUID NOT NULL,
+      created TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT fk_advert_main_type_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       PRIMARY KEY (id)
     );
 
@@ -94,6 +107,7 @@ module.exports = {
       slug VARCHAR NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT advert_involved_party_title_slug_unique UNIQUE (title, slug),
       PRIMARY KEY (id)
     );
 
@@ -356,9 +370,9 @@ module.exports = {
       first_name VARCHAR NOT NULL,
       last_name VARCHAR NOT NULL,
       email VARCHAR,
-      phone VARCHAR,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT application_user_national_id_unique UNIQUE (national_id),
       PRIMARY KEY (id)
     );
 
