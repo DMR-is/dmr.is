@@ -93,7 +93,9 @@ async function main() {
   //const superCategories = await exec('get super categories', getSuperCategories)
   // Step 2: Fix, map and wrangle the data
   const departments = await exec('fix deps', () => fixDeps(dbDepartments))
-  const fixedTypes = await exec('fix types', () => fixTypes(dbTypes))
+  const fixedTypes = await exec('fix types', () =>
+    fixTypes(dbTypes, dbDepartments),
+  )
   const cats = await exec('fix cats', () => fixCats(dbCategories))
   const parties = await exec('fix involved parties', () =>
     fixInvolvedParties(dbInvolvedParties),

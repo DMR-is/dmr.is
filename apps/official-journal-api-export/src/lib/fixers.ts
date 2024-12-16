@@ -71,7 +71,10 @@ const SKIP_TYPES = [
   'ÞETTA ER PRUFUAUGLÝSING',
 ]
 
-export async function fixTypes(types: Array<DbType>): Promise<{
+export async function fixTypes(
+  types: Array<DbType>,
+  departments: Array<DbDepartment>,
+): Promise<{
   types: Array<Type>
   typeLegacyMap: Map<string, string>
   removedTypes: Array<string>
@@ -83,9 +86,17 @@ export async function fixTypes(types: Array<DbType>): Promise<{
   const removedTypes: Array<string> = []
 
   const withSlugs: Array<Type> = types.map((type) => {
+    const departmentSlug = departments.find(
+      (dep) => dep.id === type.department_id,
+    )
+
+    const slug = departmentSlug
+      ? slugit(`${departmentSlug.title} ${type.title}`)
+      : slugit(type.title)
+
     return {
       ...type,
-      slug: slugit(type.title),
+      slug,
     }
   })
 
