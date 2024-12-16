@@ -10,6 +10,8 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { AccessDenied } from '../components/access-denied/AccessDenied'
+
 type MessageType = {
   title: string
   body?: string
@@ -44,12 +46,13 @@ const fallbackMessage = {
 
 type Props = {
   statusCode: number | null
+  accessDenied: boolean
 }
 
 export default function ErrorScreen(
   data: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) {
-  const { statusCode } = data
+  const { statusCode, accessDenied } = data
   const { asPath } = useRouter()
   const errorMessages: MessageType =
     fallbackMessage[statusCode as keyof typeof fallbackMessage]
@@ -58,33 +61,37 @@ export default function ErrorScreen(
     <GridContainer>
       <GridRow>
         <GridColumn span={'12/12'} paddingBottom={10} paddingTop={8}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            width="full"
-            alignItems="center"
-          >
-            <Text
-              variant="eyebrow"
-              as="div"
-              paddingBottom={2}
-              color="purple400"
+          {accessDenied ? (
+            <AccessDenied />
+          ) : (
+            <Box
+              display="flex"
+              flexDirection="column"
+              width="full"
+              alignItems="center"
             >
-              {statusCode}
-            </Text>
-            {errorMessages?.title && (
-              <>
-                <Text variant="h1" as="h1" paddingBottom={3}>
-                  {errorMessages.title}
-                </Text>
-                <Text variant="intro" as="div">
-                  {errorMessages.body
-                    ? formatBody(errorMessages.body, asPath)
-                    : undefined}
-                </Text>
-              </>
-            )}
-          </Box>
+              <Text
+                variant="eyebrow"
+                as="div"
+                paddingBottom={2}
+                color="purple400"
+              >
+                {statusCode}
+              </Text>
+              {errorMessages?.title && (
+                <>
+                  <Text variant="h1" as="h1" paddingBottom={3}>
+                    {errorMessages.title}
+                  </Text>
+                  <Text variant="intro" as="div">
+                    {errorMessages.body
+                      ? formatBody(errorMessages.body, asPath)
+                      : undefined}
+                  </Text>
+                </>
+              )}
+            </Box>
+          )}
         </GridColumn>
       </GridRow>
     </GridContainer>
@@ -93,6 +100,12 @@ export default function ErrorScreen(
 
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
+  query,
 }) => {
-  return { props: { statusCode: req.statusCode ?? 404 } }
+  return {
+    props: {
+      statusCode: req.statusCode ?? 404,
+      accessDenied: query?.error === 'AccessDenied',
+    },
+  }
 }
