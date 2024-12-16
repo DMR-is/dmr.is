@@ -1,4 +1,4 @@
-import { IsString, IsUUID } from 'class-validator'
+import { IsOptional, IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -6,9 +6,17 @@ export class CreateAdvertTypeBody {
   @ApiProperty({
     type: String,
     description: 'Id of the main type',
+    required: false,
   })
+  @IsOptional()
   @IsUUID()
-  mainTypeId!: string
+  mainTypeId?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Id of the department',
+  })
+  departmentId!: string
 
   @ApiProperty({
     type: String,

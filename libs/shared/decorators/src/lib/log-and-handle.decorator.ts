@@ -43,6 +43,8 @@ export function LogAndHandle(
         }
         return await originalMethod.apply(this, args)
       } catch (error) {
+        console.log(error)
+
         return handleException({
           service: service,
           method: method,

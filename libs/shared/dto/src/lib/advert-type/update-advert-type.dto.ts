@@ -1,10 +1,21 @@
+import { IsOptional, IsString, IsUUID } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 export class UpdateAdvertTypeBody {
   @ApiProperty({
     type: String,
     description: 'New title of the advert type',
-    required: true,
+    required: false,
   })
-  title!: string
+  @IsOptional()
+  @IsString()
+  title?: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsOptional()
+  @IsUUID()
+  mainTypeId?: string
 }

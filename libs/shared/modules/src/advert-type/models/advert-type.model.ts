@@ -4,11 +4,13 @@ import {
   CreatedAt,
   DataType,
   DefaultScope,
+  HasOne,
   Model,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import { AdvertDepartmentModel } from '../../journal/models'
 import { AdvertMainTypeModel } from './advert-main-type.model'
 
 @Table({ tableName: 'advert_type', timestamps: true })
@@ -35,12 +37,22 @@ export class AdvertTypeModel extends Model {
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,
+    field: 'department_id',
+  })
+  departmentId!: string
+
+  @BelongsTo(() => AdvertDepartmentModel, 'department_id')
+  department!: AdvertDepartmentModel
+
+  @Column({
+    type: DataType.UUIDV4,
+    allowNull: true,
     field: 'main_type_id',
   })
-  mainTypeId!: string
+  mainTypeId?: string
 
-  @BelongsTo(() => AdvertMainTypeModel, 'main_type_id')
-  mainType!: AdvertMainTypeModel
+  @HasOne(() => AdvertMainTypeModel, 'id')
+  mainType?: AdvertMainTypeModel
 
   @CreatedAt
   created!: Date

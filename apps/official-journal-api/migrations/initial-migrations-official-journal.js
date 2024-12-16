@@ -58,9 +58,13 @@ module.exports = {
       id UUID NOT NULL DEFAULT uuid_generate_v4(),
       title VARCHAR NOT NULL UNIQUE,
       slug VARCHAR NOT NULL UNIQUE,
-      main_type_id UUID NOT NULL,
+      department_id UUID NOT NULL,
+      main_type_id UUID,
+      legacy_id UUID NOT NULL,
       created TIMESTAMP WITH TIME ZONE DEFAULT now(),
       updated TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      CONSTRAINT slug_unique UNIQUE (slug),
+      CONSTRAINT fk_advert_type_department_id FOREIGN KEY (department_id) REFERENCES advert_department (id),
       CONSTRAINT fk_advert_type_main_type_id FOREIGN KEY (main_type_id) REFERENCES advert_main_type (id),
       PRIMARY KEY (id)
     );

@@ -49,6 +49,9 @@ export class AdvertTypeService implements IAdvertTypeService {
     private readonly advertTypeModel: typeof AdvertTypeModel,
     @InjectModel(AdvertMainTypeModel)
     private readonly advertMainTypeModel: typeof AdvertMainTypeModel,
+    @InjectModel(AdvertDepartmentModel)
+    private readonly advertDepartmentModel: typeof AdvertDepartmentModel,
+
     private sequelize: Sequelize,
   ) {}
 
@@ -61,23 +64,22 @@ export class AdvertTypeService implements IAdvertTypeService {
       query?.department,
     )
 
-    const offset = query?.page || DEFAULT_PAGE_NUMBER
     const limit = query?.pageSize || DEFAULT_PAGE_SIZE
+    const offset = (query?.page || DEFAULT_PAGE_NUMBER - 1) * limit
 
     const typesLookup = await this.advertTypeModel.findAndCountAll({
       distinct: true,
       limit: limit,
       offset: offset,
       where: whereParams,
+      order: [['title', 'DESC']],
       include: [
         {
           model: AdvertMainTypeModel,
-          include: [
-            {
-              model: AdvertDepartmentModel,
-              where: departmentWhereParams,
-            },
-          ],
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: departmentWhereParams,
         },
       ],
     })
@@ -226,14 +228,6 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      await this.createType(
-        {
-          title: body.title,
-          mainTypeId: id,
-        },
-        transaction,
-      )
-
       return ResultWrapper.ok({
         mainType: mapped.result.value.mainType,
       })
@@ -268,23 +262,23 @@ export class AdvertTypeService implements IAdvertTypeService {
   ): Promise<ResultWrapper<GetAdvertType>> {
     try {
       const id = uuid()
-      const mainType = await this.getMainTypeById(body.mainTypeId, transaction)
 
-      if (!mainType.result.ok) {
+      const department = await this.advertDepartmentModel.findByPk(
+        body.departmentId,
+      )
+
+      if (!department) {
+        this.logger.warn(`Advert department not found`, {
+          category: LOGGING_CATEGORY,
+        })
+
         return ResultWrapper.err({
-          code: 404,
-          message: `Yfirflokkur tegundar fannst ekki`,
+          code: 400,
+          message: `Deild með einkenni ${body.departmentId} er ekki til`,
         })
       }
 
-      let slug = ''
-      if (mainType.result.value.mainType.types.length > 0) {
-        slug = slugify(`${mainType.result.value.mainType.slug}-${body.title}`, {
-          lower: true,
-        })
-      } else {
-        slug = mainType.result.value.mainType.slug
-      }
+      const slug = slugify(`${department.slug}-${body.title}`, { lower: true })
 
       const createBody = {
         id: id,
@@ -361,56 +355,20 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      const oldSlug = mainType.slug
-      const slug = slugify(`${mainType.department.slug}-${body.title}`, {
-        lower: true,
-      })
-      const updateMainTypeBody = {
-        title: body.title,
-        slug: slug,
+      const updateBody = {}
+
+      if (body.title) {
+        Object.assign(updateBody, { title: body.title })
+        Object.assign(updateBody, {
+          slug: slugify(`${mainType.department.slug}-${body.title}`, {
+            lower: true,
+          }),
+        })
       }
 
-      await mainType.update(updateMainTypeBody, {
+      await mainType.update(updateBody, {
         transaction,
       })
-
-      if (mainType.types) {
-        const typesToUpdate = mainType.types.filter(
-          (type) => type.slug !== oldSlug,
-        )
-        const typeWithSameSlug = mainType.types.find(
-          (type) => type.slug === oldSlug,
-        )
-
-        // this should always run
-        if (typeWithSameSlug) {
-          await typeWithSameSlug.update(
-            {
-              slug: slug,
-            },
-            {
-              transaction,
-            },
-          )
-        }
-
-        const updatedTypePromises = typesToUpdate.map(async (type) => {
-          const subTypeSlug = slugify(`${slug}-${type.title}`, { lower: true })
-          return this.advertTypeModel.update(
-            {
-              slug: subTypeSlug,
-            },
-            {
-              where: {
-                id: type.id,
-              },
-              transaction,
-            },
-          )
-        })
-
-        await Promise.all(updatedTypePromises)
-      }
 
       const mapped = await this.getMainTypeById(id, transaction)
 
@@ -448,8 +406,9 @@ export class AdvertTypeService implements IAdvertTypeService {
     id: string,
     body: UpdateAdvertTypeBody,
   ): Promise<ResultWrapper<GetAdvertType>> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const type = await this.advertTypeModel.findByPk(id)
+      const type = await this.advertTypeModel.findByPk(id, { transaction })
 
       if (!type) {
         this.logger.warn(`Advert type<${id}> not found`, {
@@ -462,48 +421,36 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      // we need to check if the main type has the same slug if so then we cant update the slug
-      const mainType = await this.advertMainTypeModel.findByPk(type.mainTypeId)
+      const departmentSlug = type.department.slug
+      const slug = body.title
+        ? slugify(`${departmentSlug}-${body.title}`, { lower: true })
+        : type.slug
 
-      if (!mainType) {
-        this.logger.warn(`Main advert type<${type.mainTypeId}> not found`, {
-          id: type.mainTypeId,
-          category: LOGGING_CATEGORY,
-        })
-        return ResultWrapper.err({
-          code: 404,
-          message: `Yfirflokkur fannst ekki`,
-        })
+      const updateBody = {}
+
+      if (body.title) {
+        Object.assign(updateBody, { title: body.title })
       }
 
-      if (mainType.slug === type.slug) {
-        this.logger.warn(
-          `Main advert type<${type.mainTypeId}> has the same slug as the type<${id}>`,
-          {
-            id: type.mainTypeId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return ResultWrapper.err({
-          code: 400,
-          message: `Ekki er hægt að uppfæra þessa tegund`,
-        })
+      if (body.mainTypeId) {
+        Object.assign(updateBody, { mainTypeId: body.mainTypeId })
       }
 
-      const updateBody = {
-        title: body.title,
-        slug: slugify(body.title, { lower: true }),
+      if (slug !== type.slug) {
+        Object.assign(updateBody, { slug: slug })
       }
 
       const updated = await type.update(updateBody, {
+        transaction,
         returning: true,
       })
 
+      await transaction.commit()
       return ResultWrapper.ok({
         type: advertTypeMigrate(updated),
       })
     } catch (error) {
+      await transaction.rollback()
       if (error instanceof ValidationError) {
         this.logger.warn(`Advert type<${id}> already exists`, {
           id: id,
@@ -551,7 +498,9 @@ export class AdvertTypeService implements IAdvertTypeService {
       })
 
       await Promise.all(
-        subTypes.map((type) => type.destroy({ transaction: transaction })),
+        subTypes.map((type) =>
+          type.update({ mainTypeId: null }, { transaction: transaction }),
+        ),
       )
       await mainType.destroy({ transaction: transaction })
       await transaction.commit()
@@ -600,32 +549,6 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      const mainType = await this.advertMainTypeModel.findByPk(type.mainTypeId)
-      if (!mainType) {
-        this.logger.warn(`Main advert type<${type.mainTypeId}> not found`, {
-          id: type.mainTypeId,
-          category: LOGGING_CATEGORY,
-        })
-        return ResultWrapper.err({
-          code: 404,
-          message: `Yfirflokkur fannst ekki`,
-        })
-      }
-
-      if (mainType.slug === type.slug) {
-        this.logger.warn(
-          `Main advert type<${type.mainTypeId}> has the same slug as the type<${id}>`,
-          {
-            id: type.mainTypeId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-
-        return ResultWrapper.err({
-          code: 400,
-          message: `Ekki er hægt að eyða þessari tegund`,
-        })
-      }
       await type.destroy({ transaction: transaction })
       await transaction.commit()
 

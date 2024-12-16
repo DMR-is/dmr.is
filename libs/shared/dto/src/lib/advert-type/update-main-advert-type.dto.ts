@@ -6,8 +6,8 @@ export class UpdateAdvertMainType {
   @ApiProperty({
     type: String,
     description: 'New title of the main advert type',
-    required: true,
+    required: false,
   })
   @IsString()
-  title!: string
+  title?: string
 }
