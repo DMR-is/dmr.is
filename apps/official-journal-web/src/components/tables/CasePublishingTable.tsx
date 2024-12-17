@@ -115,15 +115,14 @@ export const CasePublishingTable = ({ columns }: Props) => {
   })
   const [selectedCases, setSelectedCases] = useState<Case[]>([])
 
-  const { data: departmentsData } = useDepartments({
+  const { departments } = useDepartments({
     options: {
       refreshInterval: 0,
     },
   })
 
-  const departmentId = departmentsData?.departments.find(
-    (d) => d.slug === department,
-  )?.id as string
+  const departmentId = departments?.find((d) => d.slug === department)
+    ?.id as string
 
   const { data: nextPublicationNumber } = useNextPublicationNumber({
     options: {
