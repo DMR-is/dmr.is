@@ -99,14 +99,14 @@ export async function fixTypes(
 
     const hasSameSlug = withSlugs.filter((t) => t.slug === slug)
 
-    if (hasSameSlug) {
+    if (hasSameSlug.length > 0) {
       slug = `${slug}-${hasSameSlug.length}`
     }
 
-    return {
+    withSlugs.push({
       ...type,
       slug,
-    }
+    })
   })
 
   const withoutSkippedTypes = withSlugs.filter((type) => {
