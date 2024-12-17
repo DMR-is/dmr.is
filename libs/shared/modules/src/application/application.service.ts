@@ -8,12 +8,16 @@ import {
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdvertTemplateType,
+  AdvertTemplateTypeEnums,
   Application,
   ApplicationUser,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
+  GetAdvertTemplateResponse,
+  GetAdvertTemplatesResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -25,7 +29,11 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { calculatePriceForApplication, signatureMapper } from '@dmr.is/utils'
+import {
+  calculatePriceForApplication,
+  getTemplate,
+  signatureMapper,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -400,6 +408,38 @@ export class ApplicationService implements IApplicationService {
       code: 500,
       message: 'Could not post application',
     })
+  }
+
+  /**
+   * Returns list of available advert template types.
+   *
+   * @returns A `ResultWrapper` containing an array of available types.
+   */
+  @LogAndHandle()
+  @Transactional()
+  async getApplicationAdvertTemplates(): Promise<
+    ResultWrapper<GetAdvertTemplatesResponse>
+  > {
+    const res = Object.values<string>(AdvertTemplateTypeEnums)
+
+    return ResultWrapper.ok({ types: res })
+  }
+
+  /**
+   * Creates an advert template.
+   * If no available value is provided for type, it will return 'AUGLÝSING' as default.
+   *
+   * @param type - The type of advert requested.
+   * @returns A `ResultWrapper` containing the result of the operation.
+   */
+  @LogAndHandle()
+  @Transactional()
+  async getApplicationAdvertTemplate(
+    input: AdvertTemplateType,
+  ): Promise<ResultWrapper<GetAdvertTemplateResponse>> {
+    const res = getTemplate(input.type)
+
+    return ResultWrapper.ok(res)
   }
 
   /**
