@@ -150,8 +150,19 @@ export async function fixTypes(
       }
     }
   }
+
+  // remove duplicates
+  const uniqueTypes: Array<Type> = []
+  withConsolidatedTypes.forEach((type) => {
+    const found = uniqueTypes.find((x) => x.slug === type.slug)
+
+    if (!found) {
+      uniqueTypes.push(type)
+    }
+  })
+
   const data = {
-    types: withConsolidatedTypes,
+    types: uniqueTypes,
     typeLegacyMap,
     removedTypes,
   }
