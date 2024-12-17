@@ -1,4 +1,7 @@
+import dynamic from 'next/dynamic'
+
 import {
+  Box,
   GridColumn,
   GridContainer,
   GridRow,
@@ -12,6 +15,11 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate, getSignatureDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
+
+const OriginalCompare = dynamic(
+  () => import('../original-compare/OriginalCompare'),
+  { ssr: false },
+)
 
 type Props = {
   data: Case
@@ -110,6 +118,11 @@ export const StepYfirlestur = ({ data }: Props) => {
                 })
               }}
             />
+          </GridColumn>
+          <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
+            <Box display="flex" justifyContent="flexEnd">
+              <OriginalCompare activeCase={activeCase} />
+            </Box>
           </GridColumn>
         </GridRow>
       )}

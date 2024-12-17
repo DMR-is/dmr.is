@@ -30,6 +30,7 @@ export interface ISignatureService {
   getSignaturesByCaseId(
     caseId: string,
     params?: DefaultSearchParams,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
   getSignaturesByAdvertId(
     advertId: string,

@@ -5,9 +5,12 @@ import {
   IApplicationUserService,
 } from '@dmr.is/modules'
 import {
+  AdvertTemplateTypeEnums,
   ApplicationUser,
   ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
+  GetAdvertTemplateResponse,
+  GetAdvertTemplatesResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -380,6 +383,39 @@ export class ApplicationController {
   ) {
     return ResultWrapper.unwrap(
       await this.applicationService.getApplicationCase(applicationId),
+    )
+  }
+
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(false)
+  @Route({
+    path: 'advert/templates',
+    method: 'get',
+    operationId: 'getApplicationAdvertTemplates',
+    responseType: GetAdvertTemplatesResponse,
+  })
+  async getApplicationAdvertTemplates() {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplicationAdvertTemplates(),
+    )
+  }
+
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(false)
+  @Route({
+    path: 'advert/templates/:advertType',
+    method: 'get',
+    operationId: 'getApplicationAdvertTemplate',
+    params: [{ name: 'advertType', type: 'string', required: true }],
+    responseType: GetAdvertTemplateResponse,
+  })
+  async getApplicationAdvertTemplate(
+    @Param('advertType') advertType: AdvertTemplateTypeEnums,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplicationAdvertTemplate({
+        type: advertType,
+      }),
     )
   }
 }

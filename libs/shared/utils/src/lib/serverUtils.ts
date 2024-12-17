@@ -14,15 +14,19 @@ import {
   PAGING_MAXIMUM_PAGE_SIZE,
   PDF_RETRY_ATTEMPTS,
   PDF_RETRY_DELAY,
+  SignatureType,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
+  AdvertTemplateTypeEnums,
   ApplicationCommitteeSignature,
   ApplicationSignature,
+  ApplicationSignatures,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
   CaseStatusEnum,
   CreateSignatureBody,
+  GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -32,6 +36,12 @@ import {
   HttpException,
   MaxFileSizeValidator,
 } from '@nestjs/common'
+
+import {
+  templateAuglysing,
+  templateGjaldskra,
+  templateReglugerd,
+} from './constants'
 
 export function generatePaging(
   data: unknown[],
@@ -424,6 +434,53 @@ export const getPageSize = (pageSize: number | undefined): number => {
   return pageSize
 }
 
+export const signatureMapper = (
+  signatures: ApplicationSignatures,
+  type: SignatureType,
+  caseId: string,
+  involvedPartyId: string,
+): CreateSignatureBody[] => {
+  if (type === SignatureType.Committee) {
+    const committeeObject = {
+      caseId: caseId,
+      involvedPartyId: involvedPartyId,
+      institution: signatures.committee.institution,
+      date: signatures.committee.date,
+      html: signatures.committee.html,
+      chairman: {
+        text: signatures.committee.chairman.name,
+        textAbove: signatures.committee.chairman.above,
+        textAfter: signatures.committee.chairman.after,
+        textBelow: signatures.committee.chairman.below,
+        textBefore: signatures.committee.chairman.before,
+      },
+      members: signatures.committee.members.map((item) => ({
+        text: item.name,
+        textAbove: item.above,
+        textAfter: item.after,
+        textBelow: item.below,
+        textBefore: item.before,
+      })),
+    }
+    return [committeeObject]
+  }
+
+  return signatures.regular.map((signature) => ({
+    caseId: caseId,
+    involvedPartyId: involvedPartyId,
+    institution: signature.institution,
+    date: signature.date,
+    html: signature.html,
+    members: signature.members.map((item) => ({
+      text: item.name,
+      textAbove: item.above,
+      textAfter: item.after,
+      textBelow: item.below,
+      textBefore: item.before,
+    })),
+  }))
+}
+
 export const retryAsync = async <T>(
   asyncFn: () => Promise<T>,
   retries: number | undefined = PDF_RETRY_ATTEMPTS,
@@ -444,4 +501,32 @@ export const retryAsync = async <T>(
   }
 
   throw new Error('Retry attempts exceeded')
+}
+
+export const getTemplate = (
+  type: AdvertTemplateTypeEnums,
+): GetAdvertTemplateResponse => {
+  const DEFAULT = {
+    html: templateAuglysing,
+    type: AdvertTemplateTypeEnums.AUGLYSING,
+  }
+
+  const templateType = type.toLowerCase()
+
+  switch (templateType) {
+    case AdvertTemplateTypeEnums.AUGLYSING:
+      return DEFAULT
+    case AdvertTemplateTypeEnums.REGLUGERD:
+      return {
+        html: templateReglugerd,
+        type: AdvertTemplateTypeEnums.AUGLYSING,
+      }
+    case AdvertTemplateTypeEnums.GJALDSKRA:
+      return {
+        html: templateGjaldskra,
+        type: AdvertTemplateTypeEnums.AUGLYSING,
+      }
+    default:
+      return DEFAULT
+  }
 }

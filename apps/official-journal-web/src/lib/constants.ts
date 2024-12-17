@@ -1,3 +1,5 @@
+import { getSession } from 'next-auth/react'
+
 import {
   AlertMessageProps,
   AlertMessageType,
@@ -108,6 +110,55 @@ export async function fetcher(
   }
 
   return await res.json()
+}
+
+type FetcherArgs<T> =
+  | {
+      withAuth?: boolean
+      method: 'POST' | 'PUT'
+      query?: URLSearchParams
+      body: T
+    }
+  | {
+      withAuth?: boolean
+      method: 'GET' | 'DELETE'
+      query?: URLSearchParams
+      body?: undefined
+    }
+export const fetcherV2 = async <TData, TBody = never>(
+  url: string,
+  { arg }: { arg: FetcherArgs<TBody> },
+): Promise<TData> => {
+  const withBody = arg.method === 'POST' || arg.method === 'PUT'
+
+  const withAuth = arg.withAuth ?? true
+  let authHeader = ''
+
+  if (withAuth) {
+    const session = await getSession()
+    authHeader = session ? `${session.accessToken}` : ''
+  }
+
+  const fullUrl = arg.query ? `${url}?${arg.query.toString()}` : url
+
+  const res = await fetch(fullUrl, {
+    method: arg.method,
+    body: withBody ? JSON.stringify(arg.body) : undefined,
+    headers: {
+      'Content-Type': 'application/json',
+      authorization: authHeader,
+    },
+  })
+
+  if (res.status === 204) {
+    return {} as TData
+  }
+
+  if (!res.ok) {
+    throw new Error('Error occured while fetching data')
+  }
+
+  return res.json()
 }
 
 export async function updateFetcher<T>(

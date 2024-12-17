@@ -11,7 +11,11 @@ import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { PublishedTableProps } from './types'
 
-export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
+export const CaseTableOverview = ({
+  data,
+  paging,
+  isLoading,
+}: PublishedTableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
@@ -93,6 +97,7 @@ export const CaseTableOverview = ({ data, paging }: PublishedTableProps) => {
 
   return (
     <CaseTable
+      loading={isLoading}
       columns={columns}
       rows={rows}
       paging={paging}
