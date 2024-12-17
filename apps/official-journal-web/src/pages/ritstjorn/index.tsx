@@ -3,7 +3,13 @@ import { useRouter } from 'next/router'
 import { getSession } from 'next-auth/react'
 import { useEffect, useMemo, useState } from 'react'
 
-import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  GridColumn,
+  GridContainer,
+  GridRow,
+  SkeletonLoader,
+} from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
 import { Meta } from '../../components/meta/Meta'
@@ -11,8 +17,13 @@ import { CaseTableInProgress } from '../../components/tables/CaseTableInProgress
 import { CaseTableInReview } from '../../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../../components/tables/CaseTableSubmitted'
 import { Tab, Tabs } from '../../components/tabs/Tabs'
-import { Case, CaseStatusTitleEnum, Paging } from '../../gen/fetch'
-import { useCaseOverview } from '../../hooks/api'
+import {
+  Case,
+  CaseStatusTitleEnum,
+  EditorialOverviewRequest,
+  Paging,
+} from '../../gen/fetch'
+import { CaseEditorialOverviewParams, useCaseOverview } from '../../hooks/api'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
@@ -20,10 +31,7 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
 import { messages as errorMessages } from '../../lib/messages/errors'
-import {
-  CaseOverviewSearchParams,
-  getStringFromQueryString,
-} from '../../lib/types'
+import { getStringFromQueryString } from '../../lib/types'
 import { deleteUndefined } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
@@ -58,16 +66,18 @@ export default function CaseProccessingOverviewScreen(
     (router.query.status as CaseStatusTitleEnum) ?? CaseStatusTitleEnum.Innsent,
   )
 
-  const [searchParams, setSearchParams] = useState<CaseOverviewSearchParams>({
-    search: getStringFromQueryString(router.query.search),
-    department: getStringFromQueryString(router.query.department),
-    status: getStringFromQueryString(router.query.status),
-    page: Number(getStringFromQueryString(router.query.page)) || undefined,
-    type: getStringFromQueryString(router.query.type),
-    category: getStringFromQueryString(router.query.category),
-    pageSize:
-      Number(getStringFromQueryString(router.query.pageSize)) || undefined,
-  })
+  const [searchParams, setSearchParams] = useState<CaseEditorialOverviewParams>(
+    {
+      search: getStringFromQueryString(router.query.search),
+      department: getStringFromQueryString(router.query.department),
+      status: getStringFromQueryString(router.query.status),
+      page: Number(getStringFromQueryString(router.query.page)) || undefined,
+      type: getStringFromQueryString(router.query.type),
+      category: getStringFromQueryString(router.query.category),
+      pageSize:
+        Number(getStringFromQueryString(router.query.pageSize)) || undefined,
+    },
+  )
 
   useEffect(() => {
     setSearchParams({
@@ -94,6 +104,8 @@ export default function CaseProccessingOverviewScreen(
     params: qsp,
     options: {
       keepPreviousData: true,
+      refreshInterval: 1000 * 60 * 1,
+      revalidateOnFocus: true,
       fallback: {
         cases,
         paging: paging,
@@ -120,56 +132,63 @@ export default function CaseProccessingOverviewScreen(
     }
   }
 
-  // const tabs: Tab<CaseStatusTitleEnum>[] = [
-  //   {
-  //     id: CaseStatusTitleEnum.Innsent,
-  //     label: formatMessage(caseProccessingMessages.tabs.submitted, {
-  //       count: casesResponse?.totalItems.submitted,
-  //     }),
-  //     content: (
-  //       <CaseTableSubmitted
-  //         paging={casesResponse?.paging}
-  //         data={casesResponse?.cases}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: CaseStatusTitleEnum.Grunnvinnsla,
-  //     label: formatMessage(caseProccessingMessages.tabs.inProgress, {
-  //       count: casesResponse?.totalItems.inProgress,
-  //     }),
-  //     content: (
-  //       <CaseTableInProgress
-  //         paging={casesResponse?.paging}
-  //         data={casesResponse?.cases}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: CaseStatusTitleEnum.Yfirlestur,
-  //     label: formatMessage(caseProccessingMessages.tabs.inReview, {
-  //       count: casesResponse?.totalItems.inReview,
-  //     }),
-  //     content: (
-  //       <CaseTableInReview
-  //         paging={casesResponse?.paging}
-  //         data={casesResponse?.cases}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: CaseStatusTitleEnum.Tilbúið,
-  //     label: formatMessage(caseProccessingMessages.tabs.ready, {
-  //       count: casesResponse?.totalItems.ready,
-  //     }),
-  //     content: (
-  //       <CaseTableInProgress
-  //         paging={casesResponse?.paging}
-  //         data={casesResponse?.cases}
-  //       />
-  //     ),
-  //   },
-  // ]
+  const currentCases = casesResponse?.cases ? casesResponse.cases : cases
+  const currentPaging = casesResponse?.paging ? casesResponse.paging : paging
+
+  const tabs: Tab<CaseStatusTitleEnum>[] = [
+    {
+      id: CaseStatusTitleEnum.Innsent,
+      label: formatMessage(caseProccessingMessages.tabs.submitted, {
+        count: casesResponse?.totalItems.submitted,
+      }),
+      content: (
+        <CaseTableSubmitted
+          isLoading={isLoading}
+          data={currentCases}
+          paging={currentPaging}
+        />
+      ),
+    },
+    {
+      id: CaseStatusTitleEnum.Grunnvinnsla,
+      label: formatMessage(caseProccessingMessages.tabs.inProgress, {
+        count: casesResponse?.totalItems.inProgress,
+      }),
+      content: (
+        <CaseTableInProgress
+          isLoading={isLoading}
+          data={currentCases}
+          paging={currentPaging}
+        />
+      ),
+    },
+    {
+      id: CaseStatusTitleEnum.Yfirlestur,
+      label: formatMessage(caseProccessingMessages.tabs.inReview, {
+        count: casesResponse?.totalItems.inReview,
+      }),
+      content: (
+        <CaseTableInReview
+          isLoading={isLoading}
+          data={currentCases}
+          paging={currentPaging}
+        />
+      ),
+    },
+    {
+      id: CaseStatusTitleEnum.Tilbúið,
+      label: formatMessage(caseProccessingMessages.tabs.ready, {
+        count: casesResponse?.totalItems.ready,
+      }),
+      content: (
+        <CaseTableInProgress
+          isLoading={isLoading}
+          data={currentCases}
+          paging={currentPaging}
+        />
+      ),
+    },
+  ]
 
   return (
     <>
@@ -178,13 +197,26 @@ export default function CaseProccessingOverviewScreen(
           caseProccessingMessages.breadcrumbs.cases,
         )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
       />
+      <GridContainer>
+        <GridRow>
+          <GridColumn span="12/12">
+            {error && (
+              <AlertMessage
+                type="error"
+                title="Villa kom upp"
+                message="Ekki tókst að sækja mál"
+              />
+            )}
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
       <CaseOverviewGrid>
-        {/* <Tabs
+        <Tabs
           onTabChange={onTabChange}
           selectedTab={selectedTab}
           tabs={tabs}
           label={formatMessage(caseProccessingMessages.tabs.statuses)}
-        /> */}
+        />
       </CaseOverviewGrid>
     </>
   )
