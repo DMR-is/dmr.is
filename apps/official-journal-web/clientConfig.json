@@ -1,6 +1,98 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/pdf/case/{id}": {
+      "get": {
+        "operationId": "getPdfByCaseId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf/application/{id}": {
+      "get": {
+        "operationId": "getPdfByApplicationId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf/case/{id}/url": {
+      "get": {
+        "operationId": "getPdfUrlByCaseId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf/application/{id}/url": {
+      "get": {
+        "operationId": "getPdfUrlByApplicationId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/cases/user/{nationalId}": {
       "get": {
         "operationId": "getUser",
@@ -292,7 +384,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "post": {
         "operationId": "createMainCategory",
@@ -306,7 +399,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{id}": {
@@ -321,7 +415,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       },
       "put": {
         "operationId": "updateMainCategory",
@@ -342,7 +437,8 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
@@ -363,7 +459,8 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories": {
@@ -387,7 +484,8 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/overview": {
@@ -1677,6 +1775,18 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "GetPdfRespone": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "Base64 encoded PDF" }
+        },
+        "required": ["content"]
+      },
+      "GetPdfUrlResponse": {
+        "type": "object",
+        "properties": { "url": { "type": "string" } },
+        "required": ["url"]
+      },
       "AdminUserRole": {
         "type": "object",
         "properties": {

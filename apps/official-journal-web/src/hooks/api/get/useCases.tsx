@@ -2,17 +2,15 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCasesReponse } from '../../../gen/fetch'
 import { APIRotues, fetcher } from '../../../lib/constants'
-import {
-  CaseOverviewSearchParams,
-  generateQueryFromParams,
-} from '../../../lib/types'
+import { generateQueryFromParams } from '../../../lib/types'
+import { CaseEditorialOverviewParams } from './useCaseOverview'
 
 type SWRCasesOptions = SWRConfiguration<GetCasesReponse, Error>
 
 type UseCasesParams = {
   shouldFetch?: boolean
   options?: SWRCasesOptions
-  params?: CaseOverviewSearchParams
+  params?: CaseEditorialOverviewParams
 }
 
 export const useCases = ({
