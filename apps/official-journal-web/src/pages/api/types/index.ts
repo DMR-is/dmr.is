@@ -33,25 +33,35 @@ class TypesHandler {
 
   @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const { page, pageSize, id, slug, search, department } = req.query as {
-      page?: string
-      pageSize?: string
+    const {
+      page,
+      pageSize,
+      id,
+      slug,
+      search,
+      department,
+      unassigned,
+      mainType,
+    } = req.query as {
+      page?: number
+      pageSize?: number
       search?: string
       id?: string
       slug?: string
       department?: string
+      unassigned?: boolean
+      mainType?: string
     }
-
-    const offset = tryParseInt(page, DEFAULT_PAGE_NUMBER)
-    const limit = tryParseInt(pageSize, DEFAULT_PAGE_SIZE)
 
     const types = await this.client.getTypes({
       id: id,
       slug: slug,
+      unassigned: unassigned,
       department: department,
       search: search,
-      page: offset,
-      pageSize: limit,
+      mainType: mainType,
+      page: page,
+      pageSize: pageSize,
     })
 
     return res.status(200).json(types)
@@ -61,7 +71,8 @@ class TypesHandler {
   private async create(req: NextApiRequest, res: NextApiResponse) {
     const type = await this.client.createType({
       createAdvertTypeBody: {
-        mainTypeId: req.body.mainTypeId,
+        departmentId: req.body.departmentId,
+        mainTypeId: req.body?.mainTypeId,
         title: req.body.title,
       },
     })

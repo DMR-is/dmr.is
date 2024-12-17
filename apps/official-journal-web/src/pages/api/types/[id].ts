@@ -58,6 +58,7 @@ class TypeHandler {
     const response = await this.client.updateType({
       id: id,
       updateAdvertTypeBody: {
+        mainTypeId: req.body.mainTypeId,
         title: req.body.title,
       },
     })

@@ -40,7 +40,7 @@ export function getStringFromQueryString(
 }
 
 export function generateQueryFromParams(params?: {
-  [key: string]: string | string[] | number | undefined
+  [key: string]: string | string[] | number | boolean | undefined
 }) {
   if (!params) return undefined
 

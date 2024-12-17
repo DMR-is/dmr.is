@@ -1659,6 +1659,20 @@
           },
           {
             "required": false,
+            "description": "Filter by unassigned",
+            "name": "unassigned",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "description": "Search by main type id",
+            "name": "mainType",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
             "description": "Search by title",
             "name": "search",
             "in": "query",
@@ -1769,6 +1783,20 @@
             "required": false,
             "description": "Search by id",
             "name": "id",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "description": "Filter by unassigned",
+            "name": "unassigned",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "description": "Search by main type id",
+            "name": "mainType",
             "in": "query",
             "schema": { "type": "string" }
           },
@@ -2320,47 +2348,6 @@
         },
         "required": ["publicationNumber"]
       },
-      "AdvertType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "AdvertMainType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          },
-          "types": {
-            "description": "All types under this main type",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertType" }
-          }
-        },
-        "required": ["id", "title", "slug", "types"]
-      },
       "Department": {
         "type": "object",
         "properties": {
@@ -2379,12 +2366,6 @@
             "type": "string",
             "description": "Slug of the advert department, used in URLs and API requests.",
             "example": "a-deild"
-          },
-          "mainTypes": {
-            "description": "Description of the advert department.",
-            "example": "A deild er fyrsta deildin.",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertMainType" }
           }
         },
         "required": ["id", "title", "slug"]
@@ -2705,6 +2686,28 @@
           }
         },
         "required": ["id", "name", "lastName", "active"]
+      },
+      "AdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department of the main advert type",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          }
+        },
+        "required": ["id", "title", "slug", "department"]
       },
       "CaseChannel": {
         "type": "object",
@@ -3515,6 +3518,33 @@
         },
         "required": ["errorType", "name", "message", "severity"]
       },
+      "AdvertMainType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department this main type belongs to",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          },
+          "types": {
+            "description": "All types under this main type",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertType" }
+          }
+        },
+        "required": ["id", "title", "slug", "department", "types"]
+      },
       "GetAdvertMainTypes": {
         "type": "object",
         "properties": {
@@ -3557,12 +3587,16 @@
             "type": "string",
             "description": "Id of the main type"
           },
+          "departmentId": {
+            "type": "string",
+            "description": "Id of the department"
+          },
           "title": {
             "type": "string",
             "description": "Name of the advert type"
           }
         },
-        "required": ["mainTypeId", "title"]
+        "required": ["departmentId", "title"]
       },
       "UpdateAdvertTypeBody": {
         "type": "object",
@@ -3570,9 +3604,10 @@
           "title": {
             "type": "string",
             "description": "New title of the advert type"
-          }
+          },
+          "mainTypeId": { "type": "string" }
         },
-        "required": ["title"]
+        "required": ["mainTypeId"]
       },
       "CreateAdvertMainTypeBody": {
         "type": "object",
@@ -3605,8 +3640,7 @@
             "type": "string",
             "description": "New title of the main advert type"
           }
-        },
-        "required": ["title"]
+        }
       },
       "StatisticsDepartmentItem": {
         "type": "object",

@@ -1,13 +1,21 @@
-import { Key } from 'swr'
+import useSWR, { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
-import { GetAdvertMainType, GetAdvertType } from '../../gen/fetch'
+import {
+  GetAdvertMainType,
+  GetAdvertMainTypes,
+  GetAdvertType,
+  GetAdvertTypes,
+  GetMainTypesRequest,
+  GetTypesRequest,
+} from '../../gen/fetch'
 import {
   APIRotues,
   fetcher,
   OJOIWebException,
   updateFetcher,
 } from '../../lib/constants'
+import { generateQueryFromParams } from '../../lib/types'
 
 type AdvertTypeIdParam = {
   id: string
@@ -15,18 +23,36 @@ type AdvertTypeIdParam = {
 
 type CreateAdvertTypeParams = {
   departmentId: string
-  mainTypeId: string
+  mainTypeId?: string
   title: string
 }
 
-type UpdateTypeParams = {
+export type UpdateTypeParams = {
   id: string
-  title: string
+  mainTypeId?: string | null
+  title?: string
 }
 
-type CreateAdvertMainTypeParams = Omit<CreateAdvertTypeParams, 'mainTypeId'>
+export type CreateAdvertMainTypeParams = Omit<
+  CreateAdvertTypeParams,
+  'mainTypeId'
+>
+
+type TypesParams = Record<
+  keyof GetTypesRequest,
+  string | number | boolean | undefined
+>
+
+type MainTypeParams = Record<
+  keyof GetMainTypesRequest,
+  string | number | undefined
+>
 
 type UseAdvertTypesParams = {
+  typesParams?: Partial<TypesParams>
+  mainTypesParams?: Partial<MainTypeParams>
+  typeId?: string
+  mainTypeId?: string
   onCreateTypeSuccess?: (data: GetAdvertType) => void
   onCreateMainTypeSuccess?: (data: GetAdvertMainType) => void
   onUpdateTypeSuccess?: (data: GetAdvertType) => void
@@ -36,6 +62,10 @@ type UseAdvertTypesParams = {
 }
 
 export const useAdvertTypes = ({
+  typesParams,
+  mainTypesParams,
+  typeId,
+  mainTypeId,
   onCreateMainTypeSuccess,
   onCreateTypeSuccess,
   onUpdateMainTypeSuccess,
@@ -43,6 +73,80 @@ export const useAdvertTypes = ({
   onDeleteMainTypeSuccess,
   onDeleteTypeSuccess,
 }: UseAdvertTypesParams = {}) => {
+  const {
+    data: typesData,
+    isLoading: isLoadingTypes,
+    error: typesError,
+    mutate: mutateTypes,
+  } = useSWR<GetAdvertTypes, OJOIWebException>(
+    [APIRotues.Types, typesParams],
+    ([url, qsp]: [string, Record<string, string>]) => {
+      const params = generateQueryFromParams(qsp)
+
+      const fullUrl = params ? `${url}?${params}` : url
+
+      return fetcher(fullUrl)
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    },
+  )
+
+  const {
+    data: mainTypesData,
+    isLoading: isLoadingMainTypes,
+    error: mainTypesError,
+    mutate: mutateMainTypes,
+  } = useSWR<GetAdvertMainTypes, OJOIWebException>(
+    [APIRotues.MainTypes, mainTypesParams],
+    ([url, qsp]: [string, Record<string, string>]) => {
+      const params = generateQueryFromParams(qsp)
+
+      const fullUrl = params ? `${url}?${params}` : url
+
+      return fetcher(fullUrl)
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    },
+  )
+
+  const {
+    data: typeData,
+    isLoading: isLoadingType,
+    error: typeError,
+    mutate: mutateType,
+  } = useSWR<GetAdvertType, OJOIWebException>(
+    typeId ? [APIRotues.Type, typeId] : null,
+    ([url, id]: [string, string]) => fetcher(url.replace(':id', id)),
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    },
+  )
+
+  const {
+    data: mainTypeData,
+    isLoading: isLoadingMainType,
+    error: mainTypeError,
+    mutate: mutateMainType,
+  } = useSWR<GetAdvertMainType, OJOIWebException>(
+    mainTypeId ? [APIRotues.MainType, mainTypeId] : null,
+    ([url, id]: [string, string]) => {
+      return fetcher(url.replace(':id', id))
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    },
+  )
+
   const {
     trigger: createMainTypeTrigger,
     isMutating: isCreatingMainType,
@@ -120,7 +224,12 @@ export const useAdvertTypes = ({
     APIRotues.Type,
     (url: string, { arg }: { arg: UpdateTypeParams }) =>
       updateFetcher(url.replace(':id', arg.id), {
-        arg: { method: 'PUT', title: arg.title, id: arg.id },
+        arg: {
+          method: 'PUT',
+          title: arg.title,
+          id: arg.id,
+          mainTypeId: arg.mainTypeId,
+        },
         method: 'PUT',
       }),
 
@@ -190,6 +299,22 @@ export const useAdvertTypes = ({
   }
 
   return {
+    type: typeData?.type,
+    isLoadingType,
+    typeError,
+    refetchType: mutateType,
+    mainType: mainTypeData?.mainType,
+    isLoadingMainType,
+    mainTypeError,
+    refetchMainType: mutateMainType,
+    types: typesData?.types,
+    isLoadingTypes,
+    typesError,
+    refetchTypes: mutateTypes,
+    mainTypes: mainTypesData?.mainTypes,
+    isLoadingMainTypes,
+    mainTypesError,
+    refetchMainTypes: mutateMainTypes,
     isCreatingMainType,
     isCreatingType,
     isUpdatingMainType,

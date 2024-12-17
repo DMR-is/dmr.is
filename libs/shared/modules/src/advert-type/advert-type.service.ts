@@ -113,6 +113,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       include: [
         {
           model: AdvertTypeModel,
+          include: [AdvertDepartmentModel],
         },
         {
           model: AdvertDepartmentModel,
@@ -166,7 +167,10 @@ export class AdvertTypeService implements IAdvertTypeService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>> {
     const mainType = await this.advertMainTypeModel.findByPk(id, {
-      include: [AdvertTypeModel, AdvertDepartmentModel],
+      include: [
+        AdvertDepartmentModel,
+        { model: AdvertTypeModel, include: [AdvertDepartmentModel] },
+      ],
       transaction,
     })
 
@@ -255,11 +259,10 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
-  @Transactional()
   async createType(
     body: CreateAdvertTypeBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertType>> {
+    const transaction = await this.sequelize.transaction()
     try {
       const id = uuid()
 
@@ -284,26 +287,44 @@ export class AdvertTypeService implements IAdvertTypeService {
         id: id,
         title: body.title,
         slug: slug,
+        departmentId: body.departmentId,
         mainTypeId: body.mainTypeId,
       }
 
-      const type = await this.advertTypeModel.create(createBody, {
+      const newTypeId = await this.advertTypeModel.create(createBody, {
+        transaction: transaction,
+        returning: ['id'],
+      })
+
+      const newType = await this.advertTypeModel.findByPk(newTypeId.id, {
+        include: [
+          AdvertDepartmentModel,
+          {
+            model: AdvertMainTypeModel,
+            include: [AdvertDepartmentModel],
+          },
+        ],
         transaction: transaction,
       })
 
-      const mapped = await this.getTypeById(type.id, transaction)
-
-      if (!mapped.result.ok) {
+      if (!newType) {
+        this.logger.warn(`Advert type not found after creation`, {
+          category: LOGGING_CATEGORY,
+        })
         return ResultWrapper.err({
-          code: 500,
-          message: 'Ekki tókst að búa til tegund',
+          code: 404,
+          message: `Ekki tókst að búa til tegund`,
         })
       }
 
+      const mapped = advertTypeMigrate(newType)
+
+      await transaction.commit()
       return ResultWrapper.ok({
-        type: mapped.result.value.type,
+        type: mapped,
       })
     } catch (error) {
+      await transaction.rollback()
       if (error instanceof UniqueConstraintError) {
         this.logger.warn(`Advert type already exists`, {
           category: LOGGING_CATEGORY,
@@ -338,6 +359,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         include: [
           {
             model: AdvertTypeModel,
+            include: [AdvertDepartmentModel],
           },
           { model: AdvertDepartmentModel },
         ],
@@ -408,7 +430,10 @@ export class AdvertTypeService implements IAdvertTypeService {
   ): Promise<ResultWrapper<GetAdvertType>> {
     const transaction = await this.sequelize.transaction()
     try {
-      const type = await this.advertTypeModel.findByPk(id, { transaction })
+      const type = await this.advertTypeModel.findByPk(id, {
+        include: [AdvertDepartmentModel],
+        transaction,
+      })
 
       if (!type) {
         this.logger.warn(`Advert type<${id}> not found`, {
@@ -434,6 +459,10 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       if (body.mainTypeId) {
         Object.assign(updateBody, { mainTypeId: body.mainTypeId })
+      }
+
+      if (body.mainTypeId === null) {
+        Object.assign(updateBody, { mainTypeId: null })
       }
 
       if (slug !== type.slug) {

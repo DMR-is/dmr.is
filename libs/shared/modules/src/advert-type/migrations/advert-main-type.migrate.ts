@@ -1,6 +1,7 @@
 import { AdvertMainType } from '@dmr.is/shared/dto'
 
 import { AdvertMainTypeModel } from '../models/advert-main-type.model'
+import { advertTypeMigrate } from './advert-type.migrate'
 
 export const advertMainTypeMigrate = (
   model: AdvertMainTypeModel,
@@ -9,11 +10,7 @@ export const advertMainTypeMigrate = (
     id: model.id,
     title: model.title,
     slug: model.slug,
-    types:
-      model.types?.map((type) => ({
-        id: type.id,
-        title: type.title,
-        slug: type.slug,
-      })) ?? [],
+    department: model.department,
+    types: model.types?.map((type) => advertTypeMigrate(type)) ?? [],
   }
 }

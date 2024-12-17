@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer'
 import {
+  IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
@@ -20,6 +21,25 @@ export class AdvertTypeQuery {
   @ValidateIf((o) => o.id)
   @IsUUID()
   id?: string
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    description: 'Filter by unassigned',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  unassigned?: boolean
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Search by main type id',
+  })
+  @IsOptional()
+  @IsUUID()
+  mainType?: string
 
   @ApiProperty({
     type: String,

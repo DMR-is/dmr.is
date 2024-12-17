@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Department } from '../departments'
+
 export class AdvertType {
   @ApiProperty({
     type: 'string',
@@ -21,4 +23,11 @@ export class AdvertType {
     required: true,
   })
   slug!: string
+
+  @ApiProperty({
+    type: Department,
+    description: 'The department of the main advert type',
+    required: true,
+  })
+  department!: Department
 }

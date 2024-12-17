@@ -44,6 +44,22 @@ export const getAdvertTypeWhereParams = (
     })
   }
 
+  if (query?.unassigned) {
+    Object.assign(whereParams, {
+      mainTypeId: {
+        [Op.is]: null,
+      },
+    })
+  }
+
+  if (query?.mainType) {
+    Object.assign(whereParams, {
+      mainTypeId: {
+        [Op.eq]: query.mainType,
+      },
+    })
+  }
+
   if (query?.search) {
     Object.assign(whereParams, {
       title: {
