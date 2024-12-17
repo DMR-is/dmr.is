@@ -165,7 +165,7 @@ export const UpdateAdvertMainType = ({
           <Text variant="h5">{`Tegundir tengdar við ${
             currentMainType?.title ?? mainType.title
           }`}</Text>
-          <Inline space={[2, 2, 3]}>
+          <Inline space={[2, 2, 3]} flexWrap="wrap">
             {mainTypeTypes.map((type) => (
               <Tag
                 onClick={() =>
