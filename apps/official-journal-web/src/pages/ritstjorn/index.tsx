@@ -120,88 +120,56 @@ export default function CaseProccessingOverviewScreen(
     }
   }
 
-  if (isLoading) {
-    return (
-      <CaseOverviewGrid>
-        <SkeletonLoader repeat={3} height={44} />
-      </CaseOverviewGrid>
-    )
-  }
-
-  if (error) {
-    return (
-      <CaseOverviewGrid>
-        <AlertMessage
-          type="error"
-          message={formatMessage(errorMessages.errorFetchingData)}
-          title={formatMessage(errorMessages.internalServerError)}
-        />
-      </CaseOverviewGrid>
-    )
-  }
-
-  if (!casesResponse) {
-    return (
-      <CaseOverviewGrid>
-        <AlertMessage
-          type="warning"
-          message={formatMessage(errorMessages.noDataText)}
-          title={formatMessage(errorMessages.noDataTitle)}
-        />
-      </CaseOverviewGrid>
-    )
-  }
-
-  const tabs: Tab<CaseStatusTitleEnum>[] = [
-    {
-      id: CaseStatusTitleEnum.Innsent,
-      label: formatMessage(caseProccessingMessages.tabs.submitted, {
-        count: casesResponse.totalItems.submitted,
-      }),
-      content: (
-        <CaseTableSubmitted
-          paging={casesResponse.paging}
-          data={casesResponse.cases}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Grunnvinnsla,
-      label: formatMessage(caseProccessingMessages.tabs.inProgress, {
-        count: casesResponse.totalItems.inProgress,
-      }),
-      content: (
-        <CaseTableInProgress
-          paging={casesResponse.paging}
-          data={casesResponse.cases}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Yfirlestur,
-      label: formatMessage(caseProccessingMessages.tabs.inReview, {
-        count: casesResponse.totalItems.inReview,
-      }),
-      content: (
-        <CaseTableInReview
-          paging={casesResponse.paging}
-          data={casesResponse.cases}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Tilbúið,
-      label: formatMessage(caseProccessingMessages.tabs.ready, {
-        count: casesResponse.totalItems.ready,
-      }),
-      content: (
-        <CaseTableInProgress
-          paging={casesResponse.paging}
-          data={casesResponse.cases}
-        />
-      ),
-    },
-  ]
+  // const tabs: Tab<CaseStatusTitleEnum>[] = [
+  //   {
+  //     id: CaseStatusTitleEnum.Innsent,
+  //     label: formatMessage(caseProccessingMessages.tabs.submitted, {
+  //       count: casesResponse?.totalItems.submitted,
+  //     }),
+  //     content: (
+  //       <CaseTableSubmitted
+  //         paging={casesResponse?.paging}
+  //         data={casesResponse?.cases}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     id: CaseStatusTitleEnum.Grunnvinnsla,
+  //     label: formatMessage(caseProccessingMessages.tabs.inProgress, {
+  //       count: casesResponse?.totalItems.inProgress,
+  //     }),
+  //     content: (
+  //       <CaseTableInProgress
+  //         paging={casesResponse?.paging}
+  //         data={casesResponse?.cases}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     id: CaseStatusTitleEnum.Yfirlestur,
+  //     label: formatMessage(caseProccessingMessages.tabs.inReview, {
+  //       count: casesResponse?.totalItems.inReview,
+  //     }),
+  //     content: (
+  //       <CaseTableInReview
+  //         paging={casesResponse?.paging}
+  //         data={casesResponse?.cases}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     id: CaseStatusTitleEnum.Tilbúið,
+  //     label: formatMessage(caseProccessingMessages.tabs.ready, {
+  //       count: casesResponse?.totalItems.ready,
+  //     }),
+  //     content: (
+  //       <CaseTableInProgress
+  //         paging={casesResponse?.paging}
+  //         data={casesResponse?.cases}
+  //       />
+  //     ),
+  //   },
+  // ]
 
   return (
     <>
@@ -211,12 +179,12 @@ export default function CaseProccessingOverviewScreen(
         )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
       />
       <CaseOverviewGrid>
-        <Tabs
+        {/* <Tabs
           onTabChange={onTabChange}
           selectedTab={selectedTab}
           tabs={tabs}
           label={formatMessage(caseProccessingMessages.tabs.statuses)}
-        />
+        /> */}
       </CaseOverviewGrid>
     </>
   )
