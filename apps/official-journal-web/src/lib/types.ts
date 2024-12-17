@@ -17,14 +17,6 @@ export type SearchParams = {
   pageSize?: number
 }
 
-export type CaseOverviewSearchParams = SearchParams & {
-  id?: string
-  department?: string
-  status?: string
-  type?: string
-  category?: string
-}
-
 export function getStringFromQueryString(
   value: string | Array<string | undefined> | undefined,
 ): string | undefined {

@@ -6,6 +6,7 @@ import {
   Box,
   Icon,
   LinkV2,
+  LoadingDots,
   ModalBase,
   Pagination,
   Table as T,
@@ -60,7 +61,7 @@ export type CaseTableColumnSort = {
 
 export const CaseTable = ({
   renderLink = true,
-  // loading = true,
+  loading = false,
   modalLink,
   columns,
   rows,
@@ -129,6 +130,11 @@ export const CaseTable = ({
       <T.Table>
         <T.Head>
           <T.Row>
+            {loading && (
+              <TableHeadCell size="tiny">
+                <LoadingDots large={false} />
+              </TableHeadCell>
+            )}
             {columns.map((column, index) => (
               <TableHeadCell
                 key={index}

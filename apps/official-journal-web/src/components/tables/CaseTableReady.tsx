@@ -1,26 +1,16 @@
 import { useRouter } from 'next/router'
 import { ChangeEvent } from 'react'
 
-import {
-  AlertMessage,
-  Checkbox,
-  SkeletonLoader,
-  Text,
-} from '@island.is/island-ui/core'
+import { AlertMessage, Checkbox, Stack, Text } from '@island.is/island-ui/core'
 
 import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
-import { messages as errorMessages } from '../../lib/messages/errors'
 import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import {
-  CaseTable,
-  CaseTableHeadCellProps,
-  CaseTableRowProps,
-} from './CaseTable'
+import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -51,35 +41,10 @@ export const CaseTableReady = () => {
     },
   })
 
-  if (isLoading) {
-    return <SkeletonLoader repeat={3} height={44} space={2} />
-  }
-
-  if (error) {
-    return (
-      <AlertMessage
-        type="error"
-        title={formatMessage(errorMessages.error)}
-        message={formatMessage(errorMessages.error)}
-      />
-    )
-  }
-
-  if (!caseData) {
-    return (
-      <AlertMessage
-        type="error"
-        title="Engin mál fundust"
-        message="Mál birtast þegar þau eru færð í stöðuna 'Tilbúið'"
-      />
-    )
-  }
-
-  const { cases } = caseData
-
   const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      addManyCasesToSelectedList(cases.map((row) => row.id))
+      if (!caseData?.cases) return
+      addManyCasesToSelectedList(caseData?.cases.map((row) => row.id))
     } else {
       removeAllCasesFromSelectedList()
     }
@@ -126,63 +91,74 @@ export const CaseTableReady = () => {
     },
   ]
 
-  const rows: CaseTableRowProps[] = cases.map((row) => {
-    return {
-      case: row,
-      cells: [
-        {
-          children: (
-            <Checkbox
-              id={row.id}
-              name={`case-checkbox-${row.id}`}
-              defaultChecked={false}
-              onChange={handleToggleRow}
-              checked={selectedCaseIds.includes(row.id)}
-              value={row.id}
-            />
-          ),
-        },
-        {
-          children: <CaseToolTips case={row} />,
-        },
-        {
-          sortingKey: 'caseAdvertType',
-          sortingValue: row.advertType.title,
-          children: (
-            <div className={styles.titleTableCell}>
-              <Text truncate variant="medium">
-                {row.advertType.title} {row.advertTitle}
+  const rows =
+    caseData?.cases.map((row) => {
+      return {
+        case: row,
+        cells: [
+          {
+            children: (
+              <Checkbox
+                id={row.id}
+                name={`case-checkbox-${row.id}`}
+                defaultChecked={false}
+                onChange={handleToggleRow}
+                checked={selectedCaseIds.includes(row.id)}
+                value={row.id}
+              />
+            ),
+          },
+          {
+            children: <CaseToolTips case={row} />,
+          },
+          {
+            sortingKey: 'caseAdvertType',
+            sortingValue: row.advertType.title,
+            children: (
+              <div className={styles.titleTableCell}>
+                <Text truncate variant="medium">
+                  {row.advertType.title} {row.advertTitle}
+                </Text>
+              </div>
+            ),
+          },
+          {
+            sortingKey: 'casePublishDate',
+            sortingValue: row.requestedPublicationDate,
+            children: (
+              <Text variant="medium">
+                {row.requestedPublicationDate
+                  ? formatDate(row.requestedPublicationDate)
+                  : null}
               </Text>
-            </div>
-          ),
-        },
-        {
-          sortingKey: 'casePublishDate',
-          sortingValue: row.requestedPublicationDate,
-          children: (
-            <Text variant="medium">
-              {row.requestedPublicationDate
-                ? formatDate(row.requestedPublicationDate)
-                : null}
-            </Text>
-          ),
-        },
-        {
-          children: (
-            <Text whiteSpace="nowrap" variant="medium">
-              {row.involvedParty.title}
-            </Text>
-          ),
-        },
-      ],
-    }
-  })
+            ),
+          },
+          {
+            children: (
+              <Text whiteSpace="nowrap" variant="medium">
+                {row.involvedParty.title}
+              </Text>
+            ),
+          },
+        ],
+      }
+    }) ?? []
 
   return (
-    <CaseTable
-      columns={columns}
-      rows={rows}
-      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-    />
+    <Stack space={[2, 2, 3]}>
+      {error && (
+        <AlertMessage
+          type="error"
+          title="Villa kom upp"
+          message="Ekki tókst að sækja tilbúin mál"
+        />
+      )}
+      <CaseTable
+        loading={isLoading}
+        columns={columns}
+        rows={rows}
+        defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+      />
+    </Stack>
   )
 }
