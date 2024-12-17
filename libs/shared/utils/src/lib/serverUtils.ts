@@ -511,7 +511,7 @@ export const getTemplate = (
     type: AdvertTemplateTypeEnums.AUGLYSING,
   }
 
-  const templateType = type.toUpperCase()
+  const templateType = type.toLowerCase()
 
   switch (templateType) {
     case AdvertTemplateTypeEnums.AUGLYSING:

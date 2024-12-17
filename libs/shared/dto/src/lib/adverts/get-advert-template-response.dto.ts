@@ -13,7 +13,7 @@ export class GetAdvertTemplateResponse {
   @ApiProperty({
     description: 'Template type',
     required: true,
-    example: 'AUGLÝSING',
+    example: 'auglysing',
     enum: AdvertTemplateTypeEnums,
   })
   readonly type!: string
@@ -22,7 +22,7 @@ export class GetAdvertTemplateResponse {
 export class GetAdvertTemplatesResponse {
   @ApiProperty({
     required: true,
-    example: '["AUGLÝSING", "REGLUGERÐ", "GJALDSKRÁ"]',
+    example: '["auglysing", "reglugerd", "gjaldskra"]',
     type: [String],
   })
   readonly types!: string[]
