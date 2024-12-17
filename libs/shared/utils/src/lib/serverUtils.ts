@@ -18,6 +18,7 @@ import {
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
+  AdvertTemplateTypeEnums,
   ApplicationCommitteeSignature,
   ApplicationSignature,
   ApplicationSignatures,
@@ -25,6 +26,7 @@ import {
   CaseCommentSourceEnum,
   CaseStatusEnum,
   CreateSignatureBody,
+  GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -34,6 +36,12 @@ import {
   HttpException,
   MaxFileSizeValidator,
 } from '@nestjs/common'
+
+import {
+  templateAuglysing,
+  templateGjaldskra,
+  templateReglugerd,
+} from './constants'
 
 export function generatePaging(
   data: unknown[],
@@ -493,4 +501,32 @@ export const retryAsync = async <T>(
   }
 
   throw new Error('Retry attempts exceeded')
+}
+
+export const getTemplate = (
+  type: AdvertTemplateTypeEnums,
+): GetAdvertTemplateResponse => {
+  const DEFAULT = {
+    html: templateAuglysing,
+    type: AdvertTemplateTypeEnums.AUGLYSING,
+  }
+
+  const templateType = type.toUpperCase()
+
+  switch (templateType) {
+    case AdvertTemplateTypeEnums.AUGLYSING:
+      return DEFAULT
+    case AdvertTemplateTypeEnums.REGLUGERD:
+      return {
+        html: templateReglugerd,
+        type: AdvertTemplateTypeEnums.AUGLYSING,
+      }
+    case AdvertTemplateTypeEnums.GJALDSKRA:
+      return {
+        html: templateGjaldskra,
+        type: AdvertTemplateTypeEnums.AUGLYSING,
+      }
+    default:
+      return DEFAULT
+  }
 }
