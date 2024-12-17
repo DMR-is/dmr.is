@@ -85,14 +85,23 @@ export async function fixTypes(
   // Legacy ids of removed types
   const removedTypes: Array<string> = []
 
-  const withSlugs: Array<Type> = types.map((type) => {
+  const withSlugs: Array<Type> = []
+  types.forEach((type) => {
     const departmentSlug = departments.find(
       (dep) => dep.id === type.department_id,
     )
 
-    const slug = departmentSlug
-      ? slugit(`${departmentSlug.title} ${type.title}`)
-      : slugit(type.title)
+    if (!departmentSlug) {
+      throw new Error(`Department not found for type ${type.title}`)
+    }
+
+    let slug = slugit(`${departmentSlug.title} ${type.title}`)
+
+    const hasSameSlug = withSlugs.filter((t) => t.slug === slug)
+
+    if (hasSameSlug) {
+      slug = `${slug}-${hasSameSlug.length}`
+    }
 
     return {
       ...type,
@@ -151,18 +160,8 @@ export async function fixTypes(
     }
   }
 
-  // remove duplicates
-  const uniqueTypes: Array<Type> = []
-  withConsolidatedTypes.forEach((type) => {
-    const found = uniqueTypes.find((x) => x.slug === type.slug)
-
-    if (!found) {
-      uniqueTypes.push(type)
-    }
-  })
-
   const data = {
-    types: uniqueTypes,
+    types: withConsolidatedTypes,
     typeLegacyMap,
     removedTypes,
   }
