@@ -71,7 +71,10 @@ const SKIP_TYPES = [
   'ÞETTA ER PRUFUAUGLÝSING',
 ]
 
-export async function fixTypes(types: Array<DbType>): Promise<{
+export async function fixTypes(
+  types: Array<DbType>,
+  departments: Array<DbDepartment>,
+): Promise<{
   types: Array<Type>
   typeLegacyMap: Map<string, string>
   removedTypes: Array<string>
@@ -82,11 +85,28 @@ export async function fixTypes(types: Array<DbType>): Promise<{
   // Legacy ids of removed types
   const removedTypes: Array<string> = []
 
-  const withSlugs: Array<Type> = types.map((type) => {
-    return {
-      ...type,
-      slug: slugit(type.title),
+  const withSlugs: Array<Type> = []
+  types.forEach((type) => {
+    const departmentSlug = departments.find(
+      (dep) => dep.id === type.department_id,
+    )
+
+    if (!departmentSlug) {
+      throw new Error(`Department not found for type ${type.title}`)
     }
+
+    let slug = slugit(`${departmentSlug.title} ${type.title}`)
+
+    const hasSameSlug = withSlugs.filter((t) => t.slug === slug)
+
+    if (hasSameSlug.length > 0) {
+      slug = `${slug}-${hasSameSlug.length}`
+    }
+
+    withSlugs.push({
+      ...type,
+      slug,
+    })
   })
 
   const withoutSkippedTypes = withSlugs.filter((type) => {
@@ -139,6 +159,7 @@ export async function fixTypes(types: Array<DbType>): Promise<{
       }
     }
   }
+
   const data = {
     types: withConsolidatedTypes,
     typeLegacyMap,

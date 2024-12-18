@@ -1,6 +1,6 @@
 import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript'
 
-import { AdvertTypeModel } from './advert-type.model'
+import { AdvertMainTypeModel } from '../../advert-type/models'
 
 @Table({ tableName: 'advert_department', timestamps: false })
 export class AdvertDepartmentModel extends Model {
@@ -18,6 +18,6 @@ export class AdvertDepartmentModel extends Model {
   @Column
   slug!: string
 
-  @HasMany(() => AdvertTypeModel, 'department_id')
-  adTypes?: AdvertTypeModel[]
+  @HasMany(() => AdvertMainTypeModel, 'department_id')
+  mainTypes?: AdvertMainTypeModel[]
 }

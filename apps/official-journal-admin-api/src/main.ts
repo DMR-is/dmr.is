@@ -13,6 +13,7 @@ import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
 import { AppModule } from './app/app.module'
+import { OJOIExceptionFilter } from './exceptionFilter'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -27,6 +28,7 @@ async function bootstrap() {
   // app.useLogger(logger)
 
   app.useGlobalPipes(ExceptionFactoryPipe())
+  app.useGlobalFilters(new OJOIExceptionFilter())
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({

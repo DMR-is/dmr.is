@@ -4,12 +4,13 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { AdvertStatus, GetApplicationResponse, User } from '@dmr.is/shared/dto'
+import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import {
   CaseCommunicationStatusModel,
@@ -25,7 +26,6 @@ import {
   AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusModel,
-  AdvertTypeModel,
 } from '../journal/models'
 import { IUtilityService } from './utility.service.interface'
 
@@ -39,7 +39,8 @@ export class UtilityService implements IUtilityService {
     @InjectModel(CaseModel) private caseModel: typeof CaseModel,
     @InjectModel(AdvertDepartmentModel)
     private departmentModel: typeof AdvertDepartmentModel,
-    @InjectModel(AdvertTypeModel) private typeModel: typeof AdvertTypeModel,
+    @InjectModel(AdvertTypeModel)
+    private typeModel: typeof AdvertTypeModel,
     @InjectModel(AdvertCategoryModel)
     private categoryModel: typeof AdvertCategoryModel,
 

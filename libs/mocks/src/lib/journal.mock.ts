@@ -264,11 +264,7 @@ export const emptyAdvert: Advert = {
     id: '',
     title: '',
     slug: '',
-    department: {
-      title: '',
-      slug: '',
-      id: '',
-    },
+    department: JOURNAL_DEPARTMENT_B,
   },
   subject: '',
   title: '',

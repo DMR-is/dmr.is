@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -34,7 +33,7 @@ class UpdateTypeHandler {
     const dmrClient = createDmrClient()
 
     try {
-      await dmrClient.updateType({
+      await dmrClient.updateCaseType({
         id: id,
         updateCaseTypeBody: {
           typeId: parsed.data.typeId,

@@ -8,7 +8,6 @@ import { AdvertDepartmentModel } from './advert-department.model'
 import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
 import { AdvertMainCategoryModel } from './advert-main-category.model'
 import { AdvertStatusModel } from './advert-status.model'
-import { AdvertTypeModel } from './advert-type.model'
 
 export {
   AdvertModel,
@@ -19,7 +18,6 @@ export {
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
   AdvertStatusModel,
-  AdvertTypeModel,
   AdvertCategoryDepartmentsModel,
   AdvertCategoryCategoriesModel,
 }
@@ -32,7 +30,6 @@ export const models = [
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
   AdvertStatusModel,
-  AdvertTypeModel,
   AdvertCategoryDepartmentsModel,
   AdvertDepartmentModel,
   AdvertCategoryCategoriesModel,

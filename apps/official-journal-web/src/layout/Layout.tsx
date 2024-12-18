@@ -4,7 +4,7 @@ import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
 import { SWRConfig } from 'swr'
 
-import { Footer, Page } from '@island.is/island-ui/core'
+import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
 import { Banner } from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
@@ -100,6 +100,7 @@ export const Layout = ({
                     />
                   )}
                   {children}
+                  <ToastContainer />
                 </Main>
                 {showFooter && <Footer />}
                 <style jsx global>{`

@@ -14,7 +14,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertType } from '../advert-types'
+import { AdvertType } from '../advert-type'
 import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'

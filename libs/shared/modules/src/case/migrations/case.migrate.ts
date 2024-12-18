@@ -4,6 +4,7 @@ import { withTryCatch } from '@dmr.is/utils'
 
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
 import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
+import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
@@ -38,7 +39,7 @@ export const caseMigrate = (model: CaseModel): Case => {
       publishedAt: model.publishedAt,
       requestedPublicationDate: model.requestedPublicationDate,
       advertTitle: model.advertTitle,
-      advertDepartment: model.department,
+      advertDepartment: advertDepartmentMigrate(model.department),
       advertType: model.advertType,
       message: model.message,
       html: model.html,

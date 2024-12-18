@@ -1,0 +1,145 @@
+import { useState } from 'react'
+import slugify from 'slugify'
+
+import {
+  AlertMessage,
+  Button,
+  Inline,
+  Input,
+  Select,
+  Stack,
+  toast,
+} from '@island.is/island-ui/core'
+
+import { Department, GetAdvertMainType } from '../../gen/fetch'
+import { useAdvertTypes, useDepartments } from '../../hooks/api'
+
+type CreateMainTypeState = {
+  department: Department | null
+  title: string
+  slug: string
+}
+
+type Props = {
+  onSuccess?: (data: GetAdvertMainType) => void
+}
+
+export const CreateMainType = ({ onSuccess }: Props) => {
+  const { departments } = useDepartments()
+
+  const { createMainType, createMainTypeError, isCreatingMainType } =
+    useAdvertTypes({
+      onCreateMainTypeSuccess: (data) => {
+        toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
+
+        onSuccess && onSuccess(data)
+
+        setState({
+          department: null,
+          title: '',
+          slug: '',
+        })
+      },
+    })
+
+  const departmentOptions = departments?.map((dep) => ({
+    label: dep.title,
+    value: dep,
+  }))
+
+  const [state, setState] = useState<CreateMainTypeState>({
+    department: null,
+    title: '',
+    slug: '',
+  })
+
+  const canCreate = state.department && state.title
+
+  return (
+    <Stack space={[2, 2, 3]}>
+      {createMainTypeError && (
+        <AlertMessage
+          title={createMainTypeError.name}
+          type={createMainTypeError.type}
+          message={createMainTypeError.message}
+        />
+      )}
+      <Select
+        isClearable
+        size="sm"
+        backgroundColor="blue"
+        name="create-main-type-department"
+        label="Veldu deild"
+        options={departmentOptions}
+        placeholder="Veldu deild yfirflokks"
+        onChange={(opt) => {
+          if (!opt) {
+            setState({
+              department: null,
+              title: state.title,
+              slug: slugify(state.title, { lower: true }),
+            })
+          } else {
+            setState({
+              department: opt.value,
+              title: state.title,
+              slug: slugify(`${opt.value.title}-${state.title}`, {
+                lower: true,
+              }),
+            })
+          }
+        }}
+      />
+      <Input
+        size="sm"
+        backgroundColor="blue"
+        name="create-main-type-title"
+        label="Heiti yfirflokks"
+        placeholder='T.d. "Lög" eða "Reglugerðir"'
+        value={state.title}
+        onChange={(e) => {
+          setState({
+            ...state,
+            title: e.target.value,
+            slug: slugify(
+              `${state.department ? `${state.department.title}-` : ''}${
+                e.target.value
+              }`,
+              {
+                lower: true,
+              },
+            ),
+          })
+        }}
+      />
+      <Input
+        name="create-main-type-slug"
+        size="sm"
+        backgroundColor="blue"
+        readOnly
+        label="Slóð yfirflokks"
+        value={state.slug}
+      />
+      <Inline space={[2, 2, 3]} justifyContent="flexEnd">
+        <Button
+          loading={isCreatingMainType}
+          onClick={() => {
+            if (!state.department) {
+              return
+            }
+            createMainType({
+              departmentId: state.department.id,
+              title: state.title,
+            })
+          }}
+          disabled={!canCreate}
+          size="small"
+          variant="ghost"
+          icon="add"
+        >
+          Stofna yfirflokk
+        </Button>
+      </Inline>
+    </Stack>
+  )
+}

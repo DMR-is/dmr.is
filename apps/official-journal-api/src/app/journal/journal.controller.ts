@@ -11,9 +11,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAdvertTypeResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCasesInProgressReponse,
   GetCategoriesResponse,
   GetDepartmentResponse,
@@ -88,31 +85,6 @@ export class JournalController {
     return ResultWrapper.unwrap(
       await this.journalService.getDepartments(params),
     )
-  }
-
-  @Route({
-    path: '/types/:id',
-    operationId: 'getAdvertTypeById',
-    params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetAdvertTypeResponse,
-  })
-  async type(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetAdvertTypeResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getType(id))
-  }
-
-  @Route({
-    path: '/types',
-    operationId: 'getAdvertTypes',
-    query: [{ type: GetAdvertTypesQueryParams, required: false }],
-    responseType: GetAdvertTypesResponse,
-  })
-  async types(
-    @Query()
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
   @Route({

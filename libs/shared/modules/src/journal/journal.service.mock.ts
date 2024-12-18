@@ -13,7 +13,6 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
-  AdvertType,
   Category,
   CreateAdvert,
   Department,
@@ -22,9 +21,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAdvertTypeResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCategoriesQueryParams,
   GetCategoriesResponse,
   GetCategoryResponse,
@@ -92,15 +88,6 @@ export class MockJournalService implements IJournalService {
   updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  getType(id: unknown): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  insertType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  updateType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>> {
     throw new Error('Method not implemented.')
   }
   insertMainCategory(
@@ -205,37 +192,6 @@ export class MockJournalService implements IJournalService {
       ResultWrapper.ok({
         departments: filtered,
         paging: MOCK_PAGING_SINGLE_PAGE,
-      }),
-    )
-  }
-
-  getTypes(
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<ResultWrapper<GetAdvertTypesResponse>> {
-    const mockTypes = ALL_MOCK_JOURNAL_TYPES
-
-    const filtered = mockTypes.filter((type) => {
-      if (params?.department && params.department !== type.department?.id) {
-        return false
-      }
-
-      if (
-        params?.search &&
-        !type.id.toLocaleLowerCase().includes(params.search.toLocaleLowerCase())
-      ) {
-        return false
-      }
-
-      return true
-    })
-
-    const page = params?.page ?? 1
-    const paged = slicePagedData(filtered, page)
-
-    return Promise.resolve(
-      ResultWrapper.ok({
-        types: paged,
-        paging: generatePaging(filtered, page),
       }),
     )
   }

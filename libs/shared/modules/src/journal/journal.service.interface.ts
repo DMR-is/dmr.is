@@ -1,7 +1,5 @@
 import { Transaction } from 'sequelize'
 import {
-  Advert,
-  AdvertType,
   Category,
   CreateAdvert,
   DefaultSearchParams,
@@ -11,9 +9,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAdvertTypeResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
@@ -53,13 +48,6 @@ export interface IJournalService {
   updateDepartment(
     model: Department,
   ): Promise<ResultWrapper<GetDepartmentResponse>>
-
-  getType(id: string): Promise<ResultWrapper<GetAdvertTypeResponse>>
-  getTypes(
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<ResultWrapper<GetAdvertTypesResponse>>
-  insertType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>>
-  updateType(model: AdvertType): Promise<ResultWrapper<GetAdvertTypeResponse>>
 
   getMainCategories(
     params?: DefaultSearchParams,
