@@ -171,7 +171,7 @@ export const UpdateAdvertMainType = ({
               <Tag
                 onClick={() =>
                   updateType({
-                    id: mainType.id,
+                    id: type.id,
                     mainTypeId: null,
                   })
                 }
