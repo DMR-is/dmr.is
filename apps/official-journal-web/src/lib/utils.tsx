@@ -407,3 +407,20 @@ export const tryParseInt = (
 
   return !Number.isNaN(parsed) ? parsed : defaultValue
 }
+
+export const loginRedirect = (callbackUrl?: string) => {
+  let fullUrl: string = Routes.Login
+
+  const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
+
+  if (callbackUrl && isRelativeUrl) {
+    fullUrl = `${Routes.Login}?callbackUrl=${callbackUrl}`
+  }
+
+  return {
+    redirect: {
+      destination: fullUrl,
+      permanent: false,
+    },
+  }
+}

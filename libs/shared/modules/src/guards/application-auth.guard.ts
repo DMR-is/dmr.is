@@ -1,6 +1,8 @@
 import { isUUID } from 'class-validator'
+import { decode } from 'jsonwebtoken'
 import { Sequelize } from 'sequelize-typescript'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ApplicationUser } from '@dmr.is/shared/dto'
 
 import {
   BadRequestException,
@@ -61,24 +63,30 @@ export class ApplicationAuthGaurd implements CanActivate {
         throw new BadRequestException()
       }
 
-      const userLookup = await this.applicationUserService.getUserFromToken(
-        auth,
-      )
+      let currentUser: ApplicationUser | null = null
+      try {
+        const decodedToken = decode(auth)
 
-      if (!userLookup.result.ok) {
-        this.logger.warn(
-          `User tried to access application with id<${applicationId}>, but the user lookup failed`,
-          {
-            applicationId,
-            code: userLookup.result.error.code,
-            message: userLookup.result.error.message,
-            category: LOGGING_CATEGORY,
-          },
-        )
+        if (!decodedToken || typeof decodedToken === 'string') {
+          throw new ForbiddenException()
+        }
+
+        const { nationalId } = decodedToken
+
+        const user = await this.applicationUserService.getUser(nationalId)
+
+        if (!user.result.ok) {
+          throw new ForbiddenException()
+        }
+
+        currentUser = user.result.value.user
+      } catch (error) {
         throw new ForbiddenException()
       }
 
-      const { user } = userLookup.result.value
+      if (!currentUser) {
+        throw new ForbiddenException()
+      }
 
       if (withCase) {
         const caseLookup = await this.utilityService.caseLookupByApplicationId(
@@ -87,7 +95,7 @@ export class ApplicationAuthGaurd implements CanActivate {
 
         if (!caseLookup.result.ok) {
           this.logger.warn(
-            `User<${user.id}> tried to access case with application id<${applicationId}> but case does not exist`,
+            `User<${currentUser.id}> tried to access case with application id<${applicationId}> but case does not exist`,
             {
               applicationId,
               code: caseLookup.result.error.code,
@@ -100,13 +108,13 @@ export class ApplicationAuthGaurd implements CanActivate {
 
         const hasInvolvedParty =
           await this.applicationUserService.checkIfUserHasInvolvedParty(
-            user.nationalId,
+            currentUser.nationalId,
             caseLookup.result.value.involvedPartyId,
           )
 
         if (!hasInvolvedParty.result.ok) {
           this.logger.warn(
-            `User<${user.id}> tried to access case with application id<${applicationId}>, but is not tied to institution<${caseLookup.result.value.involvedPartyId}>`,
+            `User<${currentUser.id}> tried to access case with application id<${applicationId}>, but is not tied to institution<${caseLookup.result.value.involvedPartyId}>`,
             {
               applicationId,
               code: hasInvolvedParty.result.error.code,
@@ -118,7 +126,7 @@ export class ApplicationAuthGaurd implements CanActivate {
         }
       }
 
-      request.user = user
+      request.user = currentUser
 
       return true
     } catch (error) {

@@ -1,4 +1,4 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { GetServerSideProps } from 'next'
 import { signIn } from 'next-auth/react'
 
 import {
@@ -7,6 +7,8 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Stack,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { LayoutProps } from '../layout/Layout'
@@ -14,41 +16,56 @@ import { Routes } from '../lib/constants'
 import { identityServerId } from '../lib/identityProvider'
 import { messages } from '../lib/messages/caseOverview'
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-type Props = {}
+type Props = {
+  prevUrl?: string
+}
 
-export default function Login(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
+export default function Login({ prevUrl }: Props) {
   return (
     <GridContainer>
-      <GridRow rowGap={['p2', 3]}>
+      <GridRow marginTop={[2, 2, 3]}>
         <GridColumn
-          paddingTop={2}
-          offset={['0', '0', '0', '1/12']}
-          span={['12/12', '12/12', '12/12', '10/12']}
+          paddingBottom={[2, 2, 3]}
+          offset={['0', '1/12']}
+          span={['12/12', '5/12']}
         >
-          <Box display="flex" columnGap={2}>
-            <Button
-              onClick={() => signIn(identityServerId, { callbackUrl: '/' })}
-            >
-              IDS
-            </Button>
+          <Box component="img" src="/assets/image-with-text-1.svg" />
+        </GridColumn>
+        <GridColumn paddingBottom={[2, 2, 3]} span={['12/12', '5/12']}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            height="full"
+            justifyContent="center"
+          >
+            <Stack space={2}>
+              <Text variant="h2">Innskráning</Text>
+              <Text variant="intro">
+                Skráðu þig inn hér með rafrænum skilríkjum.
+              </Text>
+              <Box marginTop={[2, 2, 3]}>
+                <Button
+                  onClick={() =>
+                    signIn(identityServerId, { callbackUrl: prevUrl })
+                  }
+                  icon="person"
+                  iconType="outline"
+                >
+                  Skrá inn með rafrænum skilríkjum
+                </Button>
+              </Box>
+            </Stack>
           </Box>
         </GridColumn>
       </GridRow>
     </GridContainer>
   )
 }
+export const getServerSideProps: GetServerSideProps<Props> = async ({
+  query,
+}) => {
+  const callbackUrl = query.callbackUrl ? query.callbackUrl : '/'
 
-export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  if (process.env.NODE_ENV !== 'development') {
-    // TODO: Disable this in production
-    // return {
-    //   notFound: true,
-    // }
-  }
   const layout: LayoutProps = {
     showFooter: true,
     bannerProps: {
@@ -71,5 +88,5 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
       ],
     },
   }
-  return { props: { layout } }
+  return { props: { layout, prevUrl: callbackUrl as string } }
 }

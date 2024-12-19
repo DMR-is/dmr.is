@@ -14,7 +14,6 @@ export const applicationUserMigrate = (
       firstName: model.firstName,
       lastName: model.lastName,
       email: model.email,
-      phone: model.phone,
       involvedParties: model.involvedParties.map((involvedParty) =>
         advertInvolvedPartyMigrate(involvedParty),
       ),

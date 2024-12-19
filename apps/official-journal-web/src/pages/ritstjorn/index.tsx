@@ -32,7 +32,7 @@ import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { getStringFromQueryString } from '../../lib/types'
-import { deleteUndefined } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
 type Props = {
@@ -135,11 +135,16 @@ export default function CaseProccessingOverviewScreen(
   const currentCases = casesResponse?.cases ? casesResponse.cases : cases
   const currentPaging = casesResponse?.paging ? casesResponse.paging : paging
 
+  const submittedCount = casesResponse?.totalItems.submitted ?? 0
+  const inProgressCount = casesResponse?.totalItems.inProgress ?? 0
+  const inReviewCount = casesResponse?.totalItems.inReview ?? 0
+  const readyCount = casesResponse?.totalItems.ready ?? 0
+
   const tabs: Tab<CaseStatusTitleEnum>[] = [
     {
       id: CaseStatusTitleEnum.Innsent,
       label: formatMessage(caseProccessingMessages.tabs.submitted, {
-        count: casesResponse?.totalItems.submitted,
+        count: submittedCount,
       }),
       content: (
         <CaseTableSubmitted
@@ -152,7 +157,7 @@ export default function CaseProccessingOverviewScreen(
     {
       id: CaseStatusTitleEnum.Grunnvinnsla,
       label: formatMessage(caseProccessingMessages.tabs.inProgress, {
-        count: casesResponse?.totalItems.inProgress,
+        count: inProgressCount,
       }),
       content: (
         <CaseTableInProgress
@@ -165,7 +170,7 @@ export default function CaseProccessingOverviewScreen(
     {
       id: CaseStatusTitleEnum.Yfirlestur,
       label: formatMessage(caseProccessingMessages.tabs.inReview, {
-        count: casesResponse?.totalItems.inReview,
+        count: inReviewCount,
       }),
       content: (
         <CaseTableInReview
@@ -178,7 +183,7 @@ export default function CaseProccessingOverviewScreen(
     {
       id: CaseStatusTitleEnum.Tilbúið,
       label: formatMessage(caseProccessingMessages.tabs.ready, {
-        count: casesResponse?.totalItems.ready,
+        count: readyCount,
       }),
       content: (
         <CaseTableInProgress
@@ -225,16 +230,12 @@ export default function CaseProccessingOverviewScreen(
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const layout: LayoutProps = {

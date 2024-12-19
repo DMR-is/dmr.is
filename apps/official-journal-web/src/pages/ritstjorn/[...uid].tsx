@@ -45,6 +45,7 @@ import {
   deleteUndefined,
   generateSteps,
   getTimestamp,
+  loginRedirect,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
@@ -370,16 +371,12 @@ export default function CaseSingle(
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const dmrClient = createDmrClient()

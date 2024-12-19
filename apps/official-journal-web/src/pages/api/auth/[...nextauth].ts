@@ -3,6 +3,7 @@ import NextAuth, { AuthOptions, User } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { AdminUserRole } from '@dmr.is/shared/dto'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -21,12 +22,14 @@ const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
-async function authorize(nationalId: string) {
+async function authorize(nationalId: string, accessToken: string) {
   const dmrClient = createDmrClient()
 
   try {
     if (nationalId) {
-      const member = await dmrClient.getUser({ nationalId })
+      const { user: member } = await dmrClient
+        .withMiddleware(new AuthMiddleware(accessToken))
+        .getUserByNationalId({ nationalId })
 
       if (!member) {
         throw new Error('Member not found')
@@ -148,7 +151,10 @@ export const authOptions: AuthOptions = {
         user.idToken = account?.id_token
 
         // Custom auth member from DB.
-        const authMember = await authorize(user.nationalId)
+        const authMember = await authorize(
+          user.nationalId,
+          account.access_token,
+        )
 
         if (!authMember) {
           return false

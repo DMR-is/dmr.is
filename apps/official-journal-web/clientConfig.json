@@ -93,31 +93,6 @@
         }
       }
     },
-    "/api/v1/cases/user/{nationalId}": {
-      "get": {
-        "operationId": "getUser",
-        "summary": "Return a user for national id",
-        "parameters": [
-          {
-            "name": "nationalId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
       "get": {
         "operationId": "getNextPublicationNumber",
@@ -2223,6 +2198,393 @@
         }
       }
     },
+    "/api/v1/admin-users/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdminUserRoles" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/admin-users/users": {
+      "get": {
+        "operationId": "getUsers",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdminUsers" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAdminUser" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/admin-users/users/{id}": {
+      "get": {
+        "operationId": "getUserById",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "put": {
+        "operationId": "updateUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdminUser" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/admin-users/users/nationalId/{nationalId}": {
+      "get": {
+        "operationId": "getUserByNationalId",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdminUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/application-users": {
+      "get": {
+        "operationId": "getApplicationUsers",
+        "summary": "",
+        "parameters": [
+          {
+            "required": false,
+            "name": "involvedParty",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get application users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUsers" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "post": {
+        "operationId": "createApplicationUser",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApplicationUser" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/application-users/{id}": {
+      "get": {
+        "operationId": "getApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "put": {
+        "operationId": "updateApplicationUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateApplicationUser" }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/institutions/{id}": {
+      "get": {
+        "operationId": "getInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateInstitution" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteInstitution",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/institutions": {
+      "get": {
+        "operationId": "getInstitutions",
+        "summary": "",
+        "parameters": [
+          {
+            "required": false,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "example": 10,
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitutions" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createInstitution",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInstitution" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetInstitution" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/department": {
       "get": {
         "operationId": "getStatisticsForDepartment",
@@ -2315,27 +2677,6 @@
         "type": "object",
         "properties": { "url": { "type": "string" } },
         "required": ["url"]
-      },
-      "AdminUserRole": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "slug": { "type": "string" }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "AdminUser": {
-        "type": "object",
-        "properties": {
-          "nationalId": { "type": "string" },
-          "displayName": { "type": "string" },
-          "roles": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUserRole" }
-          }
-        },
-        "required": ["nationalId", "displayName", "roles"]
       },
       "GetNextPublicationNumberResponse": {
         "type": "object",
@@ -3642,6 +3983,200 @@
             "type": "string",
             "description": "New title of the main advert type"
           }
+        }
+      },
+      "AdminUserRole": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetAdminUserRoles": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
+          }
+        },
+        "required": ["roles"]
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
+          }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "fullName",
+          "email",
+          "displayName",
+          "roles"
+        ]
+      },
+      "GetAdminUsers": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUser" }
+          }
+        },
+        "required": ["users"]
+      },
+      "CreateAdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "displayName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [
+          "nationalId",
+          "firstName",
+          "lastName",
+          "displayName",
+          "email",
+          "roleIds"
+        ]
+      },
+      "GetAdminUser": {
+        "type": "object",
+        "properties": { "user": { "$ref": "#/components/schemas/AdminUser" } },
+        "required": ["user"]
+      },
+      "UpdateAdminUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "displayName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleIds": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ApplicationUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "The user id" },
+          "nationalId": {
+            "type": "string",
+            "description": "The user national id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "involvedParties": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "involvedParties"
+        ]
+      },
+      "GetApplicationUsers": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationUser" }
+          }
+        },
+        "required": ["users"]
+      },
+      "GetApplicationUser": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/ApplicationUser" }
+        },
+        "required": ["user"]
+      },
+      "CreateApplicationUser": {
+        "type": "object",
+        "properties": {
+          "nationalId": {
+            "type": "string",
+            "description": "The user national id"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["nationalId", "firstName", "lastName", "involvedPartyIds"]
+      },
+      "UpdateApplicationUser": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "description": "The user first name"
+          },
+          "lastName": { "type": "string", "description": "The user last name" },
+          "email": { "type": "string", "description": "The user email" },
+          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "GetInstitution": {
+        "type": "object",
+        "properties": {
+          "institution": { "$ref": "#/components/schemas/Institution" }
+        },
+        "required": ["institution"]
+      },
+      "GetInstitutions": {
+        "type": "object",
+        "properties": {
+          "institutions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["institutions", "paging"]
+      },
+      "CreateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" }
+        },
+        "required": ["title"]
+      },
+      "UpdateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" }
         }
       },
       "StatisticsDepartmentItem": {

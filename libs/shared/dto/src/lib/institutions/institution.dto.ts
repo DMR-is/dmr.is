@@ -1,4 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { IsOptional } from 'class-validator'
+
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
+
+import { BaseEntity } from '../entity'
+import { Paging, PagingQuery } from '../paging'
 
 export class Institution {
   @ApiProperty({
@@ -26,3 +31,37 @@ export class Institution {
   })
   readonly slug!: string
 }
+
+export class InstitutionDto extends BaseEntity {}
+
+export class GetInstitution {
+  @ApiProperty({
+    type: Institution,
+  })
+  institution!: InstitutionDto
+}
+
+export class GetInstitutions {
+  @ApiProperty({
+    type: [Institution],
+  })
+  institutions!: InstitutionDto[]
+
+  @ApiProperty({
+    type: Paging,
+  })
+  paging!: Paging
+}
+
+export class InstitutionQuery extends PagingQuery {
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsOptional()
+  search?: string
+}
+
+export class CreateInstitution extends PickType(InstitutionDto, ['title']) {}
+
+export class UpdateInstitution extends PartialType(CreateInstitution) {}

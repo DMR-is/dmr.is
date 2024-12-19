@@ -87,24 +87,8 @@ export class CaseController {
     @Inject(ICommentService)
     private readonly commentService: ICommentService,
 
-    @Inject(IAdminUserService)
-    private readonly adminAuthService: IAdminUserService,
-
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
-
-  @Route({
-    path: 'user/:nationalId',
-    operationId: 'getUser',
-    summary: 'Return a user for national id',
-    responseType: AdminUser,
-    params: [{ name: 'nationalId', type: 'string', required: true }],
-  })
-  async getUser(@Param('nationalId') nationalId: string) {
-    return ResultWrapper.unwrap(
-      await this.adminAuthService.getUserByNationalId(nationalId),
-    ).user
-  }
 
   @Route({
     path: 'nextPublicationNumber/:departmentId',

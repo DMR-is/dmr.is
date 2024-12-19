@@ -1,5 +1,6 @@
 import * as jwt from 'jsonwebtoken'
 import jwksRsa from 'jwks-rsa'
+import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
@@ -19,6 +20,7 @@ export class TokenJwtAuthGuard implements CanActivate {
     rateLimit: true,
   })
 
+  @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const authHeader = request.headers.authorization

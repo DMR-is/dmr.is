@@ -18,6 +18,7 @@ import { messages } from '../../lib/messages/caseOverview'
 import {
   deleteUndefined,
   getCaseProcessingSearchParams,
+  loginRedirect,
   mapDepartmentSlugToLetter,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
@@ -88,16 +89,12 @@ export default function CaseOverview(
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
   const session = await getSession({ req })
 
   if (!session) {
-    return {
-      redirect: {
-        destination: Routes.Login,
-        permanent: false,
-      },
-    }
+    return loginRedirect(resolvedUrl)
   }
 
   const layout: LayoutProps = {

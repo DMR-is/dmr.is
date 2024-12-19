@@ -9,6 +9,8 @@ import models from './models'
 
 export { IApplicationUserService, ApplicationUserService }
 
+export { ApplicationUserController } from './application-user.controller'
+
 @Module({
   imports: [SequelizeModule.forFeature([...models]), LoggingModule],
   providers: [

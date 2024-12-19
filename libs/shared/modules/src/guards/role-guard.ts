@@ -1,4 +1,5 @@
 import { ROLES_KEY } from '@dmr.is/constants'
+import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdminUserRoleTitle } from '@dmr.is/types'
 
@@ -27,6 +28,7 @@ export class RoleGuard implements CanActivate {
     private readonly adminUserService: IAdminUserService,
   ) {}
 
+  @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
 

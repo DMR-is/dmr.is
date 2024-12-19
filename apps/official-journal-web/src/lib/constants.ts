@@ -35,6 +35,7 @@ export enum Routes {
   Overview = '/heildaryfirlit',
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
+  UserManagement = '/notendur',
 }
 
 export enum PageTitles {
@@ -69,6 +70,7 @@ export const PagePaths: Array<Path> = [
     title: 'Tegundir',
     order: 6,
   },
+  { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
 ]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -233,6 +235,12 @@ export enum APIRotues {
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
+  AdminUsers = '/api/admin-users',
+  AdminUser = '/api/admin-users/:id',
+  ApplicationUsers = '/api/application-users',
+  ApplicationUser = '/api/application-users/:id',
+  Institutions = '/api/institutions',
+  Institution = '/api/institutions/:id',
   UpdateCaseType = '/api/cases/:id/updateType',
 }
 

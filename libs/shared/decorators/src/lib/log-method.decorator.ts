@@ -15,6 +15,7 @@ export function LogMethod(logArgs: boolean | undefined = true) {
       const logData = {
         method: method,
         category: service,
+        context: `${service}`,
       }
 
       const filteredArgs = filterArgs(args, service, String(method))
@@ -22,7 +23,7 @@ export function LogMethod(logArgs: boolean | undefined = true) {
         Object.assign(logData, filteredArgs)
       }
 
-      logger.info(`${service}.${String(method)}`, {
+      logger.info(`${String(method)} called with arguments`, {
         ...logData,
       })
       return originalMethod.apply(this, args)

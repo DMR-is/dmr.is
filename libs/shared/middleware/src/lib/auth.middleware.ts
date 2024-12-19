@@ -1,5 +1,3 @@
-import { JWT } from 'next-auth/jwt'
-
 type FetchAPI = WindowOrWorkerGlobalScope['fetch']
 
 interface FetchParams {

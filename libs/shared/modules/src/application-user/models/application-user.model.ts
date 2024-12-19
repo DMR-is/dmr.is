@@ -44,13 +44,7 @@ export class ApplicationUserModel extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  email?: string
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
-  })
-  phone?: string
+  email!: string
 
   @BelongsToMany(() => AdvertInvolvedPartyModel, {
     through: () => ApplicationUserInvolvedPartyModel,

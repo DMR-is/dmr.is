@@ -25,19 +25,22 @@ export function LogAndHandle(
       try {
         const filteredArgs = filterArgs(args, service, method)
         const logData = {
+          context: `${service}`,
           method: method,
           category: service,
         }
 
         if (!logArgs) {
-          logger.debug(`${service}.${method}`)
+          logger.debug(`${method} called (skipped logging args)`, {
+            context: `${service}`,
+          })
         }
 
         if (logArgs) {
           Object.assign(logData, {
             ...filteredArgs,
           })
-          logger.debug(`${service}.${method}`, {
+          logger.debug(`${method} called with arguments`, {
             ...logData,
           })
         }

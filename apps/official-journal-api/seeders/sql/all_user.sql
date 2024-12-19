@@ -23,6 +23,7 @@ INSERT INTO
     FIRST_NAME,
     LAST_NAME,
     DISPLAY_NAME,
+    EMAIL,
     CREATED,
     UPDATED
   )
@@ -33,6 +34,7 @@ VALUES
     'Ármann Árni',
     'Gunnarsson',
     'Ármann Árni',
+    'armann.arni@testuser.com',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -44,6 +46,7 @@ INSERT INTO
     FIRST_NAME,
     LAST_NAME,
     DISPLAY_NAME,
+    EMAIL,
     CREATED,
     UPDATED
   )
@@ -54,6 +57,7 @@ VALUES
     'Pálína J',
     'Þórhildardóttir',
     'Pálína J',
+    'palina.j@testuser.com',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -65,6 +69,7 @@ INSERT INTO
     FIRST_NAME,
     LAST_NAME,
     DISPLAY_NAME,
+    EMAIL,
     CREATED,
     UPDATED
   )
@@ -75,6 +80,7 @@ VALUES
     'Gervimaður',
     'Færeyjar',
     'GM Færeyjar',
+    'gm@faereyjar.is',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -109,8 +115,7 @@ INSERT INTO
     NATIONAL_ID,
     FIRST_NAME,
     LAST_NAME,
-    EMAIL,
-    PHONE
+    EMAIL
   )
 VALUES
   (
@@ -118,8 +123,7 @@ VALUES
     '0101307789',
     'Gervimaður',
     'Útlönd',
-    NULL,
-    NULL
+    'gm@utlond.is'
   );
 
 INSERT INTO

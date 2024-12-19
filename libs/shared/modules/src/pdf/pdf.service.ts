@@ -98,7 +98,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const markup = advertPdfTemplate({
       title: answers.advert.title,
-      type: answers.advert.typeName,
+      type: answers.advert.type.title,
       content: cleanupSingleEditorOutput(answers.advert.html as HTMLText),
       additions: additionHtml,
       signature: signatureHtml,
