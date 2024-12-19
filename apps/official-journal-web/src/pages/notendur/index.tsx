@@ -368,7 +368,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   filterConfig={{
                     matchFrom: 'start',
                   }}
-                  isDisabled={!selectedApplicationUserInstitution}
                   isClearable
                   noOptionsMessage="Engir notendur eru skráðir fyrir þessa stofnun"
                   isLoading={applicationUsersLoading}
