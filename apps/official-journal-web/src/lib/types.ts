@@ -30,19 +30,3 @@ export function getStringFromQueryString(
 
   return value
 }
-
-export function generateQueryFromParams(params?: {
-  [key: string]: string | string[] | number | boolean | undefined
-}) {
-  if (!params) return undefined
-
-  const p: { [key: string]: string } = {}
-  Object.entries(params).forEach(([key, value]) => {
-    const v = value && String(value) ? String(value) : undefined
-    if (v) {
-      p[key] = v
-    }
-  })
-
-  return new URLSearchParams(p).toString()
-}

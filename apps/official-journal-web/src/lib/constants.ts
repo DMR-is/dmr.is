@@ -82,38 +82,6 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
 export const defaultFetcher = (url: string) =>
   fetch(url).then((res) => res.json())
 
-export async function fetcher(
-  url: string,
-  { arg }: { arg: { method: 'GET' | 'DELETE' | undefined } } = {
-    arg: { method: 'GET' },
-  },
-) {
-  const res = await fetch(url, {
-    method: arg.method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!res.ok) {
-    const parsedError = await res.json()
-
-    const error = new OJOIWebException(parsedError.message)
-
-    error.status = res.status
-    error.name = parsedError.name
-    error.type = parsedError.severity
-
-    throw error
-  }
-
-  if (res.status === 204) {
-    return
-  }
-
-  return await res.json()
-}
-
 type FetcherArgs<T> =
   | {
       withAuth?: boolean
@@ -161,41 +129,6 @@ export const fetcherV2 = async <TData, TBody = never>(
   }
 
   return res.json()
-}
-
-export async function updateFetcher<T>(
-  url: string,
-  { arg, method }: { arg: T; method?: 'PUT' | 'POST' },
-) {
-  const response = await fetch(url, {
-    method: method ? method : 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    const parsedError = await response.json()
-
-    const error = new OJOIWebException(parsedError.message)
-
-    error.status = response.status
-    error.name = parsedError.name
-    error.type = parsedError.severity
-
-    throw error
-  }
-
-  if (response.status === 204) {
-    return
-  }
-
-  try {
-    return await response.json()
-  } catch (error) {
-    return null
-  }
 }
 
 export enum APIRotues {
