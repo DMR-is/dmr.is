@@ -34,7 +34,7 @@ VALUES
     'Ármann Árni',
     'Gunnarsson',
     'Ármann Árni',
-    'armann.arni@testuser.com'
+    'armann.arni@testuser.com',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -57,7 +57,7 @@ VALUES
     'Pálína J',
     'Þórhildardóttir',
     'Pálína J',
-    'palina.j@testuser.com'
+    'palina.j@testuser.com',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -80,7 +80,7 @@ VALUES
     'Gervimaður',
     'Færeyjar',
     'GM Færeyjar',
-    'gm@faereyjar.is'
+    'gm@faereyjar.is',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
@@ -115,8 +115,7 @@ INSERT INTO
     NATIONAL_ID,
     FIRST_NAME,
     LAST_NAME,
-    EMAIL,
-    PHONE
+    EMAIL
   )
 VALUES
   (
@@ -124,8 +123,7 @@ VALUES
     '0101307789',
     'Gervimaður',
     'Útlönd',
-    NULL,
-    NULL
+    'gm@utlond.is'
   );
 
 INSERT INTO
