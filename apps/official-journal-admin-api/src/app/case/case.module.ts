@@ -2,11 +2,11 @@ import { LoggingModule } from '@dmr.is/logging'
 import {
   AdminUserController,
   AdminUserModule,
-  ApplicationUserController,
-  ApplicationUserModule,
   AdvertTypeAdminController,
   AdvertTypeController,
   AdvertTypeModule,
+  ApplicationUserController,
+  ApplicationUserModule,
   CommentModule,
   InstitutionAdminController,
   InstitutionController,
