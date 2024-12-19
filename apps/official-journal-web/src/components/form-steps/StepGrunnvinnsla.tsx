@@ -72,7 +72,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     },
   })
 
-  const { data: departmentsData } = useDepartments({
+  const { departments } = useDepartments({
     options: {
       onSuccess: () => {
         refetchTypes()
@@ -241,7 +241,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                   label: currentCase.advertDepartment.title,
                   value: currentCase.advertDepartment.id,
                 }}
-                options={departmentsData?.departments.map((d) => ({
+                options={departments?.map((d) => ({
                   label: d.title,
                   value: d.id,
                 }))}

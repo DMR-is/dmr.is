@@ -1,21 +1,30 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
-import { GetAdvertTypesResponse } from '../../../gen/fetch'
+import { GetAdvertTypes, GetTypesRequest } from '../../../gen/fetch'
 import { APIRotues, fetcher } from '../../../lib/constants'
-import { generateQueryFromParams, SearchParams } from '../../../lib/types'
 
-type SWRTypesOptions = SWRConfiguration<GetAdvertTypesResponse, Error>
+type SWRTypesOptions = SWRConfiguration<GetAdvertTypes, Error>
 
 type UseTypesParams = {
   options?: SWRTypesOptions
-  params?: SearchParams & { department?: string }
+  params?: GetTypesRequest
 }
 
 export const useTypes = ({ options, params }: UseTypesParams) => {
-  const query = generateQueryFromParams(params)
-  const url = query ? `${APIRotues.GetTypes}?${query}` : APIRotues.GetTypes
+  const query = params
+    ? Object.keys(params)
+        .map(
+          (key) =>
+            `${encodeURIComponent(key)}=${encodeURIComponent(
+              (params as Record<string, string | number>)[key],
+            )}`,
+        )
+        .join('&')
+    : ''
+
+  const url = query ? `${APIRotues.Types}?${query}` : APIRotues.Types
   const { data, error, isLoading, mutate, isValidating } = useSWR<
-    GetAdvertTypesResponse,
+    GetAdvertTypes,
     Error
   >(url, fetcher, options)
 

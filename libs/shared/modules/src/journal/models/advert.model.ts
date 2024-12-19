@@ -8,13 +8,13 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdvertTypeModel } from '../../advert-type/models'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'
 import { AdvertDepartmentModel } from './advert-department.model'
 import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
 import { AdvertStatusModel } from './advert-status.model'
-import { AdvertTypeModel } from './advert-type.model'
 
 @Table({ tableName: 'advert', timestamps: false })
 export class AdvertModel extends Model {

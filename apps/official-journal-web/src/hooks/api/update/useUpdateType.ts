@@ -25,7 +25,7 @@ export const useUpdateType = ({ caseId, options }: UseUpdateTypeParams) => {
     Error,
     Key,
     UpdateTypeTriggerArgs
-  >(APIRotues.UpdateType.replace(':id', caseId), updateFetcher, {
+  >(APIRotues.UpdateCaseType.replace(':id', caseId), updateFetcher, {
     throwOnError: false,
     ...options,
   })

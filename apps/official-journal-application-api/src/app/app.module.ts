@@ -1,4 +1,6 @@
 import {
+  AdvertTypeController,
+  AdvertTypeModule,
   ApplicationModule,
   ApplicationUserModule,
   HealthModule,
@@ -26,8 +28,9 @@ import { LogRequestMiddleware } from '@dmr.is/middleware'
     PdfModule,
     ApplicationUserModule,
     UtilityModule,
+    AdvertTypeModule,
   ],
-  controllers: [ApplicationController],
+  controllers: [ApplicationController, AdvertTypeController],
   providers: [],
 })
 export class AppModule implements NestModule {

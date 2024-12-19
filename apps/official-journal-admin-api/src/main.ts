@@ -6,12 +6,14 @@
 import { WinstonModule } from 'nest-winston'
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
+import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
-import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
 import { AppModule } from './app/app.module'
+import { OJOIExceptionFilter } from './exceptionFilter'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -25,12 +27,8 @@ async function bootstrap() {
   // TODO make this behave with nest
   // app.useLogger(logger)
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      // whitelist: true
-    }),
-  )
+  app.useGlobalPipes(ExceptionFactoryPipe())
+  app.useGlobalFilters(new OJOIExceptionFilter())
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({

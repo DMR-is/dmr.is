@@ -2,7 +2,10 @@ import { ApplicationCase } from '@dmr.is/shared/dto'
 
 import { caseCommunicationStatusMigrate } from '../../case/migrations/case-communication-status.migrate'
 import { CaseModel } from '../../case/models'
-import { advertCategoryMigrate } from '../../journal/migrations'
+import {
+  advertCategoryMigrate,
+  advertDepartmentMigrate,
+} from '../../journal/migrations'
 
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   const fullHtml = `
@@ -11,7 +14,7 @@ export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   `
 
   return {
-    department: model.department,
+    department: advertDepartmentMigrate(model.department),
     type: model.advertType,
     status: model.status,
     categories: model.categories

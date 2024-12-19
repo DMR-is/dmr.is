@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CategoryMainCategory } from '../main-categories/category-main-category.dto'
-
 export class Category {
   @ApiProperty({
     description: 'Unique ID for the advert category, GUID format.',

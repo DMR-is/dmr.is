@@ -47,17 +47,14 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
 import { IJournalService } from '../journal'
-import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
-  AdvertTypeModel,
-} from '../journal/models'
+import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'

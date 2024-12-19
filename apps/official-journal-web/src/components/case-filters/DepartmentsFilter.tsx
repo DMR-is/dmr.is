@@ -8,7 +8,7 @@ import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const DepartmentsFilter = () => {
   const { formatMessage } = useFormatMessage()
-  const { data, error, isLoading } = useDepartments({
+  const { departments, error, isLoading } = useDepartments({
     options: {
       keepPreviousData: true,
       refreshInterval: 0,
@@ -29,7 +29,7 @@ export const DepartmentsFilter = () => {
     )
   }
 
-  if (!data) {
+  if (!departments) {
     return (
       <AlertMessage
         type="warning"
@@ -42,7 +42,7 @@ export const DepartmentsFilter = () => {
   const options = generateOptions({
     label: 'Deild',
     queryKey: 'department',
-    options: data.departments,
+    options: departments,
   })
 
   return <FilterGroup {...options} />

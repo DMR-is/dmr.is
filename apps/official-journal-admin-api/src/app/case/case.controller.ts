@@ -22,8 +22,6 @@ import {
   CreateMainCategoryCategories,
   DefaultSearchParams,
   EditorialOverviewResponse,
-  GetAdvertTypesQueryParams,
-  GetAdvertTypesResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -67,7 +65,6 @@ import {
   Inject,
   Param,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
@@ -143,20 +140,6 @@ export class CaseController {
   })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
-  }
-
-  @Route({
-    path: 'types',
-    operationId: 'getTypes',
-    summary: 'Get advert types',
-    responseType: GetAdvertTypesResponse,
-    query: [{ type: GetAdvertTypesQueryParams }],
-  })
-  async types(
-    @Query()
-    params?: GetAdvertTypesQueryParams,
-  ): Promise<GetAdvertTypesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getTypes(params))
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
@@ -410,6 +393,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/type',
+    operationId: 'updateCaseType',
+    summary: 'Update type of case and application',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCaseTypeBody,
+  })
+  async updateType(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseTypeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/communicationStatus',
     operationId: 'updateCommunicationStatus',
     params: [{ name: 'id', type: 'string', required: true }],
@@ -422,21 +420,6 @@ export class CaseController {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseCommunicationStatus(id, body),
     )
-  }
-
-  @Route({
-    method: 'put',
-    path: ':id/type',
-    operationId: 'updateType',
-    summary: 'Update type of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCaseTypeBody,
-  })
-  async updateType(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseTypeBody,
-  ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
   }
 
   @Route({

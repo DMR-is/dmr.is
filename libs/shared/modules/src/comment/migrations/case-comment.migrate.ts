@@ -25,5 +25,6 @@ export const caseCommentMigrate = (
     creator: model.creator,
     receiver: model.receiver,
     comment: model.comment,
+    state: model.applicationState ?? null,
   }
 }

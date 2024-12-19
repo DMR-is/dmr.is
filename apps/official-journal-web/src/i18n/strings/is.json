@@ -360,7 +360,7 @@
     "description": "Title column"
   },
   "web.components.tooltips:caseLabelTooltip.fasttrack": {
-    "defaultMessage": "Harðbirting",
+    "defaultMessage": "Hraðbirting",
     "description": "Fast track label"
   },
   "web.components.tooltips:caseLabelTooltip.feedback": {

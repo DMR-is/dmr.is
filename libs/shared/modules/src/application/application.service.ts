@@ -8,12 +8,16 @@ import {
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdvertTemplateType,
+  AdvertTemplateTypeEnums,
   Application,
   ApplicationUser,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
+  GetAdvertTemplateResponse,
+  GetAdvertTemplatesResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -25,7 +29,11 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { calculatePriceForApplication } from '@dmr.is/utils'
+import {
+  calculatePriceForApplication,
+  getTemplate,
+  signatureMapper,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -42,6 +50,7 @@ import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
+import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IApplicationService } from './application.service.interface'
 import { applicationCaseMigrate } from './migrations'
@@ -62,6 +71,8 @@ export class ApplicationService implements IApplicationService {
     private readonly caseService: ICaseService,
     @Inject(IAuthService)
     private readonly authService: IAuthService,
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
     private readonly sequelize: Sequelize,
@@ -307,6 +318,35 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId),
       )
 
+      const { signatures } = ResultWrapper.unwrap(
+        await this.signatureService.getSignaturesByCaseId(
+          caseLookup.id,
+          undefined,
+          transaction,
+        ),
+      )
+
+      Promise.all(
+        signatures.map(async (signature) => {
+          this.signatureService.deleteSignature(signature.id, transaction)
+        }),
+      )
+
+      const signatureArray = signatureMapper(
+        application.answers.signatures,
+        application.answers.misc.signatureType,
+        caseLookup.id,
+        caseLookup.involvedPartyId,
+      )
+      Promise.all(
+        signatureArray.map(async (signature) => {
+          await this.signatureService.createCaseSignature(
+            signature,
+            transaction,
+          )
+        }),
+      )
+
       ResultWrapper.unwrap(
         await this.caseService.updateCase(
           {
@@ -368,6 +408,38 @@ export class ApplicationService implements IApplicationService {
       code: 500,
       message: 'Could not post application',
     })
+  }
+
+  /**
+   * Returns list of available advert template types.
+   *
+   * @returns A `ResultWrapper` containing an array of available types.
+   */
+  @LogAndHandle()
+  @Transactional()
+  async getApplicationAdvertTemplates(): Promise<
+    ResultWrapper<GetAdvertTemplatesResponse>
+  > {
+    const res = Object.values<string>(AdvertTemplateTypeEnums)
+
+    return ResultWrapper.ok({ types: res })
+  }
+
+  /**
+   * Creates an advert template.
+   * If no available value is provided for type, it will return 'AUGLÝSING' as default.
+   *
+   * @param type - The type of advert requested.
+   * @returns A `ResultWrapper` containing the result of the operation.
+   */
+  @LogAndHandle()
+  @Transactional()
+  async getApplicationAdvertTemplate(
+    input: AdvertTemplateType,
+  ): Promise<ResultWrapper<GetAdvertTemplateResponse>> {
+    const res = getTemplate(input.type)
+
+    return ResultWrapper.ok(res)
   }
 
   /**

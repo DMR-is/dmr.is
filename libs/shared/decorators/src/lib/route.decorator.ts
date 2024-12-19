@@ -85,7 +85,9 @@ export function Route({
         break
       case 'delete':
       case 'put':
-        decorators.push(ApiNoContentResponse())
+        if (!responseType) {
+          decorators.push(ApiNoContentResponse())
+        }
         decorators.push(HttpCode(204))
         break
       default:

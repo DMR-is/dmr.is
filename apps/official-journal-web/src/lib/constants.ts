@@ -1,8 +1,10 @@
 import { getSession } from 'next-auth/react'
 
-import { StringOption } from '@island.is/island-ui/core'
-
-import { PostCasePublishBody } from '../gen/fetch'
+import {
+  AlertMessageProps,
+  AlertMessageType,
+  StringOption,
+} from '@island.is/island-ui/core'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -21,6 +23,7 @@ export const COMMENTS_TO_HIDE = 4
 export enum Routes {
   Dashboard = '/',
   MainCategories = '/yfirflokkar',
+  MainTypes = '/tegundir',
   ProcessingOverview = '/ritstjorn',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
@@ -62,7 +65,12 @@ export const PagePaths: Array<Path> = [
   },
   { pathname: Routes.Dashboard, title: PageTitles.Dashboard, order: 1 },
   { pathname: Routes.MainCategories, title: 'Yfirflokkar', order: 5 },
-  { pathname: Routes.UserManagement, title: 'Notendur', order: 6 },
+  {
+    pathname: Routes.MainTypes,
+    title: 'Tegundir',
+    order: 6,
+  },
+  { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
 ]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -73,63 +81,6 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
 
 export const defaultFetcher = (url: string) =>
   fetch(url).then((res) => res.json())
-
-export async function publishCases(
-  url: string,
-  { arg }: { arg: PostCasePublishBody },
-) {
-  return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((res) => res)
-    .catch((error) => {
-      throw error
-    })
-}
-
-export async function getCase(url: string) {
-  return fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    const error = new Error('Error occured while fetching data')
-    if (!res.ok) {
-      // eslint-disable-next-line no-console
-      console.error('Error occured while fetching data')
-      error.message = await res.text()
-      error.name = res.statusText
-
-      throw error
-    }
-
-    return res.json()
-  })
-}
-
-export async function deleteComment(
-  url: string,
-  { arg }: { arg: { caseId: string; commentId: string } },
-) {
-  const fullUrl = `${url}?caseId=${arg.caseId}&commentId=${arg.commentId}`
-  return fetch(fullUrl, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then(async (res) => {
-    if (!res.ok) {
-      throw new Error('Error occured while fetching data')
-    }
-
-    return res
-  })
-}
 
 export async function fetcher(
   url: string,
@@ -145,16 +96,22 @@ export async function fetcher(
   })
 
   if (!res.ok) {
-    const message = await res.text()
+    const parsedError = await res.json()
 
-    throw new Error(message)
+    const error = new OJOIWebException(parsedError.message)
+
+    error.status = res.status
+    error.name = parsedError.name
+    error.type = parsedError.severity
+
+    throw error
   }
 
-  try {
-    return await res.json()
-  } catch (error) {
-    return res
+  if (res.status === 204) {
+    return
   }
+
+  return await res.json()
 }
 
 type FetcherArgs<T> =
@@ -206,32 +163,52 @@ export const fetcherV2 = async <TData, TBody = never>(
   return res.json()
 }
 
-export async function updateFetcher<T>(url: string, { arg }: { arg: T }) {
-  const res = await fetch(url, {
-    method: 'POST',
+export async function updateFetcher<T>(
+  url: string,
+  { arg, method }: { arg: T; method?: 'PUT' | 'POST' },
+) {
+  const response = await fetch(url, {
+    method: method ? method : 'POST',
     body: JSON.stringify(arg),
     headers: {
       'Content-Type': 'application/json',
     },
   })
 
-  if (!res.ok) {
-    const message = await res.text()
+  if (!response.ok) {
+    const parsedError = await response.json()
 
-    throw new Error(message)
+    const error = new OJOIWebException(parsedError.message)
+
+    error.status = response.status
+    error.name = parsedError.name
+    error.type = parsedError.severity
+
+    throw error
   }
 
-  return res
+  if (response.status === 204) {
+    return
+  }
+
+  try {
+    return await response.json()
+  } catch (error) {
+    return null
+  }
 }
 
 export enum APIRotues {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
+  MainTypes = '/api/mainTypes',
+  MainType = '/api/mainTypes/:id',
+  Types = '/api/types',
+  Type = '/api/types/:id',
   GetEditorialOverview = '/api/cases/editorialOverview',
   GetDepartments = '/api/cases/departments',
-  GetTypes = '/api/cases/types',
   GetCategories = '/api/cases/categories',
-  GetMainCategories = '/api/cases/mainCategories',
+  GetMainCategories = '/api/mainCategories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
   GetCommunicationStatuses = '/api/cases/communicationStatuses',
@@ -242,20 +219,19 @@ export enum APIRotues {
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
-  UpdateType = '/api/cases/:id/updateType',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
   UpdatePaid = '/api/cases/:id/updatePaid',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
-  UpdateMainCategory = '/api/cases/mainCategories/:id/update',
-  CreateMainCategory = '/api/cases/mainCategories/create',
-  CreateMainCategoryCategories = '/api/cases/mainCategories/:id/categories/create',
+  UpdateMainCategory = '/api/mainCategories/:id/update',
+  CreateMainCategory = '/api/mainCategories/create',
+  CreateMainCategoryCategories = '/api/mainCategories/:id/categories/create',
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
-  DeleteMainCategory = '/api/cases/mainCategories/:id/delete',
-  DeleteMainCategoryCategory = '/api/cases/mainCategories/:id/categories/:cid/delete',
+  DeleteMainCategory = '/api/mainCategories/:id/delete',
+  DeleteMainCategoryCategory = '/api/mainCategories/:id/categories/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
@@ -265,4 +241,47 @@ export enum APIRotues {
   ApplicationUser = '/api/application-users/:id',
   Institutions = '/api/institutions',
   Institution = '/api/institutions/:id',
+  UpdateCaseType = '/api/cases/:id/updateType',
+}
+
+export class OJOIWebException extends Error {
+  public status!: number
+  public name!: string
+  public type!: Extract<AlertMessageType, 'error' | 'info' | 'warning'>
+
+  constructor(message: string) {
+    super(message)
+  }
+
+  static serverError(message = 'Ekki tókst að vinna beiðni'): OJOIWebException {
+    const error = new OJOIWebException(message)
+    error.status = 500
+    error.name = 'Villa kom upp í vefþjón'
+    error.type = 'error'
+
+    return error
+  }
+
+  static badRequest(
+    message = 'Fyrirspurn er ekki á réttu formi',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+
+    error.status = 400
+    error.name = 'Ógild beiðni'
+    error.type = 'warning'
+
+    return error
+  }
+
+  static methodNotAllowed(
+    message = 'Þessi fyrirspurn tekur ekki við þessari aðferð',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+    error.status = 405
+    error.name = 'Aðferð ekki leyfð'
+    error.type = 'warning'
+
+    return error
+  }
 }
