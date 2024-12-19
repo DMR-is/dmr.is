@@ -61,23 +61,9 @@ export default function Login({ prevUrl }: Props) {
     </GridContainer>
   )
 }
-
-// <Box display="flex" columnGap={2}>
-//   <Button
-//     onClick={() => signIn(identityServerId, { callbackUrl: '/' })}
-//   >
-//     IDS
-//   </Button>
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   query,
 }) => {
-  if (process.env.NODE_ENV !== 'development') {
-    // TODO: Disable this in production
-    // return {
-    //   notFound: true,
-    // }
-  }
-
   const callbackUrl = query.callbackUrl ? query.callbackUrl : '/'
 
   const layout: LayoutProps = {

@@ -411,7 +411,9 @@ export const tryParseInt = (
 export const loginRedirect = (callbackUrl?: string) => {
   let fullUrl: string = Routes.Login
 
-  if (callbackUrl) {
+  const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
+
+  if (callbackUrl && isRelativeUrl) {
     fullUrl = `${Routes.Login}?callbackUrl=${callbackUrl}`
   }
 
