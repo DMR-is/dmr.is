@@ -5,7 +5,6 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Select,
   Stack,
 } from '@island.is/island-ui/core'
 
@@ -15,6 +14,7 @@ import { UpdateAdvertMainType } from '../../components/advert-types/UpdateAdvert
 import { UpdateAdvertType } from '../../components/advert-types/UpdateAdvertType'
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
+import { OJOISelect } from '../../components/select/OJOISelect'
 import { AdvertMainType, AdvertType, Department } from '../../gen/fetch'
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
@@ -29,7 +29,7 @@ export default function AdvertTypesPage() {
 
   const [selectedType, setSelectedType] = useState<AdvertType | null>(null)
 
-  const { departments, isValidating: isGettingDepartments } = useDepartments({
+  const { departments, isLoading } = useDepartments({
     options: {
       refreshInterval: 0,
       revalidateIfStale: false,
@@ -61,20 +61,23 @@ export default function AdvertTypesPage() {
     refetchTypes()
   }
 
-  const departmentOptions = departments?.map((dep) => ({
-    label: dep.title,
-    value: dep,
-  }))
+  const departmentOptions =
+    departments?.map((dep) => ({
+      label: dep.title,
+      value: dep,
+    })) ?? []
 
-  const mainTypeOptions = mainTypes?.map((mainType) => ({
-    label: mainType.title,
-    value: mainType,
-  }))
+  const mainTypeOptions =
+    mainTypes?.map((mainType) => ({
+      label: mainType.title,
+      value: mainType,
+    })) ?? []
 
-  const typeOptions = types?.map((type) => ({
-    label: type.title,
-    value: type,
-  }))
+  const typeOptions =
+    types?.map((type) => ({
+      label: type.title,
+      value: type,
+    })) ?? []
 
   const noOptMainType = selectedDepartment
     ? `Engin yfirflokkur til fyrir ${selectedDepartment.title}`
@@ -95,9 +98,9 @@ export default function AdvertTypesPage() {
             <Stack space={[2, 2, 3]}>
               <ContentWrapper title="Deildir">
                 <Stack space={[2, 2, 3]}>
-                  <Select
+                  <OJOISelect
                     isClearable
-                    isLoading={isGettingDepartments}
+                    isLoading={isLoading}
                     size="sm"
                     backgroundColor="blue"
                     label="Deild"
@@ -107,7 +110,7 @@ export default function AdvertTypesPage() {
                       setSelectedDepartment(opt ? opt.value : null)
                     }}
                   />
-                  <Select
+                  <OJOISelect
                     isLoading={isLoadingMainTypes}
                     noOptionsMessage={noOptMainType}
                     isClearable
@@ -116,11 +119,11 @@ export default function AdvertTypesPage() {
                     label="Yfirflokkur"
                     options={mainTypeOptions}
                     placeholder="Veldu yfirflokk"
-                    onChange={(opt) => {
+                    onChange={(opt) =>
                       setSelectedMainType(opt ? opt.value : null)
-                    }}
+                    }
                   />
-                  <Select
+                  <OJOISelect
                     isLoading={isLoadingTypes}
                     noOptionsMessage={noOptType}
                     isClearable

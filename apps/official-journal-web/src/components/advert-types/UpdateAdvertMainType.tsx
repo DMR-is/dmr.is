@@ -50,6 +50,7 @@ export const UpdateAdvertMainType = ({
   } = useAdvertTypes({
     typesParams: {
       department: mainType?.department.id,
+      pageSize: 1000,
       unassigned: true,
     },
     mainTypeId: mainType?.id,
@@ -170,7 +171,7 @@ export const UpdateAdvertMainType = ({
               <Tag
                 onClick={() =>
                   updateType({
-                    id: mainType.id,
+                    id: type.id,
                     mainTypeId: null,
                   })
                 }
