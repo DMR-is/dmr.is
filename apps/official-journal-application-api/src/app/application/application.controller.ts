@@ -366,7 +366,7 @@ export class ApplicationController {
   })
   async getInvolvedParties(@CurrentUser() user: ApplicationUser) {
     return ResultWrapper.unwrap(
-      await this.applicationUserService.getUserInvolvedParties(user.nationalId),
+      await this.applicationUserService.getUserInvolvedParties(user.id),
     )
   }
 
