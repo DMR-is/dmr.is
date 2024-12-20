@@ -84,9 +84,6 @@ export class JournalService implements IJournalService {
     private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
     @InjectModel(AdvertCategoryModel)
     private advertCategoryModel: typeof AdvertCategoryModel,
-    @InjectModel(AdvertStatusModel)
-    private advertStatusModel: typeof AdvertStatusModel,
-
     @InjectModel(AdvertCategoriesModel)
     private advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertCategoryCategoriesModel)
@@ -148,7 +145,7 @@ export class JournalService implements IJournalService {
 
     const advert = await this.advertModel.findByPk(ad.id, {
       include: [
-        AdvertTypeModel,
+        { model: AdvertTypeModel, include: [AdvertDepartmentModel] },
         AdvertDepartmentModel,
         AdvertStatusModel,
         AdvertInvolvedPartyModel,
@@ -692,7 +689,7 @@ export class JournalService implements IJournalService {
     }
     const advert = await this.advertModel.findByPk(id, {
       include: [
-        AdvertTypeModel,
+        { model: AdvertTypeModel, include: [AdvertDepartmentModel] },
         AdvertDepartmentModel,
         AdvertStatusModel,
         AdvertInvolvedPartyModel,
@@ -766,6 +763,11 @@ export class JournalService implements IJournalService {
         {
           model: AdvertTypeModel,
           as: 'type',
+          include: [
+            {
+              model: AdvertDepartmentModel,
+            },
+          ],
           where: params?.type
             ? {
                 slug: params?.type,
