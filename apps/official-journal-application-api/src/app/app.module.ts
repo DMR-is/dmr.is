@@ -5,6 +5,7 @@ import {
   ApplicationUserModule,
   HealthModule,
   PdfModule,
+  SignatureModule,
   UtilityModule,
 } from '@dmr.is/modules'
 import {
@@ -24,6 +25,7 @@ import { LogRequestMiddleware } from '@dmr.is/middleware'
       useClass: SequelizeConfigService,
     }),
     ApplicationModule,
+    SignatureModule,
     HealthModule,
     PdfModule,
     ApplicationUserModule,

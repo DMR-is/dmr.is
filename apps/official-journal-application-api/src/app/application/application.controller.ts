@@ -3,6 +3,7 @@ import {
   ApplicationAuthGaurd,
   IApplicationService,
   IApplicationUserService,
+  ISignatureService,
 } from '@dmr.is/modules'
 import {
   AdvertTemplateTypeEnums,
@@ -20,6 +21,7 @@ import {
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
+  Signature,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -37,6 +39,7 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  NotFoundException,
 } from '@nestjs/common'
 import {
   UUIDValidationPipe,
@@ -69,6 +72,9 @@ export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
 
     @Inject(IApplicationUserService)
     private readonly applicationUserService: IApplicationUserService,
@@ -417,5 +423,43 @@ export class ApplicationController {
         type: advertType,
       }),
     )
+  }
+
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(false)
+  @ApiResponse({
+    status: 404,
+    description: 'Signature not found',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful signature get.',
+    type: Signature,
+  })
+  @Route({
+    path: '/involved-party/:involvedPartyId',
+    method: 'get',
+    operationId: 'getSignaturesForInvolvedParty',
+    params: [{ name: 'involvedPartyId', type: 'string', required: true }],
+    responseType: Signature,
+  })
+  async getSignaturesForInvolvedParty(
+    @Param('involvedPartyId', new UUIDValidationPipe()) involvedPartyId: string,
+  ) {
+    const res = ResultWrapper.unwrap(
+      await this.signatureService.getSignatureForInvolvedParty(
+        involvedPartyId,
+        undefined,
+        true,
+      ),
+    )
+
+    const signature = res.signatures[0]
+
+    if (!signature) {
+      throw new NotFoundException('Signature not found')
+    }
+
+    return signature
   }
 }
