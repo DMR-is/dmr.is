@@ -8,12 +8,15 @@ import {
   GetInstitutionsRequest,
 } from '../../gen/fetch'
 import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { generateParams } from '../../lib/utils'
+
+type SearchParams = Record<
+  keyof GetInstitutionsRequest,
+  string | number | undefined
+>
 
 type Props = {
-  searchParams: Record<
-    keyof GetInstitutionsRequest,
-    string | number | undefined
-  >
+  searchParams: SearchParams
   config: SWRConfiguration
   onCreateSuccess?: () => void
   onUpdateSuccess?: () => void
@@ -38,18 +41,9 @@ export const useInstitutions = ({
     mutate: getInstitutions,
   } = useSWR<GetInstitutions, Error>(
     [APIRotues.Institutions, searchParams],
-    ([url, qp]) => {
-      const qsp = new URLSearchParams()
-
-      if (qp) {
-        for (const [key, value] of Object.entries(qp)) {
-          if (value) {
-            qsp.append(key, value)
-          }
-        }
-      }
+    ([url, qp]: [url: string, qp: SearchParams]) => {
       return fetcherV2<GetInstitutions>(url, {
-        arg: { method: 'GET', query: qsp },
+        arg: { method: 'GET', query: generateParams(qp) },
       })
     },
     {
