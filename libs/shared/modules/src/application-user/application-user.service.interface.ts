@@ -18,10 +18,14 @@ export interface IApplicationUserService {
     query: ApplicationUserQuery,
   ): Promise<ResultWrapper<GetApplicationUsers>>
 
-  getUser(nationalId: string): Promise<ResultWrapper<GetApplicationUser>>
+  getUser(id: string): Promise<ResultWrapper<GetApplicationUser>>
+
+  getUserByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetApplicationUser>>
 
   getUserInvolvedParties(
-    nationalId: string,
+    id: string,
   ): Promise<ResultWrapper<{ involvedParties: Institution[] }>>
 
   createUser(
