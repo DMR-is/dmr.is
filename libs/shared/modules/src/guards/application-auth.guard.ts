@@ -37,7 +37,9 @@ export class ApplicationAuthGaurd implements CanActivate {
       this.logger.debug(`Running in development mode, skipping auth guard`, {
         category: LOGGING_CATEGORY,
       })
-      const userLookup = await this.applicationUserService.getUser('0101307789')
+      const userLookup = await this.applicationUserService.getUserByNationalId(
+        '0101307789',
+      )
 
       if (userLookup.result.ok) {
         context.switchToHttp().getRequest().user = userLookup.result.value.user
