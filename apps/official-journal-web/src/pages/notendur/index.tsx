@@ -7,7 +7,6 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Select,
   SkeletonLoader,
   Stack,
   Text,
@@ -15,6 +14,7 @@ import {
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
+import { OJOISelect } from '../../components/select/OJOISelect'
 import { CreateAdminUser } from '../../components/users/CreateAdminUser'
 import { CreateApplicationUser } from '../../components/users/CreateApplicationUser'
 import { CreateInstitution } from '../../components/users/CreateInstitution'
@@ -28,7 +28,6 @@ import {
   CreateApplicationUser as CreateApplicationUserDto,
   CreateInstitution as CreateInstitutionDto,
   Institution,
-  UpdateAdminUser as UpdateAdminUserDto,
   UpdateApplicationUser as UpdateApplicationUserDto,
 } from '../../gen/fetch'
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
@@ -38,7 +37,7 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { loginRedirect } from '../../lib/utils'
 
 type Props = {
-  currentUser: AdminUser
+  currentUser: AdminUser | null
   roles: AdminUserRole[]
 }
 
@@ -48,23 +47,16 @@ export default function UsersPage({ currentUser, roles }: Props) {
     setSelectedApplicationUserInstitution,
   ] = useState<Institution | null>(null)
 
+  const [selectedAdminUser, setSelectedAdminUser] = useState<AdminUser | null>(
+    null,
+  )
+
   const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
     nationalId: '',
     firstName: '',
     lastName: '',
     displayName: '',
     email: '',
-    roleIds: [],
-  })
-
-  const [updateUserState, setUpdateUserState] = useState<
-    UpdateAdminUserDto & { id: string }
-  >({
-    id: '',
-    email: '',
-    displayName: '',
-    firstName: '',
-    lastName: '',
     roleIds: [],
   })
 
@@ -105,21 +97,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
     isLoadingUsers,
     createUser,
     isCreatingUser,
-    updateUser,
-    isUpdatingUser,
-    deleteUser,
-    isDeletingUser,
+    isUsersValidating,
   } = useAdminUsers({
-    onUpdateSuccess: () => {
-      resetUpdateState()
-      getUsers()
-    },
     onCreateSuccess: () => {
       resetCreateState()
-      getUsers()
-    },
-    onDeleteSuccess: () => {
-      resetUpdateState()
       getUsers()
     },
     config: {
@@ -209,17 +190,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
     })
   }
 
-  const resetUpdateState = () => {
-    setUpdateUserState({
-      id: '',
-      email: '',
-      displayName: '',
-      firstName: '',
-      lastName: '',
-      roleIds: [],
-    })
-  }
-
   const resetUpdateApplicationUserState = () => {
     setUpdateApplicationUserState({
       id: '',
@@ -241,7 +211,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
   }
 
   const usersOptions = users?.flatMap((user) => {
-    if (user.nationalId === currentUser.nationalId) {
+    if (user.nationalId === currentUser?.nationalId) {
       return []
     }
 
@@ -277,45 +247,34 @@ export default function UsersPage({ currentUser, roles }: Props) {
             paddingBottom={[2, 2, 3]}
           >
             <ContentWrapper title="Notendur ritstjórnar">
-              {isLoadingUsers ? (
-                <SkeletonLoader space={[2, 2, 3]} repeat={5} height={40} />
-              ) : (
-                <Stack space={[2, 2, 3]}>
-                  <Select
-                    filterConfig={{
-                      matchFrom: 'start',
-                    }}
-                    size="sm"
-                    label="Notandi"
-                    placeholder="Veldu ristjóra"
-                    backgroundColor="blue"
-                    options={usersOptions}
-                    onChange={(opt) => {
-                      if (!opt?.value) return
-
-                      const user = opt.value
-
-                      setUpdateUserState({
-                        id: user.id,
-                        email: user.email,
-                        displayName: user.displayName,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        roleIds: user.roles.map((role) => role.id),
-                      })
-                    }}
-                  />
-                  <UpdateAdminUser
-                    user={updateUserState}
-                    roles={roles}
-                    isUpdatingUser={isUpdatingUser}
-                    isDeletingUser={isDeletingUser}
-                    onUserChange={(user) => setUpdateUserState(user)}
-                    onUpdateUser={updateUser}
-                    onDeleteUser={deleteUser}
-                  />
-                </Stack>
-              )}
+              <Stack space={[2, 2, 3]}>
+                <OJOISelect
+                  isClearable
+                  isLoading={isLoadingUsers || isUsersValidating}
+                  size="sm"
+                  label="Notandi"
+                  placeholder="Veldu ristjóra"
+                  backgroundColor="blue"
+                  options={usersOptions}
+                  value={usersOptions?.find(
+                    (opt) => opt.value.id === selectedAdminUser?.id,
+                  )}
+                  onChange={(opt) =>
+                    opt
+                      ? setSelectedAdminUser(opt.value)
+                      : setSelectedAdminUser(null)
+                  }
+                />
+                <UpdateAdminUser
+                  user={selectedAdminUser}
+                  roles={roles}
+                  onDeleteSuccess={() => {
+                    setSelectedAdminUser(null)
+                    getUsers()
+                  }}
+                  onUpdatedSuccess={() => getUsers()}
+                />
+              </Stack>
             </ContentWrapper>
           </GridColumn>
           <GridColumn
@@ -328,10 +287,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
               ) : (
                 <CreateAdminUser
                   isCreatingUser={isCreatingUser}
-                  user={createUserState}
                   roles={roles}
-                  onUpdateCreateUser={(user) => setCreateUserState(user)}
-                  onCreateUser={createUser}
+                  onCreateSuccess={() => {
+                    getUsers()
+                  }}
                 />
               )}
             </ContentWrapper>
@@ -344,10 +303,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
           >
             <ContentWrapper title="Notendur umsóknarkerfis">
               <Stack space={[2, 2, 3]}>
-                <Select
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
+                <OJOISelect
                   isClearable
                   size="sm"
                   label="Stofnun"
@@ -364,10 +320,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
                     setSelectedApplicationUserInstitution(opt.value)
                   }}
                 />
-                <Select
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
+                <OJOISelect
                   isClearable
                   noOptionsMessage="Engir notendur eru skráðir fyrir þessa stofnun"
                   isLoading={applicationUsersLoading}
@@ -424,12 +377,9 @@ export default function UsersPage({ currentUser, roles }: Props) {
           <GridColumn span={['12/12', '12/12', '6/12']}>
             <ContentWrapper title="Stofnanir">
               <Stack space={[2, 2, 3]}>
-                <Select
+                <OJOISelect
                   isClearable
                   isLoading={isLoadingInstitutions}
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
                   size="sm"
                   label="Stofnun"
                   placeholder="Veldu stofnun"

@@ -5,7 +5,7 @@ import { logger } from '@dmr.is/logging'
 @Injectable()
 export class LogRequestMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const { method, url } = req
+    const { method, url, headers } = req
 
     logger.debug(`${method}: ${url}`, {
       context: 'LogRequestMiddleware',

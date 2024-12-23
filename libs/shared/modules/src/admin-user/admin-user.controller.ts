@@ -96,7 +96,7 @@ export class AdminUserController {
   @Get('/users/:id')
   @ApiParam({ name: 'id', type: 'string' })
   @ApiOperation({ operationId: 'getUserById' })
-  @ApiResponse({ status: 200, type: AdminUser })
+  @ApiResponse({ status: 200, type: GetAdminUser })
   @LogMethod()
   async getUserById(@Param('id') id: string) {
     const results = await this.adminUserService.getUserById(id)

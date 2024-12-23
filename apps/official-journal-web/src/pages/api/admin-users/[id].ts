@@ -9,6 +9,8 @@ class UserHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
+        case 'GET':
+          return void (await this.get(req, res))
         case 'PUT':
           return void (await this.update(req, res))
         case 'DELETE':
@@ -24,6 +26,16 @@ class UserHandler {
       })
       return void res.status(500).json({ message: 'Internal server error' })
     }
+  }
+
+  private async get(req: NextApiRequest, res: NextApiResponse) {
+    const user = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getUserById({
+        id: req.query.id as string,
+      })
+
+    return res.status(200).json(user)
   }
 
   private async update(req: NextApiRequest, res: NextApiResponse) {

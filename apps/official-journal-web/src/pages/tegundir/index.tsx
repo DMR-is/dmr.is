@@ -99,39 +99,45 @@ export default function AdvertTypesPage() {
               <ContentWrapper title="Deildir">
                 <Stack space={[2, 2, 3]}>
                   <OJOISelect
+                    key={selectedDepartment?.id}
                     isClearable
                     isLoading={isLoading}
-                    size="sm"
-                    backgroundColor="blue"
                     label="Deild"
                     options={departmentOptions}
                     placeholder="Veldu deild"
+                    value={departmentOptions?.find(
+                      (dep) => selectedDepartment?.id === dep.value.id,
+                    )}
                     onChange={(opt) => {
                       setSelectedDepartment(opt ? opt.value : null)
                     }}
                   />
                   <OJOISelect
+                    key={selectedMainType?.id}
                     isLoading={isLoadingMainTypes}
                     noOptionsMessage={noOptMainType}
                     isClearable
-                    size="sm"
-                    backgroundColor="blue"
                     label="Yfirflokkur"
                     options={mainTypeOptions}
                     placeholder="Veldu yfirflokk"
+                    value={mainTypeOptions?.find(
+                      (mainType) => selectedMainType?.id === mainType.value.id,
+                    )}
                     onChange={(opt) =>
                       setSelectedMainType(opt ? opt.value : null)
                     }
                   />
                   <OJOISelect
+                    key={selectedType?.id}
                     isLoading={isLoadingTypes}
                     noOptionsMessage={noOptType}
                     isClearable
-                    size="sm"
-                    backgroundColor="blue"
                     label="Tegund"
                     options={typeOptions}
                     placeholder="Veldu tegund"
+                    value={typeOptions?.find(
+                      (type) => selectedType?.id === type.value.id,
+                    )}
                     onChange={(opt) => setSelectedType(opt ? opt.value : null)}
                   />
                 </Stack>

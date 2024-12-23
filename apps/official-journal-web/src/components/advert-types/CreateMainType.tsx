@@ -6,13 +6,12 @@ import {
   Button,
   Inline,
   Input,
-  Select,
   Stack,
-  toast,
 } from '@island.is/island-ui/core'
 
 import { Department, GetAdvertMainType } from '../../gen/fetch'
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { OJOISelect } from '../select/OJOISelect'
 
 type CreateMainTypeState = {
   department: Department | null
@@ -30,8 +29,6 @@ export const CreateMainType = ({ onSuccess }: Props) => {
   const { createMainType, createMainTypeError, isCreatingMainType } =
     useAdvertTypes({
       onCreateMainTypeSuccess: (data) => {
-        toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
-
         onSuccess && onSuccess(data)
 
         setState({
@@ -64,14 +61,16 @@ export const CreateMainType = ({ onSuccess }: Props) => {
           message={createMainTypeError.message}
         />
       )}
-      <Select
+      <OJOISelect
+        key={state.department?.id}
         isClearable
-        size="sm"
-        backgroundColor="blue"
         name="create-main-type-department"
         label="Veldu deild"
         options={departmentOptions}
         placeholder="Veldu deild yfirflokks"
+        value={departmentOptions?.find(
+          (dep) => state?.department?.id === dep.value.id,
+        )}
         onChange={(opt) => {
           if (!opt) {
             setState({

@@ -2266,7 +2266,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminUser" }
+                "schema": { "$ref": "#/components/schemas/GetAdminUser" }
               }
             }
           }

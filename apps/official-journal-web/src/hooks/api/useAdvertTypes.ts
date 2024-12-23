@@ -1,6 +1,8 @@
 import useSWR, { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
+import { toast } from '@island.is/island-ui/core'
+
 import {
   GetAdvertMainType,
   GetAdvertMainTypes,
@@ -158,6 +160,7 @@ export const useAdvertTypes = ({
       }),
     {
       onSuccess: (data) => {
+        toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
         onCreateMainTypeSuccess && onCreateMainTypeSuccess(data)
       },
     },

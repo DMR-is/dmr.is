@@ -11,6 +11,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
   refetch?: () => void
@@ -50,13 +51,14 @@ export const CreateType = ({ refetch }: Props) => {
           message={createTypeError.message}
         />
       )}
-      <Select
+      <OJOISelect
         isClearable
-        size="sm"
-        backgroundColor="blue"
         label="Veldu deild tegundar"
         options={departmentOptions}
         placeholder="Veldu deild"
+        value={departmentOptions?.find(
+          (dep) => state.departmentId === dep.value.id,
+        )}
         onChange={(option) =>
           setState({
             ...state,

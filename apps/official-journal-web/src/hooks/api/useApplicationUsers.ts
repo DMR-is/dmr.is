@@ -40,10 +40,13 @@ export const useApplicationUsers = (props: Props) => {
       }
 
       return fetcherV2<GetApplicationUsers>(url, {
-        arg: { method: 'GET', query: qsp },
+        arg: { withAuth: true, method: 'GET', query: qsp },
       })
     },
-    props.config,
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
   )
 
   const {
@@ -54,7 +57,7 @@ export const useApplicationUsers = (props: Props) => {
     APIRotues.ApplicationUsers,
     (url: string, { arg }: { arg: CreateApplicationUser }) =>
       fetcherV2<GetApplicationUser, CreateApplicationUser>(url, {
-        arg: { method: 'POST', body: arg },
+        arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
       onSuccess: (user) => {
@@ -79,7 +82,7 @@ export const useApplicationUsers = (props: Props) => {
       return fetcherV2<GetApplicationUser, UpdateApplicationUser>(
         url.replace(':id', arg.id),
         {
-          arg: { method: 'PUT', body: body },
+          arg: { withAuth: true, method: 'PUT', body: body },
         },
       )
     },
@@ -100,7 +103,7 @@ export const useApplicationUsers = (props: Props) => {
       return fetcherV2<Response, DeleteApplicationUserRequest>(
         url.replace(':id', arg.id),
         {
-          arg: { method: 'DELETE' },
+          arg: { withAuth: true, method: 'DELETE' },
         },
       )
     },

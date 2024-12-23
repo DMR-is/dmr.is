@@ -2,7 +2,9 @@ import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
+  AdminUser,
   CreateAdminUser,
+  GetAdminUser,
   GetAdminUsers,
   UpdateAdminUser,
 } from '../../gen/fetch'
@@ -18,6 +20,8 @@ type UpdateUser = {
 }
 
 type Props = {
+  adminUserId?: string | null
+  onGetUserSuccess?: (user: AdminUser) => void
   onCreateSuccess?: () => void
   onCreateError?: (error: Error) => void
   onUpdateSuccess?: () => void
@@ -28,6 +32,8 @@ type Props = {
 }
 
 export const useAdminUsers = ({
+  adminUserId,
+  onGetUserSuccess,
   onCreateError,
   onCreateSuccess,
   onDeleteError,
@@ -37,17 +43,44 @@ export const useAdminUsers = ({
   config,
 }: Props = {}) => {
   const {
-    data,
+    data: userData,
+    isLoading: isLoadingUser,
+    error: userError,
+    isValidating: isUserValidating,
+    mutate: refetchUser,
+  } = useSWR<GetAdminUser, Error>(
+    adminUserId ? [APIRotues.AdminUser, adminUserId] : null,
+    ([url, id]: [url: string, id: string]) =>
+      fetcherV2(url.replace(':id', id), {
+        arg: { withAuth: true, method: 'GET' },
+      }),
+    {
+      onSuccess: ({ user }) => {
+        onGetUserSuccess && onGetUserSuccess(user)
+      },
+      refreshInterval: 0,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+    },
+  )
+
+  const {
+    data: usersData,
     isLoading: isLoadingUsers,
     error: usersError,
+    isValidating: isUsersValidating,
     mutate: refetchUsers,
   } = useSWR<GetAdminUsers, Error>(
     APIRotues.AdminUsers,
     (url: string) =>
       fetcherV2<GetAdminUsers>(url, {
-        arg: { method: 'GET' },
+        arg: { withAuth: true, method: 'GET' },
       }),
-    config,
+    {
+      refreshInterval: 0,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+    },
   )
 
   const {
@@ -58,7 +91,7 @@ export const useAdminUsers = ({
     APIRotues.AdminUsers,
     (url: string, { arg }: { arg: CreateAdminUser }) =>
       fetcherV2<Response, CreateAdminUser>(url, {
-        arg: { method: 'POST', body: arg },
+        arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
       onError: (error) => {
@@ -78,7 +111,7 @@ export const useAdminUsers = ({
     APIRotues.AdminUser,
     (url: string, { arg }: { arg: UpdateUser }) =>
       fetcherV2<Response, UpdateAdminUser>(url.replace(':id', arg.id), {
-        arg: { method: 'PUT', body: arg.body },
+        arg: { withAuth: true, method: 'PUT', body: arg.body },
       }),
     {
       onError: (error) => {
@@ -98,7 +131,7 @@ export const useAdminUsers = ({
     APIRotues.AdminUser,
     (url: string, { arg }: { arg: DeleteUser }) =>
       fetcherV2<Response>(url.replace(':id', arg.id), {
-        arg: { method: 'DELETE' },
+        arg: { withAuth: true, method: 'DELETE' },
       }),
     {
       onError: (error) => {
@@ -109,6 +142,10 @@ export const useAdminUsers = ({
       },
     },
   )
+
+  const getUser = () => {
+    refetchUser()
+  }
 
   const getUsers = () => {
     refetchUsers()
@@ -127,8 +164,14 @@ export const useAdminUsers = ({
   }
 
   return {
-    users: data?.users,
+    user: userData?.user,
+    isLoadingUser,
+    userError,
+    getUser,
+    isUserValidating,
+    users: usersData?.users,
     isLoadingUsers,
+    isUsersValidating,
     usersError,
     getUsers,
     createUser,

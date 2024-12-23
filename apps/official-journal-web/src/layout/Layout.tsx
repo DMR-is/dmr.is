@@ -61,8 +61,7 @@ export const Layout = ({
         value={{
           fetcher: defaultFetcher,
           refreshInterval: 1000 * 60,
-          errorRetryCount: 3,
-          errorRetryInterval: 5000,
+          errorRetryCount: 0,
           suspense: false,
         }}
       >
