@@ -25,7 +25,6 @@ import {
   AdminUser,
   AdminUserRole,
   ApplicationUser,
-  CreateInstitution as CreateInstitutionDto,
   Institution,
 } from '../../gen/fetch'
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
@@ -49,20 +48,11 @@ export default function UsersPage({ currentUser, roles }: Props) {
     null,
   )
 
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null)
+
   const [selectedApplicationUser, setSelectedApplicationUser] =
     useState<ApplicationUser | null>(null)
-
-  const [createInstitutionState, setCreateInstitutionState] =
-    useState<CreateInstitutionDto>({
-      title: '',
-    })
-
-  const [updateInstitutionState, setUpdateInstitutionState] =
-    useState<Institution>({
-      id: '',
-      title: '',
-      slug: '',
-    })
 
   const { users, getUsers, isLoadingUsers, isUsersValidating } = useAdminUsers({
     config: {
@@ -82,39 +72,27 @@ export default function UsersPage({ currentUser, roles }: Props) {
       },
     })
 
-  const {
-    institutions,
-    createInstitution,
-    deleteInstitution,
-    getInstitutions,
-    isCreatingInstitution,
-    isDeletingInstitution,
-    isLoadingInstitutions,
-    isUpdatingInstitution,
-    updateInstitution,
-  } = useInstitutions({
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-    searchParams: {
-      search: undefined,
-      page: 1,
-      pageSize: 1000,
-    },
-    onCreateSuccess: () => {
-      setCreateInstitutionState({ title: '' })
-      getInstitutions()
-    },
-    onDeleteSuccess: () => {
-      setUpdateInstitutionState({ id: '', title: '', slug: '' })
-      getInstitutions()
-    },
-    onUpdateSuccess: () => {
-      setUpdateInstitutionState({ id: '', title: '', slug: '' })
-      getInstitutions()
-    },
-  })
+  const { institutions, getInstitutions, isLoadingInstitutions } =
+    useInstitutions({
+      config: {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+      },
+      searchParams: {
+        search: undefined,
+        page: 1,
+        pageSize: 1000,
+      },
+      onCreateSuccess: () => {
+        getInstitutions()
+      },
+      onDeleteSuccess: () => {
+        getInstitutions()
+      },
+      onUpdateSuccess: () => {
+        getInstitutions()
+      },
+    })
 
   const usersOptions = users?.flatMap((user) => {
     if (user.nationalId === currentUser?.nationalId) {
@@ -273,6 +251,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
             <ContentWrapper title="Stofnanir">
               <Stack space={[2, 2, 3]}>
                 <OJOISelect
+                  key={selectedInstitution?.id}
                   isClearable
                   isLoading={isLoadingInstitutions}
                   size="sm"
@@ -280,44 +259,32 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   placeholder="Veldu stofnun"
                   backgroundColor="blue"
                   options={institutionsOptions}
+                  value={institutionsOptions?.find(
+                    (opt) => opt.value.id === selectedInstitution?.id,
+                  )}
                   onChange={(opt) => {
-                    if (!opt?.value) {
-                      return setSelectedApplicationUserInstitution(null)
+                    if (!opt) {
+                      setSelectedInstitution(null)
+                      return
                     }
 
-                    setUpdateInstitutionState(opt.value)
+                    setSelectedInstitution(opt.value)
                   }}
                 />
                 <UpdateInstitution
-                  isUpdating={isUpdatingInstitution}
-                  isDeleting={isDeletingInstitution}
-                  institution={updateInstitutionState}
-                  onChange={(institution) =>
-                    setUpdateInstitutionState(institution)
-                  }
-                  onUpdate={() =>
-                    updateInstitution({
-                      id: updateInstitutionState.id,
-                      title: updateInstitutionState.title,
-                    })
-                  }
-                  onDelete={() =>
-                    deleteInstitution({ id: updateInstitutionState.id })
-                  }
+                  institution={selectedInstitution}
+                  onDeleteSuccess={() => {
+                    setSelectedInstitution(null)
+                    getInstitutions()
+                  }}
+                  onUpdateSuccess={() => getInstitutions()}
                 />
               </Stack>
             </ContentWrapper>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '6/12']}>
             <ContentWrapper title="Stofna stofnun">
-              <CreateInstitution
-                institution={createInstitutionState}
-                isCreating={isCreatingInstitution}
-                onUpdate={(institution) =>
-                  setCreateInstitutionState(institution)
-                }
-                onCreate={(institution) => createInstitution(institution)}
-              />
+              <CreateInstitution onCreateSuccess={() => getInstitutions()} />
             </ContentWrapper>
           </GridColumn>
         </GridRow>

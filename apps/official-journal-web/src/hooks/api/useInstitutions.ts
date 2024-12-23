@@ -16,8 +16,8 @@ type SearchParams = Record<
 >
 
 type Props = {
-  searchParams: SearchParams
-  config: SWRConfiguration
+  searchParams?: SearchParams
+  config?: SWRConfiguration
   onCreateSuccess?: () => void
   onUpdateSuccess?: () => void
   onDeleteSuccess?: () => void
