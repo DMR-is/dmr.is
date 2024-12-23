@@ -14,7 +14,7 @@ import { APIRotues, fetcherV2 } from '../../lib/constants'
 type UpdateApplicationUserParams = UpdateApplicationUser & { id: string }
 
 type Props = {
-  searchParams: Record<keyof GetApplicationUsersRequest, string | undefined>
+  searchParams?: Record<keyof GetApplicationUsersRequest, string | undefined>
   config?: SWRConfiguration
   onCreateSuccess?: (user: GetApplicationUser) => void
   onUpdateSuccess?: (user: GetApplicationUser) => void
@@ -26,6 +26,7 @@ export const useApplicationUsers = (props: Props) => {
     data,
     isLoading: applicationUsersLoading,
     error: applicationUsersError,
+    mutate,
   } = useSWR<GetApplicationUsers, Error>(
     [APIRotues.ApplicationUsers, props.searchParams],
     ([url, qp]) => {
@@ -114,6 +115,10 @@ export const useApplicationUsers = (props: Props) => {
     },
   )
 
+  const getApplicationUsers = () => {
+    mutate()
+  }
+
   const createApplicationUser = (body: CreateApplicationUser) => {
     createApplicationUserTrigger({ ...body })
   }
@@ -127,6 +132,7 @@ export const useApplicationUsers = (props: Props) => {
   }
 
   return {
+    getApplicationUsers,
     applicationUsers: data?.users,
     applicationUsersLoading,
     applicationUsersError,

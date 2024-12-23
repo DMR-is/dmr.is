@@ -24,11 +24,9 @@ import { UpdateInstitution } from '../../components/users/UpdateInstitution'
 import {
   AdminUser,
   AdminUserRole,
-  CreateAdminUser as CreateAdminUserDto,
-  CreateApplicationUser as CreateApplicationUserDto,
+  ApplicationUser,
   CreateInstitution as CreateInstitutionDto,
   Institution,
-  UpdateApplicationUser as UpdateApplicationUserDto,
 } from '../../gen/fetch'
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
 import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
@@ -51,24 +49,8 @@ export default function UsersPage({ currentUser, roles }: Props) {
     null,
   )
 
-  const [createApplicationUserState, setCreateApplicationUserState] =
-    useState<CreateApplicationUserDto>({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      involvedPartyIds: [],
-    })
-
-  const [updateApplicationUserState, setUpdateApplicationUserState] = useState<
-    UpdateApplicationUserDto & { id: string }
-  >({
-    id: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    involvedPartyIds: [],
-  })
+  const [selectedApplicationUser, setSelectedApplicationUser] =
+    useState<ApplicationUser | null>(null)
 
   const [createInstitutionState, setCreateInstitutionState] =
     useState<CreateInstitutionDto>({
@@ -89,41 +71,16 @@ export default function UsersPage({ currentUser, roles }: Props) {
     },
   })
 
-  const {
-    applicationUsers,
-    applicationUsersLoading,
-    createApplicationUser,
-    isCreatingApplicationUser,
-    updateApplicationUser,
-    isUpdatingApplicationUser,
-    deleteApplicationUser,
-    isDeletingApplicationUser,
-  } = useApplicationUsers({
-    searchParams: {
-      involvedParty: selectedApplicationUserInstitution?.id,
-    },
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-    onUpdateSuccess: ({ user }) => {
-      setUpdateApplicationUserState({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        involvedPartyIds: user.involvedParties.map((inst) => inst.id),
-      })
-    },
-    onCreateSuccess: () => {
-      resetCreateApplicationUserState()
-      getUsers()
-    },
-    onDeleteSuccess: () => {
-      resetUpdateApplicationUserState()
-      getUsers()
-    },
-  })
+  const { getApplicationUsers, applicationUsers, applicationUsersLoading } =
+    useApplicationUsers({
+      searchParams: {
+        involvedParty: selectedApplicationUserInstitution?.id,
+      },
+      config: {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+      },
+    })
 
   const {
     institutions,
@@ -158,26 +115,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
       getInstitutions()
     },
   })
-
-  const resetUpdateApplicationUserState = () => {
-    setUpdateApplicationUserState({
-      id: '',
-      email: '',
-      firstName: '',
-      lastName: '',
-      involvedPartyIds: [],
-    })
-  }
-
-  const resetCreateApplicationUserState = () => {
-    setCreateApplicationUserState({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      involvedPartyIds: [],
-    })
-  }
 
   const usersOptions = users?.flatMap((user) => {
     if (user.nationalId === currentUser?.nationalId) {
@@ -279,9 +216,9 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   backgroundColor="blue"
                   options={institutionsOptions}
                   onChange={(opt) => {
-                    if (!opt?.value) {
+                    if (!opt) {
                       setSelectedApplicationUserInstitution(null)
-                      resetUpdateApplicationUserState()
+                      setSelectedApplicationUser(null)
                       return
                     }
 
@@ -298,30 +235,23 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   backgroundColor="blue"
                   options={applicationUsersOptions}
                   onChange={(opt) => {
-                    if (!opt?.value) {
-                      resetUpdateApplicationUserState()
-                      return
+                    if (!opt) {
+                      return setSelectedApplicationUser(null)
                     }
-                    const institutionIds = opt.value.involvedParties.map(
-                      (inst) => inst.id,
-                    )
-                    setUpdateApplicationUserState({
-                      id: opt.value.id,
-                      email: opt.value.email,
-                      firstName: opt.value.firstName,
-                      lastName: opt.value.lastName,
-                      involvedPartyIds: institutionIds,
-                    })
+
+                    setSelectedApplicationUser(opt.value)
                   }}
                 />
                 <UpdateApplicationUser
-                  user={updateApplicationUserState}
+                  user={selectedApplicationUser}
                   institutions={institutions?.institutions || []}
-                  isUpdatingUser={isUpdatingApplicationUser}
-                  isDeletingUser={isDeletingApplicationUser}
-                  onChangeUser={(user) => setUpdateApplicationUserState(user)}
-                  onUpdateUser={(user) => updateApplicationUser(user)}
-                  onDeleteUser={(user) => deleteApplicationUser(user.id)}
+                  onDeleteSuccess={() => {
+                    setSelectedApplicationUser(null)
+                    getApplicationUsers()
+                  }}
+                  onUpdateSuccess={() => {
+                    getApplicationUsers()
+                  }}
                 />
               </Stack>
             </ContentWrapper>
@@ -332,11 +262,8 @@ export default function UsersPage({ currentUser, roles }: Props) {
           >
             <ContentWrapper title="Stofna innsendanda">
               <CreateApplicationUser
-                user={createApplicationUserState}
                 institutions={institutions?.institutions || []}
-                isCreatingUser={isCreatingApplicationUser}
-                onUpdateUser={(user) => setCreateApplicationUserState(user)}
-                onCreateUser={(user) => createApplicationUser(user)}
+                onCreateSuccess={() => getApplicationUsers()}
               />
             </ContentWrapper>
           </GridColumn>
@@ -355,9 +282,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   options={institutionsOptions}
                   onChange={(opt) => {
                     if (!opt?.value) {
-                      setSelectedApplicationUserInstitution(null)
-                      resetUpdateApplicationUserState()
-                      return
+                      return setSelectedApplicationUserInstitution(null)
                     }
 
                     setUpdateInstitutionState(opt.value)
