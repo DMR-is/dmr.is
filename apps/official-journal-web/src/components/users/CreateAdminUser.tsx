@@ -19,7 +19,6 @@ import {
 import { useAdminUsers } from '../../hooks/api'
 
 type Props = {
-  isCreatingUser: boolean
   roles: AdminUserRole[]
   onCreateSuccess: () => void
 }

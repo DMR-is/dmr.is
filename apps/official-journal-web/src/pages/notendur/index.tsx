@@ -51,15 +51,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
     null,
   )
 
-  const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
-    nationalId: '',
-    firstName: '',
-    lastName: '',
-    displayName: '',
-    email: '',
-    roleIds: [],
-  })
-
   const [createApplicationUserState, setCreateApplicationUserState] =
     useState<CreateApplicationUserDto>({
       nationalId: '',
@@ -91,18 +82,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
       slug: '',
     })
 
-  const {
-    users,
-    getUsers,
-    isLoadingUsers,
-    createUser,
-    isCreatingUser,
-    isUsersValidating,
-  } = useAdminUsers({
-    onCreateSuccess: () => {
-      resetCreateState()
-      getUsers()
-    },
+  const { users, getUsers, isLoadingUsers, isUsersValidating } = useAdminUsers({
     config: {
       refreshInterval: 0,
       revalidateOnFocus: false,
@@ -178,17 +158,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
       getInstitutions()
     },
   })
-
-  const resetCreateState = () => {
-    setCreateUserState({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      displayName: '',
-      email: '',
-      roleIds: [],
-    })
-  }
 
   const resetUpdateApplicationUserState = () => {
     setUpdateApplicationUserState({
@@ -286,7 +255,6 @@ export default function UsersPage({ currentUser, roles }: Props) {
                 <SkeletonLoader height={40} />
               ) : (
                 <CreateAdminUser
-                  isCreatingUser={isCreatingUser}
                   roles={roles}
                   onCreateSuccess={() => {
                     getUsers()
