@@ -68,7 +68,7 @@ export default function CaseSingle(
   const [timestamp, setTimestamp] = useState(getTimestamp())
 
   const {
-    data: caseData,
+    case: caseData,
     error,
     isLoading,
     mutate: refetchCase,
@@ -177,7 +177,7 @@ export default function CaseSingle(
     )
   }
 
-  const stepper = generateSteps(caseData._case)
+  const stepper = generateSteps(caseData)
 
   const employeesMock = [
     {
@@ -192,10 +192,8 @@ export default function CaseSingle(
 
   const fixStep = step === 'leidretting'
 
-  const activeCase = caseData._case
-
   const isCaseRejected =
-    activeCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
+    caseData.status.title === CaseStatusTitleEnum.BirtinguHafnað
 
   return (
     <>
@@ -242,7 +240,7 @@ export default function CaseSingle(
             <Text variant="h5">{formatMessage(messages.actions.title)}</Text>
             <Select
               isOptionDisabled={(option) =>
-                activeCase.assignedTo?.id === option.value
+                caseData.assignedTo?.id === option.value
               }
               isDisabled={isAssigning || isCaseRejected}
               isLoading={isAssigning}
@@ -250,10 +248,10 @@ export default function CaseSingle(
               options={employeesMock.map((e) => ({
                 label: e.label,
                 value: e.value,
-                disabled: activeCase.assignedTo?.id === e.value,
+                disabled: caseData.assignedTo?.id === e.value,
               }))}
               defaultValue={employeesMock.find(
-                (e) => e.value === activeCase.assignedTo?.id,
+                (e) => e.value === caseData.assignedTo?.id,
               )}
               label={formatMessage(messages.actions.assignedTo)}
               placeholder={formatMessage(
@@ -270,14 +268,14 @@ export default function CaseSingle(
             <Input
               disabled
               name="status"
-              value={activeCase.status.title}
+              value={caseData.status.title}
               label={formatMessage(messages.actions.status)}
               size="sm"
             />
             <Input
               name="status"
               disabled
-              value={activeCase.communicationStatus.title}
+              value={caseData.communicationStatus.title}
               type="text"
               label={formatMessage(messages.actions.communicationsStatus)}
               size="sm"
@@ -289,7 +287,7 @@ export default function CaseSingle(
                 colorScheme="destructive"
                 size="medium"
                 fluid
-                disabled={activeCase.publishedAt !== null}
+                disabled={caseData.publishedAt !== null}
                 onClick={onRejectCaseHandler}
               >
                 {formatMessage(messages.actions.rejectCase)}
@@ -311,7 +309,7 @@ export default function CaseSingle(
                 ) : (
                   <Button
                     fluid
-                    disabled={activeCase.publishedAt === null}
+                    disabled={caseData.publishedAt === null}
                     size="medium"
                     colorScheme="destructive"
                     loading={isUnpublishing}
@@ -326,24 +324,24 @@ export default function CaseSingle(
         }
       >
         <Stack space={[2, 3, 4]}>
-          {step === 'innsent' && <StepInnsending activeCase={activeCase} />}
-          {step === 'grunnvinnsla' && <StepGrunnvinnsla data={activeCase} />}
-          {step === 'yfirlestur' && <StepYfirlestur data={activeCase} />}
-          {step === 'tilbuid' && <StepTilbuid activeCase={activeCase} />}
+          {step === 'innsent' && <StepInnsending activeCase={caseData} />}
+          {step === 'grunnvinnsla' && <StepGrunnvinnsla data={caseData} />}
+          {step === 'yfirlestur' && <StepYfirlestur data={caseData} />}
+          {step === 'tilbuid' && <StepTilbuid activeCase={caseData} />}
           {step === 'leidretting' && (
             <StepLeidretting
               isFixing={isFixing}
               canPublish={canPublishFixedChanges}
-              data={activeCase}
+              data={caseData}
               timestamp={timestamp}
               onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
             />
           )}
 
-          <Attachments activeCase={activeCase} refetchCase={refetchCase} />
+          <Attachments activeCase={caseData} refetchCase={refetchCase} />
 
-          {activeCase.message && (
-            <EditorMessageDisplay message={activeCase.message} />
+          {caseData.message && (
+            <EditorMessageDisplay message={caseData.message} />
           )}
 
           <Comments
@@ -352,10 +350,10 @@ export default function CaseSingle(
                 setCanPublishFixedChanges(true)
               }
             }}
-            activeCase={activeCase}
+            activeCase={caseData}
           />
           <FormFooter
-            activeCase={activeCase}
+            activeCase={caseData}
             caseStep={step}
             canPublishFix={canPublishFixedChanges}
             updateAdvertHtmlTrigger={() =>

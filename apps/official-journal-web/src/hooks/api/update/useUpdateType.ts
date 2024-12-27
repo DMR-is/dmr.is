@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type UpdateTypeTriggerArgs = {
   typeId: string
@@ -25,10 +25,20 @@ export const useUpdateType = ({ caseId, options }: UseUpdateTypeParams) => {
     Error,
     Key,
     UpdateTypeTriggerArgs
-  >(APIRotues.UpdateCaseType.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+  >(
+    APIRoutes.UpdateCaseType,
+    (url: string, { arg }: { arg: UpdateTypeTriggerArgs }) =>
+      fetcherV2<Response, UpdateTypeTriggerArgs>(url.replace(':id', caseId), {
+        arg: {
+          method: 'POST',
+          body: arg,
+        },
+      }),
+    {
+      throwOnError: false,
+      ...options,
+    },
+  )
 
   return {
     data,

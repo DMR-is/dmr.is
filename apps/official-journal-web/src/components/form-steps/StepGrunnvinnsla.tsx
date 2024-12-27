@@ -18,10 +18,10 @@ import {
 
 import { Case } from '../../gen/fetch'
 import {
+  useAdvertTypes,
   useCase,
   useCategories,
   useDepartments,
-  useTypes,
   useUpdateCategories,
   useUpdateDepartment,
   useUpdatePrice,
@@ -42,7 +42,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const {
-    data: caseData,
+    case: caseData,
     error: caseError,
     isLoading: isLoadingCase,
     mutate: refetchCase,
@@ -53,32 +53,17 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     },
   })
 
-  const {
-    data: typesData,
-    isLoading: isLoadingTypes,
-    mutate: refetchTypes,
-  } = useTypes({
-    params: {
+  const { types, isLoadingTypes } = useAdvertTypes({
+    typesParams: {
+      department: caseData
+        ? caseData.advertDepartment.id
+        : data.advertDepartment.id,
       page: 1,
       pageSize: 1000,
-      department: caseData
-        ? caseData._case.advertDepartment.id
-        : data.advertDepartment.id,
-    },
-    options: {
-      onSuccess: () => {
-        refetchCase()
-      },
     },
   })
 
-  const { departments } = useDepartments({
-    options: {
-      onSuccess: () => {
-        refetchTypes()
-      },
-    },
-  })
+  const { departments } = useDepartments()
 
   const { trigger: updatePrice, isMutating: isUpdatingPrice } = useUpdatePrice({
     caseId: data.id,
@@ -204,8 +189,6 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     )
   }
 
-  const currentCase = caseData._case
-
   return (
     <>
       <Box marginBottom={4}>
@@ -225,7 +208,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 readOnly
                 disabled
                 name="institution"
-                value={currentCase.involvedParty.title}
+                value={caseData.involvedParty.title}
                 label={formatMessage(messages.grunnvinnsla.institution)}
                 size="sm"
               />
@@ -238,8 +221,8 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 backgroundColor="blue"
                 name="department"
                 defaultValue={{
-                  label: currentCase.advertDepartment.title,
-                  value: currentCase.advertDepartment.id,
+                  label: caseData.advertDepartment.title,
+                  value: caseData.advertDepartment.id,
                 }}
                 options={departments?.map((d) => ({
                   label: d.title,
@@ -267,10 +250,10 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 size="sm"
                 isDisabled={isLoadingTypes || isUpdatingTypes}
                 defaultValue={{
-                  label: currentCase.advertType.title,
-                  value: currentCase.advertType.id,
+                  label: caseData.advertType.title,
+                  value: caseData.advertType.id,
                 }}
-                options={typesData?.types.map((t) => ({
+                options={types?.map((t) => ({
                   label: t.title,
                   value: t.id,
                 }))}
@@ -289,7 +272,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
               <Input
                 backgroundColor="blue"
                 name="subject"
-                defaultValue={currentCase.advertTitle}
+                defaultValue={caseData.advertTitle}
                 onChange={(e) => debouncedUpdateTitle(e.target.value)}
                 label={formatMessage(messages.grunnvinnsla.subject)}
                 size="sm"
@@ -310,7 +293,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                   label: c.title,
                   value: c.id,
                 }))}
-                defaultValue={currentCase.advertCategories.map((c) => ({
+                defaultValue={caseData.advertCategories.map((c) => ({
                   label: c.title,
                   value: c.id,
                 }))}
@@ -325,7 +308,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
           <GridRow marginBottom={2} rowGap={2} alignItems="center">
             <GridColumn span={['12/12']}>
               <Inline space={1}>
-                {currentCase.advertCategories.map((cat, i) => (
+                {caseData.advertCategories.map((cat, i) => (
                   <Tag
                     disabled={isUpdatingCategories}
                     onClick={() =>
@@ -364,9 +347,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 disabled
                 name="createdDate"
                 selected={
-                  currentCase.createdAt
-                    ? new Date(currentCase.createdAt)
-                    : undefined
+                  caseData.createdAt ? new Date(caseData.createdAt) : undefined
                 }
                 label={formatMessage(messages.grunnvinnsla.createdDate)}
                 size="sm"
@@ -381,7 +362,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
               <DatePicker
                 backgroundColor="blue"
                 name="publicationDate"
-                selected={new Date(currentCase.requestedPublicationDate)}
+                selected={new Date(caseData.requestedPublicationDate)}
                 label={formatMessage(messages.grunnvinnsla.publicationDate)}
                 size="sm"
                 placeholderText=""
@@ -398,7 +379,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
               <Checkbox
                 disabled
                 name="fastTrack"
-                checked={currentCase.fastTrack}
+                checked={caseData.fastTrack}
                 label={formatMessage(messages.grunnvinnsla.fastTrack)}
               />
             </GridColumn>
@@ -410,7 +391,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
                 backgroundColor="blue"
                 loading={isUpdatingPrice}
                 name="price"
-                defaultValue={currentCase.price}
+                defaultValue={caseData.price}
                 label={formatMessage(messages.grunnvinnsla.price)}
                 size="sm"
                 type="number"
@@ -425,7 +406,7 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
             <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
               <Checkbox
                 name="paid"
-                defaultChecked={currentCase.paid}
+                defaultChecked={caseData.paid}
                 onChange={(e) => {
                   updatePaid({
                     paid: e.target.checked,

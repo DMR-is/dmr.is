@@ -9,7 +9,7 @@ import {
   GetApplicationUsersRequest,
   UpdateApplicationUser,
 } from '../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../lib/constants'
 
 type UpdateApplicationUserParams = UpdateApplicationUser & { id: string }
 
@@ -28,7 +28,7 @@ export const useApplicationUsers = (props: Props) => {
     error: applicationUsersError,
     mutate,
   } = useSWR<GetApplicationUsers, Error>(
-    [APIRotues.ApplicationUsers, props.searchParams],
+    [APIRoutes.ApplicationUsers, props.searchParams],
     ([url, qp]) => {
       const qsp = new URLSearchParams()
 
@@ -55,7 +55,7 @@ export const useApplicationUsers = (props: Props) => {
     isMutating: isCreatingApplicationUser,
     error: createApplicationUserError,
   } = useSWRMutation<GetApplicationUser, Error, Key, CreateApplicationUser>(
-    APIRotues.ApplicationUsers,
+    APIRoutes.ApplicationUsers,
     (url: string, { arg }: { arg: CreateApplicationUser }) =>
       fetcherV2<GetApplicationUser, CreateApplicationUser>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
@@ -77,7 +77,7 @@ export const useApplicationUsers = (props: Props) => {
     Key,
     UpdateApplicationUserParams
   >(
-    APIRotues.ApplicationUser,
+    APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: UpdateApplicationUserParams }) => {
       const { id, ...body } = arg
       return fetcherV2<GetApplicationUser, UpdateApplicationUser>(
@@ -99,7 +99,7 @@ export const useApplicationUsers = (props: Props) => {
     isMutating: isDeletingApplicationUser,
     error: deleteApplicationUserError,
   } = useSWRMutation<Response, Error, Key, DeleteApplicationUserRequest>(
-    APIRotues.ApplicationUser,
+    APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: DeleteApplicationUserRequest }) => {
       return fetcherV2<Response, DeleteApplicationUserRequest>(
         url.replace(':id', arg.id),

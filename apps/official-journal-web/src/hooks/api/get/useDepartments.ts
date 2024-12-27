@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetDepartmentsResponse } from '../../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
@@ -22,7 +22,7 @@ export const useDepartments = ({
     GetDepartmentsResponse,
     Error
   >(
-    [APIRotues.GetDepartments, params],
+    [APIRoutes.GetDepartments, params],
     ([url, qsp]: [url: string, qsp: Params]) =>
       fetcherV2(url, {
         arg: {

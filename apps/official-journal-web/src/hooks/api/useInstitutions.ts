@@ -7,7 +7,7 @@ import {
   GetInstitutions,
   GetInstitutionsRequest,
 } from '../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
 
 type SearchParams = Record<
@@ -40,7 +40,7 @@ export const useInstitutions = ({
     error: institutionError,
     mutate: getInstitutions,
   } = useSWR<GetInstitutions, Error>(
-    [APIRotues.Institutions, searchParams],
+    [APIRoutes.Institutions, searchParams],
     ([url, qp]: [url: string, qp: SearchParams]) => {
       return fetcherV2<GetInstitutions>(url, {
         arg: { method: 'GET', query: generateParams(qp) },
@@ -56,7 +56,7 @@ export const useInstitutions = ({
     isMutating: isCreatingInstitution,
     error: createInstitutionError,
   } = useSWRMutation<GetInstitutionResponse, Error, Key, CreateInstitution>(
-    APIRotues.Institutions,
+    APIRoutes.Institutions,
     (url: string, { arg }: { arg: CreateInstitution }) => {
       return fetcherV2<GetInstitutionResponse, CreateInstitution>(url, {
         arg: { method: 'POST', body: arg },
@@ -79,7 +79,7 @@ export const useInstitutions = ({
     Key,
     UpdateInstitutionParams
   >(
-    APIRotues.Institution,
+    APIRoutes.Institution,
     (url: string, { arg }: { arg: UpdateInstitutionParams }) => {
       const { id, ...body } = arg
       return fetcherV2<GetInstitutionResponse, UpdateInstitution>(
@@ -101,7 +101,7 @@ export const useInstitutions = ({
     isMutating: isDeletingInstitution,
     error: deleteInstitutionError,
   } = useSWRMutation<Response, Error, Key, DeleteInstitution>(
-    APIRotues.Institution,
+    APIRoutes.Institution,
     (url: string, { arg }: { arg: DeleteInstitution }) => {
       return fetcherV2<Response, string>(url.replace(':id', arg.id), {
         arg: { method: 'DELETE' },

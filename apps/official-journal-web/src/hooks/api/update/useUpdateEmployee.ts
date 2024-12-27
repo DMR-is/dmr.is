@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 export type UpdateEmployeeParams = {
   caseId: string
@@ -28,10 +28,24 @@ export const useUpdateEmployee = ({
     Error,
     Key,
     UpdateEmployeeTriggerArgs
-  >(APIRotues.UpdateEmployee.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+  >(
+    APIRoutes.UpdateEmployee,
+    (url: string, { arg }: { arg: UpdateEmployeeTriggerArgs }) =>
+      fetcherV2<Response, UpdateEmployeeTriggerArgs>(
+        url.replace(':id', caseId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'POST',
+            body: arg,
+          },
+        },
+      ),
+    {
+      throwOnError: false,
+      ...options,
+    },
+  )
 
   return {
     trigger,

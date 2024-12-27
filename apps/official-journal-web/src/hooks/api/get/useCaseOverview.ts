@@ -4,7 +4,7 @@ import {
   EditorialOverviewRequest,
   EditorialOverviewResponse,
 } from '../../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
 
@@ -28,7 +28,7 @@ export const useCaseOverview = ({
     isValidating,
     mutate,
   } = useSWR<EditorialOverviewResponse, Error>(
-    [APIRotues.GetEditorialOverview, params],
+    [APIRoutes.GetEditorialOverview, params],
     ([url, qsp]: [url: string, qsp: CaseEditorialOverviewParams]) => {
       const params = new URLSearchParams()
 

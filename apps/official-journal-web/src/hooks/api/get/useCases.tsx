@@ -1,8 +1,8 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCasesReponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
-import { generateQueryFromParams } from '../../../lib/types'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { generateParams } from '../../../lib/utils'
 import { CaseEditorialOverviewParams } from './useCaseOverview'
 
 type SWRCasesOptions = SWRConfiguration<GetCasesReponse, Error>
@@ -13,17 +13,22 @@ type UseCasesParams = {
   params?: CaseEditorialOverviewParams
 }
 
-export const useCases = ({
-  shouldFetch = true,
-  options,
-  params,
-}: UseCasesParams = {}) => {
-  const query = generateQueryFromParams(params)
-  const url = query ? `${APIRotues.GetCases}?${query}` : APIRotues.GetCases
+export const useCases = ({ options, params }: UseCasesParams = {}) => {
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCasesReponse,
     Error
-  >(shouldFetch ? url : null, fetcher, options)
+  >(
+    [APIRoutes.GetCases, params],
+    ([url, params]: [url: string, params: CaseEditorialOverviewParams]) =>
+      fetcherV2(url, {
+        arg: {
+          withAuth: true,
+          method: 'GET',
+          query: generateParams(params),
+        },
+      }),
+    options,
+  )
 
   return {
     data,

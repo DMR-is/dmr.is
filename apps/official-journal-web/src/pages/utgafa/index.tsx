@@ -17,7 +17,7 @@ import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
-import { APIRotues, CaseDepartmentTabs, Routes } from '../../lib/constants'
+import { APIRoutes, CaseDepartmentTabs, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/casePublishOverview'
 import { getStringFromQueryString } from '../../lib/types'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
@@ -56,7 +56,7 @@ export default function CasePublishingOverview(
   const onPublishSuccess = () => {
     setPublishing(false)
     const revalidate = `${
-      APIRotues.GetCases
+      APIRoutes.GetCases
     }?department=${selectedTab}&status=${encodeURIComponent(
       CaseStatusTitleEnum.Tilbúið,
     )}`

@@ -1,14 +1,13 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type DeleteCommentTriggerArgs = {
   commentId: string
 }
 
 type UseDeleteCommentParams = {
-  basePath: string
   options?: SWRMutationConfiguration<
     Response,
     Error,
@@ -17,25 +16,17 @@ type UseDeleteCommentParams = {
   >
 }
 
-export const useDeleteComment = ({
-  basePath,
-  options,
-}: UseDeleteCommentParams) => {
-  // Ensure the key is not null before calling swrMutation
-  if (!basePath) {
-    throw new Error('Key must be provided')
-  }
-
+export const useDeleteComment = ({ options }: UseDeleteCommentParams) => {
   const { trigger, isMutating } = swrMutation<
     Response,
     Error,
     Key,
     DeleteCommentTriggerArgs
   >(
-    basePath,
-    (url: string, { arg }: { arg: { commentId: string } }) => {
-      return fetcher(url.replace(':cid', arg.commentId), {
-        arg: { method: 'DELETE' },
+    APIRoutes.DeleteComment,
+    (url: string, { arg }: { arg: DeleteCommentTriggerArgs }) => {
+      return fetcherV2<Response>(url.replace(':cid', arg.commentId), {
+        arg: { withAuth: true, method: 'DELETE' },
       })
     },
     options,

@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCommunicationSatusesResponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type SWRCommunicationStatusesOptions = SWRConfiguration<
   GetCommunicationSatusesResponse,
@@ -14,13 +14,20 @@ type UseCommunicationStatusesParams = {
 
 export const useCommunicationStatuses = ({
   options,
-}: UseCommunicationStatusesParams = {}) => {
-  const url = APIRotues.GetCommunicationStatuses
-
+}: UseCommunicationStatusesParams) => {
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCommunicationSatusesResponse,
     Error
-  >(url, fetcher, options)
+  >(
+    APIRoutes.GetCommunicationStatuses,
+    (url: string) =>
+      fetcherV2(url, {
+        arg: {
+          method: 'GET',
+        },
+      }),
+    options,
+  )
 
   return {
     data,

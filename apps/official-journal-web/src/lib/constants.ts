@@ -87,7 +87,7 @@ type FetcherArgs<T> =
       withAuth?: boolean
       method: 'POST' | 'PUT'
       query?: URLSearchParams
-      body: T
+      body?: T
     }
   | {
       withAuth?: boolean
@@ -99,7 +99,7 @@ export const fetcherV2 = async <TData, TBody = never>(
   url: string,
   { arg }: { arg: FetcherArgs<TBody> },
 ): Promise<TData> => {
-  const withBody = arg.method === 'POST' || arg.method === 'PUT'
+  const withBody = (arg.method === 'POST' || arg.method === 'PUT') && arg.body
 
   const withAuth = arg.withAuth ?? true
   let authHeader = ''
@@ -131,7 +131,7 @@ export const fetcherV2 = async <TData, TBody = never>(
   return res.json()
 }
 
-export enum APIRotues {
+export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
   MainTypes = '/api/mainTypes',

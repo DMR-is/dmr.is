@@ -1,34 +1,38 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetNextPublicationNumberResponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
-import { generateQueryFromParams } from '../../../lib/types'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { generateParams } from '../../../lib/utils'
 
 type SWRNextPublicationNumberOptions = SWRConfiguration<
   GetNextPublicationNumberResponse,
   Error
 >
 
+type Params = {
+  departmentId: string
+}
+
 type UseNextPublicationNumberParams = {
   options?: SWRNextPublicationNumberOptions
-  params?: {
-    departmentId: string
-  }
+  params?: Params
 }
 
 export const useNextPublicationNumber = ({
   options,
   params,
 }: UseNextPublicationNumberParams = {}) => {
-  const query = generateQueryFromParams(params)
-  const url = query
-    ? `${APIRotues.GetNextPublicationNumber}?${query}`
-    : APIRotues.GetNextPublicationNumber
-
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetNextPublicationNumberResponse,
     Error
-  >(url, fetcher, options)
+  >(
+    [APIRoutes.GetNextPublicationNumber, params],
+    ([url, params]: [url: string, params: Params]) =>
+      fetcherV2<GetNextPublicationNumberResponse>(url, {
+        arg: { withAuth: true, method: 'GET', query: generateParams(params) },
+      }),
+    options,
+  )
 
   return {
     data,

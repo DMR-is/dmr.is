@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type UpdateCommunicationStatusTriggerArgs = {
   statusId: string
@@ -28,10 +28,24 @@ export const useUpdateCommunicationStatus = ({
     Error,
     Key,
     UpdateCommunicationStatusTriggerArgs
-  >(APIRotues.UpdateCommunicationStatus.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+  >(
+    APIRoutes.UpdateCommunicationStatus,
+    (url: string, { arg }: { arg: UpdateCommunicationStatusTriggerArgs }) =>
+      fetcherV2<Response, UpdateCommunicationStatusTriggerArgs>(
+        url.replace(':id', caseId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'POST',
+            body: arg,
+          },
+        },
+      ),
+    {
+      throwOnError: false,
+      ...options,
+    },
+  )
 
   return {
     data,

@@ -1,4 +1,4 @@
-import useSWR, { Key, SWRConfiguration } from 'swr'
+import useSWR, { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
@@ -8,7 +8,7 @@ import {
   GetAdminUsers,
   UpdateAdminUser,
 } from '../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../lib/constants'
 
 type DeleteUser = {
   id: string
@@ -28,7 +28,6 @@ type Props = {
   onUpdateError?: (error: Error) => void
   onDeleteSuccess?: () => void
   onDeleteError?: (error: Error) => void
-  config?: SWRConfiguration
 }
 
 export const useAdminUsers = ({
@@ -40,7 +39,6 @@ export const useAdminUsers = ({
   onDeleteSuccess,
   onUpdateError,
   onUpdateSuccess,
-  config,
 }: Props = {}) => {
   const {
     data: userData,
@@ -49,7 +47,7 @@ export const useAdminUsers = ({
     isValidating: isUserValidating,
     mutate: refetchUser,
   } = useSWR<GetAdminUser, Error>(
-    adminUserId ? [APIRotues.AdminUser, adminUserId] : null,
+    adminUserId ? [APIRoutes.AdminUser, adminUserId] : null,
     ([url, id]: [url: string, id: string]) =>
       fetcherV2(url.replace(':id', id), {
         arg: { withAuth: true, method: 'GET' },
@@ -71,7 +69,7 @@ export const useAdminUsers = ({
     isValidating: isUsersValidating,
     mutate: refetchUsers,
   } = useSWR<GetAdminUsers, Error>(
-    APIRotues.AdminUsers,
+    APIRoutes.AdminUsers,
     (url: string) =>
       fetcherV2<GetAdminUsers>(url, {
         arg: { withAuth: true, method: 'GET' },
@@ -88,7 +86,7 @@ export const useAdminUsers = ({
     isMutating: isCreatingUser,
     error: createUserError,
   } = useSWRMutation<Response, Error, Key, CreateAdminUser>(
-    APIRotues.AdminUsers,
+    APIRoutes.AdminUsers,
     (url: string, { arg }: { arg: CreateAdminUser }) =>
       fetcherV2<Response, CreateAdminUser>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
@@ -108,7 +106,7 @@ export const useAdminUsers = ({
     isMutating: isUpdatingUser,
     error: updateUserError,
   } = useSWRMutation<Response, Error, Key, UpdateUser>(
-    APIRotues.AdminUser,
+    APIRoutes.AdminUser,
     (url: string, { arg }: { arg: UpdateUser }) =>
       fetcherV2<Response, UpdateAdminUser>(url.replace(':id', arg.id), {
         arg: { withAuth: true, method: 'PUT', body: arg.body },
@@ -128,7 +126,7 @@ export const useAdminUsers = ({
     isMutating: isDeletingUser,
     error: deleteUserError,
   } = useSWRMutation<Response, Error, Key, DeleteUser>(
-    APIRotues.AdminUser,
+    APIRoutes.AdminUser,
     (url: string, { arg }: { arg: DeleteUser }) =>
       fetcherV2<Response>(url.replace(':id', arg.id), {
         arg: { withAuth: true, method: 'DELETE' },

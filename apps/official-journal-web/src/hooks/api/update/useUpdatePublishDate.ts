@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type UpdatePublishDateTriggerArgs = {
   date: string
@@ -27,10 +27,24 @@ export const useUpdatePublishDate = ({
     Error,
     Key,
     UpdatePublishDateTriggerArgs
-  >(APIRotues.UpdatePublishDate.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+  >(
+    APIRoutes.UpdatePublishDate,
+    (url: string, { arg }: { arg: UpdatePublishDateTriggerArgs }) =>
+      fetcherV2<Response, UpdatePublishDateTriggerArgs>(
+        url.replace(':id', caseId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'POST',
+            body: arg,
+          },
+        },
+      ),
+    {
+      throwOnError: false,
+      ...options,
+    },
+  )
 
   return {
     data,

@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetTagsResponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcherV2 } from '../../../lib/constants'
 
 type SWRTagsOptions = SWRConfiguration<GetTagsResponse, Error>
 
@@ -10,11 +10,17 @@ type UseTagsParams = {
 }
 
 export const useTags = ({ options }: UseTagsParams) => {
-  const url = APIRotues.GetTags
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetTagsResponse,
     Error
-  >(url, fetcher, options)
+  >(
+    APIRoutes.GetTags,
+    (url) =>
+      fetcherV2(url, {
+        arg: { withAuth: true, method: 'GET' },
+      }),
+    options,
+  )
 
   return {
     data,
