@@ -114,10 +114,10 @@ export class ApplicationAdvert {
   requestedDate!: string
 
   @ApiProperty({
-    type: [String],
+    type: [BaseEntity],
   })
   @IsUUID(undefined, { each: true })
-  categories!: string[]
+  categories!: BaseEntity[]
 
   @ApiProperty({
     type: [ApplicationCommunicationChannel],

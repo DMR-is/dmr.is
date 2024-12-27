@@ -83,12 +83,14 @@ export class SignatureService implements ISignatureService {
   private async findSignatures(
     params?: DefaultSearchParams,
     where?: WhereParams,
+    mostRecent?: boolean,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
     const defaultOptions = getDefaultOptions(params)
 
     const signatures = await this.signatureModel.findAndCountAll({
       ...defaultOptions,
+      ...(mostRecent && { order: [['date', 'DESC']], limit: 1 }),
       where: signatureParams(where),
       transaction,
     })
@@ -275,7 +277,7 @@ export class SignatureService implements ISignatureService {
     params?: DefaultSearchParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(params, params, transaction)
+    return await this.findSignatures(params, params, undefined, transaction)
   }
 
   @LogAndHandle()
@@ -283,9 +285,15 @@ export class SignatureService implements ISignatureService {
   async getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
+    mostRecent?: boolean,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(params, { involvedPartyId }, transaction)
+    return await this.findSignatures(
+      params,
+      { involvedPartyId },
+      mostRecent,
+      transaction,
+    )
   }
 
   @LogAndHandle()
