@@ -35,8 +35,8 @@ export const useUpdateType = ({ caseId, options }: UseUpdateTypeParams) => {
         },
       }),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

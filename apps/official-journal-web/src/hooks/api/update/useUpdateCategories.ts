@@ -41,8 +41,8 @@ export const useUpdateCategories = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

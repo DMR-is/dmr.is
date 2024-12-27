@@ -63,6 +63,7 @@ export const useInstitutions = ({
       })
     },
     {
+      throwOnError: false,
       onSuccess: () => {
         onCreateSuccess && onCreateSuccess()
       },
@@ -90,6 +91,7 @@ export const useInstitutions = ({
       )
     },
     {
+      throwOnError: false,
       onSuccess: () => {
         onUpdateSuccess && onUpdateSuccess()
       },
@@ -108,6 +110,7 @@ export const useInstitutions = ({
       })
     },
     {
+      throwOnError: false,
       onSuccess: () => {
         onDeleteSuccess && onDeleteSuccess()
       },

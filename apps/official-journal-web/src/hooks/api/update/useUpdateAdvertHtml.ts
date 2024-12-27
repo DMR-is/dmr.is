@@ -41,7 +41,10 @@ export const useUpdateAdvertHtml = ({
           },
         },
       ),
-    options,
+    {
+      ...options,
+      throwOnError: false,
+    },
   )
 
   return {

@@ -34,8 +34,8 @@ export const useUpdateTitle = ({ caseId, options }: UseUpdateTitleParams) => {
         },
       }),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

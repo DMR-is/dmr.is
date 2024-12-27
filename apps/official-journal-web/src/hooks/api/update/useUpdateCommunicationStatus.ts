@@ -42,8 +42,8 @@ export const useUpdateCommunicationStatus = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

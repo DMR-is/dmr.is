@@ -36,8 +36,8 @@ export const useUpdateTag = ({ caseId, options }: UseUpdateTagParams) => {
         },
       }),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

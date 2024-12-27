@@ -159,6 +159,7 @@ export const useAdvertTypes = ({
         },
       }),
     {
+      throwOnError: false,
       onSuccess: (data) => {
         toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
         onCreateMainTypeSuccess && onCreateMainTypeSuccess(data)
@@ -185,6 +186,7 @@ export const useAdvertTypes = ({
         },
       }),
     {
+      throwOnError: false,
       onSuccess: (data) => {
         onCreateTypeSuccess && onCreateTypeSuccess(data)
       },
@@ -213,6 +215,7 @@ export const useAdvertTypes = ({
         },
       ),
     {
+      throwOnError: false,
       onSuccess: (data) => {
         onUpdateMainTypeSuccess && onUpdateMainTypeSuccess(data)
       },
@@ -234,6 +237,7 @@ export const useAdvertTypes = ({
       }),
 
     {
+      throwOnError: false,
       onSuccess: (data) => {
         onUpdateTypeSuccess && onUpdateTypeSuccess(data)
       },
@@ -251,6 +255,7 @@ export const useAdvertTypes = ({
         arg: { method: 'DELETE' },
       }),
     {
+      throwOnError: false,
       onSuccess: () => {
         onDeleteMainTypeSuccess && onDeleteMainTypeSuccess()
       },
@@ -268,6 +273,7 @@ export const useAdvertTypes = ({
         arg: { method: 'DELETE' },
       }),
     {
+      throwOnError: false,
       onSuccess: () => {
         onDeleteTypeSuccess && onDeleteTypeSuccess()
       },

@@ -42,8 +42,8 @@ export const useUpdateCaseStatus = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

@@ -41,8 +41,8 @@ export const useUpdatePublishDate = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

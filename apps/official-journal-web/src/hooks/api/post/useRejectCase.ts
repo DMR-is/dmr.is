@@ -28,7 +28,10 @@ export const useRejectCase = ({ options }: RejectParams) => {
       fetcherV2<Response>(url.replace(':id', arg.caseId), {
         arg: { withAuth: true, method: 'POST' },
       }),
-    options,
+    {
+      ...options,
+      throwOnError: false,
+    },
   )
 
   return {

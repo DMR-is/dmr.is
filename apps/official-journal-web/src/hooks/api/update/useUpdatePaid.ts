@@ -36,8 +36,8 @@ export const useUpdatePaid = ({ caseId, options }: UseUpdatePaidParams) => {
         },
       }),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

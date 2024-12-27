@@ -36,8 +36,8 @@ export const useUpdatePrice = ({ caseId, options }: UseUpdatePriceParams) => {
         },
       }),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

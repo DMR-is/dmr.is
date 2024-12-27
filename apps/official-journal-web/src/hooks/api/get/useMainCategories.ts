@@ -89,6 +89,7 @@ export const useMainCategories = ({
           arg: { method: 'POST', body: arg },
         }),
       {
+        throwOnError: false,
         onSuccess: () => {
           refetchMainCategories()
           onCreateMainCategorySuccess && onCreateMainCategorySuccess()
@@ -114,6 +115,7 @@ export const useMainCategories = ({
         },
       ),
     {
+      throwOnError: false,
       onSuccess: () => {
         refetchMainCategories()
         onCreateMainCategoryCategoriesSuccess &&
@@ -132,6 +134,7 @@ export const useMainCategories = ({
           },
         }),
       {
+        throwOnError: false,
         onSuccess: () => {
           refetchMainCategories()
           onDeleteMainCategorySuccess && onDeleteMainCategorySuccess()
@@ -155,6 +158,7 @@ export const useMainCategories = ({
         { arg: { method: 'DELETE' } },
       ),
     {
+      throwOnError: false,
       onSuccess: () => {
         onDeleteMainCategoryCategorySuccess &&
           onDeleteMainCategoryCategorySuccess()
@@ -176,6 +180,7 @@ export const useMainCategories = ({
         },
       ),
     {
+      throwOnError: false,
       onSuccess: () => {
         refetchMainCategories()
         onUpdateMainCategorySuccess && onUpdateMainCategorySuccess()

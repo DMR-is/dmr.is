@@ -92,6 +92,7 @@ export const useAdminUsers = ({
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
+      throwOnError: false,
       onError: (error) => {
         onCreateError && onCreateError(error)
       },
@@ -112,6 +113,7 @@ export const useAdminUsers = ({
         arg: { withAuth: true, method: 'PUT', body: arg.body },
       }),
     {
+      throwOnError: false,
       onError: (error) => {
         onUpdateError && onUpdateError(error)
       },
@@ -132,6 +134,7 @@ export const useAdminUsers = ({
         arg: { withAuth: true, method: 'DELETE' },
       }),
     {
+      throwOnError: false,
       onError: (error) => {
         onDeleteError && onDeleteError(error)
       },

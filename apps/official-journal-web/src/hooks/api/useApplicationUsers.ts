@@ -61,6 +61,7 @@ export const useApplicationUsers = (props: Props) => {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
+      throwOnError: false,
       onSuccess: (user) => {
         props.onCreateSuccess && props.onCreateSuccess(user)
       },
@@ -88,6 +89,7 @@ export const useApplicationUsers = (props: Props) => {
       )
     },
     {
+      throwOnError: false,
       onSuccess: (user) => {
         props.onUpdateSuccess && props.onUpdateSuccess(user)
       },
@@ -109,6 +111,7 @@ export const useApplicationUsers = (props: Props) => {
       )
     },
     {
+      throwOnError: false,
       onSuccess: () => {
         props.onDeleteSuccess && props.onDeleteSuccess()
       },

@@ -26,7 +26,10 @@ export const usePublishCases = (options?: SWRPublishCasesOptions) => {
       fetcherV2<Response, PublishCasesTriggerArgs>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
-    options,
+    {
+      ...options,
+      throwOnError: false,
+    },
   )
 
   return {

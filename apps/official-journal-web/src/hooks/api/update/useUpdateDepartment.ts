@@ -42,8 +42,8 @@ export const useUpdateDepartment = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

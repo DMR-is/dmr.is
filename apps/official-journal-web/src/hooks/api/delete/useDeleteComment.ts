@@ -29,7 +29,10 @@ export const useDeleteComment = ({ options }: UseDeleteCommentParams) => {
         arg: { withAuth: true, method: 'DELETE' },
       })
     },
-    options,
+    {
+      ...options,
+      throwOnError: false,
+    },
   )
 
   return {

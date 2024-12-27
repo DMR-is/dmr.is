@@ -42,8 +42,8 @@ export const useUpdateEmployee = ({
         },
       ),
     {
-      throwOnError: false,
       ...options,
+      throwOnError: false,
     },
   )
 

@@ -34,7 +34,10 @@ export const useAddComment = ({ caseId, options }: UseAddCommentParams) => {
       fetcherV2<Response, AddCommentTriggerArgs>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
-    options,
+    {
+      ...options,
+      throwOnError: false,
+    },
   )
 
   return {

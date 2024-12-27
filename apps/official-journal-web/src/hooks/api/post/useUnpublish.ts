@@ -36,7 +36,7 @@ export const useUnpublishCase = ({ options }: UnpublishParams) => {
           },
         },
       ),
-    options,
+    { ...options, throwOnError: false },
   )
 
   return {
