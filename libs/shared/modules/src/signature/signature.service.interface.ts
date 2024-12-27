@@ -26,6 +26,8 @@ export interface ISignatureService {
   getSignatureForInvolvedParty(
     involvedPartyId: string,
     params?: DefaultSearchParams,
+    mostRecent?: boolean,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignaturesResponse>>
   getSignaturesByCaseId(
     caseId: string,
