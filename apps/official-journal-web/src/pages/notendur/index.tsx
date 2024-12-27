@@ -54,12 +54,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
   const [selectedApplicationUser, setSelectedApplicationUser] =
     useState<ApplicationUser | null>(null)
 
-  const { users, getUsers, isLoadingUsers, isUsersValidating } = useAdminUsers({
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-  })
+  const { users, getUsers, isLoadingUsers, isUsersValidating } = useAdminUsers()
 
   const { getApplicationUsers, applicationUsers, applicationUsersLoading } =
     useApplicationUsers({

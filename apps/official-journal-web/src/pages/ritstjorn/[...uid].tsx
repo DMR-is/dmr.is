@@ -98,7 +98,6 @@ export default function CaseSingle(
   })
 
   const { trigger: rejectCase } = useRejectCase({
-    caseId: data.thisCase.id,
     options: {
       onSuccess: () => {
         router.push(Routes.ProcessingOverview)
@@ -117,7 +116,6 @@ export default function CaseSingle(
     })
 
   const { trigger: unpublish, isMutating: isUnpublishing } = useUnpublishCase({
-    caseId: data.thisCase.id,
     options: {
       onSuccess: () => {
         refetchCase()
@@ -131,7 +129,7 @@ export default function CaseSingle(
     )
 
     if (proceed) {
-      rejectCase()
+      rejectCase({ caseId: data.thisCase.id })
     }
   }
 
@@ -141,7 +139,9 @@ export default function CaseSingle(
     )
 
     if (proceed) {
-      unpublish()
+      unpublish({
+        caseId: data.thisCase.id,
+      })
     }
   }
 
