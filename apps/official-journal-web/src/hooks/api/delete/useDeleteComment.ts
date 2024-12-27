@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type DeleteCommentTriggerArgs = {
   commentId: string
@@ -25,7 +25,7 @@ export const useDeleteComment = ({ options }: UseDeleteCommentParams) => {
   >(
     APIRoutes.DeleteComment,
     (url: string, { arg }: { arg: DeleteCommentTriggerArgs }) => {
-      return fetcherV2<Response>(url.replace(':cid', arg.commentId), {
+      return fetcher<Response>(url.replace(':cid', arg.commentId), {
         arg: { withAuth: true, method: 'DELETE' },
       })
     },

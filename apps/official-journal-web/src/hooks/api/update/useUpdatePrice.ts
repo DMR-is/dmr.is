@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdatePriceTriggerArgs = {
   price: number
@@ -28,7 +28,7 @@ export const useUpdatePrice = ({ caseId, options }: UseUpdatePriceParams) => {
   >(
     APIRoutes.UpdatePrice,
     (url: string, { arg }: { arg: UpdatePriceTriggerArgs }) =>
-      fetcherV2<Response, UpdatePriceTriggerArgs>(url.replace(':id', caseId), {
+      fetcher<Response, UpdatePriceTriggerArgs>(url.replace(':id', caseId), {
         arg: {
           withAuth: true,
           method: 'POST',

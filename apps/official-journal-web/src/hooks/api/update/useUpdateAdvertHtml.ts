@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UdpateAdvertHtmlTriggerArgs = {
   advertHtml: string
@@ -31,7 +31,7 @@ export const useUpdateAdvertHtml = ({
   >(
     APIRoutes.UpdateAdvertHtml,
     (url: string, { arg }: { arg: UdpateAdvertHtmlTriggerArgs }) =>
-      fetcherV2<Response, UdpateAdvertHtmlTriggerArgs>(
+      fetcher<Response, UdpateAdvertHtmlTriggerArgs>(
         url.replace(':id', caseId),
         {
           arg: {

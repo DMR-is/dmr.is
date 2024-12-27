@@ -2,7 +2,7 @@ import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { GetMainCategoriesResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
@@ -67,7 +67,7 @@ export const useMainCategories = ({
   } = useSWR<GetMainCategoriesResponse, Error>(
     [APIRoutes.GetMainCategories, params],
     ([url, params]: [url: string, params: SearchParams]) =>
-      fetcherV2(url, {
+      fetcher(url, {
         arg: {
           method: 'GET',
           query: generateParams(params),
@@ -85,7 +85,7 @@ export const useMainCategories = ({
     useSWRMutation<Response, Error, Key, CreateMainCategoryParams>(
       APIRoutes.CreateMainCategory,
       (url: string, { arg }: { arg: CreateMainCategoryParams }) =>
-        fetcherV2<Response, CreateMainCategoryParams>(url, {
+        fetcher<Response, CreateMainCategoryParams>(url, {
           arg: { method: 'POST', body: arg },
         }),
       {
@@ -108,7 +108,7 @@ export const useMainCategories = ({
   >(
     APIRoutes.CreateMainCategoryCategories,
     (url: string, { arg }: { arg: CreateMainCategoryCategoriesTriggerArgs }) =>
-      fetcherV2<Response, CreateMainCategoryCategoriesTriggerArgs>(
+      fetcher<Response, CreateMainCategoryCategoriesTriggerArgs>(
         url.replace(':id', arg.mainCategoryId),
         {
           arg: { method: 'POST', body: arg },
@@ -128,7 +128,7 @@ export const useMainCategories = ({
     useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
       APIRoutes.DeleteMainCategory,
       (url: string, { arg }: { arg: DeleteMainCategoryTriggerArgs }) =>
-        fetcherV2<Response>(url.replace(':id', arg.mainCategoryId), {
+        fetcher<Response>(url.replace(':id', arg.mainCategoryId), {
           arg: {
             method: 'DELETE',
           },
@@ -153,7 +153,7 @@ export const useMainCategories = ({
   >(
     APIRoutes.DeleteMainCategoryCategory,
     (url: string, { arg }: { arg: DeleteMainCategoryCategoryTriggerArgs }) =>
-      fetcherV2<Response>(
+      fetcher<Response>(
         url.replace(':id', arg.mainCategoryId).replace(':cid', arg.categoryId),
         { arg: { method: 'DELETE' } },
       ),
@@ -173,7 +173,7 @@ export const useMainCategories = ({
   } = useSWRMutation<Response, Error, Key, UpdateMainCategoryParams>(
     APIRoutes.UpdateMainCategory,
     (url: string, { arg }: { arg: UpdateMainCategoryParams }) =>
-      fetcherV2<Response, UpdateMainCategoryParams>(
+      fetcher<Response, UpdateMainCategoryParams>(
         url.replace(':id', arg.mainCategoryId),
         {
           arg: { method: 'PUT', body: arg },

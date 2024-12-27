@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdateNextCaseStatusTriggerArgs = {
   currentStatus: string
@@ -31,7 +31,7 @@ export const useUpdateNextCaseStatus = ({
   >(
     caseId ? APIRoutes.UpdateNextCaseStatus : null,
     (url: string, { arg }: { arg: UpdateNextCaseStatusTriggerArgs }) =>
-      fetcherV2<Response, UpdateNextCaseStatusTriggerArgs>(
+      fetcher<Response, UpdateNextCaseStatusTriggerArgs>(
         url.replace(':id', caseId),
         {
           arg: {

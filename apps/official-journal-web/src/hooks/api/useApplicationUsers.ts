@@ -9,7 +9,7 @@ import {
   GetApplicationUsersRequest,
   UpdateApplicationUser,
 } from '../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcher } from '../../lib/constants'
 
 type UpdateApplicationUserParams = UpdateApplicationUser & { id: string }
 
@@ -40,7 +40,7 @@ export const useApplicationUsers = (props: Props) => {
         }
       }
 
-      return fetcherV2<GetApplicationUsers>(url, {
+      return fetcher<GetApplicationUsers>(url, {
         arg: { withAuth: true, method: 'GET', query: qsp },
       })
     },
@@ -57,7 +57,7 @@ export const useApplicationUsers = (props: Props) => {
   } = useSWRMutation<GetApplicationUser, Error, Key, CreateApplicationUser>(
     APIRoutes.ApplicationUsers,
     (url: string, { arg }: { arg: CreateApplicationUser }) =>
-      fetcherV2<GetApplicationUser, CreateApplicationUser>(url, {
+      fetcher<GetApplicationUser, CreateApplicationUser>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
@@ -81,7 +81,7 @@ export const useApplicationUsers = (props: Props) => {
     APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: UpdateApplicationUserParams }) => {
       const { id, ...body } = arg
-      return fetcherV2<GetApplicationUser, UpdateApplicationUser>(
+      return fetcher<GetApplicationUser, UpdateApplicationUser>(
         url.replace(':id', arg.id),
         {
           arg: { withAuth: true, method: 'PUT', body: body },
@@ -103,7 +103,7 @@ export const useApplicationUsers = (props: Props) => {
   } = useSWRMutation<Response, Error, Key, DeleteApplicationUserRequest>(
     APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: DeleteApplicationUserRequest }) => {
-      return fetcherV2<Response, DeleteApplicationUserRequest>(
+      return fetcher<Response, DeleteApplicationUserRequest>(
         url.replace(':id', arg.id),
         {
           arg: { withAuth: true, method: 'DELETE' },

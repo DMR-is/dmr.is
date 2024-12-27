@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdatePaidTriggerArgs = {
   paid: boolean
@@ -28,7 +28,7 @@ export const useUpdatePaid = ({ caseId, options }: UseUpdatePaidParams) => {
   >(
     APIRoutes.UpdatePaid,
     (url: string, { arg }: { arg: UpdatePaidTriggerArgs }) =>
-      fetcherV2<Response, UpdatePaidTriggerArgs>(url.replace(':id', caseId), {
+      fetcher<Response, UpdatePaidTriggerArgs>(url.replace(':id', caseId), {
         arg: {
           withAuth: true,
           method: 'POST',

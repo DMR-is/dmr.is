@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCategoriesResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
@@ -22,7 +22,7 @@ export const useCategories = ({
   >(
     [APIRoutes.GetCategories, params],
     ([url, qsp]: [url: string, qsp: SearchParams]) =>
-      fetcherV2(url, {
+      fetcher(url, {
         arg: {
           method: 'GET',
           query: generateParams(qsp),

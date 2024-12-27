@@ -8,7 +8,7 @@ import {
   GetAdminUsers,
   UpdateAdminUser,
 } from '../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcher } from '../../lib/constants'
 
 type DeleteUser = {
   id: string
@@ -49,7 +49,7 @@ export const useAdminUsers = ({
   } = useSWR<GetAdminUser, Error>(
     adminUserId ? [APIRoutes.AdminUser, adminUserId] : null,
     ([url, id]: [url: string, id: string]) =>
-      fetcherV2(url.replace(':id', id), {
+      fetcher(url.replace(':id', id), {
         arg: { withAuth: true, method: 'GET' },
       }),
     {
@@ -71,7 +71,7 @@ export const useAdminUsers = ({
   } = useSWR<GetAdminUsers, Error>(
     APIRoutes.AdminUsers,
     (url: string) =>
-      fetcherV2<GetAdminUsers>(url, {
+      fetcher<GetAdminUsers>(url, {
         arg: { withAuth: true, method: 'GET' },
       }),
     {
@@ -88,7 +88,7 @@ export const useAdminUsers = ({
   } = useSWRMutation<Response, Error, Key, CreateAdminUser>(
     APIRoutes.AdminUsers,
     (url: string, { arg }: { arg: CreateAdminUser }) =>
-      fetcherV2<Response, CreateAdminUser>(url, {
+      fetcher<Response, CreateAdminUser>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
@@ -109,7 +109,7 @@ export const useAdminUsers = ({
   } = useSWRMutation<Response, Error, Key, UpdateUser>(
     APIRoutes.AdminUser,
     (url: string, { arg }: { arg: UpdateUser }) =>
-      fetcherV2<Response, UpdateAdminUser>(url.replace(':id', arg.id), {
+      fetcher<Response, UpdateAdminUser>(url.replace(':id', arg.id), {
         arg: { withAuth: true, method: 'PUT', body: arg.body },
       }),
     {
@@ -130,7 +130,7 @@ export const useAdminUsers = ({
   } = useSWRMutation<Response, Error, Key, DeleteUser>(
     APIRoutes.AdminUser,
     (url: string, { arg }: { arg: DeleteUser }) =>
-      fetcherV2<Response>(url.replace(':id', arg.id), {
+      fetcher<Response>(url.replace(':id', arg.id), {
         arg: { withAuth: true, method: 'DELETE' },
       }),
     {

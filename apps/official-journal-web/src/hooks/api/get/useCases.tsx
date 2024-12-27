@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCasesReponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 import { generateParams } from '../../../lib/utils'
 import { CaseEditorialOverviewParams } from './useCaseOverview'
 
@@ -20,7 +20,7 @@ export const useCases = ({ options, params }: UseCasesParams = {}) => {
   >(
     [APIRoutes.GetCases, params],
     ([url, params]: [url: string, params: CaseEditorialOverviewParams]) =>
-      fetcherV2(url, {
+      fetcher(url, {
         arg: {
           withAuth: true,
           method: 'GET',

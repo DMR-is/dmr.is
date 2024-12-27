@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdateCategoriesTriggerArgs = {
   categoryIds: string[]
@@ -30,7 +30,7 @@ export const useUpdateCategories = ({
   >(
     APIRoutes.UpdateCategories,
     (url: string, { arg }: { arg: UpdateCategoriesTriggerArgs }) =>
-      fetcherV2<Response, UpdateCategoriesTriggerArgs>(
+      fetcher<Response, UpdateCategoriesTriggerArgs>(
         url.replace(':id', caseId),
         {
           arg: {

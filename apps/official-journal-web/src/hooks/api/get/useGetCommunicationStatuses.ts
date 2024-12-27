@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCommunicationSatusesResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type SWRCommunicationStatusesOptions = SWRConfiguration<
   GetCommunicationSatusesResponse,
@@ -21,7 +21,7 @@ export const useCommunicationStatuses = ({
   >(
     APIRoutes.GetCommunicationStatuses,
     (url: string) =>
-      fetcherV2(url, {
+      fetcher(url, {
         arg: {
           method: 'GET',
         },

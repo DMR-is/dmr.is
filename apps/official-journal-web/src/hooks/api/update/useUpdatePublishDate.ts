@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdatePublishDateTriggerArgs = {
   date: string
@@ -30,7 +30,7 @@ export const useUpdatePublishDate = ({
   >(
     APIRoutes.UpdatePublishDate,
     (url: string, { arg }: { arg: UpdatePublishDateTriggerArgs }) =>
-      fetcherV2<Response, UpdatePublishDateTriggerArgs>(
+      fetcher<Response, UpdatePublishDateTriggerArgs>(
         url.replace(':id', caseId),
         {
           arg: {

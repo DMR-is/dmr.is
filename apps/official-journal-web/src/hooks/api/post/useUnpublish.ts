@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UnpublishParams = {
   options?: SWRUnpublishCaseOptions
@@ -27,15 +27,12 @@ export const useUnpublishCase = ({ options }: UnpublishParams) => {
   >(
     APIRoutes.UnpublishCase,
     (url: string, { arg }: { arg: UnpublishTriggerArgs }) =>
-      fetcherV2<Response, UnpublishTriggerArgs>(
-        url.replace(':id', arg.caseId),
-        {
-          arg: {
-            withAuth: true,
-            method: 'POST',
-          },
+      fetcher<Response, UnpublishTriggerArgs>(url.replace(':id', arg.caseId), {
+        arg: {
+          withAuth: true,
+          method: 'POST',
         },
-      ),
+      }),
     { ...options, throwOnError: false },
   )
 

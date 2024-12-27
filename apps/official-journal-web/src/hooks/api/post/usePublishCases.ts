@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 export type PublishCasesTriggerArgs = {
   caseIds: string[]
@@ -23,7 +23,7 @@ export const usePublishCases = (options?: SWRPublishCasesOptions) => {
   >(
     APIRoutes.PublishCases,
     (url: string, { arg }: { arg: PublishCasesTriggerArgs }) =>
-      fetcherV2<Response, PublishCasesTriggerArgs>(url, {
+      fetcher<Response, PublishCasesTriggerArgs>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {

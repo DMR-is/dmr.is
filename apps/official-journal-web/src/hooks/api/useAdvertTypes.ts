@@ -11,7 +11,7 @@ import {
   GetMainTypesRequest,
   GetTypesRequest,
 } from '../../gen/fetch'
-import { APIRoutes, fetcherV2, OJOIWebException } from '../../lib/constants'
+import { APIRoutes, fetcher, OJOIWebException } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
 
 type AdvertTypeIdParam = {
@@ -78,7 +78,7 @@ export const useAdvertTypes = ({
   } = useSWR<GetAdvertTypes, OJOIWebException>(
     [APIRoutes.Types, typesParams],
     ([url, qsp]: [string, TypesParams]) => {
-      return fetcherV2(url, {
+      return fetcher(url, {
         arg: { method: 'GET', query: generateParams(qsp) },
       })
     },
@@ -97,7 +97,7 @@ export const useAdvertTypes = ({
   } = useSWR<GetAdvertMainTypes, OJOIWebException>(
     [APIRoutes.MainTypes, mainTypesParams],
     ([url, qsp]: [string, Record<string, string>]) => {
-      return fetcherV2(url, {
+      return fetcher(url, {
         arg: { method: 'GET', query: generateParams(qsp) },
       })
     },
@@ -116,7 +116,7 @@ export const useAdvertTypes = ({
   } = useSWR<GetAdvertType, OJOIWebException>(
     typeId ? [APIRoutes.Type, typeId] : null,
     ([url, id]: [string, string]) =>
-      fetcherV2(url.replace(':id', id), { arg: { method: 'GET' } }),
+      fetcher(url.replace(':id', id), { arg: { method: 'GET' } }),
     {
       revalidateOnFocus: false,
       revalidateIfStale: false,
@@ -132,7 +132,7 @@ export const useAdvertTypes = ({
   } = useSWR<GetAdvertMainType, OJOIWebException>(
     mainTypeId ? [APIRoutes.MainType, mainTypeId] : null,
     ([url, id]: [string, string]) =>
-      fetcherV2(url.replace(':id', id), { arg: { method: 'GET' } }),
+      fetcher(url.replace(':id', id), { arg: { method: 'GET' } }),
     {
       revalidateOnFocus: false,
       revalidateIfStale: false,
@@ -152,7 +152,7 @@ export const useAdvertTypes = ({
   >(
     APIRoutes.MainTypes,
     async (url: string, { arg }: { arg: CreateAdvertMainTypeParams }) =>
-      fetcherV2<GetAdvertMainType, CreateAdvertMainTypeParams>(url, {
+      fetcher<GetAdvertMainType, CreateAdvertMainTypeParams>(url, {
         arg: {
           body: arg,
           method: 'POST',
@@ -179,7 +179,7 @@ export const useAdvertTypes = ({
   >(
     APIRoutes.Types,
     async (url: string, { arg }: { arg: CreateAdvertTypeParams }) =>
-      fetcherV2<GetAdvertType, CreateAdvertTypeParams>(url, {
+      fetcher<GetAdvertType, CreateAdvertTypeParams>(url, {
         arg: {
           method: 'POST',
           body: arg,
@@ -205,7 +205,7 @@ export const useAdvertTypes = ({
   >(
     APIRoutes.MainType,
     async (url: string, { arg }: { arg: UpdateMainTypeParams }) =>
-      fetcherV2<GetAdvertMainType, UpdateMainTypeParams>(
+      fetcher<GetAdvertMainType, UpdateMainTypeParams>(
         url.replace(':id', arg.id),
         {
           arg: {
@@ -229,7 +229,7 @@ export const useAdvertTypes = ({
   } = useSWRMutation<GetAdvertType, OJOIWebException, Key, UpdateTypeParams>(
     APIRoutes.Type,
     (url: string, { arg }: { arg: UpdateTypeParams }) =>
-      fetcherV2<GetAdvertType, UpdateTypeParams>(url.replace(':id', arg.id), {
+      fetcher<GetAdvertType, UpdateTypeParams>(url.replace(':id', arg.id), {
         arg: {
           method: 'PUT',
           body: arg,
@@ -251,7 +251,7 @@ export const useAdvertTypes = ({
   } = useSWRMutation<Response, OJOIWebException, Key, AdvertTypeIdParam>(
     APIRoutes.MainType,
     (url: string, { arg }: { arg: { id: string } }) =>
-      fetcherV2<Response>(url.replace(':id', arg.id), {
+      fetcher<Response>(url.replace(':id', arg.id), {
         arg: { method: 'DELETE' },
       }),
     {
@@ -269,7 +269,7 @@ export const useAdvertTypes = ({
   } = useSWRMutation<Response, OJOIWebException, Key, AdvertTypeIdParam>(
     APIRoutes.Type,
     (url: string, { arg }: { arg: { id: string } }) =>
-      fetcherV2<Response>(url.replace(':id', arg.id), {
+      fetcher<Response>(url.replace(':id', arg.id), {
         arg: { method: 'DELETE' },
       }),
     {

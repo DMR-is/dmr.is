@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetTagsResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type SWRTagsOptions = SWRConfiguration<GetTagsResponse, Error>
 
@@ -16,7 +16,7 @@ export const useTags = ({ options }: UseTagsParams) => {
   >(
     APIRoutes.GetTags,
     (url) =>
-      fetcherV2(url, {
+      fetcher(url, {
         arg: { withAuth: true, method: 'GET' },
       }),
     options,

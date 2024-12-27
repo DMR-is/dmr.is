@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdateTitleTriggerArgs = {
   title: string
@@ -27,7 +27,7 @@ export const useUpdateTitle = ({ caseId, options }: UseUpdateTitleParams) => {
   >(
     APIRoutes.UpdateTitle,
     (url: string, { arg }: { arg: UpdateTitleTriggerArgs }) =>
-      fetcherV2<Response, UpdateTitleTriggerArgs>(url.replace(':id', caseId), {
+      fetcher<Response, UpdateTitleTriggerArgs>(url.replace(':id', caseId), {
         arg: {
           method: 'POST',
           body: arg,

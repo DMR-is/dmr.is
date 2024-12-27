@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetNextPublicationNumberResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 import { generateParams } from '../../../lib/utils'
 
 type SWRNextPublicationNumberOptions = SWRConfiguration<
@@ -28,7 +28,7 @@ export const useNextPublicationNumber = ({
   >(
     [APIRoutes.GetNextPublicationNumber, params],
     ([url, params]: [url: string, params: Params]) =>
-      fetcherV2<GetNextPublicationNumberResponse>(url, {
+      fetcher<GetNextPublicationNumberResponse>(url, {
         arg: { withAuth: true, method: 'GET', query: generateParams(params) },
       }),
     options,

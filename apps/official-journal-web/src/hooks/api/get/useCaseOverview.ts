@@ -4,7 +4,7 @@ import {
   EditorialOverviewRequest,
   EditorialOverviewResponse,
 } from '../../../gen/fetch'
-import { APIRoutes, fetcherV2 } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
 
@@ -38,7 +38,7 @@ export const useCaseOverview = ({
         }
       })
 
-      return fetcherV2(url, {
+      return fetcher(url, {
         arg: {
           method: 'GET',
           withAuth: true,

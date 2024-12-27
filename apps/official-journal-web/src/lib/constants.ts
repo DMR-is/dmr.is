@@ -1,10 +1,6 @@
 import { getSession } from 'next-auth/react'
 
-import {
-  AlertMessageProps,
-  AlertMessageType,
-  StringOption,
-} from '@island.is/island-ui/core'
+import { AlertMessageType, StringOption } from '@island.is/island-ui/core'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -95,7 +91,7 @@ type FetcherArgs<T> =
       query?: URLSearchParams
       body?: undefined
     }
-export const fetcherV2 = async <TData, TBody = never>(
+export const fetcher = async <TData, TBody = never>(
   url: string,
   { arg }: { arg: FetcherArgs<TBody> },
 ): Promise<TData> => {
