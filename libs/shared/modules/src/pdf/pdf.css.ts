@@ -515,6 +515,12 @@ export const pdfCss = `
 
   /* ======================================================================= */
 
+  .signature__date, signature__content, .signature__member {
+    display: none;
+  }
+
+  /* ======================================================================= */
+
   .disclaimer {
     margin-top: 3em;
     page-break-inside: avoid;
