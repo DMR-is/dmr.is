@@ -3,12 +3,14 @@ import {
   Column,
   DataType,
   DefaultScope,
+  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript'
 import { CaseStatusEnum } from '@dmr.is/shared/dto'
 
 import { CaseCommentModel } from '../../comment/models'
+import { CaseModel } from './case.model'
 
 @Table({ tableName: 'case_status', timestamps: false })
 @DefaultScope(() => ({
@@ -39,4 +41,7 @@ export class CaseStatusModel extends Model {
 
   @BelongsTo(() => CaseCommentModel, 'id')
   comment?: CaseCommentModel
+
+  @HasMany(() => CaseModel, 'statusId')
+  cases?: CaseModel[]
 }

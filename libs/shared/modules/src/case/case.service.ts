@@ -1,15 +1,20 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { AttachmentTypeParam, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import {
+  AttachmentTypeParam,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_PAGE_SIZE,
+} from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
   CaseCommunicationStatus,
+  CaseOverviewQuery,
   CaseStatusEnum,
   CreateCaseChannelBody,
-  EditorialOverviewResponse,
   GetCaseResponse,
+  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
   GetCommunicationSatusesResponse,
@@ -36,7 +41,12 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
-import { enumMapper, generatePaging, getS3Bucket } from '@dmr.is/utils'
+import {
+  enumMapper,
+  generatePaging,
+  getLimitAndOffset,
+  getS3Bucket,
+} from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -61,11 +71,12 @@ import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
+import { caseOverviewMigrate } from './migrations/case-overview.migrate'
+import { caseOverviewStatusMigrate } from './migrations/case-overview-status.migrate'
 import { caseTagMigrate } from './migrations/case-tag.migrate'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
-import { counterResult } from './case.utils'
 import {
   CaseCommunicationStatusModel,
   CaseModel,
@@ -99,6 +110,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseTagModel)
     private readonly caseTagModel: typeof CaseTagModel,
+    @InjectModel(CaseStatusModel)
+    private readonly caseStatusModel: typeof CaseStatusModel,
 
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
@@ -621,66 +634,148 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   async getCasesOverview(
-    params?: GetCasesQuery | undefined,
-  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
-    const cases = (await this.getCases(params)).unwrap()
+    status?: string,
+    params?: CaseOverviewQuery,
+  ): Promise<ResultWrapper<GetCasesOverview>> {
+    const availableStatuses = [
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+      CaseStatusEnum.ReadyForPublishing,
+    ]
 
-    const counter = await this.caseModel.findAll({
+    const lowered = status?.toLowerCase()
+
+    const currentStatus =
+      availableStatuses.find((s) => s.toLowerCase() === lowered) ??
+      CaseStatusEnum.Submitted
+
+    const whereParams = caseParameters(params)
+
+    const counterResults = this.caseStatusModel.findAll({
+      benchmark: true,
+      raw: true,
+      nest: true,
       attributes: [
-        [Sequelize.literal(`status.title`), 'caseStatusTitle'],
-        [Sequelize.fn('COUNT', Sequelize.col('status_id')), 'count'],
+        [Sequelize.col('CaseStatusModel.id'), 'status.id'],
+        [Sequelize.col('CaseStatusModel.title'), 'status.title'],
+        [Sequelize.col('CaseStatusModel.slug'), 'status.slug'],
+        [Sequelize.fn('COUNT', Sequelize.col('cases.id')), 'count'],
       ],
       include: [
         {
-          model: CaseStatusModel,
-          as: 'status',
+          model: this.caseModel,
+          required: false,
+          where: whereParams,
           attributes: [],
         },
+      ],
+      where: {
+        title: {
+          [Op.in]: availableStatuses,
+        },
+      },
+      group: [
+        'CaseStatusModel.id',
+        'CaseStatusModel.title',
+        'CaseStatusModel.slug',
+      ],
+      logging: (_, timing) => {
+        this.logger.info(
+          `getCaseOverview counter query executed in ${timing}ms`,
+          {
+            context: 'CaseService',
+            category: LOGGING_CATEGORY,
+            query: 'getCaseOverview',
+          },
+        )
+      },
+    }) as unknown as Array<{
+      status: {
+        id: string
+        title: string
+        slug: string
+      }
+      count: number
+    }>
+
+    const { limit, offset } = getLimitAndOffset({
+      page: params?.page ? parseInt(params?.page) : undefined,
+      pageSize: params?.pageSize ? parseInt(params?.pageSize) : undefined,
+    })
+
+    const casesResults = this.caseModel.findAndCountAll({
+      raw: true,
+      nest: true,
+      benchmark: true,
+      offset: offset,
+      limit: limit,
+      attributes: [
+        'id',
+        'requestedPublicationDate',
+        'createdAt',
+        'advertTitle',
+        'fastTrack',
+      ],
+      where: whereParams,
+      include: [
         {
           model: AdvertDepartmentModel,
-          where: params?.department
-            ? {
-                slug: {
-                  [Op.in]: params.department,
-                },
-              }
-            : undefined,
+          attributes: ['id', 'title', 'slug'],
         },
         {
           model: AdvertTypeModel,
-          where: params?.type
-            ? {
-                slug: {
-                  [Op.in]: params.type,
-                },
-              }
-            : undefined,
+          attributes: ['id', 'title', 'slug'],
         },
         {
-          model: AdvertCategoryModel,
-          where: params?.category
-            ? {
-                slug: params?.category,
-              }
-            : undefined,
+          model: CaseCommunicationStatusModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          where: {
+            title: {
+              [Op.eq]: currentStatus,
+            },
+          },
+        },
+        {
+          model: CaseTagModel,
+          attributes: ['id', 'title', 'slug'],
         },
       ],
-      group: [
-        'status_id',
-        `status.title`,
-        'department.id',
-        'advertType.id',
-        'categories.id',
-        'CaseModel.id',
-        'categories->CaseCategoriesModel.case_case_id',
-        'categories->CaseCategoriesModel.category_id',
-      ],
+      logging: (_, timing) => {
+        this.logger.info(`getCaseOverview query executed in ${timing}ms`, {
+          context: 'CaseService',
+          category: LOGGING_CATEGORY,
+          query: 'getCaseOverview',
+        })
+      },
     })
 
+    const [counter, cases] = await Promise.all([counterResults, casesResults])
+
+    const mappedCases = cases.rows.map((c) => caseOverviewMigrate(c))
+
+    const paging = generatePaging(
+      cases.rows,
+      params?.page ? parseInt(params?.page) : DEFAULT_PAGE_NUMBER,
+      params?.pageSize ? parseInt(params?.pageSize) : DEFAULT_PAGE_SIZE,
+      cases.count,
+    )
+
     return ResultWrapper.ok({
-      cases: cases.cases,
-      paging: cases.paging,
-      totalItems: counterResult(counter),
+      cases: mappedCases,
+      statuses: counter.map((c) =>
+        caseOverviewStatusMigrate({
+          id: c.status.id,
+          slug: c.status.slug,
+          title: c.status.title,
+          count: c.count,
+        }),
+      ),
+      paging,
     })
   }
 

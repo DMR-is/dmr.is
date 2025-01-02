@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+import { CaseTagEnum } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_tag', timestamps: false })
 @DefaultScope(() => ({
@@ -25,7 +26,7 @@ export class CaseTagModel extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: string
+  title!: CaseTagEnum
 
   @Column({
     type: DataType.STRING,
