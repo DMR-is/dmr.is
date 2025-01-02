@@ -63,8 +63,13 @@ import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
+import { InstitutionModel } from '../institution/models/institution.model'
 import { IJournalService } from '../journal'
-import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+} from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -716,6 +721,8 @@ export class CaseService implements ICaseService {
         'createdAt',
         'advertTitle',
         'fastTrack',
+        'publishedAt',
+        'publicationNumber',
       ],
       where: whereParams,
       include: [
@@ -742,6 +749,10 @@ export class CaseService implements ICaseService {
         },
         {
           model: CaseTagModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: InstitutionModel,
           attributes: ['id', 'title', 'slug'],
         },
       ],

@@ -4,16 +4,28 @@ import { CaseModel } from '../models'
 
 export const caseOverviewMigrate = (model: CaseModel): CaseOverview => ({
   id: model.id,
-  advertDepartment: model.department,
-  advertType: model.advertType,
+  status: {
+    id: model.status.id,
+    title: model.status.title,
+    slug: model.status.slug,
+  },
   communicationStatus: {
     id: model.communicationStatus.id,
     title: model.communicationStatus.title,
     slug: model.communicationStatus.slug,
   },
-  requestedPublicationDate: model.requestedPublicationDate,
-  createdAt: model.createdAt,
+  involvedParty: {
+    id: model.involvedParty.id,
+    title: model.involvedParty.title,
+    slug: model.involvedParty.slug,
+  },
+  advertDepartment: model.department,
+  advertType: model.advertType,
   advertTitle: model.advertTitle,
+  requestedPublicationDate: model.requestedPublicationDate,
+  publicationNumber: model.publicationNumber,
+  publishedAt: model.publishedAt,
+  createdAt: model.createdAt,
   fastTrack: model.fastTrack,
   assignedTo: null,
   tag: model?.tag ? model.tag : null,

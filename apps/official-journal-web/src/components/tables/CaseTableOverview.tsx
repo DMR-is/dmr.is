@@ -2,11 +2,7 @@ import { Tag, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate, getOverviewStatusColor } from '../../lib/utils'
-import {
-  CaseTable,
-  CaseTableHeadCellProps,
-  CaseTableRowProps,
-} from './CaseTable'
+import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { PublishedTableProps } from './types'

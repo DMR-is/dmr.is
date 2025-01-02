@@ -2877,6 +2877,57 @@
           }
         }
       },
+      "CaseStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "Innsent",
+              "Grunnvinnsla",
+              "Yfirlestur",
+              "Tilbúið",
+              "Útgefið",
+              "Tekið úr birtingu",
+              "Birtingu hafnað"
+            ],
+            "example": "Innsent",
+            "description": "Status of the case"
+          },
+          "slug": {
+            "type": "string",
+            "example": "innsent",
+            "description": "Slug of the case staus"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "Institution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the institution, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the institution",
+            "example": "Dómsmálaráðuneytið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the institution, used in URLs and API requests.",
+            "example": "domsmalaraduneytid"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -2933,9 +2984,17 @@
             "type": "string",
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
           },
+          "status": {
+            "description": "Status of the case, default to \"Innsent\"",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
+          },
           "tag": {
             "description": "Internal tag for the case, default to null",
             "allOf": [{ "$ref": "#/components/schemas/CaseTag" }]
+          },
+          "involvedParty": {
+            "description": "Involved party of the case.",
+            "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
           "createdAt": {
             "type": "string",
@@ -2956,6 +3015,11 @@
             "example": false,
             "description": "Requested fast track"
           },
+          "publishedAt": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Date the case was published. ISO 8601 date and time format in UTC."
+          },
           "requestedPublicationDate": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
@@ -2974,19 +3038,27 @@
           "advertType": {
             "description": "The advert type",
             "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+          },
+          "publicationNumber": {
+            "type": "string",
+            "description": "Publication number of the case."
           }
         },
         "required": [
           "id",
+          "status",
           "tag",
+          "involvedParty",
           "createdAt",
           "assignedTo",
           "communicationStatus",
           "fastTrack",
+          "publishedAt",
           "requestedPublicationDate",
           "advertTitle",
           "advertDepartment",
-          "advertType"
+          "advertType",
+          "publicationNumber"
         ]
       },
       "CaseOverviewStatus": {
@@ -3144,57 +3216,6 @@
           "advertHtml": { "type": "string", "description": "Advert HTML" }
         },
         "required": ["advertHtml"]
-      },
-      "CaseStatus": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "title": {
-            "type": "string",
-            "enum": [
-              "Innsent",
-              "Grunnvinnsla",
-              "Yfirlestur",
-              "Tilbúið",
-              "Útgefið",
-              "Tekið úr birtingu",
-              "Birtingu hafnað"
-            ],
-            "example": "Innsent",
-            "description": "Status of the case"
-          },
-          "slug": {
-            "type": "string",
-            "example": "innsent",
-            "description": "Slug of the case staus"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "Institution": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the institution, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the institution",
-            "example": "Dómsmálaráðuneytið"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the institution, used in URLs and API requests.",
-            "example": "domsmalaraduneytid"
-          }
-        },
-        "required": ["id", "title", "slug"]
       },
       "CaseChannel": {
         "type": "object",

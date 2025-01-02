@@ -1,3 +1,5 @@
+import { publicDecrypt } from 'crypto'
+
 import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
@@ -76,6 +78,7 @@ export class CaseOverview extends PickType(Case, [
   'id',
   'communicationStatus',
   'requestedPublicationDate',
+  'status',
   'createdAt',
   'advertDepartment',
   'advertType',
@@ -83,6 +86,9 @@ export class CaseOverview extends PickType(Case, [
   'fastTrack',
   'assignedTo',
   'tag',
+  'involvedParty',
+  'publicationNumber',
+  'publishedAt',
 ]) {}
 
 export class CaseOverviewQuery extends PickType(GetCasesQuery, [

@@ -18,7 +18,7 @@ type SWRUnpublishCaseOptions = SWRMutationConfiguration<
   UnpublishTriggerArgs
 >
 
-export const useUnpublishCase = ({ options }: UnpublishParams) => {
+export const useUnpublishCase = ({ options }: UnpublishParams = {}) => {
   const { trigger, isMutating, error } = swrMutation<
     Response,
     Error,
