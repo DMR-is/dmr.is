@@ -12,7 +12,7 @@ import { messages } from './messages'
 import { PublishedTableProps } from './types'
 
 export const CaseTableOverview = ({
-  data,
+  cases,
   paging,
   isLoading,
 }: PublishedTableProps) => {
@@ -52,7 +52,7 @@ export const CaseTableOverview = ({
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => ({
+  const rows = cases?.map((row) => ({
     case: row,
     cells: [
       {

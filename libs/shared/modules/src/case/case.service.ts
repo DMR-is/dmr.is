@@ -700,8 +700,8 @@ export class CaseService implements ICaseService {
     }>
 
     const { limit, offset } = getLimitAndOffset({
-      page: params?.page ? parseInt(params?.page) : undefined,
-      pageSize: params?.pageSize ? parseInt(params?.pageSize) : undefined,
+      page: params?.page,
+      pageSize: params?.pageSize,
     })
 
     const casesResults = this.caseModel.findAndCountAll({
@@ -760,8 +760,8 @@ export class CaseService implements ICaseService {
 
     const paging = generatePaging(
       cases.rows,
-      params?.page ? parseInt(params?.page) : DEFAULT_PAGE_NUMBER,
-      params?.pageSize ? parseInt(params?.pageSize) : DEFAULT_PAGE_SIZE,
+      params?.page,
+      params?.pageSize,
       cases.count,
     )
 
@@ -827,10 +827,8 @@ export class CaseService implements ICaseService {
   async getCases(
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
-    const page = params?.page ? parseInt(params.page, 10) : 1
-    const pageSize = params?.pageSize
-      ? parseInt(params.pageSize, 10)
-      : DEFAULT_PAGE_SIZE
+    const page = params?.page ?? DEFAULT_PAGE_NUMBER
+    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     const whereParams = caseParameters(params)
 
@@ -1035,8 +1033,8 @@ export class CaseService implements ICaseService {
     const casesPromise = this.getCases({
       department: [department],
       status: finishedStatuses,
-      page: params.page.toString(),
-      pageSize: params.pageSize.toString(),
+      page: params.page,
+      pageSize: params.pageSize,
     })
 
     const [counterResults, casesLookup] = await Promise.all([

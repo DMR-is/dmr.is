@@ -30,16 +30,6 @@ export const CategoriesFilter = () => {
     )
   }
 
-  if (!data && !isLoading) {
-    return (
-      <AlertMessage
-        type="warning"
-        title={formatMessage(errorMessages.noDataTitle)}
-        message={formatMessage(errorMessages.noDataText)}
-      />
-    )
-  }
-
   const options = generateOptions({
     label: 'Flokkur',
     queryKey: 'category',

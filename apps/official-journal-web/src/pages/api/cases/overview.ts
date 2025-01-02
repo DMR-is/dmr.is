@@ -10,11 +10,13 @@ class GetEditorialOverviewHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
+    const status = req.query.status as string
+
     const cases = await dmrClient.editorialOverview({
       search: getStringFromQueryString(req.query.search),
       category: getStringFromQueryString(req.query.category),
       type: getStringFromQueryString(req.query.type),
-      status: getStringFromQueryString(req.query.status),
+      status: status,
       department: getStringFromQueryString(req.query.department),
       page: getStringFromQueryString(req.query.page),
       pageSize: getStringFromQueryString(req.query.pageSize),

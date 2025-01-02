@@ -6,6 +6,7 @@ import {
 
 import { Text } from '@island.is/island-ui/core'
 
+import { useIsMounted } from '../../hooks/useIsMounted'
 import * as styles from './Tooltip.css'
 
 type Props = {
@@ -14,8 +15,11 @@ type Props = {
 }
 
 export const Tooltip = ({ text, children }: Props) => {
+  const isMounted = useIsMounted()
+
   const tooltip = useTooltipState({ placement: 'bottom' })
 
+  if (!isMounted) return null
   if (!text) return null
 
   return (

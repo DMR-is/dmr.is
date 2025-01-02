@@ -78,6 +78,7 @@ export class CaseOverview extends PickType(Case, [
   'requestedPublicationDate',
   'createdAt',
   'advertDepartment',
+  'advertType',
   'advertTitle',
   'fastTrack',
   'assignedTo',

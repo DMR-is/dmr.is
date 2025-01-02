@@ -50,12 +50,17 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
     },
   ]
 
-  const rows: CaseTableRowProps[] = cases.map((row) => {
+  const rows = cases?.map((row) => {
     return {
       case: row,
       cells: [
         {
-          children: <CaseToolTips case={row} />,
+          children: (
+            <CaseToolTips
+              fastTrack={row.fastTrack}
+              status={row.communicationStatus.title}
+            />
+          ),
         },
         {
           sortingKey: 'casePublishDate',

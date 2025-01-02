@@ -109,7 +109,12 @@ export const CaseTableReady = () => {
             ),
           },
           {
-            children: <CaseToolTips case={row} />,
+            children: (
+              <CaseToolTips
+                fastTrack={row.fastTrack}
+                status={row.communicationStatus.title}
+              />
+            ),
           },
           {
             sortingKey: 'caseAdvertType',

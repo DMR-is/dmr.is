@@ -437,14 +437,14 @@
             "description": "Page number",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
             "description": "Page size",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "department",
@@ -979,14 +979,14 @@
             "description": "Page number",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "pageSize",
             "description": "Page size",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
             "name": "caseNumber",
@@ -2904,6 +2904,28 @@
         },
         "required": ["id", "name", "lastName", "active"]
       },
+      "AdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department of the main advert type",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          }
+        },
+        "required": ["id", "title", "slug", "department"]
+      },
       "CaseOverview": {
         "type": "object",
         "properties": {
@@ -2948,6 +2970,10 @@
             "example": "B-Deild",
             "description": "Advert department",
             "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          },
+          "advertType": {
+            "description": "The advert type",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
           }
         },
         "required": [
@@ -2959,7 +2985,8 @@
           "fastTrack",
           "requestedPublicationDate",
           "advertTitle",
-          "advertDepartment"
+          "advertDepartment",
+          "advertType"
         ]
       },
       "CaseOverviewStatus": {
@@ -3168,28 +3195,6 @@
           }
         },
         "required": ["id", "title", "slug"]
-      },
-      "AdvertType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          },
-          "department": {
-            "description": "The department of the main advert type",
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          }
-        },
-        "required": ["id", "title", "slug", "department"]
       },
       "CaseChannel": {
         "type": "object",

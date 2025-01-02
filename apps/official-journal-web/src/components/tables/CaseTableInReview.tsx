@@ -4,16 +4,12 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import {
-  CaseTable,
-  CaseTableHeadCellProps,
-  CaseTableRowProps,
-} from './CaseTable'
+import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { TableProps } from './types'
 
-export const CaseTableInReview = ({ data, paging, isLoading }: TableProps) => {
+export const CaseTableInReview = ({ cases, paging, isLoading }: TableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
@@ -53,11 +49,16 @@ export const CaseTableInReview = ({ data, paging, isLoading }: TableProps) => {
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => ({
+  const rows = cases?.map((row) => ({
     case: row,
     cells: [
       {
-        children: <CaseToolTips case={row} />,
+        children: (
+          <CaseToolTips
+            fastTrack={row.fastTrack}
+            status={row.communicationStatus.title}
+          />
+        ),
       },
       {
         sortingKey: 'casePublishDate',

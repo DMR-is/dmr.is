@@ -15,8 +15,6 @@ export const TypesFilter = () => {
 
   const { types, isLoadingTypes, typesError } = useAdvertTypes({
     typesParams: {
-      page: 1,
-      pageSize: 1000,
       search,
     },
   })
@@ -27,16 +25,6 @@ export const TypesFilter = () => {
         type="error"
         title={formatMessage(errorMessages.errorFetchingData)}
         message={formatMessage(errorMessages.errorFetchingTypesMessage)}
-      />
-    )
-  }
-
-  if (isLoadingTypes) {
-    return (
-      <AlertMessage
-        type="warning"
-        title={formatMessage(errorMessages.noDataTitle)}
-        message={formatMessage(errorMessages.noDataText)}
       />
     )
   }

@@ -29,21 +29,11 @@ export const DepartmentsFilter = () => {
     )
   }
 
-  if (!departments) {
-    return (
-      <AlertMessage
-        type="warning"
-        title={formatMessage(errorMessages.noDataTitle)}
-        message={formatMessage(errorMessages.noDataText)}
-      />
-    )
-  }
-
   const options = generateOptions({
     label: 'Deild',
     queryKey: 'department',
     options: departments,
   })
 
-  return <FilterGroup {...options} />
+  return <FilterGroup {...options} loading={isLoading} />
 }

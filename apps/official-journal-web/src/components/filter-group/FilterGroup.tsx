@@ -5,7 +5,9 @@ import {
   Button,
   Checkbox,
   Icon,
+  Inline,
   Input,
+  LoadingDots,
   Text,
 } from '@island.is/island-ui/core'
 
@@ -17,11 +19,11 @@ import { messages } from './messages'
 type Props = {
   label: string
   queryKey: string
+  loading?: boolean
   options: { label: string; value: string }[]
   search?: string
   searchPlaceholder?: string
   setSearch?: Dispatch<SetStateAction<string>>
-  loading?: boolean
   startExpanded?: boolean
 }
 
@@ -58,9 +60,12 @@ export const FilterGroup = ({
         }}
         className={styles.filterExpandButton}
       >
-        <Text color="dark400" variant="h5">
-          {label}
-        </Text>
+        <Inline alignY="center" space={1}>
+          {loading && <LoadingDots single large={false} />}
+          <Text color="dark400" variant="h5">
+            {label}
+          </Text>
+        </Inline>
         <Box className={styles.filterExpandButtonIcon}>
           <Icon icon={toggle ? 'remove' : 'add'} color="blue400" size="small" />
         </Box>

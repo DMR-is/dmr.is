@@ -1,36 +1,22 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
-import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
-import {
-  AlertMessage,
-  GridColumn,
-  GridContainer,
-  GridRow,
-} from '@island.is/island-ui/core'
+import { Stack } from '@island.is/island-ui/core'
 
 import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
 import { Meta } from '../../components/meta/Meta'
 import { CaseTableInProgress } from '../../components/tables/CaseTableInProgress'
 import { CaseTableInReview } from '../../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../../components/tables/CaseTableSubmitted'
-import { Tab, Tabs } from '../../components/tabs/Tabs'
-import {
-  CaseOverview,
-  CaseOverviewStatus,
-  CaseStatusTitleEnum,
-  EditorialOverviewRequest,
-  Paging,
-} from '../../gen/fetch'
+import { Tabs } from '../../components/tabs/Tabs'
 import { useCaseOverview } from '../../hooks/api'
 import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
-import { getStringFromQueryString } from '../../lib/types'
 import {
   deleteUndefined,
   loginRedirect,
@@ -38,18 +24,7 @@ import {
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-type CaseOverviewSearchParams = EditorialOverviewRequest
-
-type Props = {
-  cases: CaseOverview[]
-  statuses: CaseOverviewStatus[]
-  paging: Paging
-}
-
-export default function CaseProccessingOverviewScreen(
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
-  const { cases, paging, statuses } = data
+export default function CaseProccessingOverviewScreen() {
   const { formatMessage } = useFormatMessage()
 
   const { setEnableDepartments, setEnableCategories, setEnableTypes } =
@@ -61,10 +36,7 @@ export default function CaseProccessingOverviewScreen(
     setEnableTypes(true)
   }, [])
 
-  const [status, setStatus] = useQueryState(
-    'status',
-    parseAsString.withDefault('Innsent'),
-  )
+  const [status, setStatus] = useQueryState('status')
   const [search, setSearch] = useQueryState('search')
   const [department, setDepartment] = useQueryState('department')
   const [type, setType] = useQueryState('type')
@@ -75,103 +47,88 @@ export default function CaseProccessingOverviewScreen(
     parseAsInteger.withDefault(10),
   )
 
-  const {
-    data: casesResponse,
-    error,
-    isLoading,
-  } = useCaseOverview({
-    options: {
-      keepPreviousData: true,
-      refreshInterval: 1000 * 60 * 1,
-      revalidateOnFocus: true,
-      fallback: {
-        cases,
-        paging,
-        statuses,
-      },
+  const { cases, statuses, paging, isLoading, isValidating } = useCaseOverview({
+    params: {
+      status: status ? status : undefined,
+      search: search ? search : undefined,
+      department: department ? department : undefined,
+      type: type ? type : undefined,
+      category: category ? category : undefined,
+      page: page ? page : undefined,
+      pageSize: pageSize ? pageSize : undefined,
     },
   })
 
-  // const onTabChange = (id: string) => {
-  //   const tabId = id as CaseStatusTitleEnum
-  //   if (tabId) {
-  //     setSelectedTab(tabId)
-  //     setSearchParams({
-  //       ...searchParams,
-  //       status: tabId,
-  //     })
-  //     router.replace(
-  //       {
-  //         query: { ...router.query, status: tabId },
-  //       },
-  //       undefined,
-  //       { shallow: true },
-  //     )
-  //   }
-  // }
+  const loading = isLoading || isValidating
 
-  const currentCases = casesResponse?.cases ? casesResponse.cases : cases
-  const currentPaging = casesResponse?.paging ? casesResponse.paging : paging
+  const dynamicTabs = statuses
+    ?.map((status) => {
+      let TabComponent
+      let label
+      let order = 0
+      switch (status.title) {
+        case 'Innsent':
+          order = 1
+          label = formatMessage(caseProccessingMessages.tabs.submitted, {
+            count: status.count,
+          })
+          TabComponent = (
+            <CaseTableSubmitted
+              isLoading={loading}
+              cases={cases}
+              paging={paging}
+            />
+          )
+          break
+        case 'Grunnvinnsla':
+          order = 2
+          label = formatMessage(caseProccessingMessages.tabs.inProgress, {
+            count: status.count,
+          })
+          TabComponent = (
+            <CaseTableInProgress
+              isLoading={loading}
+              cases={cases}
+              paging={paging}
+            />
+          )
+          break
+        case 'Yfirlestur':
+          order = 3
+          label = formatMessage(caseProccessingMessages.tabs.inReview, {
+            count: status.count,
+          })
+          TabComponent = (
+            <CaseTableInReview
+              isLoading={loading}
+              cases={cases}
+              paging={paging}
+            />
+          )
+          break
+        case 'Tilbúið':
+          order = 4
+          label = formatMessage(caseProccessingMessages.tabs.ready, {
+            count: status.count,
+          })
+          TabComponent = (
+            <CaseTableInProgress
+              isLoading={loading}
+              cases={cases}
+              paging={paging}
+            />
+          )
+          break
+      }
 
-  const submittedCount = casesResponse?.totalItems.submitted ?? 0
-  const inProgressCount = casesResponse?.totalItems.inProgress ?? 0
-  const inReviewCount = casesResponse?.totalItems.inReview ?? 0
-  const readyCount = casesResponse?.totalItems.ready ?? 0
-
-  const tabs: Tab<CaseStatusTitleEnum>[] = [
-    {
-      id: CaseStatusTitleEnum.Innsent,
-      label: formatMessage(caseProccessingMessages.tabs.submitted, {
-        count: submittedCount,
-      }),
-      content: (
-        <CaseTableSubmitted
-          isLoading={isLoading}
-          data={currentCases}
-          paging={currentPaging}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Grunnvinnsla,
-      label: formatMessage(caseProccessingMessages.tabs.inProgress, {
-        count: inProgressCount,
-      }),
-      content: (
-        <CaseTableInProgress
-          isLoading={isLoading}
-          data={currentCases}
-          paging={currentPaging}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Yfirlestur,
-      label: formatMessage(caseProccessingMessages.tabs.inReview, {
-        count: inReviewCount,
-      }),
-      content: (
-        <CaseTableInReview
-          isLoading={isLoading}
-          data={currentCases}
-          paging={currentPaging}
-        />
-      ),
-    },
-    {
-      id: CaseStatusTitleEnum.Tilbúið,
-      label: formatMessage(caseProccessingMessages.tabs.ready, {
-        count: readyCount,
-      }),
-      content: (
-        <CaseTableInProgress
-          isLoading={isLoading}
-          data={currentCases}
-          paging={currentPaging}
-        />
-      ),
-    },
-  ]
+      return {
+        id: status.title,
+        label: label,
+        content: TabComponent,
+        order: order,
+      }
+    })
+    .sort((a, b) => a.order - b.order)
 
   return (
     <>
@@ -180,32 +137,26 @@ export default function CaseProccessingOverviewScreen(
           caseProccessingMessages.breadcrumbs.cases,
         )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
       />
-      <GridContainer>
-        <GridRow>
-          <GridColumn span="12/12">
-            {error && (
-              <AlertMessage
-                type="error"
-                title="Villa kom upp"
-                message="Ekki tókst að sækja mál"
-              />
-            )}
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
       <CaseOverviewGrid>
-        <Tabs
-          onTabChange={(id) => setStatus(id)}
-          selectedTab={status}
-          tabs={tabs}
-          label={formatMessage(caseProccessingMessages.tabs.statuses)}
-        />
+        <Stack space={[2, 2, 3]}>
+          <Tabs
+            onTabChange={(id) =>
+              setStatus(id, {
+                history: 'replace',
+                shallow: true,
+              })
+            }
+            selectedTab={status ?? 'Innsent'}
+            tabs={dynamicTabs ?? []}
+            label={formatMessage(caseProccessingMessages.tabs.statuses)}
+          />
+        </Stack>
       </CaseOverviewGrid>
     </>
   )
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
+export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
   resolvedUrl,
@@ -248,31 +199,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     },
   }
 
-  const qsp = {
-    search: getStringFromQueryString(query.search),
-    department: getStringFromQueryString(query.department),
-    status: getStringFromQueryString(query.status),
-    type: getStringFromQueryString(query.type),
-    category: getStringFromQueryString(query.category),
-    page: getStringFromQueryString(query.page) || undefined,
-    pageSize: getStringFromQueryString(query.pageSize) || undefined,
-  }
-
   try {
-    const dmrClient = createDmrClient()
-    const { cases, paging, statuses } = await dmrClient.editorialOverview({
-      ...qsp,
-      status: status,
-    })
-
     return {
       props: deleteUndefined({
         session,
         layout,
-        cases: cases,
-        paging: paging,
-        statuses,
-        qsp,
       }),
     }
   } catch (error) {

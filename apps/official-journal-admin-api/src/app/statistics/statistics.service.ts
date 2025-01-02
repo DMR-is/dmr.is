@@ -32,7 +32,7 @@ export class StatisticsService implements IStatisticsService {
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const casesRes = (
       await this.casesService.getCases({
-        pageSize: '1000',
+        pageSize: 1000,
         department: [slug],
         status: [
           CaseStatusEnum.Submitted,
@@ -106,7 +106,7 @@ export class StatisticsService implements IStatisticsService {
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
     const casesRes = (
       await this.casesService.getCases({
-        pageSize: '1000',
+        pageSize: 1000,
         year: new Date().getFullYear().toString(),
         status: [
           CaseStatusEnum.Submitted,
