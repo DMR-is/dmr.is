@@ -28,6 +28,9 @@ export const section = recipe({
     },
     paddingTop: {
       default: {},
+      content: {
+        paddingBlockStart: theme.spacing[4],
+      },
       off: { paddingBlockStart: 0 },
     },
   },

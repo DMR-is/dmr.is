@@ -6,7 +6,6 @@ import { useCategories } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
-import { generateOptions } from '../../lib/utils'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const CategoriesFilter = () => {
@@ -30,19 +29,20 @@ export const CategoriesFilter = () => {
     )
   }
 
-  const options = generateOptions({
-    label: 'Flokkur',
-    queryKey: 'category',
-    options: data?.categories,
-  })
-
   return (
     <FilterGroup
+      label="Flokkur"
+      queryKey="category"
+      options={
+        data?.categories.map((c) => ({
+          label: c.title,
+          value: c.title,
+        })) ?? []
+      }
       search={search}
       setSearch={setSearch}
       loading={isLoading}
       searchPlaceholder={formatMessage(generalMessages.searchByCategory)}
-      {...options}
     />
   )
 }

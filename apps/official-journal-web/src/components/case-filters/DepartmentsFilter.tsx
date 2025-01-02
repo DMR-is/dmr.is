@@ -1,9 +1,8 @@
-import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
+import { AlertMessage } from '@island.is/island-ui/core'
 
 import { useDepartments } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
-import { generateOptions } from '../../lib/utils'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const DepartmentsFilter = () => {
@@ -15,10 +14,6 @@ export const DepartmentsFilter = () => {
     },
   })
 
-  if (isLoading) {
-    return <SkeletonLoader height={44} />
-  }
-
   if (error) {
     return (
       <AlertMessage
@@ -29,11 +24,17 @@ export const DepartmentsFilter = () => {
     )
   }
 
-  const options = generateOptions({
-    label: 'Deild',
-    queryKey: 'department',
-    options: departments,
-  })
-
-  return <FilterGroup {...options} loading={isLoading} />
+  return (
+    <FilterGroup
+      label="Deild"
+      queryKey="department"
+      options={
+        departments?.map((dep) => ({
+          label: dep.title,
+          value: dep.title,
+        })) ?? []
+      }
+      loading={isLoading}
+    />
+  )
 }

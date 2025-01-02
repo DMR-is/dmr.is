@@ -1,6 +1,5 @@
 import { Reorder, useDragControls } from 'framer-motion'
-import { useRouter } from 'next/router'
-import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
+import { useQueryState } from 'nuqs'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
 import {
@@ -18,7 +17,6 @@ import {
   useNextPublicationNumber,
 } from '../../hooks/api'
 import { usePublishContext } from '../../hooks/usePublishContext'
-import { getStringFromQueryString } from '../../lib/types'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'

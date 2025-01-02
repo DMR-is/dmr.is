@@ -752,7 +752,7 @@ export class CaseService implements ICaseService {
           attributes: ['id', 'title', 'slug'],
         },
         {
-          model: InstitutionModel,
+          model: AdvertInvolvedPartyModel,
           attributes: ['id', 'title', 'slug'],
         },
       ],
