@@ -10,7 +10,7 @@ type SWRNextPublicationNumberOptions = SWRConfiguration<
 >
 
 type Params = {
-  departmentId: string
+  departmentId?: string
 }
 
 type UseNextPublicationNumberParams = {
@@ -26,7 +26,7 @@ export const useNextPublicationNumber = ({
     GetNextPublicationNumberResponse,
     Error
   >(
-    [APIRoutes.GetNextPublicationNumber, params],
+    params?.departmentId ? [APIRoutes.GetNextPublicationNumber, params] : null,
     ([url, params]: [url: string, params: Params]) =>
       fetcher<GetNextPublicationNumberResponse>(url, {
         arg: { withAuth: true, method: 'GET', query: generateParams(params) },

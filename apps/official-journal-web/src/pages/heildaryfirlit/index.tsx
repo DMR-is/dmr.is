@@ -53,7 +53,7 @@ export default function CaseOverview(
     return {
       id: tab.value,
       label: `${tab.label} ${tab ? `(${totalCases[countKey]})` : ''}`,
-      content: <CaseTableOverview data={cases} paging={paging} />,
+      content: <CaseTableOverview cases={cases} paging={paging} />,
     }
   })
 

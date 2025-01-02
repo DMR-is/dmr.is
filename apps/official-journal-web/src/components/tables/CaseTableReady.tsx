@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router'
+import { useQueryState } from 'nuqs'
 import { ChangeEvent } from 'react'
 
 import { AlertMessage, Checkbox, Stack, Text } from '@island.is/island-ui/core'
@@ -7,7 +7,6 @@ import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
-import { getStringFromQueryString } from '../../lib/types'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
@@ -24,8 +23,7 @@ export const CaseTableReady = () => {
     removeAllCasesFromSelectedList,
   } = usePublishContext()
   const { selectedCaseIds } = publishingState
-  const router = useRouter()
-  const department = getStringFromQueryString(router.query.department)
+  const [department] = useQueryState('department')
 
   const {
     data: caseData,
@@ -33,8 +31,8 @@ export const CaseTableReady = () => {
     error,
   } = useCases({
     params: {
-      department: department,
-      status: CaseStatusTitleEnum.Tilbúið,
+      department: department ? [department] : undefined,
+      status: [CaseStatusTitleEnum.Tilbúið],
     },
     options: {
       refreshInterval: 1000 * 60,

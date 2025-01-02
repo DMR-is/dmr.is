@@ -1,5 +1,6 @@
 import { Reorder, useDragControls } from 'framer-motion'
 import { useRouter } from 'next/router'
+import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
 import {
@@ -94,9 +95,8 @@ type Props = {
 
 export const CasePublishingTable = ({ columns }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
-  const router = useRouter()
 
-  const department = getStringFromQueryString(router.query.department)
+  const [department] = useQueryState('department')
   const { publishingState, setCasesWithPublicationNumber } = usePublishContext()
   const { selectedCaseIds } = publishingState
 
@@ -109,7 +109,7 @@ export const CasePublishingTable = ({ columns }: Props) => {
       refreshInterval: 0,
     },
     params: {
-      department: department,
+      department: department ? [department] : undefined,
       pageSize: 100,
     },
   })
@@ -121,15 +121,14 @@ export const CasePublishingTable = ({ columns }: Props) => {
     },
   })
 
-  const departmentId = departments?.find((d) => d.slug === department)
-    ?.id as string
+  const currentDepartment = departments?.find((d) => d.slug === department)
 
   const { data: nextPublicationNumber } = useNextPublicationNumber({
     options: {
       refreshInterval: 0,
     },
     params: {
-      departmentId: departmentId,
+      departmentId: currentDepartment?.id,
     },
   })
 
