@@ -46,6 +46,10 @@ export function LogAndHandle(
         }
         return await originalMethod.apply(this, args)
       } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('error', error)
+        }
+
         return handleException({
           service: service,
           method: method,

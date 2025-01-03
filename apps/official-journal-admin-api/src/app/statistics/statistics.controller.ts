@@ -2,13 +2,14 @@ import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
+  DepartmentSlugEnum,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Query } from '@nestjs/common'
+import { Controller, Inject, Param, Query } from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 
@@ -23,14 +24,15 @@ export class StatisticsController {
   ) {}
 
   @Route({
-    path: '/department',
+    path: '/department/:slug',
+    params: [{ name: 'slug', type: String }],
     operationId: 'getStatisticsForDepartment',
-    query: [{ name: 'slug', type: 'string', required: true }],
     description: 'Gets statistics for individual department (a, b or c)',
     responseType: GetStatisticsDepartmentResponse,
   })
   async department(
-    @Query('slug') slug: string,
+    @Param('slug', new EnumValidationPipe(DepartmentSlugEnum))
+    slug: DepartmentSlugEnum,
   ): Promise<GetStatisticsDepartmentResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getDepartment(slug),

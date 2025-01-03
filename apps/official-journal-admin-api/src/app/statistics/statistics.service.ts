@@ -1,102 +1,117 @@
+import { Op, Sequelize } from 'sequelize'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService, IUtilityService } from '@dmr.is/modules'
-import { CaseStatusEnum } from '@dmr.is/shared/dto'
+import {
+  AdvertDepartmentModel,
+  CaseModel,
+  CaseStatusModel,
+} from '@dmr.is/modules'
+import { CaseStatusEnum, DepartmentSlugEnum } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
-  StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { isSingular } from '@dmr.is/utils/client'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
 import { IStatisticsService } from './statistics.service.interface'
+
+const LOGGING_CATEGORY = 'statistics-service'
+const LOGGING_CONTEXT = 'StatisticsQueryRunner'
+
+type DepartmentCounterResult = {
+  status: {
+    id: string
+    title: CaseStatusEnum
+    slug: string
+  }
+  count: string
+}
 
 @Injectable()
 export class StatisticsService implements IStatisticsService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(forwardRef(() => ICaseService))
-    private readonly casesService: ICaseService,
-    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-  ) {
-    this.logger.info('Using StatisticsService')
-  }
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(CaseStatusModel)
+    private readonly caseStatusModel: typeof CaseStatusModel,
+  ) {}
 
   @LogAndHandle()
   async getDepartment(
-    slug: string,
+    slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
-    const casesRes = (
-      await this.casesService.getCases({
-        pageSize: '1000',
-        department: [slug],
-        status: [
-          CaseStatusEnum.Submitted,
-          CaseStatusEnum.InProgress,
-          CaseStatusEnum.InReview,
-          CaseStatusEnum.ReadyForPublishing,
-        ],
-      })
-    ).unwrap()
-    const cases = casesRes.cases
+    const availableStatuses = [
+      CaseStatusEnum.Submitted,
+      CaseStatusEnum.InProgress,
+      CaseStatusEnum.InReview,
+      CaseStatusEnum.ReadyForPublishing,
+    ]
 
-    let submitted = 0
-    let inProgress = 0
-    let inReview = 0
-    let ready = 0
-
-    cases.forEach((thisCase) => {
-      switch (thisCase.status.title) {
-        case CaseStatusEnum.Submitted:
-          submitted++
-          break
-        case CaseStatusEnum.InProgress:
-          inProgress++
-          break
-        case CaseStatusEnum.InReview:
-          inReview++
-          break
-        case CaseStatusEnum.ReadyForPublishing:
-          ready++
-          break
-      }
-    })
-
-    const total = submitted + inProgress + inReview + ready
-    const submittedPercentage = total ? (submitted / total) * 100 : 0
-    const inProgressPercentage = total ? (inProgress / total) * 100 : 0
-    const inReviewPercentage = total ? (inReview / total) * 100 : 0
-    const readyPercentage = total ? (ready / total) * 100 : 0
-
-    return ResultWrapper.ok({
-      data: {
-        submitted: {
-          name: CaseStatusEnum.Submitted,
-          count: submitted,
-          percentage: Math.round(submittedPercentage),
-        },
-        inProgress: {
-          name: CaseStatusEnum.InProgress,
-          count: inProgress,
-          percentage: Math.round(inProgressPercentage),
-        },
-        inReview: {
-          name: CaseStatusEnum.InReview,
-          count: inReview,
-          percentage: Math.round(inReviewPercentage),
-        },
-        ready: {
-          name: CaseStatusEnum.ReadyForPublishing,
-          count: ready,
-          percentage: Math.round(readyPercentage),
+    const counterResults = (await this.caseStatusModel.findAll({
+      benchmark: true,
+      raw: true,
+      nest: true,
+      attributes: [
+        [Sequelize.col('CaseStatusModel.id'), 'status.id'],
+        [Sequelize.col('CaseStatusModel.title'), 'status.title'],
+        [Sequelize.col('CaseStatusModel.slug'), 'status.slug'],
+        [Sequelize.fn('COUNT', Sequelize.col('cases.id')), 'count'],
+      ],
+      where: {
+        title: {
+          [Op.in]: availableStatuses,
         },
       },
-      totalCases: total,
-    })
+      include: [
+        {
+          model: CaseModel,
+          required: false,
+          attributes: [],
+          include: [
+            {
+              model: AdvertDepartmentModel,
+              required: true,
+              attributes: [],
+              where: {
+                slug: {
+                  [Op.eq]: slug,
+                },
+              },
+            },
+          ],
+        },
+      ],
+      group: ['CaseStatusModel.id', 'cases.department.id'],
+      logging: (_, timing) =>
+        this.logger.info(`getStatisticsForDepartment ran in ${timing}ms`, {
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+          query: 'getStatisticsForDepartment',
+        }),
+    })) as unknown as DepartmentCounterResult[]
+
+    const total = counterResults.reduce((acc, curr) => {
+      return acc + parseInt(curr.count)
+    }, 0)
+
+    const results: GetStatisticsDepartmentResponse = {
+      total,
+      statuses: counterResults.map((counter) => ({
+        status: {
+          id: counter.status.id,
+          title: counter.status.title,
+          slug: counter.status.slug,
+        },
+        count: parseInt(counter.count),
+        percentage: Math.round((parseInt(counter.count) / total) * 100),
+      })),
+    }
+
+    return ResultWrapper.ok(results)
   }
 
   @LogAndHandle()
@@ -104,191 +119,188 @@ export class StatisticsService implements IStatisticsService {
     type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    const casesRes = (
-      await this.casesService.getCases({
-        pageSize: '1000',
-        year: new Date().getFullYear().toString(),
-        status: [
-          CaseStatusEnum.Submitted,
-          CaseStatusEnum.InProgress,
-          CaseStatusEnum.InReview,
-          CaseStatusEnum.ReadyForPublishing,
-        ],
-      })
-    ).unwrap()
+    throw new NotImplementedException()
 
-    const cases = casesRes.cases
+    // const casesRes = (
+    //   await this.casesService.getCases({
+    //     pageSize: '1000',
+    //     year: new Date().getFullYear().toString(),
+    //     status: [
+    //       CaseStatusEnum.Submitted,
+    //       CaseStatusEnum.InProgress,
+    //       CaseStatusEnum.InReview,
+    //       CaseStatusEnum.ReadyForPublishing,
+    //     ],
+    //   })
+    // ).unwrap()
 
-    const categories: StatisticsOverviewCategory[] = []
-    let totalCases = 0
+    // const cases = casesRes.cases
 
-    if (type === StatisticsOverviewQueryType.General) {
-      let submittedCount = 0
-      let inProgressCount = 0
-      let submittedFastTrack = 0
-      let inReviewFastTrack = 0
+    // const categories: StatisticsOverviewCategory[] = []
+    // const totalCases = 0
 
-      // fast track functionality is not implemented yet
+    // if (type === StatisticsOverviewQueryType.General) {
+    //   let submittedCount = 0
+    //   let inProgressCount = 0
+    //   let submittedFastTrack = 0
+    //   let inReviewFastTrack = 0
 
-      cases.forEach((thisCase) => {
-        if (thisCase.status.title === CaseStatusEnum.Submitted) {
-          submittedCount++
-        }
+    //   // fast track functionality is not implemented yet
 
-        if (
-          [CaseStatusEnum.InProgress, CaseStatusEnum.InReview].includes(
-            thisCase.status.title as CaseStatusEnum,
-          )
-        ) {
-          inProgressCount++
-        }
+    //   cases.forEach((thisCase) => {
+    //     if (thisCase.status.title === CaseStatusEnum.Submitted) {
+    //       submittedCount++
+    //     }
 
-        if (
-          thisCase.fastTrack &&
-          thisCase.status.title !== CaseStatusEnum.ReadyForPublishing
-        ) {
-          submittedFastTrack++
-        }
+    //     if (
+    //       [CaseStatusEnum.InProgress, CaseStatusEnum.InReview].includes(
+    //         thisCase.status.title as CaseStatusEnum,
+    //       )
+    //     ) {
+    //       inProgressCount++
+    //     }
 
-        if (
-          thisCase.fastTrack &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          inReviewFastTrack++
-        }
-      })
+    //     if (
+    //       thisCase.fastTrack &&
+    //       thisCase.status.title !== CaseStatusEnum.ReadyForPublishing
+    //     ) {
+    //       submittedFastTrack++
+    //     }
 
-      if (submittedCount) {
-        categories.push({
-          text: isSingular(submittedCount)
-            ? `${submittedCount} innsent mál bíður úthlutunar.`
-            : `${submittedCount} innsend mál bíða úthlutunar.`,
-          totalCases: submittedCount,
-        })
-      }
+    //     if (
+    //       thisCase.fastTrack &&
+    //       thisCase.status.title === CaseStatusEnum.ReadyForPublishing
+    //     ) {
+    //       inReviewFastTrack++
+    //     }
+    //   })
 
-      if (inProgressCount) {
-        categories.push({
-          text: isSingular(inProgressCount)
-            ? `${inProgressCount} mál er í vinnslu.`
-            : `${inProgressCount} mál eru í vinnslu.`,
-          totalCases: inProgressCount,
-        })
-      }
+    //   if (submittedCount) {
+    //     categories.push({
+    //       text: isSingular(submittedCount)
+    //         ? `${submittedCount} innsent mál bíður úthlutunar.`
+    //         : `${submittedCount} innsend mál bíða úthlutunar.`,
+    //       totalCases: submittedCount,
+    //     })
+    //   }
 
-      if (submittedFastTrack) {
-        categories.push({
-          text: isSingular(submittedFastTrack)
-            ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
-            : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
-          totalCases: submittedFastTrack,
-        })
-      }
+    //   if (inProgressCount) {
+    //     categories.push({
+    //       text: isSingular(inProgressCount)
+    //         ? `${inProgressCount} mál er í vinnslu.`
+    //         : `${inProgressCount} mál eru í vinnslu.`,
+    //       totalCases: inProgressCount,
+    //     })
+    //   }
 
-      if (inReviewFastTrack) {
-        categories.push({
-          text: isSingular(inReviewFastTrack)
-            ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
-            : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
-          totalCases: inReviewFastTrack,
-        })
-      }
+    //   if (submittedFastTrack) {
+    //     categories.push({
+    //       text: isSingular(submittedFastTrack)
+    //         ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
+    //         : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
+    //       totalCases: submittedFastTrack,
+    //     })
+    //   }
 
-      totalCases =
-        submittedCount +
-        inProgressCount +
-        submittedFastTrack +
-        inReviewFastTrack
-    }
+    //   if (inReviewFastTrack) {
+    //     categories.push({
+    //       text: isSingular(inReviewFastTrack)
+    //         ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
+    //         : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
+    //       totalCases: inReviewFastTrack,
+    //     })
+    //   }
 
-    if (type === StatisticsOverviewQueryType.Personal && userId) {
-      const myCases = cases.filter((c) => c.assignedTo?.id === userId)
-      const myCasesCount = myCases.length
+    //   totalCases =
+    //     submittedCount +
+    //     inProgressCount +
+    //     submittedFastTrack +
+    //     inReviewFastTrack
+    // }
 
-      if (myCasesCount) {
-        categories.push({
-          text: isSingular(myCasesCount)
-            ? `${myCasesCount} mál er skráð á mig.`
-            : `${myCasesCount} mál eru skráð á mig.`,
-          totalCases: myCasesCount,
-        })
-      }
+    // if (type === StatisticsOverviewQueryType.Personal && userId) {
+    //   const myCases = cases.filter((c) => c.assignedTo?.id === userId)
+    //   const myCasesCount = myCases.length
 
-      totalCases = myCasesCount
-    }
+    //   if (myCasesCount) {
+    //     categories.push({
+    //       text: isSingular(myCasesCount)
+    //         ? `${myCasesCount} mál er skráð á mig.`
+    //         : `${myCasesCount} mál eru skráð á mig.`,
+    //       totalCases: myCasesCount,
+    //     })
+    //   }
 
-    if (type === StatisticsOverviewQueryType.Inactive) {
-      const limit = new Date()
-      limit.setDate(-6)
+    //   totalCases = myCasesCount
+    // }
 
-      const inactiveCases = cases.filter(
-        (c) =>
-          [
-            CaseStatusEnum.Submitted,
-            CaseStatusEnum.InProgress,
-            CaseStatusEnum.InReview,
-          ].includes(c.status.title as CaseStatusEnum) &&
-          new Date(c.modifiedAt) < limit,
-      )
-      const inactiveCasesCount = inactiveCases.length
+    // if (type === StatisticsOverviewQueryType.Inactive) {
+    //   const limit = new Date()
+    //   limit.setDate(-6)
 
-      if (inactiveCasesCount) {
-        categories.push({
-          text: isSingular(inactiveCasesCount)
-            ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
-            : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
-          totalCases: inactiveCasesCount,
-        })
-      }
-      totalCases = inactiveCasesCount
-    }
+    //   const inactiveCases = cases.filter(
+    //     (c) =>
+    //       [
+    //         CaseStatusEnum.Submitted,
+    //         CaseStatusEnum.InProgress,
+    //         CaseStatusEnum.InReview,
+    //       ].includes(c.status.title as CaseStatusEnum) &&
+    //       new Date(c.modifiedAt) < limit,
+    //   )
+    //   const inactiveCasesCount = inactiveCases.length
 
-    if (type === StatisticsOverviewQueryType.Publishing) {
-      const today = new Date()
-      let todayCount = 0
-      let pastDueCount = 0
+    //   if (inactiveCasesCount) {
+    //     categories.push({
+    //       text: isSingular(inactiveCasesCount)
+    //         ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
+    //         : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
+    //       totalCases: inactiveCasesCount,
+    //     })
+    //   }
+    //   totalCases = inactiveCasesCount
+    // }
 
-      cases.forEach((thisCase) => {
-        if (
-          thisCase.requestedPublicationDate &&
-          new Date(thisCase.requestedPublicationDate) === today &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          todayCount++
-        }
+    // if (type === StatisticsOverviewQueryType.Publishing) {
+    //   const today = new Date()
+    //   let todayCount = 0
+    //   let pastDueCount = 0
 
-        if (
-          thisCase.requestedPublicationDate &&
-          new Date(thisCase.requestedPublicationDate) < today &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          pastDueCount++
-        }
-      })
+    //   cases.forEach((thisCase) => {
+    //     if (
+    //       thisCase.requestedPublicationDate &&
+    //       new Date(thisCase.requestedPublicationDate) === today &&
+    //       thisCase.status.title === CaseStatusEnum.ReadyForPublishing
+    //     ) {
+    //       todayCount++
+    //     }
 
-      if (todayCount) {
-        categories.push({
-          text: isSingular(todayCount)
-            ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
-            : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalCases: todayCount,
-        })
-      }
+    //     if (
+    //       thisCase.requestedPublicationDate &&
+    //       new Date(thisCase.requestedPublicationDate) < today &&
+    //       thisCase.status.title === CaseStatusEnum.ReadyForPublishing
+    //     ) {
+    //       pastDueCount++
+    //     }
+    //   })
 
-      if (pastDueCount) {
-        categories.push({
-          text: isSingular(pastDueCount)
-            ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
-            : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalCases: pastDueCount,
-        })
-      }
-      totalCases = todayCount + pastDueCount
-    }
+    //   if (todayCount) {
+    //     categories.push({
+    //       text: isSingular(todayCount)
+    //         ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
+    //         : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
+    //       totalCases: todayCount,
+    //     })
+    //   }
 
-    return ResultWrapper.ok({
-      categories,
-      totalCases,
-    })
+    //   if (pastDueCount) {
+    //     categories.push({
+    //       text: isSingular(pastDueCount)
+    //         ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
+    //         : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
+    //       totalCases: pastDueCount,
+    //     })
+    //   }
+    //   totalCases = todayCount + pastDueCount
+    // }
   }
 }

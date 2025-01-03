@@ -8,6 +8,12 @@ export enum CaseStatusEnum {
   Rejected = 'Birtingu hafnað',
 }
 
+export enum DepartmentSlugEnum {
+  A = 'a-deild',
+  B = 'b-deild',
+  C = 'c-deild',
+}
+
 export enum CaseCommunicationStatus {
   NotStarted = 'Ekki hafin',
   WaitingForAnswers = 'Beðið eftir svörum',
