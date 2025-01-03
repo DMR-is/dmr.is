@@ -10,7 +10,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 export interface IApplicationUserService {
   checkIfUserHasInvolvedParty(
-    nationalId: string,
+    id: string,
     institutionId: string,
   ): Promise<ResultWrapper<{ hasInvolvedParty: boolean }>>
 

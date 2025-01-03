@@ -312,11 +312,11 @@ export class ApplicationUserService implements IApplicationUserService {
   @LogAndHandle()
   @Transactional()
   async checkIfUserHasInvolvedParty(
-    nationalId: string,
+    id: string,
     institutionId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ hasInvolvedParty: boolean }>> {
-    const userLookup = await this.getUser(nationalId, transaction)
+    const userLookup = await this.getUser(id, transaction)
 
     if (!userLookup.result.ok) {
       return ResultWrapper.err({
