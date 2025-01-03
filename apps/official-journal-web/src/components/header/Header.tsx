@@ -1,5 +1,6 @@
 import cn from 'classnames'
 import { useSession } from 'next-auth/react'
+import { useEffect } from 'react'
 
 import {
   Box,
@@ -28,6 +29,15 @@ export const Header = ({ headerWhite }: HeaderType) => {
   const { formatMessage } = useFormatMessage()
   const { data: session } = useSession()
   const logOut = useLogOut()
+
+  useEffect(() => {
+    if (session?.invalid === true) {
+      // Make sure to log out if the session is invalid
+      // This is just a front-end logout for the user's convenience
+      // The session is invalidated on the server side
+      logOut()
+    }
+  }, [session?.invalid])
 
   return (
     <header className={cn(styles.header, { white: headerWhite })}>

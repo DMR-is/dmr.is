@@ -14,6 +14,7 @@ declare module 'next-auth' {
     scope?: string | string[]
     expires?: string
     user: User
+    invalid?: boolean
   }
 }
 
@@ -26,5 +27,6 @@ declare module 'next-auth/jwt' {
     nationalId?: string
     name?: string
     email?: string
+    invalid?: boolean
   }
 }
