@@ -12,8 +12,13 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { IStatisticsService } from './statistics.service.interface'
 
@@ -30,13 +35,10 @@ export class StatisticsController {
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
   @Roles(USER_ROLES.Admin)
-  @Route({
-    path: '/department/:slug',
-    params: [{ name: 'slug', type: String }],
-    operationId: 'getStatisticsForDepartment',
-    description: 'Gets statistics for individual department (a, b or c)',
-    responseType: GetStatisticsDepartmentResponse,
-  })
+  @Get('/department/:slug')
+  @ApiOperation({ operationId: 'getStatisticsForDepartment' })
+  @ApiParam({ name: 'slug', enum: DepartmentSlugEnum, required: true })
+  @ApiResponse({ status: 200, type: GetStatisticsDepartmentResponse })
   async department(
     @Param('slug', new EnumValidationPipe(DepartmentSlugEnum))
     slug: DepartmentSlugEnum,
@@ -46,21 +48,19 @@ export class StatisticsController {
     )
   }
 
-  @Route({
-    path: '/overview/:type',
-    operationId: 'getStatisticsOverview',
-    params: [
-      { name: 'type', enum: StatisticsOverviewQueryType, required: true },
-    ],
-    description: 'Gets overview of statistics',
-    responseType: GetStatisticsOverviewResponse,
-  })
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  // @Roles(USER_ROLES.Admin)
+  @Get('/overview/:type')
+  @ApiOperation({ operationId: 'getStatisticsOverview' })
+  @ApiParam({ name: 'type', enum: StatisticsOverviewQueryType, required: true })
+  @ApiResponse({ status: 200, type: GetStatisticsOverviewResponse })
   async overview(
     @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
     type: StatisticsOverviewQueryType,
     @CurrentUser() user: AdminUser,
   ): Promise<GetStatisticsOverviewResponse> {
-    console.log('user', user)
-    return ResultWrapper.unwrap(await this.statisticsService.getOverview(type))
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getOverview(type, user?.id),
+    )
   }
 }
