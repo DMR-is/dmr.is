@@ -1,7 +1,10 @@
-import { Route } from '@dmr.is/decorators'
+import { USER_ROLES } from '@dmr.is/constants'
+import { CurrentUser, Roles, Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
+import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
+  AdminUser,
   DepartmentSlugEnum,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -9,10 +12,12 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, Query } from '@nestjs/common'
+import { Controller, Inject, Param, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { IStatisticsService } from './statistics.service.interface'
 
+@ApiBearerAuth()
 @Controller({
   version: '1',
 })
@@ -23,6 +28,8 @@ export class StatisticsController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: '/department/:slug',
     params: [{ name: 'slug', type: String }],
@@ -40,27 +47,20 @@ export class StatisticsController {
   }
 
   @Route({
-    path: '/overview',
+    path: '/overview/:type',
     operationId: 'getStatisticsOverview',
-    query: [
+    params: [
       { name: 'type', enum: StatisticsOverviewQueryType, required: true },
-      {
-        name: 'userId',
-        type: String,
-        required: false,
-        allowEmptyValue: true,
-      },
     ],
     description: 'Gets overview of statistics',
     responseType: GetStatisticsOverviewResponse,
   })
   async overview(
-    @Query('type', new EnumValidationPipe(StatisticsOverviewQueryType))
+    @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
     type: StatisticsOverviewQueryType,
-    @Query('userId', new UUIDValidationPipe(true)) userId?: string,
+    @CurrentUser() user: AdminUser,
   ): Promise<GetStatisticsOverviewResponse> {
-    return ResultWrapper.unwrap(
-      await this.statisticsService.getOverview(type, userId),
-    )
+    console.log('user', user)
+    return ResultWrapper.unwrap(await this.statisticsService.getOverview(type))
   }
 }

@@ -1,5 +1,5 @@
 import { LoggingModule } from '@dmr.is/logging'
-import { CaseModel, CaseStatusModel } from '@dmr.is/modules'
+import { AdminUserModule, CaseModel, CaseStatusModel } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -15,6 +15,7 @@ const MOCK_DATA = process.env.API_MOCK === 'true'
   imports: [
     SequelizeModule.forFeature([CaseModel, CaseStatusModel]),
     LoggingModule,
+    AdminUserModule,
   ],
   controllers: [StatisticsController],
   providers: [

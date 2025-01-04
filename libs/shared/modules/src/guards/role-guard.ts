@@ -6,17 +6,16 @@ import { AdminUserRoleTitle } from '@dmr.is/types'
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { IAdminUserService } from '../admin-user/admin-user.service.interface'
 
-const LOGGING_CATEGORY = 'admin-auth-guard'
+const LOGGING_CATEGORY = 'role-guard'
+const LOGGING_CONTEXT = 'RoleGuard'
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -39,33 +38,37 @@ export class RoleGuard implements CanActivate {
 
     try {
       // Check if user has required roles
-      const roleLookup = await this.adminUserService.checkIfUserHasRole(
+      const userLookup = await this.adminUserService.getUserByNationalId(
         request.user.nationalId,
-        requiredRoles,
       )
 
-      if (!roleLookup.result.ok) {
-        this.logger.warn('Could not get user roles', {
-          error: roleLookup.result.error,
+      if (!userLookup.result.ok) {
+        this.logger.warn('Could not find user', {
+          error: userLookup.result.error,
           category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
         })
-
-        if (roleLookup.result.error.code === 500) {
-          throw new InternalServerErrorException()
-        }
-
-        if (roleLookup.result.error.code === 404) {
-          throw new UnauthorizedException()
-        }
-
-        throw new ForbiddenException()
+        return false
       }
 
-      if (!roleLookup.result.value.hasRole) {
-        throw new UnauthorizedException(
-          'Invalid role provided, required role: ' + requiredRoles,
-        )
+      const user = userLookup.result.value.user
+
+      // if user has any role that is required, return true
+      const hasRole = requiredRoles.some((role) =>
+        user.roles.some((userRole) => userRole.title === role),
+      )
+
+      if (!hasRole) {
+        this.logger.warn('User does not have required roles', {
+          user: user,
+          requiredRoles: requiredRoles,
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+        })
+        return false
       }
+
+      request.user = user
 
       return true
     } catch (error) {
