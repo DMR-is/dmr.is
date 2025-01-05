@@ -1,6 +1,11 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
+import { IAdminUserService } from '@dmr.is/modules'
+import {
+  AdminUser,
+  DepartmentSlugEnum,
+  StatisticsOverviewQueryType,
+} from '@dmr.is/shared/dto'
 
 import { NotImplementedException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -30,6 +35,10 @@ describe('StatisticsController', () => {
           provide: IStatisticsService,
           useClass: MockStatisticsService,
         },
+        {
+          provide: IAdminUserService,
+          useValue: jest.fn(),
+        },
       ],
     }).compile()
     controller = statistics.get<StatisticsController>(StatisticsController)
@@ -38,8 +47,10 @@ describe('StatisticsController', () => {
   describe('department', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
-        const results = await controller.department(department.id)
-        expect(results.totalCases).toBeGreaterThanOrEqual(0)
+        const results = await controller.department(
+          department.slug as DepartmentSlugEnum,
+        )
+        expect(results.total).toBeGreaterThanOrEqual(0)
       })
     })
   })
@@ -48,13 +59,17 @@ describe('StatisticsController', () => {
     it('Should return total count larger than 0', async () => {
       const results = await controller.overview(
         StatisticsOverviewQueryType.General,
+        {} as AdminUser,
       )
-      expect(results.totalCases).toEqual(0)
+      expect(results.total).toEqual(0)
     })
 
     it('Should throw not implemented error', async () => {
       try {
-        await controller.overview(StatisticsOverviewQueryType.General)
+        await controller.overview(
+          StatisticsOverviewQueryType.General,
+          {} as AdminUser,
+        )
       } catch (error) {
         if (error instanceof NotImplementedException) {
           expect(error.message).toEqual('Not Implemented')

@@ -1,6 +1,9 @@
 import { LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { StatisticsOverviewQueryType } from '@dmr.is/shared/dto'
+import {
+  DepartmentSlugEnum,
+  StatisticsOverviewQueryType,
+} from '@dmr.is/shared/dto'
 
 import { NotImplementedException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
@@ -28,8 +31,11 @@ describe('StatisticsService', () => {
   describe('getStatistics', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
-        const results = (await service.getDepartment(department.id)).unwrap()
-        expect(results.totalCases).toBeGreaterThanOrEqual(0)
+        const results = (
+          await service.getDepartment(department.slug as DepartmentSlugEnum)
+        ).unwrap()
+
+        expect(results.total).toBeGreaterThanOrEqual(0)
       })
     })
   })
@@ -39,7 +45,7 @@ describe('StatisticsService', () => {
       const results = (
         await service.getOverview(StatisticsOverviewQueryType.General)
       ).unwrap()
-      expect(results.totalCases).toEqual(0)
+      expect(results.total).toEqual(0)
     })
 
     it('Should throw not implemented error', async () => {

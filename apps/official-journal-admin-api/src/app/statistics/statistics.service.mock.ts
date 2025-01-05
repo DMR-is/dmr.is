@@ -90,7 +90,7 @@ export class MockStatisticsService implements IStatisticsService {
         count: ready,
         percentage: Math.round(readyPercentage),
       },
-      totalCases: total,
+      total: total,
     })
   }
 
