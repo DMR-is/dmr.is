@@ -208,11 +208,6 @@ export class StatisticsService implements IStatisticsService {
           count: readyForPublishingCount,
           percentage: total ? (readyForPublishingCount / total) * 100 : 0,
         },
-        {
-          title: 'Alls',
-          count: total,
-          percentage: 100,
-        },
       ],
     }
 
@@ -474,7 +469,8 @@ export class StatisticsService implements IStatisticsService {
   private async getInactiveOverviewCount(): Promise<
     ResultWrapper<GetStatisticsOverviewResponse>
   > {
-    const limit = new Date().setDate(-6)
+    const limit = new Date()
+    limit.setDate(limit.getDate() - 5)
 
     const inactiveCount = await this.caseModel.count({
       benchmark: true,
