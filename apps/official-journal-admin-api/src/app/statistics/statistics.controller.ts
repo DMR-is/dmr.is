@@ -1,5 +1,5 @@
 import { USER_ROLES } from '@dmr.is/constants'
-import { CurrentUser, Roles, Route } from '@dmr.is/decorators'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'

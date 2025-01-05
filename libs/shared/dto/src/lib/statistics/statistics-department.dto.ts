@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseStatus } from '../cases'
+import { CaseStatusEnum } from '../cases'
 
 class StatisticsStatusCount {
   @ApiProperty({
-    type: CaseStatus,
+    type: String,
   })
-  status!: CaseStatus
+  title!: string
 
   @ApiProperty({
     type: Number,
