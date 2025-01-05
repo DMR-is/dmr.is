@@ -38,8 +38,6 @@ export class StatisticsService implements IStatisticsService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(CaseStatusModel)
-    private readonly caseStatusModel: typeof CaseStatusModel,
   ) {}
 
   @LogAndHandle()
