@@ -90,7 +90,7 @@ export class MockStatisticsService implements IStatisticsService {
         count: ready,
         percentage: Math.round(readyPercentage),
       },
-      totalCases: total,
+      total: total,
     })
   }
 
@@ -134,11 +134,11 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${adverts.length} innsend mál bíða úthlutunar`,
-          totalCases: submitted,
+          count: submitted,
         },
         {
           text: `Borist hafa ný svör í ${inProgress} málum`,
-          totalCases: inProgress,
+          count: inProgress,
         },
       ]
       totalCases = adverts.length
@@ -173,11 +173,11 @@ export class MockStatisticsService implements IStatisticsService {
       categories = [
         {
           text: `${today} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalCases: today,
+          count: today,
         },
         {
           text: `${pastDue} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalCases: pastDue,
+          count: pastDue,
         },
       ]
       totalCases = adverts.length
@@ -186,7 +186,7 @@ export class MockStatisticsService implements IStatisticsService {
     // @ts-expect-error FIXME: weird error
     return ResultWrapper.ok({
       categories: categories,
-      totalCases: totalCases,
+      total: totalCases,
     })
   }
 }

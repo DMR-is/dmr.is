@@ -1,7 +1,14 @@
 import dynamic from 'next/dynamic'
 import { Pie } from 'recharts'
 
-import { Box, Table as T, Text } from '@island.is/island-ui/core'
+import {
+  Box,
+  Inline,
+  SkeletonLoader,
+  Stack,
+  Table as T,
+  Text,
+} from '@island.is/island-ui/core'
 import { theme } from '@island.is/island-ui/theme'
 
 import {
@@ -14,7 +21,8 @@ import { messages } from './messages'
 import * as styles from './Statistics.css'
 
 type Props = {
-  data: GetStatisticsDepartmentResponse | null
+  data?: GetStatisticsDepartmentResponse
+  loading?: boolean
 }
 
 const PieChart = dynamic(
@@ -22,7 +30,7 @@ const PieChart = dynamic(
   { ssr: false },
 )
 
-export const StatisticsPieCharts = ({ data }: Props) => {
+export const StatisticsPieCharts = ({ data, loading }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const mapTitleToColor = (name: string) => {
@@ -40,7 +48,29 @@ export const StatisticsPieCharts = ({ data }: Props) => {
     }
   }
 
-  if (!data?.totalCases)
+  if (loading) {
+    return (
+      <Stack space={1}>
+        <SkeletonLoader
+          height={30}
+          repeat={1}
+          space={1}
+          borderRadius="standard"
+        />
+        <Inline align="center">
+          <SkeletonLoader borderRadius="circle" height={184} width={184} />
+        </Inline>
+        <SkeletonLoader
+          height={30}
+          repeat={5}
+          space={1}
+          borderRadius="standard"
+        />
+      </Stack>
+    )
+  }
+
+  if (!data || data.total === 0)
     return (
       <Box className={styles.statisticsEmpty}>
         <Box
@@ -55,11 +85,11 @@ export const StatisticsPieCharts = ({ data }: Props) => {
       </Box>
     )
 
-  const pieData = Object.entries(data.data).map(([_, value]) => ({
-    name: value.name,
+  const pieData = Object.entries(data.statuses).map(([_, value]) => ({
+    name: value.title,
     value: value.count,
     percentage: value.percentage,
-    fill: mapTitleToColor(value.name),
+    fill: mapTitleToColor(value.title),
   }))
 
   return (
@@ -122,7 +152,7 @@ export const StatisticsPieCharts = ({ data }: Props) => {
             </T.Data>
             <T.Data align="center" style={{ paddingBlock: theme.spacing[1] }}>
               <Text fontWeight="medium" variant="medium">
-                {data.totalCases}
+                {data.total}
               </Text>
             </T.Data>
             <T.Data align="center" style={{ paddingBlock: theme.spacing[1] }}>

@@ -46,6 +46,11 @@ export function LogAndHandle(
         }
         return await originalMethod.apply(this, args)
       } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('error', error)
+        }
+
         return handleException({
           service: service,
           method: method,

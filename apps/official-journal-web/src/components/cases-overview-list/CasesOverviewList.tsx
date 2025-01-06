@@ -7,7 +7,7 @@ import { messages } from './messages'
 
 type Props = {
   variant?: 'default' | 'assigned' | 'inactive' | 'readyForPublishing'
-  data: GetStatisticsOverviewResponse | null
+  data?: GetStatisticsOverviewResponse
 }
 
 type ItemProps = {
@@ -20,7 +20,7 @@ const CasesOverviewListItem = ({ children }: ItemProps) => {
 export const CasesOverviewList = ({ variant = 'default', data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  if (!data || data?.totalCases === 0) {
+  if (!data || data?.total === 0) {
     return (
       <Box className={styles.casesOverviewListEmpty}>
         <div>
@@ -42,8 +42,8 @@ export const CasesOverviewList = ({ variant = 'default', data }: Props) => {
 
   return (
     <ul className={styles.casesListOverview}>
-      {data?.totalCases &&
-        data?.categories.map((category, index) => (
+      {data.total &&
+        data.categories.map((category, index) => (
           <CasesOverviewListItem key={index}>
             {category.text}
           </CasesOverviewListItem>

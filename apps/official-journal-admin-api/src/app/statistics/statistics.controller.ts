@@ -1,17 +1,28 @@
-import { Route } from '@dmr.is/decorators'
+import { USER_ROLES } from '@dmr.is/constants'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
+import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
+  AdminUser,
+  DepartmentSlugEnum,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { IStatisticsService } from './statistics.service.interface'
 
+@ApiBearerAuth()
 @Controller({
   version: '1',
 })
@@ -22,43 +33,34 @@ export class StatisticsController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Route({
-    path: '/department',
-    operationId: 'getStatisticsForDepartment',
-    query: [{ name: 'slug', type: 'string', required: true }],
-    description: 'Gets statistics for individual department (a, b or c)',
-    responseType: GetStatisticsDepartmentResponse,
-  })
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
+  @Get('/department/:slug')
+  @ApiOperation({ operationId: 'getStatisticsForDepartment' })
+  @ApiParam({ name: 'slug', enum: DepartmentSlugEnum, required: true })
+  @ApiResponse({ status: 200, type: GetStatisticsDepartmentResponse })
   async department(
-    @Query('slug') slug: string,
+    @Param('slug', new EnumValidationPipe(DepartmentSlugEnum))
+    slug: DepartmentSlugEnum,
   ): Promise<GetStatisticsDepartmentResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getDepartment(slug),
     )
   }
 
-  @Route({
-    path: '/overview',
-    operationId: 'getStatisticsOverview',
-    query: [
-      { name: 'type', enum: StatisticsOverviewQueryType, required: true },
-      {
-        name: 'userId',
-        type: String,
-        required: false,
-        allowEmptyValue: true,
-      },
-    ],
-    description: 'Gets overview of statistics',
-    responseType: GetStatisticsOverviewResponse,
-  })
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  // @Roles(USER_ROLES.Admin)
+  @Get('/overview/:type')
+  @ApiOperation({ operationId: 'getStatisticsOverview' })
+  @ApiParam({ name: 'type', enum: StatisticsOverviewQueryType, required: true })
+  @ApiResponse({ status: 200, type: GetStatisticsOverviewResponse })
   async overview(
-    @Query('type', new EnumValidationPipe(StatisticsOverviewQueryType))
+    @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
     type: StatisticsOverviewQueryType,
-    @Query('userId', new UUIDValidationPipe(true)) userId?: string,
+    @CurrentUser() user: AdminUser,
   ): Promise<GetStatisticsOverviewResponse> {
     return ResultWrapper.unwrap(
-      await this.statisticsService.getOverview(type, userId),
+      await this.statisticsService.getOverview(type, user?.id),
     )
   }
 }
