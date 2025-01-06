@@ -319,7 +319,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     headerWhite: true,
     bannerProps: {
       showBanner: false,
-      showFilters: false,
       title: messages.banner.title,
     },
   }

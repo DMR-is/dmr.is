@@ -6,7 +6,6 @@ import { useAdvertTypes } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
-import { generateOptions } from '../../lib/utils'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const TypesFilter = () => {
@@ -29,19 +28,20 @@ export const TypesFilter = () => {
     )
   }
 
-  const options = generateOptions({
-    label: 'Tegund',
-    queryKey: 'type',
-    options: types,
-  })
-
   return (
     <FilterGroup
       search={search}
       setSearch={setSearch}
+      options={
+        types?.map((type) => ({
+          label: type.title,
+          value: type.title,
+        })) || []
+      }
+      label="Tegund"
+      queryKey="type"
       loading={isLoadingTypes}
       searchPlaceholder={formatMessage(generalMessages.searchByType)}
-      {...options}
     />
   )
 }

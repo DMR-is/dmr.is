@@ -1,4 +1,5 @@
 import reverse from 'lodash/reverse'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
 import {
@@ -14,7 +15,6 @@ import {
 import { CaseOverview, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useQueryParams } from '../../hooks/useQueryParams'
 import { Routes } from '../../lib/constants'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
@@ -67,8 +67,6 @@ export const CaseTable = ({
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { add } = useQueryParams()
-
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   const breakpoints = useBreakpoints()
@@ -79,6 +77,11 @@ export const CaseTable = ({
   }>({
     ...defaultSort,
   })
+
+  const [_, setPage] = useQueryState(
+    'page',
+    parseAsInteger.withDefault(paging?.page || 1),
+  )
 
   const sortedData = useMemo(() => {
     if (!rows) return []
@@ -203,7 +206,7 @@ export const CaseTable = ({
             totalItems={paging.totalItems}
             totalPages={paging.totalPages}
             renderLink={(page, className, children) => (
-              <button className={className} onClick={() => add({ page })}>
+              <button className={className} onClick={() => setPage(page)}>
                 {children}
               </button>
             )}

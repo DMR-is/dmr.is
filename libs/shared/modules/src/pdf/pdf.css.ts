@@ -507,10 +507,16 @@ export const pdfCss = `
 
   /* ======================================================================= */
 
-  .regulation__signature {
+  .regulation__signature, .signature {
     margin-top: 2em;
     page-break-inside: avoid;
     page-break-before: avoid;
+  }
+
+  /* ======================================================================= */
+
+  .signature__date, .signature__content, .signature__member {
+    display: none;
   }
 
   /* ======================================================================= */

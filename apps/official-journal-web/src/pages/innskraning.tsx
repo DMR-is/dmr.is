@@ -70,7 +70,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     showFooter: true,
     bannerProps: {
       showBanner: false,
-      showFilters: false,
       imgSrc: '/assets/banner-publish-image.svg',
       title: messages.banner.title,
       description: messages.banner.description,

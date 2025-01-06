@@ -161,8 +161,8 @@ export class JournalController {
 
     const casesResponse = ResultWrapper.unwrap(
       await this.caseService.getCases({
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? DEFAULT_PAGE_SIZE,
+        page: params?.page,
+        pageSize: params?.pageSize,
         status: statuses,
       }),
     )

@@ -13,7 +13,6 @@ import { Meta } from '../../components/meta/Meta'
 import { Tabs } from '../../components/tabs/Tabs'
 import { PublishingContextProvider } from '../../context/publishingContext'
 import { Case, CaseStatusTitleEnum, Paging } from '../../gen/fetch'
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
@@ -40,16 +39,7 @@ export default function CasePublishingOverview(
     ? (router.query.department as string)
     : 'a-deild'
 
-  const { setEnableDepartments, setEnableCategories, setEnableTypes } =
-    useFilterContext()
-
   const [publishing, setPublishing] = useState<boolean>(false)
-
-  useEffect(() => {
-    setEnableDepartments(true)
-    setEnableCategories(true)
-    setEnableTypes(true)
-  }, [])
 
   const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
 
@@ -179,13 +169,15 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: true,
-      showFilters: true,
       imgSrc: '/assets/banner-publish-image.svg',
       title: messages.banner.title,
       description: messages.banner.description,
       variant: 'small',
       contentColumnSpan: ['12/12', '12/12', '7/12'],
       imageColumnSpan: ['12/12', '12/12', '3/12'],
+      enableCategories: true,
+      enableDepartments: true,
+      enableTypes: true,
       breadcrumbs: [
         {
           title: messages.breadcrumbs.dashboard,

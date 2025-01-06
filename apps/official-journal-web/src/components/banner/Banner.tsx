@@ -30,10 +30,12 @@ type Props = {
   cards?: BannerCard[]
   imgSrc?: string
   variant?: 'small' | 'large'
-  showFilters?: boolean
   breadcrumbs?: BreadcrumbsProps
   imageColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
   contentColumnSpan?: React.ComponentProps<typeof GridColumn>['span']
+  enableCategories?: boolean
+  enableDepartments?: boolean
+  enableTypes?: boolean
 }
 
 export const Banner = ({
@@ -42,13 +44,17 @@ export const Banner = ({
   cards,
   imgSrc,
   variant,
-  showFilters = false,
   breadcrumbs = [],
   imageColumnSpan = ['12/12', '12/12', '5/12'],
   contentColumnSpan = ['12/12', '12/12', '5/12'],
+  enableCategories = false,
+  enableDepartments = false,
+  enableTypes = false,
 }: Props) => {
   const { notifications } = useNotificationContext()
   const { formatMessage } = useFormatMessage()
+
+  const showFilters = enableCategories || enableDepartments || enableTypes
 
   return (
     <Section className={styles.bannerSection}>
@@ -97,7 +103,9 @@ export const Banner = ({
                     </Stack>
                   </Box>
                 )}
-                {showFilters && <CaseFilters />}
+                {showFilters && (
+                  <CaseFilters enableCategories enableDepartments enableTypes />
+                )}
               </GridColumn>
             </>
           )}
