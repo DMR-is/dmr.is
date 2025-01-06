@@ -3064,10 +3064,6 @@
       "CaseOverviewStatus": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
           "title": {
             "type": "string",
             "enum": [
@@ -3082,14 +3078,9 @@
             "example": "Innsent",
             "description": "Status of the case"
           },
-          "slug": {
-            "type": "string",
-            "example": "innsent",
-            "description": "Slug of the case staus"
-          },
           "count": { "type": "number", "description": "Count of the cases" }
         },
-        "required": ["id", "title", "slug", "count"]
+        "required": ["title", "count"]
       },
       "GetCasesOverview": {
         "type": "object",

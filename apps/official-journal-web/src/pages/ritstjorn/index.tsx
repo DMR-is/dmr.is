@@ -17,6 +17,7 @@ import { CaseTableInProgress } from '../../components/tables/CaseTableInProgress
 import { CaseTableInReview } from '../../components/tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../../components/tables/CaseTableSubmitted'
 import { Tabs } from '../../components/tabs/Tabs'
+import { CaseOverviewStatusTitleEnum } from '../../gen/fetch'
 import { useCaseOverview } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
@@ -60,7 +61,7 @@ export default function CaseProccessingOverviewScreen() {
       let label
       let order = 0
       switch (status.title) {
-        case 'Innsent':
+        case CaseOverviewStatusTitleEnum.Innsent:
           order = 1
           label = formatMessage(caseProccessingMessages.tabs.submitted, {
             count: status.count,
@@ -80,7 +81,7 @@ export default function CaseProccessingOverviewScreen() {
             />
           )
           break
-        case 'Grunnvinnsla':
+        case CaseOverviewStatusTitleEnum.Grunnvinnsla:
           order = 2
           label = formatMessage(caseProccessingMessages.tabs.inProgress, {
             count: status.count,
@@ -100,7 +101,7 @@ export default function CaseProccessingOverviewScreen() {
             />
           )
           break
-        case 'Yfirlestur':
+        case CaseOverviewStatusTitleEnum.Yfirlestur:
           order = 3
           label = formatMessage(caseProccessingMessages.tabs.inReview, {
             count: status.count,
@@ -120,7 +121,7 @@ export default function CaseProccessingOverviewScreen() {
             />
           )
           break
-        case 'Tilbúið':
+        case CaseOverviewStatusTitleEnum.Tilbúið:
           order = 4
           label = formatMessage(caseProccessingMessages.tabs.ready, {
             count: status.count,

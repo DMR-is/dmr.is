@@ -141,7 +141,7 @@ export class ApplicationAuthGaurd implements CanActivate {
 
         const hasInvolvedParty =
           await this.applicationUserService.checkIfUserHasInvolvedParty(
-            currentUser.nationalId,
+            currentUser.id,
             caseLookup.result.value.involvedPartyId,
           )
 
