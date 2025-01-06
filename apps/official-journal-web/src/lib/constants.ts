@@ -157,7 +157,8 @@ export const fetcherV2 = async <TData, TBody = never>(
   }
 
   if (!res.ok) {
-    throw new Error('Error occured while fetching data')
+    const err = await res.json()
+    throw new Error(err.message)
   }
 
   return res.json()
@@ -242,6 +243,8 @@ export enum APIRotues {
   Institutions = '/api/institutions',
   Institution = '/api/institutions/:id',
   UpdateCaseType = '/api/cases/:id/updateType',
+  GetStatisticsForDepartment = '/api/statistics/department',
+  GetStatisticsOverview = '/api/statistics/overview',
 }
 
 export class OJOIWebException extends Error {

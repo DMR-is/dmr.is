@@ -1,4 +1,5 @@
 import {
+  DepartmentSlugEnum,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
@@ -7,7 +8,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 export interface IStatisticsService {
   getDepartment(
-    slug: string,
+    slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>>
 
   getOverview(

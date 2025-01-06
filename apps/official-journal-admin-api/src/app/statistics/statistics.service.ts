@@ -1,102 +1,215 @@
+import { Op, Sequelize } from 'sequelize'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService, IUtilityService } from '@dmr.is/modules'
-import { CaseStatusEnum } from '@dmr.is/shared/dto'
+import {
+  AdvertDepartmentModel,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+} from '@dmr.is/modules'
+import {
+  CaseCommunicationStatus,
+  CaseStatusEnum,
+  DepartmentSlugEnum,
+} from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
-  StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { isSingular } from '@dmr.is/utils/client'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
 import { IStatisticsService } from './statistics.service.interface'
 
+const LOGGING_CATEGORY = 'statistics-service'
+const LOGGING_CONTEXT = 'StatisticsQueryRunner'
+
 @Injectable()
 export class StatisticsService implements IStatisticsService {
+  private readonly availableStatuses = [
+    CaseStatusEnum.Submitted,
+    CaseStatusEnum.InProgress,
+    CaseStatusEnum.InReview,
+    CaseStatusEnum.ReadyForPublishing,
+  ]
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(forwardRef(() => ICaseService))
-    private readonly casesService: ICaseService,
-    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-  ) {
-    this.logger.info('Using StatisticsService')
-  }
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+  ) {}
 
   @LogAndHandle()
   async getDepartment(
-    slug: string,
+    slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
-    const casesRes = (
-      await this.casesService.getCases({
-        pageSize: '1000',
-        department: [slug],
-        status: [
-          CaseStatusEnum.Submitted,
-          CaseStatusEnum.InProgress,
-          CaseStatusEnum.InReview,
-          CaseStatusEnum.ReadyForPublishing,
-        ],
-      })
-    ).unwrap()
-    const cases = casesRes.cases
-
-    let submitted = 0
-    let inProgress = 0
-    let inReview = 0
-    let ready = 0
-
-    cases.forEach((thisCase) => {
-      switch (thisCase.status.title) {
-        case CaseStatusEnum.Submitted:
-          submitted++
-          break
-        case CaseStatusEnum.InProgress:
-          inProgress++
-          break
-        case CaseStatusEnum.InReview:
-          inReview++
-          break
-        case CaseStatusEnum.ReadyForPublishing:
-          ready++
-          break
-      }
+    const submittedCountQuery = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.Submitted,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: slug,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsForDepartment submitted count query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'getStatisticsForDepartment',
+          },
+        ),
     })
 
-    const total = submitted + inProgress + inReview + ready
-    const submittedPercentage = total ? (submitted / total) * 100 : 0
-    const inProgressPercentage = total ? (inProgress / total) * 100 : 0
-    const inReviewPercentage = total ? (inReview / total) * 100 : 0
-    const readyPercentage = total ? (ready / total) * 100 : 0
-
-    return ResultWrapper.ok({
-      data: {
-        submitted: {
-          name: CaseStatusEnum.Submitted,
-          count: submitted,
-          percentage: Math.round(submittedPercentage),
+    const inProgressCountQuery = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.InProgress,
+            },
+          },
         },
-        inProgress: {
-          name: CaseStatusEnum.InProgress,
-          count: inProgress,
-          percentage: Math.round(inProgressPercentage),
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: slug,
+            },
+          },
         },
-        inReview: {
-          name: CaseStatusEnum.InReview,
-          count: inReview,
-          percentage: Math.round(inReviewPercentage),
-        },
-        ready: {
-          name: CaseStatusEnum.ReadyForPublishing,
-          count: ready,
-          percentage: Math.round(readyPercentage),
-        },
-      },
-      totalCases: total,
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsForDepartment in progress count query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'getStatisticsForDepartment',
+          },
+        ),
     })
+
+    const inReviewCountQuery = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.InReview,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: slug,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsForDepartment in review count query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'getStatisticsForDepartment',
+          },
+        ),
+    })
+
+    const readyForPublishingCountQuery = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.ReadyForPublishing,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: slug,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsForDepartment ready for publishing count query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'getStatisticsForDepartment',
+          },
+        ),
+    })
+
+    const [
+      submittedCount,
+      inProgressCount,
+      inReviewCount,
+      readyForPublishingCount,
+    ] = await Promise.all([
+      submittedCountQuery,
+      inProgressCountQuery,
+      inReviewCountQuery,
+      readyForPublishingCountQuery,
+    ])
+
+    const total =
+      submittedCount + inProgressCount + inReviewCount + readyForPublishingCount
+
+    const results = {
+      total: total,
+      statuses: [
+        {
+          title: CaseStatusEnum.Submitted,
+          count: submittedCount,
+          percentage: total ? (submittedCount / total) * 100 : 0,
+        },
+        {
+          title: CaseStatusEnum.InProgress,
+          count: inProgressCount,
+          percentage: total ? (inProgressCount / total) * 100 : 0,
+        },
+        {
+          title: CaseStatusEnum.InReview,
+          count: inReviewCount,
+          percentage: total ? (inReviewCount / total) * 100 : 0,
+        },
+        {
+          title: CaseStatusEnum.ReadyForPublishing,
+          count: readyForPublishingCount,
+          percentage: total ? (readyForPublishingCount / total) * 100 : 0,
+        },
+      ],
+    }
+
+    return ResultWrapper.ok(results)
   }
 
   @LogAndHandle()
@@ -104,191 +217,390 @@ export class StatisticsService implements IStatisticsService {
     type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
-    const casesRes = (
-      await this.casesService.getCases({
-        pageSize: '1000',
-        year: new Date().getFullYear().toString(),
-        status: [
-          CaseStatusEnum.Submitted,
-          CaseStatusEnum.InProgress,
-          CaseStatusEnum.InReview,
-          CaseStatusEnum.ReadyForPublishing,
-        ],
-      })
-    ).unwrap()
+    const personal = type === StatisticsOverviewQueryType.Personal && userId
 
-    const cases = casesRes.cases
-
-    const categories: StatisticsOverviewCategory[] = []
-    let totalCases = 0
-
-    if (type === StatisticsOverviewQueryType.General) {
-      let submittedCount = 0
-      let inProgressCount = 0
-      let submittedFastTrack = 0
-      let inReviewFastTrack = 0
-
-      // fast track functionality is not implemented yet
-
-      cases.forEach((thisCase) => {
-        if (thisCase.status.title === CaseStatusEnum.Submitted) {
-          submittedCount++
-        }
-
-        if (
-          [CaseStatusEnum.InProgress, CaseStatusEnum.InReview].includes(
-            thisCase.status.title as CaseStatusEnum,
+    switch (type) {
+      case StatisticsOverviewQueryType.General:
+        return this.getGeneralOverviewCount()
+      case StatisticsOverviewQueryType.Personal:
+        if (!personal) {
+          this.logger.warn(
+            'Personal statstic overview requested without userId',
+            LOGGING_CONTEXT,
           )
-        ) {
-          inProgressCount++
+          return ResultWrapper.err({
+            code: 400,
+            message: 'No userId provided for personal overview',
+          })
         }
-
-        if (
-          thisCase.fastTrack &&
-          thisCase.status.title !== CaseStatusEnum.ReadyForPublishing
-        ) {
-          submittedFastTrack++
-        }
-
-        if (
-          thisCase.fastTrack &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          inReviewFastTrack++
-        }
-      })
-
-      if (submittedCount) {
-        categories.push({
-          text: isSingular(submittedCount)
-            ? `${submittedCount} innsent mál bíður úthlutunar.`
-            : `${submittedCount} innsend mál bíða úthlutunar.`,
-          totalCases: submittedCount,
-        })
-      }
-
-      if (inProgressCount) {
-        categories.push({
-          text: isSingular(inProgressCount)
-            ? `${inProgressCount} mál er í vinnslu.`
-            : `${inProgressCount} mál eru í vinnslu.`,
-          totalCases: inProgressCount,
-        })
-      }
-
-      if (submittedFastTrack) {
-        categories.push({
-          text: isSingular(submittedFastTrack)
-            ? `${submittedFastTrack} innsent mál er með ósk um hraðbirtingu.`
-            : `${submittedFastTrack} innsend mál eru með ósk um hraðbirtingu.`,
-          totalCases: submittedFastTrack,
-        })
-      }
-
-      if (inReviewFastTrack) {
-        categories.push({
-          text: isSingular(inReviewFastTrack)
-            ? `${inReviewFastTrack} mál í yfirlestri er með ósk um hraðbirtingu.`
-            : `${inReviewFastTrack} mál í yfirlestri eru með ósk um hraðbirtingu.`,
-          totalCases: inReviewFastTrack,
-        })
-      }
-
-      totalCases =
-        submittedCount +
-        inProgressCount +
-        submittedFastTrack +
-        inReviewFastTrack
+        return this.getPersonalOverviewCount(userId)
+      case StatisticsOverviewQueryType.Inactive:
+        return this.getInactiveOverviewCount()
+      case StatisticsOverviewQueryType.Publishing:
+        return this.getPublishingOverviewCount()
+      default:
+        return this.getGeneralOverviewCount()
     }
+  }
 
-    if (type === StatisticsOverviewQueryType.Personal && userId) {
-      const myCases = cases.filter((c) => c.assignedTo?.id === userId)
-      const myCasesCount = myCases.length
-
-      if (myCasesCount) {
-        categories.push({
-          text: isSingular(myCasesCount)
-            ? `${myCasesCount} mál er skráð á mig.`
-            : `${myCasesCount} mál eru skráð á mig.`,
-          totalCases: myCasesCount,
-        })
-      }
-
-      totalCases = myCasesCount
-    }
-
-    if (type === StatisticsOverviewQueryType.Inactive) {
-      const limit = new Date()
-      limit.setDate(-6)
-
-      const inactiveCases = cases.filter(
-        (c) =>
-          [
-            CaseStatusEnum.Submitted,
-            CaseStatusEnum.InProgress,
-            CaseStatusEnum.InReview,
-          ].includes(c.status.title as CaseStatusEnum) &&
-          new Date(c.modifiedAt) < limit,
-      )
-      const inactiveCasesCount = inactiveCases.length
-
-      if (inactiveCasesCount) {
-        categories.push({
-          text: isSingular(inactiveCasesCount)
-            ? `${inactiveCasesCount} mál hefur ekki verið hreyft í meira en 5 daga.`
-            : `${inactiveCasesCount} mál hafa ekki verið hreyfð í meira en 5 daga.`,
-          totalCases: inactiveCasesCount,
-        })
-      }
-      totalCases = inactiveCasesCount
-    }
-
-    if (type === StatisticsOverviewQueryType.Publishing) {
-      const today = new Date()
-      let todayCount = 0
-      let pastDueCount = 0
-
-      cases.forEach((thisCase) => {
-        if (
-          thisCase.requestedPublicationDate &&
-          new Date(thisCase.requestedPublicationDate) === today &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          todayCount++
-        }
-
-        if (
-          thisCase.requestedPublicationDate &&
-          new Date(thisCase.requestedPublicationDate) < today &&
-          thisCase.status.title === CaseStatusEnum.ReadyForPublishing
-        ) {
-          pastDueCount++
-        }
-      })
-
-      if (todayCount) {
-        categories.push({
-          text: isSingular(todayCount)
-            ? `${todayCount} tilbúið mál er áætlað til útgáfu í dag.`
-            : `${todayCount} tilbúin mál eru áætluð til útgáfu í dag.`,
-          totalCases: todayCount,
-        })
-      }
-
-      if (pastDueCount) {
-        categories.push({
-          text: isSingular(pastDueCount)
-            ? `${pastDueCount} mál í yfirlestri er með liðinn birtingardag.`
-            : `${pastDueCount} mál í yfirlestri eru með liðinn birtingardag.`,
-          totalCases: pastDueCount,
-        })
-      }
-      totalCases = todayCount + pastDueCount
-    }
-
-    return ResultWrapper.ok({
-      categories,
-      totalCases,
+  @LogAndHandle()
+  private async getGeneralOverviewCount(): Promise<
+    ResultWrapper<GetStatisticsOverviewResponse>
+  > {
+    const unassignedQuery = this.caseModel.count({
+      benchmark: true,
+      where: {
+        assignedUserId: {
+          [Op.eq]: null,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.Submitted,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview unassigned cases query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'unassignedCases',
+          },
+        ),
     })
+
+    const recentActivityQuery = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.in]: this.availableStatuses,
+            },
+          },
+        },
+        {
+          model: CaseCommunicationStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseCommunicationStatus.HasAnswers,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview recent activity query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'recentActivity',
+          },
+        ),
+    })
+
+    const submittedFasttrackQuery = this.caseModel.count({
+      benchmark: true,
+      where: {
+        fastTrack: {
+          [Op.eq]: true,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.Submitted,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview submitted fast track query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'fasttrackCases',
+          },
+        ),
+    })
+
+    const inReviewFasttrackQuery = this.caseModel.count({
+      benchmark: true,
+      where: {
+        fastTrack: {
+          [Op.eq]: true,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.InReview,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview in review fast track query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'fasttrackCasesInReview',
+          },
+        ),
+    })
+
+    const [
+      unassignedCount,
+      recentActivityCount,
+      submittedFastCount,
+      inreviewFastCount,
+    ] = await Promise.all([
+      unassignedQuery,
+      recentActivityQuery,
+      submittedFasttrackQuery,
+      inReviewFasttrackQuery,
+    ])
+
+    const result: GetStatisticsOverviewResponse = {
+      categories: [
+        {
+          text:
+            unassignedCount === 1
+              ? `${unassignedCount} innsent mál bíða úthlutunar`
+              : `${unassignedCount} innsend mál bíða úthlutunar`,
+          count: unassignedCount,
+        },
+        {
+          text:
+            recentActivityCount === 1
+              ? `Borist hafa ný svör í ${recentActivityCount} máli`
+              : `Borist hafa ný svör í ${recentActivityCount} málum`,
+          count: recentActivityCount,
+        },
+        {
+          text:
+            submittedFastCount === 1
+              ? `${submittedFastCount} innsent mál er með ósk um hraðbirtingu`
+              : `${submittedFastCount} innsend mál eru með ósk um hraðbirtingu`,
+          count: submittedFastCount,
+        },
+        {
+          text:
+            inreviewFastCount === 1
+              ? `${inreviewFastCount} mál í yfirlestri er með ósk um hraðbirtingu`
+              : `${inreviewFastCount} mál í yfirlestri eru með ósk um hraðbirtingu`,
+          count: inreviewFastCount,
+        },
+      ],
+      total:
+        unassignedCount +
+        recentActivityCount +
+        submittedFastCount +
+        inreviewFastCount,
+    }
+
+    return ResultWrapper.ok(result)
+  }
+
+  @LogAndHandle()
+  private async getPersonalOverviewCount(
+    userId: string,
+  ): Promise<ResultWrapper<GetStatisticsOverviewResponse>> {
+    const personalCount = await this.caseModel.count({
+      benchmark: true,
+      where: {
+        assignedUserId: {
+          [Op.eq]: userId,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.in]: this.availableStatuses,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview unassigned cases query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'personalCases',
+          },
+        ),
+    })
+
+    const result: GetStatisticsOverviewResponse = {
+      categories: [
+        {
+          text:
+            personalCount === 1
+              ? `${personalCount} mál er skráð á mig`
+              : `${personalCount} mál eru skráð á mig`,
+          count: personalCount,
+        },
+      ],
+      total: personalCount,
+    }
+
+    return ResultWrapper.ok(result)
+  }
+
+  @LogAndHandle()
+  private async getInactiveOverviewCount(): Promise<
+    ResultWrapper<GetStatisticsOverviewResponse>
+  > {
+    const limit = new Date()
+    limit.setDate(limit.getDate() - 5)
+
+    const inactiveCount = await this.caseModel.count({
+      benchmark: true,
+      where: {
+        updatedAt: {
+          [Op.lt]: limit,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.in]: this.availableStatuses,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview inactive cases query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'inactiveCases',
+          },
+        ),
+    })
+
+    const result: GetStatisticsOverviewResponse = {
+      categories: [
+        {
+          text:
+            inactiveCount === 1
+              ? `${inactiveCount} mál hefur ekki verið hreyft í meira en 5 daga`
+              : `${inactiveCount} mál hafa ekki verið hreyfð í meira en 5 daga`,
+          count: inactiveCount,
+        },
+      ],
+      total: inactiveCount,
+    }
+
+    return ResultWrapper.ok(result)
+  }
+
+  @LogAndHandle()
+  private async getPublishingOverviewCount(): Promise<
+    ResultWrapper<GetStatisticsOverviewResponse>
+  > {
+    const today = new Date()
+
+    const todayCount = this.caseModel.count({
+      benchmark: true,
+      where: {
+        requestedPublicationDate: {
+          [Op.eq]: today,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.ReadyForPublishing,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview todays publishing query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'todayPublishing',
+          },
+        ),
+    })
+
+    const pastDueCount = this.caseModel.count({
+      benchmark: true,
+      where: {
+        requestedPublicationDate: {
+          [Op.lt]: today,
+        },
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.eq]: CaseStatusEnum.InReview,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getStatisticsOverview past due publishing query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'pastDuePublishing',
+          },
+        ),
+    })
+
+    const [todayPublishingCount, pastDuePublishingCount] = await Promise.all([
+      todayCount,
+      pastDueCount,
+    ])
+
+    const result: GetStatisticsOverviewResponse = {
+      categories: [
+        {
+          text:
+            todayPublishingCount === 1
+              ? `${todayPublishingCount} tilbúið mál eru áætlað til útgáfu í dag.`
+              : `${todayPublishingCount} tilbúin mál eru áætluð til útgáfu í dag.`,
+          count: todayPublishingCount,
+        },
+        {
+          text:
+            pastDuePublishingCount === 1
+              ? `${pastDuePublishingCount} mál í yfirlestri er með liðinn birtingardag.`
+              : `${pastDuePublishingCount} mál í yfirlestri eru með liðinn birtingardag.`,
+          count: pastDuePublishingCount,
+        },
+      ],
+      total: todayPublishingCount + pastDuePublishingCount,
+    }
+
+    return ResultWrapper.ok(result)
   }
 }

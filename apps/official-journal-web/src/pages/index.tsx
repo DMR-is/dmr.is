@@ -1,8 +1,6 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import { Session } from 'next-auth'
+import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
-import { logger } from '@dmr.is/logging'
-import { isResponse } from '@dmr.is/utils/client'
+import { useState } from 'react'
 
 import {
   Box,
@@ -21,105 +19,112 @@ import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { StatisticsPieCharts } from '../components/statistics/PieCharts'
 import {
-  GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
+  GetStatisticsForDepartmentSlugEnum,
   GetStatisticsOverviewTypeEnum,
 } from '../gen/fetch'
+import { useStatistics } from '../hooks/api'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { LayoutProps } from '../layout/Layout'
-import { createDmrClient } from '../lib/api/createClient'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 import { deleteUndefined, loginRedirect } from '../lib/utils'
 
-type Props = {
-  session: Session
-  statisticsOverview: {
-    general: GetStatisticsOverviewResponse | null
-    personal: GetStatisticsOverviewResponse | null
-    inactive: GetStatisticsOverviewResponse | null
-    publishing: GetStatisticsOverviewResponse | null
-  }
-  statisticsByDepartment: {
-    a: GetStatisticsDepartmentResponse | null
-    b: GetStatisticsDepartmentResponse | null
-    c: GetStatisticsDepartmentResponse | null
-  }
-}
-
-const LOG_CATEGORY = 'dashboard'
-
-export default function Dashboard(
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
-  const { statisticsOverview, statisticsByDepartment } = data
-
+export default function Dashboard() {
   const { formatMessage } = useFormatMessage()
 
-  const ritstjornTabs: TabType[] = [
+  const [departmentTab, setDepartmentTab] = useState(
+    GetStatisticsForDepartmentSlugEnum.ADeild,
+  )
+
+  const [overviewTab, setOverviewTab] = useState<GetStatisticsOverviewTypeEnum>(
+    GetStatisticsOverviewTypeEnum.General,
+  )
+
+  const {
+    departmentStatistics,
+    isLoadingDepartmentStatistics,
+    overviewData,
+    errorOverview,
+    isLoadingOverview,
+  } = useStatistics({
+    departmentParams: {
+      slug: departmentTab,
+    },
+    overviewParams: {
+      type: overviewTab,
+    },
+  })
+
+  const { overviewData: publishingOverviewData } = useStatistics({
+    overviewParams: {
+      type: GetStatisticsOverviewTypeEnum.Publishing,
+    },
+  })
+
+  const statisticsTabs: TabType[] = [
     {
-      id: 'ritstjorn-almennt',
-      label: formatMessage(messages.tabs.admin.general),
+      id: GetStatisticsForDepartmentSlugEnum.ADeild,
+      label: formatMessage(messages.tabs.statistics.a),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList
-            data={statisticsOverview.general}
-            variant="default"
+          <StatisticsPieCharts
+            data={departmentStatistics}
+            loading={isLoadingDepartmentStatistics}
           />
         </Box>
       ),
     },
     {
-      id: 'ritstjorn-min-mal',
-      label: formatMessage(messages.tabs.admin.personal),
+      id: GetStatisticsForDepartmentSlugEnum.BDeild,
+      label: formatMessage(messages.tabs.statistics.b),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList
-            data={statisticsOverview.personal}
-            variant="assigned"
+          <StatisticsPieCharts
+            data={departmentStatistics}
+            loading={isLoadingDepartmentStatistics}
           />
         </Box>
       ),
     },
     {
-      id: 'ritstjorn-ohreyfd-mal',
-      label: formatMessage(messages.tabs.admin.inactive),
+      id: GetStatisticsForDepartmentSlugEnum.CDeild,
+      label: formatMessage(messages.tabs.statistics.c),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList
-            data={statisticsOverview.inactive}
-            variant="inactive"
+          <StatisticsPieCharts
+            data={departmentStatistics}
+            loading={isLoadingDepartmentStatistics}
           />
         </Box>
       ),
     },
   ]
 
-  const statisticsTabs: TabType[] = [
+  const ritstjornTabs = [
     {
-      id: 'statistics-not-published-a',
-      label: formatMessage(messages.tabs.statistics.a),
+      id: GetStatisticsOverviewTypeEnum.General,
+      label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsPieCharts data={statisticsByDepartment.a} />
+          <CasesOverviewList data={overviewData} variant="default" />
         </Box>
       ),
     },
     {
-      id: 'statistics-not-published-b',
-      label: formatMessage(messages.tabs.statistics.b),
+      id: GetStatisticsOverviewTypeEnum.Personal,
+      label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsPieCharts data={statisticsByDepartment.b} />
+          <CasesOverviewList data={overviewData} variant="assigned" />
         </Box>
       ),
     },
     {
-      id: 'statistics-not-published-c',
-      label: formatMessage(messages.tabs.statistics.c),
+      id: GetStatisticsOverviewTypeEnum.Inactive,
+      label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
-          <StatisticsPieCharts data={statisticsByDepartment.c} />
+          <CasesOverviewList data={overviewData} variant="inactive" />
         </Box>
       ),
     },
@@ -152,7 +157,10 @@ export default function Dashboard(
                 >
                   <Tabs
                     label={formatMessage(messages.general.caseStatuses)}
-                    selected={ritstjornTabs[0].id}
+                    selected={overviewTab}
+                    onChange={(id) =>
+                      setOverviewTab(id as GetStatisticsOverviewTypeEnum)
+                    }
                     size="sm"
                     tabs={ritstjornTabs}
                   />
@@ -163,7 +171,7 @@ export default function Dashboard(
                   linkText={messages.general.openPublishing}
                 >
                   <CasesOverviewList
-                    data={statisticsOverview.publishing}
+                    data={publishingOverviewData}
                     variant="readyForPublishing"
                   />
                 </ContentWrapper>
@@ -176,7 +184,10 @@ export default function Dashboard(
               >
                 <Tabs
                   label={formatMessage(messages.general.statistics)}
-                  selected={statisticsTabs[0].id}
+                  selected={departmentTab}
+                  onChange={(id) =>
+                    setDepartmentTab(id as GetStatisticsForDepartmentSlugEnum)
+                  }
                   size="sm"
                   tabs={statisticsTabs}
                 />
@@ -211,69 +222,15 @@ export default function Dashboard(
   )
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
+export const getServerSideProps: GetServerSideProps = async ({
   req,
   resolvedUrl,
 }) => {
   const session = await getSession({ req })
-  const dmrClient = createDmrClient()
 
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
-
-  const [general, personal, inactive, publishing] = await Promise.all(
-    [
-      dmrClient.getStatisticsOverview({
-        type: GetStatisticsOverviewTypeEnum.General,
-      }),
-      dmrClient.getStatisticsOverview({
-        type: GetStatisticsOverviewTypeEnum.Personal,
-        userId: session.user.nationalId,
-      }),
-      dmrClient.getStatisticsOverview({
-        type: GetStatisticsOverviewTypeEnum.Inactive,
-      }),
-      dmrClient.getStatisticsOverview({
-        type: GetStatisticsOverviewTypeEnum.Publishing,
-      }),
-    ].map((promise) =>
-      promise.catch(async (err) => {
-        if (isResponse(err)) {
-          const json = await err.json()
-          logger.error(`Error fetching data`, {
-            statusCode: json.statusCode,
-            message: json.message,
-            error: json.error,
-            category: LOG_CATEGORY,
-          })
-        }
-        return null
-      }),
-    ),
-  )
-
-  const [aStatistics, bStatistics, cStatistics] = await Promise.all(
-    [
-      dmrClient.getStatisticsForDepartment({
-        slug: 'a-deild',
-      }),
-      dmrClient.getStatisticsForDepartment({
-        slug: 'b-deild',
-      }),
-      dmrClient.getStatisticsForDepartment({
-        slug: 'c-deild',
-      }),
-    ].map((promise) =>
-      promise.catch((error) => {
-        logger.error('Error fetching statistics', {
-          error,
-          category: LOG_CATEGORY,
-        })
-        return null
-      }),
-    ),
-  )
 
   const mockBannerCards = [
     {
@@ -311,17 +268,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     props: deleteUndefined({
       session,
       layout,
-      statisticsOverview: {
-        general,
-        personal,
-        inactive,
-        publishing,
-      },
-      statisticsByDepartment: {
-        a: aStatistics,
-        b: bStatistics,
-        c: cStatistics,
-      },
     }),
   }
 }

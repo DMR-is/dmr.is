@@ -424,3 +424,17 @@ export const loginRedirect = (callbackUrl?: string) => {
     },
   }
 }
+
+export const generateParams = (params?: Record<string, any>) => {
+  const urlSearchParmas = new URLSearchParams()
+
+  if (params) {
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined) {
+        urlSearchParmas.append(key, params[key])
+      }
+    })
+  }
+
+  return urlSearchParmas
+}
