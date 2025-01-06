@@ -6,7 +6,7 @@ import {
   GetStatisticsOverviewRequest,
   GetStatisticsOverviewResponse,
 } from '../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcher } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
 
 type UseStatisticsParams = {
@@ -24,10 +24,10 @@ export const useStatistics = ({
     error: errorDepartmentStatistics,
   } = useSWR<GetStatisticsDepartmentResponse>(
     departmentParams
-      ? [APIRotues.GetStatisticsForDepartment, departmentParams]
+      ? [APIRoutes.GetStatisticsForDepartment, departmentParams]
       : null,
     ([url, qsp]: [url: string, qsp: GetStatisticsForDepartmentRequest]) =>
-      fetcherV2<GetStatisticsDepartmentResponse>(url, {
+      fetcher<GetStatisticsDepartmentResponse>(url, {
         arg: {
           method: 'GET',
           query: generateParams(qsp),
@@ -46,9 +46,9 @@ export const useStatistics = ({
     isLoading: isLoadingOverview,
     error: errorOverview,
   } = useSWR<GetStatisticsOverviewResponse>(
-    overviewParams ? [APIRotues.GetStatisticsOverview, overviewParams] : null,
+    overviewParams ? [APIRoutes.GetStatisticsOverview, overviewParams] : null,
     ([url, qsp]: [url: string, qsp: GetStatisticsOverviewRequest]) =>
-      fetcherV2<GetStatisticsOverviewResponse>(url, {
+      fetcher<GetStatisticsOverviewResponse>(url, {
         arg: {
           method: 'GET',
           query: generateParams(qsp),
