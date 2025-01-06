@@ -72,7 +72,10 @@ class Counter {
   count!: number
 }
 
-export class CaseOverviewStatus extends IntersectionType(CaseStatus, Counter) {}
+export class CaseOverviewStatus extends IntersectionType(
+  PickType(CaseStatus, ['title'] as const),
+  Counter,
+) {}
 
 export class CaseOverview extends PickType(Case, [
   'id',

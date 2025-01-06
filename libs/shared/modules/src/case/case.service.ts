@@ -92,6 +92,7 @@ import {
 import { CASE_RELATIONS } from './relations'
 
 const LOGGING_CATEGORY = 'case-service'
+const LOGGING_QUERY = 'CaseServiceQueryRunner'
 
 @Injectable()
 export class CaseService implements ICaseService {
@@ -657,56 +658,36 @@ export class CaseService implements ICaseService {
 
     const whereParams = caseParameters(params)
 
-    const counterResults = this.caseStatusModel.findAll({
-      benchmark: true,
-      raw: true,
-      nest: true,
-      attributes: [
-        [Sequelize.col('CaseStatusModel.id'), 'status.id'],
-        [Sequelize.col('CaseStatusModel.title'), 'status.title'],
-        [Sequelize.col('CaseStatusModel.slug'), 'status.slug'],
-        [Sequelize.fn('COUNT', Sequelize.col('cases.id')), 'count'],
-      ],
-      include: [
-        {
-          model: this.caseModel,
-          required: false,
-          where: whereParams,
-          attributes: [],
-        },
-      ],
-      where: {
-        title: {
-          [Op.in]: availableStatuses,
-        },
-      },
-      group: [
-        'CaseStatusModel.id',
-        'CaseStatusModel.title',
-        'CaseStatusModel.slug',
-      ],
-      logging: (_, timing) => {
-        this.logger.info(
-          `getCaseOverview counter query executed in ${timing}ms`,
-          {
-            context: 'CaseService',
-            category: LOGGING_CATEGORY,
-            query: 'getCaseOverview',
-          },
-        )
-      },
-    }) as unknown as Array<{
-      status: {
-        id: string
-        title: string
-        slug: string
-      }
-      count: number
-    }>
-
     const { limit, offset } = getLimitAndOffset({
       page: params?.page,
       pageSize: params?.pageSize,
+    })
+
+    const counterResults = availableStatuses.map((status) => {
+      return this.caseModel.count({
+        benchmark: true,
+        where: whereParams,
+        include: [
+          {
+            model: CaseStatusModel,
+            where: {
+              title: {
+                [Op.eq]: status,
+              },
+            },
+          },
+        ],
+        logging: (_, timing) => {
+          this.logger.info(
+            `getCaseOverview counter for status ${status} query executed in ${timing}ms`,
+            {
+              context: LOGGING_QUERY,
+              category: LOGGING_CATEGORY,
+              query: 'getCaseOverview',
+            },
+          )
+        },
+      })
     })
 
     const casesResults = this.caseModel.findAndCountAll({
@@ -752,20 +733,27 @@ export class CaseService implements ICaseService {
           attributes: ['id', 'title', 'slug'],
         },
         {
-          model: InstitutionModel,
+          model: AdvertInvolvedPartyModel,
           attributes: ['id', 'title', 'slug'],
         },
       ],
       logging: (_, timing) => {
-        this.logger.info(`getCaseOverview query executed in ${timing}ms`, {
-          context: 'CaseService',
-          category: LOGGING_CATEGORY,
-          query: 'getCaseOverview',
-        })
+        this.logger.info(
+          `getCaseOverview get cases query executed in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getCaseOverview',
+          },
+        )
       },
     })
 
-    const [counter, cases] = await Promise.all([counterResults, casesResults])
+    const counter = (await Promise.all(counterResults)).map((count, index) => ({
+      title: availableStatuses[index],
+      count,
+    }))
+    const cases = await casesResults
 
     const mappedCases = cases.rows.map((c) => caseOverviewMigrate(c))
 
@@ -777,15 +765,13 @@ export class CaseService implements ICaseService {
     )
 
     return ResultWrapper.ok({
-      cases: mappedCases,
       statuses: counter.map((c) =>
         caseOverviewStatusMigrate({
-          id: c.status.id,
-          slug: c.status.slug,
-          title: c.status.title,
+          title: c.title,
           count: c.count,
         }),
       ),
+      cases: mappedCases,
       paging,
     })
   }
