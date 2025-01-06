@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+import { CaseCommunicationStatus } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_communication_status', timestamps: false })
 @DefaultScope(() => ({
@@ -25,7 +26,7 @@ export class CaseCommunicationStatusModel extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: string
+  title!: CaseCommunicationStatus
 
   @Column({
     type: DataType.STRING,

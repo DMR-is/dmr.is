@@ -1,56 +1,39 @@
-import useSWR, { SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 
-import {
-  EditorialOverviewRequest,
-  EditorialOverviewResponse,
-} from '../../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../../lib/constants'
-
-type SWRCaseOverviewOptions = SWRConfiguration<EditorialOverviewResponse, Error>
-
-export type CaseEditorialOverviewParams = Partial<
-  Record<keyof EditorialOverviewRequest, string | number | undefined>
->
+import { EditorialOverviewRequest, GetCasesOverview } from '../../../gen/fetch'
+import { APIRoutes, fetcher } from '../../../lib/constants'
+import { generateParams } from '../../../lib/utils'
 
 type UseCaseOverviewParams = {
-  options?: SWRCaseOverviewOptions
-  params?: CaseEditorialOverviewParams
+  params?: Partial<EditorialOverviewRequest>
 }
 
-export const useCaseOverview = ({
-  options,
-  params,
-}: UseCaseOverviewParams = {}) => {
-  const {
-    data: caseOverviewData,
-    error,
-    isLoading,
-    isValidating,
-    mutate,
-  } = useSWR<EditorialOverviewResponse, Error>(
-    [APIRotues.GetEditorialOverview, params],
-    ([url, qsp]: [url: string, qsp: CaseEditorialOverviewParams]) => {
-      const params = new URLSearchParams()
-
-      Object.entries(qsp).forEach(([key, value]) => {
-        if (value) {
-          params.append(key, value.toString())
-        }
-      })
-
-      return fetcherV2(url, {
+export const useCaseOverview = ({ params }: UseCaseOverviewParams = {}) => {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<
+    GetCasesOverview,
+    Error
+  >(
+    [APIRoutes.GetEditorialOverview, params],
+    ([url, qsp]: [url: string, qsp: EditorialOverviewRequest]) => {
+      return fetcher(url, {
         arg: {
           method: 'GET',
           withAuth: true,
-          query: params,
+          query: generateParams(qsp),
         },
       })
     },
-    options,
+    {
+      refreshInterval: 1000 * 60 * 5,
+      revalidateOnFocus: true,
+      keepPreviousData: true,
+    },
   )
 
   return {
-    data: caseOverviewData,
+    cases: data?.cases,
+    paging: data?.paging,
+    statuses: data?.statuses,
     error,
     isLoading,
     isValidating,

@@ -2,30 +2,23 @@ import { useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
-import { useTypes } from '../../hooks/api'
+import { useAdvertTypes } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
-import { generateOptions } from '../../lib/utils'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const TypesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
 
-  const { data, error, isLoading } = useTypes({
-    params: {
-      page: 1,
-      pageSize: 1000,
+  const { types, isLoadingTypes, typesError } = useAdvertTypes({
+    typesParams: {
       search,
-    },
-    options: {
-      keepPreviousData: true,
-      refreshInterval: 0,
     },
   })
 
-  if (error) {
+  if (typesError) {
     return (
       <AlertMessage
         type="error"
@@ -35,29 +28,20 @@ export const TypesFilter = () => {
     )
   }
 
-  if (!data && !isLoading) {
-    return (
-      <AlertMessage
-        type="warning"
-        title={formatMessage(errorMessages.noDataTitle)}
-        message={formatMessage(errorMessages.noDataText)}
-      />
-    )
-  }
-
-  const options = generateOptions({
-    label: 'Tegund',
-    queryKey: 'type',
-    options: data?.types,
-  })
-
   return (
     <FilterGroup
       search={search}
       setSearch={setSearch}
-      loading={isLoading}
+      options={
+        types?.map((type) => ({
+          label: type.title,
+          value: type.title,
+        })) || []
+      }
+      label="Tegund"
+      queryKey="type"
+      loading={isLoadingTypes}
       searchPlaceholder={formatMessage(generalMessages.searchByType)}
-      {...options}
     />
   )
 }

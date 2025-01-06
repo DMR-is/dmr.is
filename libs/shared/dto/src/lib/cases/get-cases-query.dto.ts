@@ -57,23 +57,27 @@ export class GetCasesQuery {
 
   @ApiProperty({
     name: 'page',
-    type: String,
+    type: Number,
     description: 'Page number',
     required: false,
   })
   @IsOptional()
-  @IsNumberString()
-  page?: string
+  @Transform(({ value }) => {
+    return parseInt(value, 10)
+  })
+  page?: number
 
   @ApiProperty({
     name: 'pageSize',
-    type: String,
+    type: Number,
     description: 'Page size',
     required: false,
   })
   @IsOptional()
-  @IsNumberString()
-  pageSize?: string
+  @Transform(({ value }) => {
+    return parseInt(value, 10)
+  })
+  pageSize?: number
 
   @ApiProperty({
     name: 'caseNumber',

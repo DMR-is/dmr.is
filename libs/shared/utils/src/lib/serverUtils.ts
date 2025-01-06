@@ -7,6 +7,7 @@ import {
 } from 'sequelize'
 import {
   APPLICATION_FILES_BUCKET,
+  DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PRICE,
   FAST_TRACK_DAYS,
@@ -42,6 +43,22 @@ import {
   templateGjaldskra,
   templateReglugerd,
 } from './constants'
+
+type GetLimitAndOffsetParams = {
+  page?: number
+  pageSize?: number
+}
+export const getLimitAndOffset = ({
+  page = DEFAULT_PAGE_NUMBER,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: GetLimitAndOffsetParams) => {
+  const limit = pageSize
+  const offset = (page - 1) * limit
+  return {
+    offset,
+    limit,
+  }
+}
 
 export function generatePaging(
   data: unknown[],

@@ -1,27 +1,59 @@
+import { useEffect, useState } from 'react'
 import slugify from 'slugify'
 
-import { Button, Inline, Input, Stack } from '@island.is/island-ui/core'
+import { Button, Inline, Input, Stack, toast } from '@island.is/island-ui/core'
 
 import { Institution } from '../../gen/fetch'
+import { useInstitutions } from '../../hooks/api'
 
 type Props = {
-  institution: Institution
-  isDeleting: boolean
-  isUpdating: boolean
-  onChange: (institution: Institution) => void
-  onUpdate: (institution: Institution) => void
-  onDelete: (institution: Institution) => void
+  institution: Institution | null
+  onUpdateSuccess?: () => void
+  onDeleteSuccess?: () => void
 }
 
 export const UpdateInstitution = ({
   institution,
-  isDeleting,
-  isUpdating,
-  onChange,
-  onUpdate,
-  onDelete,
+  onDeleteSuccess,
+  onUpdateSuccess,
 }: Props) => {
-  const isDisabled = !institution.id
+  useEffect(() => {
+    if (institution) {
+      setUpdateState(institution)
+    } else {
+      setUpdateState({
+        id: '',
+        title: '',
+        slug: '',
+      })
+    }
+  }, [institution])
+
+  const [updateState, setUpdateState] = useState<Institution>({
+    id: '',
+    title: '',
+    slug: '',
+  })
+
+  const {
+    updateInstitution,
+    isUpdatingInstitution,
+    deleteInstitution,
+    isDeletingInstitution,
+  } = useInstitutions({
+    onUpdateSuccess: () => {
+      toast.success(`Stofnun ${updateState.title} uppfærð`)
+
+      onUpdateSuccess && onUpdateSuccess()
+    },
+    onDeleteSuccess: () => {
+      toast.success(`Stofnun ${updateState.title} eytt`)
+
+      onDeleteSuccess && onDeleteSuccess()
+    },
+  })
+
+  const isDisabled = !updateState.id
 
   return (
     <Stack space={[2, 2, 3]}>
@@ -33,8 +65,10 @@ export const UpdateInstitution = ({
         label="Titill stofnunar"
         placeholder="Sláðu inn heiti stofnunar"
         backgroundColor="blue"
-        value={institution.title}
-        onChange={(e) => onChange({ ...institution, title: e.target.value })}
+        value={updateState.title}
+        onChange={(e) =>
+          setUpdateState({ ...updateState, title: e.target.value })
+        }
       />
       <Input
         name="update-institution-slug"
@@ -44,15 +78,18 @@ export const UpdateInstitution = ({
         placeholder="Sláðu inn heiti stofnunar"
         backgroundColor="blue"
         readOnly
-        value={slugify(institution.title, { lower: true })}
+        value={slugify(updateState.title, { lower: true })}
       />
       <Inline space={2} justifyContent="spaceBetween" flexWrap="wrap">
         <Button
           disabled={isDisabled}
           icon="trash"
           iconType="outline"
-          loading={isDeleting}
-          onClick={() => onDelete(institution)}
+          loading={isDeletingInstitution}
+          onClick={() => {
+            if (!institution?.id) return
+            deleteInstitution({ id: institution.id })
+          }}
           size="small"
           variant="ghost"
           colorScheme="destructive"
@@ -63,8 +100,8 @@ export const UpdateInstitution = ({
           disabled={isDisabled}
           icon="pencil"
           iconType="outline"
-          loading={isUpdating}
-          onClick={() => onUpdate(institution)}
+          loading={isUpdatingInstitution}
+          onClick={() => updateInstitution(updateState)}
           size="small"
           variant="ghost"
         >

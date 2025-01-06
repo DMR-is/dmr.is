@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCaseResponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UseCaseParams = {
   caseId: string
@@ -12,10 +12,17 @@ export const useCase = ({ caseId, options }: UseCaseParams) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     GetCaseResponse,
     Error
-  >(APIRotues.GetCase.replace(':id', caseId), fetcher, options)
+  >(
+    caseId ? [APIRoutes.GetCase, caseId] : null,
+    ([url, id]: [url: string, id: string]) =>
+      fetcher(url.replace(':id', id), {
+        arg: { withAuth: true, method: 'GET' },
+      }),
+    options,
+  )
 
   return {
-    data,
+    case: data?._case,
     error,
     isLoading,
     isValidating,

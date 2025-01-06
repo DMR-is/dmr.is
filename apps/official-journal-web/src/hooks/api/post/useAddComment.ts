@@ -8,7 +8,7 @@ export type AddCommentTriggerArgs = {
   receiver?: string
 }
 
-import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type SWRAddCommentOptions = SWRMutationConfiguration<
   Response,
@@ -28,7 +28,17 @@ export const useAddComment = ({ caseId, options }: UseAddCommentParams) => {
     Error,
     Key,
     AddCommentTriggerArgs
-  >(APIRoutes.CreateComment.replace(':id', caseId), updateFetcher, options)
+  >(
+    caseId ? APIRoutes.CreateComment.replace(':id', caseId) : null,
+    (url: string, { arg }: { arg: AddCommentTriggerArgs }) =>
+      fetcher<Response, AddCommentTriggerArgs>(url, {
+        arg: { withAuth: true, method: 'POST', body: arg },
+      }),
+    {
+      ...options,
+      throwOnError: false,
+    },
+  )
 
   return {
     trigger,

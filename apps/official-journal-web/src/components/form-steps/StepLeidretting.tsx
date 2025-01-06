@@ -31,7 +31,7 @@ export const StepLeidretting = ({
   const { formatMessage } = useFormatMessage()
 
   const {
-    data: caseData,
+    case: caseData,
     error: caseError,
     isLoading: isLoadingCase,
   } = useCase({
@@ -72,10 +72,8 @@ export const StepLeidretting = ({
     )
   }
 
-  const activeCase = caseData._case
-
   const isRejected =
-    activeCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
+    caseData.status.title === CaseStatusTitleEnum.BirtinguHafnað
 
   return (
     <GridContainer>
@@ -105,12 +103,12 @@ export const StepLeidretting = ({
             <HTMLEditor
               key={timestamp}
               readonly={!isFixing}
-              defaultValue={activeCase.html}
+              defaultValue={caseData.html}
               onChange={onAdvertHtmlChange}
             />
             <HTMLEditor
               readonly={true}
-              defaultValue={activeCase.signatures
+              defaultValue={caseData.signatures
                 .map((signature) => signature.html)
                 .join(' ')}
             />

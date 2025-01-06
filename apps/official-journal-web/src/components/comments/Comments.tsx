@@ -6,7 +6,7 @@ import { Box, Button, Icon, Tabs, Tag, Text } from '@island.is/island-ui/core'
 import { Case } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { APIRotues, COMMENTS_TO_HIDE } from '../../lib/constants'
+import { COMMENTS_TO_HIDE } from '../../lib/constants'
 import { commentToNode, getCommentIcon } from '../../lib/utils'
 import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
@@ -28,7 +28,6 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
   })
   const { trigger: onDeleteComment, isMutating: isDeletingComment } =
     useDeleteComment({
-      basePath: APIRotues.DeleteComment.replace(':id', activeCase.id),
       options: {
         onSuccess: () => {
           const currentCommentCount = activeCase.comments.length - 1

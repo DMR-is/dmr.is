@@ -1,10 +1,6 @@
 import { getSession } from 'next-auth/react'
 
-import {
-  AlertMessageProps,
-  AlertMessageType,
-  StringOption,
-} from '@island.is/island-ui/core'
+import { AlertMessageType, StringOption } from '@island.is/island-ui/core'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104
@@ -25,6 +21,7 @@ export enum Routes {
   MainCategories = '/yfirflokkar',
   MainTypes = '/tegundir',
   ProcessingOverview = '/ritstjorn',
+  ProccessingDetail = '/ritstjorn/:caseId',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
@@ -50,6 +47,9 @@ type Path = {
   title: string
   order: number
 }
+
+export const WAITING_ANSWERS_VALUE = 'Beðið eftir svörum'
+export const NEW_ANSWER_VALUE = 'Svör hafa borist'
 
 export const PagePaths: Array<Path> = [
   { pathname: Routes.Overview, title: PageTitles.CaseOverview, order: 4 },
@@ -82,44 +82,12 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
 export const defaultFetcher = (url: string) =>
   fetch(url).then((res) => res.json())
 
-export async function fetcher(
-  url: string,
-  { arg }: { arg: { method: 'GET' | 'DELETE' | undefined } } = {
-    arg: { method: 'GET' },
-  },
-) {
-  const res = await fetch(url, {
-    method: arg.method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!res.ok) {
-    const parsedError = await res.json()
-
-    const error = new OJOIWebException(parsedError.message)
-
-    error.status = res.status
-    error.name = parsedError.name
-    error.type = parsedError.severity
-
-    throw error
-  }
-
-  if (res.status === 204) {
-    return
-  }
-
-  return await res.json()
-}
-
 type FetcherArgs<T> =
   | {
       withAuth?: boolean
       method: 'POST' | 'PUT'
       query?: URLSearchParams
-      body: T
+      body?: T
     }
   | {
       withAuth?: boolean
@@ -127,11 +95,11 @@ type FetcherArgs<T> =
       query?: URLSearchParams
       body?: undefined
     }
-export const fetcherV2 = async <TData, TBody = never>(
+export const fetcher = async <TData, TBody = never>(
   url: string,
   { arg }: { arg: FetcherArgs<TBody> },
 ): Promise<TData> => {
-  const withBody = arg.method === 'POST' || arg.method === 'PUT'
+  const withBody = (arg.method === 'POST' || arg.method === 'PUT') && arg.body
 
   const withAuth = arg.withAuth ?? true
   let authHeader = ''
@@ -164,49 +132,14 @@ export const fetcherV2 = async <TData, TBody = never>(
   return res.json()
 }
 
-export async function updateFetcher<T>(
-  url: string,
-  { arg, method }: { arg: T; method?: 'PUT' | 'POST' },
-) {
-  const response = await fetch(url, {
-    method: method ? method : 'POST',
-    body: JSON.stringify(arg),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    const parsedError = await response.json()
-
-    const error = new OJOIWebException(parsedError.message)
-
-    error.status = response.status
-    error.name = parsedError.name
-    error.type = parsedError.severity
-
-    throw error
-  }
-
-  if (response.status === 204) {
-    return
-  }
-
-  try {
-    return await response.json()
-  } catch (error) {
-    return null
-  }
-}
-
-export enum APIRotues {
+export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
   MainTypes = '/api/mainTypes',
   MainType = '/api/mainTypes/:id',
   Types = '/api/types',
   Type = '/api/types/:id',
-  GetEditorialOverview = '/api/cases/editorialOverview',
+  GetEditorialOverview = '/api/cases/overview',
   GetDepartments = '/api/cases/departments',
   GetCategories = '/api/cases/categories',
   GetMainCategories = '/api/mainCategories',

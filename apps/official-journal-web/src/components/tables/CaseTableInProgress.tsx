@@ -13,7 +13,7 @@ import { messages } from './messages'
 import { TableProps } from './types'
 
 export const CaseTableInProgress = ({
-  data,
+  cases,
   paging,
   isLoading,
 }: TableProps) => {
@@ -50,11 +50,16 @@ export const CaseTableInProgress = ({
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => ({
+  const rows = cases?.map((row) => ({
     case: row,
     cells: [
       {
-        children: <CaseToolTips case={row} />,
+        children: (
+          <CaseToolTips
+            fastTrack={row.fastTrack}
+            status={row.communicationStatus.title}
+          />
+        ),
       },
       {
         sortingKey: 'casePublishDate',

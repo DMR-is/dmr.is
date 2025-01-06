@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { toast } from 'react-toastify'
+
 import {
   Box,
   Button,
@@ -13,28 +16,46 @@ import {
   AdminUserRole,
   CreateAdminUser as CreateAdminUserDto,
 } from '../../gen/fetch'
+import { useAdminUsers } from '../../hooks/api'
 
 type Props = {
-  isCreatingUser: boolean
-  user: CreateAdminUserDto
   roles: AdminUserRole[]
-  onUpdateCreateUser: (user: CreateAdminUserDto) => void
-  onCreateUser: (user: CreateAdminUserDto) => void
+  onCreateSuccess: () => void
 }
 
-export const CreateAdminUser = ({
-  user,
-  roles,
-  isCreatingUser,
-  onUpdateCreateUser,
-  onCreateUser,
-}: Props) => {
+export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
+  const [createAdminUser, setCreateAdminUser] = useState<CreateAdminUserDto>({
+    nationalId: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    displayName: '',
+    roleIds: [],
+  })
+
+  const { createUser, isCreatingUser } = useAdminUsers({
+    onCreateSuccess: () => {
+      toast.success(
+        `Notandi hefur ${createAdminUser.displayName} verið stofnaður`,
+      )
+      setCreateAdminUser({
+        nationalId: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        displayName: '',
+        roleIds: [],
+      })
+      onCreateSuccess && onCreateSuccess()
+    },
+  })
+
   const rolesOptions = roles.map((role) => ({
     label: role.title,
     value: role,
   }))
 
-  const isDisabled = Object.values(user).some(
+  const isDisabled = Object.values(createAdminUser).some(
     (value) => !value || (Array.isArray(value) && value.length === 0),
   )
 
@@ -46,10 +67,10 @@ export const CreateAdminUser = ({
         type="number"
         label="Kennitala"
         backgroundColor="blue"
-        value={user.nationalId}
+        value={createAdminUser.nationalId}
         onChange={(e) =>
-          onUpdateCreateUser({
-            ...user,
+          setCreateAdminUser({
+            ...createAdminUser,
             nationalId: e.target.value,
           })
         }
@@ -60,10 +81,10 @@ export const CreateAdminUser = ({
         type="email"
         label="Netfang"
         backgroundColor="blue"
-        value={user.email}
+        value={createAdminUser.email}
         onChange={(e) =>
-          onUpdateCreateUser({
-            ...user,
+          setCreateAdminUser({
+            ...createAdminUser,
             email: e.target.value,
           })
         }
@@ -73,10 +94,10 @@ export const CreateAdminUser = ({
         size="sm"
         label="Fornafn"
         backgroundColor="blue"
-        value={user.firstName}
+        value={createAdminUser.firstName}
         onChange={(e) =>
-          onUpdateCreateUser({
-            ...user,
+          setCreateAdminUser({
+            ...createAdminUser,
             firstName: e.target.value,
           })
         }
@@ -86,10 +107,10 @@ export const CreateAdminUser = ({
         size="sm"
         label="Eftirnafn"
         backgroundColor="blue"
-        value={user.lastName}
+        value={createAdminUser.lastName}
         onChange={(e) =>
-          onUpdateCreateUser({
-            ...user,
+          setCreateAdminUser({
+            ...createAdminUser,
             lastName: e.target.value,
           })
         }
@@ -99,10 +120,10 @@ export const CreateAdminUser = ({
         size="sm"
         label="Notendanafn"
         backgroundColor="blue"
-        value={user.displayName}
+        value={createAdminUser.displayName}
         onChange={(e) =>
-          onUpdateCreateUser({
-            ...user,
+          setCreateAdminUser({
+            ...createAdminUser,
             displayName: e.target.value,
           })
         }
@@ -115,21 +136,23 @@ export const CreateAdminUser = ({
         onChange={(opt) => {
           if (!opt?.value) return
 
-          if (user.roleIds.includes(opt.value.id)) {
-            onUpdateCreateUser({
-              ...user,
-              roleIds: user.roleIds.filter((id) => id !== opt.value.id),
+          if (createAdminUser.roleIds.includes(opt.value.id)) {
+            setCreateAdminUser({
+              ...createAdminUser,
+              roleIds: createAdminUser.roleIds.filter(
+                (id) => id !== opt.value.id,
+              ),
             })
           } else {
-            onUpdateCreateUser({
-              ...user,
-              roleIds: user.roleIds.concat(opt.value.id),
+            setCreateAdminUser({
+              ...createAdminUser,
+              roleIds: createAdminUser.roleIds.concat(opt.value.id),
             })
           }
         }}
       />
       <Inline space={2} flexWrap="wrap">
-        {user.roleIds.map((roleId) => {
+        {createAdminUser.roleIds.map((roleId) => {
           const role = roles.find((r) => r.id === roleId)
 
           return (
@@ -137,9 +160,11 @@ export const CreateAdminUser = ({
               outlined
               key={role?.id}
               onClick={() =>
-                onUpdateCreateUser({
-                  ...user,
-                  roleIds: user.roleIds.filter((id) => id !== roleId),
+                setCreateAdminUser({
+                  ...createAdminUser,
+                  roleIds: createAdminUser.roleIds.filter(
+                    (id) => id !== roleId,
+                  ),
                 })
               }
             >
@@ -160,7 +185,7 @@ export const CreateAdminUser = ({
         <Button
           disabled={isDisabled}
           loading={isCreatingUser}
-          onClick={() => onCreateUser(user)}
+          onClick={() => createUser(createAdminUser)}
           variant="ghost"
           size="small"
           icon="person"

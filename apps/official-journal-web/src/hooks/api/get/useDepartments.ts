@@ -1,14 +1,17 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetDepartmentsResponse } from '../../../gen/fetch'
-import { APIRotues, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
+import { generateParams } from '../../../lib/utils'
 
 type SWRDepartmentsOptions = SWRConfiguration<GetDepartmentsResponse, Error>
 
+type Params = Record<keyof SearchParams, string | number>
+
 type UseDepartmentsParams = {
   options?: SWRDepartmentsOptions
-  params?: Record<keyof SearchParams, string | number>
+  params?: Params
 }
 
 export const useDepartments = ({
@@ -19,14 +22,14 @@ export const useDepartments = ({
     GetDepartmentsResponse,
     Error
   >(
-    [APIRotues.GetDepartments, params],
-    ([url, qsp]: [url: string, qsp: Record<string, string>]) => {
-      const query = new URLSearchParams(qsp)
-
-      const fullUrl = `${url}?${query.toString()}`
-
-      return fetcher(fullUrl)
-    },
+    [APIRoutes.GetDepartments, params],
+    ([url, qsp]: [url: string, qsp: Params]) =>
+      fetcher(url, {
+        arg: {
+          method: 'GET',
+          query: generateParams(qsp),
+        },
+      }),
     options,
   )
 

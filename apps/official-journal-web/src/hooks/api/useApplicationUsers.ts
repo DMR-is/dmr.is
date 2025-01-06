@@ -9,12 +9,12 @@ import {
   GetApplicationUsersRequest,
   UpdateApplicationUser,
 } from '../../gen/fetch'
-import { APIRotues, fetcherV2 } from '../../lib/constants'
+import { APIRoutes, fetcher } from '../../lib/constants'
 
 type UpdateApplicationUserParams = UpdateApplicationUser & { id: string }
 
 type Props = {
-  searchParams: Record<keyof GetApplicationUsersRequest, string | undefined>
+  searchParams?: Record<keyof GetApplicationUsersRequest, string | undefined>
   config?: SWRConfiguration
   onCreateSuccess?: (user: GetApplicationUser) => void
   onUpdateSuccess?: (user: GetApplicationUser) => void
@@ -26,8 +26,9 @@ export const useApplicationUsers = (props: Props) => {
     data,
     isLoading: applicationUsersLoading,
     error: applicationUsersError,
+    mutate,
   } = useSWR<GetApplicationUsers, Error>(
-    [APIRotues.ApplicationUsers, props.searchParams],
+    [APIRoutes.ApplicationUsers, props.searchParams],
     ([url, qp]) => {
       const qsp = new URLSearchParams()
 
@@ -39,11 +40,14 @@ export const useApplicationUsers = (props: Props) => {
         }
       }
 
-      return fetcherV2<GetApplicationUsers>(url, {
-        arg: { method: 'GET', query: qsp },
+      return fetcher<GetApplicationUsers>(url, {
+        arg: { withAuth: true, method: 'GET', query: qsp },
       })
     },
-    props.config,
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
   )
 
   const {
@@ -51,12 +55,13 @@ export const useApplicationUsers = (props: Props) => {
     isMutating: isCreatingApplicationUser,
     error: createApplicationUserError,
   } = useSWRMutation<GetApplicationUser, Error, Key, CreateApplicationUser>(
-    APIRotues.ApplicationUsers,
+    APIRoutes.ApplicationUsers,
     (url: string, { arg }: { arg: CreateApplicationUser }) =>
-      fetcherV2<GetApplicationUser, CreateApplicationUser>(url, {
-        arg: { method: 'POST', body: arg },
+      fetcher<GetApplicationUser, CreateApplicationUser>(url, {
+        arg: { withAuth: true, method: 'POST', body: arg },
       }),
     {
+      throwOnError: false,
       onSuccess: (user) => {
         props.onCreateSuccess && props.onCreateSuccess(user)
       },
@@ -73,17 +78,18 @@ export const useApplicationUsers = (props: Props) => {
     Key,
     UpdateApplicationUserParams
   >(
-    APIRotues.ApplicationUser,
+    APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: UpdateApplicationUserParams }) => {
       const { id, ...body } = arg
-      return fetcherV2<GetApplicationUser, UpdateApplicationUser>(
+      return fetcher<GetApplicationUser, UpdateApplicationUser>(
         url.replace(':id', arg.id),
         {
-          arg: { method: 'PUT', body: body },
+          arg: { withAuth: true, method: 'PUT', body: body },
         },
       )
     },
     {
+      throwOnError: false,
       onSuccess: (user) => {
         props.onUpdateSuccess && props.onUpdateSuccess(user)
       },
@@ -95,21 +101,26 @@ export const useApplicationUsers = (props: Props) => {
     isMutating: isDeletingApplicationUser,
     error: deleteApplicationUserError,
   } = useSWRMutation<Response, Error, Key, DeleteApplicationUserRequest>(
-    APIRotues.ApplicationUser,
+    APIRoutes.ApplicationUser,
     (url: string, { arg }: { arg: DeleteApplicationUserRequest }) => {
-      return fetcherV2<Response, DeleteApplicationUserRequest>(
+      return fetcher<Response, DeleteApplicationUserRequest>(
         url.replace(':id', arg.id),
         {
-          arg: { method: 'DELETE' },
+          arg: { withAuth: true, method: 'DELETE' },
         },
       )
     },
     {
+      throwOnError: false,
       onSuccess: () => {
         props.onDeleteSuccess && props.onDeleteSuccess()
       },
     },
   )
+
+  const getApplicationUsers = () => {
+    mutate()
+  }
 
   const createApplicationUser = (body: CreateApplicationUser) => {
     createApplicationUserTrigger({ ...body })
@@ -124,6 +135,7 @@ export const useApplicationUsers = (props: Props) => {
   }
 
   return {
+    getApplicationUsers,
     applicationUsers: data?.users,
     applicationUsersLoading,
     applicationUsersError,

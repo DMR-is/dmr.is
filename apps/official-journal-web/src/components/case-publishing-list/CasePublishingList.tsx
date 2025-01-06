@@ -50,15 +50,15 @@ export const CasePublishingList = ({
     },
   })
 
-  const ids = casesWithPublishingNumber.map((c) => c.id).join(',')
+  const ids = casesWithPublishingNumber.map((c) => c.id)
 
   const { data, error, isLoading } = useCases({
     options: {
       refreshInterval: 0,
     },
     params: {
-      status: CaseStatusTitleEnum.Tilbúið,
-      id: ids,
+      status: [CaseStatusTitleEnum.Tilbúið],
+      id: [...ids],
     },
   })
 

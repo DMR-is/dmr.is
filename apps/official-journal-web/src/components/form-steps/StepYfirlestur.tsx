@@ -29,7 +29,7 @@ export const StepYfirlestur = ({ data }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const {
-    data: caseData,
+    case: caseData,
     error: caseError,
     isLoading: isLoadingCase,
     mutate: refetchCase,
@@ -63,9 +63,7 @@ export const StepYfirlestur = ({ data }: Props) => {
     return <div>No data</div>
   }
 
-  const activeCase = caseData._case
-
-  const signatureDate = getSignatureDate(activeCase.signatures)
+  const signatureDate = getSignatureDate(caseData.signatures)
 
   return (
     <GridContainer>
@@ -80,17 +78,17 @@ export const StepYfirlestur = ({ data }: Props) => {
       <GridRow marginBottom={2} rowGap={2} alignItems="center">
         <GridColumn span={['12/12']}>
           <AdvertDisplay
-            advertNumber={`${activeCase.caseNumber}`}
+            advertNumber={`${caseData.caseNumber}`}
             signatureDate={
               signatureDate
                 ? formatDate(signatureDate, 'dd. MMMM yyyy')
                 : undefined
             }
-            advertType={activeCase.advertType.title}
-            advertSubject={activeCase.advertTitle}
-            advertText={activeCase.html}
-            signatureHtml={activeCase.signatures.map((s) => s.html).join('')}
-            isLegacy={activeCase.isLegacy}
+            advertType={caseData.advertType.title}
+            advertSubject={caseData.advertTitle}
+            advertText={caseData.html}
+            signatureHtml={caseData.signatures.map((s) => s.html).join('')}
+            isLegacy={caseData.isLegacy}
           />
         </GridColumn>
       </GridRow>
@@ -101,8 +99,8 @@ export const StepYfirlestur = ({ data }: Props) => {
             <Select
               name="tag"
               defaultValue={{
-                label: activeCase.tag.title,
-                value: activeCase.tag.id,
+                label: caseData.tag.title,
+                value: caseData.tag.id,
               }}
               options={tagsData.tags.map((tag) => ({
                 label: tag.title,
@@ -121,7 +119,7 @@ export const StepYfirlestur = ({ data }: Props) => {
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '12/12', '6/12']}>
             <Box display="flex" justifyContent="flexEnd">
-              <OriginalCompare activeCase={activeCase} />
+              <OriginalCompare activeCase={caseData} />
             </Box>
           </GridColumn>
         </GridRow>

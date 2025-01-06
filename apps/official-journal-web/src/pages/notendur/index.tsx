@@ -7,7 +7,6 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Select,
   SkeletonLoader,
   Stack,
   Text,
@@ -15,6 +14,7 @@ import {
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
+import { OJOISelect } from '../../components/select/OJOISelect'
 import { CreateAdminUser } from '../../components/users/CreateAdminUser'
 import { CreateApplicationUser } from '../../components/users/CreateApplicationUser'
 import { CreateInstitution } from '../../components/users/CreateInstitution'
@@ -24,12 +24,8 @@ import { UpdateInstitution } from '../../components/users/UpdateInstitution'
 import {
   AdminUser,
   AdminUserRole,
-  CreateAdminUser as CreateAdminUserDto,
-  CreateApplicationUser as CreateApplicationUserDto,
-  CreateInstitution as CreateInstitutionDto,
+  ApplicationUser,
   Institution,
-  UpdateAdminUser as UpdateAdminUserDto,
-  UpdateApplicationUser as UpdateApplicationUserDto,
 } from '../../gen/fetch'
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
 import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
@@ -38,7 +34,7 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { loginRedirect } from '../../lib/utils'
 
 type Props = {
-  currentUser: AdminUser
+  currentUser: AdminUser | null
   roles: AdminUserRole[]
 }
 
@@ -48,200 +44,53 @@ export default function UsersPage({ currentUser, roles }: Props) {
     setSelectedApplicationUserInstitution,
   ] = useState<Institution | null>(null)
 
-  const [createUserState, setCreateUserState] = useState<CreateAdminUserDto>({
-    nationalId: '',
-    firstName: '',
-    lastName: '',
-    displayName: '',
-    email: '',
-    roleIds: [],
-  })
+  const [selectedAdminUser, setSelectedAdminUser] = useState<AdminUser | null>(
+    null,
+  )
 
-  const [updateUserState, setUpdateUserState] = useState<
-    UpdateAdminUserDto & { id: string }
-  >({
-    id: '',
-    email: '',
-    displayName: '',
-    firstName: '',
-    lastName: '',
-    roleIds: [],
-  })
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null)
 
-  const [createApplicationUserState, setCreateApplicationUserState] =
-    useState<CreateApplicationUserDto>({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      involvedPartyIds: [],
+  const [selectedApplicationUser, setSelectedApplicationUser] =
+    useState<ApplicationUser | null>(null)
+
+  const { users, getUsers, isLoadingUsers, isUsersValidating } = useAdminUsers()
+
+  const { getApplicationUsers, applicationUsers, applicationUsersLoading } =
+    useApplicationUsers({
+      searchParams: {
+        involvedParty: selectedApplicationUserInstitution?.id,
+      },
+      config: {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+      },
     })
 
-  const [updateApplicationUserState, setUpdateApplicationUserState] = useState<
-    UpdateApplicationUserDto & { id: string }
-  >({
-    id: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    involvedPartyIds: [],
-  })
-
-  const [createInstitutionState, setCreateInstitutionState] =
-    useState<CreateInstitutionDto>({
-      title: '',
+  const { institutions, getInstitutions, isLoadingInstitutions } =
+    useInstitutions({
+      config: {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+      },
+      searchParams: {
+        search: undefined,
+        page: 1,
+        pageSize: 1000,
+      },
+      onCreateSuccess: () => {
+        getInstitutions()
+      },
+      onDeleteSuccess: () => {
+        getInstitutions()
+      },
+      onUpdateSuccess: () => {
+        getInstitutions()
+      },
     })
-
-  const [updateInstitutionState, setUpdateInstitutionState] =
-    useState<Institution>({
-      id: '',
-      title: '',
-      slug: '',
-    })
-
-  const {
-    users,
-    getUsers,
-    isLoadingUsers,
-    createUser,
-    isCreatingUser,
-    updateUser,
-    isUpdatingUser,
-    deleteUser,
-    isDeletingUser,
-  } = useAdminUsers({
-    onUpdateSuccess: () => {
-      resetUpdateState()
-      getUsers()
-    },
-    onCreateSuccess: () => {
-      resetCreateState()
-      getUsers()
-    },
-    onDeleteSuccess: () => {
-      resetUpdateState()
-      getUsers()
-    },
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-  })
-
-  const {
-    applicationUsers,
-    applicationUsersLoading,
-    createApplicationUser,
-    isCreatingApplicationUser,
-    updateApplicationUser,
-    isUpdatingApplicationUser,
-    deleteApplicationUser,
-    isDeletingApplicationUser,
-  } = useApplicationUsers({
-    searchParams: {
-      involvedParty: selectedApplicationUserInstitution?.id,
-    },
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-    onUpdateSuccess: ({ user }) => {
-      setUpdateApplicationUserState({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        involvedPartyIds: user.involvedParties.map((inst) => inst.id),
-      })
-    },
-    onCreateSuccess: () => {
-      resetCreateApplicationUserState()
-      getUsers()
-    },
-    onDeleteSuccess: () => {
-      resetUpdateApplicationUserState()
-      getUsers()
-    },
-  })
-
-  const {
-    institutions,
-    createInstitution,
-    deleteInstitution,
-    getInstitutions,
-    isCreatingInstitution,
-    isDeletingInstitution,
-    isLoadingInstitutions,
-    isUpdatingInstitution,
-    updateInstitution,
-  } = useInstitutions({
-    config: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-    searchParams: {
-      search: undefined,
-      page: 1,
-      pageSize: 1000,
-    },
-    onCreateSuccess: () => {
-      setCreateInstitutionState({ title: '' })
-      getInstitutions()
-    },
-    onDeleteSuccess: () => {
-      setUpdateInstitutionState({ id: '', title: '', slug: '' })
-      getInstitutions()
-    },
-    onUpdateSuccess: () => {
-      setUpdateInstitutionState({ id: '', title: '', slug: '' })
-      getInstitutions()
-    },
-  })
-
-  const resetCreateState = () => {
-    setCreateUserState({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      displayName: '',
-      email: '',
-      roleIds: [],
-    })
-  }
-
-  const resetUpdateState = () => {
-    setUpdateUserState({
-      id: '',
-      email: '',
-      displayName: '',
-      firstName: '',
-      lastName: '',
-      roleIds: [],
-    })
-  }
-
-  const resetUpdateApplicationUserState = () => {
-    setUpdateApplicationUserState({
-      id: '',
-      email: '',
-      firstName: '',
-      lastName: '',
-      involvedPartyIds: [],
-    })
-  }
-
-  const resetCreateApplicationUserState = () => {
-    setCreateApplicationUserState({
-      nationalId: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      involvedPartyIds: [],
-    })
-  }
 
   const usersOptions = users?.flatMap((user) => {
-    if (user.nationalId === currentUser.nationalId) {
+    if (user.nationalId === currentUser?.nationalId) {
       return []
     }
 
@@ -277,45 +126,34 @@ export default function UsersPage({ currentUser, roles }: Props) {
             paddingBottom={[2, 2, 3]}
           >
             <ContentWrapper title="Notendur ritstjórnar">
-              {isLoadingUsers ? (
-                <SkeletonLoader space={[2, 2, 3]} repeat={5} height={40} />
-              ) : (
-                <Stack space={[2, 2, 3]}>
-                  <Select
-                    filterConfig={{
-                      matchFrom: 'start',
-                    }}
-                    size="sm"
-                    label="Notandi"
-                    placeholder="Veldu ristjóra"
-                    backgroundColor="blue"
-                    options={usersOptions}
-                    onChange={(opt) => {
-                      if (!opt?.value) return
-
-                      const user = opt.value
-
-                      setUpdateUserState({
-                        id: user.id,
-                        email: user.email,
-                        displayName: user.displayName,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        roleIds: user.roles.map((role) => role.id),
-                      })
-                    }}
-                  />
-                  <UpdateAdminUser
-                    user={updateUserState}
-                    roles={roles}
-                    isUpdatingUser={isUpdatingUser}
-                    isDeletingUser={isDeletingUser}
-                    onUserChange={(user) => setUpdateUserState(user)}
-                    onUpdateUser={updateUser}
-                    onDeleteUser={deleteUser}
-                  />
-                </Stack>
-              )}
+              <Stack space={[2, 2, 3]}>
+                <OJOISelect
+                  isClearable
+                  isLoading={isLoadingUsers || isUsersValidating}
+                  size="sm"
+                  label="Notandi"
+                  placeholder="Veldu ristjóra"
+                  backgroundColor="blue"
+                  options={usersOptions}
+                  value={usersOptions?.find(
+                    (opt) => opt.value.id === selectedAdminUser?.id,
+                  )}
+                  onChange={(opt) =>
+                    opt
+                      ? setSelectedAdminUser(opt.value)
+                      : setSelectedAdminUser(null)
+                  }
+                />
+                <UpdateAdminUser
+                  user={selectedAdminUser}
+                  roles={roles}
+                  onDeleteSuccess={() => {
+                    setSelectedAdminUser(null)
+                    getUsers()
+                  }}
+                  onUpdatedSuccess={() => getUsers()}
+                />
+              </Stack>
             </ContentWrapper>
           </GridColumn>
           <GridColumn
@@ -327,11 +165,10 @@ export default function UsersPage({ currentUser, roles }: Props) {
                 <SkeletonLoader height={40} />
               ) : (
                 <CreateAdminUser
-                  isCreatingUser={isCreatingUser}
-                  user={createUserState}
                   roles={roles}
-                  onUpdateCreateUser={(user) => setCreateUserState(user)}
-                  onCreateUser={createUser}
+                  onCreateSuccess={() => {
+                    getUsers()
+                  }}
                 />
               )}
             </ContentWrapper>
@@ -344,10 +181,7 @@ export default function UsersPage({ currentUser, roles }: Props) {
           >
             <ContentWrapper title="Notendur umsóknarkerfis">
               <Stack space={[2, 2, 3]}>
-                <Select
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
+                <OJOISelect
                   isClearable
                   size="sm"
                   label="Stofnun"
@@ -355,19 +189,16 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   backgroundColor="blue"
                   options={institutionsOptions}
                   onChange={(opt) => {
-                    if (!opt?.value) {
+                    if (!opt) {
                       setSelectedApplicationUserInstitution(null)
-                      resetUpdateApplicationUserState()
+                      setSelectedApplicationUser(null)
                       return
                     }
 
                     setSelectedApplicationUserInstitution(opt.value)
                   }}
                 />
-                <Select
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
+                <OJOISelect
                   isClearable
                   noOptionsMessage="Engir notendur eru skráðir fyrir þessa stofnun"
                   isLoading={applicationUsersLoading}
@@ -377,30 +208,23 @@ export default function UsersPage({ currentUser, roles }: Props) {
                   backgroundColor="blue"
                   options={applicationUsersOptions}
                   onChange={(opt) => {
-                    if (!opt?.value) {
-                      resetUpdateApplicationUserState()
-                      return
+                    if (!opt) {
+                      return setSelectedApplicationUser(null)
                     }
-                    const institutionIds = opt.value.involvedParties.map(
-                      (inst) => inst.id,
-                    )
-                    setUpdateApplicationUserState({
-                      id: opt.value.id,
-                      email: opt.value.email,
-                      firstName: opt.value.firstName,
-                      lastName: opt.value.lastName,
-                      involvedPartyIds: institutionIds,
-                    })
+
+                    setSelectedApplicationUser(opt.value)
                   }}
                 />
                 <UpdateApplicationUser
-                  user={updateApplicationUserState}
+                  user={selectedApplicationUser}
                   institutions={institutions?.institutions || []}
-                  isUpdatingUser={isUpdatingApplicationUser}
-                  isDeletingUser={isDeletingApplicationUser}
-                  onChangeUser={(user) => setUpdateApplicationUserState(user)}
-                  onUpdateUser={(user) => updateApplicationUser(user)}
-                  onDeleteUser={(user) => deleteApplicationUser(user.id)}
+                  onDeleteSuccess={() => {
+                    setSelectedApplicationUser(null)
+                    getApplicationUsers()
+                  }}
+                  onUpdateSuccess={() => {
+                    getApplicationUsers()
+                  }}
                 />
               </Stack>
             </ContentWrapper>
@@ -411,11 +235,8 @@ export default function UsersPage({ currentUser, roles }: Props) {
           >
             <ContentWrapper title="Stofna innsendanda">
               <CreateApplicationUser
-                user={createApplicationUserState}
                 institutions={institutions?.institutions || []}
-                isCreatingUser={isCreatingApplicationUser}
-                onUpdateUser={(user) => setCreateApplicationUserState(user)}
-                onCreateUser={(user) => createApplicationUser(user)}
+                onCreateSuccess={() => getApplicationUsers()}
               />
             </ContentWrapper>
           </GridColumn>
@@ -424,57 +245,41 @@ export default function UsersPage({ currentUser, roles }: Props) {
           <GridColumn span={['12/12', '12/12', '6/12']}>
             <ContentWrapper title="Stofnanir">
               <Stack space={[2, 2, 3]}>
-                <Select
+                <OJOISelect
+                  key={selectedInstitution?.id}
                   isClearable
                   isLoading={isLoadingInstitutions}
-                  filterConfig={{
-                    matchFrom: 'start',
-                  }}
                   size="sm"
                   label="Stofnun"
                   placeholder="Veldu stofnun"
                   backgroundColor="blue"
                   options={institutionsOptions}
+                  value={institutionsOptions?.find(
+                    (opt) => opt.value.id === selectedInstitution?.id,
+                  )}
                   onChange={(opt) => {
-                    if (!opt?.value) {
-                      setSelectedApplicationUserInstitution(null)
-                      resetUpdateApplicationUserState()
+                    if (!opt) {
+                      setSelectedInstitution(null)
                       return
                     }
 
-                    setUpdateInstitutionState(opt.value)
+                    setSelectedInstitution(opt.value)
                   }}
                 />
                 <UpdateInstitution
-                  isUpdating={isUpdatingInstitution}
-                  isDeleting={isDeletingInstitution}
-                  institution={updateInstitutionState}
-                  onChange={(institution) =>
-                    setUpdateInstitutionState(institution)
-                  }
-                  onUpdate={() =>
-                    updateInstitution({
-                      id: updateInstitutionState.id,
-                      title: updateInstitutionState.title,
-                    })
-                  }
-                  onDelete={() =>
-                    deleteInstitution({ id: updateInstitutionState.id })
-                  }
+                  institution={selectedInstitution}
+                  onDeleteSuccess={() => {
+                    setSelectedInstitution(null)
+                    getInstitutions()
+                  }}
+                  onUpdateSuccess={() => getInstitutions()}
                 />
               </Stack>
             </ContentWrapper>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '6/12']}>
             <ContentWrapper title="Stofna stofnun">
-              <CreateInstitution
-                institution={createInstitutionState}
-                isCreating={isCreatingInstitution}
-                onUpdate={(institution) =>
-                  setCreateInstitutionState(institution)
-                }
-                onCreate={(institution) => createInstitution(institution)}
-              />
+              <CreateInstitution onCreateSuccess={() => getInstitutions()} />
             </ContentWrapper>
           </GridColumn>
         </GridRow>

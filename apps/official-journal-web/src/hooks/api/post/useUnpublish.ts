@@ -1,30 +1,40 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UnpublishParams = {
-  caseId: string
   options?: SWRUnpublishCaseOptions
+}
+
+type UnpublishTriggerArgs = {
+  caseId: string
 }
 
 type SWRUnpublishCaseOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  undefined
+  UnpublishTriggerArgs
 >
 
-export const useUnpublishCase = ({ caseId, options }: UnpublishParams) => {
+export const useUnpublishCase = ({ options }: UnpublishParams = {}) => {
   const { trigger, isMutating, error } = swrMutation<
     Response,
     Error,
     Key,
-    undefined
-  >(APIRoutes.UnpublishCase.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+    UnpublishTriggerArgs
+  >(
+    APIRoutes.UnpublishCase,
+    (url: string, { arg }: { arg: UnpublishTriggerArgs }) =>
+      fetcher<Response, UnpublishTriggerArgs>(url.replace(':id', arg.caseId), {
+        arg: {
+          withAuth: true,
+          method: 'POST',
+        },
+      }),
+    { ...options, throwOnError: false },
+  )
 
   return {
     trigger,

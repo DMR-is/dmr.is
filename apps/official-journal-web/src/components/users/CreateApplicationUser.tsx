@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
   Box,
   Button,
@@ -7,29 +9,51 @@ import {
   Select,
   Stack,
   Tag,
+  toast,
 } from '@island.is/island-ui/core'
 
 import {
   CreateApplicationUser as CreateApplicationUserDto,
   Institution,
 } from '../../gen/fetch'
+import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 
 type Props = {
-  user: CreateApplicationUserDto
   institutions: Institution[]
-  isCreatingUser: boolean
-  onUpdateUser: (user: CreateApplicationUserDto) => void
-  onCreateUser: (user: CreateApplicationUserDto) => void
+  onCreateSuccess?: () => void
 }
 
 export const CreateApplicationUser = ({
-  user,
-  isCreatingUser,
-  onUpdateUser,
-  onCreateUser,
   institutions,
+  onCreateSuccess,
 }: Props) => {
-  const isDisabled = Object.values(user).some(
+  const [createApplicationUserState, setCreateApplicationUserState] =
+    useState<CreateApplicationUserDto>({
+      nationalId: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      involvedPartyIds: [],
+    })
+
+  const { createApplicationUser, isCreatingApplicationUser } =
+    useApplicationUsers({
+      onCreateSuccess: ({ user }) => {
+        toast.success(
+          `Innsendandi hefur ${user.firstName} ${user.lastName} verið stofnaður`,
+        )
+        onCreateSuccess && onCreateSuccess()
+        setCreateApplicationUserState({
+          nationalId: '',
+          email: '',
+          firstName: '',
+          lastName: '',
+          involvedPartyIds: [],
+        })
+      },
+    })
+
+  const isDisabled = Object.values(createApplicationUserState).some(
     (value) => !value || (Array.isArray(value) && value.length === 0),
   )
 
@@ -46,10 +70,10 @@ export const CreateApplicationUser = ({
         type="number"
         label="Kennitala"
         backgroundColor="blue"
-        value={user.nationalId}
+        value={createApplicationUserState.nationalId}
         onChange={(e) =>
-          onUpdateUser({
-            ...user,
+          setCreateApplicationUserState({
+            ...createApplicationUserState,
             nationalId: e.target.value,
           })
         }
@@ -60,10 +84,10 @@ export const CreateApplicationUser = ({
         type="email"
         label="Netfang"
         backgroundColor="blue"
-        value={user.email}
+        value={createApplicationUserState.email}
         onChange={(e) =>
-          onUpdateUser({
-            ...user,
+          setCreateApplicationUserState({
+            ...createApplicationUserState,
             email: e.target.value,
           })
         }
@@ -73,10 +97,10 @@ export const CreateApplicationUser = ({
         size="sm"
         label="Fornafn"
         backgroundColor="blue"
-        value={user.firstName}
+        value={createApplicationUserState.firstName}
         onChange={(e) =>
-          onUpdateUser({
-            ...user,
+          setCreateApplicationUserState({
+            ...createApplicationUserState,
             firstName: e.target.value,
           })
         }
@@ -86,10 +110,10 @@ export const CreateApplicationUser = ({
         size="sm"
         label="Eftirnafn"
         backgroundColor="blue"
-        value={user.lastName}
+        value={createApplicationUserState.lastName}
         onChange={(e) =>
-          onUpdateUser({
-            ...user,
+          setCreateApplicationUserState({
+            ...createApplicationUserState,
             lastName: e.target.value,
           })
         }
@@ -106,22 +130,28 @@ export const CreateApplicationUser = ({
         onChange={(opt) => {
           if (!opt?.value) return
 
-          const hasInvolvedParty = user.involvedPartyIds?.find(
-            (id) => id === opt.value.id,
-          )
+          const hasInvolvedParty =
+            createApplicationUserState.involvedPartyIds?.find(
+              (id) => id === opt.value.id,
+            )
 
           const parties = hasInvolvedParty
-            ? user.involvedPartyIds?.filter((id) => id !== opt.value.id)
-            : [...(user.involvedPartyIds || []), opt.value.id]
+            ? createApplicationUserState.involvedPartyIds?.filter(
+                (id) => id !== opt.value.id,
+              )
+            : [
+                ...(createApplicationUserState.involvedPartyIds || []),
+                opt.value.id,
+              ]
 
-          onUpdateUser({
-            ...user,
+          setCreateApplicationUserState({
+            ...createApplicationUserState,
             involvedPartyIds: parties,
           })
         }}
       />
       <Inline space={2} flexWrap="wrap">
-        {user.involvedPartyIds?.map((id) => {
+        {createApplicationUserState.involvedPartyIds?.map((id) => {
           const institution = institutions.find((inst) => inst.id === id)
 
           return (
@@ -130,12 +160,13 @@ export const CreateApplicationUser = ({
               variant="blueberry"
               key={id}
               onClick={() => {
-                const parties = user.involvedPartyIds?.filter(
-                  (partyId) => partyId !== id,
-                )
+                const parties =
+                  createApplicationUserState.involvedPartyIds?.filter(
+                    (partyId) => partyId !== id,
+                  )
 
-                onUpdateUser({
-                  ...user,
+                setCreateApplicationUserState({
+                  ...createApplicationUserState,
                   involvedPartyIds: parties,
                 })
               }}
@@ -151,10 +182,10 @@ export const CreateApplicationUser = ({
       <Inline justifyContent="flexEnd" space={2}>
         <Button
           disabled={isDisabled}
-          loading={isCreatingUser}
+          loading={isCreatingApplicationUser}
           variant="ghost"
           size="small"
-          onClick={() => onCreateUser(user)}
+          onClick={() => createApplicationUser(createApplicationUserState)}
           icon="add"
         >
           Stofna innsendanda

@@ -1,30 +1,38 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues as APIRoutes, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
-type RejectParams = {
+type RejectCaseTriggerArgs = {
   caseId: string
-  options?: SWRRejectCaseOptions
 }
-
-type SWRRejectCaseOptions = SWRMutationConfiguration<
+type Configuration = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  undefined
+  RejectCaseTriggerArgs
 >
+type RejectParams = {
+  options?: Configuration
+}
 
-export const useRejectCase = ({ caseId, options }: RejectParams) => {
+export const useRejectCase = ({ options }: RejectParams) => {
   const { trigger, isMutating, error } = swrMutation<
     Response,
     Error,
     Key,
-    undefined
-  >(APIRoutes.RejectCase.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+    RejectCaseTriggerArgs
+  >(
+    APIRoutes.RejectCase,
+    (url: string, { arg }: { arg: RejectCaseTriggerArgs }) =>
+      fetcher<Response>(url.replace(':id', arg.caseId), {
+        arg: { withAuth: true, method: 'POST' },
+      }),
+    {
+      ...options,
+      throwOnError: false,
+    },
+  )
 
   return {
     trigger,

@@ -11137,6 +11137,7 @@ __metadata:
     next: "npm:^14.2.3"
     next-auth: "npm:^4.24.8"
     node-fetch: "npm:2.6.7"
+    nuqs: "npm:^2.3.0"
     nx: "npm:^17.2.5"
     oidc-client-ts: "npm:2.0.3"
     open-next: "npm:^2.3.7"
@@ -16490,7 +16491,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mitt@npm:3.0.1":
+"mitt@npm:3.0.1, mitt@npm:^3.0.1":
   version: 3.0.1
   resolution: "mitt@npm:3.0.1"
   checksum: 3ab4fdecf3be8c5255536faa07064d05caa3dd332bd318ff02e04621f7b3069ca1de9106cfe8e7ced675abfc2bec2ce4c4ef321c4a1bb1fb29df8ae090741913
@@ -17081,6 +17082,30 @@ __metadata:
   dependencies:
     boolbase: "npm:^1.0.0"
   checksum: 5fee7ff309727763689cfad844d979aedd2204a817fbaaf0e1603794a7c20db28548d7b024692f953557df6ce4a0ee4ae46cd8ebd9b36cfb300b9226b567c479
+  languageName: node
+  linkType: hard
+
+"nuqs@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "nuqs@npm:2.3.0"
+  dependencies:
+    mitt: "npm:^3.0.1"
+  peerDependencies:
+    "@remix-run/react": ">=2"
+    next: ">=14.2.0"
+    react: ">=18.2.0 || ^19.0.0-0"
+    react-router: ^7
+    react-router-dom: ^6 || ^7
+  peerDependenciesMeta:
+    "@remix-run/react":
+      optional: true
+    next:
+      optional: true
+    react-router:
+      optional: true
+    react-router-dom:
+      optional: true
+  checksum: ba3ff07dfe687a52a3d5da5570f7e54bd0adcbff8c4c6b666e5293f66c664403d22908ab96b7b52e3efcf41d113dc22e5e2cb65c1223297971138d9ddfc3a598
   languageName: node
   linkType: hard
 

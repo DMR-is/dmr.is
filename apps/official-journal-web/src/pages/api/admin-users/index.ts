@@ -35,13 +35,13 @@ class UsersHandler {
   }
 
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const user = await this.client
+    await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .createUser({
         createAdminUser: req.body,
       })
 
-    return res.status(201).json(user)
+    return res.status(204).end()
   }
 }
 

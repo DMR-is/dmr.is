@@ -51,6 +51,8 @@ export const safelyExtractPathnameFromUrl = (url?: string) => {
 export const mapTabIdToCaseStatus = (param?: string) => {
   if (!param) return CaseStatusTitleEnum.Innsent
 
+  const check = param.toLowerCase().slice(0, 1).toUpperCase() + param.slice(1)
+
   switch (param) {
     case CaseStatusTitleEnum.Innsent:
       return CaseStatusTitleEnum.Innsent

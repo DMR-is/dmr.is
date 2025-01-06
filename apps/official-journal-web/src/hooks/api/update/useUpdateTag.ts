@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRotues, updateFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdateTagTriggerArgs = {
   tagId: string
@@ -25,10 +25,21 @@ export const useUpdateTag = ({ caseId, options }: UseUpdateTagParams) => {
     Error,
     Key,
     UpdateTagTriggerArgs
-  >(APIRotues.UpdateTag.replace(':id', caseId), updateFetcher, {
-    throwOnError: false,
-    ...options,
-  })
+  >(
+    APIRoutes.UpdateTag,
+    (url: string, { arg }: { arg: UpdateTagTriggerArgs }) =>
+      fetcher<Response, UpdateTagTriggerArgs>(url.replace(':id', caseId), {
+        arg: {
+          withAuth: true,
+          method: 'POST',
+          body: arg,
+        },
+      }),
+    {
+      ...options,
+      throwOnError: false,
+    },
+  )
 
   return {
     data,
