@@ -82,9 +82,11 @@ export const authOptions: AuthOptions = {
         token.idToken = user.idToken
         token.isRefreshTokenExpired = false
       }
-
       if (token.isRefreshTokenExpired) {
-        return token
+        return {
+          ...token,
+          invalid: true,
+        }
       }
 
       // Handle token expiry and refresh logic
@@ -123,6 +125,10 @@ export const authOptions: AuthOptions = {
       // Add tokens to session
       session.accessToken = token.accessToken as string
       session.idToken = token.idToken as string
+
+      if (token.invalid) {
+        session.invalid = true
+      }
 
       const decoded = decode(token.accessToken)
 
