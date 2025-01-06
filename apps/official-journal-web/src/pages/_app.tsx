@@ -1,7 +1,7 @@
 import { AppProps as NextAppProps } from 'next/app'
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
-import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+import { NuqsAdapter } from 'nuqs/adapters/next'
 
 import { globalStyles } from '@island.is/island-ui/core'
 
