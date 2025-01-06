@@ -37,7 +37,9 @@ export class ApplicationAuthGaurd implements CanActivate {
       this.logger.debug(`Running in development mode, skipping auth guard`, {
         category: LOGGING_CATEGORY,
       })
-      const userLookup = await this.applicationUserService.getUser('0101307789')
+      const userLookup = await this.applicationUserService.getUserByNationalId(
+        '0101307789',
+      )
 
       if (userLookup.result.ok) {
         context.switchToHttp().getRequest().user = userLookup.result.value.user
@@ -60,27 +62,57 @@ export class ApplicationAuthGaurd implements CanActivate {
 
       if (!isUUID(applicationId)) {
         // we have to throw to return correct status from guard
+        this.logger.warn(
+          `User tried to access application with invalid id<${applicationId}>`,
+          {
+            applicationId,
+            category: LOGGING_CATEGORY,
+          },
+        )
         throw new BadRequestException()
       }
 
       let currentUser: ApplicationUser | null = null
       try {
-        const decodedToken = decode(auth)
+        const decodedToken = decode(auth.split('Bearer ')[1])
 
         if (!decodedToken || typeof decodedToken === 'string') {
+          this.logger.warn(
+            `User tried to access application with invalid token`,
+            {
+              category: LOGGING_CATEGORY,
+            },
+          )
           throw new ForbiddenException()
         }
 
         const { nationalId } = decodedToken
 
-        const user = await this.applicationUserService.getUser(nationalId)
+        const user = await this.applicationUserService.getUserByNationalId(
+          nationalId,
+        )
 
         if (!user.result.ok) {
+          this.logger.warn(
+            `User<${nationalId}> tried to access application with id<${applicationId}> but user does not exist`,
+            {
+              nationalId,
+              applicationId,
+              code: user.result.error.code,
+              message: user.result.error.message,
+              category: LOGGING_CATEGORY,
+            },
+          )
           throw new ForbiddenException()
         }
 
         currentUser = user.result.value.user
       } catch (error) {
+        this.logger.warn(`Exception caught in application auth gaurd`, {
+          error: error,
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CATEGORY,
+        })
         throw new ForbiddenException()
       }
 
@@ -101,6 +133,7 @@ export class ApplicationAuthGaurd implements CanActivate {
               code: caseLookup.result.error.code,
               message: caseLookup.result.error.message,
               category: LOGGING_CATEGORY,
+              context: LOGGING_CATEGORY,
             },
           )
           throw new ForbiddenException()
@@ -108,7 +141,7 @@ export class ApplicationAuthGaurd implements CanActivate {
 
         const hasInvolvedParty =
           await this.applicationUserService.checkIfUserHasInvolvedParty(
-            currentUser.nationalId,
+            currentUser.id,
             caseLookup.result.value.involvedPartyId,
           )
 
@@ -120,6 +153,7 @@ export class ApplicationAuthGaurd implements CanActivate {
               code: hasInvolvedParty.result.error.code,
               message: hasInvolvedParty.result.error.message,
               category: LOGGING_CATEGORY,
+              context: LOGGING_CATEGORY,
             },
           )
           throw new ForbiddenException()
@@ -132,6 +166,7 @@ export class ApplicationAuthGaurd implements CanActivate {
     } catch (error) {
       this.logger.error(`Error occurred in application auth guard`, {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CATEGORY,
         error,
       })
 

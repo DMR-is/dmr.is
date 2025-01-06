@@ -12,6 +12,7 @@ import {
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
   GetCaseResponse,
+  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
   GetCommunicationSatusesResponse,
@@ -104,8 +105,9 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
   getCasesOverview(
+    status?: string,
     params?: GetCasesQuery,
-  ): Promise<ResultWrapper<EditorialOverviewResponse>> {
+  ): Promise<ResultWrapper<GetCasesOverview>> {
     throw new Error('Method not implemented.')
   }
   createCaseChannel(

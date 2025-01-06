@@ -1,26 +1,21 @@
-import { Case } from '../../gen/fetch'
+import { CommunicationStatusTitleEnum } from '../../gen/fetch'
 import { CaseLabelTooltip } from '../tooltips/CaseLabelTooltip'
 import * as styles from './CaseTooltips.css'
 type Props = {
-  case: Case
+  fastTrack?: boolean
+  status?: CommunicationStatusTitleEnum
 }
 
-const WAITING_ANSWERS_VALUE = 'Beðið eftir svörum'
-const NEW_ANSWER_VALUE = 'Svör hafa borist'
-
-export const CaseToolTips = ({ case: caseData }: Props) => {
-  const isFastTrack = caseData.fastTrack
-  const isWaitingForAnswers =
-    caseData.communicationStatus.title === WAITING_ANSWERS_VALUE
-  const hasNewAnswer = caseData.communicationStatus.title === NEW_ANSWER_VALUE
-
-  if (!isFastTrack && !isWaitingForAnswers && !hasNewAnswer) return null
+export const CaseToolTips = ({ fastTrack = false, status }: Props) => {
+  const waitingForAnswers =
+    status === CommunicationStatusTitleEnum.BeðiðEftirSvörum
+  const hasNewAnswer = status === CommunicationStatusTitleEnum.SvörHafaBorist
 
   return (
     <div className={styles.iconWrapper}>
-      {isFastTrack && <CaseLabelTooltip type="fasttrack" />}
-      {isWaitingForAnswers && <CaseLabelTooltip type="waiting" />}
-      {hasNewAnswer && <CaseLabelTooltip type="new" />}
+      {fastTrack ? <CaseLabelTooltip type="fasttrack" /> : null}
+      {waitingForAnswers ? <CaseLabelTooltip type="waiting" /> : null}
+      {hasNewAnswer ? <CaseLabelTooltip type="new" /> : null}
     </div>
   )
 }

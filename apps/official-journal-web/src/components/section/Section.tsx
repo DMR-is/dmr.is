@@ -7,7 +7,7 @@ type Props = {
   className?: string
   variant?: 'default' | 'blue'
   bleed?: boolean
-  paddingTop?: 'default' | 'off'
+  paddingTop?: 'default' | 'off' | 'content'
 }
 export const Section = ({
   children,

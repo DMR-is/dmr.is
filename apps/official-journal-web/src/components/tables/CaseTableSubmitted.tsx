@@ -12,7 +12,7 @@ import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { TableProps } from './types'
 
-export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
+export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
@@ -50,12 +50,17 @@ export const CaseTableSubmitted = ({ data, paging }: TableProps) => {
     },
   ]
 
-  const rows: CaseTableRowProps[] = data.map((row) => {
+  const rows = cases?.map((row) => {
     return {
       case: row,
       cells: [
         {
-          children: <CaseToolTips case={row} />,
+          children: (
+            <CaseToolTips
+              fastTrack={row.fastTrack}
+              status={row.communicationStatus.title}
+            />
+          ),
         },
         {
           sortingKey: 'casePublishDate',

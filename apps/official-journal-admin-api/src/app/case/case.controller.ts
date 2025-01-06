@@ -4,7 +4,6 @@ import { USER_ROLES } from '@dmr.is/constants'
 import { Roles, Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  IAdminUserService,
   ICaseService,
   ICommentService,
   IJournalService,
@@ -13,19 +12,19 @@ import {
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
-  AdminUser,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
+  CaseOverviewQuery,
   CreateCaseResponse,
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
-  EditorialOverviewResponse,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCaseResponse,
+  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
   GetCategoriesResponse,
@@ -278,16 +277,20 @@ export class CaseController {
   }
 
   @Route({
-    path: 'overview',
+    path: 'overview/:status',
+    params: [{ name: 'status', type: 'string', required: true }],
     operationId: 'editorialOverview',
     summary: 'Get editorial overview',
-    responseType: EditorialOverviewResponse,
-    query: [{ type: GetCasesQuery }],
+    responseType: GetCasesOverview,
+    query: [{ type: CaseOverviewQuery }],
   })
   async editorialOverview(
-    @Query() params?: GetCasesQuery,
-  ): Promise<EditorialOverviewResponse> {
-    return ResultWrapper.unwrap(await this.caseService.getCasesOverview(params))
+    @Param('status') status: string,
+    @Query() params?: CaseOverviewQuery,
+  ): Promise<GetCasesOverview> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasesOverview(status, params),
+    )
   }
 
   @Route({

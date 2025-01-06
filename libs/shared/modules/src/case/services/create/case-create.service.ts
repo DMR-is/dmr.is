@@ -3,6 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { BaseEntity } from '@dmr.is/shared/dto'
 import {
   AdditionType,
   Application,
@@ -71,7 +72,7 @@ interface CreateCaseBodyValues {
     createdAt: string
     updatedAt: string
   }
-  categories: AdvertCategoryModel[]
+  categories: BaseEntity[]
   channels: CreateCaseChannelBody[]
   signature: CreateSignatureBody[]
   additions: CreateAddtionBody[]
@@ -135,10 +136,6 @@ export class CaseCreateService implements ICaseCreateService {
         application.answers.advert.department.id,
         transaction,
       ),
-      this.utilityService.categoriesLookup(
-        application.answers.advert.categories,
-        transaction,
-      ),
     ])
 
     const [
@@ -148,7 +145,6 @@ export class CaseCreateService implements ICaseCreateService {
       internalCaseNumberResult,
       typeResult,
       departmentResult,
-      categoriesResult,
     ] = promises
 
     if (!caseStatusResult.result.ok) {
@@ -193,20 +189,12 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
-    if (!categoriesResult.result.ok) {
-      return ResultWrapper.err({
-        code: categoriesResult.result.error.code,
-        message: categoriesResult.result.error.message,
-      })
-    }
-
     const caseStatus = caseStatusResult.result.value
     const caseTag = caseTagResult.result.value
     const caseCommunicationStatus = caseCommunicationStatusResult.result.value
     const internalCaseNumber = internalCaseNumberResult.result.value
     const type = typeResult.result.value
     const department = departmentResult.result.value
-    const categories = categoriesResult.result.value
 
     const channels =
       application.answers.advert.channels?.map((channel) => {
@@ -272,7 +260,7 @@ export class CaseCreateService implements ICaseCreateService {
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
       },
-      categories: categories,
+      categories: application.answers.advert.categories,
       channels: channels,
       signature: signatureBody,
       additions: additionsBody,

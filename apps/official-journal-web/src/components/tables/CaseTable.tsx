@@ -1,24 +1,21 @@
 import reverse from 'lodash/reverse'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import ReactDOM from 'react-dom'
+import { parseAsInteger, useQueryState } from 'nuqs'
+import { useMemo, useState } from 'react'
 
 import {
   Box,
   Icon,
   LinkV2,
   LoadingDots,
-  ModalBase,
   Pagination,
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
+import { CaseOverview, Paging } from '../../gen/fetch'
 import useBreakpoints from '../../hooks/useBreakpoints'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useQueryParams } from '../../hooks/useQueryParams'
-import { formatDate, generateCaseLink } from '../../lib/utils'
-import { AdvertDisplay } from '../advert-display/AdvertDisplay'
+import { Routes } from '../../lib/constants'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
@@ -40,14 +37,14 @@ export type CaseTableCellProps = {
 }
 
 export type CaseTableRowProps = {
-  case: Case
+  case: CaseOverview
   cells: CaseTableCellProps[]
 }
 
 export type Props = {
   defaultSort: CaseTableColumnSort
   columns: CaseTableHeadCellProps[]
-  rows: CaseTableRowProps[]
+  rows?: CaseTableRowProps[]
   paging?: Paging
   renderLink?: boolean
   modalLink?: boolean
@@ -70,8 +67,6 @@ export const CaseTable = ({
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { add } = useQueryParams()
-
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   const breakpoints = useBreakpoints()
@@ -83,7 +78,13 @@ export const CaseTable = ({
     ...defaultSort,
   })
 
+  const [_, setPage] = useQueryState(
+    'page',
+    parseAsInteger.withDefault(paging?.page || 1),
+  )
+
   const sortedData = useMemo(() => {
+    if (!rows) return []
     const sorted = [...rows].sort((a, b) => {
       const nameA = a.cells.find((cell) => cell.sortingKey === sorting.key)
       const nameB = b.cells.find((cell) => cell.sortingKey === sorting.key)
@@ -112,17 +113,6 @@ export const CaseTable = ({
             : 'asc'
           : 'asc',
     })
-  }
-
-  const portalRef = useRef<Element>()
-  const [modalActive, setModalActive] = useState<Case>()
-  useEffect(() => {
-    portalRef.current = document.querySelector('#__next') as Element
-  })
-
-  const openModal = (e: React.MouseEvent<HTMLElement>, activeCase: Case) => {
-    e.preventDefault()
-    setModalActive(activeCase)
   }
 
   return (
@@ -182,14 +172,10 @@ export const CaseTable = ({
                         visible: hoveredRow === row.case.id,
                       })}
                       component={!modalLink ? LinkV2 : 'button'}
-                      onClick={
-                        modalLink ? (e) => openModal(e, row.case) : undefined
-                      }
-                      href={
-                        !modalLink
-                          ? generateCaseLink(row.case.status.title, row.case.id)
-                          : undefined
-                      }
+                      href={Routes.ProccessingDetail.replace(
+                        ':caseId',
+                        row.case.id,
+                      )}
                     >
                       <Box className={styles.seeMoreTableCellLinkText}>
                         <Text variant="eyebrow" color={'blue400'}>
@@ -220,55 +206,13 @@ export const CaseTable = ({
             totalItems={paging.totalItems}
             totalPages={paging.totalPages}
             renderLink={(page, className, children) => (
-              <button className={className} onClick={() => add({ page })}>
+              <button className={className} onClick={() => setPage(page)}>
                 {children}
               </button>
             )}
           />
         </Box>
       )}
-      {modalActive &&
-        ReactDOM.createPortal(
-          <ModalBase
-            baseId="advert"
-            isVisible={true}
-            initialVisibility={true}
-            onVisibilityChange={(isVisible) =>
-              !isVisible && setModalActive(undefined)
-            }
-            hideOnEsc={true}
-            modalLabel={formatMessage(messages.modal.modalLabel)}
-          >
-            <div className={styles.advertModal}>
-              <div className={styles.advertModalHeader}>
-                <button
-                  className={styles.advertModalClose}
-                  onClick={() => setModalActive(undefined)}
-                >
-                  <Icon icon="close" />
-                </button>
-              </div>
-              <AdvertDisplay
-                advertNumber={String(modalActive.caseNumber)}
-                // TODO: get correct date
-                signatureDate={
-                  modalActive.requestedPublicationDate
-                    ? formatDate(
-                        modalActive.requestedPublicationDate,
-                        'dd. MMMM yyyy',
-                      )
-                    : undefined
-                }
-                advertType={modalActive.advertTitle}
-                advertSubject="'STRING'" // modalActive.advertDepartment.title
-                advertText="'STRING'" // modalActive.document
-                isLegacy={false}
-                paddingTop={[5, 6, 8]}
-              />
-            </div>
-          </ModalBase>,
-          portalRef.current as Element,
-        )}
     </>
   )
 }

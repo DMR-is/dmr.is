@@ -9,6 +9,9 @@ class GetCasesHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
+    const page = getStringFromQueryString(req.query.page)
+    const pageSize = getStringFromQueryString(req.query.pageSize)
+
     const cases = await dmrClient.getCases({
       id: getStringFromQueryString(req.query.id),
       search: getStringFromQueryString(req.query.search),
@@ -16,8 +19,8 @@ class GetCasesHandler {
       type: getStringFromQueryString(req.query.type),
       status: getStringFromQueryString(req.query.status),
       department: getStringFromQueryString(req.query.department),
-      page: getStringFromQueryString(req.query.page),
-      pageSize: getStringFromQueryString(req.query.pageSize),
+      page: page ? parseInt(page) : undefined,
+      pageSize: pageSize ? parseInt(pageSize) : undefined,
     })
 
     return res.status(200).json(cases)

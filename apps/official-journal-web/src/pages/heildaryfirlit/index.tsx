@@ -1,6 +1,6 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getSession } from 'next-auth/react'
-import { useState } from 'react'
+import { parseAsString, useQueryState } from 'nuqs'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
@@ -10,7 +10,6 @@ import { CaseTableOverview } from '../../components/tables/CaseTableOverview'
 import { Tab, Tabs } from '../../components/tabs/Tabs'
 import { Case, GetPublishedCasesResponse, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useQueryParams } from '../../hooks/useQueryParams'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { CaseDepartmentTabs, Routes } from '../../lib/constants'
@@ -37,15 +36,14 @@ export default function CaseOverview(
   const { cases, paging, totalCases } = data
 
   const { formatMessage } = useFormatMessage()
-  const { add, get } = useQueryParams()
 
-  const [selectedTab, setSelectedTab] = useState(get('tab') || DEFAULT_TAB)
+  const [tab, setTab] = useQueryState(
+    'tab',
+    parseAsString.withDefault(DEFAULT_TAB),
+  )
 
   const onTabChange = (id: string) => {
-    setSelectedTab(id)
-    add({
-      tab: id,
-    })
+    setTab(id)
   }
 
   const tabs: Tab[] = CaseDepartmentTabs.map((tab) => {
@@ -53,7 +51,7 @@ export default function CaseOverview(
     return {
       id: tab.value,
       label: `${tab.label} ${tab ? `(${totalCases[countKey]})` : ''}`,
-      content: <CaseTableOverview data={cases} paging={paging} />,
+      content: <CaseTableOverview cases={cases} paging={paging} />,
     }
   })
 
@@ -64,7 +62,7 @@ export default function CaseOverview(
           messages.breadcrumbs.casePublishing,
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
       />
-      <Section key={selectedTab} paddingTop="off">
+      <Section key={tab} paddingTop="off">
         <GridContainer>
           <GridRow rowGap={['p2', 3]}>
             <GridColumn
@@ -74,7 +72,7 @@ export default function CaseOverview(
             >
               <Tabs
                 onTabChange={onTabChange}
-                selectedTab={selectedTab}
+                selectedTab={tab}
                 tabs={tabs}
                 label={formatMessage(messages.general.departments)}
               />
@@ -100,7 +98,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: true,
-      showFilters: true,
+      enableCategories: true,
+      enableDepartments: true,
+      enableTypes: true,
       imgSrc: '/assets/banner-publish-image.svg',
       title: messages.banner.title,
       description: messages.banner.description,

@@ -21,6 +21,7 @@ export enum Routes {
   MainCategories = '/yfirflokkar',
   MainTypes = '/tegundir',
   ProcessingOverview = '/ritstjorn',
+  ProccessingDetail = '/ritstjorn/:caseId',
   ProcessingDetailSubmitted = '/ritstjorn/:caseId/innsent',
   ProcessingDetailInProgress = '/ritstjorn/:caseId/grunnvinnsla',
   ProcessingDetailInReview = '/ritstjorn/:caseId/yfirlestur',
@@ -46,6 +47,9 @@ type Path = {
   title: string
   order: number
 }
+
+export const WAITING_ANSWERS_VALUE = 'Beðið eftir svörum'
+export const NEW_ANSWER_VALUE = 'Svör hafa borist'
 
 export const PagePaths: Array<Path> = [
   { pathname: Routes.Overview, title: PageTitles.CaseOverview, order: 4 },
@@ -134,7 +138,7 @@ export enum APIRoutes {
   MainType = '/api/mainTypes/:id',
   Types = '/api/types',
   Type = '/api/types/:id',
-  GetEditorialOverview = '/api/cases/editorialOverview',
+  GetEditorialOverview = '/api/cases/overview',
   GetDepartments = '/api/cases/departments',
   GetCategories = '/api/cases/categories',
   GetMainCategories = '/api/mainCategories',

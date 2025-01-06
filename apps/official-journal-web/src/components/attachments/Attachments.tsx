@@ -20,7 +20,7 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 type Props = {
   activeCase: Case
-  refetchCase: KeyedMutator<GetCaseResponse>
+  refetchCase?: KeyedMutator<GetCaseResponse>
 }
 
 export const Attachments = ({ activeCase, refetchCase }: Props) => {
@@ -53,7 +53,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
       applicationId: activeCase.applicationId,
       file,
       onSuccess: () => {
-        refetchCase()
+        refetchCase && refetchCase()
       },
     })
   }

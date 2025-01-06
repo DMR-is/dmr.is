@@ -12,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-type'
 import { ApplicationAttachment } from '../attachments'

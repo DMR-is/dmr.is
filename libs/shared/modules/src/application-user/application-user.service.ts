@@ -38,6 +38,7 @@ export class ApplicationUserService implements IApplicationUserService {
     private readonly userInvolvedPartyModel: typeof ApplicationUserInvolvedPartyModel,
     private readonly sequelize: Sequelize,
   ) {}
+
   async createUser(
     body: CreateApplicationUser,
   ): Promise<ResultWrapper<GetApplicationUser>> {
@@ -271,13 +272,37 @@ export class ApplicationUserService implements IApplicationUserService {
 
   @LogAndHandle()
   @Transactional()
-  async getUserInvolvedParties(
+  async getUserByNationalId(
     nationalId: string,
     transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationUser>> {
+    const user = await this.applicationUserModel.findOne({
+      where: {
+        nationalId: nationalId,
+      },
+      include: [AdvertInvolvedPartyModel],
+      transaction: transaction,
+    })
+
+    if (!user) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'User not found',
+      })
+    }
+
+    const migrated = applicationUserMigrate(user)
+
+    return ResultWrapper.ok({ user: migrated })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getUserInvolvedParties(
+    id: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationUserInvolvedPartiesResponse>> {
-    const parties = ResultWrapper.unwrap(
-      await this.getUser(nationalId, transaction),
-    )
+    const parties = ResultWrapper.unwrap(await this.getUser(id, transaction))
 
     return ResultWrapper.ok({
       involvedParties: parties.user.involvedParties,
@@ -287,11 +312,11 @@ export class ApplicationUserService implements IApplicationUserService {
   @LogAndHandle()
   @Transactional()
   async checkIfUserHasInvolvedParty(
-    nationalId: string,
+    id: string,
     institutionId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ hasInvolvedParty: boolean }>> {
-    const userLookup = await this.getUser(nationalId, transaction)
+    const userLookup = await this.getUser(id, transaction)
 
     if (!userLookup.result.ok) {
       return ResultWrapper.err({

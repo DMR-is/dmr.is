@@ -1,9 +1,10 @@
 import { Transaction } from 'sequelize'
 import {
   CaseCommunicationStatus,
+  CaseOverviewQuery,
   CreateCaseChannelBody,
-  EditorialOverviewResponse,
   GetCaseResponse,
+  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
   GetCommunicationSatusesResponse,
@@ -46,8 +47,9 @@ export interface ICaseService {
 
   publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
   getCasesOverview(
-    params?: GetCasesQuery,
-  ): Promise<ResultWrapper<EditorialOverviewResponse>>
+    status: string,
+    params?: CaseOverviewQuery,
+  ): Promise<ResultWrapper<GetCasesOverview>>
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
 
   createCaseChannel(

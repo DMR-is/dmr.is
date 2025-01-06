@@ -1,3 +1,4 @@
+import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
 import { Dispatch, SetStateAction, useId, useState } from 'react'
 
 import {
@@ -5,11 +6,12 @@ import {
   Button,
   Checkbox,
   Icon,
+  Inline,
   Input,
+  LoadingDots,
   Text,
 } from '@island.is/island-ui/core'
 
-import { useFilterContext } from '../../hooks/useFilterContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from '../filter-popover/FilterPopover.css'
 import { messages } from './messages'
@@ -17,11 +19,11 @@ import { messages } from './messages'
 type Props = {
   label: string
   queryKey: string
+  loading?: boolean
   options: { label: string; value: string }[]
   search?: string
   searchPlaceholder?: string
   setSearch?: Dispatch<SetStateAction<string>>
-  loading?: boolean
   startExpanded?: boolean
 }
 
@@ -36,15 +38,15 @@ export const FilterGroup = ({
   startExpanded = false,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const { filterState, toggleFilter, clearFilter } = useFilterContext()
 
   const localId = useId()
 
   const [toggle, setToggle] = useState(startExpanded)
 
-  const clearGroup = () => {
-    clearFilter(queryKey)
-  }
+  const [filters, setFilters] = useQueryState(
+    queryKey,
+    parseAsArrayOf(parseAsString, ','),
+  )
 
   return (
     <Box className={styles.filterExpandButtonWrapper}>
@@ -58,9 +60,12 @@ export const FilterGroup = ({
         }}
         className={styles.filterExpandButton}
       >
-        <Text color="dark400" variant="h5">
-          {label}
-        </Text>
+        <Inline alignY="center" space={1}>
+          {loading && <LoadingDots single large={false} />}
+          <Text color="dark400" variant="h5">
+            {label}
+          </Text>
+        </Inline>
         <Box className={styles.filterExpandButtonIcon}>
           <Icon icon={toggle ? 'remove' : 'add'} color="blue400" size="small" />
         </Box>
@@ -84,20 +89,17 @@ export const FilterGroup = ({
           </Box>
         )}
         {options.map((filter, index) => {
-          const isChecked = !!filterState.activeFilters.find(
-            (f) => f.key === queryKey && f.slug === filter.value,
-          )
+          const isChecked = filters?.includes(filter.value)
           return (
             <Checkbox
               checked={isChecked}
-              onChange={(e) => {
-                toggleFilter(
-                  e.target.checked,
-                  queryKey,
-                  filter.value,
-                  filter.label,
-                )
-              }}
+              onChange={(e) =>
+                e.target.checked
+                  ? setFilters([...(filters || []), filter.value])
+                  : setFilters([
+                      ...(filters || []).filter((f) => f !== filter.value),
+                    ])
+              }
               name={filter.label}
               key={index}
               label={filter.label}
@@ -111,7 +113,7 @@ export const FilterGroup = ({
             icon="reload"
             as="button"
             iconType="outline"
-            onClick={clearGroup}
+            onClick={() => setFilters([])}
           >
             {formatMessage(messages.general.clearFilter)}
           </Button>
