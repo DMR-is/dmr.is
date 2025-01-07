@@ -36,6 +36,20 @@ export const CaseTableReady = () => {
     },
     options: {
       refreshInterval: 1000 * 60,
+      suspense: true,
+      fallbackData: {
+        cases: [],
+        paging: {
+          page: 1,
+          pageSize: 10,
+          hasNextPage: false,
+          totalPages: 0,
+          totalItems: 0,
+          nextPage: null,
+          previousPage: null,
+          hasPreviousPage: false,
+        },
+      },
     },
   })
 

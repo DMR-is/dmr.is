@@ -1,4 +1,6 @@
-import { Box, Button, Text } from '@island.is/island-ui/core'
+import { Suspense } from 'react'
+
+import { Box, Button, SkeletonLoader, Text } from '@island.is/island-ui/core'
 
 import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -22,7 +24,18 @@ export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
   return (
     <Box display="flex" flexDirection="column" rowGap={4}>
       <Box>
-        <CaseTableReady />
+        <Suspense
+          fallback={
+            <SkeletonLoader
+              repeat={3}
+              height={44}
+              borderRadius="standard"
+              space={2}
+            />
+          }
+        >
+          <CaseTableReady />
+        </Suspense>
       </Box>
 
       <Box>
