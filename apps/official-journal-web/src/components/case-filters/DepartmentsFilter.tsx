@@ -11,20 +11,6 @@ export const DepartmentsFilter = () => {
     options: {
       keepPreviousData: true,
       refreshInterval: 0,
-      suspense: true,
-      fallbackData: {
-        departments: [],
-        paging: {
-          page: 1,
-          pageSize: 10,
-          totalPages: 1,
-          totalItems: 0,
-          nextPage: null,
-          previousPage: null,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      },
     },
   })
 

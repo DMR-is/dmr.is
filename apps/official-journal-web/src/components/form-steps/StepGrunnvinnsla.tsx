@@ -48,9 +48,6 @@ export const StepGrunnvinnsla = ({ data }: Props) => {
     mutate: refetchCase,
   } = useCase({
     caseId: data.id,
-    options: {
-      fallback: data,
-    },
   })
 
   const { types, isLoadingTypes } = useAdvertTypes({

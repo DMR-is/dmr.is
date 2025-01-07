@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { MessageDescriptor } from 'react-intl'
 
 import {
@@ -16,9 +16,14 @@ import {
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
-import { CaseFilters } from '../case-filters/CaseFilters'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
+
+const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
+  loading: () => (
+    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
+  ),
+})
 
 type BreadcrumbsProps = Array<
   Omit<React.ComponentProps<typeof Breadcrumbs>['items'][number], 'title'> & {
@@ -106,22 +111,7 @@ export const Banner = ({
                   </Box>
                 )}
                 {showFilters && (
-                  <Suspense
-                    fallback={
-                      <SkeletonLoader
-                        repeat={3}
-                        space={2}
-                        borderRadius="standard"
-                        height={44}
-                      />
-                    }
-                  >
-                    <CaseFilters
-                      enableCategories={enableCategories}
-                      enableDepartments={enableDepartments}
-                      enableTypes={enableTypes}
-                    />
-                  </Suspense>
+                  <CaseFilters enableCategories enableDepartments enableTypes />
                 )}
               </GridColumn>
             </>

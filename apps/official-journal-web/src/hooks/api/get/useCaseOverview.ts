@@ -6,13 +6,9 @@ import { generateParams } from '../../../lib/utils'
 
 type UseCaseOverviewParams = {
   params?: Partial<EditorialOverviewRequest>
-  fallbackData?: GetCasesOverview
 }
 
-export const useCaseOverview = ({
-  params,
-  fallbackData,
-}: UseCaseOverviewParams = {}) => {
+export const useCaseOverview = ({ params }: UseCaseOverviewParams = {}) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     GetCasesOverview,
     Error
@@ -31,8 +27,6 @@ export const useCaseOverview = ({
       refreshInterval: 1000 * 60 * 5,
       revalidateOnFocus: true,
       keepPreviousData: true,
-      suspense: true,
-      fallbackData: fallbackData,
     },
   )
 

@@ -142,3 +142,5 @@ export const CaseFilters = ({
     </Stack>
   )
 }
+
+export default CaseFilters
