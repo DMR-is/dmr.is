@@ -216,3 +216,5 @@ export const CaseTable = ({
     </>
   )
 }
+
+export default CaseTable

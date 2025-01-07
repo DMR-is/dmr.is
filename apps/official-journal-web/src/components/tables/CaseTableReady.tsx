@@ -1,7 +1,14 @@
+import dynamic from 'next/dynamic'
 import { useQueryState } from 'nuqs'
 import { ChangeEvent } from 'react'
 
-import { AlertMessage, Checkbox, Stack, Text } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  Checkbox,
+  SkeletonLoader,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
@@ -9,9 +16,15 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CaseTable, CaseTableHeadCellProps } from './CaseTable'
+import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
+
+const CaseTable = dynamic(() => import('./CaseTable'), {
+  loading: () => (
+    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
+  ),
+})
 
 export const CaseTableReady = () => {
   const { formatMessage } = useFormatMessage()
@@ -36,20 +49,6 @@ export const CaseTableReady = () => {
     },
     options: {
       refreshInterval: 1000 * 60,
-      suspense: true,
-      fallbackData: {
-        cases: [],
-        paging: {
-          page: 1,
-          pageSize: 10,
-          hasNextPage: false,
-          totalPages: 0,
-          totalItems: 0,
-          nextPage: null,
-          previousPage: null,
-          hasPreviousPage: false,
-        },
-      },
     },
   })
 
@@ -179,3 +178,5 @@ export const CaseTableReady = () => {
     </Stack>
   )
 }
+
+export default CaseTableReady

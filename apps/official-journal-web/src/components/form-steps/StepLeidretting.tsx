@@ -36,9 +36,6 @@ export const StepLeidretting = ({
     isLoading: isLoadingCase,
   } = useCase({
     caseId: data.id,
-    options: {
-      fallback: data,
-    },
   })
 
   if (isLoadingCase) {

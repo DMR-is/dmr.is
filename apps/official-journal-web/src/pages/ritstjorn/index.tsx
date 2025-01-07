@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 import { getSession } from 'next-auth/react'
-import { Suspense } from 'react'
 
 import {
   GridColumn,
@@ -11,11 +11,8 @@ import {
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
-import { CaseOverviewTabs } from '../../components/tabs/CaseOverviewTabs'
-import { GetCasesOverview } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
 import {
@@ -25,11 +22,22 @@ import {
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-type Props = {
-  data: GetCasesOverview
-}
+const CaseOverviewTabs = dynamic(
+  () => import('../../components/tabs/CaseOverviewTabs'),
+  {
+    loading: () => (
+      <SkeletonLoader
+        repeat={3}
+        height={44}
+        space={2}
+        borderRadius="standard"
+      />
+    ),
+    ssr: false,
+  },
+)
 
-export default function CaseProccessingOverviewScreen({ data }: Props) {
+export default function CaseProccessingOverviewScreen() {
   const { formatMessage } = useFormatMessage()
 
   return (
@@ -46,18 +54,7 @@ export default function CaseProccessingOverviewScreen({ data }: Props) {
               span={['12/12', '12/12', '12/12', '10/12']}
               offset={['0', '0', '0', '1/12']}
             >
-              <Suspense
-                fallback={
-                  <SkeletonLoader
-                    repeat={5}
-                    space={2}
-                    borderRadius="standard"
-                    height={44}
-                  />
-                }
-              >
-                <CaseOverviewTabs data={data} />
-              </Suspense>
+              <CaseOverviewTabs />
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -66,7 +63,7 @@ export default function CaseProccessingOverviewScreen({ data }: Props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
+export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
   resolvedUrl,
@@ -88,12 +85,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       },
     }
   }
-
-  const client = createDmrClient()
-
-  const caseOverview = await client.editorialOverview({
-    status: status,
-  })
 
   const layout: LayoutProps = {
     bannerProps: {
@@ -120,7 +111,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   try {
     return {
       props: deleteUndefined({
-        data: caseOverview,
         session,
         layout,
       }),

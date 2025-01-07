@@ -86,20 +86,6 @@ export const useAdvertTypes = ({
       revalidateOnFocus: false,
       revalidateIfStale: false,
       refreshInterval: 0,
-      suspense: true,
-      fallbackData: {
-        types: [],
-        paging: {
-          page: 1,
-          totalPages: 1,
-          totalItems: 0,
-          nextPage: null,
-          previousPage: null,
-          pageSize: 10,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      },
     },
   )
 

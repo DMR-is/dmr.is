@@ -35,9 +35,6 @@ export const StepYfirlestur = ({ data }: Props) => {
     mutate: refetchCase,
   } = useCase({
     caseId: data.id,
-    options: {
-      fallback: data,
-    },
   })
 
   const { data: tagsData } = useTags({

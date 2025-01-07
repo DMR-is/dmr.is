@@ -2,7 +2,7 @@ import { parseAsInteger, useQueryState } from 'nuqs'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
-import { CaseOverviewStatusTitleEnum, GetCasesOverview } from '../../gen/fetch'
+import { CaseOverviewStatusTitleEnum } from '../../gen/fetch'
 import { useCaseOverview } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseProcessingOverview'
@@ -11,11 +11,7 @@ import { CaseTableInReview } from '../tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../tables/CaseTableSubmitted'
 import { Tabs } from './Tabs'
 
-type Props = {
-  data: GetCasesOverview
-}
-
-export const CaseOverviewTabs = ({ data }: Props) => {
+export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
 
   const [status, setStatus] = useQueryState('status')
@@ -27,7 +23,6 @@ export const CaseOverviewTabs = ({ data }: Props) => {
   const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
 
   const { cases, statuses, paging, isLoading, isValidating } = useCaseOverview({
-    fallbackData: data,
     params: {
       status: status ? status : undefined,
       search: search ? search : undefined,
@@ -152,3 +147,5 @@ export const CaseOverviewTabs = ({ data }: Props) => {
     />
   )
 }
+
+export default CaseOverviewTabs

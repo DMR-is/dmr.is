@@ -1,16 +1,20 @@
-import { Text } from '@island.is/island-ui/core'
+import dynamic from 'next/dynamic'
+
+import { SkeletonLoader, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import {
-  CaseTable,
-  CaseTableHeadCellProps,
-  CaseTableRowProps,
-} from './CaseTable'
+import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { TableProps } from './types'
+
+const CaseTable = dynamic(() => import('./CaseTable'), {
+  loading: () => (
+    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
+  ),
+})
 
 export const CaseTableInProgress = ({
   cases,
