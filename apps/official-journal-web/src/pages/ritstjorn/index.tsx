@@ -1,26 +1,21 @@
 import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
-import { parseAsInteger, useQueryState } from 'nuqs'
+import { Suspense } from 'react'
 
 import {
   GridColumn,
   GridContainer,
   GridRow,
   SkeletonLoader,
-  Stack,
 } from '@island.is/island-ui/core'
 
-import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
-import { CaseTableInProgress } from '../../components/tables/CaseTableInProgress'
-import { CaseTableInReview } from '../../components/tables/CaseTableInReview'
-import { CaseTableSubmitted } from '../../components/tables/CaseTableSubmitted'
-import { Tabs } from '../../components/tabs/Tabs'
-import { CaseOverviewStatusTitleEnum } from '../../gen/fetch'
-import { useCaseOverview } from '../../hooks/api'
+import { CaseOverviewTabs } from '../../components/tabs/CaseOverviewTabs'
+import { GetCasesOverview } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
+import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
 import {
@@ -30,127 +25,12 @@ import {
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-export default function CaseProccessingOverviewScreen() {
+type Props = {
+  data: GetCasesOverview
+}
+
+export default function CaseProccessingOverviewScreen({ data }: Props) {
   const { formatMessage } = useFormatMessage()
-
-  const [status, setStatus] = useQueryState('status')
-  const [search] = useQueryState('search')
-  const [department] = useQueryState('department')
-  const [type] = useQueryState('type')
-  const [category] = useQueryState('category')
-  const [page] = useQueryState('page', parseAsInteger.withDefault(1))
-  const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
-
-  const { cases, statuses, paging, isLoading, isValidating } = useCaseOverview({
-    params: {
-      status: status ? status : undefined,
-      search: search ? search : undefined,
-      department: department ? department : undefined,
-      type: type ? type : undefined,
-      category: category ? category : undefined,
-      page: page ? page : undefined,
-      pageSize: pageSize ? pageSize : undefined,
-    },
-  })
-
-  const loading = isLoading || isValidating
-
-  const dynamicTabs = statuses
-    ?.map((status) => {
-      let TabComponent
-      let label
-      let order = 0
-      switch (status.title) {
-        case CaseOverviewStatusTitleEnum.Innsent:
-          order = 1
-          label = formatMessage(caseProccessingMessages.tabs.submitted, {
-            count: status.count,
-          })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableSubmitted
-              isLoading={loading}
-              cases={cases}
-              paging={paging}
-            />
-          )
-          break
-        case CaseOverviewStatusTitleEnum.Grunnvinnsla:
-          order = 2
-          label = formatMessage(caseProccessingMessages.tabs.inProgress, {
-            count: status.count,
-          })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInProgress
-              isLoading={loading}
-              cases={cases}
-              paging={paging}
-            />
-          )
-          break
-        case CaseOverviewStatusTitleEnum.Yfirlestur:
-          order = 3
-          label = formatMessage(caseProccessingMessages.tabs.inReview, {
-            count: status.count,
-          })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInReview
-              isLoading={loading}
-              cases={cases}
-              paging={paging}
-            />
-          )
-          break
-        case CaseOverviewStatusTitleEnum.Tilbúið:
-          order = 4
-          label = formatMessage(caseProccessingMessages.tabs.ready, {
-            count: status.count,
-          })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInProgress
-              isLoading={loading}
-              cases={cases}
-              paging={paging}
-            />
-          )
-          break
-      }
-
-      return {
-        id: status.title,
-        label: label,
-        content: TabComponent,
-        order: order,
-      }
-    })
-    .sort((a, b) => a.order - b.order)
 
   return (
     <>
@@ -166,19 +46,18 @@ export default function CaseProccessingOverviewScreen() {
               span={['12/12', '12/12', '12/12', '10/12']}
               offset={['0', '0', '0', '1/12']}
             >
-              <Stack space={[2, 2, 3]}>
-                <Tabs
-                  onTabChange={(id) =>
-                    setStatus(id, {
-                      history: 'replace',
-                      shallow: true,
-                    })
-                  }
-                  selectedTab={status ?? 'Innsent'}
-                  tabs={dynamicTabs ?? []}
-                  label={formatMessage(caseProccessingMessages.tabs.statuses)}
-                />
-              </Stack>
+              <Suspense
+                fallback={
+                  <SkeletonLoader
+                    repeat={5}
+                    space={2}
+                    borderRadius="standard"
+                    height={44}
+                  />
+                }
+              >
+                <CaseOverviewTabs data={data} />
+              </Suspense>
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -187,7 +66,7 @@ export default function CaseProccessingOverviewScreen() {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({
+export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
   query,
   resolvedUrl,
@@ -209,6 +88,12 @@ export const getServerSideProps: GetServerSideProps = async ({
       },
     }
   }
+
+  const client = createDmrClient()
+
+  const caseOverview = await client.editorialOverview({
+    status: status,
+  })
 
   const layout: LayoutProps = {
     bannerProps: {
@@ -235,6 +120,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   try {
     return {
       props: deleteUndefined({
+        data: caseOverview,
         session,
         layout,
       }),

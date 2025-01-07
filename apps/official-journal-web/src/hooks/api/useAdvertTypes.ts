@@ -86,6 +86,8 @@ export const useAdvertTypes = ({
       revalidateOnFocus: false,
       revalidateIfStale: false,
       refreshInterval: 0,
+      suspense: true,
+      fallbackData: { types: [] },
     },
   )
 

@@ -1,6 +1,6 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getSession } from 'next-auth/react'
-import { parseAsString, useQueryState } from 'nuqs'
+import { useState } from 'react'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
@@ -37,10 +37,7 @@ export default function CaseOverview(
 
   const { formatMessage } = useFormatMessage()
 
-  const [tab, setTab] = useQueryState(
-    'tab',
-    parseAsString.withDefault(DEFAULT_TAB),
-  )
+  const [tab, setTab] = useState(DEFAULT_TAB)
 
   const onTabChange = (id: string) => {
     setTab(id)

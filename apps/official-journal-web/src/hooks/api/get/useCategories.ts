@@ -28,7 +28,23 @@ export const useCategories = ({
           query: generateParams(qsp),
         },
       }),
-    options,
+    {
+      ...options,
+      suspense: true,
+      fallbackData: {
+        categories: [],
+        paging: {
+          page: 1,
+          totalPages: 1,
+          totalItems: 0,
+          nextPage: null,
+          previousPage: null,
+          pageSize: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
+    },
   )
 
   return {
