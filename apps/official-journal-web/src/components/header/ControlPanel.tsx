@@ -1,4 +1,4 @@
-// import { usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { Box, DropdownMenu } from '@island.is/island-ui/core'
 
@@ -8,11 +8,11 @@ import * as styles from './ControlPanel.css'
 import { messages } from './messages'
 export const ControlPanel = () => {
   const { formatMessage } = useFormatMessage()
-  // const pathBranch = usePathname().split('/')[1]
+  const pathBranch = usePathname().split('/')[1]
 
-  // const activePath = PagePaths.find(
-  //   (path) => path.pathname === `/${pathBranch}`,
-  // )
+  const activePath = PagePaths.find(
+    (path) => path.pathname === `/${pathBranch}`,
+  )
 
   const paths = PagePaths.sort((a, b) => a.order - b.order).map((path) => {
     return {
@@ -31,8 +31,7 @@ export const ControlPanel = () => {
         </div>
         <DropdownMenu
           icon="chevronDown"
-          // title={activePath?.title}
-          title="Stjórnborð"
+          title={activePath?.title}
           items={paths}
         />
       </div>

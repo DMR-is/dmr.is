@@ -8,6 +8,9 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    missingSuspenseWithCSRBailout: true,
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
 
