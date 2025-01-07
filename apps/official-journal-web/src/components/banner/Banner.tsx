@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { MessageDescriptor } from 'react-intl'
 
 import {
@@ -7,6 +8,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  SkeletonLoader,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -104,7 +106,22 @@ export const Banner = ({
                   </Box>
                 )}
                 {showFilters && (
-                  <CaseFilters enableCategories enableDepartments enableTypes />
+                  <Suspense
+                    fallback={
+                      <SkeletonLoader
+                        repeat={3}
+                        space={2}
+                        borderRadius="standard"
+                        height={44}
+                      />
+                    }
+                  >
+                    <CaseFilters
+                      enableCategories={enableCategories}
+                      enableDepartments={enableDepartments}
+                      enableTypes={enableTypes}
+                    />
+                  </Suspense>
                 )}
               </GridColumn>
             </>

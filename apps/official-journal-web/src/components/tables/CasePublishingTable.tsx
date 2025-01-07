@@ -1,5 +1,4 @@
 import { Reorder, useDragControls } from 'framer-motion'
-import { useQueryState } from 'nuqs'
 import { RefObject, useEffect, useRef, useState } from 'react'
 
 import {
@@ -94,7 +93,7 @@ type Props = {
 export const CasePublishingTable = ({ columns }: Props) => {
   const dragContainerRef = useRef<HTMLElement>(null)
 
-  const [department] = useQueryState('department')
+  const [department] = useState('department')
   const { publishingState, setCasesWithPublicationNumber } = usePublishContext()
   const { selectedCaseIds } = publishingState
 
