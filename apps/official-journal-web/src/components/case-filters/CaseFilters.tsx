@@ -1,13 +1,11 @@
 import debounce from 'lodash/debounce'
 import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
-import { Suspense } from 'react'
 
 import {
   Box,
   Button,
   Inline,
   Input,
-  SkeletonLoader,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -86,20 +84,9 @@ export const CaseFilters = ({
             }
           >
             <FilterPopover resetFilters={resetFilters}>
-              <Suspense
-                fallback={
-                  <SkeletonLoader
-                    repeat={3}
-                    space={2}
-                    borderRadius="standard"
-                    height={44}
-                  />
-                }
-              >
-                {enableTypes && <TypesFilter />}
-                {enableDepartments && <DepartmentsFilter />}
-                {enableCategories && <CategoriesFilter />}
-              </Suspense>
+              {enableTypes && <TypesFilter />}
+              {enableDepartments && <DepartmentsFilter />}
+              {enableCategories && <CategoriesFilter />}
             </FilterPopover>
           </Popover>
         )}
