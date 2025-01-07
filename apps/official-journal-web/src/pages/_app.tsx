@@ -28,11 +28,11 @@ export default function App({
       refetchInterval={5 * 60}
       basePath="/api/auth"
     >
-      <Layout {...pageProps.layout}>
-        <NuqsAdapter>
+      <NuqsAdapter>
+        <Layout {...pageProps.layout}>
           <Component {...pageProps} />
-        </NuqsAdapter>
-      </Layout>
+        </Layout>
+      </NuqsAdapter>
     </SessionProvider>
   )
 }
