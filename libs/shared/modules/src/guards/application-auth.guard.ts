@@ -53,24 +53,11 @@ export class ApplicationAuthGaurd implements CanActivate {
     try {
       const request = context.switchToHttp().getRequest()
       const auth = request.headers?.authorization
-      const applicationId = request.params?.id
 
       const withCase = this.reflector.get<boolean>(
         'withCase',
         context.getHandler(),
       )
-
-      if (!isUUID(applicationId)) {
-        // we have to throw to return correct status from guard
-        this.logger.warn(
-          `User tried to access application with invalid id<${applicationId}>`,
-          {
-            applicationId,
-            category: LOGGING_CATEGORY,
-          },
-        )
-        throw new BadRequestException()
-      }
 
       let currentUser: ApplicationUser | null = null
       try {
@@ -94,10 +81,8 @@ export class ApplicationAuthGaurd implements CanActivate {
 
         if (!user.result.ok) {
           this.logger.warn(
-            `User<${nationalId}> tried to access application with id<${applicationId}> but user does not exist`,
+            `User tried to access application, but user was not found`,
             {
-              nationalId,
-              applicationId,
               code: user.result.error.code,
               message: user.result.error.message,
               category: LOGGING_CATEGORY,
@@ -121,6 +106,18 @@ export class ApplicationAuthGaurd implements CanActivate {
       }
 
       if (withCase) {
+        const applicationId = request.params?.id
+        if (!isUUID(applicationId)) {
+          // we have to throw to return correct status from guard
+          this.logger.warn(
+            `User tried to access application with invalid id<${applicationId}>`,
+            {
+              applicationId,
+              category: LOGGING_CATEGORY,
+            },
+          )
+          throw new BadRequestException()
+        }
         const caseLookup = await this.utilityService.caseLookupByApplicationId(
           applicationId,
         )
