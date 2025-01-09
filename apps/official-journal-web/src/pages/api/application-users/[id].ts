@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
