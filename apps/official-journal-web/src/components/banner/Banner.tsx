@@ -125,3 +125,5 @@ export const Banner = ({
     </Section>
   )
 }
+
+export default Banner
