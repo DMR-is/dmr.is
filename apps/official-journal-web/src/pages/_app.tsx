@@ -1,7 +1,6 @@
 import { AppProps as NextAppProps } from 'next/app'
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
-import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 
 import { globalStyles } from '@island.is/island-ui/core'
 
@@ -28,11 +27,9 @@ export default function App({
       refetchInterval={5 * 60}
       basePath="/api/auth"
     >
-      <NuqsAdapter>
-        <Layout {...pageProps.layout}>
-          <Component {...pageProps} />
-        </Layout>
-      </NuqsAdapter>
+      <Layout {...pageProps.layout}>
+        <Component {...pageProps} />
+      </Layout>
     </SessionProvider>
   )
 }

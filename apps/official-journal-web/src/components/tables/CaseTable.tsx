@@ -1,5 +1,5 @@
 import reverse from 'lodash/reverse'
-import { parseAsInteger, useQueryState } from 'nuqs'
+import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useMemo, useState } from 'react'
 
 import {

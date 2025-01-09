@@ -1,4 +1,8 @@
-import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
+import {
+  parseAsArrayOf,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate'
 import { Dispatch, SetStateAction, useId, useState } from 'react'
 
 import {

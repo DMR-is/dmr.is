@@ -1,4 +1,4 @@
-import { parseAsInteger, useQueryState } from 'nuqs'
+import { parseAsInteger, useQueryState } from 'next-usequerystate'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
@@ -35,6 +35,57 @@ export const CaseOverviewTabs = () => {
   })
 
   const loading = isLoading
+
+  const loadingTabs = [
+    {
+      id: 'Innsent',
+      label: formatMessage(messages.tabs.submittedNoCount),
+      content: (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          borderRadius="standard"
+          space={2}
+        />
+      ),
+    },
+    {
+      id: 'Grunnvinnsla',
+      label: formatMessage(messages.tabs.inProgressNoCount),
+      content: (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          borderRadius="standard"
+          space={2}
+        />
+      ),
+    },
+    {
+      id: 'Yfirlestur',
+      label: formatMessage(messages.tabs.inReviewNoCount),
+      content: (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          borderRadius="standard"
+          space={2}
+        />
+      ),
+    },
+    {
+      id: 'Tilbúið',
+      label: formatMessage(messages.tabs.readyNoCount),
+      content: (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          borderRadius="standard"
+          space={2}
+        />
+      ),
+    },
+  ]
 
   const dynamicTabs = statuses
     ?.map((status) => {
@@ -141,8 +192,8 @@ export const CaseOverviewTabs = () => {
           shallow: true,
         })
       }
-      selectedTab={status ?? 'Innsent'}
-      tabs={dynamicTabs ?? []}
+      selectedTab={status ?? CaseOverviewStatusTitleEnum.Innsent}
+      tabs={dynamicTabs || loadingTabs}
       label={formatMessage(messages.tabs.statuses)}
     />
   )

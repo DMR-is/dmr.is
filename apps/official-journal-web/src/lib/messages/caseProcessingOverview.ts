@@ -27,6 +27,26 @@ export const messages = {
       defaultMessage: 'Tilbúið ({count})',
       description: 'Tab label for cases ready',
     },
+    submittedNoCount: {
+      id: 'web.page.caseProcessingOverview:tabs.submittedNoCount',
+      defaultMessage: 'Innsendingar',
+      description: 'Tab label for submitted cases',
+    },
+    inProgressNoCount: {
+      id: 'web.page.caseProcessingOverview:tabs.inProgressNoCount',
+      defaultMessage: 'Grunnvinnsla',
+      description: 'Tab label for cases in progress',
+    },
+    inReviewNoCount: {
+      id: 'web.page.caseProcessingOverview:tabs.inReviewNoCount',
+      defaultMessage: 'Yfirlestur',
+      description: 'Tab label for cases in review',
+    },
+    readyNoCount: {
+      id: 'web.page.caseProcessingOverview:tabs.readyNoCount',
+      defaultMessage: 'Tilbúið',
+      description: 'Tab label for cases ready',
+    },
   }),
   banner: defineMessages({
     title: {
