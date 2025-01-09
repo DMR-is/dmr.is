@@ -137,7 +137,7 @@
     "nest-winston": "^1.9.4",
     "next": "^14.2.3",
     "next-auth": "^4.24.8",
-    "next-usequerystate": "^1.20.0",
+    "next-usequerystate": "1.20.0",
     "node-fetch": "2.6.7",
     "oidc-client-ts": "2.0.3",
     "pg": "^8.11.5",
