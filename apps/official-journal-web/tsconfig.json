@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -14,6 +13,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "incremental": true,
+    "target": "es2015",
+    "module": "esnext",
     "plugins": [
       {
         "name": "next"
