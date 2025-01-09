@@ -9,7 +9,6 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "generatePackageJson": true,
         "outputPath": "dist/apps/official-journal-web"
       },
       "configurations": {
