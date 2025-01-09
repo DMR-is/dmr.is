@@ -1,5 +1,9 @@
 import debounce from 'lodash/debounce'
-import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
+import {
+  parseAsArrayOf,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate'
 
 import {
   Box,

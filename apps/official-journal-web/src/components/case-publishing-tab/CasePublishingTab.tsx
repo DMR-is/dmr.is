@@ -1,18 +1,11 @@
-import dynamic from 'next/dynamic'
-
-import { Box, Button, SkeletonLoader, Text } from '@island.is/island-ui/core'
+import { Box, Button, Text } from '@island.is/island-ui/core'
 
 import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
+import CaseTableReady from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
-
-const CaseTableReady = dynamic(() => import('../tables/CaseTableReady'), {
-  loading: () => (
-    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
-  ),
-})
 
 type Props = {
   cases: Case[]

@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic'
 import { MessageDescriptor } from 'react-intl'
 
 import {
@@ -8,7 +7,6 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  SkeletonLoader,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -16,14 +14,9 @@ import {
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
+import CaseFilters from '../case-filters/CaseFilters'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
-
-const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
-  loading: () => (
-    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
-  ),
-})
 
 type BreadcrumbsProps = Array<
   Omit<React.ComponentProps<typeof Breadcrumbs>['items'][number], 'title'> & {

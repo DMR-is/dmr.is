@@ -1,14 +1,7 @@
-import dynamic from 'next/dynamic'
-import { useQueryState } from 'nuqs'
+import { useQueryState } from 'next-usequerystate'
 import { ChangeEvent } from 'react'
 
-import {
-  AlertMessage,
-  Checkbox,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { AlertMessage, Checkbox, Stack, Text } from '@island.is/island-ui/core'
 
 import { CaseStatusTitleEnum } from '../../gen/fetch'
 import { useCases } from '../../hooks/api'
@@ -16,15 +9,9 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CaseTableHeadCellProps } from './CaseTable'
+import CaseTable, { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
-
-const CaseTable = dynamic(() => import('./CaseTable'), {
-  loading: () => (
-    <SkeletonLoader repeat={4} height={44} space={2} borderRadius="standard" />
-  ),
-})
 
 export const CaseTableReady = () => {
   const { formatMessage } = useFormatMessage()
