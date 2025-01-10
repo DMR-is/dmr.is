@@ -13,6 +13,7 @@ import {
   CaseOverviewQuery,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  DepartmentSlugEnum,
   GetCaseResponse,
   GetCasesOverview,
   GetCasesQuery,
@@ -40,7 +41,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
-import { PublishedCaseCounterResults, ResultWrapper } from '@dmr.is/types'
+import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
   generatePaging,
@@ -63,7 +64,6 @@ import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
-import { InstitutionModel } from '../institution/models/institution.model'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -977,7 +977,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   async getFinishedCases(
-    department: string,
+    department: DepartmentSlugEnum,
     params: GetPublishedCasesQuery,
   ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
     const whereParams = {}
@@ -990,90 +990,206 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const finishedStatuses = [
+    const availableStatuses = [
       CaseStatusEnum.Published,
       CaseStatusEnum.Rejected,
       CaseStatusEnum.Unpublished,
     ]
 
-    const counterResultsPromise = this.caseModel.findAll({
-      attributes: [
-        [Sequelize.literal(`"department"."slug"`), 'departmentSlug'],
-        [Sequelize.literal(`COUNT("CaseModel"."department_id")`), 'totalCases'],
-      ],
-      raw: true,
-      offset: (params.page - 1) * params.pageSize,
-      limit: params.pageSize,
+    const limit = params.pageSize
+    const offset = (params.page - 1) * limit
+
+    const counterA = this.caseModel.count({
+      benchmark: true,
       include: [
         {
-          attributes: [],
-          model: AdvertDepartmentModel,
-          as: `department`,
-        },
-        {
           model: CaseStatusModel,
-          attributes: [],
           where: {
             title: {
-              [Op.in]: finishedStatuses,
+              [Op.in]: availableStatuses,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: DepartmentSlugEnum.A,
             },
           },
         },
       ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getFinishedCases department A counter query ran in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getFinishedCases',
+          },
+        ),
+    })
+
+    const counterB = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.in]: availableStatuses,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: DepartmentSlugEnum.B,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getFinishedCases department B counter query ran in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getFinishedCases',
+          },
+        ),
+    })
+
+    const counterC = this.caseModel.count({
+      benchmark: true,
+      include: [
+        {
+          model: CaseStatusModel,
+          where: {
+            title: {
+              [Op.in]: availableStatuses,
+            },
+          },
+        },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            slug: {
+              [Op.eq]: DepartmentSlugEnum.C,
+            },
+          },
+        },
+      ],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getFinishedCases department C counter query ran in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getFinishedCases',
+          },
+        ),
+    })
+
+    const casesResults = this.caseModel.findAndCountAll({
+      raw: true,
+      nest: true,
+      benchmark: true,
+      offset: offset,
+      limit: limit,
+      attributes: [
+        'id',
+        'requestedPublicationDate',
+        'createdAt',
+        'advertTitle',
+        'fastTrack',
+        'publishedAt',
+        'publicationNumber',
+      ],
       where: whereParams,
-      group: [`"department"."slug"`, `"department"."id"`],
-      replacements: {
-        department,
+      include: [
+        {
+          model: AdvertDepartmentModel,
+          attributes: ['id', 'title', 'slug'],
+          where: {
+            title: {
+              [Op.eq]: department,
+            },
+          },
+        },
+        {
+          model: AdvertTypeModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: CaseCommunicationStatusModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          where: {
+            title: {
+              [Op.in]: availableStatuses,
+            },
+          },
+        },
+        {
+          model: CaseTagModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+      ],
+      logging: (_, timing) => {
+        this.logger.info(
+          `getFinishedCases get cases query executed in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getFinishedCases',
+          },
+        )
       },
     })
 
-    const casesPromise = this.getCases({
-      department: [department],
-      status: finishedStatuses,
-      page: params.page,
-      pageSize: params.pageSize,
-    })
-
-    const [counterResults, casesLookup] = await Promise.all([
-      counterResultsPromise,
-      casesPromise,
+    const [cases, countA, countB, countC] = await Promise.all([
+      casesResults,
+      counterA,
+      counterB,
+      counterC,
     ])
 
-    if (!casesLookup.result.ok) {
-      this.logger.warn('Failed to get cases for published cases', {
-        error: casesLookup.result.error,
-        cateory: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Internal server error',
-      })
-    }
-
-    const totalCases = (
-      counterResults as unknown as PublishedCaseCounterResults[]
-    ).reduce(
-      (r, current) => {
-        const key = current.departmentSlug.split('-')[0]
-        const value = parseInt(current.totalCases, 10)
-
-        return {
-          ...r,
-          [key]: value,
-        }
+    const counter = [
+      {
+        department: 'A deild',
+        count: countA,
       },
       {
-        a: 0,
-        b: 0,
-        c: 0,
-      } as GetPublishedCasesResponse['totalCases'],
+        department: 'B deild',
+        count: countB,
+      },
+      {
+        department: 'C deild',
+        count: countC,
+      },
+    ]
+
+    const mapped = cases.rows.map((c) => caseOverviewMigrate(c))
+    const paging = generatePaging(
+      cases.rows,
+      params.page,
+      params.pageSize,
+      cases.count,
     )
 
     return ResultWrapper.ok({
-      cases: casesLookup.result.value.cases,
-      paging: casesLookup.result.value.paging,
-      totalCases,
+      counter,
+      cases: mapped,
+      paging,
     })
   }
 

@@ -1079,41 +1079,44 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/published/{department}": {
+    "/api/v1/cases/finished/{departmentSlug}": {
       "get": {
-        "operationId": "getPublishedCases",
-        "summary": "Get cases",
+        "operationId": "getFinishedCases",
+        "summary": "",
         "parameters": [
           {
-            "name": "department",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
+            "name": "page",
             "description": "Page number",
             "required": false,
-            "name": "page",
             "in": "query",
             "schema": { "default": 1, "type": "number" }
           },
           {
+            "name": "search",
             "description": "Search for advert title",
             "required": false,
-            "name": "search",
             "in": "query",
             "schema": { "default": "", "type": "string" }
           },
           {
+            "name": "pageSize",
             "description": "Page size",
             "required": false,
-            "name": "pageSize",
             "in": "query",
             "schema": { "default": 10, "type": "number" }
+          },
+          {
+            "name": "departmentSlug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["a-deild", "b-deild", "c-deild"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -3689,34 +3692,31 @@
         },
         "required": ["cases", "paging"]
       },
-      "PublishedCasesTotalItems": {
+      "PublishedCasesCounter": {
         "type": "object",
         "properties": {
-          "a": { "type": "number" },
-          "b": { "type": "number" },
-          "c": { "type": "number" }
+          "department": { "type": "string" },
+          "count": { "type": "number" }
         },
-        "required": ["a", "b", "c"]
+        "required": ["department", "count"]
       },
       "GetPublishedCasesResponse": {
         "type": "object",
         "properties": {
+          "counter": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublishedCasesCounter" }
+          },
           "cases": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Case" }
-          },
-          "totalCases": {
-            "description": "Total items",
-            "allOf": [
-              { "$ref": "#/components/schemas/PublishedCasesTotalItems" }
-            ]
+            "items": { "$ref": "#/components/schemas/CaseOverview" }
           },
           "paging": {
             "description": "Paging info",
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["cases", "totalCases", "paging"]
+        "required": ["counter", "cases", "paging"]
       },
       "PostCasePublishBody": {
         "type": "object",

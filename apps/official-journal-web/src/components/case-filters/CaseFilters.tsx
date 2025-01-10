@@ -99,33 +99,36 @@ export const CaseFilters = ({
         <Stack space={1}>
           <Inline space={1} flexWrap="wrap">
             <Text whiteSpace="nowrap">Síun á lista:</Text>
-            {departments?.map((dep, i) => (
-              <ActiveFilterTag
-                key={i}
-                label={dep}
-                onClick={() =>
-                  setDepartments(departments.filter((d) => d !== dep))
-                }
-              />
-            ))}
-            {types?.map((dep, i) => (
-              <ActiveFilterTag
-                key={i}
-                label={dep}
-                variant="purple"
-                onClick={() => setTypes(types.filter((d) => d !== dep))}
-              />
-            ))}
-            {categories?.map((dep, i) => (
-              <ActiveFilterTag
-                key={i}
-                label={dep}
-                variant="mint"
-                onClick={() =>
-                  setCategories(categories.filter((d) => d !== dep))
-                }
-              />
-            ))}
+            {enableDepartments &&
+              departments?.map((dep, i) => (
+                <ActiveFilterTag
+                  key={i}
+                  label={dep}
+                  onClick={() =>
+                    setDepartments(departments.filter((d) => d !== dep))
+                  }
+                />
+              ))}
+            {enableTypes &&
+              types?.map((dep, i) => (
+                <ActiveFilterTag
+                  key={i}
+                  label={dep}
+                  variant="purple"
+                  onClick={() => setTypes(types.filter((d) => d !== dep))}
+                />
+              ))}
+            {enableCategories &&
+              categories?.map((dep, i) => (
+                <ActiveFilterTag
+                  key={i}
+                  label={dep}
+                  variant="mint"
+                  onClick={() =>
+                    setCategories(categories.filter((d) => d !== dep))
+                  }
+                />
+              ))}
           </Inline>
           {allFilters.length > 1 && (
             <Text whiteSpace="nowrap">

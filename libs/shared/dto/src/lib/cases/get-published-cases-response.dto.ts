@@ -1,39 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
-import { Case } from './case.dto'
+import { CaseOverview } from './case-editorial-overview.dto'
 
-class PublishedCasesTotalItems {
+export class PublishedCasesCounter {
   @ApiProperty({
-    name: 'a',
-    type: Number,
+    name: 'department',
+    type: String,
   })
-  a!: number
-
-  @ApiProperty({
-    name: 'b',
-    type: Number,
-  })
-  b!: number
+  department!: string
 
   @ApiProperty({
-    name: 'c',
     type: Number,
+    name: 'count',
   })
-  c!: number
+  count!: number
 }
 
 export class GetPublishedCasesResponse {
   @ApiProperty({
-    type: [Case],
+    type: [PublishedCasesCounter],
+    name: 'counter',
   })
-  cases!: Case[]
+  counter!: PublishedCasesCounter[]
 
   @ApiProperty({
-    description: 'Total items',
-    type: PublishedCasesTotalItems,
+    type: [CaseOverview],
+    name: 'cases',
   })
-  totalCases!: PublishedCasesTotalItems
+  cases!: CaseOverview[]
 
   @ApiProperty({
     description: 'Paging info',
