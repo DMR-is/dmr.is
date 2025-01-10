@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
@@ -7,6 +6,7 @@ import { SWRConfig } from 'swr'
 
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
+import Banner from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
 import { NotificationContextProvider } from '../context/notificationContext'
@@ -16,10 +16,6 @@ import { defaultFetcher } from '../lib/constants'
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
 }
-
-const Banner = dynamic(() => import('../components/banner/Banner'), {
-  ssr: false,
-})
 
 export type LayoutProps = {
   children?: React.ReactNode

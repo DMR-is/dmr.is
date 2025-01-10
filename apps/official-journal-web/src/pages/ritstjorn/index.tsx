@@ -1,11 +1,18 @@
 import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 import { getSession } from 'next-auth/react'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Inline,
+  SkeletonLoader,
+  Stack,
+} from '@island.is/island-ui/core'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
-import CaseOverviewTabs from '../../components/tabs/CaseOverviewTabs'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { Routes } from '../../lib/constants'
@@ -16,6 +23,29 @@ import {
   mapTabIdToCaseStatus,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+
+const CaseOverviewTabs = dynamic(
+  () => import('../../components/tabs/CaseOverviewTabs'),
+  {
+    ssr: false,
+    loading: () => (
+      <Stack space={2}>
+        <Inline space={2} justifyContent="spaceBetween">
+          <SkeletonLoader width={200} height={44} borderRadius="standard" />
+          <SkeletonLoader width={200} height={44} borderRadius="standard" />
+          <SkeletonLoader width={200} height={44} borderRadius="standard" />
+          <SkeletonLoader width={200} height={44} borderRadius="standard" />
+        </Inline>
+        <SkeletonLoader
+          repeat={4}
+          height={44}
+          space={2}
+          borderRadius="standard"
+        />
+      </Stack>
+    ),
+  },
+)
 
 export default function CaseProccessingOverviewScreen() {
   const { formatMessage } = useFormatMessage()
