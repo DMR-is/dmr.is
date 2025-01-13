@@ -52,16 +52,17 @@ export const CaseFilters = ({
   )
 
   const allFilters = [
-    ...(departments || []),
-    ...(types || []),
-    ...(categories || []),
+    ...((enableDepartments && departments) || []),
+    ...((enableTypes && types) || []),
+    ...((enableCategories && categories) || []),
   ]
 
   const resetFilters = () => {
     setSearch('')
-    setCategories([])
-    setDepartments([])
-    setTypes([])
+
+    enableCategories && setCategories([])
+    enableDepartments && setDepartments([])
+    enableTypes && setTypes([])
   }
 
   const showFilters = enableCategories || enableDepartments || enableTypes
@@ -100,15 +101,17 @@ export const CaseFilters = ({
           <Inline space={1} flexWrap="wrap">
             <Text whiteSpace="nowrap">Síun á lista:</Text>
             {enableDepartments &&
-              departments?.map((dep, i) => (
-                <ActiveFilterTag
-                  key={i}
-                  label={dep}
-                  onClick={() =>
-                    setDepartments(departments.filter((d) => d !== dep))
-                  }
-                />
-              ))}
+              departments?.map((dep, i) => {
+                return (
+                  <ActiveFilterTag
+                    key={i}
+                    label={dep}
+                    onClick={() =>
+                      setDepartments(departments.filter((d) => d !== dep))
+                    }
+                  />
+                )
+              })}
             {enableTypes &&
               types?.map((dep, i) => (
                 <ActiveFilterTag

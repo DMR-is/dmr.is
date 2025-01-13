@@ -1,17 +1,18 @@
 import { Transaction } from 'sequelize'
 import {
   CaseCommunicationStatus,
-  CaseOverviewQuery,
+  CaseStatusEnum,
   CreateCaseChannelBody,
   DepartmentSlugEnum,
   GetCaseResponse,
-  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithStatusCount,
+  GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery,
-  GetPublishedCasesResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -37,20 +38,25 @@ export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
 
-  getFinishedCases(
+  getCasesReadyForPublication(
     department: DepartmentSlugEnum,
-    query?: GetPublishedCasesQuery,
-  ): Promise<ResultWrapper<GetPublishedCasesResponse>>
+    query?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
+
+  getCasesWithDepartmentCount(
+    department: DepartmentSlugEnum,
+    query?: GetCasesWithDepartmentCountQuery,
+  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
   createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
   publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
-  getCasesOverview(
-    status: string,
-    params?: CaseOverviewQuery,
-  ): Promise<ResultWrapper<GetCasesOverview>>
+  getCasesWithStatusCount(
+    status: CaseStatusEnum,
+    params?: GetCasesWithStatusCountQuery,
+  ): Promise<ResultWrapper<GetCasesWithStatusCount>>
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
 
   createCaseChannel(

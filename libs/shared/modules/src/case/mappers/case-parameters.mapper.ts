@@ -26,6 +26,29 @@ type WhereClause = {
   }
 }
 
+export const titleOrSlugMatch = (filters?: string | string[]) => {
+  const whereClause = {}
+
+  if (!filters) {
+    return whereClause
+  }
+
+  const isArray = Array.isArray(filters)
+
+  Object.assign(whereClause, {
+    [Op.or]: [
+      {
+        title: isArray ? { [Op.in]: filters } : { [Op.iLike]: `%${filters}%` },
+      },
+      {
+        slug: isArray ? { [Op.in]: filters } : { [Op.iLike]: `%${filters}%` },
+      },
+    ],
+  })
+
+  return whereClause
+}
+
 export const caseParameters = (params?: GetCasesQuery) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}

@@ -15,7 +15,7 @@ import {
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
-  CaseOverviewQuery,
+  CaseStatusEnum,
   CreateCaseResponse,
   CreateMainCategory,
   CreateMainCategoryCategories,
@@ -25,16 +25,17 @@ import {
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCaseResponse,
-  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithStatusCount,
+  GetCasesWithStatusCountQuery,
   GetCategoriesResponse,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery,
-  GetPublishedCasesResponse,
   GetTagsResponse,
   MainCategory,
   PostApplicationAttachmentBody,
@@ -64,7 +65,6 @@ import {
   Controller,
   Get,
   Inject,
-  NotImplementedException,
   Param,
   Query,
   UseGuards,
@@ -296,21 +296,27 @@ export class CaseController {
     ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
-  @Route({
-    path: 'overview/:status',
-    params: [{ name: 'status', type: 'string', required: true }],
-    operationId: 'editorialOverview',
-    summary: 'Get editorial overview',
-    responseType: GetCasesOverview,
-    query: [{ type: CaseOverviewQuery }],
+  @Get('/status-count/:status')
+  @ApiOperation({ operationId: 'getCasesWithStatusCount' })
+  @ApiParam({
+    name: 'status',
+    enum: CaseStatusEnum,
+    description: 'Cases with this status will be returned',
   })
+  @ApiQuery({ type: GetCasesWithStatusCountQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithStatusCount })
   @TimeLog()
-  async editorialOverview(
-    @Param('status') status: string,
-    @Query() params?: CaseOverviewQuery,
-  ): Promise<GetCasesOverview> {
+  /**
+   * Returns cases with status count, by default count cases for every status.
+   * @param status - Status of the cases to be returned
+   */
+  async getCasesWithStatusCount(
+    @Param('status', new EnumValidationPipe(CaseStatusEnum))
+    status: CaseStatusEnum,
+    @Query() params?: GetCasesQuery,
+  ): Promise<GetCasesWithStatusCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCasesOverview(status, params),
+      await this.caseService.getCasesWithStatusCount(status, params),
     )
   }
 
@@ -629,19 +635,19 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
   }
 
-  @Get('/finished/:departmentSlug')
+  @Get('/department-count/:departmentSlug')
   @ApiOperation({ operationId: 'getFinishedCases' })
   @ApiParam({ name: 'departmentSlug', enum: DepartmentSlugEnum })
-  @ApiQuery({ name: 'query', type: GetPublishedCasesQuery })
-  @ApiResponse({ status: 200, type: GetPublishedCasesResponse })
+  @ApiQuery({ name: 'query', type: GetCasesWithDepartmentCountQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
   @TimeLog()
-  async getFinishedCases(
+  async getCasesWithDepartmentCount(
     @Param('departmentSlug', new EnumValidationPipe(DepartmentSlugEnum))
     department: DepartmentSlugEnum,
-    @Query() query?: GetPublishedCasesQuery,
-  ): Promise<GetPublishedCasesResponse> {
+    @Query() query?: GetCasesWithDepartmentCountQuery,
+  ): Promise<GetCasesWithDepartmentCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getFinishedCases(department, query),
+      await this.caseService.getCasesWithDepartmentCount(department, query),
     )
   }
 

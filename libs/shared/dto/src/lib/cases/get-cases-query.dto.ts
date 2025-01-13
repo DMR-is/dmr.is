@@ -7,9 +7,11 @@ import {
   IsString,
 } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
-export class GetCasesQuery {
+import { PagingQuery } from '../paging'
+
+export class CasesQuery {
   @ApiProperty({
     name: 'id',
     type: String,
@@ -54,30 +56,6 @@ export class GetCasesQuery {
   @IsOptional()
   @IsNumberString()
   year?: string
-
-  @ApiProperty({
-    name: 'page',
-    type: Number,
-    description: 'Page number',
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    return parseInt(value, 10)
-  })
-  page?: number
-
-  @ApiProperty({
-    name: 'pageSize',
-    type: Number,
-    description: 'Page size',
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    return parseInt(value, 10)
-  })
-  pageSize?: number
 
   @ApiProperty({
     name: 'caseNumber',
@@ -220,3 +198,5 @@ export class GetCasesQuery {
   })
   category?: string[]
 }
+
+export class GetCasesQuery extends IntersectionType(CasesQuery, PagingQuery) {}

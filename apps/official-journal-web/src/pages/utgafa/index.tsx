@@ -1,138 +1,104 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import { useRouter } from 'next/router'
+import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
-import { useEffect, useState } from 'react'
-import { mutate } from 'swr'
 
-import { Box } from '@island.is/island-ui/core'
+import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
-import { CaseOverviewGrid } from '../../components/case-overview-grid/CaseOverviewGrid'
-import { CasePublishingList } from '../../components/case-publishing-list/CasePublishingList'
-import { CasePublishingTab } from '../../components/case-publishing-tab/CasePublishingTab'
 import { Meta } from '../../components/meta/Meta'
-import { Tabs } from '../../components/tabs/Tabs'
-import { PublishingContextProvider } from '../../context/publishingContext'
-import { Case, CaseStatusTitleEnum, Paging } from '../../gen/fetch'
+import { Section } from '../../components/section/Section'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
-import { APIRoutes, CaseDepartmentTabs, Routes } from '../../lib/constants'
+import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/casePublishOverview'
-import { getStringFromQueryString } from '../../lib/types'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-type Props = {
-  cases: Case[]
-  paging: Paging
-}
-
-export default function CasePublishingOverview(
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
-  const { cases, paging } = data
-
-  const router = useRouter()
+export default function CasePublishingOverview() {
   const { formatMessage } = useFormatMessage()
 
-  const initalDepartment = router.query.department
-    ? (router.query.department as string)
-    : 'a-deild'
+  // const initalDepartment = router.query.department
+  //   ? (router.query.department as string)
+  //   : 'a-deild'
 
-  const [publishing, setPublishing] = useState<boolean>(false)
+  // const [publishing, setPublishing] = useState<boolean>(false)
 
-  const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
+  // const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
 
-  const onPublishSuccess = () => {
-    setPublishing(false)
-    const revalidate = `${
-      APIRoutes.GetCases
-    }?department=${selectedTab}&status=${encodeURIComponent(
-      CaseStatusTitleEnum.Tilbúið,
-    )}`
-    mutate(revalidate)
-  }
+  // const onPublishSuccess = () => {
+  //   setPublishing(false)
+  //   const revalidate = `${
+  //     APIRoutes.GetCases
+  //   }?department=${selectedTab}&status=${encodeURIComponent(
+  //     CaseStatusTitleEnum.Tilbúið,
+  //   )}`
+  //   mutate(revalidate)
+  // }
+  // }
 
-  const onTabChange = (id: string) => {
-    setSelectedTab(id)
-
-    router.replace(
-      {
-        query: {
-          ...router.query,
-          department: id,
-        },
-      },
-      undefined,
-      { shallow: true },
-    )
-  }
-
-  const tabs = [
-    {
-      id: CaseDepartmentTabs[0].value,
-      label: CaseDepartmentTabs[0].label,
-      content: (
-        <PublishingContextProvider>
-          {publishing && (
-            <CasePublishingList
-              onPublishSuccess={onPublishSuccess}
-              onCancel={() => setPublishing(false)}
-            />
-          )}
-          <Box hidden={publishing}>
-            <CasePublishingTab
-              proceedToPublishing={setPublishing}
-              cases={cases}
-              paging={paging}
-            />
-          </Box>
-        </PublishingContextProvider>
-      ),
-    },
-    {
-      id: CaseDepartmentTabs[1].value,
-      label: CaseDepartmentTabs[1].label,
-      content: (
-        <PublishingContextProvider>
-          {publishing && (
-            <CasePublishingList
-              onPublishSuccess={onPublishSuccess}
-              onCancel={() => setPublishing(false)}
-            />
-          )}
-          <Box hidden={publishing}>
-            <CasePublishingTab
-              proceedToPublishing={setPublishing}
-              cases={cases}
-              paging={paging}
-            />
-          </Box>
-        </PublishingContextProvider>
-      ),
-    },
-    {
-      id: CaseDepartmentTabs[2].value,
-      label: CaseDepartmentTabs[2].label,
-      content: (
-        <PublishingContextProvider>
-          {publishing && (
-            <CasePublishingList
-              onPublishSuccess={onPublishSuccess}
-              onCancel={() => setPublishing(false)}
-            />
-          )}
-          <Box hidden={publishing}>
-            <CasePublishingTab
-              proceedToPublishing={setPublishing}
-              cases={cases}
-              paging={paging}
-            />
-          </Box>
-        </PublishingContextProvider>
-      ),
-    },
-  ]
+  // const tabs = [
+  //   {
+  //     id: CaseDepartmentTabs[0].value,
+  //     label: CaseDepartmentTabs[0].label,
+  //     content: (
+  //       <PublishingContextProvider>
+  //         {publishing && (
+  //           <CasePublishingList
+  //             onPublishSuccess={onPublishSuccess}
+  //             onCancel={() => setPublishing(false)}
+  //           />
+  //         )}
+  //         <Box hidden={publishing}>
+  //           <CasePublishingTab
+  //             proceedToPublishing={setPublishing}
+  //             cases={cases}
+  //             paging={paging}
+  //           />
+  //         </Box>
+  //       </PublishingContextProvider>
+  //     ),
+  //   },
+  //   {
+  //     id: CaseDepartmentTabs[1].value,
+  //     label: CaseDepartmentTabs[1].label,
+  //     content: (
+  //       <PublishingContextProvider>
+  //         {publishing && (
+  //           <CasePublishingList
+  //             onPublishSuccess={onPublishSuccess}
+  //             onCancel={() => setPublishing(false)}
+  //           />
+  //         )}
+  //         <Box hidden={publishing}>
+  //           <CasePublishingTab
+  //             proceedToPublishing={setPublishing}
+  //             cases={cases}
+  //             paging={paging}
+  //           />
+  //         </Box>
+  //       </PublishingContextProvider>
+  //     ),
+  //   },
+  //   {
+  //     id: CaseDepartmentTabs[2].value,
+  //     label: CaseDepartmentTabs[2].label,
+  //     content: (
+  //       <PublishingContextProvider>
+  //         {publishing && (
+  //           <CasePublishingList
+  //             onPublishSuccess={onPublishSuccess}
+  //             onCancel={() => setPublishing(false)}
+  //           />
+  //         )}
+  //         <Box hidden={publishing}>
+  //           <CasePublishingTab
+  //             proceedToPublishing={setPublishing}
+  //             cases={cases}
+  //             paging={paging}
+  //           />
+  //         </Box>
+  //       </PublishingContextProvider>
+  //     ),
+  //   },
+  // ]
 
   return (
     <>
@@ -141,21 +107,23 @@ export default function CasePublishingOverview(
           messages.breadcrumbs.casePublishing,
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
       />
-
-      <CaseOverviewGrid>
-        <Tabs
-          hideTablist={publishing}
-          label="Veldu deild"
-          selectedTab={selectedTab}
-          tabs={tabs}
-          onTabChange={(id) => onTabChange(id)}
-        />
-      </CaseOverviewGrid>
+      <Section paddingTop="content">
+        <GridContainer>
+          <GridRow>
+            <GridColumn
+              span={['12/12', '12/12', '12/12', '10/12']}
+              offset={['0', '0', '0', '1/12']}
+            >
+              <h2>hello</h2>
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Section>
     </>
   )
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
+export const getServerSideProps: GetServerSideProps = async ({
   query,
   req,
   resolvedUrl,
@@ -176,7 +144,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       contentColumnSpan: ['12/12', '12/12', '7/12'],
       imageColumnSpan: ['12/12', '12/12', '3/12'],
       enableCategories: true,
-      enableDepartments: true,
+      enableDepartments: false,
       enableTypes: true,
       breadcrumbs: [
         {
@@ -191,20 +159,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   }
 
   try {
-    const dmrClient = createDmrClient()
-    const department = getStringFromQueryString(query.tab) || 'a-deild'
-
-    const { cases, paging } = await dmrClient.getCases({
-      department,
-      status: CaseStatusTitleEnum.Tilbúið,
-    })
-
     return {
       props: deleteUndefined({
         session,
         layout,
-        cases,
-        paging,
       }),
     }
   } catch (error) {

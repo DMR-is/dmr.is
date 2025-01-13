@@ -2980,7 +2980,7 @@
         },
         "required": ["id", "title", "slug", "department"]
       },
-      "CaseOverview": {
+      "Case": {
         "type": "object",
         "properties": {
           "id": {
@@ -3091,7 +3091,7 @@
           "cases": {
             "description": "Cases for selected tab",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseOverview" }
+            "items": { "$ref": "#/components/schemas/Case" }
           },
           "statuses": {
             "description": "Total cases for each status",
@@ -3472,7 +3472,7 @@
         },
         "required": ["id", "title", "html"]
       },
-      "Case": {
+      "CaseDetailed": {
         "type": "object",
         "properties": {
           "id": {
@@ -3658,7 +3658,9 @@
       },
       "GetCaseResponse": {
         "type": "object",
-        "properties": { "case": { "$ref": "#/components/schemas/Case" } },
+        "properties": {
+          "case": { "$ref": "#/components/schemas/CaseDetailed" }
+        },
         "required": ["case"]
       },
       "PostApplicationBody": {
@@ -3675,7 +3677,9 @@
       },
       "CreateCaseResponse": {
         "type": "object",
-        "properties": { "case": { "$ref": "#/components/schemas/Case" } },
+        "properties": {
+          "case": { "$ref": "#/components/schemas/CaseDetailed" }
+        },
         "required": ["case"]
       },
       "GetCasesReponse": {
@@ -3709,7 +3713,7 @@
           },
           "cases": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseOverview" }
+            "items": { "$ref": "#/components/schemas/Case" }
           },
           "paging": {
             "description": "Paging info",

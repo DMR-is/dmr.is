@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
-import { Case } from './case.dto'
+import { CaseDetailed } from './case.dto'
 
 export class GetCasesReponse {
   @ApiProperty({
-    type: [Case],
+    type: [CaseDetailed],
   })
-  cases!: Case[]
+  cases!: CaseDetailed[]
 
   @ApiProperty({
     description: 'Paging info',

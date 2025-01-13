@@ -21,6 +21,7 @@ import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions'
+import { Paging } from '../paging'
 import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
 import { User } from '../users/user.dto'
@@ -28,7 +29,7 @@ import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseStatus } from './case-status.dto'
 
-export class Case {
+export class CaseDetailed {
   @ApiProperty({
     type: String,
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
@@ -282,4 +283,89 @@ export class Case {
   @ValidateNested({ each: true })
   @Type(() => CaseAddition)
   additions!: CaseAddition[]
+}
+
+export class Case extends PickType(CaseDetailed, [
+  'id',
+  'communicationStatus',
+  'requestedPublicationDate',
+  'status',
+  'createdAt',
+  'advertDepartment',
+  'advertType',
+  'advertTitle',
+  'fastTrack',
+  'assignedTo',
+  'tag',
+  'involvedParty',
+  'publicationNumber',
+  'publishedAt',
+]) {}
+
+export class DepartmentCounter {
+  @ApiProperty({
+    name: 'department',
+    type: String,
+  })
+  department!: string
+
+  @ApiProperty({
+    type: Number,
+    name: 'count',
+  })
+  count!: number
+}
+
+export class StatusCounter {
+  @ApiProperty({
+    name: 'status',
+    type: String,
+  })
+  status!: string
+
+  @ApiProperty({
+    type: Number,
+    name: 'count',
+  })
+  count!: number
+}
+
+export class GetCasesWithDepartmentCount {
+  @ApiProperty({
+    type: [DepartmentCounter],
+    name: 'counter',
+  })
+  departments!: DepartmentCounter[]
+
+  @ApiProperty({
+    type: [Case],
+    name: 'cases',
+  })
+  cases!: Case[]
+
+  @ApiProperty({
+    description: 'Paging info',
+    type: Paging,
+  })
+  paging!: Paging
+}
+
+export class GetCasesWithStatusCount {
+  @ApiProperty({
+    type: [StatusCounter],
+    name: 'counter',
+  })
+  statuses!: StatusCounter[]
+
+  @ApiProperty({
+    type: [Case],
+    name: 'cases',
+  })
+  cases!: Case[]
+
+  @ApiProperty({
+    description: 'Paging info',
+    type: Paging,
+  })
+  paging!: Paging
 }
