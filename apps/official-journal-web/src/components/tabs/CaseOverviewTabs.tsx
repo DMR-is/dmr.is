@@ -1,9 +1,13 @@
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import {
+  parseAsInteger,
+  parseAsStringEnum,
+  useQueryState,
+} from 'next-usequerystate'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
-import { CaseOverviewStatusTitleEnum } from '../../gen/fetch'
-import { useCaseOverview } from '../../hooks/api'
+import { CaseStatusEnum } from '../../gen/fetch'
+import { useCasesWithStatusCount } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseProcessingOverview'
 import { CaseTableInProgress } from '../tables/CaseTableInProgress'
@@ -14,7 +18,10 @@ import { Tabs } from './Tabs'
 export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
 
-  const [status, setStatus] = useQueryState('status')
+  const [status, setStatus] = useQueryState(
+    'status',
+    parseAsStringEnum<CaseStatusEnum>(Object.values(CaseStatusEnum)),
+  )
   const [search] = useQueryState('search')
   const [department] = useQueryState('department')
   const [type] = useQueryState('type')
@@ -22,17 +29,24 @@ export const CaseOverviewTabs = () => {
   const [page] = useQueryState('page', parseAsInteger.withDefault(1))
   const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
 
-  const { cases, statuses, paging, isLoading, isValidating } = useCaseOverview({
-    params: {
-      status: status ? status : undefined,
-      search: search ? search : undefined,
-      department: department ? department : undefined,
-      type: type ? type : undefined,
-      category: category ? category : undefined,
-      page: page ? page : undefined,
-      pageSize: pageSize ? pageSize : undefined,
-    },
-  })
+  const { cases, statuses, paging, isLoading, isValidating } =
+    useCasesWithStatusCount({
+      params: {
+        statuses: [
+          CaseStatusEnum.Innsent,
+          CaseStatusEnum.Grunnvinnsla,
+          CaseStatusEnum.Yfirlestur,
+          CaseStatusEnum.Tilbúið,
+        ],
+        status: status ?? undefined,
+        search: search ? search : undefined,
+        department: department ? department : undefined,
+        type: type ? type : undefined,
+        category: category ? category : undefined,
+        page: page ? page : undefined,
+        pageSize: pageSize ? pageSize : undefined,
+      },
+    })
 
   const loading = isLoading
 
@@ -92,8 +106,8 @@ export const CaseOverviewTabs = () => {
       let TabComponent
       let label
       let order = 0
-      switch (status.title) {
-        case CaseOverviewStatusTitleEnum.Innsent:
+      switch (status.status) {
+        case CaseStatusEnum.Innsent:
           order = 1
           label = formatMessage(messages.tabs.submitted, {
             count: status.count,
@@ -113,7 +127,7 @@ export const CaseOverviewTabs = () => {
             />
           )
           break
-        case CaseOverviewStatusTitleEnum.Grunnvinnsla:
+        case CaseStatusEnum.Grunnvinnsla:
           order = 2
           label = formatMessage(messages.tabs.inProgress, {
             count: status.count,
@@ -133,7 +147,7 @@ export const CaseOverviewTabs = () => {
             />
           )
           break
-        case CaseOverviewStatusTitleEnum.Yfirlestur:
+        case CaseStatusEnum.Yfirlestur:
           order = 3
           label = formatMessage(messages.tabs.inReview, {
             count: status.count,
@@ -153,7 +167,7 @@ export const CaseOverviewTabs = () => {
             />
           )
           break
-        case CaseOverviewStatusTitleEnum.Tilbúið:
+        case CaseStatusEnum.Tilbúið:
           order = 4
           label = formatMessage(messages.tabs.ready, {
             count: status.count,
@@ -176,7 +190,7 @@ export const CaseOverviewTabs = () => {
       }
 
       return {
-        id: status.title,
+        id: status.status,
         label: label,
         content: TabComponent,
         order: order,
@@ -187,12 +201,12 @@ export const CaseOverviewTabs = () => {
   return (
     <Tabs
       onTabChange={(id) =>
-        setStatus(id, {
+        setStatus(id as CaseStatusEnum, {
           history: 'replace',
           shallow: true,
         })
       }
-      selectedTab={status ?? CaseOverviewStatusTitleEnum.Innsent}
+      selectedTab={status ?? CaseStatusEnum.Innsent}
       tabs={dynamicTabs || loadingTabs}
       label={formatMessage(messages.tabs.statuses)}
     />

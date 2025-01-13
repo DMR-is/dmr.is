@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer'
 import { IsArray, IsEnum, IsOptional } from 'class-validator'
 
 import { ApiProperty, IntersectionType, OmitType } from '@nestjs/swagger'
@@ -7,12 +8,16 @@ import { GetCasesQuery } from './get-cases-query.dto'
 
 class StatusesToBeCounted {
   @ApiProperty({
-    enum: [CaseStatusEnum],
+    enum: CaseStatusEnum,
+    enumName: 'CaseStatusEnum',
     description: 'Statuses to be counted',
+    isArray: true,
+    required: false,
   })
   @IsOptional()
   @IsArray()
   @IsEnum(CaseStatusEnum, { each: true })
+  @Expose()
   statuses?: CaseStatusEnum[]
 }
 

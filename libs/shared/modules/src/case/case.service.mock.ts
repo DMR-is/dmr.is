@@ -9,16 +9,17 @@ import {
   CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
+  DepartmentEnum,
   DepartmentSlugEnum,
   GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
   GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountQuery,
   GetCasesWithStatusCount,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery,
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
@@ -55,18 +56,14 @@ export class CaseServiceMock implements ICaseService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+
   getCasesWithStatusCount(
     status: string,
     params?: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesWithStatusCount>> {
     throw new Error('Method not implemented.')
   }
-  getCasesReadyForPublication(
-    department: DepartmentSlugEnum,
-    query?: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>> {
-    throw new Error('Method not implemented.')
-  }
+
   unpublishCase(id: string): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
@@ -88,7 +85,7 @@ export class CaseServiceMock implements ICaseService {
   }
   getCasesWithDepartmentCount(
     department: string,
-    query?: GetPublishedCasesQuery,
+    query?: GetCasesWithDepartmentCountQuery,
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>> {
     throw new Error('Method not implemented.')
   }

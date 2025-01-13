@@ -333,7 +333,6 @@ export class StatusCounter {
 export class GetCasesWithDepartmentCount {
   @ApiProperty({
     type: [DepartmentCounter],
-    name: 'counter',
   })
   departments!: DepartmentCounter[]
 
@@ -353,7 +352,6 @@ export class GetCasesWithDepartmentCount {
 export class GetCasesWithStatusCount {
   @ApiProperty({
     type: [StatusCounter],
-    name: 'counter',
   })
   statuses!: StatusCounter[]
 

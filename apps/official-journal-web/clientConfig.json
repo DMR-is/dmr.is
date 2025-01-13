@@ -414,15 +414,25 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/overview/{status}": {
+    "/api/v1/cases/status-count/{status}": {
       "get": {
-        "operationId": "editorialOverview",
-        "summary": "Get editorial overview",
+        "operationId": "getCasesWithStatusCount",
+        "summary": "",
         "parameters": [
           {
-            "name": "status",
-            "required": true,
-            "in": "path",
+            "required": false,
+            "name": "statuses",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/CaseStatusEnum" }
+            }
+          },
+          {
+            "name": "id",
+            "description": "ID of the case to get.",
+            "required": false,
+            "in": "query",
             "schema": { "type": "string" }
           },
           {
@@ -433,18 +443,67 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "page",
-            "description": "Page number",
+            "name": "applicationId",
+            "description": "Application ID",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
           },
           {
-            "name": "pageSize",
-            "description": "Page size",
+            "name": "year",
+            "description": "Year",
             "required": false,
             "in": "query",
-            "schema": { "type": "number" }
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "caseNumber",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "employeeId",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fastTrack",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "institution",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           },
           {
             "name": "department",
@@ -466,14 +525,37 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "example": 10,
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "path",
+            "description": "Cases with this status will be returned",
+            "schema": { "$ref": "#/components/schemas/CaseStatusEnum" }
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesOverview" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetCasesWithStatusCount"
+                }
               }
             }
           }
@@ -975,20 +1057,6 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "page",
-            "description": "Page number",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "description": "Page size",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
             "name": "caseNumber",
             "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
@@ -1064,6 +1132,20 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "example": 10,
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
@@ -1079,40 +1161,128 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/finished/{departmentSlug}": {
+    "/api/v1/cases/department-count/{department}": {
       "get": {
-        "operationId": "getFinishedCases",
+        "operationId": "getCasesWithDepartmentCount",
         "summary": "",
         "parameters": [
           {
-            "name": "page",
-            "description": "Page number",
+            "name": "id",
+            "description": "ID of the case to get.",
             "required": false,
             "in": "query",
-            "schema": { "default": 1, "type": "number" }
+            "schema": { "type": "string" }
           },
           {
             "name": "search",
-            "description": "Search for advert title",
+            "description": "String to search for in cases.",
             "required": false,
             "in": "query",
-            "schema": { "default": "", "type": "string" }
+            "schema": { "type": "string" }
           },
           {
+            "name": "applicationId",
+            "description": "Application ID",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "description": "Year",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "caseNumber",
+            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "employeeId",
+            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fastTrack",
+            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "institution",
+            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "example": 1,
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "required": false,
+            "example": 10,
             "name": "pageSize",
-            "description": "Page size",
-            "required": false,
             "in": "query",
-            "schema": { "default": 10, "type": "number" }
+            "schema": { "type": "number" }
           },
           {
-            "name": "departmentSlug",
+            "name": "department",
             "required": true,
             "in": "path",
-            "schema": {
-              "enum": ["a-deild", "b-deild", "c-deild"],
-              "type": "string"
-            }
+            "schema": { "$ref": "#/components/schemas/DepartmentEnum" }
           }
         ],
         "responses": {
@@ -1121,7 +1291,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetPublishedCasesResponse"
+                  "$ref": "#/components/schemas/GetCasesWithDepartmentCount"
                 }
               }
             }
@@ -2880,6 +3050,27 @@
           }
         }
       },
+      "CaseStatusEnum": {
+        "type": "string",
+        "description": "Statuses to be counted",
+        "enum": [
+          "Innsent",
+          "Grunnvinnsla",
+          "Yfirlestur",
+          "Tilbúið",
+          "Útgefið",
+          "Tekið úr birtingu",
+          "Birtingu hafnað"
+        ]
+      },
+      "StatusCounter": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "count": { "type": "number" }
+        },
+        "required": ["status", "count"]
+      },
       "CaseStatus": {
         "type": "object",
         "properties": {
@@ -3064,46 +3255,23 @@
           "publicationNumber"
         ]
       },
-      "CaseOverviewStatus": {
+      "GetCasesWithStatusCount": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string",
-            "enum": [
-              "Innsent",
-              "Grunnvinnsla",
-              "Yfirlestur",
-              "Tilbúið",
-              "Útgefið",
-              "Tekið úr birtingu",
-              "Birtingu hafnað"
-            ],
-            "example": "Innsent",
-            "description": "Status of the case"
+          "statuses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/StatusCounter" }
           },
-          "count": { "type": "number", "description": "Count of the cases" }
-        },
-        "required": ["title", "count"]
-      },
-      "GetCasesOverview": {
-        "type": "object",
-        "properties": {
           "cases": {
-            "description": "Cases for selected tab",
             "type": "array",
             "items": { "$ref": "#/components/schemas/Case" }
           },
-          "statuses": {
-            "description": "Total cases for each status",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseOverviewStatus" }
-          },
           "paging": {
-            "description": "Paging information",
+            "description": "Paging info",
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["cases", "statuses", "paging"]
+        "required": ["statuses", "cases", "paging"]
       },
       "PresignedUrlResponse": {
         "type": "object",
@@ -3696,7 +3864,11 @@
         },
         "required": ["cases", "paging"]
       },
-      "PublishedCasesCounter": {
+      "DepartmentEnum": {
+        "type": "string",
+        "enum": ["A deild", "B deild", "C deild"]
+      },
+      "DepartmentCounter": {
         "type": "object",
         "properties": {
           "department": { "type": "string" },
@@ -3704,12 +3876,12 @@
         },
         "required": ["department", "count"]
       },
-      "GetPublishedCasesResponse": {
+      "GetCasesWithDepartmentCount": {
         "type": "object",
         "properties": {
-          "counter": {
+          "departments": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/PublishedCasesCounter" }
+            "items": { "$ref": "#/components/schemas/DepartmentCounter" }
           },
           "cases": {
             "type": "array",
@@ -3720,7 +3892,7 @@
             "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
-        "required": ["counter", "cases", "paging"]
+        "required": ["departments", "cases", "paging"]
       },
       "PostCasePublishBody": {
         "type": "object",

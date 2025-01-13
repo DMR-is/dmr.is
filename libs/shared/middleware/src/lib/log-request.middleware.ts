@@ -7,8 +7,6 @@ export class LogRequestMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { method, url, headers } = req
 
-    console.log(req.query)
-
     logger.debug(`${method}: ${url}`, {
       context: 'LogRequestMiddleware',
       method,

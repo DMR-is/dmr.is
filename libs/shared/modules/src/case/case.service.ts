@@ -12,6 +12,7 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  DepartmentEnum,
   DepartmentSlugEnum,
   GetCaseResponse,
   GetCasesQuery,
@@ -129,18 +130,6 @@ export class CaseService implements ICaseService {
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
-  }
-  getCasesOverview(
-    status: string,
-    params?: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesWithStatusCount>> {
-    throw new Error('Method not implemented.')
-  }
-  getCasesReadyForPublication(
-    department: DepartmentSlugEnum,
-    query?: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>> {
-    throw new Error('Method not implemented.')
   }
 
   @LogAndHandle()
@@ -674,7 +663,7 @@ export class CaseService implements ICaseService {
       pageSize: params?.pageSize,
     })
 
-    const counterResults = statusesToBeCounted?.map((statusToBeCounted) => {
+    const counterResults = statusesToBeCounted.map((statusToBeCounted) => {
       return this.caseModel.count({
         benchmark: true,
         where: whereParams,
@@ -986,15 +975,15 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   async getCasesWithDepartmentCount(
-    department: DepartmentSlugEnum,
+    department: DepartmentEnum,
     params: GetCasesWithDepartmentCountQuery,
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>> {
     const whereParams = caseParameters(params)
 
     const departmentsToCount = [
-      DepartmentSlugEnum.A,
-      DepartmentSlugEnum.B,
-      DepartmentSlugEnum.C,
+      DepartmentEnum.A,
+      DepartmentEnum.B,
+      DepartmentEnum.C,
     ]
 
     const limit = params.pageSize

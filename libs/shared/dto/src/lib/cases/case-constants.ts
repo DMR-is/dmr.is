@@ -14,6 +14,12 @@ export enum DepartmentSlugEnum {
   C = 'c-deild',
 }
 
+export enum DepartmentEnum {
+  A = 'A deild',
+  B = 'B deild',
+  C = 'C deild',
+}
+
 export enum CaseCommunicationStatus {
   NotStarted = 'Ekki hafin',
   WaitingForAnswers = 'Beðið eftir svörum',

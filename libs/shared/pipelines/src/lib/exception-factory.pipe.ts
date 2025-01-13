@@ -4,6 +4,7 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common'
 export const ExceptionFactoryPipe = (apiName?: string) =>
   new ValidationPipe({
     enableDebugMessages: true,
+    transform: true,
     exceptionFactory(errors) {
       const errs = errors.map((error) => {
         const target = error.target?.constructor.name
@@ -24,6 +25,6 @@ export const ExceptionFactoryPipe = (apiName?: string) =>
       })
       return new BadRequestException(errs)
     },
-    transform: true,
+
     // stopAtFirstError: true,
   })

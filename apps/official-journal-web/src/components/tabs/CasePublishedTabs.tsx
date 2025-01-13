@@ -3,20 +3,19 @@ import {
   parseAsStringEnum,
   useQueryState,
 } from 'next-usequerystate'
-import slugify from 'slugify'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
-import { GetFinishedCasesDepartmentSlugEnum as DepartmentSlugEnum } from '../../gen/fetch'
-import { usePublishedCases } from '../../hooks/api'
+import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
+import { useCasesWithDepartmentCount } from '../../hooks/api'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
 export const CasePublishedTabs = () => {
   const [department, setDepartment] = useQueryState(
     'department',
-    parseAsStringEnum(Object.values(DepartmentSlugEnum)).withDefault(
-      DepartmentSlugEnum.ADeild,
+    parseAsStringEnum(Object.values(DepartmentEnum)).withDefault(
+      DepartmentEnum.ADeild,
     ),
   )
 
@@ -24,17 +23,25 @@ export const CasePublishedTabs = () => {
   const [pageSize] = useQueryState('pageSize', parseAsInteger)
   const [search] = useQueryState('search')
 
-  const { caseOverview, isLoading, isValidating, error } = usePublishedCases({
-    params: {
-      departmentSlug: department,
-      page,
-      pageSize,
-      search,
-    },
-  })
+  const statuses = [
+    CaseStatusEnum.ÚTgefið,
+    CaseStatusEnum.TekiðÚrBirtingu,
+    CaseStatusEnum.BirtinguHafnað,
+  ]
 
-  const tabs = caseOverview?.counter.map((counter) => ({
-    id: slugify(counter.department, { lower: true }),
+  const { caseOverview, isLoading, isValidating, error } =
+    useCasesWithDepartmentCount({
+      params: {
+        department: department,
+        status: statuses.join(','),
+        page,
+        pageSize,
+        search,
+      },
+    })
+
+  const tabs = caseOverview?.departments.map((counter) => ({
+    id: counter.department,
     label: `${counter.department} (${counter.count})`,
     content: isLoading ? (
       <SkeletonLoader
@@ -44,15 +51,15 @@ export const CasePublishedTabs = () => {
         borderRadius="standard"
       />
     ) : (
-      <CaseTableOverview cases={caseOverview.cases} />
+      <CaseTableOverview cases={caseOverview.cases} isLoading={isValidating} />
     ),
   }))
 
   return (
     <Tabs
-      onTabChange={(id) => setDepartment(id as DepartmentSlugEnum)}
+      onTabChange={(id) => setDepartment(id as DepartmentEnum)}
       tabs={tabs || []}
-      selectedTab={department ?? DepartmentSlugEnum.ADeild}
+      selectedTab={department ?? DepartmentEnum.ADeild}
       label="Heildaryfirlit"
     />
   )

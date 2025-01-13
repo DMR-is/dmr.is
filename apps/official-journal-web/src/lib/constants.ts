@@ -73,9 +73,9 @@ export const PagePaths: Array<Path> = [
   { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
 ]
 
-export const DEPARTMENT_A = 'a-deild'
-export const DEPARTMENT_B = 'b-deild'
-export const DEPARTMENT_C = 'c-deild'
+export const DEPARTMENT_A = 'A deild'
+export const DEPARTMENT_B = 'B deild'
+export const DEPARTMENT_C = 'C deild'
 export const DEPARTMENTS = [DEPARTMENT_A, DEPARTMENT_B, DEPARTMENT_C]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
@@ -144,8 +144,8 @@ export enum APIRoutes {
   MainType = '/api/mainTypes/:id',
   Types = '/api/types',
   Type = '/api/types/:id',
-  GetEditorialOverview = '/api/cases/overview',
-  GetPublishedCases = '/api/cases/published',
+  GetCasesWithStatusCount = '/api/cases/withStatusCount',
+  GetCasesWithDepartmentCount = '/api/cases/withDepartmentCount',
   GetDepartments = '/api/cases/departments',
   GetCategories = '/api/cases/categories',
   GetMainCategories = '/api/mainCategories',

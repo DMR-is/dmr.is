@@ -10,6 +10,7 @@ import {
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentType,
+  CaseDetailed,
   CaseStatusTitleEnum,
   CaseTagTitleEnum,
   Middleware,
@@ -216,7 +217,7 @@ export const commentToNode = (comment: CaseComment) => {
   }
 }
 
-export const generateSteps = (activeCase: Case): StepsType[] => {
+export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
   const statusIndex = caseStatusToIndex[activeCase.status.title]
   const displayTypes = [
     CaseCommentType.InnsentAf,
@@ -431,7 +432,13 @@ export const generateParams = (params?: Record<string, any>) => {
   if (params) {
     Object.keys(params).forEach((key) => {
       if (params[key] !== undefined) {
-        urlSearchParmas.append(key, params[key])
+        if (Array.isArray(params[key])) {
+          params[key].forEach((value) => {
+            urlSearchParmas.append(key, value)
+          })
+        } else {
+          urlSearchParmas.append(key, params[key])
+        }
       }
     })
   }

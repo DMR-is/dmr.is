@@ -3,7 +3,7 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
-  DepartmentSlugEnum,
+  DepartmentEnum,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -38,13 +38,8 @@ export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
 
-  getCasesReadyForPublication(
-    department: DepartmentSlugEnum,
-    query?: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
-
   getCasesWithDepartmentCount(
-    department: DepartmentSlugEnum,
+    department: DepartmentEnum,
     query?: GetCasesWithDepartmentCountQuery,
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
   createCase(

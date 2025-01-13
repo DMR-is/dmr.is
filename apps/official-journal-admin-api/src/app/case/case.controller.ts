@@ -20,6 +20,7 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
+  DepartmentEnum,
   DepartmentSlugEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
@@ -301,6 +302,7 @@ export class CaseController {
   @ApiParam({
     name: 'status',
     enum: CaseStatusEnum,
+    enumName: 'CaseStatusEnum',
     description: 'Cases with this status will be returned',
   })
   @ApiQuery({ type: GetCasesWithStatusCountQuery })
@@ -635,15 +637,19 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
   }
 
-  @Get('/department-count/:departmentSlug')
-  @ApiOperation({ operationId: 'getFinishedCases' })
-  @ApiParam({ name: 'departmentSlug', enum: DepartmentSlugEnum })
+  @Get('/department-count/:department')
+  @ApiOperation({ operationId: 'getCasesWithDepartmentCount' })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
+  })
   @ApiQuery({ name: 'query', type: GetCasesWithDepartmentCountQuery })
   @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
   @TimeLog()
   async getCasesWithDepartmentCount(
-    @Param('departmentSlug', new EnumValidationPipe(DepartmentSlugEnum))
-    department: DepartmentSlugEnum,
+    @Param('department', new EnumValidationPipe(DepartmentEnum))
+    department: DepartmentEnum,
     @Query() query?: GetCasesWithDepartmentCountQuery,
   ): Promise<GetCasesWithDepartmentCount> {
     return ResultWrapper.unwrap(

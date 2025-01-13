@@ -1,8 +1,8 @@
 import useSWR from 'swr'
 
 import {
-  GetFinishedCasesRequest,
-  GetPublishedCasesResponse,
+  GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountRequest,
 } from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
 import { generateParams } from '../../../lib/utils'
@@ -12,16 +12,18 @@ type Nullable<T> = {
 }
 
 type UseCaseOverviewParams = {
-  params?: Partial<Nullable<GetFinishedCasesRequest>>
+  params?: Partial<Nullable<GetCasesWithDepartmentCountRequest>>
 }
 
-export const usePublishedCases = ({ params }: UseCaseOverviewParams = {}) => {
+export const useCasesWithDepartmentCount = ({
+  params,
+}: UseCaseOverviewParams = {}) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
-    GetPublishedCasesResponse,
+    GetCasesWithDepartmentCount,
     Error
   >(
-    [APIRoutes.GetPublishedCases, params],
-    ([url, qsp]: [url: string, qsp: GetFinishedCasesRequest]) => {
+    [APIRoutes.GetCasesWithDepartmentCount, params],
+    ([url, qsp]: [url: string, qsp: GetCasesWithDepartmentCountRequest]) => {
       return fetcher(url, {
         arg: {
           method: 'GET',
