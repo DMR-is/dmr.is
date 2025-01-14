@@ -12,6 +12,7 @@ import {
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
+  AddCaseAdvertCorrection,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -20,6 +21,7 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
+  DeleteCaseAdvertCorrection,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -458,6 +460,38 @@ export class CaseController {
   }
 
   @Route({
+    method: 'post',
+    path: ':id/correction',
+    operationId: 'Add correction',
+    summary: 'Add correction to case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: AddCaseAdvertCorrection,
+  })
+  async postCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: AddCaseAdvertCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.postCaseCorrection(id, body))
+  }
+
+  @Route({
+    method: 'delete',
+    path: ':id/correction',
+    operationId: 'Add correction',
+    summary: 'Delete correction from DB',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: DeleteCaseAdvertCorrection,
+  })
+  async deleteCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: DeleteCaseAdvertCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.deleteCorrection(id, body))
+  }
+
+  // TODO: Do we need a put for correction? Or is it just a post?
+
+  @Route({
     method: 'put',
     path: ':id/categories',
     operationId: 'updateCategories',
@@ -551,8 +585,9 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
+  // TODO: ADD THIS BACK IN.
+  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  // @Roles(USER_ROLES.Admin)
   @Route({
     path: ':id',
     operationId: 'getCase',

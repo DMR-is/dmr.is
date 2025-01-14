@@ -3,12 +3,14 @@ import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
+  AddCaseAdvertCorrection,
   Case,
   CaseComment,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
+  DeleteCaseAdvertCorrection,
   EditorialOverviewResponse,
   GetCaseCommentsQuery,
   GetCaseResponse,
@@ -247,6 +249,20 @@ export class CaseServiceMock implements ICaseService {
   }
 
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+    throw new Error('Method not implemented.')
+  }
+
+  postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+
+  deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+  ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
 

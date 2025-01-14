@@ -40,6 +40,16 @@ export class Case {
   @ApiProperty({
     type: String,
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+    description: 'Id of the advert the case is related to.',
+    nullable: true,
+  })
+  @IsString()
+  @IsUUID()
+  advertId?: string
+
+  @ApiProperty({
+    type: String,
+    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
     description:
       'Id of the submitted application, default to null on older cases.',
   })

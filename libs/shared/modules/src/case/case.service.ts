@@ -8,11 +8,13 @@ import {
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AddCaseAdvertCorrection,
   AdvertStatus,
   CaseCommunicationStatus,
   CaseOverviewQuery,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  DeleteCaseAdvertCorrection,
   GetCaseResponse,
   GetCasesOverview,
   GetCasesQuery,
@@ -67,8 +69,10 @@ import { InstitutionModel } from '../institution/models/institution.model'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
+  AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
@@ -122,6 +126,9 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
 
+    @InjectModel(AdvertCorrectionModel)
+    private advertCorrectionModel: typeof AdvertCorrectionModel,
+
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     private readonly sequelize: Sequelize,
@@ -136,6 +143,9 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Unpublished)
     ).unwrap()
 
+    // TODO: Remove PUBLISHED_CASE_ADVERTS table
+    // Then remove all casePublishedAdvertsModel references
+    // Use advertId from case directly instead.
     const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
       where: {
         caseId: id,
@@ -605,6 +615,7 @@ export class CaseService implements ICaseService {
     const updatePromise = this.caseModel.update(
       {
         publicationNumber: number,
+        advertId: advertCreateResult.result.value.advert.id,
       },
       {
         where: {
@@ -614,6 +625,7 @@ export class CaseService implements ICaseService {
       },
     )
 
+    // TODO: Remove relation promise with casePublishedAdvertsModel removal
     const relationPromise = this.casePublishedAdvertsModel.create(
       {
         caseId: caseId,
@@ -791,6 +803,10 @@ export class CaseService implements ICaseService {
       include: [
         ...CASE_RELATIONS,
         {
+          model: AdvertModel,
+          include: [AdvertCorrectionModel],
+        },
+        {
           model: AdvertDepartmentModel,
         },
         {
@@ -816,6 +832,100 @@ export class CaseService implements ICaseService {
 
     return ResultWrapper.ok({
       case: caseMigrate(caseLookup),
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['advertId'],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const { advertId } = caseLookup
+
+    if (!advertId) {
+      return ResultWrapper.err({
+        code: 409,
+        message: 'Advert id not found, case not published.',
+      })
+    }
+
+    try {
+      await this.advertCorrectionModel.create<AdvertCorrectionModel>(
+        {
+          ...body,
+          advertId: advertId,
+        },
+        { transaction: transaction, validate: true },
+      )
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Failed to create correction',
+      })
+    }
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['advertId'],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const { advertId } = caseLookup
+
+    if (!advertId) {
+      return ResultWrapper.err({
+        code: 409,
+        message: 'Advert id not found, case not published.',
+      })
+    }
+
+    const correctionLookup = await this.advertCorrectionModel.findOne({
+      where: {
+        id: body.correctionId,
+        advertId: advertId,
+      },
+      transaction,
+    })
+
+    if (!correctionLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Correction not found for this case',
+      })
+    }
+
+    await correctionLookup.destroy({ transaction })
+
+    return ResultWrapper.ok({
+      message: 'Correction deleted successfully',
     })
   }
 

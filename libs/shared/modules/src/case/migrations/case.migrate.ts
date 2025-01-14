@@ -6,6 +6,7 @@ import { attachmentMigrate } from '../../attachments/migrations/attachment.migra
 import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
+import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
 import { CaseModel } from '../models'
@@ -19,6 +20,7 @@ export const caseMigrate = (model: CaseModel): Case => {
   return withTryCatch(() => {
     return {
       id: model.id,
+      advertId: model.advertId,
       applicationId: model.applicationId,
       year: model.year,
       caseNumber: model.caseNumber,
@@ -64,6 +66,9 @@ export const caseMigrate = (model: CaseModel): Case => {
       additions: model.additions
         ? model.additions.map((add) => caseAdditionMigrate(add))
         : [],
+      corrections: model.advert?.corrections
+        ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
+        : undefined,
     }
   }, `Error migrating case ${model.id}`)
 }

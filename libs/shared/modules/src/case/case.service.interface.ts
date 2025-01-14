@@ -1,8 +1,10 @@
 import { Transaction } from 'sequelize'
 import {
+  AddCaseAdvertCorrection,
   CaseCommunicationStatus,
   CaseOverviewQuery,
   CreateCaseChannelBody,
+  DeleteCaseAdvertCorrection,
   GetCaseResponse,
   GetCasesOverview,
   GetCasesQuery,
@@ -122,6 +124,18 @@ export interface ICaseService {
   getNextCasePublicationNumber(
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
+
+  postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 
   getCommunicationStatuses(): Promise<
     ResultWrapper<GetCommunicationSatusesResponse>

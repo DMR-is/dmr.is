@@ -8,6 +8,7 @@ import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions/institution.dto'
 import { AdvertAttachment } from './advert-attachment'
 import { AdvertStatus } from './advert-constants.dto'
+import { AdvertCorrection } from './advert-correction.dto'
 import { AdvertDocument } from './advert-document'
 import { AdvertPublicationNumber } from './advert-publication-number.dto'
 
@@ -149,4 +150,11 @@ export class Advert {
     required: true,
   })
   readonly attachments!: AdvertAttachment[]
+
+  @ApiProperty({
+    type: [AdvertCorrection],
+    description: 'Corrections made to the advert.',
+    required: false,
+  })
+  readonly corrections?: AdvertCorrection[]
 }
