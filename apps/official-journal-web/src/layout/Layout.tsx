@@ -6,7 +6,7 @@ import { SWRConfig } from 'swr'
 
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
-import { Banner } from '../components/banner/Banner'
+import Banner from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
 import { NotificationContextProvider } from '../context/notificationContext'

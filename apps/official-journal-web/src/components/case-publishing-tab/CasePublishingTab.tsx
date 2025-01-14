@@ -1,9 +1,17 @@
-import { Box, Button, Text } from '@island.is/island-ui/core'
+import dynamic from 'next/dynamic'
+
+import {
+  Box,
+  Button,
+  Inline,
+  SkeletonLoader,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { usePublishContext } from '../../hooks/usePublishContext'
-import CaseTableReady from '../tables/CaseTableReady'
 import { CaseTableSelectedCases } from '../tables/CaseTableSelectedCases'
 import { messages } from './messages'
 
@@ -12,6 +20,25 @@ type Props = {
   paging: Paging
   proceedToPublishing: (toggle: boolean) => void
 }
+
+const CaseTableReady = dynamic(() => import('../tables/CaseTableReady'), {
+  ssr: false,
+  loading: () => (
+    <Stack space={2}>
+      <Inline justifyContent="spaceBetween">
+        <SkeletonLoader width={266} height={44} borderRadius="standard" />
+        <SkeletonLoader width={266} height={44} borderRadius="standard" />
+        <SkeletonLoader width={266} height={44} borderRadius="standard" />
+      </Inline>
+      <SkeletonLoader
+        repeat={3}
+        height={44}
+        borderRadius="standard"
+        space={2}
+      />
+    </Stack>
+  ),
+})
 
 export const CasePublishingTab = ({ proceedToPublishing }: Props) => {
   const { formatMessage } = useFormatMessage()

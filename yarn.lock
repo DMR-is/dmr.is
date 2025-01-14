@@ -11136,7 +11136,7 @@ __metadata:
     nest-winston: "npm:^1.9.4"
     next: "npm:^14.2.3"
     next-auth: "npm:^4.24.8"
-    next-usequerystate: "npm:^1.20.0"
+    next-usequerystate: "npm:1.20.0"
     node-fetch: "npm:2.6.7"
     nx: "npm:^17.2.5"
     oidc-client-ts: "npm:2.0.3"
@@ -16792,7 +16792,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next-usequerystate@npm:^1.20.0":
+"next-usequerystate@npm:1.20.0":
   version: 1.20.0
   resolution: "next-usequerystate@npm:1.20.0"
   dependencies:

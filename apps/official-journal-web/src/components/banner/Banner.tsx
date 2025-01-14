@@ -1,12 +1,16 @@
+import dynamic from 'next/dynamic'
 import { MessageDescriptor } from 'react-intl'
 
 import {
   AlertMessage,
   Box,
   Breadcrumbs,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
+  Input,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -14,7 +18,6 @@ import {
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
-import CaseFilters from '../case-filters/CaseFilters'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
 
@@ -37,6 +40,26 @@ type Props = {
   enableDepartments?: boolean
   enableTypes?: boolean
 }
+
+const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
+  ssr: false,
+  loading: () => (
+    <Inline space={2}>
+      <Input
+        placeholder="Leita eftir málsefni"
+        disabled
+        loading
+        size="sm"
+        icon={{ name: 'search', type: 'outline' }}
+        backgroundColor="blue"
+        name="filter-loader"
+      />
+      <Button variant="utility" icon="filter" disabled loading>
+        Opna síu
+      </Button>
+    </Inline>
+  ),
+})
 
 export const Banner = ({
   title,
@@ -104,7 +127,11 @@ export const Banner = ({
                   </Box>
                 )}
                 {showFilters && (
-                  <CaseFilters enableCategories enableDepartments enableTypes />
+                  <CaseFilters
+                    enableCategories={enableCategories}
+                    enableDepartments={enableDepartments}
+                    enableTypes={enableTypes}
+                  />
                 )}
               </GridColumn>
             </>
@@ -125,3 +152,5 @@ export const Banner = ({
     </Section>
   )
 }
+
+export default Banner
