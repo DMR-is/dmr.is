@@ -1,10 +1,12 @@
 import { Transform } from 'class-transformer'
 import {
-  IsBooleanString,
+  IsArray,
+  IsBoolean,
   IsDateString,
-  IsNumberString,
+  IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator'
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
@@ -13,24 +15,25 @@ import { PagingQuery } from '../paging'
 
 export class CasesQuery {
   @ApiProperty({
-    name: 'id',
-    type: String,
-    description: 'ID of the case to get.',
+    type: [String],
     required: false,
   })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value
-    }
-    return value?.split(',')
-  })
+  @IsArray()
+  @IsUUID(4, { each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
   id?: string[]
 
   @ApiProperty({
-    name: 'search',
     type: String,
-    description: 'String to search for in cases.',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  applicationId?: string
+
+  @ApiProperty({
+    type: String,
     required: false,
   })
   @IsOptional()
@@ -38,89 +41,82 @@ export class CasesQuery {
   search?: string
 
   @ApiProperty({
-    name: 'applicationId',
-    type: String,
-    description: 'Application ID',
+    type: Number,
     required: false,
   })
   @IsOptional()
-  @IsString()
-  applicationId?: string
-
-  @ApiProperty({
-    name: 'year',
-    type: String,
-    description: 'Year',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumberString()
+  @IsNumber()
   year?: string
 
   @ApiProperty({
-    name: 'caseNumber',
-    description:
-      'Case number to filter on, takes into account `caseNumber` on `Case`.',
-    type: String,
+    type: [String],
     required: false,
+    description: 'Id, title or slug of the statuses',
   })
   @IsOptional()
-  @IsString()
-  caseNumber?: string
-
-  @ApiProperty({
-    name: 'status',
-    type: String,
-    description:
-      'Case status id to filter cases on, takes into account `status` on `Case`.',
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value
-    }
-    return value?.split(',')
-  })
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
   status?: string[]
 
   @ApiProperty({
-    name: 'employeeId',
-    description:
-      'Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.',
+    type: [String],
+    required: false,
+    description: 'Id, title or slug of the departments',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
+  department?: string[]
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description: 'Id, title or slug of the types',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
+  type?: string[]
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description: 'Id, title or slug of the categories',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
+  category?: string[]
+
+  @ApiProperty({
     type: String,
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   employeeId?: string
 
   @ApiProperty({
-    name: 'published',
-    description:
-      'Boolean to filter cases on, takes into account `published` on `Case`.',
-    type: String,
+    type: Boolean,
     required: false,
   })
   @IsOptional()
-  @IsBooleanString()
-  published?: string
+  @IsBoolean()
+  published?: boolean
 
   @ApiProperty({
-    name: 'fastTrack',
-    description:
-      'Boolean to filter cases on, takes into account `fastTrack` on `Case`.',
-    type: String,
+    type: Boolean,
     required: false,
   })
   @IsOptional()
-  @IsBooleanString()
-  fastTrack?: string
+  @IsBoolean()
+  fastTrack?: boolean
 
   @ApiProperty({
-    name: 'institution',
-    description:
-      'Institution to filter cases on, takes into account `institution` on `Case`.',
     type: String,
     required: false,
   })
@@ -129,9 +125,6 @@ export class CasesQuery {
   institution?: string
 
   @ApiProperty({
-    name: 'dateFrom',
-    description:
-      'Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
     type: String,
     required: false,
   })
@@ -140,63 +133,12 @@ export class CasesQuery {
   fromDate?: string
 
   @ApiProperty({
-    name: 'dateTo',
-    description:
-      'Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.',
     type: String,
     required: false,
   })
   @IsOptional()
   @IsDateString()
   toDate?: string
-
-  @ApiProperty({
-    name: 'department',
-    description:
-      'Department slug to filter cases on, takes into account `department` on `Advert`.',
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value
-    }
-    return value?.split(',')
-  })
-  department?: string[]
-
-  @ApiProperty({
-    name: 'type',
-    description:
-      'Type slug to filter cases on, takes into account `type` on `Advert`.',
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value
-    }
-    return value?.split(',')
-  })
-  type?: string[]
-
-  @ApiProperty({
-    name: 'category',
-    description:
-      'Category slug to filter cases on, takes into account `category` on `Advert`.',
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value
-    }
-    return value?.split(',')
-  })
-  category?: string[]
 }
 
 export class GetCasesQuery extends IntersectionType(CasesQuery, PagingQuery) {}

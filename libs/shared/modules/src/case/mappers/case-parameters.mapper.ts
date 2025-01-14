@@ -1,3 +1,4 @@
+import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
@@ -26,7 +27,7 @@ type WhereClause = {
   }
 }
 
-export const titleOrSlugMatch = (filters?: string | string[]) => {
+export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
   const whereClause = {}
 
   if (!filters) {
@@ -34,14 +35,25 @@ export const titleOrSlugMatch = (filters?: string | string[]) => {
   }
 
   const isArray = Array.isArray(filters)
+  const isId = isArray
+    ? filters.every((filter) => isUUID(filter))
+    : isUUID(filters)
+
+  if (isId) {
+    Object.assign(whereClause, {
+      id: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+    })
+
+    return whereClause
+  }
 
   Object.assign(whereClause, {
     [Op.or]: [
       {
-        title: isArray ? { [Op.in]: filters } : { [Op.iLike]: `%${filters}%` },
+        title: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
       },
       {
-        slug: isArray ? { [Op.in]: filters } : { [Op.iLike]: `%${filters}%` },
+        slug: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
       },
     ],
   })
@@ -74,23 +86,19 @@ export const caseParameters = (params?: GetCasesQuery) => {
     whereClause.year = params.year
   }
 
-  if (params?.caseNumber !== undefined) {
-    whereClause.caseNumber = params.caseNumber
-  }
-
   if (params?.employeeId !== undefined) {
     whereClause.assignedUserId = params.employeeId
   }
 
   if (params?.fastTrack !== undefined) {
-    whereClause.fastTrack = params.fastTrack === 'true'
+    whereClause.fastTrack = params.fastTrack === true
   }
 
-  if (params?.published === 'true') {
+  if (params?.published === true) {
     whereClause.publishedAt = { [Op.not]: null }
   }
 
-  if (params?.published === 'false') {
+  if (params?.published === false) {
     whereClause.publishedAt = { [Op.is]: null }
   }
 

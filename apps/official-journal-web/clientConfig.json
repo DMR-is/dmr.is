@@ -429,100 +429,83 @@
             }
           },
           {
+            "required": false,
             "name": "id",
-            "description": "ID of the case to get.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
-            "name": "search",
-            "description": "String to search for in cases.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
             "name": "applicationId",
-            "description": "Application ID",
-            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           },
           {
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
             "name": "year",
-            "description": "Year",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
-            "name": "caseNumber",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "employeeId",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
+            "description": "Id, title or slug of the departments",
             "name": "department",
-            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
+            "required": false,
+            "description": "Id, title or slug of the types",
             "name": "type",
-            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
             "required": false,
+            "description": "Id, title or slug of the categories",
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "required": false,
+            "name": "employeeId",
             "in": "query",
             "schema": { "type": "string" }
           },
           {
-            "name": "category",
-            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "required": false,
+            "name": "published",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "fastTrack",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "institution",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "fromDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "toDate",
             "in": "query",
             "schema": { "type": "string" }
           },
@@ -1029,107 +1012,90 @@
         "summary": "Get cases",
         "parameters": [
           {
+            "required": false,
             "name": "id",
-            "description": "ID of the case to get.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
-            "name": "search",
-            "description": "String to search for in cases.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
             "name": "applicationId",
-            "description": "Application ID",
-            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           },
           {
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
             "name": "year",
-            "description": "Year",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
-            "name": "caseNumber",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
+            "description": "Id, title or slug of the statuses",
             "name": "status",
-            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
-            "name": "employeeId",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
+            "description": "Id, title or slug of the departments",
             "name": "department",
-            "description": "Department slug to filter cases on, takes into account `department` on `Advert`.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
+            "required": false,
+            "description": "Id, title or slug of the types",
             "name": "type",
-            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
             "required": false,
+            "description": "Id, title or slug of the categories",
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "required": false,
+            "name": "employeeId",
             "in": "query",
             "schema": { "type": "string" }
           },
           {
-            "name": "category",
-            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "required": false,
+            "name": "published",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "fastTrack",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "institution",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "fromDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "toDate",
             "in": "query",
             "schema": { "type": "string" }
           },
@@ -1167,100 +1133,83 @@
         "summary": "",
         "parameters": [
           {
+            "required": false,
             "name": "id",
-            "description": "ID of the case to get.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
-            "name": "search",
-            "description": "String to search for in cases.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
             "name": "applicationId",
-            "description": "Application ID",
-            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           },
           {
+            "required": false,
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
             "name": "year",
-            "description": "Year",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           },
           {
-            "name": "caseNumber",
-            "description": "Case number to filter on, takes into account `caseNumber` on `Case`.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
+            "description": "Id, title or slug of the statuses",
             "name": "status",
-            "description": "Case status id to filter cases on, takes into account `status` on `Case`.",
-            "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
-            "name": "employeeId",
-            "description": "Id of the employee to filter cases on, takes into account `employeeId` on `Case` and `CaseComment`.",
             "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "description": "Boolean to filter cases on, takes into account `published` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fastTrack",
-            "description": "Boolean to filter cases on, takes into account `fastTrack` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "institution",
-            "description": "Institution to filter cases on, takes into account `institution` on `Case`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "description": "Date from which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "description": "Date to which to filter adverts on, inclusive, takes into account `createdDate`, `updatedDate` and `signatureDate`.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
+            "description": "Id, title or slug of the types",
             "name": "type",
-            "description": "Type slug to filter cases on, takes into account `type` on `Advert`.",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
             "required": false,
+            "description": "Id, title or slug of the categories",
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "required": false,
+            "name": "employeeId",
             "in": "query",
             "schema": { "type": "string" }
           },
           {
-            "name": "category",
-            "description": "Category slug to filter cases on, takes into account `category` on `Advert`.",
             "required": false,
+            "name": "published",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "fastTrack",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "required": false,
+            "name": "institution",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "fromDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "name": "toDate",
             "in": "query",
             "schema": { "type": "string" }
           },

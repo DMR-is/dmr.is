@@ -5,10 +5,11 @@ import {
   GetCasesWithStatusCountRequest,
 } from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
+import { NullableExcept } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
 type UseGetCasesWithStatusCount = {
-  params?: Partial<GetCasesWithStatusCountRequest>
+  params?: NullableExcept<GetCasesWithStatusCountRequest, 'status'>
 }
 
 export const useCasesWithStatusCount = ({
@@ -29,8 +30,8 @@ export const useCasesWithStatusCount = ({
       }),
     {
       refreshInterval: 1000 * 60 * 5,
-      revalidateOnFocus: true,
       keepPreviousData: true,
+      revalidateOnFocus: false,
     },
   )
 

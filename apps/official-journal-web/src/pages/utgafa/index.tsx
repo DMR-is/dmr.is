@@ -1,7 +1,13 @@
 import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 import { getSession } from 'next-auth/react'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  SkeletonLoader,
+} from '@island.is/island-ui/core'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
@@ -12,93 +18,23 @@ import { messages } from '../../lib/messages/casePublishOverview'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
+const ReadyForPublicationTabs = dynamic(
+  () => import('../../components/tabs/CaseReadyForPublicationTabs'),
+  {
+    ssr: false,
+    loading: () => (
+      <SkeletonLoader
+        repeat={3}
+        height={44}
+        space={2}
+        borderRadius="standard"
+      />
+    ),
+  },
+)
+
 export default function CasePublishingOverview() {
   const { formatMessage } = useFormatMessage()
-
-  // const initalDepartment = router.query.department
-  //   ? (router.query.department as string)
-  //   : 'a-deild'
-
-  // const [publishing, setPublishing] = useState<boolean>(false)
-
-  // const [selectedTab, setSelectedTab] = useState<string>(initalDepartment)
-
-  // const onPublishSuccess = () => {
-  //   setPublishing(false)
-  //   const revalidate = `${
-  //     APIRoutes.GetCases
-  //   }?department=${selectedTab}&status=${encodeURIComponent(
-  //     CaseStatusTitleEnum.Tilbúið,
-  //   )}`
-  //   mutate(revalidate)
-  // }
-  // }
-
-  // const tabs = [
-  //   {
-  //     id: CaseDepartmentTabs[0].value,
-  //     label: CaseDepartmentTabs[0].label,
-  //     content: (
-  //       <PublishingContextProvider>
-  //         {publishing && (
-  //           <CasePublishingList
-  //             onPublishSuccess={onPublishSuccess}
-  //             onCancel={() => setPublishing(false)}
-  //           />
-  //         )}
-  //         <Box hidden={publishing}>
-  //           <CasePublishingTab
-  //             proceedToPublishing={setPublishing}
-  //             cases={cases}
-  //             paging={paging}
-  //           />
-  //         </Box>
-  //       </PublishingContextProvider>
-  //     ),
-  //   },
-  //   {
-  //     id: CaseDepartmentTabs[1].value,
-  //     label: CaseDepartmentTabs[1].label,
-  //     content: (
-  //       <PublishingContextProvider>
-  //         {publishing && (
-  //           <CasePublishingList
-  //             onPublishSuccess={onPublishSuccess}
-  //             onCancel={() => setPublishing(false)}
-  //           />
-  //         )}
-  //         <Box hidden={publishing}>
-  //           <CasePublishingTab
-  //             proceedToPublishing={setPublishing}
-  //             cases={cases}
-  //             paging={paging}
-  //           />
-  //         </Box>
-  //       </PublishingContextProvider>
-  //     ),
-  //   },
-  //   {
-  //     id: CaseDepartmentTabs[2].value,
-  //     label: CaseDepartmentTabs[2].label,
-  //     content: (
-  //       <PublishingContextProvider>
-  //         {publishing && (
-  //           <CasePublishingList
-  //             onPublishSuccess={onPublishSuccess}
-  //             onCancel={() => setPublishing(false)}
-  //           />
-  //         )}
-  //         <Box hidden={publishing}>
-  //           <CasePublishingTab
-  //             proceedToPublishing={setPublishing}
-  //             cases={cases}
-  //             paging={paging}
-  //           />
-  //         </Box>
-  //       </PublishingContextProvider>
-  //     ),
-  //   },
-  // ]
 
   return (
     <>
@@ -114,7 +50,7 @@ export default function CasePublishingOverview() {
               span={['12/12', '12/12', '12/12', '10/12']}
               offset={['0', '0', '0', '1/12']}
             >
-              <h2>hello</h2>
+              <ReadyForPublicationTabs />
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -124,7 +60,6 @@ export default function CasePublishingOverview() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({
-  query,
   req,
   resolvedUrl,
 }) => {

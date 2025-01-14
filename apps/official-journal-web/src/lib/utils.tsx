@@ -1,22 +1,31 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
+import { z } from 'zod'
 
 import type { IconMapIcon } from '@island.is/island-ui/core'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
-  Case,
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentType,
   CaseDetailed,
+  CaseStatusEnum,
   CaseStatusTitleEnum,
   CaseTagTitleEnum,
-  Middleware,
+  DepartmentEnum,
+  GetCasesRequest,
+  GetCasesWithDepartmentCountRequest,
+  GetCasesWithStatusCountRequest,
   Signature,
 } from '../gen/fetch'
-import { FALLBACK_DOMAIN, JSON_ENDING, Routes } from './constants'
+import {
+  FALLBACK_DOMAIN,
+  JSON_ENDING,
+  OJOIWebException,
+  Routes,
+} from './constants'
 
 export const formatDate = (date: string, df = 'dd.MM.yyyy') => {
   try {
@@ -431,7 +440,8 @@ export const generateParams = (params?: Record<string, any>) => {
 
   if (params) {
     Object.keys(params).forEach((key) => {
-      if (params[key] !== undefined) {
+      const val = params[key]
+      if (val !== undefined && val !== null) {
         if (Array.isArray(params[key])) {
           params[key].forEach((value) => {
             urlSearchParmas.append(key, value)
@@ -444,4 +454,150 @@ export const generateParams = (params?: Record<string, any>) => {
   }
 
   return urlSearchParmas
+}
+
+const queryParamUnion = z.union([
+  z.string(),
+  z.array(z.string()),
+  z.undefined(),
+])
+
+const queryParamToString = queryParamUnion.transform(
+  (val): string | undefined => {
+    if (!val) return undefined
+
+    if (Array.isArray(val)) {
+      return val[0]
+    }
+
+    return val
+  },
+)
+
+const queryParamToNumber = queryParamUnion.transform(
+  (val): number | undefined => {
+    if (!val) return undefined
+
+    if (Array.isArray(val)) {
+      const parsed = parseInt(val[0], 10)
+      if (Number.isNaN(parsed)) return undefined
+
+      return parsed
+    }
+
+    const parsed = parseInt(val, 10)
+    if (Number.isNaN(parsed)) return undefined
+
+    return parsed
+  },
+)
+
+const queryParamToBoolean = queryParamUnion.transform(
+  (val): boolean | undefined => {
+    if (!val) return undefined
+
+    if (Array.isArray(val)) {
+      return val[0] === 'true'
+    }
+
+    return val === 'true'
+  },
+)
+
+const queryParamToStringArray = queryParamUnion.transform(
+  (val): string[] | undefined => {
+    if (!val) return undefined
+
+    if (Array.isArray(val)) {
+      return val
+    }
+
+    return val.split(',')
+  },
+)
+
+const queryParamToEnumArray = <T extends string>(enumType: Record<string, T>) =>
+  queryParamUnion.transform((val): T[] | undefined => {
+    if (!val) return undefined
+
+    if (Array.isArray(val)) {
+      return val.filter((v) => Object.keys(enumType).includes(v)) as T[]
+    }
+
+    return val
+      .split(',')
+      .filter((v) => Object.keys(enumType).includes(v)) as T[]
+  })
+
+const isDepartmentEnum = z.nativeEnum(DepartmentEnum)
+const isCaseStatusTitleEnum = z.nativeEnum(CaseStatusEnum)
+
+export const transformQueryToCaseParams = (
+  query: ParsedUrlQuery,
+): GetCasesRequest => {
+  return {
+    id: queryParamToStringArray.parse(query.id),
+    applicationId: queryParamToString.parse(query.applicationId),
+    search: queryParamToString.parse(query.search),
+    department: queryParamToStringArray.parse(query.department),
+    category: queryParamToStringArray.parse(query.category),
+    status: queryParamToStringArray.parse(query.status),
+    type: queryParamToStringArray.parse(query.type),
+    year: queryParamToNumber.parse(query.year),
+    institution: queryParamToString.parse(query.institution),
+    fastTrack: queryParamToBoolean.parse(query.fastTrack),
+    published: queryParamToBoolean.parse(query.published),
+    employeeId: queryParamToString.parse(query.employeeId),
+    fromDate: queryParamToString.parse(query.fromDate),
+    toDate: queryParamToString.parse(query.toDate),
+    page: queryParamToNumber.parse(query.page),
+    pageSize: queryParamToNumber.parse(query.pageSize),
+  }
+}
+
+export const transformQueryToCaseWithDepartmentCountParams = (
+  query: ParsedUrlQuery,
+): GetCasesWithDepartmentCountRequest => {
+  const { department: _, ...rest } = transformQueryToCaseParams(query)
+
+  const department = queryParamToString.parse(query.department)
+
+  const check = isDepartmentEnum.safeParse(department)
+
+  if (!check.success) {
+    throw OJOIWebException.badRequest(
+      'Department is required and must be a valid DepartmentEnum',
+    )
+  }
+
+  return {
+    department: check.data,
+    ...rest,
+  }
+}
+
+export const transformQueryToCasesWithStatusCountParams = (
+  query: ParsedUrlQuery,
+): GetCasesWithStatusCountRequest => {
+  const { status: _, ...rest } = transformQueryToCaseParams(query)
+
+  const check = isCaseStatusTitleEnum.safeParse(
+    queryParamToString.parse(query.status),
+  )
+
+  const statuses = queryParamToEnumArray(CaseStatusEnum).safeParse(
+    query.statuses,
+  )
+
+  if (!check.success) {
+    throw OJOIWebException.badRequest(
+      'Status is required and must be a valid CaseStatusTitleEnum',
+    )
+  }
+
+  return {
+    status: check.data,
+    statuses: statuses.success ? statuses.data : undefined,
+    ...rest,
+  }
 }

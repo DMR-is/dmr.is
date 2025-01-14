@@ -5,19 +5,16 @@ import {
   GetCasesWithDepartmentCountRequest,
 } from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
+import { NullableExcept } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
-type Nullable<T> = {
-  [P in keyof T]: T[P] | null
-}
-
-type UseCaseOverviewParams = {
-  params?: Partial<Nullable<GetCasesWithDepartmentCountRequest>>
+type UseCasesWithDepartmentCountParams = {
+  params?: NullableExcept<GetCasesWithDepartmentCountRequest, 'department'>
 }
 
 export const useCasesWithDepartmentCount = ({
   params,
-}: UseCaseOverviewParams = {}) => {
+}: UseCasesWithDepartmentCountParams = {}) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     GetCasesWithDepartmentCount,
     Error
@@ -34,8 +31,8 @@ export const useCasesWithDepartmentCount = ({
     },
     {
       refreshInterval: 1000 * 60 * 5,
-      revalidateOnFocus: true,
       keepPreviousData: true,
+      revalidateOnFocus: false,
     },
   )
 

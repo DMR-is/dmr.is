@@ -1,14 +1,11 @@
-import {
-  parseAsInteger,
-  parseAsStringEnum,
-  useQueryState,
-} from 'next-usequerystate'
+import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import { useCasesWithStatusCount } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useSearchParams } from '../../hooks/useSearchParams'
 import { messages } from '../../lib/messages/caseProcessingOverview'
 import { CaseTableInProgress } from '../tables/CaseTableInProgress'
 import { CaseTableInReview } from '../tables/CaseTableInReview'
@@ -18,33 +15,27 @@ import { Tabs } from './Tabs'
 export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
 
+  const [searchParams] = useSearchParams()
+  const { status: _status, ...params } = searchParams
+
   const [status, setStatus] = useQueryState(
     'status',
-    parseAsStringEnum<CaseStatusEnum>(Object.values(CaseStatusEnum)),
+    parseAsStringEnum<CaseStatusEnum>(
+      Object.values(CaseStatusEnum),
+    ).withDefault(CaseStatusEnum.Innsent),
   )
-  const [search] = useQueryState('search')
-  const [department] = useQueryState('department')
-  const [type] = useQueryState('type')
-  const [category] = useQueryState('category')
-  const [page] = useQueryState('page', parseAsInteger.withDefault(1))
-  const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
 
   const { cases, statuses, paging, isLoading, isValidating } =
     useCasesWithStatusCount({
       params: {
+        status: status,
         statuses: [
           CaseStatusEnum.Innsent,
           CaseStatusEnum.Grunnvinnsla,
           CaseStatusEnum.Yfirlestur,
           CaseStatusEnum.Tilbúið,
         ],
-        status: status ?? undefined,
-        search: search ? search : undefined,
-        department: department ? department : undefined,
-        type: type ? type : undefined,
-        category: category ? category : undefined,
-        page: page ? page : undefined,
-        pageSize: pageSize ? pageSize : undefined,
+        ...params,
       },
     })
 

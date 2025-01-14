@@ -1,19 +1,14 @@
 import dynamic from 'next/dynamic'
-import { useQueryState } from 'next-usequerystate'
-import { ChangeEvent } from 'react'
 
 import {
-  AlertMessage,
   Checkbox,
   SkeletonLoader,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseStatusTitleEnum } from '../../gen/fetch'
-import { useCases } from '../../hooks/api'
+import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { usePublishContext } from '../../hooks/usePublishContext'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import { CaseTableHeadCellProps } from './CaseTable'
@@ -26,57 +21,19 @@ const CaseTable = dynamic(() => import('./CaseTable'), {
   ),
 })
 
-export const CaseTableReady = () => {
+type Props = {
+  cases?: Case[]
+  isLoading?: boolean
+}
+
+export const CaseTableReady = ({ cases, isLoading }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const {
-    publishingState,
-    addCaseToSelectedList,
-    removeCaseFromSelectedList,
-    addManyCasesToSelectedList,
-    removeAllCasesFromSelectedList,
-  } = usePublishContext()
-  const { selectedCaseIds } = publishingState
-  const [department] = useQueryState('department')
-
-  const {
-    data: caseData,
-    isLoading,
-    error,
-  } = useCases({
-    params: {
-      department: department ? [department] : undefined,
-      status: [CaseStatusTitleEnum.Tilbúið],
-    },
-    options: {
-      refreshInterval: 1000 * 60,
-    },
-  })
-
-  const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      if (!caseData?.cases) return
-      addManyCasesToSelectedList(caseData?.cases.map((row) => row.id))
-    } else {
-      removeAllCasesFromSelectedList()
-    }
-  }
-
-  const handleToggleRow = (e: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = e.target
-
-    if (checked) {
-      addCaseToSelectedList(e.target.value)
-    } else {
-      removeCaseFromSelectedList(e.target.value)
-    }
-  }
-
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
       sortable: false,
       size: 'tiny',
-      children: <Checkbox defaultChecked={false} onChange={handleToggleAll} />,
+      children: <Checkbox defaultChecked={false} />,
     },
     {
       name: 'caseLabels',
@@ -103,7 +60,7 @@ export const CaseTableReady = () => {
   ]
 
   const rows =
-    caseData?.cases.map((row) => {
+    cases?.map((row) => {
       return {
         case: row,
         cells: [
@@ -113,8 +70,6 @@ export const CaseTableReady = () => {
                 id={row.id}
                 name={`case-checkbox-${row.id}`}
                 defaultChecked={false}
-                onChange={handleToggleRow}
-                checked={selectedCaseIds.includes(row.id)}
                 value={row.id}
               />
             ),
@@ -162,19 +117,20 @@ export const CaseTableReady = () => {
 
   return (
     <Stack space={[2, 2, 3]}>
-      {error && (
-        <AlertMessage
-          type="error"
-          title="Villa kom upp"
-          message="Ekki tókst að sækja tilbúin mál"
+      {isLoading ? (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          space={2}
+          borderRadius="standard"
+        />
+      ) : (
+        <CaseTable
+          columns={columns}
+          rows={rows}
+          defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
         />
       )}
-      <CaseTable
-        loading={isLoading}
-        columns={columns}
-        rows={rows}
-        defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-      />
     </Stack>
   )
 }

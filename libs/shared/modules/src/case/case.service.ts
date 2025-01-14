@@ -13,7 +13,6 @@ import {
   CaseStatusEnum,
   CreateCaseChannelBody,
   DepartmentEnum,
-  DepartmentSlugEnum,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -76,7 +75,7 @@ import { IS3Service } from '../s3/s3.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import {
   caseParameters,
-  titleOrSlugMatch,
+  matchByIdTitleOrSlug,
 } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
@@ -92,7 +91,7 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from './models'
-import { CASE_RELATIONS } from './relations'
+import { casesDetailedIncludes, casesIncludes } from './relations'
 
 const LOGGING_CATEGORY = 'case-service'
 const LOGGING_QUERY = 'CaseServiceQueryRunner'
@@ -497,7 +496,7 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const activeCase = await this.caseModel.findByPk(caseId, {
-      include: [...CASE_RELATIONS],
+      include: [...casesDetailedIncludes],
     })
 
     if (!activeCase) {
@@ -667,16 +666,12 @@ export class CaseService implements ICaseService {
       return this.caseModel.count({
         benchmark: true,
         where: whereParams,
-        include: [
-          {
-            model: CaseStatusModel,
-            where: {
-              title: {
-                [Op.eq]: statusToBeCounted,
-              },
-            },
-          },
-        ],
+        include: casesIncludes({
+          department: params?.department,
+          type: params?.type,
+          status: statusToBeCounted,
+          institution: params?.institution,
+        }),
         logging: (_, timing) => {
           this.logger.info(
             `getCasesWithStatusCount counter for status ${statusToBeCounted} query executed in ${timing}ms`,
@@ -706,39 +701,12 @@ export class CaseService implements ICaseService {
         'publicationNumber',
       ],
       where: whereParams,
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.department),
-        },
-        {
-          model: AdvertTypeModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.type),
-        },
-        {
-          model: CaseCommunicationStatusModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: CaseStatusModel,
-          attributes: ['id', 'title', 'slug'],
-          where: {
-            title: {
-              [Op.eq]: status,
-            },
-          },
-        },
-        {
-          model: CaseTagModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-      ],
+      include: casesIncludes({
+        department: params?.department,
+        type: params?.type,
+        status: status,
+        institution: params?.institution,
+      }),
       logging: (_, timing) => {
         this.logger.info(
           `getCasesWithStatusCount get cases query executed in ${timing}ms`,
@@ -790,7 +758,7 @@ export class CaseService implements ICaseService {
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const caseLookup = await this.caseModel.findByPk(id, {
       include: [
-        ...CASE_RELATIONS,
+        ...casesDetailedIncludes,
         {
           model: AdvertDepartmentModel,
         },
@@ -845,35 +813,12 @@ export class CaseService implements ICaseService {
         'publicationNumber',
       ],
       where: whereParams,
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.department),
-        },
-        {
-          model: AdvertTypeModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.type),
-        },
-        {
-          model: CaseCommunicationStatusModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: CaseStatusModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.status),
-        },
-        {
-          model: CaseTagModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-      ],
+      include: casesIncludes({
+        department: params?.department,
+        type: params?.type,
+        status: params?.status,
+        institution: params?.institution,
+      }),
       logging: (_, timing) => {
         this.logger.info(`getCases get cases query executed in ${timing}ms`, {
           context: LOGGING_QUERY,
@@ -994,35 +939,12 @@ export class CaseService implements ICaseService {
         return this.caseModel.count({
           benchmark: true,
           where: whereParams,
-          include: [
-            {
-              model: AdvertDepartmentModel,
-              attributes: ['id', 'title', 'slug'],
-              where: titleOrSlugMatch(department),
-            },
-            {
-              model: AdvertTypeModel,
-              attributes: ['id', 'title', 'slug'],
-              where: titleOrSlugMatch(params?.type),
-            },
-            {
-              model: CaseCommunicationStatusModel,
-              attributes: ['id', 'title', 'slug'],
-            },
-            {
-              model: CaseStatusModel,
-              attributes: ['id', 'title', 'slug'],
-              where: titleOrSlugMatch(params?.status),
-            },
-            {
-              model: CaseTagModel,
-              attributes: ['id', 'title', 'slug'],
-            },
-            {
-              model: AdvertInvolvedPartyModel,
-              attributes: ['id', 'title', 'slug'],
-            },
-          ],
+          include: casesIncludes({
+            department: department,
+            type: params?.type,
+            status: params?.status,
+            institution: params?.institution,
+          }),
           logging: (_, timing) =>
             this.logger.info(
               `getCasesWithDepartmentCount ${department} counter query ran in ${timing}ms`,
@@ -1037,8 +959,6 @@ export class CaseService implements ICaseService {
     )
 
     const casesResults = this.caseModel.findAndCountAll({
-      raw: true,
-      nest: true,
       benchmark: true,
       offset: offset,
       limit: limit,
@@ -1052,38 +972,12 @@ export class CaseService implements ICaseService {
         'publicationNumber',
       ],
       where: whereParams,
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'title', 'slug'],
-          where: {
-            title: {
-              [Op.eq]: department,
-            },
-          },
-        },
-        {
-          model: AdvertTypeModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: CaseCommunicationStatusModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: CaseStatusModel,
-          attributes: ['id', 'title', 'slug'],
-          where: titleOrSlugMatch(params?.status),
-        },
-        {
-          model: CaseTagModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-      ],
+      include: casesIncludes({
+        department: department,
+        type: params?.type,
+        status: params?.status,
+        institution: params?.institution,
+      }),
       logging: (_, timing) => {
         this.logger.info(
           `getCasesWithDepartmentCount get cases query executed in ${timing}ms`,
