@@ -20,6 +20,7 @@ import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
+import { BaseEntity } from '../entity'
 import { Institution } from '../institutions'
 import { Paging } from '../paging'
 import { Signature } from '../signatures'
@@ -171,10 +172,10 @@ export class CaseDetailed {
   advertDepartment!: Department
 
   @ApiProperty({
-    type: AdvertType,
+    type: BaseEntity,
     description: 'The advert type',
   })
-  advertType!: AdvertType
+  advertType!: BaseEntity
 
   @ApiProperty({
     description: 'List of advert categories.',
@@ -294,6 +295,7 @@ export class Case extends PickType(CaseDetailed, [
   'advertDepartment',
   'advertType',
   'advertTitle',
+  'advertCategories',
   'fastTrack',
   'assignedTo',
   'tag',

@@ -1,14 +1,11 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import {
-  AttachmentTypeParam,
-  DEFAULT_PAGE_NUMBER,
-  DEFAULT_PAGE_SIZE,
-} from '@dmr.is/constants'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
+  Case,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -18,6 +15,8 @@ import {
   GetCasesReponse,
   GetCasesWithDepartmentCount,
   GetCasesWithDepartmentCountQuery,
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
@@ -68,15 +67,13 @@ import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
+  AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
+import { SignatureModel } from '../signature/models'
 import { IUtilityService } from '../utility/utility.service.interface'
-import {
-  caseParameters,
-  matchByIdTitleOrSlug,
-} from './mappers/case-parameters.mapper'
+import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
 import { caseDetailedMigrate } from './migrations/case-detailed.migrate'
@@ -126,9 +123,151 @@ export class CaseService implements ICaseService {
 
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
+    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+  async getCasesWithPublicationNumber(
+    department: DepartmentEnum,
+    params: GetCasesWithPublicationNumberQuery,
+  ): Promise<ResultWrapper<GetCasesWithPublicationNumber>> {
+    if (!params?.id) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Missing required parameter id',
+      })
+    }
+
+    // publication number is dependent on the signature date
+    // so we take the year from the signature date and count from there
+    const cases = await this.caseModel.findAll({
+      benchmark: true,
+      attributes: ['id'],
+      include: [
+        ...casesIncludes({ department: department }),
+        {
+          model: SignatureModel,
+          attributes: ['date'],
+        },
+      ],
+      logging: (_, timing) => {
+        this.logger.info(
+          `getCasesWithPublicationNumber query executed in ${timing}ms`,
+          {
+            context: LOGGING_QUERY,
+            category: LOGGING_CATEGORY,
+            query: 'getCasesWithPublicationNumber',
+          },
+        )
+      },
+    })
+
+    if (cases.length === 0) {
+      return ResultWrapper.ok({
+        cases: [],
+      })
+    }
+
+    // we must ensure the order of the cases is the same as passed in the params
+    const sortedCases = params.id
+      .map((id) => cases.find((c) => c.id === id))
+      .filter((c) => c !== undefined) // this should never happen, but for typescript
+
+    const calculateNextPublicationNumber = async () => {
+      const withPublicationNumber: number[] = []
+      const migratedCases: Case[] = []
+      for (const c of sortedCases) {
+        const signatureDate = c.signatures?.at(0)?.date
+
+        const year = signatureDate
+          ? new Date(signatureDate).getFullYear()
+          : new Date().getFullYear()
+
+        const nextPublicationNumber = await this.advertModel.count({
+          benchmark: true,
+          distinct: true,
+          where: {
+            departmentId: {
+              [Op.eq]: c.department.id,
+            },
+            [Op.and]: [
+              Sequelize.where(
+                Sequelize.fn(
+                  'EXTRACT',
+                  Sequelize.literal(`YEAR FROM "signature_date"`),
+                ),
+                year,
+              ),
+            ],
+          },
+          logging: (_, timing) =>
+            this.logger.info(
+              `getCasesWithPublicationNumber nextPublicationNumber query executed in ${timing}ms`,
+              {
+                context: LOGGING_QUERY,
+                category: LOGGING_CATEGORY,
+                query: 'getCasesWithPublicationNumber',
+              },
+            ),
+        })
+
+        const yearCount = withPublicationNumber.filter((y) => y === year).length
+        withPublicationNumber.push(year)
+
+        const mappedCase = caseMigrate(c)
+        migratedCases.push({
+          ...mappedCase,
+          publicationNumber: `${nextPublicationNumber + yearCount + 1}`,
+        })
+      }
+
+      return migratedCases
+    }
+
+    const mapped = await calculateNextPublicationNumber()
+
+    return ResultWrapper.ok({
+      cases: mapped,
+    })
+  }
+
+  async getCasesSqlQuery(params: GetCasesQuery) {
+    const whereParams = caseParameters(params)
+    const limit = params?.pageSize
+    const offset = (params?.page - 1) * limit
+
+    return this.caseModel.findAndCountAll({
+      distinct: true,
+      benchmark: true,
+      offset: offset,
+      limit: limit,
+      attributes: [
+        'id',
+        'requestedPublicationDate',
+        'createdAt',
+        'advertTitle',
+        'fastTrack',
+        'publishedAt',
+        'publicationNumber',
+      ],
+      where: whereParams,
+      include: casesIncludes({
+        department: params?.department,
+        type: params?.type,
+        status: params?.status,
+        institution: params?.institution,
+        category: params?.category,
+      }),
+      order: [['requestedPublicationDate', 'ASC']],
+      logging: (_, timing) => {
+        this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
+          context: LOGGING_QUERY,
+          category: LOGGING_CATEGORY,
+          query: 'getCasesSqlQuery',
+        })
+      },
+    })
   }
 
   @LogAndHandle()
@@ -643,7 +782,7 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
-    params?: GetCasesWithStatusCountQuery,
+    params: GetCasesWithStatusCountQuery,
   ): Promise<ResultWrapper<GetCasesWithStatusCount>> {
     const statusesToBeCounted = params?.statuses ?? [
       CaseStatusEnum.Submitted,
@@ -664,6 +803,7 @@ export class CaseService implements ICaseService {
 
     const counterResults = statusesToBeCounted.map((statusToBeCounted) => {
       return this.caseModel.count({
+        distinct: true,
         benchmark: true,
         where: whereParams,
         include: casesIncludes({
@@ -671,6 +811,7 @@ export class CaseService implements ICaseService {
           type: params?.type,
           status: statusToBeCounted,
           institution: params?.institution,
+          category: params?.category,
         }),
         logging: (_, timing) => {
           this.logger.info(
@@ -685,39 +826,7 @@ export class CaseService implements ICaseService {
       })
     })
 
-    const casesResults = this.caseModel.findAndCountAll({
-      raw: true,
-      nest: true,
-      benchmark: true,
-      offset: offset,
-      limit: limit,
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: params?.department,
-        type: params?.type,
-        status: status,
-        institution: params?.institution,
-      }),
-      logging: (_, timing) => {
-        this.logger.info(
-          `getCasesWithStatusCount get cases query executed in ${timing}ms`,
-          {
-            context: LOGGING_QUERY,
-            category: LOGGING_CATEGORY,
-            query: 'getCasesWithStatusCount',
-          },
-        )
-      },
-    })
+    const casesResults = this.getCasesSqlQuery({ ...params, status: [status] })
 
     const counter = (await Promise.all(counterResults)).map((count, index) => ({
       title: statusesToBeCounted[index],
@@ -791,48 +900,14 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   @Transactional()
   async getCases(
-    params?: GetCasesQuery,
+    params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
-    const page = params?.page ?? DEFAULT_PAGE_NUMBER
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const whereParams = caseParameters(params)
-
-    const cases = await this.caseModel.findAndCountAll({
-      benchmark: true,
-      offset: (page - 1) * pageSize,
-      limit: pageSize,
-      order: [['requestedPublicationDate', 'DESC']],
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: params?.department,
-        type: params?.type,
-        status: params?.status,
-        institution: params?.institution,
-      }),
-      logging: (_, timing) => {
-        this.logger.info(`getCases get cases query executed in ${timing}ms`, {
-          context: LOGGING_QUERY,
-          category: LOGGING_CATEGORY,
-          query: 'getCases',
-        })
-      },
-    })
-
+    const cases = await this.getCasesSqlQuery(params)
     const mapped = cases.rows.map((c) => caseMigrate(c))
 
     return ResultWrapper.ok({
       cases: mapped,
-      paging: generatePaging(mapped, page, pageSize, cases.count),
+      paging: generatePaging(mapped, params.page, params.pageSize, cases.count),
     })
   }
 
@@ -931,12 +1006,10 @@ export class CaseService implements ICaseService {
       DepartmentEnum.C,
     ]
 
-    const limit = params.pageSize
-    const offset = (params.page - 1) * limit
-
     const [counterA, counterB, counterC] = departmentsToCount.map(
       (department) => {
         return this.caseModel.count({
+          distinct: true,
           benchmark: true,
           where: whereParams,
           include: casesIncludes({
@@ -944,6 +1017,7 @@ export class CaseService implements ICaseService {
             type: params?.type,
             status: params?.status,
             institution: params?.institution,
+            category: params?.category,
           }),
           logging: (_, timing) =>
             this.logger.info(
@@ -958,36 +1032,9 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const casesResults = this.caseModel.findAndCountAll({
-      benchmark: true,
-      offset: offset,
-      limit: limit,
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: department,
-        type: params?.type,
-        status: params?.status,
-        institution: params?.institution,
-      }),
-      logging: (_, timing) => {
-        this.logger.info(
-          `getCasesWithDepartmentCount get cases query executed in ${timing}ms`,
-          {
-            context: LOGGING_QUERY,
-            category: LOGGING_CATEGORY,
-            query: 'getCasesWithDepartmentCount',
-          },
-        )
-      },
+    const casesResults = this.getCasesSqlQuery({
+      ...params,
+      department: [department],
     })
 
     const [cases, ...counters] = await Promise.all([

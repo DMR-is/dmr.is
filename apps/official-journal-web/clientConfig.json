@@ -3182,6 +3182,12 @@
             "description": "The advert type",
             "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
           },
+          "advertCategories": {
+            "description": "List of advert categories.",
+            "nullable": false,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
           "publicationNumber": {
             "type": "string",
             "description": "Publication number of the case."
@@ -3201,6 +3207,7 @@
           "advertTitle",
           "advertDepartment",
           "advertType",
+          "advertCategories",
           "publicationNumber"
         ]
       },

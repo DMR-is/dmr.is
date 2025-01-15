@@ -21,7 +21,6 @@ import {
   CreateMainCategoryCategories,
   DefaultSearchParams,
   DepartmentEnum,
-  DepartmentSlugEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
@@ -30,6 +29,8 @@ import {
   GetCasesReponse,
   GetCasesWithDepartmentCount,
   GetCasesWithDepartmentCountQuery,
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
   GetCategoriesResponse,
@@ -784,5 +785,26 @@ export class CaseController {
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
+  }
+
+  @Get('/with-publication-number/:department')
+  @ApiOperation({ operationId: 'getCasesWithPublicationNumber' })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
+  })
+  @ApiQuery({ type: GetCasesWithPublicationNumberQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithPublicationNumber })
+  @TimeLog()
+  async getCasesWithPublicationNumber(
+    @Param('department', new EnumValidationPipe(DepartmentEnum))
+    department: DepartmentEnum,
+    @Query()
+    params: GetCasesWithPublicationNumberQuery,
+  ): Promise<GetCasesWithPublicationNumber> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasesWithPublicationNumber(department, params),
+    )
   }
 }

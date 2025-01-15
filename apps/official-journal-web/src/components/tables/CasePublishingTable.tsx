@@ -1,14 +1,22 @@
 import { Reorder, useDragControls } from 'framer-motion'
 import { RefObject, useRef, useState } from 'react'
 
-import { Icon, Table as T, Text } from '@island.is/island-ui/core'
+import {
+  Icon,
+  SkeletonLoader,
+  Table as T,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
+import { useNextPublicationNumber } from '../../hooks/api'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
 import { TableHeadCell } from './CaseTableHeadCell'
+import { messages } from './messages'
 
 type RowProps = {
   row: Case
@@ -75,11 +83,43 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  columns: CaseTableHeadCellProps[]
+  cases: Case[]
+  onReorder?: (cases: Case[]) => void
 }
 
-export const CasePublishingTable = ({ columns }: Props) => {
+export const CasePublishingTable = ({ cases, onReorder }: Props) => {
+  const { formatMessage } = useFormatMessage()
   const dragContainerRef = useRef<HTMLElement>(null)
+
+  const columns: CaseTableHeadCellProps[] = [
+    {
+      name: 'caseNumber',
+      sortable: true,
+      fixed: true,
+      size: 'small',
+      children: formatMessage(messages.tables.selectedCases.columns.number),
+    },
+    {
+      name: 'caseTitle',
+      sortable: false,
+      fixed: false,
+      children: formatMessage(messages.tables.selectedCases.columns.title),
+    },
+    {
+      name: 'caseInstitution',
+      sortable: false,
+      fixed: false,
+      children: formatMessage(
+        messages.tables.selectedCases.columns.institution,
+      ),
+    },
+    {
+      name: '',
+      fixed: false,
+      size: 'tiny',
+      children: '',
+    },
+  ]
 
   return (
     <T.Table>
@@ -97,31 +137,45 @@ export const CasePublishingTable = ({ columns }: Props) => {
           ))}
         </T.Row>
       </T.Head>
-      {selectedCases.length === 0 ? (
-        <CaseTableEmpty columns={columns.length} />
+      {cases.length === 0 ? (
+        <CaseTableEmpty
+          columns={columns.length}
+          message={formatMessage(messages.tables.selectedCases.empty.message)}
+        />
+      ) : isLoading ? (
+        <SkeletonLoader
+          repeat={3}
+          height={44}
+          space={2}
+          borderRadius="standard"
+        />
       ) : (
         <Reorder.Group
           as="tbody"
           axis="y"
-          values={selectedCases}
-          onReorder={(newOrder) => {
-            setSelectedCases(newOrder)
-            setCasesWithPublicationNumber(
-              newOrder.map((c, i) => ({
-                id: c.id,
-                publishingNumber: startingNumber + i,
-              })),
+          values={cases}
+          onReorder={(newOrder) =>
+            onReorder &&
+            onReorder(
+              newOrder.map((c, i) => {
+                const newPublicationNumber = data?.publicationNumber ?? 1 + i
+
+                return {
+                  ...c,
+                  publicationNumber: newPublicationNumber.toString(),
+                }
+              }),
             )
-          }}
+          }
           ref={dragContainerRef}
         >
-          {selectedCases.map((row, i) => {
+          {cases.map((row, i) => {
             return (
               <CasePublishingTableRow
                 key={row.id}
                 row={row}
                 container={dragContainerRef}
-                number={startingNumber + i}
+                number={data?.publicationNumber ?? 1 + i}
               />
             )
           })}

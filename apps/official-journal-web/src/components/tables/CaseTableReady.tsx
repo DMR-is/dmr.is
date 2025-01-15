@@ -1,7 +1,11 @@
 import dynamic from 'next/dynamic'
+import { useState } from 'react'
 
 import {
+  Button,
   Checkbox,
+  Inline,
+  LinkV2,
   SkeletonLoader,
   Stack,
   Text,
@@ -9,8 +13,10 @@ import {
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
+import { CasePublishingTable } from './CasePublishingTable'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
@@ -28,12 +34,24 @@ type Props = {
 
 export const CaseTableReady = ({ cases, isLoading }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const [selectedCases, setSelectedCases] = useState<Case[]>([])
+
+  const allChecked = selectedCases.length === cases?.length
+
+  const toggle = () =>
+    selectedCases.length === cases?.length
+      ? setSelectedCases([])
+      : setSelectedCases(cases ?? [])
+
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
       sortable: false,
       size: 'tiny',
-      children: <Checkbox defaultChecked={false} />,
+      children: (
+        <Checkbox defaultChecked={allChecked} onChange={() => toggle()} />
+      ),
     },
     {
       name: 'caseLabels',
@@ -59,47 +77,58 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
     },
   ]
 
-  const rows =
-    cases?.map((row) => {
+  const confirmUrl = `${Routes.PublishingConfirm}?caseIds=${selectedCases
+    .map((c) => `${c.id}:${c.publicationNumber}`)
+    .join(',')}`
+
+  const caseTableColumns =
+    cases?.map((_case) => {
       return {
-        case: row,
+        case: _case,
         cells: [
           {
             children: (
               <Checkbox
-                id={row.id}
-                name={`case-checkbox-${row.id}`}
-                defaultChecked={false}
-                value={row.id}
+                id={_case.id}
+                name={`case-checkbox-${_case.id}`}
+                onChange={(e) =>
+                  e.target.checked
+                    ? setSelectedCases([...selectedCases, _case])
+                    : setSelectedCases(
+                        selectedCases.filter((c) => c.id !== _case.id),
+                      )
+                }
+                checked={selectedCases.some((c) => c.id === _case.id)}
+                value={_case.id}
               />
             ),
           },
           {
             children: (
               <CaseToolTips
-                fastTrack={row.fastTrack}
-                status={row.communicationStatus.title}
+                fastTrack={_case.fastTrack}
+                status={_case.communicationStatus.title}
               />
             ),
           },
           {
             sortingKey: 'caseAdvertType',
-            sortingValue: row.advertType.title,
+            sortingValue: _case.advertType.title,
             children: (
               <div className={styles.titleTableCell}>
                 <Text truncate variant="medium">
-                  {row.advertType.title} {row.advertTitle}
+                  {_case.advertType.title} {_case.advertTitle}
                 </Text>
               </div>
             ),
           },
           {
             sortingKey: 'casePublishDate',
-            sortingValue: row.requestedPublicationDate,
+            sortingValue: _case.requestedPublicationDate,
             children: (
               <Text variant="medium">
-                {row.requestedPublicationDate
-                  ? formatDate(row.requestedPublicationDate)
+                {_case.requestedPublicationDate
+                  ? formatDate(_case.requestedPublicationDate)
                   : null}
               </Text>
             ),
@@ -107,7 +136,7 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
           {
             children: (
               <Text whiteSpace="nowrap" variant="medium">
-                {row.involvedParty.title}
+                {_case.involvedParty.title}
               </Text>
             ),
           },
@@ -117,20 +146,27 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
 
   return (
     <Stack space={[2, 2, 3]}>
-      {isLoading ? (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          space={2}
-          borderRadius="standard"
-        />
-      ) : (
-        <CaseTable
-          columns={columns}
-          rows={rows}
-          defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-        />
-      )}
+      <CaseTable
+        loading={isLoading}
+        columns={columns}
+        rows={caseTableColumns}
+        defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+      />
+      <CasePublishingTable
+        cases={selectedCases}
+        onReorder={(cases) => setSelectedCases(cases)}
+      />
+      <Inline justifyContent="flexEnd">
+        <LinkV2 href={confirmUrl}>
+          <Button
+            disabled={selectedCases.length === 0}
+            icon="arrowForward"
+            iconType="filled"
+          >
+            Gefa út valin mál hallooo
+          </Button>
+        </LinkV2>
+      </Inline>
     </Stack>
   )
 }

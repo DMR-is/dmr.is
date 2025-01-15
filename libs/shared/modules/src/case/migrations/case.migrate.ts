@@ -19,9 +19,23 @@ export const caseMigrate = (model: CaseModel): Case => ({
     title: model.involvedParty.title,
     slug: model.involvedParty.slug,
   },
-  advertDepartment: model.department,
-  advertType: model.advertType,
+  advertDepartment: {
+    id: model.department.id,
+    title: model.department.title,
+    slug: model.department.slug,
+  },
+  advertType: {
+    id: model.advertType.id,
+    title: model.advertType.title,
+    slug: model.advertType.slug,
+  },
   advertTitle: model.advertTitle,
+  advertCategories:
+    model.categories?.map((c) => ({
+      id: c.id,
+      title: c.title,
+      slug: c.slug,
+    })) ?? [],
   requestedPublicationDate: model.requestedPublicationDate,
   publicationNumber: model.publicationNumber,
   publishedAt: model.publishedAt,
