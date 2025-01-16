@@ -20,7 +20,7 @@ import { StepLeidretting } from '../../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../../components/form-steps/StepYfirlestur'
 import { Meta } from '../../components/meta/Meta'
-import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
+import { CaseDetailed, CaseStatusTitleEnum } from '../../gen/fetch'
 import { useRejectCase, useUpdateEmployee } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
@@ -39,7 +39,7 @@ import {
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  thisCase: Case
+  thisCase: CaseDetailed
   step: CaseStep
 }
 

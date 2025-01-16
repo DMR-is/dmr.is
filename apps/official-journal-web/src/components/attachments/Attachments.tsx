@@ -12,14 +12,14 @@ import {
 
 import {
   ApplicationAttachmentTypeTitleEnum,
-  Case,
+  CaseDetailed,
   GetCaseResponse,
 } from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
   refetchCase?: KeyedMutator<GetCaseResponse>
 }
 

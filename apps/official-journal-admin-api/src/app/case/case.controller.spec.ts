@@ -124,11 +124,11 @@ describe('CaseController', () => {
         .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
       await caseController.createCase({
-        applicationId: activeCase.applicationId,
+        applicationId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
       })
 
       expect(createSpy).toHaveBeenCalledWith({
-        applicationId: activeCase.applicationId,
+        applicationId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
       })
     })
   })

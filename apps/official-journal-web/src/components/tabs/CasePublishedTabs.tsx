@@ -33,7 +33,7 @@ export const CasePublishedTabs = () => {
     useCasesWithDepartmentCount({
       params: {
         department: department,
-        status: statuses.join(','),
+        status: statuses,
         page,
         pageSize,
         search,

@@ -2,26 +2,16 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../lib/api/createClient'
-import { getStringFromQueryString } from '../../../lib/types'
+import { transformQueryToCaseParams } from '../../../lib/utils'
 class GetCasesHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const dmrClient = createDmrClient()
 
-    const page = getStringFromQueryString(req.query.page)
-    const pageSize = getStringFromQueryString(req.query.pageSize)
+    const params = transformQueryToCaseParams(req.query)
 
-    const cases = await dmrClient.getCases({
-      id: getStringFromQueryString(req.query.id),
-      search: getStringFromQueryString(req.query.search),
-      category: getStringFromQueryString(req.query.category),
-      type: getStringFromQueryString(req.query.type),
-      status: getStringFromQueryString(req.query.status),
-      department: getStringFromQueryString(req.query.department),
-      page: page ? parseInt(page) : undefined,
-      pageSize: pageSize ? parseInt(pageSize) : undefined,
-    })
+    const cases = await dmrClient.getCases(params)
 
     return res.status(200).json(cases)
   }

@@ -64,6 +64,13 @@
         "cwd": "apps/official-journal-web"
       }
     },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/official-journal-web",
+        "command": "rm -rf src/gen/fetch"
+      }
+    },
     "codegen": {
       "executor": "nx:run-commands",
       "options": {
@@ -86,6 +93,7 @@
       "options": {
         "commands": [
           "yarn nx run official-journal-web:update-openapi-schema",
+          "yarn nx run official-journal-web:clean",
           "yarn nx run official-journal-web:codegen"
         ],
         "parallel": false,
