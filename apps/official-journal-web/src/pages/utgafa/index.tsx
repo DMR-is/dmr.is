@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import { getSession } from 'next-auth/react'
 
 import {
+  AlertMessage,
   GridColumn,
   GridContainer,
   GridRow,
@@ -33,7 +34,18 @@ const ReadyForPublicationTabs = dynamic(
   },
 )
 
-export default function CasePublishingOverview() {
+const NotificationPortal = dynamic(
+  () => import('../../components/notification-portal/NotificationPortal'),
+  {
+    ssr: false,
+  },
+)
+
+type Props = {
+  success: boolean
+}
+
+export default function CasePublishingOverview({ success }: Props) {
   const { formatMessage } = useFormatMessage()
 
   return (
@@ -51,6 +63,15 @@ export default function CasePublishingOverview() {
               offset={['0', '0', '0', '1/12']}
             >
               <ReadyForPublicationTabs />
+              {success && (
+                <NotificationPortal>
+                  <AlertMessage
+                    type="success"
+                    title="Útgáfa mála heppnaðist"
+                    message="Málin eru nú orðin sýnileg á ytri vef."
+                  />
+                </NotificationPortal>
+              )}
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -59,8 +80,9 @@ export default function CasePublishingOverview() {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({
+export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
+  query,
   resolvedUrl,
 }) => {
   const session = await getSession({ req })
@@ -94,10 +116,13 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   try {
+    const didSuccessfullyPublishCases = query.success === 'true'
+
     return {
       props: deleteUndefined({
         session,
         layout,
+        success: didSuccessfullyPublishCases,
       }),
     }
   } catch (error) {

@@ -2,7 +2,6 @@ import dynamic from 'next/dynamic'
 import { MessageDescriptor } from 'react-intl'
 
 import {
-  AlertMessage,
   Box,
   Breadcrumbs,
   Button,
@@ -11,11 +10,11 @@ import {
   GridRow,
   Inline,
   Input,
-  Stack,
   Text,
 } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { NOTIFICATION_PORTAL_ID } from '../../lib/constants'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
@@ -110,6 +109,7 @@ export const Banner = ({
                     ? formatMessage(description)
                     : description}
                 </Text>
+                <div id={NOTIFICATION_PORTAL_ID} />
                 {showFilters && (
                   <CaseFilters
                     enableCategories={enableCategories}

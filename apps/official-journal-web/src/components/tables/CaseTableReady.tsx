@@ -25,6 +25,9 @@ export const CaseTableReady = ({
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
+  const allChecked =
+    selectedCaseIds.length > 0 && selectedCaseIds.length === cases?.length
+
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
@@ -32,8 +35,8 @@ export const CaseTableReady = ({
       size: 'tiny',
       children: (
         <Checkbox
-          defaultChecked={selectedCaseIds.length === cases?.length}
-          checked={selectedCaseIds.length === cases?.length}
+          defaultChecked={allChecked}
+          checked={allChecked}
           onChange={() => toggleAll()}
         />
       ),

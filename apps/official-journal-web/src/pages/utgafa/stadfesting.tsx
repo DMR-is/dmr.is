@@ -1,4 +1,5 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
 import { getSession } from 'next-auth/react'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
@@ -15,6 +16,8 @@ import {
 
 import { CasePublishingList } from '../../components/case-publishing-list/CasePublishingList'
 import { Section } from '../../components/section/Section'
+import { Case } from '../../gen/fetch'
+import { usePublishCases } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
@@ -25,9 +28,20 @@ import {
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-export default function ConfirmPublishing({
-  cases,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+type Props = {
+  cases: Case[]
+}
+
+export default function ConfirmPublishing({ cases }: Props) {
+  const router = useRouter()
+  const { trigger, error, isMutating } = usePublishCases({
+    onSuccess: () => {
+      router.push(
+        `${Routes.PublishingOverview}?department=${router.query.department}&success=true`,
+      )
+    },
+  })
+
   return (
     <Section paddingTop="off">
       <GridContainer>
@@ -37,11 +51,19 @@ export default function ConfirmPublishing({
             offset={['0', '0', '0', '1/12']}
           >
             <Stack space={[2, 2, 3]}>
-              <AlertMessage
-                type="warning"
-                title="Mál til útgáfu"
-                message="Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar."
-              />
+              {error ? (
+                <AlertMessage
+                  type="error"
+                  title="Ekki tókst að gefa út mál"
+                  message="Villa kom upp við útáfu mála, reyndu aftur síðar."
+                />
+              ) : (
+                <AlertMessage
+                  type="warning"
+                  title="Mál til útgáfu"
+                  message="Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar."
+                />
+              )}
               <CasePublishingList cases={cases} />
               <Box
                 marginTop={3}
@@ -49,10 +71,19 @@ export default function ConfirmPublishing({
                 flexWrap="wrap"
                 justifyContent="spaceBetween"
               >
-                <LinkV2 href={Routes.PublishingOverview}>
+                <LinkV2
+                  href={`${Routes.PublishingOverview}?department=${router.query.department}`}
+                >
                   <Button variant="ghost">Tilbaka í útgáfu mála</Button>
                 </LinkV2>
-                <Button icon="arrowForward">Gefa út öll mál</Button>
+                <Button
+                  onClick={() => trigger({ caseIds: cases.map((c) => c.id) })}
+                  disabled={isMutating}
+                  loading={isMutating}
+                  icon="arrowForward"
+                >
+                  Gefa út öll mál
+                </Button>
               </Box>
             </Stack>
           </GridColumn>
