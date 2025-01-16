@@ -4,9 +4,12 @@ import { AuthMiddleware } from '@dmr.is/middleware'
 
 import {
   AlertMessage,
+  Box,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
   Stack,
 } from '@island.is/island-ui/core'
 
@@ -40,6 +43,17 @@ export default function ConfirmPublishing({
                 message="Vinsamlegast farðu yfir og staðfestu eftirfarandi lista mála til birtingar."
               />
               <CasePublishingList cases={cases} />
+              <Box
+                marginTop={3}
+                display="flex"
+                flexWrap="wrap"
+                justifyContent="spaceBetween"
+              >
+                <LinkV2 href={Routes.PublishingOverview}>
+                  <Button variant="ghost">Tilbaka í útgáfu mála</Button>
+                </LinkV2>
+                <Button icon="arrowForward">Gefa út öll mál</Button>
+              </Box>
             </Stack>
           </GridColumn>
         </GridRow>

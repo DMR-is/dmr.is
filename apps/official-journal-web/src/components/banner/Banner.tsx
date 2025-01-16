@@ -16,7 +16,6 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useNotificationContext } from '../../hooks/useNotificationContext'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
 import { Section } from '../section/Section'
 import * as styles from './Banner.css'
@@ -74,7 +73,6 @@ export const Banner = ({
   enableDepartments = false,
   enableTypes = false,
 }: Props) => {
-  const { notifications } = useNotificationContext()
   const { formatMessage } = useFormatMessage()
 
   const showFilters = enableCategories || enableDepartments || enableTypes
@@ -112,20 +110,6 @@ export const Banner = ({
                     ? formatMessage(description)
                     : description}
                 </Text>
-                {notifications.length > 0 && (
-                  <Box marginBottom={3}>
-                    <Stack space={3}>
-                      {notifications.map((notification, index) => (
-                        <AlertMessage
-                          key={index}
-                          type={notification.type ?? 'info'}
-                          title={notification.title}
-                          message={notification.message}
-                        />
-                      ))}
-                    </Stack>
-                  </Box>
-                )}
                 {showFilters && (
                   <CaseFilters
                     enableCategories={enableCategories}
