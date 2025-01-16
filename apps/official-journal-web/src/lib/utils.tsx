@@ -529,8 +529,8 @@ const queryParamToEnumArray = <T extends string>(enumType: Record<string, T>) =>
       .filter((v) => Object.keys(enumType).includes(v)) as T[]
   })
 
-const isDepartmentEnum = z.nativeEnum(DepartmentEnum)
-const isCaseStatusTitleEnum = z.nativeEnum(CaseStatusEnum)
+export const isDepartmentEnum = z.nativeEnum(DepartmentEnum)
+export const isCaseStatusTitleEnum = z.nativeEnum(CaseStatusEnum)
 
 export const transformQueryToCaseParams = (
   query: ParsedUrlQuery,

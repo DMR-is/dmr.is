@@ -29,6 +29,7 @@ export const caseMigrate = (model: CaseModel): Case => ({
     title: model.advertType.title,
     slug: model.advertType.slug,
   },
+  year: model.year,
   advertTitle: model.advertTitle,
   advertCategories:
     model.categories?.map((c) => ({

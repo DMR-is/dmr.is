@@ -14,7 +14,6 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { AdvertType } from '../advert-type'
 import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
@@ -291,6 +290,7 @@ export class Case extends PickType(CaseDetailed, [
   'communicationStatus',
   'requestedPublicationDate',
   'status',
+  'year',
   'createdAt',
   'advertDepartment',
   'advertType',

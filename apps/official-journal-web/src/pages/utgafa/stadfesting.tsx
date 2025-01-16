@@ -17,8 +17,8 @@ import { createDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import {
   deleteUndefined,
+  isDepartmentEnum,
   loginRedirect,
-  transformQueryToCaseParams,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
@@ -70,6 +70,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     }
   }
 
+  const caseIds = Array.isArray(casesToPublish)
+    ? casesToPublish
+    : casesToPublish.split(',')
+
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: true,
@@ -89,39 +93,22 @@ export const getServerSideProps: GetServerSideProps = async ({
   try {
     const client = createDmrClient()
 
-    const departmentId = query.department
+    const department = isDepartmentEnum.safeParse(query.department)
 
-    const caseIdsWithPublicationNumber = Array.isArray(casesToPublish)
-      ? casesToPublish
-      : casesToPublish.split(',')
-
-    // caseids = uuid:number,uuid:number
-
-    const caseIds = caseIdsWithPublicationNumber.reduce((acc, curr) => {
-      const [id] = curr.split(':')
-
-      Object.assign(acc, { [id]: curr.split(':')[1] })
-
-      return acc
-    }, {} as Record<string, string>)
-
-    const caseParams = transformQueryToCaseParams({
-      id: Object.keys(caseIds),
-      page: '1',
-      pageSize: '100',
-      department: departmentId,
-    })
+    if (!department.success) {
+      throw new CustomNextError(
+        400,
+        'Villa kom upp við að sækja gögn fyrir staðfestinu útgáfu',
+        'Ógilt gildi fyrir deild',
+      )
+    }
 
     const cases = await client
       .withMiddleware(new AuthMiddleware(session.accessToken))
-      .getCases(caseParams)
-
-    const withPublicationNumber = cases.cases.map((_case) => {
-      return {
-        ..._case,
-        publicationNumber: caseIds[_case.id],
-      }
-    })
+      .getCasesWithPublicationNumber({
+        department: department.data,
+        id: caseIds,
+      })
 
     return {
       props: deleteUndefined({

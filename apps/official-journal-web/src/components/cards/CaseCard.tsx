@@ -8,6 +8,7 @@ type Props = {
   insitiution?: string | null
   department?: string | null
   publicationNumber?: string | null
+  year?: number | null
   publicationDate?: string | null
   title?: string | null
   categories?: string[] | null
@@ -18,6 +19,7 @@ export const CaseCard = ({
   insitiution,
   department,
   publicationNumber,
+  year,
   publicationDate,
   title,
   categories,
@@ -49,7 +51,9 @@ export const CaseCard = ({
       )}
       {publicationNumber && (
         <Box>
-          <Text variant="h3">{publicationNumber}</Text>
+          <Text variant="h3">
+            {publicationNumber}/{year}
+          </Text>
         </Box>
       )}
       {title && (

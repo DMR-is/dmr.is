@@ -1405,6 +1405,39 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/with-publication-number/{department}": {
+      "get": {
+        "operationId": "getCasesWithPublicationNumber",
+        "summary": "",
+        "parameters": [
+          {
+            "required": false,
+            "name": "id",
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "department",
+            "required": true,
+            "in": "path",
+            "schema": { "$ref": "#/components/schemas/DepartmentEnum" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCasesWithPublicationNumber"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/signatures/involved-party/{id}": {
       "get": {
         "operationId": "getSignaturesForInvolvedParty",
@@ -3098,27 +3131,14 @@
         },
         "required": ["id", "name", "lastName", "active"]
       },
-      "AdvertType": {
+      "BaseEntity": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          },
-          "department": {
-            "description": "The department of the main advert type",
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          }
+          "id": { "type": "string", "description": "Id of the entity" },
+          "title": { "type": "string", "description": "Title of the entity" },
+          "slug": { "type": "string", "description": "Slug of the entity" }
         },
-        "required": ["id", "title", "slug", "department"]
+        "required": ["id", "title", "slug"]
       },
       "Case": {
         "type": "object",
@@ -3126,6 +3146,11 @@
           "id": {
             "type": "string",
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "year": {
+            "type": "number",
+            "example": 2024,
+            "description": "Year the case was created."
           },
           "status": {
             "description": "Status of the case, default to \"Innsent\"",
@@ -3180,7 +3205,7 @@
           },
           "advertType": {
             "description": "The advert type",
-            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+            "allOf": [{ "$ref": "#/components/schemas/BaseEntity" }]
           },
           "advertCategories": {
             "description": "List of advert categories.",
@@ -3195,6 +3220,7 @@
         },
         "required": [
           "id",
+          "year",
           "status",
           "tag",
           "involvedParty",
@@ -3681,7 +3707,7 @@
           },
           "advertType": {
             "description": "The advert type",
-            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+            "allOf": [{ "$ref": "#/components/schemas/BaseEntity" }]
           },
           "advertCategories": {
             "description": "List of advert categories.",
@@ -3905,6 +3931,16 @@
         },
         "required": ["internal", "type", "source", "comment", "creator"]
       },
+      "GetCasesWithPublicationNumber": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Case" }
+          }
+        },
+        "required": ["cases"]
+      },
       "GetSignaturesResponse": {
         "type": "object",
         "properties": {
@@ -3971,6 +4007,28 @@
           "caseId",
           "advertId"
         ]
+      },
+      "AdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department of the main advert type",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          }
+        },
+        "required": ["id", "title", "slug", "department"]
       },
       "GetAdvertTypes": {
         "type": "object",

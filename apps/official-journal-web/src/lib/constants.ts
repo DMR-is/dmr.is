@@ -146,6 +146,7 @@ export enum APIRoutes {
   Type = '/api/types/:id',
   GetCasesWithStatusCount = '/api/cases/withStatusCount',
   GetCasesWithDepartmentCount = '/api/cases/withDepartmentCount',
+  GetCasesWithPublicationNumber = '/api/cases/withPublicationNumber',
   GetDepartments = '/api/cases/departments',
   GetCategories = '/api/cases/categories',
   GetMainCategories = '/api/mainCategories',

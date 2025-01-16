@@ -1,48 +1,29 @@
-import dynamic from 'next/dynamic'
-import { useState } from 'react'
-
-import {
-  Button,
-  Checkbox,
-  Inline,
-  LinkV2,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { Checkbox, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CasePublishingTable } from './CasePublishingTable'
-import { CaseTableHeadCellProps } from './CaseTable'
+import CaseTable, { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
-const CaseTable = dynamic(() => import('./CaseTable'), {
-  loading: () => (
-    <SkeletonLoader repeat={3} height={44} space={2} borderRadius="standard" />
-  ),
-})
-
 type Props = {
   cases?: Case[]
+  selectedCaseIds: string[]
   isLoading?: boolean
+  toggleAll: () => void
+  toggle: (_case: Case, checked: boolean) => void
 }
 
-export const CaseTableReady = ({ cases, isLoading }: Props) => {
+export const CaseTableReady = ({
+  cases,
+  selectedCaseIds,
+  toggle,
+  toggleAll,
+  isLoading,
+}: Props) => {
   const { formatMessage } = useFormatMessage()
-
-  const [selectedCases, setSelectedCases] = useState<Case[]>([])
-
-  const allChecked = selectedCases.length === cases?.length
-
-  const toggle = () =>
-    selectedCases.length === cases?.length
-      ? setSelectedCases([])
-      : setSelectedCases(cases ?? [])
 
   const columns: CaseTableHeadCellProps[] = [
     {
@@ -50,7 +31,11 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
       sortable: false,
       size: 'tiny',
       children: (
-        <Checkbox defaultChecked={allChecked} onChange={() => toggle()} />
+        <Checkbox
+          defaultChecked={selectedCaseIds.length === cases?.length}
+          checked={selectedCaseIds.length === cases?.length}
+          onChange={() => toggleAll()}
+        />
       ),
     },
     {
@@ -77,10 +62,6 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
     },
   ]
 
-  const confirmUrl = `${Routes.PublishingConfirm}?caseIds=${selectedCases
-    .map((c) => `${c.id}:${c.publicationNumber}`)
-    .join(',')}`
-
   const caseTableColumns =
     cases?.map((_case) => {
       return {
@@ -91,14 +72,8 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
               <Checkbox
                 id={_case.id}
                 name={`case-checkbox-${_case.id}`}
-                onChange={(e) =>
-                  e.target.checked
-                    ? setSelectedCases([...selectedCases, _case])
-                    : setSelectedCases(
-                        selectedCases.filter((c) => c.id !== _case.id),
-                      )
-                }
-                checked={selectedCases.some((c) => c.id === _case.id)}
+                onChange={(e) => toggle(_case, e.target.checked)}
+                checked={selectedCaseIds.some((id) => id === _case.id)}
                 value={_case.id}
               />
             ),
@@ -145,29 +120,12 @@ export const CaseTableReady = ({ cases, isLoading }: Props) => {
     }) ?? []
 
   return (
-    <Stack space={[2, 2, 3]}>
-      <CaseTable
-        loading={isLoading}
-        columns={columns}
-        rows={caseTableColumns}
-        defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-      />
-      <CasePublishingTable
-        cases={selectedCases}
-        onReorder={(cases) => setSelectedCases(cases)}
-      />
-      <Inline justifyContent="flexEnd">
-        <LinkV2 href={confirmUrl}>
-          <Button
-            disabled={selectedCases.length === 0}
-            icon="arrowForward"
-            iconType="filled"
-          >
-            Gefa út valin mál hallooo
-          </Button>
-        </LinkV2>
-      </Inline>
-    </Stack>
+    <CaseTable
+      loading={isLoading}
+      columns={columns}
+      rows={caseTableColumns}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+    />
   )
 }
 

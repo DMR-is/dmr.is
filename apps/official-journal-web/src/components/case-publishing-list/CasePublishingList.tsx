@@ -18,6 +18,7 @@ export const CasePublishingList = ({ cases }: Props) => {
             key={c.id}
             department={c.advertDepartment.title}
             publicationDate={c.requestedPublicationDate}
+            year={c.year}
             insitiution={c.involvedParty.title}
             publicationNumber={c.publicationNumber}
             title={c.advertTitle}

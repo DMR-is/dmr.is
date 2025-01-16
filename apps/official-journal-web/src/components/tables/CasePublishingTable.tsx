@@ -3,13 +3,13 @@ import { RefObject, useRef, useState } from 'react'
 
 import {
   Icon,
-  SkeletonLoader,
+  Inline,
+  LoadingDots,
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
-import { useNextPublicationNumber } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
@@ -49,7 +49,7 @@ const CasePublishingTableRow = ({
     >
       <TableCell fixed>
         <Text variant="medium" whiteSpace="nowrap">
-          {`${number}/${new Date().getFullYear()}`}
+          {`${number}/${row.year}`}
         </Text>
       </TableCell>
       <TableCell>
@@ -83,20 +83,22 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  cases: Case[]
+  cases?: Case[]
+  isLoading: boolean
   onReorder?: (cases: Case[]) => void
 }
 
-export const CasePublishingTable = ({ cases, onReorder }: Props) => {
+export const CasePublishingTable = ({ cases, isLoading, onReorder }: Props) => {
   const { formatMessage } = useFormatMessage()
+
   const dragContainerRef = useRef<HTMLElement>(null)
 
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'caseNumber',
-      sortable: true,
       fixed: true,
       size: 'small',
+      sortable: false,
       children: formatMessage(messages.tables.selectedCases.columns.number),
     },
     {
@@ -117,7 +119,7 @@ export const CasePublishingTable = ({ cases, onReorder }: Props) => {
       name: '',
       fixed: false,
       size: 'tiny',
-      children: '',
+      children: isLoading && <LoadingDots />,
     },
   ]
 
@@ -132,50 +134,35 @@ export const CasePublishingTable = ({ cases, onReorder }: Props) => {
               sortable={column.sortable}
               fixed={column.fixed}
             >
-              {column.children}
+              <Inline alignY="center" space={1}>
+                <Text variant="medium" fontWeight="semiBold">
+                  {column.children}
+                </Text>
+              </Inline>
             </TableHeadCell>
           ))}
         </T.Row>
       </T.Head>
-      {cases.length === 0 ? (
+      {cases?.length === 0 ? (
         <CaseTableEmpty
+          message="Ekkert mál valið til útgáfu"
           columns={columns.length}
-          message={formatMessage(messages.tables.selectedCases.empty.message)}
-        />
-      ) : isLoading ? (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          space={2}
-          borderRadius="standard"
         />
       ) : (
         <Reorder.Group
           as="tbody"
           axis="y"
-          values={cases}
-          onReorder={(newOrder) =>
-            onReorder &&
-            onReorder(
-              newOrder.map((c, i) => {
-                const newPublicationNumber = data?.publicationNumber ?? 1 + i
-
-                return {
-                  ...c,
-                  publicationNumber: newPublicationNumber.toString(),
-                }
-              }),
-            )
-          }
+          values={cases ?? []}
+          onReorder={(newOrder) => onReorder && onReorder(newOrder)}
           ref={dragContainerRef}
         >
-          {cases.map((row, i) => {
+          {cases?.map((row) => {
             return (
               <CasePublishingTableRow
                 key={row.id}
                 row={row}
                 container={dragContainerRef}
-                number={data?.publicationNumber ?? 1 + i}
+                number={Number(row.publicationNumber)}
               />
             )
           })}

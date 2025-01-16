@@ -128,6 +128,46 @@ export class CaseService implements ICaseService {
   ) {
     this.logger.info('Using CaseService')
   }
+
+  async getCasesSqlQuery(params: GetCasesQuery) {
+    const whereParams = caseParameters(params)
+    const limit = params?.pageSize
+    const offset = (params?.page - 1) * limit
+
+    return this.caseModel.findAndCountAll({
+      distinct: true,
+      benchmark: true,
+      offset: offset,
+      limit: limit,
+      attributes: [
+        'id',
+        'requestedPublicationDate',
+        'createdAt',
+        'year',
+        'advertTitle',
+        'fastTrack',
+        'publishedAt',
+        'publicationNumber',
+      ],
+      where: whereParams,
+      include: casesIncludes({
+        department: params?.department,
+        type: params?.type,
+        status: params?.status,
+        institution: params?.institution,
+        category: params?.category,
+      }),
+      order: [['requestedPublicationDate', 'ASC']],
+      logging: (_, timing) => {
+        this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
+          context: LOGGING_QUERY,
+          category: LOGGING_CATEGORY,
+          query: 'getCasesSqlQuery',
+        })
+      },
+    })
+  }
+
   async getCasesWithPublicationNumber(
     department: DepartmentEnum,
     params: GetCasesWithPublicationNumberQuery,
@@ -143,7 +183,16 @@ export class CaseService implements ICaseService {
     // so we take the year from the signature date and count from there
     const cases = await this.caseModel.findAll({
       benchmark: true,
-      attributes: ['id'],
+      attributes: [
+        'id',
+        'requestedPublicationDate',
+        'createdAt',
+        'year',
+        'advertTitle',
+        'fastTrack',
+        'publishedAt',
+        'publicationNumber',
+      ],
       include: [
         ...casesIncludes({ department: department }),
         {
@@ -175,14 +224,10 @@ export class CaseService implements ICaseService {
       .filter((c) => c !== undefined) // this should never happen, but for typescript
 
     const calculateNextPublicationNumber = async () => {
-      const withPublicationNumber: number[] = []
+      const publicationYears: number[] = []
       const migratedCases: Case[] = []
       for (const c of sortedCases) {
-        const signatureDate = c.signatures?.at(0)?.date
-
-        const year = signatureDate
-          ? new Date(signatureDate).getFullYear()
-          : new Date().getFullYear()
+        const year = c.year
 
         const nextPublicationNumber = await this.advertModel.count({
           benchmark: true,
@@ -212,8 +257,8 @@ export class CaseService implements ICaseService {
             ),
         })
 
-        const yearCount = withPublicationNumber.filter((y) => y === year).length
-        withPublicationNumber.push(year)
+        const yearCount = publicationYears.filter((y) => y === year).length
+        publicationYears.push(year)
 
         const mappedCase = caseMigrate(c)
         migratedCases.push({
@@ -228,45 +273,7 @@ export class CaseService implements ICaseService {
     const mapped = await calculateNextPublicationNumber()
 
     return ResultWrapper.ok({
-      cases: mapped,
-    })
-  }
-
-  async getCasesSqlQuery(params: GetCasesQuery) {
-    const whereParams = caseParameters(params)
-    const limit = params?.pageSize
-    const offset = (params?.page - 1) * limit
-
-    return this.caseModel.findAndCountAll({
-      distinct: true,
-      benchmark: true,
-      offset: offset,
-      limit: limit,
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: params?.department,
-        type: params?.type,
-        status: params?.status,
-        institution: params?.institution,
-        category: params?.category,
-      }),
-      order: [['requestedPublicationDate', 'ASC']],
-      logging: (_, timing) => {
-        this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
-          context: LOGGING_QUERY,
-          category: LOGGING_CATEGORY,
-          query: 'getCasesSqlQuery',
-        })
-      },
+      cases: mapped.sort((a, b) => a.year - b.year),
     })
   }
 
