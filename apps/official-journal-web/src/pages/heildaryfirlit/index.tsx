@@ -1,56 +1,40 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 import { getSession } from 'next-auth/react'
-import { useState } from 'react'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  SkeletonLoader,
+} from '@island.is/island-ui/core'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
-import { CaseTableOverview } from '../../components/tables/CaseTableOverview'
-import { Tab, Tabs } from '../../components/tabs/Tabs'
-import { Case, GetPublishedCasesResponse, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
-import { CaseDepartmentTabs, Routes } from '../../lib/constants'
+import { DEPARTMENTS, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseOverview'
-import {
-  deleteUndefined,
-  getCaseProcessingSearchParams,
-  loginRedirect,
-  mapDepartmentSlugToLetter,
-} from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 
-type Props = {
-  cases: Case[]
-  paging: Paging
-  totalCases: GetPublishedCasesResponse['totalCases']
-}
+const CasePublishedTabs = dynamic(
+  () => import('../../components/tabs/CasePublishedTabs'),
+  {
+    ssr: false,
+    loading: () => (
+      <SkeletonLoader
+        repeat={3}
+        height={44}
+        space={2}
+        borderRadius="standard"
+      />
+    ),
+  },
+)
 
-const DEFAULT_TAB = 'a-deild'
-
-export default function CaseOverview(
-  data: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
-  const { cases, paging, totalCases } = data
-
+export default function PublishedCasesPage() {
   const { formatMessage } = useFormatMessage()
-
-  const [tab, setTab] = useState(DEFAULT_TAB)
-
-  const onTabChange = (id: string) => {
-    setTab(id)
-  }
-
-  const tabs: Tab[] = CaseDepartmentTabs.map((tab) => {
-    const countKey = mapDepartmentSlugToLetter(tab.value)
-    return {
-      id: tab.value,
-      label: `${tab.label} ${tab ? `(${totalCases[countKey]})` : ''}`,
-      content: <CaseTableOverview cases={cases} paging={paging} />,
-    }
-  })
 
   return (
     <>
@@ -59,7 +43,7 @@ export default function CaseOverview(
           messages.breadcrumbs.casePublishing,
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
       />
-      <Section key={tab} paddingTop="off">
+      <Section paddingTop="off">
         <GridContainer>
           <GridRow rowGap={['p2', 3]}>
             <GridColumn
@@ -67,12 +51,7 @@ export default function CaseOverview(
               offset={['0', '0', '0', '1/12']}
               span={['12/12', '12/12', '12/12', '10/12']}
             >
-              <Tabs
-                onTabChange={onTabChange}
-                selectedTab={tab}
-                tabs={tabs}
-                label={formatMessage(messages.general.departments)}
-              />
+              <CasePublishedTabs />
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -81,7 +60,7 @@ export default function CaseOverview(
   )
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async ({
+export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
   resolvedUrl,
@@ -92,47 +71,44 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     return loginRedirect(resolvedUrl)
   }
 
-  const layout: LayoutProps = {
-    bannerProps: {
-      showBanner: true,
-      enableCategories: true,
-      enableDepartments: true,
-      enableTypes: true,
-      imgSrc: '/assets/banner-publish-image.svg',
-      title: messages.banner.title,
-      description: messages.banner.description,
-      variant: 'small',
-      contentColumnSpan: ['12/12', '12/12', '5/12'],
-      imageColumnSpan: ['12/12', '12/12', '5/12'],
-      breadcrumbs: [
-        {
-          title: messages.breadcrumbs.dashboard,
-          href: Routes.Dashboard,
-        },
-        {
-          title: messages.breadcrumbs.casePublishing,
-        },
-      ],
-    },
+  if (!DEPARTMENTS.includes(query.department as string)) {
+    return {
+      redirect: {
+        destination: `${Routes.Overview}?department=${DEPARTMENTS[0]}`,
+        permanent: false,
+      },
+    }
   }
 
   try {
-    const { tab } = getCaseProcessingSearchParams(query) || DEFAULT_TAB
-    const search = query.search as string | undefined
-    const dmrClient = createDmrClient()
-
-    const { cases, paging, totalCases } = await dmrClient.getPublishedCases({
-      department: tab ? tab : CaseDepartmentTabs[0].value,
-      search: search,
-    })
+    const layout: LayoutProps = {
+      bannerProps: {
+        showBanner: true,
+        enableCategories: true,
+        enableDepartments: false,
+        enableTypes: true,
+        imgSrc: '/assets/banner-publish-image.svg',
+        title: messages.banner.title,
+        description: messages.banner.description,
+        variant: 'small',
+        contentColumnSpan: ['12/12', '12/12', '5/12'],
+        imageColumnSpan: ['12/12', '12/12', '5/12'],
+        breadcrumbs: [
+          {
+            title: messages.breadcrumbs.dashboard,
+            href: Routes.Dashboard,
+          },
+          {
+            title: messages.breadcrumbs.casePublishing,
+          },
+        ],
+      },
+    }
 
     return {
       props: deleteUndefined({
         session,
         layout,
-        cases,
-        paging,
-        totalCases,
       }),
     }
   } catch (error) {

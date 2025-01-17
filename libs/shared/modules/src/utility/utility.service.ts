@@ -19,7 +19,7 @@ import {
   CaseTagModel,
 } from '../case/models'
 import { CaseCategoriesModel } from '../case/models/case-categories.model'
-import { CASE_RELATIONS } from '../case/relations'
+import { casesDetailedIncludes } from '../case/relations'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -384,7 +384,7 @@ export class UtilityService implements IUtilityService {
       where: {
         applicationId: applicationId,
       },
-      include: CASE_RELATIONS,
+      include: casesDetailedIncludes,
       transaction,
     })
 
@@ -404,7 +404,7 @@ export class UtilityService implements IUtilityService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseModel>> {
     const found = await this.caseModel.findByPk(caseId, {
-      include: CASE_RELATIONS,
+      include: casesDetailedIncludes,
       transaction,
     })
 

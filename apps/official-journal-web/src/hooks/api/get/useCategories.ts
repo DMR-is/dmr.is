@@ -29,6 +29,8 @@ export const useCategories = ({
         },
       }),
     {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
       ...options,
     },
   )

@@ -15,7 +15,7 @@ import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { caseMigrate } from '../case/migrations/case.migrate'
+import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
 import { IPdfService } from './pdf.service.interface'
@@ -152,7 +152,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   @LogAndHandle()
   async getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
-    const activeCase = caseMigrate(caseLookup)
+    const activeCase = caseDetailedMigrate(caseLookup)
 
     const markup = advertPdfTemplate({
       title: activeCase.advertTitle,

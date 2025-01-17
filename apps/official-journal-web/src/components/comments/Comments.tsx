@@ -3,7 +3,7 @@ import AnimateHeight from 'react-animate-height'
 
 import { Box, Button, Icon, Tabs, Tag, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { CaseDetailed } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { COMMENTS_TO_HIDE } from '../../lib/constants'
@@ -12,7 +12,7 @@ import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
 import { messages } from './messages'
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
   onAddCommentSuccess?: () => void
 }
 

@@ -3,22 +3,25 @@ import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
-  Case,
   CaseComment,
   CaseCommunicationStatus,
+  CaseDetailed,
   CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
-  EditorialOverviewResponse,
+  DepartmentEnum,
+  DepartmentSlugEnum,
   GetCaseCommentsQuery,
   GetCaseResponse,
-  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
+  GetCasesWithStatusCount,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery,
-  GetPublishedCasesResponse,
   GetTagsResponse,
   GetUsersQueryParams,
   GetUsersResponse,
@@ -51,10 +54,25 @@ import {
 
 import { ICaseService } from './case.service.interface'
 
-export class CaseServiceMock implements ICaseService {
+// export class CaseServiceMock implements ICaseService {
+export class CaseServiceMock {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using CaseServiceMock')
   }
+  getCasesWithPublicationNumber(
+    department: DepartmentEnum,
+    params: GetCasesWithPublicationNumberQuery,
+  ): Promise<ResultWrapper<GetCasesWithPublicationNumber>> {
+    throw new Error('Method not implemented.')
+  }
+
+  getCasesWithStatusCount(
+    status: string,
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesWithStatusCount>> {
+    throw new Error('Method not implemented.')
+  }
+
   unpublishCase(id: string): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
@@ -74,10 +92,10 @@ export class CaseServiceMock implements ICaseService {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-  getFinishedCases(
+  getCasesWithDepartmentCount(
     department: string,
-    query?: GetPublishedCasesQuery,
-  ): Promise<ResultWrapper<GetPublishedCasesResponse>> {
+    query?: GetCasesWithDepartmentCountQuery,
+  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>> {
     throw new Error('Method not implemented.')
   }
   updateEmployee(id: string, userId: string): Promise<ResultWrapper> {
@@ -107,7 +125,7 @@ export class CaseServiceMock implements ICaseService {
   getCasesOverview(
     status?: string,
     params?: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesOverview>> {
+  ): Promise<ResultWrapper<GetCasesWithStatusCount>> {
     throw new Error('Method not implemented.')
   }
   createCaseChannel(
@@ -218,7 +236,7 @@ export class CaseServiceMock implements ICaseService {
     throw new Error('Method not implemented.')
   }
 
-  getCaseByApplicationId(applicationId: string): Promise<Case | null> {
+  getCaseByApplicationId(applicationId: string): Promise<CaseDetailed | null> {
     this.logger.info('getCaseByApplicationId', applicationId)
     throw new Error('Method not implemented.')
   }

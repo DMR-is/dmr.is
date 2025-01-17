@@ -1,13 +1,13 @@
-import { CaseOverview, Paging } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 
 export type TableProps = {
-  cases?: CaseOverview[]
+  cases?: Case[]
   paging?: Paging
   isLoading?: boolean
 }
 
 export type PublishedTableProps = {
-  cases?: CaseOverview[]
+  cases?: Case[]
   paging?: Paging
   isLoading?: boolean
 }

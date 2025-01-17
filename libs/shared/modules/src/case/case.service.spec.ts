@@ -10,7 +10,11 @@ import { IApplicationService } from '../application/application.service.interfac
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { ICommentService } from '../comment/comment.service.interface'
 import { IJournalService } from '../journal'
-import { AdvertCategoryModel, AdvertDepartmentModel } from '../journal/models'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertModel,
+} from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
@@ -39,6 +43,7 @@ describe('CaseService', () => {
   let attachmentService: IAttachmentService
   let s3Service: IS3Service
   let caseModel: CaseModel
+  let advertModel: AdvertModel
   let categoriesModel: CaseCategoriesModel
   let advertCategoryModel: AdvertCategoryModel
   let caseCategoriesModel: CaseCategoriesModel
@@ -124,6 +129,12 @@ describe('CaseService', () => {
           })),
         },
         {
+          provide: getModelToken(AdvertModel),
+          useClass: jest.fn(() => ({
+            create: () => ({}),
+          })),
+        },
+        {
           provide: getModelToken(CaseTagModel),
           useClass: jest.fn(() => ({
             create: () => ({}),
@@ -192,6 +203,7 @@ describe('CaseService', () => {
     s3Service = app.get<IS3Service>(IS3Service)
     caseCreateService = app.get<ICaseCreateService>(ICaseCreateService)
     caseUpdateService = app.get<ICaseUpdateService>(ICaseUpdateService)
+    advertModel = app.get<AdvertModel>(getModelToken(AdvertModel))
     caseModel = app.get<CaseModel>(getModelToken(CaseModel))
     caseCategoriesModel = app.get<CaseCategoriesModel>(
       getModelToken(CaseCategoriesModel),

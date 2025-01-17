@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Case } from './case.dto'
+import { CaseDetailed } from './case.dto'
 
 export class GetCaseResponse {
   @ApiProperty({
-    type: Case,
+    type: CaseDetailed,
     required: true,
   })
-  readonly case!: Case
+  readonly case!: CaseDetailed
 }
