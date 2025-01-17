@@ -76,7 +76,11 @@ export const CaseTableOverview = ({
         ),
       },
       {
-        children: <Text variant="medium">{row.publicationNumber}</Text>,
+        children: (
+          <Text variant="medium">
+            {row.publicationNumber}/{row.year}
+          </Text>
+        ),
       },
       {
         children: (
