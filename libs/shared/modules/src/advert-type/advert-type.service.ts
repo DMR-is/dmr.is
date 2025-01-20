@@ -22,7 +22,7 @@ import {
   UpdateAdvertTypeBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -64,15 +64,17 @@ export class AdvertTypeService implements IAdvertTypeService {
       query?.department,
     )
 
-    const limit = query?.pageSize || DEFAULT_PAGE_SIZE
-    const offset = (query?.page || DEFAULT_PAGE_NUMBER - 1) * limit
+    const { limit, offset } = getLimitAndOffset({
+      page: query?.page,
+      pageSize: query?.pageSize,
+    })
 
     const typesLookup = await this.advertTypeModel.findAndCountAll({
       distinct: true,
       limit: limit,
       offset: offset,
       where: whereParams,
-      order: [['title', 'DESC']],
+      order: [['title', 'ASC']],
       include: [
         {
           model: AdvertMainTypeModel,

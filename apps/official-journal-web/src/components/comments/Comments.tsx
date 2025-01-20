@@ -53,7 +53,7 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
   }, [activeCase.comments, order])
 
   return (
-    <Box borderRadius="large" padding={[2, 3, 5]} background="purple100">
+    <Box borderRadius="large" padding={[2, 3, 5]} background="blue100">
       <Box display="flex" justifyContent="spaceBetween" alignItems="center">
         <Text variant="h5">{formatMessage(messages.comments.title)}</Text>
 
