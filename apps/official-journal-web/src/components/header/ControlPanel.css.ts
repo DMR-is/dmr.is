@@ -3,11 +3,11 @@ import { recipe } from '@vanilla-extract/recipes'
 
 import { theme } from '@island.is/island-ui/theme'
 
-import { HEADER_HEIGHT } from '../../lib/constants'
+import { HEADER_HEIGHT, MOBILE_HEADER_HEIGHT } from '../../lib/constants'
 
 export const controlPanel = style({
-  height: HEADER_HEIGHT,
-  inlineSize: 300,
+  height: MOBILE_HEADER_HEIGHT,
+  inlineSize: 160,
 
   display: 'flex',
   flexDirection: 'column',
@@ -15,10 +15,21 @@ export const controlPanel = style({
 
   borderLeft: `1px solid ${theme.color.blue200}`,
   borderRight: `1px solid ${theme.color.blue200}`,
+  paddingInline: theme.spacing[1],
 
-  paddingInline: theme.spacing[3],
   position: 'relative',
   zIndex: 1,
+
+  '@media': {
+    [`screen and (min-width: ${theme.breakpoints.lg}px)`]: {
+      height: HEADER_HEIGHT,
+    },
+
+    [`screen and (min-width: ${theme.breakpoints.sm}px)`]: {
+      inlineSize: 300,
+      paddingInline: theme.spacing[3],
+    },
+  },
 })
 
 export const controlPanelChevron = recipe({
