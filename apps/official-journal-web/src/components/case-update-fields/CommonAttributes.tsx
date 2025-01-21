@@ -1,6 +1,13 @@
-import { c } from 'next-usequerystate/dist/serializer-DjSGvhZt'
+import debounce from 'lodash/debounce'
+import throttle from 'lodash/throttle'
 
-import { AccordionItem, Inline, Stack, toast } from '@island.is/island-ui/core'
+import {
+  AccordionItem,
+  AlertMessage,
+  Inline,
+  Stack,
+  toast,
+} from '@island.is/island-ui/core'
 
 import { Department } from '../../gen/fetch'
 import {
@@ -8,6 +15,7 @@ import {
   useCategories,
   useUpdateCategories,
   useUpdateDepartment,
+  useUpdateTitle,
   useUpdateType,
 } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
@@ -67,11 +75,11 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
       caseId: currentCase.id,
       options: {
         onSuccess: () => {
-          toast.success(`Deild máls uppfærð`)
+          toast.success(`Deild auglýsingar uppfærð`)
           refetch()
         },
         onError: () => {
-          toast.error(`Ekki tókst að uppfæra deild`)
+          toast.error(`Ekki tókst að uppfæra deild auglýsingar`)
         },
       },
     })
@@ -80,10 +88,10 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
     caseId: currentCase.id,
     options: {
       onError: () => {
-        toast.error(`Ekki tókst að uppfæra tegund máls`)
+        toast.error(`Ekki tókst að uppfæra tegund auglýsingar`)
       },
       onSuccess: () => {
-        toast.success(`Tegund máls uppfærð`)
+        toast.success(`Tegund auglýsingar uppfærð`)
         refetch()
       },
     },
@@ -94,14 +102,35 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
       caseId: currentCase.id,
       options: {
         onError: () => {
-          toast.error(`Ekki tókst að uppfæra efnisflokka máls`)
+          toast.error(`Ekki tókst að uppfæra efnisflokka auglýsingar`)
         },
         onSuccess: () => {
-          toast.success(`Efnisflokkar máls uppfærðir`)
+          toast.success(`Efnisflokkar auglýsingar uppfærðir`)
           refetch()
         },
       },
     })
+
+  const { trigger: updateTitle, isMutating: isUpdatingTitle } = useUpdateTitle({
+    caseId: currentCase.id,
+    options: {
+      onError: () => {
+        toast.error(`Ekki tókst að uppfæra heiti auglýsingar`)
+      },
+      onSuccess: () => {
+        toast.success(`Heiti auglýsingar uppfært`)
+        refetch()
+      },
+    },
+  })
+
+  const debounceUpdateTitle = debounce(updateTitle, 500)
+  const updateTitleHandler = (val: string) => {
+    debounceUpdateTitle.cancel()
+    debounceUpdateTitle({
+      title: val,
+    })
+  }
 
   return (
     <AccordionItem
@@ -129,7 +158,9 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
           )}
           options={departmentOptions}
           onChange={(opt) => {
-            if (!opt) return
+            if (!opt) {
+              return toast.warning('Eitthvað fór úrskeiðis')
+            }
 
             updateDepartment({
               departmentId: opt.value,
@@ -146,7 +177,9 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
             (t) => t.value === currentCase.advertType?.id,
           )}
           onChange={(opt) => {
-            if (!opt) return
+            if (!opt) {
+              return toast.warning('Eitthvað fór úrskeiðis')
+            }
 
             updateType({
               typeId: opt.value,
@@ -156,11 +189,20 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
         <OJOIInput
           textarea
           name="advertTitle"
+          isValidating={isUpdatingTitle}
           rows={4}
           defaultValue={currentCase.advertTitle}
           label={formatMessage(messages.grunnvinnsla.subject)}
+          onChange={(e) => updateTitleHandler(e.target.value)}
         />
         <Stack space={1}>
+          {currentCase.advertCategories.length === 0 && (
+            <AlertMessage
+              type="warning"
+              title="Athugið"
+              message="Engir efnisflokkar eru valdir fyrir auglýsinguna"
+            />
+          )}
           <OJOISelect
             isLoading={isLoadingCategories}
             width="half"
@@ -169,7 +211,9 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
             defaultValue={defaultCategory}
             isValidating={isUpdatingCategory}
             onChange={(opt) => {
-              if (!opt) return
+              if (!opt) {
+                return toast.warning('Eitthvað fór úrskeiðis')
+              }
 
               updateCategories({
                 categoryIds: [opt.value],

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -11,7 +11,6 @@ const bodySchema = z.object({
 class UpdateTitleHandler {
   @LogMethod(false)
   @HandleApiException()
-  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id?: string }
 
@@ -34,7 +33,7 @@ class UpdateTitleHandler {
       },
     })
 
-    return res.status(200).end()
+    return res.status(204).end()
   }
 }
 
