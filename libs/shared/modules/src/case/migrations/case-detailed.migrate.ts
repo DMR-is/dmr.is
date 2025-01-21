@@ -19,7 +19,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return withTryCatch(() => {
     return {
       id: model.id,
-      applicationId: model.applicationId,
+      applicationId: model?.applicationId,
       year: model.year,
       caseNumber: model.caseNumber,
       status: caseStatusMigrate(model.status),

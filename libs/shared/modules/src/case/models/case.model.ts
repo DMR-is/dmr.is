@@ -40,10 +40,10 @@ export class CaseModel extends Model {
 
   @Column({
     type: DataType.UUID,
-    allowNull: false,
+    allowNull: true,
     field: 'application_id',
   })
-  applicationId!: string
+  applicationId?: string
 
   @Column({
     type: DataType.INTEGER,

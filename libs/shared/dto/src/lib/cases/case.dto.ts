@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDateString,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   Max,
@@ -44,8 +45,9 @@ export class CaseDetailed {
     description:
       'Id of the submitted application, default to null on older cases.',
   })
+  @IsOptional()
   @IsUUID()
-  readonly applicationId!: string
+  readonly applicationId?: string
 
   @ApiProperty({
     type: Number,
