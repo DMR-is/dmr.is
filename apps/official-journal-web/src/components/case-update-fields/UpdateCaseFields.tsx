@@ -5,17 +5,16 @@ import {
   GridRow,
 } from '@island.is/island-ui/core'
 
-import { CaseDetailed, Department } from '../../gen/fetch'
+import { Department } from '../../gen/fetch'
 import { UpdateCaseCommonFields } from './CommonAttributes'
 import { UpdateCasePublishingFields } from './UpdatePublishingFields'
 
 type Props = {
   expanded?: boolean
   departments: Department[]
-  currentCase: CaseDetailed
 }
 
-export const UpdateCaseAttributes = ({ departments, currentCase }: Props) => {
+export const UpdateCaseAttributes = ({ departments }: Props) => {
   return (
     <GridContainer>
       <GridRow>
@@ -25,10 +24,7 @@ export const UpdateCaseAttributes = ({ departments, currentCase }: Props) => {
             dividerOnBottom={true}
             singleExpand={false}
           >
-            <UpdateCaseCommonFields
-              departments={departments}
-              currentCase={currentCase}
-            />
+            <UpdateCaseCommonFields departments={departments} />
             <UpdateCasePublishingFields />
           </Accordion>
         </GridColumn>

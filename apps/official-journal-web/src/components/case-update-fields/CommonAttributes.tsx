@@ -1,7 +1,12 @@
-import { AccordionItem, Inline, Stack } from '@island.is/island-ui/core'
+import { AccordionItem, Inline, Stack, toast } from '@island.is/island-ui/core'
 
-import { CaseDetailed, Department } from '../../gen/fetch'
-import { useAdvertTypes, useCategories } from '../../hooks/api'
+import { Department } from '../../gen/fetch'
+import {
+  useAdvertTypes,
+  useCategories,
+  useUpdateDepartment,
+} from '../../hooks/api'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
@@ -9,12 +14,14 @@ import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
 
 type Props = {
-  currentCase: CaseDetailed
   departments: Department[]
 }
 
-export const UpdateCaseCommonFields = ({ currentCase, departments }: Props) => {
+export const UpdateCaseCommonFields = ({ departments }: Props) => {
   const { formatMessage } = useFormatMessage()
+
+  const { currentCase, error, isLoading, isValidating, refetch } =
+    useCaseContext()
 
   const departmentOptions = departments.map((d) => ({
     label: d.title,
@@ -52,6 +59,19 @@ export const UpdateCaseCommonFields = ({ currentCase, departments }: Props) => {
     value: c.id,
   }))
 
+  const { trigger } = useUpdateDepartment({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success(`Deild uppfærð`)
+        refetch()
+      },
+      onError: () => {
+        toast.error(`Ekki tókst að uppfæra deild`)
+      },
+    },
+  })
+
   return (
     <AccordionItem
       id="case-attributes"
@@ -76,6 +96,13 @@ export const UpdateCaseCommonFields = ({ currentCase, departments }: Props) => {
             (dep) => dep.value === currentCase.advertDepartment.id,
           )}
           options={departmentOptions}
+          onChange={(opt) => {
+            if (!opt) return
+
+            trigger({
+              departmentId: opt.value,
+            })
+          }}
         />
         <OJOISelect
           width="half"

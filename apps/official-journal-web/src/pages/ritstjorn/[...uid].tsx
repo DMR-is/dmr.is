@@ -11,6 +11,7 @@ import { Comments } from '../../components/comments/Comments'
 import { EditorMessageDisplay } from '../../components/editor-message/EditorMessageDisplay'
 import { FormShell } from '../../components/form/FormShell'
 import { Meta } from '../../components/meta/Meta'
+import { CaseProvider } from '../../context/caseContext'
 import {
   AdminUser,
   CaseDetailed,
@@ -43,7 +44,7 @@ export default function CaseSingle({
   const { formatMessage } = useFormatMessage()
 
   return (
-    <>
+    <CaseProvider initalCase={caseData}>
       <Meta
         title={`${formatMessage(messages.breadcrumbs.case)} - ${formatMessage(
           messages.breadcrumbs.dashboard,
@@ -51,10 +52,7 @@ export default function CaseSingle({
       />
       <FormShell caseData={caseData} tags={tags}>
         <Stack space={[2, 3, 4]}>
-          <UpdateCaseAttributes
-            departments={departments}
-            currentCase={caseData}
-          />
+          <UpdateCaseAttributes departments={departments} />
 
           <Attachments activeCase={caseData} />
 
@@ -73,7 +71,7 @@ export default function CaseSingle({
           /> */}
         </Stack>
       </FormShell>
-    </>
+    </CaseProvider>
   )
 }
 export const getServerSideProps: GetServerSideProps<Props> = async ({
