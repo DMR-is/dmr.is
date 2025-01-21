@@ -1,18 +1,15 @@
 import { GetServerSideProps } from 'next'
-import { useRouter } from 'next/router'
 import { getSession } from 'next-auth/react'
 import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { Input, Stack, Text } from '@island.is/island-ui/core'
+import { Stack } from '@island.is/island-ui/core'
 
 import { Attachments } from '../../components/attachments/Attachments'
-import { UpdateCaseAttributes } from '../../components/case-update-fields/UpdateCaseAttributes'
+import { UpdateCaseAttributes } from '../../components/case-update-fields/UpdateCaseFields'
 import { Comments } from '../../components/comments/Comments'
 import { EditorMessageDisplay } from '../../components/editor-message/EditorMessageDisplay'
 import { FormShell } from '../../components/form/FormShell'
-import { Section } from '../../components/form-stepper/Section'
-import { FormStepperThemes } from '../../components/form-stepper/types'
 import { Meta } from '../../components/meta/Meta'
 import {
   AdminUser,
@@ -56,26 +53,8 @@ export default function CaseSingle({
         <Stack space={[2, 3, 4]}>
           <UpdateCaseAttributes
             departments={departments}
-            currentInstitution={caseData.involvedParty}
-            currentTitle={caseData.advertTitle}
-            currentType={caseData.advertType}
-            currentDepartment={caseData.advertDepartment}
-            currentCategories={caseData.advertCategories}
+            currentCase={caseData}
           />
-
-          {/* {step === 'innsent' && <StepInnsending activeCase={caseData} />}
-          {step === 'grunnvinnsla' && <StepGrunnvinnsla data={caseData} />}
-          {step === 'yfirlestur' && <StepYfirlestur data={caseData} />}
-          {step === 'tilbuid' && <StepTilbuid activeCase={caseData} />}
-          {step === 'leidretting' && (
-            <StepLeidretting
-              isFixing={isFixing}
-              canPublish={canPublishFixedChanges}
-              data={caseData}
-              timestamp={new Date().toISOString()}
-              onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
-            />
-          )} */}
 
           <Attachments activeCase={caseData} />
 
