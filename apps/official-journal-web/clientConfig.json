@@ -668,6 +668,30 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/fasttrack": {
+      "put": {
+        "operationId": "updateFasttrack",
+        "summary": "Update fasttrack status of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFasttrackBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/tag": {
       "put": {
         "operationId": "updateTag",
@@ -3294,6 +3318,11 @@
         "type": "object",
         "properties": { "paid": { "type": "boolean" } },
         "required": ["paid"]
+      },
+      "UpdateFasttrackBody": {
+        "type": "object",
+        "properties": { "fasttrack": { "type": "boolean" } },
+        "required": ["fasttrack"]
       },
       "UpdateTagBody": {
         "type": "object",

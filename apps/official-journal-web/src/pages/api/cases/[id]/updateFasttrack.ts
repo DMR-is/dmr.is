@@ -4,11 +4,11 @@ import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-const updatePriceBody = z.object({
-  price: z.number(),
+const bodySchema = z.object({
+  fastTrack: z.boolean(),
 })
 
-class UpdatePriceHandler {
+class UpdateFasttrackHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -18,21 +18,24 @@ class UpdatePriceHandler {
       return res.status(400).end()
     }
 
-    const price = updatePriceBody.parse(req.body).price
+    const parsed = bodySchema.safeParse(req.body)
+
+    if (!parsed.success) {
+      return res.status(400).end()
+    }
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updatePrice({
+    await dmrClient.updateFasttrack({
       id: id,
-      updateCasePriceBody: {
-        price: price,
+      updateFasttrackBody: {
+        fasttrack: parsed.data.fastTrack,
       },
     })
-
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePriceHandler()
+const instance = new UpdateFasttrackHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

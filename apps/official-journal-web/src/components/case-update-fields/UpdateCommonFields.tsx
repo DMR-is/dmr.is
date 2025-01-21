@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce'
-import throttle from 'lodash/throttle'
+import { useState } from 'react'
 
 import {
   AccordionItem,
@@ -29,10 +29,22 @@ type Props = {
   departments: Department[]
 }
 
-export const UpdateCaseCommonFields = ({ departments }: Props) => {
+export const UpdateCommonFields = ({ departments }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const { currentCase, refetch } = useCaseContext()
+
+  const [mostRecentCategory, setMostRecentCategory] = useState<{
+    label: string
+    value: string
+  }>(
+    currentCase.advertCategories.length > 0
+      ? {
+          label: currentCase.advertCategories[0].title,
+          value: currentCase.advertCategories[0].id,
+        }
+      : { label: '', value: '' },
+  )
 
   const departmentOptions = departments.map((d) => ({
     label: d.title,
@@ -60,15 +72,14 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
     value: t.id,
   }))
 
-  const categoriesOptions = categoriesData?.categories.map((c) => ({
-    label: c.title,
-    value: c.id,
-  }))
-
-  const defaultCategory = currentCase.advertCategories?.map((c) => ({
-    label: c.title,
-    value: c.id,
-  }))
+  const categoriesOptions = categoriesData?.categories
+    .map((c) => ({
+      label: c.title,
+      value: c.id,
+    }))
+    .filter(
+      (c) => !currentCase.advertCategories.some((ac) => ac.id === c.value),
+    )
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
     useUpdateDepartment({
@@ -208,13 +219,13 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
             width="half"
             label={formatMessage(messages.grunnvinnsla.categories)}
             options={categoriesOptions}
-            defaultValue={defaultCategory}
+            defaultValue={mostRecentCategory}
             isValidating={isUpdatingCategory}
             onChange={(opt) => {
               if (!opt) {
                 return toast.warning('Eitthvað fór úrskeiðis')
               }
-
+              setMostRecentCategory(opt)
               updateCategories({
                 categoryIds: [opt.value],
               })

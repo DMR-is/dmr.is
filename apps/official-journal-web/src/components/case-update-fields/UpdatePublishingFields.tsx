@@ -1,11 +1,104 @@
-import { AccordionItem, Stack } from '@island.is/island-ui/core'
+import { set } from 'lodash'
+import debounce from 'lodash/debounce'
+import { useEffect, useState } from 'react'
 
+import {
+  AccordionItem,
+  Box,
+  Checkbox,
+  DatePicker,
+  Inline,
+  Stack,
+  toast,
+  useBreakpoint,
+} from '@island.is/island-ui/core'
+
+import { useUpdatePrice } from '../../hooks/api'
+import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'
+import { useUpdatePaid } from '../../hooks/api/update/useUpdatePaid'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
+import { Spinner } from '../spinner/Spinner'
 
-export const UpdateCasePublishingFields = () => {
+export const UpdatePublishingFields = () => {
   const { formatMessage } = useFormatMessage()
+
+  const { currentCase } = useCaseContext()
+
+  const { md } = useBreakpoint()
+
+  const [paid, setPaid] = useState(currentCase.paid)
+  const [paidDelay, setPaidDelay] = useState(false)
+
+  const [fastTrack, setFastTrack] = useState(currentCase.fastTrack)
+  const [fastTrackDelay, setFastTrackDelay] = useState(false)
+
+  useEffect(() => {
+    setPaidDelay(true)
+    const delay = setInterval(() => {
+      setPaidDelay(false)
+    }, 1000)
+
+    return () => {
+      clearInterval(delay)
+    }
+  }, [paid])
+
+  useEffect(() => {
+    setFastTrackDelay(true)
+    const delay = setInterval(() => {
+      setFastTrackDelay(false)
+    }, 1000)
+
+    return () => {
+      clearInterval(delay)
+    }
+  }, [fastTrack])
+
+  const { trigger: updatePrice } = useUpdatePrice({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success('Verð auglýsingar hefur verið uppfært')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra verð auglýsingar')
+      },
+    },
+  })
+
+  const { trigger: updatePaid } = useUpdatePaid({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success('Greiðslustaða auglýsingar hefur verið uppfærð')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra greiðslustöðu auglýsingar')
+      },
+    },
+  })
+
+  const { trigger: updateFasttrack } = useUpdateFastTrack({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar')
+      },
+    },
+  })
+
+  const debouncedUpdatePrice = debounce(updatePrice, 500)
+
+  const updatePriceHandler = (value: string) => {
+    debouncedUpdatePrice.cancel()
+    debouncedUpdatePrice({ price: parseInt(value, 10) })
+  }
 
   return (
     <AccordionItem
@@ -16,32 +109,63 @@ export const UpdateCasePublishingFields = () => {
       iconVariant="small"
     >
       <Stack space={2}>
-        <OJOIInput
-          disabled
-          width="half"
-          name="createdDate"
-          value={new Date().toLocaleDateString()}
-          label={formatMessage(messages.grunnvinnsla.createdDate)}
-        />
-        <OJOIInput
-          width="half"
-          name="publicationDate"
-          value={new Date().toLocaleDateString()}
-          label={formatMessage(messages.grunnvinnsla.publicationDate)}
-        />
-        <OJOIInput
-          width="half"
-          name="price"
-          label={formatMessage(messages.grunnvinnsla.price)}
-          type="number"
-          inputMode="numeric"
-        />
-        <OJOIInput
-          width="half"
-          name="paid"
-          label={formatMessage(messages.grunnvinnsla.paid)}
-          type="checkbox"
-        />
+        <Inline alignY="center" space={[2, 4]}>
+          <DatePicker
+            locale="is"
+            disabled
+            size="sm"
+            backgroundColor="blue"
+            selected={new Date(currentCase.createdAt)}
+            label={formatMessage(messages.grunnvinnsla.createdDate)}
+            placeholderText=""
+          />
+        </Inline>
+        <Inline alignY="center" space={[2, 4]}>
+          <DatePicker
+            locale="is"
+            size="sm"
+            backgroundColor="blue"
+            placeholderText="Dagsetning birtingar"
+            selected={new Date(currentCase.requestedPublicationDate)}
+            label={formatMessage(messages.grunnvinnsla.publicationDate)}
+          />
+          <Inline alignY="center" space={1}>
+            {fastTrackDelay && <Spinner />}
+            <Checkbox
+              disabled={fastTrackDelay}
+              defaultChecked={fastTrack}
+              label="Óskað er eftir hraðbirtingu"
+              onChange={(e) => {
+                updateFasttrack({ fastTrack: e.target.checked })
+                setFastTrack(e.target.checked)
+              }}
+            />
+          </Inline>
+        </Inline>
+        <Inline alignY="center" space={[2, 4]}>
+          <Box style={{ minWidth: md ? '308px' : '254px' }}>
+            <OJOIInput
+              name="price"
+              defaultValue={currentCase.price}
+              label={formatMessage(messages.grunnvinnsla.price)}
+              type="number"
+              inputMode="numeric"
+              onChange={(e) => updatePriceHandler(e.target.value)}
+            />
+          </Box>
+          <Inline alignY="center" space={1}>
+            {paidDelay && <Spinner />}
+            <Checkbox
+              defaultChecked={paid}
+              disabled={paidDelay}
+              onChange={(e) => {
+                updatePaid({ paid: e.target.checked })
+                setPaid(e.target.checked)
+              }}
+              label="Búið er að greiða"
+            />
+          </Inline>
+        </Inline>
       </Stack>
     </AccordionItem>
   )

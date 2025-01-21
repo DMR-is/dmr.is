@@ -34,6 +34,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -127,6 +128,14 @@ export class CaseService implements ICaseService {
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @LogAndHandle()
+  updateCaseFasttrack(
+    caseId: string,
+    body: UpdateFasttrackBody,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateFasttrack(caseId, body)
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {

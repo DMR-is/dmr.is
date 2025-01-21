@@ -164,6 +164,7 @@ export enum APIRoutes {
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
   UpdatePaid = '/api/cases/:id/updatePaid',
+  UpdateFasttrack = '/api/cases/:id/updateFasttrack',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
   UpdateMainCategory = '/api/mainCategories/:id/update',

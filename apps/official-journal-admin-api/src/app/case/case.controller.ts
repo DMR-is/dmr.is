@@ -52,6 +52,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateMainCategory,
   UpdateNextStatusBody,
   UpdatePaidBody,
@@ -396,6 +397,21 @@ export class CaseController {
     @Body() body: UpdatePaidBody,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
+  }
+
+  @Route({
+    method: 'put',
+    path: ':id/fasttrack',
+    operationId: 'updateFasttrack',
+    summary: 'Update fasttrack status of case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateFasttrackBody,
+  })
+  async updateFasttrack(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateFasttrackBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCaseFasttrack(id, body))
   }
 
   @Route({

@@ -17,6 +17,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -55,6 +56,25 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     private readonly sequelize: Sequelize,
   ) {}
+  async updateFasttrack(
+    caseId: string,
+    body: UpdateFasttrackBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseModel.update(
+      {
+        fastTrack: body.fasttrack,
+      },
+      {
+        where: {
+          id: caseId,
+        },
+        transaction: transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
 
   @LogAndHandle()
   @Transactional()

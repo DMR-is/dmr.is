@@ -6,8 +6,8 @@ import {
 } from '@island.is/island-ui/core'
 
 import { Department } from '../../gen/fetch'
-import { UpdateCaseCommonFields } from './CommonAttributes'
-import { UpdateCasePublishingFields } from './UpdatePublishingFields'
+import { UpdateCommonFields } from './UpdateCommonFields'
+import { UpdatePublishingFields } from './UpdatePublishingFields'
 
 type Props = {
   expanded?: boolean
@@ -24,8 +24,8 @@ export const UpdateCaseAttributes = ({ departments }: Props) => {
             dividerOnBottom={true}
             singleExpand={false}
           >
-            <UpdateCaseCommonFields departments={departments} />
-            <UpdateCasePublishingFields />
+            <UpdateCommonFields departments={departments} />
+            <UpdatePublishingFields />
           </Accordion>
         </GridColumn>
       </GridRow>
