@@ -131,8 +131,8 @@ export class CaseService implements ICaseService {
 
   async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
-    const limit = params?.pageSize
-    const offset = (params?.page - 1) * limit
+
+    const { limit, offset } = getLimitAndOffset(params)
 
     return this.caseModel.findAndCountAll({
       distinct: true,
@@ -803,11 +803,6 @@ export class CaseService implements ICaseService {
 
     const whereParams = caseParameters(params)
 
-    const { limit, offset } = getLimitAndOffset({
-      page: params?.page,
-      pageSize: params?.pageSize,
-    })
-
     const counterResults = statusesToBeCounted.map((statusToBeCounted) => {
       return this.caseModel.count({
         distinct: true,
@@ -995,7 +990,9 @@ export class CaseService implements ICaseService {
       })
     }
 
-    await this.utilityService.rejectApplication(caseModel.applicationId)
+    if (caseModel.applicationId) {
+      await this.utilityService.rejectApplication(caseModel.applicationId)
+    }
 
     return ResultWrapper.ok()
   }

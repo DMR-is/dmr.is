@@ -54,7 +54,7 @@ export default function CaseSingle({
         <Stack space={[2, 3, 4]}>
           <UpdateCaseAttributes departments={departments} />
 
-          <Attachments activeCase={caseData} />
+          {!!caseData.applicationId && <Attachments activeCase={caseData} />}
 
           {caseData.message && (
             <EditorMessageDisplay message={caseData.message} />
