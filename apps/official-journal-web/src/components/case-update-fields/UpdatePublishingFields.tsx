@@ -1,4 +1,3 @@
-import { set } from 'lodash'
 import debounce from 'lodash/debounce'
 import { useEffect, useState } from 'react'
 
@@ -8,12 +7,13 @@ import {
   Checkbox,
   DatePicker,
   Inline,
+  SkeletonLoader,
   Stack,
   toast,
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import { useUpdatePrice } from '../../hooks/api'
+import { useUpdatePrice, useUpdatePublishDate } from '../../hooks/api'
 import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'
 import { useUpdatePaid } from '../../hooks/api/update/useUpdatePaid'
 import { useCaseContext } from '../../hooks/useCaseContext'
@@ -25,7 +25,7 @@ import { Spinner } from '../spinner/Spinner'
 export const UpdatePublishingFields = () => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase } = useCaseContext()
+  const { currentCase, refetch } = useCaseContext()
 
   const { md } = useBreakpoint()
 
@@ -62,6 +62,7 @@ export const UpdatePublishingFields = () => {
     options: {
       onSuccess: () => {
         toast.success('Verð auglýsingar hefur verið uppfært')
+        refetch()
       },
       onError: () => {
         toast.error('Ekki tókst að uppfæra verð auglýsingar')
@@ -74,6 +75,7 @@ export const UpdatePublishingFields = () => {
     options: {
       onSuccess: () => {
         toast.success('Greiðslustaða auglýsingar hefur verið uppfærð')
+        refetch()
       },
       onError: () => {
         toast.error('Ekki tókst að uppfæra greiðslustöðu auglýsingar')
@@ -86,9 +88,26 @@ export const UpdatePublishingFields = () => {
     options: {
       onSuccess: () => {
         toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð')
+        refetch()
       },
       onError: () => {
         toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar')
+      },
+    },
+  })
+
+  const {
+    trigger: updatePublishingDate,
+    isMutating: isUpdatingPublishingDate,
+  } = useUpdatePublishDate({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success('Dagsetning auglýsingar hefur verið uppfærð')
+        refetch()
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra dagsetningu auglýsingar')
       },
     },
   })
@@ -121,19 +140,27 @@ export const UpdatePublishingFields = () => {
           />
         </Inline>
         <Inline alignY="center" space={[2, 4]}>
-          <DatePicker
-            locale="is"
-            size="sm"
-            backgroundColor="blue"
-            placeholderText="Dagsetning birtingar"
-            selected={new Date(currentCase.requestedPublicationDate)}
-            label={formatMessage(messages.grunnvinnsla.publicationDate)}
-          />
+          {isUpdatingPublishingDate ? (
+            <SkeletonLoader height={64} borderRadius="large" />
+          ) : (
+            <DatePicker
+              key={currentCase.requestedPublicationDate}
+              locale="is"
+              size="sm"
+              backgroundColor="blue"
+              placeholderText="Dagsetning birtingar"
+              selected={new Date(currentCase.requestedPublicationDate)}
+              label={formatMessage(messages.grunnvinnsla.publicationDate)}
+              handleChange={(date) =>
+                updatePublishingDate({ date: date.toISOString() })
+              }
+            />
+          )}
           <Inline alignY="center" space={1}>
             {fastTrackDelay && <Spinner />}
             <Checkbox
               disabled={fastTrackDelay}
-              defaultChecked={fastTrack}
+              checked={currentCase.fastTrack}
               label="Óskað er eftir hraðbirtingu"
               onChange={(e) => {
                 updateFasttrack({ fastTrack: e.target.checked })
@@ -156,7 +183,7 @@ export const UpdatePublishingFields = () => {
           <Inline alignY="center" space={1}>
             {paidDelay && <Spinner />}
             <Checkbox
-              defaultChecked={paid}
+              checked={currentCase.paid}
               disabled={paidDelay}
               onChange={(e) => {
                 updatePaid({ paid: e.target.checked })
