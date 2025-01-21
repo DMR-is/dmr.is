@@ -1,4 +1,6 @@
-import { ApiProperty, ApiResponse } from '@nestjs/swagger'
+import { IsEnum } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertTemplateTypeEnums } from './advert-types.dto'
 
@@ -16,14 +18,23 @@ export class GetAdvertTemplateResponse {
     example: 'auglysing',
     enum: AdvertTemplateTypeEnums,
   })
-  readonly type!: string
+  @IsEnum(AdvertTemplateTypeEnums)
+  readonly type!: AdvertTemplateTypeEnums
 }
 
-export class GetAdvertTemplatesResponse {
+export class AdvertTemplateDetails {
   @ApiProperty({
     required: true,
-    example: '["auglysing", "reglugerd", "gjaldskra"]',
-    type: [String],
+    example: 'auglysing',
+    enum: AdvertTemplateTypeEnums,
   })
-  readonly types!: string[]
+  @IsEnum(AdvertTemplateTypeEnums)
+  readonly slug!: AdvertTemplateTypeEnums
+
+  @ApiProperty({
+    description: 'Template title',
+    required: true,
+    example: 'Auglýsing',
+  })
+  readonly title!: string
 }
