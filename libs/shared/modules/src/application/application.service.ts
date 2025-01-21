@@ -8,6 +8,7 @@ import {
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdvertTemplateDetails,
   AdvertTemplateType,
   AdvertTemplateTypeEnums,
   Application,
@@ -17,7 +18,6 @@ import {
   CaseCommunicationStatus,
   CasePriceResponse,
   GetAdvertTemplateResponse,
-  GetAdvertTemplatesResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -32,6 +32,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import {
   calculatePriceForApplication,
   getTemplate,
+  getTemplateDetails,
   signatureMapper,
 } from '@dmr.is/utils'
 
@@ -418,11 +419,11 @@ export class ApplicationService implements IApplicationService {
   @LogAndHandle()
   @Transactional()
   async getApplicationAdvertTemplates(): Promise<
-    ResultWrapper<GetAdvertTemplatesResponse>
+    ResultWrapper<AdvertTemplateDetails[]>
   > {
-    const res = Object.values<string>(AdvertTemplateTypeEnums)
+    const res = getTemplateDetails()
 
-    return ResultWrapper.ok({ types: res })
+    return ResultWrapper.ok(res)
   }
 
   /**
