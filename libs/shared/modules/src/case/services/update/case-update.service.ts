@@ -37,6 +37,7 @@ import { CaseCategoriesModel, CaseModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
 
 const LOGGING_CATEGORY = 'case-update-service'
+const LOGGING_CONTEXT = 'CaseUpdateService'
 
 @Injectable()
 export class CaseUpdateService implements ICaseUpdateService {
@@ -67,17 +68,37 @@ export class CaseUpdateService implements ICaseUpdateService {
       )
 
       const caseLookup = await this.caseModel.findByPk(body.caseId, {
-        attributes: ['applicationId'],
+        attributes: ['id ', 'applicationId'],
       })
 
-      if (caseLookup !== null && caseLookup.applicationId) {
-        const { application } = (
-          await this.applicationService.getApplication(caseLookup.applicationId)
-        ).unwrap()
+      if (!caseLookup) {
+        throw new BadRequestException('Case not found')
+      }
 
-        if (application.state === ApplicationStates.SUBMITTED) {
-          ResultWrapper.unwrap(
-            await this.utilityService.editApplication(caseLookup.applicationId),
+      if (caseLookup.applicationId) {
+        try {
+          const { application } = (
+            await this.applicationService.getApplication(
+              caseLookup.applicationId,
+            )
+          ).unwrap()
+
+          if (application.state === ApplicationStates.SUBMITTED) {
+            ResultWrapper.unwrap(
+              await this.utilityService.editApplication(
+                caseLookup.applicationId,
+              ),
+            )
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Could not reject application<${caseLookup.applicationId}>`,
+            {
+              context: LOGGING_CONTEXT,
+              category: LOGGING_CATEGORY,
+              applicationId: caseLookup.applicationId,
+              error: error,
+            },
           )
         }
       }
@@ -377,7 +398,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -386,21 +407,34 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await caseLookup.update({
       departmentId: body.departmentId,
+      transaction,
     })
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                departmentId: body.departmentId,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  departmentId: body.departmentId,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> department`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -414,7 +448,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -427,18 +461,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     })
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                typeId: body.typeId,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  typeId: body.typeId,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> type`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -452,7 +498,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -511,18 +557,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     const ids = newCurrentCategories.map((c) => c.categoryId)
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                categories: ids,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  categories: ids,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> categories`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -539,7 +597,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     const { fastTrack } = getFastTrack(requestedPublicationDate)
 
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
       transaction,
     })
 
@@ -553,21 +611,31 @@ export class CaseUpdateService implements ICaseUpdateService {
       transaction,
     })
 
-    // const applicationId = updatedModels[0].applicationId
-
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                requestedDate: body.date,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  requestedDate: body.date,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> requested publication date`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -581,7 +649,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
       transaction,
     })
 
@@ -590,18 +658,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     }
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                title: body.title,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  title: body.title,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> title`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -659,7 +739,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['applicationId'],
+      attributes: ['id ', 'applicationId'],
       transaction,
     })
 
@@ -673,18 +753,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     })
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.applicationService.updateApplication(
-          caseLookup.applicationId,
-          {
-            answers: {
-              advert: {
-                html: body.advertHtml,
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  html: body.advertHtml,
+                },
               },
             },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> advert html`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
           },
-        ),
-      )
+        )
+      }
     }
 
     return ResultWrapper.ok()
