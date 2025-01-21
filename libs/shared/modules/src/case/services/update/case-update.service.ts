@@ -68,7 +68,7 @@ export class CaseUpdateService implements ICaseUpdateService {
       )
 
       const caseLookup = await this.caseModel.findByPk(body.caseId, {
-        attributes: ['id ', 'applicationId'],
+        attributes: ['id', 'applicationId'],
       })
 
       if (!caseLookup) {
@@ -398,7 +398,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -448,7 +448,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -498,7 +498,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
     })
 
     if (!caseLookup) {
@@ -597,7 +597,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     const { fastTrack } = getFastTrack(requestedPublicationDate)
 
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
       transaction,
     })
 
@@ -649,7 +649,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
       transaction,
     })
 
@@ -739,7 +739,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id ', 'applicationId'],
+      attributes: ['id', 'applicationId'],
       transaction,
     })
 
