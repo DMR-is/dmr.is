@@ -1,9 +1,12 @@
+import { c } from 'next-usequerystate/dist/serializer-DjSGvhZt'
+
 import { AccordionItem, Inline, Stack, toast } from '@island.is/island-ui/core'
 
 import { Department } from '../../gen/fetch'
 import {
   useAdvertTypes,
   useCategories,
+  useUpdateCategories,
   useUpdateDepartment,
   useUpdateType,
 } from '../../hooks/api'
@@ -86,6 +89,20 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
     },
   })
 
+  const { trigger: updateCategories, isMutating: isUpdatingCategory } =
+    useUpdateCategories({
+      caseId: currentCase.id,
+      options: {
+        onError: () => {
+          toast.error(`Ekki tókst að uppfæra efnisflokka máls`)
+        },
+        onSuccess: () => {
+          toast.success(`Efnisflokkar máls uppfærðir`)
+          refetch()
+        },
+      },
+    })
+
   return (
     <AccordionItem
       id="case-attributes"
@@ -150,10 +167,25 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
             label={formatMessage(messages.grunnvinnsla.categories)}
             options={categoriesOptions}
             defaultValue={defaultCategory}
+            isValidating={isUpdatingCategory}
+            onChange={(opt) => {
+              if (!opt) return
+
+              updateCategories({
+                categoryIds: [opt.value],
+              })
+            }}
           />
-          <Inline>
+          <Inline space={1} flexWrap="wrap">
             {currentCase.advertCategories?.map((category, i) => (
-              <OJOITag key={i} variant="blue" outlined closeable>
+              <OJOITag
+                isValidating={isUpdatingCategory}
+                key={i}
+                variant="blue"
+                outlined
+                closeable
+                onClick={() => updateCategories({ categoryIds: [category.id] })}
+              >
                 {category.title}
               </OJOITag>
             ))}
