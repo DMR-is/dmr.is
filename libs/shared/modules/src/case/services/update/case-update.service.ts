@@ -60,23 +60,26 @@ export class CaseUpdateService implements ICaseUpdateService {
   private async updateCommunication(
     body: UpdateCaseCommunicationBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     if (body.reject) {
       this.logger.debug(
         `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
       )
-      const caseLookup = (
-        await this.utilityService.caseLookup(body.caseId, transaction)
-      ).unwrap()
 
-      const { application } = (
-        await this.applicationService.getApplication(caseLookup.applicationId)
-      ).unwrap()
+      const caseLookup = await this.caseModel.findByPk(body.caseId, {
+        attributes: ['applicationId'],
+      })
 
-      if (application.state === ApplicationStates.SUBMITTED) {
-        ResultWrapper.unwrap(
-          await this.utilityService.editApplication(caseLookup.applicationId),
-        )
+      if (caseLookup !== null && caseLookup.applicationId) {
+        const { application } = (
+          await this.applicationService.getApplication(caseLookup.applicationId)
+        ).unwrap()
+
+        if (application.state === ApplicationStates.SUBMITTED) {
+          ResultWrapper.unwrap(
+            await this.utilityService.editApplication(caseLookup.applicationId),
+          )
+        }
       }
     }
 
@@ -140,7 +143,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCase(
     body: UpdateCaseBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const updateData = updateCaseBodyMapper(body)
 
     await this.caseModel.update<CaseModel>(updateData, {
@@ -172,7 +175,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCommunicationStatusBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const lookup = (
       await this.utilityService.caseCommunicationStatusLookupById(
         body.statusId,
@@ -202,7 +205,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     status: CaseCommunicationStatus,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const lookup = (
       await this.utilityService.caseCommunicationStatusLookup(
         status,
@@ -232,7 +235,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     id: string,
     body: UpdateCaseStatusBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const status = (
       await this.utilityService.caseStatusLookup(body.status)
     ).unwrap()
@@ -272,7 +275,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     id: string,
     body: UpdateNextStatusBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const currentStatus = (
       await this.utilityService.caseStatusLookup(
         body.currentStatus,
@@ -311,7 +314,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     id: string,
     body: UpdateNextStatusBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const currentStatus = (
       await this.utilityService.caseStatusLookup(
         body.currentStatus,
@@ -350,7 +353,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCasePriceBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     await this.caseModel.update(
       {
         price: body.price,
@@ -372,31 +375,33 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCaseDepartmentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
-    const [_, updatedModels] = await this.caseModel.update(
-      {
-        departmentId: body.departmentId,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-        returning: true,
-      },
-    )
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+    })
 
-    const applicationId = updatedModels[0].applicationId
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
 
-    ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(applicationId, {
-        answers: {
-          advert: {
-            departmentId: body.departmentId,
+    await caseLookup.update({
+      departmentId: body.departmentId,
+    })
+
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                departmentId: body.departmentId,
+              },
+            },
           },
-        },
-      }),
-    )
+        ),
+      )
+    }
 
     return ResultWrapper.ok()
   }
@@ -407,33 +412,33 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCaseTypeBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
-    const [_, updatedModels] = await this.caseModel.update(
-      {
-        advertTypeId: body.typeId,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-        returning: true,
-      },
-    )
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+    })
 
-    const applicationId = updatedModels[0].applicationId
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
 
-    const updateApplicationResult =
-      await this.applicationService.updateApplication(applicationId, {
-        answers: {
-          advert: {
-            typeId: body.typeId,
+    await caseLookup.update({
+      advertTypeId: body.typeId,
+      transaction,
+    })
+
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                typeId: body.typeId,
+              },
+            },
           },
-        },
-      })
-
-    if (!updateApplicationResult.isOk()) {
-      throw new BadRequestException('Failed to update application')
+        ),
+      )
     }
 
     return ResultWrapper.ok()
@@ -445,10 +450,14 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCategoriesBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
-    const caseLookup = ResultWrapper.unwrap(
-      await this.utilityService.caseLookup(caseId, transaction),
-    )
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+    })
+
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
 
     const currentCategories = await this.caseCategoriesModel.findAll({
       where: {
@@ -501,18 +510,20 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     const ids = newCurrentCategories.map((c) => c.categoryId)
 
-    ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(
-        caseLookup.applicationId,
-        {
-          answers: {
-            advert: {
-              categories: ids,
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                categories: ids,
+              },
             },
           },
-        },
-      ),
-    )
+        ),
+      )
+    }
 
     return ResultWrapper.ok()
   }
@@ -523,35 +534,41 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdatePublishDateBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     const requestedPublicationDate = new Date(body.date)
     const { fastTrack } = getFastTrack(requestedPublicationDate)
 
-    const [_, updatedModels] = await this.caseModel.update(
-      {
-        requestedPublicationDate: body.date,
-        fastTrack: fastTrack,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-        returning: true,
-      },
-    )
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+      transaction,
+    })
 
-    const applicationId = updatedModels[0].applicationId
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
 
-    ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(applicationId, {
-        answers: {
-          advert: {
-            requestedDate: body.date,
+    await caseLookup.update({
+      requestedPublicationDate: body.date,
+      fastTrack: fastTrack,
+      transaction,
+    })
+
+    // const applicationId = updatedModels[0].applicationId
+
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                requestedDate: body.date,
+              },
+            },
           },
-        },
-      }),
-    )
+        ),
+      )
+    }
 
     return ResultWrapper.ok()
   }
@@ -562,31 +579,30 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateTitleBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
-    const [_, updatedModels] = await this.caseModel.update(
-      {
-        advertTitle: body.title,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-        returning: true,
-      },
-    )
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+      transaction,
+    })
 
-    const applicationId = updatedModels[0].applicationId
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
 
-    ResultWrapper.unwrap(
-      await this.applicationService.updateApplication(applicationId, {
-        answers: {
-          advert: {
-            title: body.title,
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                title: body.title,
+              },
+            },
           },
-        },
-      }),
-    )
+        ),
+      )
+    }
 
     return ResultWrapper.ok()
   }
@@ -597,7 +613,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdatePaidBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     await this.caseModel.update(
       {
         paid: body.paid,
@@ -619,7 +635,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateTagBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<undefined>> {
+  ): Promise<ResultWrapper> {
     await this.caseModel.update(
       {
         tagId: body.tagId,
@@ -642,54 +658,33 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const [_, updatedRows] = await this.caseModel.update(
-      {
-        html: body.advertHtml,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-        returning: true,
-      },
-    )
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['applicationId'],
+      transaction,
+    })
 
-    if (!updatedRows.length) {
-      this.logger.error(`Failed to update advert for case<${caseId}>`, {
-        category: 'CaseUpdateService',
-        error: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to update advert',
-      })
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
     }
 
-    const applicationId = updatedRows[0].applicationId
+    await caseLookup.update({
+      html: body.advertHtml,
+      transaction,
+    })
 
-    const advertUpdate = await this.applicationService.updateApplication(
-      applicationId,
-      {
-        answers: {
-          advert: {
-            html: body.advertHtml,
+    if (caseLookup.applicationId) {
+      ResultWrapper.unwrap(
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                html: body.advertHtml,
+              },
+            },
           },
-        },
-      },
-    )
-
-    if (!advertUpdate.result.ok) {
-      this.logger.error(`Failed to update advert for case<${caseId}>`, {
-        category: 'CaseUpdateService',
-        error: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to update advert',
-      })
+        ),
+      )
     }
 
     return ResultWrapper.ok()
