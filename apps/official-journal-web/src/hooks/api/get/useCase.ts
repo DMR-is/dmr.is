@@ -18,7 +18,14 @@ export const useCase = ({ caseId, options }: UseCaseParams) => {
       fetcher(url.replace(':id', id), {
         arg: { withAuth: true, method: 'GET' },
       }),
-    options,
+    {
+      ...options,
+
+      onSuccess: (data, key, config) => {
+        console.log('well hello')
+        options?.onSuccess && options.onSuccess(data, key, config)
+      },
+    },
   )
 
   return {

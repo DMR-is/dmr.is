@@ -50,7 +50,7 @@ export default function CaseSingle({
           messages.breadcrumbs.dashboard,
         )}`}
       />
-      <FormShell caseData={caseData} tags={tags}>
+      <FormShell tags={tags}>
         <Stack space={[2, 3, 4]}>
           <UpdateCaseAttributes departments={departments} />
 
@@ -60,7 +60,7 @@ export default function CaseSingle({
             <EditorMessageDisplay message={caseData.message} />
           )}
 
-          <Comments activeCase={caseData} />
+          {/* <Comments activeCase={caseData} /> */}
           {/* <FormFooter
             activeCase={caseData}
             caseStep={step}

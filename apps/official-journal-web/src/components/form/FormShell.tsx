@@ -5,12 +5,12 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Input,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
 
-import { CaseDetailed, CaseTag } from '../../gen/fetch'
+import { CaseTag } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseSingle'
 import { generateSteps } from '../../lib/utils'
@@ -22,14 +22,16 @@ import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './FormShell.css'
 type FormShellType = {
-  caseData: CaseDetailed
   tags: CaseTag[]
   children?: React.ReactNode
 }
 
-export const FormShell = ({ caseData, children, tags }: FormShellType) => {
+export const FormShell = ({ children, tags }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
-  const steps = generateSteps(caseData)
+
+  const { currentCase } = useCaseContext()
+
+  const steps = generateSteps(currentCase)
 
   const breadcrumbs = [
     {
@@ -107,14 +109,14 @@ export const FormShell = ({ caseData, children, tags }: FormShellType) => {
                   <OJOIInput
                     disabled
                     name="status"
-                    value={caseData.status.title}
+                    value={currentCase.status.title}
                     label={formatMessage(messages.actions.status)}
                     size="sm"
                   />
                   <OJOIInput
                     name="status"
                     disabled
-                    value={caseData.communicationStatus.title}
+                    value={currentCase.communicationStatus.title}
                     type="text"
                     label={formatMessage(messages.actions.communicationsStatus)}
                     size="sm"
@@ -125,7 +127,7 @@ export const FormShell = ({ caseData, children, tags }: FormShellType) => {
                     name="internal-tag"
                     label={formatMessage(statusMessages.yfirlestur.tag)}
                     defaultValue={tagOptions.find(
-                      (tag) => tag.value === caseData.tag.id,
+                      (tag) => tag.value === currentCase.tag.id,
                     )}
                     options={tagOptions}
                   />

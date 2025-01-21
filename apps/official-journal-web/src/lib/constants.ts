@@ -137,8 +137,6 @@ export const fetcher = async <TData, TBody = never>(
   return res.json()
 }
 
-export const NOTIFICATION_PORTAL_ID = 'notification-portal'
-
 export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',

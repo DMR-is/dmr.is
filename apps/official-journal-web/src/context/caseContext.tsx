@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 
 import {
   CaseDetailed,
@@ -86,21 +86,18 @@ type CaseProviderProps = {
 }
 
 export const CaseProvider = ({ initalCase, children }: CaseProviderProps) => {
-  const {
-    mutate: refetch,
-    isLoading,
-    error,
-    isValidating,
-  } = useCase({
+  const { mutate, isLoading, error, isValidating } = useCase({
     caseId: initalCase.id,
     options: {
-      onSuccess: (data) => {
-        setCurrentCase(data._case)
-      },
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      onSuccess: (data) => setCurrentCase(data._case),
     },
   })
 
   const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
+
+  const refetch = async () => await mutate()
 
   return (
     <CaseContext.Provider

@@ -5,6 +5,7 @@ import {
   useAdvertTypes,
   useCategories,
   useUpdateDepartment,
+  useUpdateType,
 } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -20,8 +21,7 @@ type Props = {
 export const UpdateCaseCommonFields = ({ departments }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, error, isLoading, isValidating, refetch } =
-    useCaseContext()
+  const { currentCase, refetch } = useCaseContext()
 
   const departmentOptions = departments.map((d) => ({
     label: d.title,
@@ -30,7 +30,7 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
 
   const { types, isLoadingTypes } = useAdvertTypes({
     typesParams: {
-      department: currentCase.id,
+      department: currentCase.advertDepartment.id,
       page: 1,
       pageSize: 100,
     },
@@ -59,15 +59,29 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
     value: c.id,
   }))
 
-  const { trigger } = useUpdateDepartment({
+  const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
+    useUpdateDepartment({
+      caseId: currentCase.id,
+      options: {
+        onSuccess: () => {
+          toast.success(`Deild máls uppfærð`)
+          refetch()
+        },
+        onError: () => {
+          toast.error(`Ekki tókst að uppfæra deild`)
+        },
+      },
+    })
+
+  const { trigger: updateType, isMutating: isUpdatingType } = useUpdateType({
     caseId: currentCase.id,
     options: {
-      onSuccess: () => {
-        toast.success(`Deild uppfærð`)
-        refetch()
-      },
       onError: () => {
-        toast.error(`Ekki tókst að uppfæra deild`)
+        toast.error(`Ekki tókst að uppfæra tegund máls`)
+      },
+      onSuccess: () => {
+        toast.success(`Tegund máls uppfærð`)
+        refetch()
       },
     },
   })
@@ -91,6 +105,7 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
         <OJOISelect
           width="half"
           name="department"
+          isValidating={isUpdatingDepartment}
           label={formatMessage(messages.grunnvinnsla.department)}
           value={departmentOptions.find(
             (dep) => dep.value === currentCase.advertDepartment.id,
@@ -99,7 +114,7 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
           onChange={(opt) => {
             if (!opt) return
 
-            trigger({
+            updateDepartment({
               departmentId: opt.value,
             })
           }}
@@ -107,11 +122,19 @@ export const UpdateCaseCommonFields = ({ departments }: Props) => {
         <OJOISelect
           width="half"
           isLoading={isLoadingTypes}
+          isValidating={isUpdatingType}
           label={formatMessage(messages.grunnvinnsla.type)}
           options={typeOptions}
           value={typeOptions?.find(
             (t) => t.value === currentCase.advertType?.id,
           )}
+          onChange={(opt) => {
+            if (!opt) return
+
+            updateType({
+              typeId: opt.value,
+            })
+          }}
         />
         <OJOIInput
           textarea
