@@ -47,10 +47,14 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
       return
     }
 
+    if (!activeCase.applicationId) {
+      return
+    }
+
     overwriteAttachment({
       attachmentId,
       caseId: activeCase.id,
-      applicationId: activeCase.applicationId,
+      applicationId: activeCase?.applicationId,
       file,
       onSuccess: () => {
         refetchCase && refetchCase()

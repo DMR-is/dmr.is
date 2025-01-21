@@ -268,7 +268,7 @@ export default function CaseSingle(
             />
           )}
 
-          <Attachments activeCase={thisCase} />
+          {!!thisCase.applicationId && <Attachments activeCase={thisCase} />}
 
           {thisCase.message && (
             <EditorMessageDisplay message={thisCase.message} />

@@ -44,6 +44,7 @@ export class CaseDetailed {
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
     description:
       'Id of the submitted application, default to null on older cases.',
+    required: false,
   })
   @IsOptional()
   @IsUUID()
