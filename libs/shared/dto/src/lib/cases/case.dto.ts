@@ -15,6 +15,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { AdminUser } from '../admin-user'
 import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
@@ -116,13 +117,13 @@ export class CaseDetailed {
   isLegacy!: boolean
 
   @ApiProperty({
-    type: User,
+    type: AdminUser,
     description: 'User the case is assigned to.',
     nullable: true,
   })
   @ValidateIf((o) => o.assignedTo !== null)
-  @Type(() => User)
-  assignedTo!: User | null
+  @Type(() => AdminUser)
+  assignedTo!: AdminUser | null
 
   @ApiProperty({
     type: CommunicationStatus,
