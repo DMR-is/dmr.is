@@ -75,6 +75,7 @@ export const useAdvertTypes = ({
     isLoading: isLoadingTypes,
     error: typesError,
     mutate: mutateTypes,
+    isValidating: isValidatingTypes,
   } = useSWR<GetAdvertTypes, OJOIWebException>(
     [APIRoutes.Types, typesParams],
     ([url, qsp]: [string, TypesParams]) => {
@@ -308,6 +309,7 @@ export const useAdvertTypes = ({
     type: typeData?.type,
     isLoadingType,
     typeError,
+    isValidatingTypes,
     refetchType: mutateType,
     mainType: mainTypeData?.mainType,
     isLoadingMainType,

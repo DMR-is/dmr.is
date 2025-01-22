@@ -21,7 +21,12 @@ import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
 
-export const CommonFields = () => {
+type Props = {
+  toggle: boolean
+  onToggle: () => void
+}
+
+export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const {
@@ -30,6 +35,7 @@ export const CommonFields = () => {
     departmentOptions,
     categoryOptions,
     typeOptions,
+    isValidatingTypes,
   } = useCaseContext()
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
@@ -96,8 +102,9 @@ export const CommonFields = () => {
 
   return (
     <AccordionItem
-      id="case-attributes"
-      startExpanded
+      id="commonFields"
+      expanded={expanded}
+      onToggle={onToggle}
       label={formatMessage(messages.grunnvinnsla.group1title)}
       labelVariant="h5"
       iconVariant="small"
@@ -131,6 +138,7 @@ export const CommonFields = () => {
         />
         <OJOISelect
           width="half"
+          isLoading={isValidatingTypes}
           isValidating={isUpdatingType}
           label={formatMessage(messages.grunnvinnsla.type)}
           options={typeOptions}

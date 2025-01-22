@@ -22,7 +22,12 @@ import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
 import { Spinner } from '../spinner/Spinner'
 
-export const PublishingFields = () => {
+type Props = {
+  toggle: boolean
+  onToggle: () => void
+}
+
+export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const { currentCase, refetch } = useCaseContext()
@@ -121,8 +126,9 @@ export const PublishingFields = () => {
 
   return (
     <AccordionItem
-      startExpanded
-      id="case-attributes-2"
+      id="publishingFields"
+      expanded={expanded}
+      onToggle={onToggle}
       label={formatMessage(messages.grunnvinnsla.group2title)}
       labelVariant="h5"
       iconVariant="small"

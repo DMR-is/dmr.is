@@ -20,7 +20,13 @@ const OriginalCompare = dynamic(
   () => import('../original-compare/OriginalCompare'),
   { ssr: false },
 )
-export const AdvertFields = () => {
+
+type Props = {
+  toggle: boolean
+  onToggle: () => void
+}
+
+export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const { currentCase, refetch } = useCaseContext()
@@ -46,8 +52,9 @@ export const AdvertFields = () => {
 
   return (
     <AccordionItem
-      startExpanded
-      id="case-attributes-2"
+      id="advertFields"
+      expanded={toggle}
+      onToggle={onToggle}
       label={formatMessage(messages.yfirlestur.group1title)}
       labelVariant="h5"
       iconVariant="small"

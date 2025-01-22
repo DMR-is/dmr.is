@@ -5,14 +5,20 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Attachments } from '../attachments/Attachments'
 import { messages } from '../form-steps/messages'
 
-export const AttachmentFields = () => {
+type Props = {
+  toggle: boolean
+  onToggle: () => void
+}
+
+export const AttachmentFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
   const { currentCase } = useCaseContext()
 
   return (
     <AccordionItem
-      startExpanded
-      id="case-attributes-2"
+      id="attachments"
+      expanded={toggle}
+      onToggle={onToggle}
       label={formatMessage(messages.grunnvinnsla.attachments)}
       labelVariant="h5"
       iconVariant="small"

@@ -4,13 +4,19 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Comments } from '../comments/Comments'
 import { messages } from '../comments/messages'
 
-export const CommentFields = () => {
+type Props = {
+  toggle: boolean
+  onToggle: () => void
+}
+
+export const CommentFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   return (
     <AccordionItem
-      startExpanded
-      id="case-attributes-2"
+      id="comment-fields"
+      expanded={toggle}
+      onToggle={onToggle}
       label={formatMessage(messages.comments.title)}
       labelVariant="h5"
       iconVariant="small"

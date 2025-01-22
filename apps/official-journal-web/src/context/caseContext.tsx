@@ -82,6 +82,7 @@ type CaseState = {
   refetch: () => void
   isLoading?: boolean
   isValidating?: boolean
+  isValidatingTypes?: boolean
   error?: Error
 }
 
@@ -90,6 +91,7 @@ export const CaseContext = createContext<CaseState>({
   refetch: () => undefined,
   isLoading: false,
   isValidating: false,
+  isValidatingTypes: false,
   error: undefined,
   departmentOptions: [],
   tagOptions: [],
@@ -127,7 +129,7 @@ export const CaseProvider = ({
   })
 
   const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
-  const { types: fetchedTypes } = useAdvertTypes({
+  const { types: fetchedTypes, isValidatingTypes } = useAdvertTypes({
     typesParams: {
       department: currentCase.advertDepartment.id,
       page: 1,
@@ -162,6 +164,7 @@ export const CaseProvider = ({
         categoryOptions,
         employeeOptions,
         typeOptions,
+        isValidatingTypes,
         refetch,
         isLoading,
         isValidating,

@@ -1,23 +1,33 @@
 import { ComponentProps } from 'react'
 
-import { BoxProps, Icon, useBoxStyles } from '@island.is/island-ui/core'
+import {
+  BoxProps,
+  Icon,
+  Inline,
+  Text,
+  useBoxStyles,
+} from '@island.is/island-ui/core'
 
 type IconProps = ComponentProps<typeof Icon>
 
 type Props = Pick<IconProps, 'icon' | 'size' | 'color' | 'type'> & {
+  label?: string
   background?: BoxProps['background']
   onClick?: () => void
 }
 
 export const IconButton = (props: Props) => {
+  const paddingModifier =
+    props.size === 'small' ? 1 : props.size === 'medium' ? 2 : 3
+
   const buttonClass = useBoxStyles({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 'circle',
     background: props?.background || 'blue100',
-    padding: 1,
     component: 'button',
+    padding: 'smallGutter',
   })
 
   const withDefault = {
@@ -27,8 +37,17 @@ export const IconButton = (props: Props) => {
   }
 
   return (
-    <button className={buttonClass} type="button" onClick={props.onClick}>
-      <Icon {...withDefault} />
+    <button type="button" onClick={props.onClick}>
+      <Inline alignY="center" space={1}>
+        {props.label && (
+          <Text variant="small" fontWeight="medium">
+            {props.label}
+          </Text>
+        )}
+        <div className={buttonClass}>
+          <Icon {...withDefault} />
+        </div>
+      </Inline>
     </button>
   )
 }
