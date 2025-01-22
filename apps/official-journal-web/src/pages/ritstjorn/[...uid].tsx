@@ -12,6 +12,7 @@ import { Meta } from '../../components/meta/Meta'
 import { CaseProvider } from '../../context/caseContext'
 import {
   AdminUser,
+  AdvertType,
   CaseDetailed,
   CaseTag,
   Category,
@@ -30,6 +31,7 @@ type Props = {
   admins: AdminUser[]
   categories: Category[]
   tags: CaseTag[]
+  types: AdvertType[]
 }
 
 export default function CaseSingle({
@@ -38,24 +40,26 @@ export default function CaseSingle({
   categories,
   admins,
   tags,
+  types,
 }: Props) {
   const { formatMessage } = useFormatMessage()
 
   return (
-    <CaseProvider initalCase={caseData}>
+    <CaseProvider
+      tags={tags}
+      initalCase={caseData}
+      categories={categories}
+      departments={departments}
+      employees={admins}
+      types={types}
+    >
       <Meta
         title={`${formatMessage(messages.breadcrumbs.case)} - ${formatMessage(
           messages.breadcrumbs.dashboard,
         )}`}
       />
       <FormShell tags={tags}>
-        <Stack space={[2, 3, 4]}>
-          <CaseFields departments={departments} />
-
-          {caseData.message && (
-            <EditorMessageDisplay message={caseData.message} />
-          )}
-        </Stack>
+        <CaseFields />
       </FormShell>
     </CaseProvider>
   )
@@ -120,6 +124,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         tagPromises,
       ])
 
+    const types = await dmrClient.getTypes({
+      department: caseResponse._case.advertDepartment.id,
+      page: 1,
+      pageSize: 100,
+    })
+
     return {
       props: deleteUndefined({
         session,
@@ -129,6 +139,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         categories: categories.categories,
         admins: users.users,
         tags: tags.tags,
+        types: types.types,
       }),
     }
   } catch (error) {

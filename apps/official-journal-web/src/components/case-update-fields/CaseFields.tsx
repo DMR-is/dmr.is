@@ -8,19 +8,14 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { Department } from '../../gen/fetch'
 import { AdvertFields } from './AdvertFields'
 import { AttachmentFields } from './AttachmentsFields'
 import { CommentFields } from './CommentFields'
 import { CommonFields } from './CommonFields'
+import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
 
-type Props = {
-  expanded?: boolean
-  departments: Department[]
-}
-
-export const CaseFields = ({ departments }: Props) => {
+export const CaseFields = () => {
   const [expandAll, setExpandAll] = useState(false)
 
   return (
@@ -35,10 +30,11 @@ export const CaseFields = ({ departments }: Props) => {
               singleExpand={false}
               space={2}
             >
-              <CommonFields departments={departments} />
+              <CommonFields />
               <PublishingFields />
               <AdvertFields />
               <AttachmentFields />
+              <MessageField />
               <CommentFields />
             </Accordion>
           </Stack>

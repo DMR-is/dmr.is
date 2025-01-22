@@ -7,8 +7,7 @@ export const useCaseContext = () => {
     throw new Error('useCaseContext must be used within a CaseProvider')
   }
 
-  const { currentCase, refetch, isLoading, isValidating, error } =
-    useContext(CaseContext)
+  const { ...props } = useContext(CaseContext)
 
-  return { currentCase, refetch, isLoading, isValidating, error }
+  return { ...props }
 }

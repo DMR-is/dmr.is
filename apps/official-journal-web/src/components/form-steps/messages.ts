@@ -67,6 +67,11 @@ export const messages = {
       defaultMessage: 'Fylgiskjöl',
       description: '',
     },
+    message: {
+      id: 'web.components.steps.grunnvinnsla:message',
+      defaultMessage: 'Skilaboð til ritstjóra',
+      description: '',
+    },
   }),
   yfirlestur: defineMessages({
     group1title: {

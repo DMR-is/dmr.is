@@ -7,6 +7,7 @@ import type { IconMapIcon } from '@island.is/island-ui/core'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
+  BaseEntity,
   CaseComment,
   CaseCommentCaseStatusEnum,
   CaseCommentType,
@@ -320,27 +321,11 @@ export const getCaseProcessingSearchParams = (
   return params
 }
 
-type GenerateOptionsParams = {
-  label: string
-  queryKey: string
-  options: { id: string; slug: string; title: string }[] | undefined
-}
-
-export const generateOptions = ({
-  label,
-  queryKey,
-  options,
-}: GenerateOptionsParams) => {
-  return {
-    label,
-    queryKey,
-    options: options
-      ? options.map((option) => ({
-          label: option.title,
-          value: option.slug,
-        }))
-      : [],
-  }
+export const createOptions = <T extends BaseEntity>(arr: T[]) => {
+  return arr.map((item) => ({
+    label: item.title,
+    value: item.id,
+  }))
 }
 
 export const getSignatureDate = (signatures: Signature[]) => {

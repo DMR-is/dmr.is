@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce'
-import { useState } from 'react'
 
 import {
   AccordionItem,
@@ -9,10 +8,7 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { Department } from '../../gen/fetch'
 import {
-  useAdvertTypes,
-  useCategories,
   useUpdateCategories,
   useUpdateDepartment,
   useUpdateTitle,
@@ -25,61 +21,16 @@ import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
 
-type Props = {
-  departments: Department[]
-}
-
-export const CommonFields = ({ departments }: Props) => {
+export const CommonFields = () => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch } = useCaseContext()
-
-  const [mostRecentCategory, setMostRecentCategory] = useState<{
-    label: string
-    value: string
-  }>(
-    currentCase.advertCategories.length > 0
-      ? {
-          label: currentCase.advertCategories[0].title,
-          value: currentCase.advertCategories[0].id,
-        }
-      : { label: '', value: '' },
-  )
-
-  const departmentOptions = departments.map((d) => ({
-    label: d.title,
-    value: d.id,
-  }))
-
-  const { types, isLoadingTypes } = useAdvertTypes({
-    typesParams: {
-      department: currentCase.advertDepartment.id,
-      page: 1,
-      pageSize: 100,
-    },
-  })
-
-  const { data: categoriesData, isLoading: isLoadingCategories } =
-    useCategories({
-      params: {
-        page: 1,
-        pageSize: 500,
-      },
-    })
-
-  const typeOptions = types?.map((t) => ({
-    label: t.title,
-    value: t.id,
-  }))
-
-  const categoriesOptions = categoriesData?.categories
-    .map((c) => ({
-      label: c.title,
-      value: c.id,
-    }))
-    .filter(
-      (c) => !currentCase.advertCategories.some((ac) => ac.id === c.value),
-    )
+  const {
+    currentCase,
+    refetch,
+    departmentOptions,
+    categoryOptions,
+    typeOptions,
+  } = useCaseContext()
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
     useUpdateDepartment({
@@ -180,7 +131,6 @@ export const CommonFields = ({ departments }: Props) => {
         />
         <OJOISelect
           width="half"
-          isLoading={isLoadingTypes}
           isValidating={isUpdatingType}
           label={formatMessage(messages.grunnvinnsla.type)}
           options={typeOptions}
@@ -215,17 +165,14 @@ export const CommonFields = ({ departments }: Props) => {
             />
           )}
           <OJOISelect
-            isLoading={isLoadingCategories}
             width="half"
             label={formatMessage(messages.grunnvinnsla.categories)}
-            options={categoriesOptions}
-            defaultValue={mostRecentCategory}
+            options={categoryOptions}
             isValidating={isUpdatingCategory}
             onChange={(opt) => {
               if (!opt) {
                 return toast.warning('Eitthvað fór úrskeiðis')
               }
-              setMostRecentCategory(opt)
               updateCategories({
                 categoryIds: [opt.value],
               })
