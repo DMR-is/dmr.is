@@ -7,9 +7,10 @@ import {
   GridRow,
   Stack,
   Text,
+  toast,
 } from '@island.is/island-ui/core'
 
-import { CaseTag } from '../../gen/fetch'
+import { useUpdateEmployee } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseSingle'
@@ -22,16 +23,28 @@ import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './FormShell.css'
 type FormShellType = {
-  tags: CaseTag[]
   children?: React.ReactNode
 }
 
-export const FormShell = ({ children, tags }: FormShellType) => {
+export const FormShell = ({ children }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase } = useCaseContext()
+  const { currentCase, employeeOptions, tagOptions } = useCaseContext()
 
   const steps = generateSteps(currentCase)
+
+  const { trigger: assignEmployee, isMutating: isAssigning } =
+    useUpdateEmployee({
+      caseId: currentCase.id,
+      options: {
+        onSuccess: () => {
+          toast.success('Máli úthlutað á starfsmann')
+        },
+        onError: () => {
+          toast.error('Ekki tókst að úthluta máli á starfsmann')
+        },
+      },
+    })
 
   const breadcrumbs = [
     {
@@ -46,11 +59,6 @@ export const FormShell = ({ children, tags }: FormShellType) => {
       title: formatMessage(messages.breadcrumbs.case),
     },
   ]
-
-  const tagOptions = tags.map((tag) => ({
-    label: tag.title,
-    value: tag.id,
-  }))
 
   return (
     <Box className={styles.root}>
@@ -106,6 +114,17 @@ export const FormShell = ({ children, tags }: FormShellType) => {
                 className={styles.sidebarInner}
               >
                 <Stack space={2}>
+                  <OJOISelect
+                    backgroundColor="white"
+                    label="Starfsmaður"
+                    isValidating={isAssigning}
+                    options={employeeOptions}
+                    placeholder="Úthluta máli á starfsmann"
+                    onChange={(opt) => {
+                      if (!opt) return
+                      assignEmployee({ userId: opt.value })
+                    }}
+                  />
                   <OJOIInput
                     disabled
                     name="status"
