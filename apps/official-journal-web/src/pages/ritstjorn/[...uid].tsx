@@ -5,9 +5,7 @@ import { isResponse } from '@dmr.is/utils/client'
 
 import { Stack } from '@island.is/island-ui/core'
 
-import { Attachments } from '../../components/attachments/Attachments'
-import { UpdateCaseAttributes } from '../../components/case-update-fields/UpdateCaseFields'
-import { Comments } from '../../components/comments/Comments'
+import { CaseFields } from '../../components/case-update-fields/CaseFields'
 import { EditorMessageDisplay } from '../../components/editor-message/EditorMessageDisplay'
 import { FormShell } from '../../components/form/FormShell'
 import { Meta } from '../../components/meta/Meta'
@@ -52,23 +50,11 @@ export default function CaseSingle({
       />
       <FormShell tags={tags}>
         <Stack space={[2, 3, 4]}>
-          <UpdateCaseAttributes departments={departments} />
-
-          {!!caseData.applicationId && <Attachments activeCase={caseData} />}
+          <CaseFields departments={departments} />
 
           {caseData.message && (
             <EditorMessageDisplay message={caseData.message} />
           )}
-
-          {/* <Comments activeCase={caseData} /> */}
-          {/* <FormFooter
-            activeCase={caseData}
-            caseStep={step}
-            canPublishFix={canPublishFixedChanges}
-            updateAdvertHtmlTrigger={() =>
-              updateAdvertHtmlTrigger({ advertHtml: updatedAdvertHtml })
-            }
-          /> */}
         </Stack>
       </FormShell>
     </CaseProvider>
@@ -87,7 +73,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const dmrClient = createDmrClient()
   const caseId = query.uid?.[0]
-  // const step = query.uid?.[1] as CaseStep | undefined
 
   if (!caseId) {
     throw new CustomNextError(404, 'Slóð inniheldur ekki auðkenni (id)!')

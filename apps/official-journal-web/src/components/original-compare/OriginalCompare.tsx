@@ -6,15 +6,16 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-browser'
 import { getDiff, HTMLDump } from '@island.is/regulations-tools/html'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { CaseDetailed } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import * as s from './OriginalCompare.css'
 
-export type OriginalCompareProps = {
-  activeCase: CaseDetailed
+type Props = {
+  disclosure?: React.ComponentProps<typeof Drawer>['disclosure']
 }
 
-export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
-  const [activeText, setActiveText] = useState<'base' | 'diff'>('base')
+export const OriginalCompare = ({ disclosure }: Props) => {
+  const { currentCase: activeCase } = useCaseContext()
+  const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
   const [baseText, setBaseText] = useState<HTMLText>('')
   const [currentDiff, setCurrentDiff] = useState<HTMLText>('')
 
@@ -50,11 +51,15 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
         baseId="diff_drawer"
         ariaLabel="Sýna breytingar á meginmáli"
         disclosure={
-          <Button
-            title="Skoða upprunalega útgáfu"
-            circle
-            icon="document"
-          ></Button>
+          disclosure ? (
+            disclosure
+          ) : (
+            <Button
+              title="Skoða breytingar á meginmáli"
+              circle
+              icon="document"
+            />
+          )
         }
       >
         <Button

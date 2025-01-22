@@ -34,7 +34,7 @@ class UpdateAdvertHtmlHandler {
       },
     })
 
-    return void res.status(200).end()
+    return void res.status(204).end()
   }
 }
 

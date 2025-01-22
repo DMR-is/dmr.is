@@ -29,7 +29,7 @@ type Props = {
   departments: Department[]
 }
 
-export const UpdateCommonFields = ({ departments }: Props) => {
+export const CommonFields = ({ departments }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const { currentCase, refetch } = useCaseContext()

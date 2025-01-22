@@ -22,7 +22,7 @@ import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
 import { Spinner } from '../spinner/Spinner'
 
-export const UpdatePublishingFields = () => {
+export const PublishingFields = () => {
   const { formatMessage } = useFormatMessage()
 
   const { currentCase, refetch } = useCaseContext()
