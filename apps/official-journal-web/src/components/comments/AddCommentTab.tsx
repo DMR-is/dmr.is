@@ -5,7 +5,6 @@ import { Box, Button, Input, Stack } from '@island.is/island-ui/core'
 import { CommunicationStatus } from '../../gen/fetch'
 import { useAddComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { ALL_USERS } from '../../lib/userMock'
 import { messages } from './messages'
 
 type Props = {
@@ -60,7 +59,7 @@ export const AddCommentTab = ({
               caseId: caseId,
               internal: internal,
               comment: commentValue,
-              creator: ALL_USERS.find((user) => user.id === userId)?.name || '',
+              creator: '', // TODO: Get user from context
             })
           }}
         >
