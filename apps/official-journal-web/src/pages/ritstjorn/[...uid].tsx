@@ -112,11 +112,11 @@ export default function CaseSingle(
   const employeesMock = [
     {
       label: 'Ármann',
-      value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+      value: 'f450279c-b07e-4f92-a5ae-d8f93360cafe',
     },
     {
       label: 'Pálína J',
-      value: '21140e6b-e272-4d78-b085-dbc3190b2a0a',
+      value: 'db710b5d-8745-4f5f-b22b-c7151847c56a',
     },
   ]
 

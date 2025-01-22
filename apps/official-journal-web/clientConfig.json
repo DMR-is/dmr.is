@@ -3104,32 +3104,40 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "User": {
+      "AdminUserRole": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID for the user, GUID format.",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          },
-          "name": {
-            "type": "string",
-            "description": "First name of the user.",
-            "example": "Jón Gunnar"
-          },
-          "lastName": {
-            "type": "string",
-            "description": "Last name of the user.",
-            "example": "Jónsson"
-          },
-          "active": {
-            "type": "boolean",
-            "description": "Status of the user",
-            "example": true
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminUserRole" }
           }
         },
-        "required": ["id", "name", "lastName", "active"]
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "fullName",
+          "email",
+          "displayName",
+          "roles"
+        ]
       },
       "BaseEntity": {
         "type": "object",
@@ -3172,7 +3180,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/User" }]
+            "allOf": [{ "$ref": "#/components/schemas/AdminUser" }]
           },
           "communicationStatus": {
             "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
@@ -3674,7 +3682,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/User" }]
+            "allOf": [{ "$ref": "#/components/schemas/AdminUser" }]
           },
           "communicationStatus": {
             "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
@@ -4181,15 +4189,6 @@
           }
         }
       },
-      "AdminUserRole": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "slug": { "type": "string" }
-        },
-        "required": ["id", "title", "slug"]
-      },
       "GetAdminUserRoles": {
         "type": "object",
         "properties": {
@@ -4199,32 +4198,6 @@
           }
         },
         "required": ["roles"]
-      },
-      "AdminUser": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "fullName": { "type": "string" },
-          "email": { "type": "string" },
-          "displayName": { "type": "string" },
-          "roles": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUserRole" }
-          }
-        },
-        "required": [
-          "id",
-          "nationalId",
-          "firstName",
-          "lastName",
-          "fullName",
-          "email",
-          "displayName",
-          "roles"
-        ]
       },
       "GetAdminUsers": {
         "type": "object",
