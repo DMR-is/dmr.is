@@ -1,12 +1,10 @@
 import {
   Accordion,
-  Button,
   GridColumn,
   GridContainer,
   GridRow,
   Inline,
   Stack,
-  Text,
 } from '@island.is/island-ui/core'
 
 import { useToggle } from '../../hooks/useToggle'

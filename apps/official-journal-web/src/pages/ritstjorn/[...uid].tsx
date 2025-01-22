@@ -3,10 +3,7 @@ import { getSession } from 'next-auth/react'
 import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { Stack } from '@island.is/island-ui/core'
-
 import { CaseFields } from '../../components/case-update-fields/CaseFields'
-import { EditorMessageDisplay } from '../../components/editor-message/EditorMessageDisplay'
 import { FormShell } from '../../components/form/FormShell'
 import { Meta } from '../../components/meta/Meta'
 import { CaseProvider } from '../../context/caseContext'
@@ -58,7 +55,7 @@ export default function CaseSingle({
           messages.breadcrumbs.dashboard,
         )}`}
       />
-      <FormShell tags={tags}>
+      <FormShell>
         <CaseFields />
       </FormShell>
     </CaseProvider>

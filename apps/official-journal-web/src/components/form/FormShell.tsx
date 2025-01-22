@@ -29,7 +29,7 @@ type FormShellType = {
 export const FormShell = ({ children }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, employeeOptions, tagOptions } = useCaseContext()
+  const { currentCase, employeeOptions, tagOptions, refetch } = useCaseContext()
 
   const steps = generateSteps(currentCase)
 
@@ -38,6 +38,7 @@ export const FormShell = ({ children }: FormShellType) => {
       caseId: currentCase.id,
       options: {
         onSuccess: () => {
+          refetch()
           toast.success('Máli úthlutað á starfsmann')
         },
         onError: () => {
@@ -116,10 +117,15 @@ export const FormShell = ({ children }: FormShellType) => {
                 <Stack space={2}>
                   <OJOISelect
                     backgroundColor="white"
-                    label="Starfsmaður"
+                    name="employee"
                     isValidating={isAssigning}
+                    label="Starfsmaður"
                     options={employeeOptions}
                     placeholder="Úthluta máli á starfsmann"
+                    value={employeeOptions.find(
+                      (employee) =>
+                        employee.value === currentCase.assignedTo?.id,
+                    )}
                     onChange={(opt) => {
                       if (!opt) return
                       assignEmployee({ userId: opt.value })

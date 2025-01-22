@@ -99,7 +99,8 @@ const wrapper = style({
   zIndex: 0,
   display: 'flex',
   flexFlow: 'row nowrap',
-  minHeight: '200px',
+  minHeight: '400px',
+  maxHeight: '800px',
 })
 
 export const classes: EditorClasses & { editorNoMinHeight: string } = {

@@ -22,7 +22,6 @@ export const useCase = ({ caseId, options }: UseCaseParams) => {
       ...options,
 
       onSuccess: (data, key, config) => {
-        console.log('well hello')
         options?.onSuccess && options.onSuccess(data, key, config)
       },
     },
