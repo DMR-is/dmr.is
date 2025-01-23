@@ -1,7 +1,7 @@
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { USER_ROLES } from '@dmr.is/constants'
-import { Roles, Route } from '@dmr.is/decorators'
+import { Roles, Route, TimeLog } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ICaseService,
@@ -10,32 +10,36 @@ import {
   RoleGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
-  CaseOverviewQuery,
+  CaseStatusEnum,
   CreateCaseResponse,
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
   DeleteCaseAdvertCorrection,
+  DepartmentEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
   GetCaseCommentsResponse,
   GetCaseResponse,
-  GetCasesOverview,
   GetCasesQuery,
   GetCasesReponse,
+  GetCasesWithDepartmentCount,
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
+  GetCasesWithStatusCount,
+  GetCasesWithStatusCountQuery,
   GetCategoriesResponse,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
-  GetPublishedCasesQuery as GetFinishedCasesQuery,
-  GetPublishedCasesResponse,
   GetTagsResponse,
   MainCategory,
   PostApplicationAttachmentBody,
@@ -64,12 +68,19 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Inject,
   Param,
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 const LOG_CATEGORY = 'case-controller'
 
@@ -99,6 +110,7 @@ export class CaseController {
     responseType: GetNextPublicationNumberResponse,
     params: [{ name: 'departmentId', type: 'string', required: true }],
   })
+  @TimeLog()
   async getNextPublicationNumber(
     @Param('departmentId', new UUIDValidationPipe()) departmentId: string,
   ): Promise<GetNextPublicationNumberResponse> {
@@ -114,6 +126,7 @@ export class CaseController {
     responseType: GetDepartmentsResponse,
     query: [{ type: DefaultSearchParams }],
   })
+  @TimeLog()
   async departments(
     @Query() params: DefaultSearchParams,
   ): Promise<GetDepartmentsResponse> {
@@ -128,6 +141,7 @@ export class CaseController {
     summary: 'Get communication statuses',
     responseType: GetCommunicationSatusesResponse,
   })
+  @TimeLog()
   async communicationStatues(): Promise<GetCommunicationSatusesResponse> {
     return ResultWrapper.unwrap(
       await this.caseService.getCommunicationStatuses(),
@@ -140,6 +154,7 @@ export class CaseController {
     summary: 'Get tags',
     responseType: GetTagsResponse,
   })
+  @TimeLog()
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
   }
@@ -153,6 +168,7 @@ export class CaseController {
     responseType: GetCategoriesResponse,
     query: [{ type: DefaultSearchParams }],
   })
+  @TimeLog()
   async categories(
     @Query()
     params?: DefaultSearchParams,
@@ -167,6 +183,7 @@ export class CaseController {
     query: [{ type: DefaultSearchParams }],
     responseType: GetMainCategoriesResponse,
   })
+  @TimeLog()
   async mainCategories(): Promise<GetMainCategoriesResponse> {
     return ResultWrapper.unwrap(await this.journalService.getMainCategories())
   }
@@ -178,6 +195,7 @@ export class CaseController {
     operationId: 'deleteMainCategory',
     summary: 'Delete main category',
   })
+  @TimeLog()
   async deleteMainCategory(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<void> {
@@ -194,6 +212,7 @@ export class CaseController {
     operationId: 'deleteMainCategoryCategory',
     summary: 'Delete main category category',
   })
+  @TimeLog()
   async deleteMainCategoryCategory(
     @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
     @Param('categoryId', new UUIDValidationPipe()) categoryId: string,
@@ -213,6 +232,7 @@ export class CaseController {
     summary: 'Create main category',
     bodyType: CreateMainCategory,
   })
+  @TimeLog()
   async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
     const id = uuid()
 
@@ -252,6 +272,7 @@ export class CaseController {
     params: [{ name: 'mainCategoryId', type: 'string', required: true }],
     bodyType: CreateMainCategoryCategories,
   })
+  @TimeLog()
   async createMainCategoryCategories(
     @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
     @Body() body: CreateMainCategoryCategories,
@@ -272,6 +293,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateMainCategory,
   })
+  @TimeLog()
   async updateMainCategory(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateMainCategory,
@@ -279,20 +301,28 @@ export class CaseController {
     ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
-  @Route({
-    path: 'overview/:status',
-    params: [{ name: 'status', type: 'string', required: true }],
-    operationId: 'editorialOverview',
-    summary: 'Get editorial overview',
-    responseType: GetCasesOverview,
-    query: [{ type: CaseOverviewQuery }],
+  @Get('/status-count/:status')
+  @ApiOperation({ operationId: 'getCasesWithStatusCount' })
+  @ApiParam({
+    name: 'status',
+    enum: CaseStatusEnum,
+    enumName: 'CaseStatusEnum',
+    description: 'Cases with this status will be returned',
   })
-  async editorialOverview(
-    @Param('status') status: string,
-    @Query() params?: CaseOverviewQuery,
-  ): Promise<GetCasesOverview> {
+  @ApiQuery({ type: GetCasesWithStatusCountQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithStatusCount })
+  @TimeLog()
+  /**
+   * Returns cases with status count, by default count cases for every status.
+   * @param status - Status of the cases to be returned
+   */
+  async getCasesWithStatusCount(
+    @Param('status', new EnumValidationPipe(CaseStatusEnum))
+    status: CaseStatusEnum,
+    @Query() params?: GetCasesQuery,
+  ): Promise<GetCasesWithStatusCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCasesOverview(status, params),
+      await this.caseService.getCasesWithStatusCount(status, params),
     )
   }
 
@@ -306,6 +336,7 @@ export class CaseController {
     operationId: 'getCaseAttachment',
     responseType: PresignedUrlResponse,
   })
+  @TimeLog()
   async getCaseAttachment(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
@@ -327,6 +358,7 @@ export class CaseController {
     bodyType: PostApplicationAttachmentBody,
     responseType: PresignedUrlResponse,
   })
+  @TimeLog()
   async overwriteCaseAttachment(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
@@ -345,6 +377,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateCasePriceBody,
   })
+  @TimeLog()
   async updatePrice(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCasePriceBody,
@@ -360,6 +393,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdatePaidBody,
   })
+  @TimeLog()
   async updatePaid(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdatePaidBody,
@@ -375,6 +409,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateTagBody,
   })
+  @TimeLog()
   async updateTag(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateTagBody,
@@ -390,6 +425,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateCaseDepartmentBody,
   })
+  @TimeLog()
   async updateDepartment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseDepartmentBody,
@@ -405,6 +441,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateCaseTypeBody,
   })
+  @TimeLog()
   async updateType(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseTypeBody,
@@ -419,6 +456,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateCommunicationStatusBody,
   })
+  @TimeLog()
   async updateCommunicationStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCommunicationStatusBody,
@@ -436,6 +474,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdatePublishDateBody,
   })
+  @TimeLog()
   async updatePublishDate(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdatePublishDateBody,
@@ -453,6 +492,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateTitleBody,
   })
+  @TimeLog()
   async updateTitle(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateTitleBody,
@@ -498,6 +538,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: UpdateCategoriesBody,
   })
+  @TimeLog()
   async updateCategories(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCategoriesBody,
@@ -513,6 +554,7 @@ export class CaseController {
     bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
+  @TimeLog()
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateNextStatusBody,
@@ -528,6 +570,7 @@ export class CaseController {
     bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
+  @TimeLog()
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateNextStatusBody,
@@ -547,6 +590,7 @@ export class CaseController {
       { name: 'userId', type: 'string', required: true },
     ],
   })
+  @TimeLog()
   async assign(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
@@ -562,6 +606,7 @@ export class CaseController {
     summary: 'Update case status.',
     bodyType: UpdateCaseStatusBody,
   })
+  @TimeLog()
   async updateStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseStatusBody,
@@ -592,6 +637,7 @@ export class CaseController {
     summary: 'Update advert html',
     bodyType: UpdateAdvertHtmlBody,
   })
+  @TimeLog()
   async updateAdvertHtml(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
@@ -608,6 +654,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     responseType: GetCaseResponse,
   })
+  @TimeLog()
   async case(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetCaseResponse> {
@@ -621,6 +668,7 @@ export class CaseController {
     bodyType: PostApplicationBody,
     responseType: CreateCaseResponse,
   })
+  @TimeLog()
   async createCase(@Body() body: PostApplicationBody): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
@@ -633,24 +681,28 @@ export class CaseController {
     responseType: GetCasesReponse,
     query: [{ type: GetCasesQuery }],
   })
+  @TimeLog()
   async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
   }
 
-  @Route({
-    path: '/published/:department',
-    operationId: 'getPublishedCases',
-    summary: 'Get cases',
-    responseType: GetPublishedCasesResponse,
-    params: [{ name: 'department', type: 'string', required: true }],
-    query: [{ type: GetFinishedCasesQuery, required: false }],
+  @Get('/department-count/:department')
+  @ApiOperation({ operationId: 'getCasesWithDepartmentCount' })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
   })
-  async getFinishedCases(
-    @Param('department') department: string,
-    @Query() query?: GetFinishedCasesQuery,
-  ): Promise<GetCasesReponse> {
+  @ApiQuery({ name: 'query', type: GetCasesWithDepartmentCountQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
+  @TimeLog()
+  async getCasesWithDepartmentCount(
+    @Param('department', new EnumValidationPipe(DepartmentEnum))
+    department: DepartmentEnum,
+    @Query() query?: GetCasesWithDepartmentCountQuery,
+  ): Promise<GetCasesWithDepartmentCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getFinishedCases(department, query),
+      await this.caseService.getCasesWithDepartmentCount(department, query),
     )
   }
 
@@ -661,6 +713,7 @@ export class CaseController {
     summary: 'Publish cases',
     bodyType: PostCasePublishBody,
   })
+  @TimeLog()
   async publish(@Body() body: PostCasePublishBody): Promise<void> {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
   }
@@ -672,6 +725,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     description: 'Unpublish case',
   })
+  @TimeLog()
   async unpublish(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<void> {
@@ -685,6 +739,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     description: 'Reject case',
   })
+  @TimeLog()
   async reject(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<void> {
@@ -699,6 +754,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     query: [{ type: GetCaseCommentsQuery }],
   })
+  @TimeLog()
   async getComments(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetCaseCommentsResponse> {
@@ -721,6 +777,7 @@ export class CaseController {
     ],
     responseType: GetCaseCommentResponse,
   })
+  @TimeLog()
   async getComment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
@@ -742,6 +799,7 @@ export class CaseController {
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: PostCaseCommentBody,
   })
+  @TimeLog()
   async createComment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: PostCaseCommentBody,
@@ -769,10 +827,32 @@ export class CaseController {
       { name: 'commentId', type: 'string', required: true },
     ],
   })
+  @TimeLog()
   async deleteComment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
   ): Promise<void> {
     ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
+  }
+
+  @Get('/with-publication-number/:department')
+  @ApiOperation({ operationId: 'getCasesWithPublicationNumber' })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
+  })
+  @ApiQuery({ type: GetCasesWithPublicationNumberQuery })
+  @ApiResponse({ status: 200, type: GetCasesWithPublicationNumber })
+  @TimeLog()
+  async getCasesWithPublicationNumber(
+    @Param('department', new EnumValidationPipe(DepartmentEnum))
+    department: DepartmentEnum,
+    @Query()
+    params: GetCasesWithPublicationNumberQuery,
+  ): Promise<GetCasesWithPublicationNumber> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasesWithPublicationNumber(department, params),
+    )
   }
 }

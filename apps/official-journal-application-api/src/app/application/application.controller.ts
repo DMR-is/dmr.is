@@ -11,7 +11,7 @@ import {
   ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetAdvertTemplateResponse,
-  GetAdvertTemplatesResponse,
+  AdvertTemplateDetails,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -398,7 +398,7 @@ export class ApplicationController {
     path: 'advert/templates',
     method: 'get',
     operationId: 'getApplicationAdvertTemplates',
-    responseType: GetAdvertTemplatesResponse,
+    responseType: [AdvertTemplateDetails],
   })
   async getApplicationAdvertTemplates() {
     return ResultWrapper.unwrap(

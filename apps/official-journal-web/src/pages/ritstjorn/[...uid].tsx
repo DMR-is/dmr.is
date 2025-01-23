@@ -20,7 +20,7 @@ import { StepLeidretting } from '../../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../../components/form-steps/StepYfirlestur'
 import { Meta } from '../../components/meta/Meta'
-import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
+import { CaseDetailed, CaseStatusTitleEnum } from '../../gen/fetch'
 import { useRejectCase, useUpdateEmployee } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import {
@@ -42,7 +42,7 @@ import {
 import { CustomNextError } from '../../units/error'
 
 type Props = {
-  thisCase: Case
+  thisCase: CaseDetailed
   step: CaseStep
 }
 
@@ -119,11 +119,11 @@ export default function CaseSingle(
   const employeesMock = [
     {
       label: 'Ármann',
-      value: '3d918322-8e60-44ad-be5e-7485d0e45cdd',
+      value: 'f450279c-b07e-4f92-a5ae-d8f93360cafe',
     },
     {
       label: 'Pálína J',
-      value: '21140e6b-e272-4d78-b085-dbc3190b2a0a',
+      value: 'db710b5d-8745-4f5f-b22b-c7151847c56a',
     },
   ]
 
@@ -282,7 +282,7 @@ export default function CaseSingle(
             />
           )}
 
-          <Attachments activeCase={thisCase} />
+          {!!thisCase.applicationId && <Attachments activeCase={thisCase} />}
 
           {thisCase.message && (
             <EditorMessageDisplay message={thisCase.message} />

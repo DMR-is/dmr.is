@@ -11,11 +11,11 @@ import {
 } from '@island.is/island-ui/core'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Case } from '../../gen/fetch'
+import { CaseDetailed } from '../../gen/fetch'
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { HTMLEditor } from '../editor/Editor'
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
 }
 export const StepInnsending = ({ activeCase }: Props) => {
   const original = activeCase.html as HTMLText

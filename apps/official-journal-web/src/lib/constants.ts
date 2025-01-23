@@ -28,7 +28,7 @@ export enum Routes {
   ProcessingDetailReady = '/ritstjorn/:caseId/tilbuid',
   ProccessingDetailCorrection = '/ritstjorn/:caseId/leidretting',
   PublishingOverview = '/utgafa',
-  PublishingDetail = '/utgafa/:caseId',
+  PublishingConfirm = '/utgafa/stadfesting',
   Overview = '/heildaryfirlit',
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
@@ -72,6 +72,11 @@ export const PagePaths: Array<Path> = [
   },
   { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
 ]
+
+export const DEPARTMENT_A = 'A deild'
+export const DEPARTMENT_B = 'B deild'
+export const DEPARTMENT_C = 'C deild'
+export const DEPARTMENTS = [DEPARTMENT_A, DEPARTMENT_B, DEPARTMENT_C]
 
 export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'A deild', value: 'a-deild', key: 'department' },
@@ -132,6 +137,8 @@ export const fetcher = async <TData, TBody = never>(
   return res.json()
 }
 
+export const NOTIFICATION_PORTAL_ID = 'notification-portal'
+
 export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
@@ -139,7 +146,9 @@ export enum APIRoutes {
   MainType = '/api/mainTypes/:id',
   Types = '/api/types',
   Type = '/api/types/:id',
-  GetEditorialOverview = '/api/cases/overview',
+  GetCasesWithStatusCount = '/api/cases/withStatusCount',
+  GetCasesWithDepartmentCount = '/api/cases/withDepartmentCount',
+  GetCasesWithPublicationNumber = '/api/cases/withPublicationNumber',
   GetDepartments = '/api/cases/departments',
   GetCategories = '/api/cases/categories',
   GetMainCategories = '/api/mainCategories',

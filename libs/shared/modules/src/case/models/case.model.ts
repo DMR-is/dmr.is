@@ -8,6 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
@@ -42,10 +43,10 @@ export class CaseModel extends Model {
 
   @Column({
     type: DataType.UUID,
-    allowNull: false,
+    allowNull: true,
     field: 'application_id',
   })
-  applicationId!: string
+  applicationId?: string
 
   @Column({
     type: DataType.INTEGER,
@@ -108,6 +109,9 @@ export class CaseModel extends Model {
     field: 'assigned_user_id',
   })
   assignedUserId!: string | null
+
+  @BelongsTo(() => AdminUserModel, 'assigned_user_id')
+  assignedUser?: AdminUserModel
 
   @Column({ type: DataType.UUID, field: 'case_communication_status_id' })
   communicationStatusId!: string

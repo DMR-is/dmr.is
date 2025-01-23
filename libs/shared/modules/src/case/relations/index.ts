@@ -1,3 +1,7 @@
+import { Includeable } from 'sequelize'
+
+import { AdminUserModel } from '../../admin-user/models/admin-user.model'
+import { AdminUserRoleModel } from '../../admin-user/models/user-role.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/models'
 import {
@@ -10,6 +14,7 @@ import {
   SignatureModel,
   SignatureTypeModel,
 } from '../../signature/models'
+import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 import {
   CaseAdditionModel,
   CaseChannelModel,
@@ -18,7 +23,7 @@ import {
   CaseTagModel,
 } from '../models'
 
-export const CASE_RELATIONS = [
+export const casesDetailedIncludes = [
   CaseTagModel,
   CaseStatusModel,
   CaseCommunicationStatusModel,
@@ -28,6 +33,10 @@ export const CASE_RELATIONS = [
   CaseChannelModel,
   AdvertInvolvedPartyModel,
   CaseAdditionModel,
+  {
+    model: AdminUserModel,
+    include: [{ model: AdminUserRoleModel }],
+  },
   {
     model: CaseCommentModel,
     include: [CaseCommentTypeModel, CaseStatusModel],
@@ -46,5 +55,49 @@ export const CASE_RELATIONS = [
         as: 'members',
       },
     ],
+  },
+]
+
+type CaseIncludeFilters = {
+  department?: string | string[]
+  type?: string | string[]
+  status?: string | string[]
+  institution?: string | string[]
+  category?: string | string[]
+}
+export const casesIncludes = (params: CaseIncludeFilters): Includeable[] => [
+  {
+    model: CaseStatusModel,
+    attributes: ['id', 'title', 'slug'],
+    where: matchByIdTitleOrSlug(params?.status),
+  },
+  {
+    model: AdvertDepartmentModel,
+    attributes: ['id', 'title', 'slug'],
+    where: matchByIdTitleOrSlug(params?.department),
+  },
+  {
+    model: AdvertTypeModel,
+    attributes: ['id', 'title', 'slug'],
+    where: matchByIdTitleOrSlug(params?.type),
+  },
+  {
+    model: AdvertInvolvedPartyModel,
+    attributes: ['id', 'title', 'slug'],
+    where: matchByIdTitleOrSlug(params?.institution),
+  },
+  {
+    model: AdvertCategoryModel,
+    attributes: ['id', 'title', 'slug'],
+    where: matchByIdTitleOrSlug(params?.category),
+    required: false,
+  },
+  {
+    model: CaseCommunicationStatusModel,
+    attributes: ['id', 'title', 'slug'],
+  },
+  {
+    model: CaseTagModel,
+    attributes: ['id', 'title', 'slug'],
   },
 ]

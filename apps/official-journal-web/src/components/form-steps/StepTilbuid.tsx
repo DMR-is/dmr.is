@@ -5,14 +5,14 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { CaseDetailed } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { formatDate, getSignatureDate } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { messages } from './messages'
 
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
 }
 
 export const StepTilbuid = ({ activeCase }: Props) => {

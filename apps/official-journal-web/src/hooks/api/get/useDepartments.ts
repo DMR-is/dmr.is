@@ -30,7 +30,10 @@ export const useDepartments = ({
           query: generateParams(qsp),
         },
       }),
-    options,
+    {
+      revalidateOnFocus: false,
+      ...options,
+    },
   )
 
   return {

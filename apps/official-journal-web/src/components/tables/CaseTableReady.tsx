@@ -1,82 +1,45 @@
-import dynamic from 'next/dynamic'
-import { useQueryState } from 'next-usequerystate'
-import { ChangeEvent } from 'react'
+import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import {
-  AlertMessage,
-  Checkbox,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
-
-import { CaseStatusTitleEnum } from '../../gen/fetch'
-import { useCases } from '../../hooks/api'
+import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { usePublishContext } from '../../hooks/usePublishContext'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import { CaseTableHeadCellProps } from './CaseTable'
+import CaseTable, { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
-const CaseTable = dynamic(() => import('./CaseTable'), {
-  loading: () => (
-    <SkeletonLoader repeat={3} height={44} space={2} borderRadius="standard" />
-  ),
-})
+type Props = {
+  cases?: Case[]
+  selectedCaseIds: string[]
+  isLoading?: boolean
+  toggleAll: () => void
+  toggle: (_case: Case, checked: boolean) => void
+}
 
-export const CaseTableReady = () => {
+export const CaseTableReady = ({
+  cases,
+  selectedCaseIds,
+  toggle,
+  toggleAll,
+  isLoading,
+}: Props) => {
   const { formatMessage } = useFormatMessage()
-  const {
-    publishingState,
-    addCaseToSelectedList,
-    removeCaseFromSelectedList,
-    addManyCasesToSelectedList,
-    removeAllCasesFromSelectedList,
-  } = usePublishContext()
-  const { selectedCaseIds } = publishingState
-  const [department] = useQueryState('department')
 
-  const {
-    data: caseData,
-    isLoading,
-    error,
-  } = useCases({
-    params: {
-      department: department ? [department] : undefined,
-      status: [CaseStatusTitleEnum.Tilbúið],
-    },
-    options: {
-      refreshInterval: 1000 * 60,
-    },
-  })
-
-  const handleToggleAll = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      if (!caseData?.cases) return
-      addManyCasesToSelectedList(caseData?.cases.map((row) => row.id))
-    } else {
-      removeAllCasesFromSelectedList()
-    }
-  }
-
-  const handleToggleRow = (e: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = e.target
-
-    if (checked) {
-      addCaseToSelectedList(e.target.value)
-    } else {
-      removeCaseFromSelectedList(e.target.value)
-    }
-  }
+  const allChecked =
+    selectedCaseIds.length > 0 && selectedCaseIds.length === cases?.length
 
   const columns: CaseTableHeadCellProps[] = [
     {
       name: 'select',
       sortable: false,
       size: 'tiny',
-      children: <Checkbox defaultChecked={false} onChange={handleToggleAll} />,
+      children: (
+        <Checkbox
+          defaultChecked={allChecked}
+          checked={allChecked}
+          onChange={() => toggleAll()}
+        />
+      ),
     },
     {
       name: 'caseLabels',
@@ -102,49 +65,48 @@ export const CaseTableReady = () => {
     },
   ]
 
-  const rows =
-    caseData?.cases.map((row) => {
+  const caseTableColumns =
+    cases?.map((_case) => {
       return {
-        case: row,
+        case: _case,
         cells: [
           {
             children: (
               <Checkbox
-                id={row.id}
-                name={`case-checkbox-${row.id}`}
-                defaultChecked={false}
-                onChange={handleToggleRow}
-                checked={selectedCaseIds.includes(row.id)}
-                value={row.id}
+                id={_case.id}
+                name={`case-checkbox-${_case.id}`}
+                onChange={(e) => toggle(_case, e.target.checked)}
+                checked={selectedCaseIds.some((id) => id === _case.id)}
+                value={_case.id}
               />
             ),
           },
           {
             children: (
               <CaseToolTips
-                fastTrack={row.fastTrack}
-                status={row.communicationStatus.title}
+                fastTrack={_case.fastTrack}
+                status={_case.communicationStatus.title}
               />
             ),
           },
           {
             sortingKey: 'caseAdvertType',
-            sortingValue: row.advertType.title,
+            sortingValue: _case.advertType.title,
             children: (
               <div className={styles.titleTableCell}>
                 <Text truncate variant="medium">
-                  {row.advertType.title} {row.advertTitle}
+                  {_case.advertType.title} {_case.advertTitle}
                 </Text>
               </div>
             ),
           },
           {
             sortingKey: 'casePublishDate',
-            sortingValue: row.requestedPublicationDate,
+            sortingValue: _case.requestedPublicationDate,
             children: (
               <Text variant="medium">
-                {row.requestedPublicationDate
-                  ? formatDate(row.requestedPublicationDate)
+                {_case.requestedPublicationDate
+                  ? formatDate(_case.requestedPublicationDate)
                   : null}
               </Text>
             ),
@@ -152,7 +114,7 @@ export const CaseTableReady = () => {
           {
             children: (
               <Text whiteSpace="nowrap" variant="medium">
-                {row.involvedParty.title}
+                {_case.involvedParty.title}
               </Text>
             ),
           },
@@ -161,21 +123,12 @@ export const CaseTableReady = () => {
     }) ?? []
 
   return (
-    <Stack space={[2, 2, 3]}>
-      {error && (
-        <AlertMessage
-          type="error"
-          title="Villa kom upp"
-          message="Ekki tókst að sækja tilbúin mál"
-        />
-      )}
-      <CaseTable
-        loading={isLoading}
-        columns={columns}
-        rows={rows}
-        defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-      />
-    </Stack>
+    <CaseTable
+      loading={isLoading}
+      columns={columns}
+      rows={caseTableColumns}
+      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+    />
   )
 }
 

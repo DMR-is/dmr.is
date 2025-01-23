@@ -1,10 +1,10 @@
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
+  AdvertTemplateDetails,
   AdvertTemplateType,
   ApplicationUser,
   CasePriceResponse,
   GetAdvertTemplateResponse,
-  GetAdvertTemplatesResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -89,7 +89,7 @@ export interface IApplicationService {
   ): Promise<ResultWrapper<GetAdvertTemplateResponse>>
 
   getApplicationAdvertTemplates(): Promise<
-    ResultWrapper<GetAdvertTemplatesResponse>
+    ResultWrapper<AdvertTemplateDetails[]>
   >
 }
 

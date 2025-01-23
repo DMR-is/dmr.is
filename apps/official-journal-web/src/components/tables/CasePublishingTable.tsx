@@ -1,26 +1,22 @@
 import { Reorder, useDragControls } from 'framer-motion'
-import { RefObject, useEffect, useRef, useState } from 'react'
+import { RefObject, useRef, useState } from 'react'
 
 import {
-  AlertMessage,
   Icon,
-  SkeletonLoader,
+  Inline,
+  LoadingDots,
   Table as T,
   Text,
 } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
-import {
-  useCases,
-  useDepartments,
-  useNextPublicationNumber,
-} from '../../hooks/api'
-import { usePublishContext } from '../../hooks/usePublishContext'
+import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { TableCell } from './CaseTableCell'
 import { CaseTableEmpty } from './CaseTableEmpty'
 import { TableHeadCell } from './CaseTableHeadCell'
+import { messages } from './messages'
 
 type RowProps = {
   row: Case
@@ -53,7 +49,7 @@ const CasePublishingTableRow = ({
     >
       <TableCell fixed>
         <Text variant="medium" whiteSpace="nowrap">
-          {`${number}/${new Date().getFullYear()}`}
+          {`${number}/${row.year}`}
         </Text>
       </TableCell>
       <TableCell>
@@ -87,95 +83,45 @@ const CasePublishingTableRow = ({
 }
 
 type Props = {
-  columns: CaseTableHeadCellProps[]
+  cases?: Case[]
+  isLoading: boolean
+  onReorder?: (cases: Case[]) => void
 }
 
-export const CasePublishingTable = ({ columns }: Props) => {
+export const CasePublishingTable = ({ cases, isLoading, onReorder }: Props) => {
+  const { formatMessage } = useFormatMessage()
+
   const dragContainerRef = useRef<HTMLElement>(null)
 
-  const [department] = useState('department')
-  const { publishingState, setCasesWithPublicationNumber } = usePublishContext()
-  const { selectedCaseIds } = publishingState
-
-  const {
-    data: caseData,
-    error,
-    isLoading,
-  } = useCases({
-    options: {
-      refreshInterval: 0,
+  const columns: CaseTableHeadCellProps[] = [
+    {
+      name: 'caseNumber',
+      fixed: true,
+      size: 'small',
+      sortable: false,
+      children: formatMessage(messages.tables.selectedCases.columns.number),
     },
-    params: {
-      department: department ? [department] : undefined,
-      pageSize: 100,
+    {
+      name: 'caseTitle',
+      sortable: false,
+      fixed: false,
+      children: formatMessage(messages.tables.selectedCases.columns.title),
     },
-  })
-  const [selectedCases, setSelectedCases] = useState<Case[]>([])
-
-  const { departments } = useDepartments({
-    options: {
-      refreshInterval: 0,
+    {
+      name: 'caseInstitution',
+      sortable: false,
+      fixed: false,
+      children: formatMessage(
+        messages.tables.selectedCases.columns.institution,
+      ),
     },
-  })
-
-  const currentDepartment = departments?.find((d) => d.slug === department)
-
-  const { data: nextPublicationNumber } = useNextPublicationNumber({
-    options: {
-      refreshInterval: 0,
+    {
+      name: '',
+      fixed: false,
+      size: 'tiny',
+      children: isLoading && <LoadingDots />,
     },
-    params: {
-      departmentId: currentDepartment?.id,
-    },
-  })
-
-  const startingNumber = nextPublicationNumber?.publicationNumber
-    ? nextPublicationNumber.publicationNumber
-    : 1
-
-  useEffect(() => {
-    if (caseData) {
-      const selectedCases = caseData.cases.filter((c) =>
-        selectedCaseIds.includes(c.id),
-      )
-
-      const ordered = selectedCases.length
-        ? (selectedCaseIds.map((id) =>
-            selectedCases.find((c) => c.id === id),
-          ) as Case[])
-        : []
-
-      const casesWithPublicationNumber = ordered
-        ? ordered.map((c, i) => ({
-            id: c.id,
-            publishingNumber: startingNumber + i,
-          }))
-        : []
-      setCasesWithPublicationNumber(casesWithPublicationNumber)
-      setSelectedCases(ordered)
-    }
-  }, [selectedCaseIds, caseData])
-
-  if (isLoading) return <SkeletonLoader repeat={3} height={44} />
-
-  if (error)
-    return (
-      <AlertMessage
-        type="error"
-        title="Villa kom upp!"
-        message="Villa kom upp við að sækja mál"
-      />
-    )
-
-  if (!caseData) {
-    return (
-      <AlertMessage
-        type="error"
-        title="Engin mál fundust"
-        message="Engin mál fundust með þessum skilyrðum"
-      />
-    )
-  }
+  ]
 
   return (
     <T.Table>
@@ -188,36 +134,35 @@ export const CasePublishingTable = ({ columns }: Props) => {
               sortable={column.sortable}
               fixed={column.fixed}
             >
-              {column.children}
+              <Inline alignY="center" space={1}>
+                <Text variant="medium" fontWeight="semiBold">
+                  {column.children}
+                </Text>
+              </Inline>
             </TableHeadCell>
           ))}
         </T.Row>
       </T.Head>
-      {selectedCases.length === 0 ? (
-        <CaseTableEmpty columns={columns.length} />
+      {cases?.length === 0 ? (
+        <CaseTableEmpty
+          message="Ekkert mál valið til útgáfu"
+          columns={columns.length}
+        />
       ) : (
         <Reorder.Group
           as="tbody"
           axis="y"
-          values={selectedCases}
-          onReorder={(newOrder) => {
-            setSelectedCases(newOrder)
-            setCasesWithPublicationNumber(
-              newOrder.map((c, i) => ({
-                id: c.id,
-                publishingNumber: startingNumber + i,
-              })),
-            )
-          }}
+          values={cases ?? []}
+          onReorder={(newOrder) => onReorder && onReorder(newOrder)}
           ref={dragContainerRef}
         >
-          {selectedCases.map((row, i) => {
+          {cases?.map((row) => {
             return (
               <CasePublishingTableRow
                 key={row.id}
                 row={row}
                 container={dragContainerRef}
-                number={startingNumber + i}
+                number={Number(row.publicationNumber)}
               />
             )
           })}

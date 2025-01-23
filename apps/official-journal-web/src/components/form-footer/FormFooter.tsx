@@ -1,13 +1,13 @@
 import { Box } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { CaseDetailed } from '../../gen/fetch'
 import { CaseStep } from '../../lib/utils'
 import { FixStep } from './FixStep'
 import { NextStep } from './NextStep'
 import { PrevStep } from './PrevStep'
 
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
   caseStep: CaseStep
   canPublishFix: boolean
   loading?: boolean

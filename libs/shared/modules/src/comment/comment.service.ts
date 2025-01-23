@@ -128,7 +128,7 @@ export class CommentService implements ICommentService {
     const shouldStoreState = body.storeState === true
     let applicationState: string | null = null
 
-    if (shouldStoreState) {
+    if (shouldStoreState && caseLookup.applicationId) {
       const { application } = (
         await this.applicationService.getApplication(caseLookup.applicationId)
       ).unwrap()

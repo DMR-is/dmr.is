@@ -207,6 +207,12 @@ export class CaseCreateService implements ICaseCreateService {
     const signatureType = application.answers.misc.signatureType
     const signature = application.answers.signatures[signatureType]
 
+    // This is important, because the signature year is used to determine the year of the case
+    // not the creation date of the case
+    const signatureDate = Array.isArray(signature)
+      ? new Date(signature[0].date)
+      : new Date(signature.date)
+
     const additionalSignature =
       application.answers.signatures.additionalSignature !== undefined
         ? application.answers.signatures.additionalSignature[signatureType]
@@ -245,7 +251,7 @@ export class CaseCreateService implements ICaseCreateService {
         involvedPartyId: involvedPartyId,
         departmentId: department.id,
         advertTypeId: type.id,
-        year: now.getFullYear(),
+        year: signatureDate.getFullYear(),
         caseNumber: internalCaseNumber.internalCaseNumber,
         advertTitle: application.answers.advert.title,
         html: application.answers.advert.html,

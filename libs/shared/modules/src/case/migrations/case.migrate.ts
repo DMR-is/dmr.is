@@ -1,74 +1,47 @@
-import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { Case, CaseCommentSourceEnum } from '@dmr.is/shared/dto'
-import { withTryCatch } from '@dmr.is/utils'
+import { Case } from '@dmr.is/shared/dto'
 
-import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
-import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
-import { advertDepartmentMigrate } from '../../journal/migrations'
-import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
-import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
-import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
-import { signatureMigrate } from '../../signature/migrations/signature.migrate'
 import { CaseModel } from '../models'
-import { caseAdditionMigrate } from './case-addition.migrate'
-import { caseChannelMigrate } from './case-channel.migrate'
-import { caseCommunicationStatusMigrate } from './case-communication-status.migrate'
-import { caseStatusMigrate } from './case-status.migrate'
-import { caseTagMigrate } from './case-tag.migrate'
 
-export const caseMigrate = (model: CaseModel): Case => {
-  return withTryCatch(() => {
-    return {
-      id: model.id,
-      advertId: model.advertId,
-      applicationId: model.applicationId,
-      year: model.year,
-      caseNumber: model.caseNumber,
-      status: caseStatusMigrate(model.status),
-      tag: model.tag ? caseTagMigrate(model.tag) : null,
-      involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
-      createdAt: model.createdAt,
-      assignedTo:
-        ALL_MOCK_USERS.find((u) => u.id === model.assignedUserId) ?? null, // TODO: Implement this when auth is ready
-      communicationStatus: caseCommunicationStatusMigrate(
-        model.communicationStatus,
-      ),
-      fastTrack: model.fastTrack,
-      isLegacy: model.isLegacy,
-      modifiedAt: model.updatedAt,
-      paid: model.paid ?? false,
-      price: model.price,
-      publishedAt: model.publishedAt,
-      requestedPublicationDate: model.requestedPublicationDate,
-      advertTitle: model.advertTitle,
-      advertDepartment: advertDepartmentMigrate(model.department),
-      advertType: model.advertType,
-      message: model.message,
-      html: model.html,
-      publicationNumber: model.publicationNumber,
-      advertCategories: model.categories
-        ? model.categories.map((c) => advertCategoryMigrate(c)) ?? []
-        : [],
-      channels: model.channels
-        ? model.channels.map((c) => caseChannelMigrate(c))
-        : [],
-      signatures: model.signatures
-        ? model.signatures.map((s) => signatureMigrate(s))
-        : [],
-      comments: model.comments
-        ? model.comments.map((c) =>
-            caseCommentMigrate(c, CaseCommentSourceEnum.API),
-          )
-        : [],
-      attachments: model.attachments
-        ? model.attachments.map((a) => attachmentMigrate(a))
-        : [],
-      additions: model.additions
-        ? model.additions.map((add) => caseAdditionMigrate(add))
-        : [],
-      advertCorrections: model.advert?.corrections
-        ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
-        : undefined,
-    }
-  }, `Error migrating case ${model.id}`)
-}
+export const caseMigrate = (model: CaseModel): Case => ({
+  id: model.id,
+  status: {
+    id: model.status.id,
+    title: model.status.title,
+    slug: model.status.slug,
+  },
+  communicationStatus: {
+    id: model.communicationStatus.id,
+    title: model.communicationStatus.title,
+    slug: model.communicationStatus.slug,
+  },
+  involvedParty: {
+    id: model.involvedParty.id,
+    title: model.involvedParty.title,
+    slug: model.involvedParty.slug,
+  },
+  advertDepartment: {
+    id: model.department.id,
+    title: model.department.title,
+    slug: model.department.slug,
+  },
+  advertType: {
+    id: model.advertType.id,
+    title: model.advertType.title,
+    slug: model.advertType.slug,
+  },
+  year: model.year,
+  advertTitle: model.advertTitle,
+  advertCategories:
+    model.categories?.map((c) => ({
+      id: c.id,
+      title: c.title,
+      slug: c.slug,
+    })) ?? [],
+  requestedPublicationDate: model.requestedPublicationDate,
+  publicationNumber: model.publicationNumber,
+  publishedAt: model.publishedAt,
+  createdAt: model.createdAt,
+  fastTrack: model.fastTrack,
+  assignedTo: null,
+  tag: model?.tag ? model.tag : null,
+})

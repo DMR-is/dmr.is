@@ -1,3 +1,4 @@
+import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
@@ -26,6 +27,40 @@ type WhereClause = {
   }
 }
 
+export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
+  const whereClause = {}
+
+  if (!filters) {
+    return whereClause
+  }
+
+  const isArray = Array.isArray(filters)
+  const isId = isArray
+    ? filters.every((filter) => isUUID(filter))
+    : isUUID(filters)
+
+  if (isId) {
+    Object.assign(whereClause, {
+      id: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+    })
+
+    return whereClause
+  }
+
+  Object.assign(whereClause, {
+    [Op.or]: [
+      {
+        title: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+      },
+      {
+        slug: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+      },
+    ],
+  })
+
+  return whereClause
+}
+
 export const caseParameters = (params?: GetCasesQuery) => {
   // Initialize the where clause object must be declared inside the function to avoid side effects
   const whereClause: WhereClause = {}
@@ -51,23 +86,19 @@ export const caseParameters = (params?: GetCasesQuery) => {
     whereClause.year = params.year
   }
 
-  if (params?.caseNumber !== undefined) {
-    whereClause.caseNumber = params.caseNumber
-  }
-
   if (params?.employeeId !== undefined) {
     whereClause.assignedUserId = params.employeeId
   }
 
   if (params?.fastTrack !== undefined) {
-    whereClause.fastTrack = params.fastTrack === 'true'
+    whereClause.fastTrack = params.fastTrack === true
   }
 
-  if (params?.published === 'true') {
+  if (params?.published === true) {
     whereClause.publishedAt = { [Op.not]: null }
   }
 
-  if (params?.published === 'false') {
+  if (params?.published === false) {
     whereClause.publishedAt = { [Op.is]: null }
   }
 

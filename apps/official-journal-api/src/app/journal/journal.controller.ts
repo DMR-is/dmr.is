@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
@@ -161,8 +161,8 @@ export class JournalController {
 
     const casesResponse = ResultWrapper.unwrap(
       await this.caseService.getCases({
-        page: params?.page,
-        pageSize: params?.pageSize,
+        page: params?.page ?? DEFAULT_PAGE_NUMBER,
+        pageSize: params?.pageSize ?? DEFAULT_PAGE_SIZE,
         status: statuses,
       }),
     )

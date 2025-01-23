@@ -12,14 +12,14 @@ import {
 
 import {
   ApplicationAttachmentTypeTitleEnum,
-  Case,
+  CaseDetailed,
   GetCaseResponse,
 } from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 type Props = {
-  activeCase: Case
+  activeCase: CaseDetailed
   refetchCase?: KeyedMutator<GetCaseResponse>
 }
 
@@ -47,10 +47,14 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
       return
     }
 
+    if (!activeCase.applicationId) {
+      return
+    }
+
     overwriteAttachment({
       attachmentId,
       caseId: activeCase.id,
-      applicationId: activeCase.applicationId,
+      applicationId: activeCase?.applicationId,
       file,
       onSuccess: () => {
         refetchCase && refetchCase()

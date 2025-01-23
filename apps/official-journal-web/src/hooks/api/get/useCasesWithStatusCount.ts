@@ -1,32 +1,37 @@
 import useSWR from 'swr'
 
-import { EditorialOverviewRequest, GetCasesOverview } from '../../../gen/fetch'
+import {
+  GetCasesWithStatusCount,
+  GetCasesWithStatusCountRequest,
+} from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
+import { NullableExcept } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 
-type UseCaseOverviewParams = {
-  params?: Partial<EditorialOverviewRequest>
+type UseGetCasesWithStatusCount = {
+  params?: NullableExcept<GetCasesWithStatusCountRequest, 'status'>
 }
 
-export const useCaseOverview = ({ params }: UseCaseOverviewParams = {}) => {
+export const useCasesWithStatusCount = ({
+  params,
+}: UseGetCasesWithStatusCount = {}) => {
   const { data, error, isLoading, isValidating, mutate } = useSWR<
-    GetCasesOverview,
+    GetCasesWithStatusCount,
     Error
   >(
-    [APIRoutes.GetEditorialOverview, params],
-    ([url, qsp]: [url: string, qsp: EditorialOverviewRequest]) => {
-      return fetcher(url, {
+    [APIRoutes.GetCasesWithStatusCount, params],
+    ([url, qsp]: [url: string, qsp: GetCasesWithStatusCountRequest]) =>
+      fetcher(url, {
         arg: {
           method: 'GET',
           withAuth: true,
           query: generateParams(qsp),
         },
-      })
-    },
+      }),
     {
       refreshInterval: 1000 * 60 * 5,
-      revalidateOnFocus: true,
       keepPreviousData: true,
+      revalidateOnFocus: false,
     },
   )
 

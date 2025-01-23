@@ -19,6 +19,7 @@ import {
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
+  AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
   ApplicationCommitteeSignature,
   ApplicationSignature,
@@ -66,6 +67,7 @@ export function generatePaging(
   pageSize: number | undefined = DEFAULT_PAGE_SIZE,
   totalItems: number | undefined = data.length,
 ) {
+  let pageToUse = page
   const totalPages =
     Math.ceil(totalItems / pageSize) === 0
       ? 1
@@ -74,13 +76,11 @@ export function generatePaging(
   const previousPage = page - 1
 
   if (page > totalPages) {
-    throw new BadRequestException(
-      `Invalid page<${page}> number is larger than totalPages<${totalPages}>`,
-    )
+    pageToUse = totalPages
   }
 
   return {
-    page: Number(page),
+    page: Number(pageToUse),
     pageSize: Number(pageSize),
     totalPages,
     totalItems,
@@ -536,14 +536,41 @@ export const getTemplate = (
     case AdvertTemplateTypeEnums.REGLUGERD:
       return {
         html: templateReglugerd,
-        type: AdvertTemplateTypeEnums.AUGLYSING,
+        type: AdvertTemplateTypeEnums.REGLUGERD,
       }
     case AdvertTemplateTypeEnums.GJALDSKRA:
       return {
         html: templateGjaldskra,
-        type: AdvertTemplateTypeEnums.AUGLYSING,
+        type: AdvertTemplateTypeEnums.GJALDSKRA,
       }
     default:
       return DEFAULT
   }
+}
+
+export const getTemplateDetails = (): AdvertTemplateDetails[] => {
+  const enumArray = Object.values<AdvertTemplateTypeEnums>(
+    AdvertTemplateTypeEnums,
+  )
+  const res = enumArray.map((slug) => {
+    switch (slug) {
+      case AdvertTemplateTypeEnums.AUGLYSING:
+        return {
+          slug: AdvertTemplateTypeEnums.AUGLYSING,
+          title: 'Auglýsing',
+        }
+      case AdvertTemplateTypeEnums.REGLUGERD:
+        return {
+          slug: AdvertTemplateTypeEnums.REGLUGERD,
+          title: 'Reglugerð',
+        }
+      case AdvertTemplateTypeEnums.GJALDSKRA:
+        return {
+          slug: AdvertTemplateTypeEnums.GJALDSKRA,
+          title: 'Gjaldskrá',
+        }
+    }
+  })
+
+  return res
 }

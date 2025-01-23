@@ -6,11 +6,11 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-browser'
 import { getDiff, HTMLDump } from '@island.is/regulations-tools/html'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { Case } from '../../gen/fetch'
+import { CaseDetailed } from '../../gen/fetch'
 import * as s from './OriginalCompare.css'
 
 export type OriginalCompareProps = {
-  activeCase: Case
+  activeCase: CaseDetailed
 }
 
 export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
