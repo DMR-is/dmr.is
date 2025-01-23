@@ -490,8 +490,6 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.deleteCorrection(id, body))
   }
 
-  // TODO: Do we need a put for correction? Or is it just a post?
-
   @Route({
     method: 'put',
     path: ':id/categories',
@@ -601,9 +599,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateAdvertByHtml(id, body))
   }
 
-  // TODO: ADD THIS BACK IN.
-  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  // @Roles(USER_ROLES.Admin)
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: ':id',
     operationId: 'getCase',
