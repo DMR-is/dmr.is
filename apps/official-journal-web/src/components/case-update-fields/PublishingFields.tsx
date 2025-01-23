@@ -30,7 +30,7 @@ type Props = {
 export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch } = useCaseContext()
+  const { currentCase, refetch, canEdit } = useCaseContext()
 
   const { md } = useBreakpoint()
 
@@ -150,6 +150,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             <SkeletonLoader height={64} borderRadius="large" />
           ) : (
             <DatePicker
+              disabled={!canEdit}
               key={currentCase.requestedPublicationDate}
               locale="is"
               size="sm"
@@ -165,7 +166,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
           <Inline alignY="center" space={1}>
             {fastTrackDelay && <Spinner />}
             <Checkbox
-              disabled={fastTrackDelay}
+              disabled={fastTrackDelay || !canEdit}
               checked={currentCase.fastTrack}
               label="Óskað er eftir hraðbirtingu"
               onChange={(e) => {
@@ -178,6 +179,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
         <Inline alignY="center" space={[2, 4]}>
           <Box style={{ minWidth: md ? '308px' : '254px' }}>
             <OJOIInput
+              disabled={!canEdit}
               name="price"
               defaultValue={currentCase.price}
               label={formatMessage(messages.grunnvinnsla.price)}
@@ -190,7 +192,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             {paidDelay && <Spinner />}
             <Checkbox
               checked={currentCase.paid}
-              disabled={paidDelay}
+              disabled={paidDelay || !canEdit}
               onChange={(e) => {
                 updatePaid({ paid: e.target.checked })
                 setPaid(e.target.checked)

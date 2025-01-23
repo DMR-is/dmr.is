@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next'
-import { getSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
@@ -41,6 +41,8 @@ export default function CaseSingle({
 }: Props) {
   const { formatMessage } = useFormatMessage()
 
+  const currentUser = useSession()
+
   return (
     <CaseProvider
       tags={tags}
@@ -49,6 +51,7 @@ export default function CaseSingle({
       departments={departments}
       employees={admins}
       types={types}
+      currentUserId={currentUser?.data?.user?.id}
     >
       <Meta
         title={`${formatMessage(messages.breadcrumbs.case)} - ${formatMessage(

@@ -1,5 +1,5 @@
 import cn from 'classnames'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Button, Drawer } from '@island.is/island-ui/core'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-browser'
@@ -14,35 +14,26 @@ type Props = {
 }
 
 export const OriginalCompare = ({ disclosure }: Props) => {
-  const { currentCase: activeCase } = useCaseContext()
+  const {
+    currentCase: activeCase,
+    lastFetched,
+    isValidating,
+  } = useCaseContext()
   const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
-  const [baseText, setBaseText] = useState<HTMLText>('')
-  const [currentDiff, setCurrentDiff] = useState<HTMLText>('')
 
-  useEffect(() => {
-    if (!baseText && !currentDiff) {
-      try {
-        const baseParsed = JSON.parse(activeCase.comments?.[0]?.state).answers
-          ?.advert?.html
+  const html = useMemo(() => {
+    const baseParsed = JSON.parse(activeCase.comments?.[0]?.state).answers
+      ?.advert?.html
 
-        const currentActive = activeCase.html
+    if (activeText === 'base') return baseParsed
 
-        const diffText = getDiff(
-          dirtyClean(baseParsed as HTMLText),
-          dirtyClean(currentActive as HTMLText),
-        )
+    const diffText = getDiff(
+      dirtyClean(baseParsed as HTMLText),
+      dirtyClean(activeCase.html as HTMLText),
+    )
 
-        setBaseText(baseParsed)
-        setCurrentDiff(diffText.diff)
-      } catch (e) {
-        setBaseText('')
-      }
-    }
-  }, [activeCase?.comments])
-
-  if (!activeText || !baseText) {
-    return null
-  }
+    return diffText.diff
+  }, [activeCase.html, activeCase.comments, activeText])
 
   const diffShowing = activeText === 'diff'
   return (
@@ -72,12 +63,16 @@ export const OriginalCompare = ({ disclosure }: Props) => {
           }}
           variant="text"
         >
-          {diffShowing ? 'Sjá grunntexta' : 'Sjá breytingar'}{' '}
+          {diffShowing ? 'Sjá grunntexta' : 'Sjá breytingar'}
         </Button>
-        <HTMLDump
-          className={cn(s.editor, s.diff)}
-          html={diffShowing ? currentDiff : baseText}
-        />
+
+        {!isValidating === true && (
+          <HTMLDump
+            key={lastFetched}
+            className={cn(s.editor, s.diff)}
+            html={html}
+          />
+        )}
       </Drawer>
     </>
   )

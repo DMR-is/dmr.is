@@ -1,6 +1,5 @@
 import { AccordionItem } from '@island.is/island-ui/core'
 
-import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Attachments } from '../attachments/Attachments'
 import { messages } from '../form-steps/messages'
@@ -12,7 +11,6 @@ type Props = {
 
 export const AttachmentFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const { currentCase } = useCaseContext()
 
   return (
     <AccordionItem
@@ -23,7 +21,7 @@ export const AttachmentFields = ({ toggle, onToggle }: Props) => {
       labelVariant="h5"
       iconVariant="small"
     >
-      <Attachments activeCase={currentCase} />
+      <Attachments />
     </AccordionItem>
   )
 }

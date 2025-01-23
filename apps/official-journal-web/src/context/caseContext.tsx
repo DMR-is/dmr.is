@@ -84,6 +84,8 @@ type CaseState = {
   isValidating?: boolean
   isValidatingTypes?: boolean
   error?: Error
+  canEdit: boolean
+  lastFetched: string
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -98,6 +100,8 @@ export const CaseContext = createContext<CaseState>({
   categoryOptions: [],
   employeeOptions: [],
   typeOptions: [],
+  canEdit: false,
+  lastFetched: new Date().toISOString(),
 })
 
 type CaseProviderProps = {
@@ -108,6 +112,7 @@ type CaseProviderProps = {
   types: AdvertType[]
   employees: AdminUser[]
   children: React.ReactNode
+  currentUserId?: string
 }
 
 export const CaseProvider = ({
@@ -117,18 +122,23 @@ export const CaseProvider = ({
   tags,
   types,
   employees,
+  currentUserId,
   children,
 }: CaseProviderProps) => {
+  const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
+  const [lastFetched, setLastFetched] = useState(new Date().toISOString())
   const { mutate, isLoading, error, isValidating } = useCase({
     caseId: initalCase.id,
     options: {
       keepPreviousData: true,
       revalidateOnFocus: false,
-      onSuccess: (data) => setCurrentCase(data._case),
+      onSuccess: (data) => {
+        setCurrentCase(data._case)
+        setLastFetched(new Date().toISOString())
+      },
     },
   })
 
-  const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
   const { types: fetchedTypes, isValidatingTypes } = useAdvertTypes({
     typesParams: {
       department: currentCase.advertDepartment.id,
@@ -155,6 +165,8 @@ export const CaseProvider = ({
 
   const typeOptions = createOptions(fetchedTypes ? fetchedTypes : types)
 
+  const canEdit = currentUserId === currentCase.assignedTo?.id
+
   return (
     <CaseContext.Provider
       value={{
@@ -169,6 +181,8 @@ export const CaseProvider = ({
         isLoading,
         isValidating,
         error,
+        canEdit,
+        lastFetched,
       }}
     >
       {children}

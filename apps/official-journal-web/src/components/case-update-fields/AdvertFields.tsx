@@ -13,6 +13,7 @@ import {
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
 import { messages } from '../form-steps/messages'
 
@@ -29,7 +30,7 @@ type Props = {
 export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch } = useCaseContext()
+  const { currentCase, refetch, canEdit } = useCaseContext()
 
   const { trigger } = useUpdateAdvertHtml({
     caseId: currentCase.id,
@@ -62,20 +63,35 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
       <Stack space={2}>
         <Box border="standard" borderRadius="large">
           <HTMLEditor
+            readonly={!canEdit}
             defaultValue={currentCase.html}
             onChange={(val) => onChangeHandler(val)}
           />
         </Box>
-        <Inline justifyContent="flexEnd">
+        <Inline space={2} justifyContent="flexEnd">
           <OriginalCompare
             disclosure={
               <Button
+                disabled={!canEdit}
                 variant="utility"
                 icon="document"
                 iconType="outline"
                 size="small"
               >
                 Breytingarsaga
+              </Button>
+            }
+          />
+          <AdvertDisplay
+            disclosure={
+              <Button
+                disabled={!canEdit}
+                variant="utility"
+                size="small"
+                icon="open"
+                iconType="outline"
+              >
+                Forskoðun
               </Button>
             }
           />

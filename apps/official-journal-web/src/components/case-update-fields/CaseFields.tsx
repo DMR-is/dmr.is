@@ -1,5 +1,6 @@
 import {
   Accordion,
+  AlertMessage,
   GridColumn,
   GridContainer,
   GridRow,
@@ -7,6 +8,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useToggle } from '../../hooks/useToggle'
 import { IconButton } from '../icon-button/IconButton'
 import { AdvertFields } from './AdvertFields'
@@ -17,6 +19,8 @@ import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
 
 export const CaseFields = () => {
+  const { canEdit } = useCaseContext()
+
   const commonToggle = useToggle(true)
   const publishingToggle = useToggle(false)
   const advertToggle = useToggle(false)
@@ -55,6 +59,13 @@ export const CaseFields = () => {
       <GridRow>
         <GridColumn span="12/12">
           <Stack space={2}>
+            {!canEdit && (
+              <AlertMessage
+                type="info"
+                title="Þú ert ekki skráður á málið"
+                message="Aðeins starfsmenn skráðir á málið geta breytt því"
+              />
+            )}
             <Inline space={1} alignY="center" justifyContent="flexEnd">
               <IconButton
                 size="small"

@@ -1,5 +1,4 @@
 import React from 'react'
-import { KeyedMutator } from 'swr'
 
 import {
   AlertMessage,
@@ -10,21 +9,15 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import {
-  ApplicationAttachmentTypeTitleEnum,
-  CaseDetailed,
-  GetCaseResponse,
-} from '../../gen/fetch'
+import { ApplicationAttachmentTypeTitleEnum } from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
-type Props = {
-  activeCase: CaseDetailed
-  refetchCase?: KeyedMutator<GetCaseResponse>
-}
 
-export const Attachments = ({ activeCase, refetchCase }: Props) => {
+export const Attachments = () => {
   const { formatMessage } = useFormatMessage()
+  const { currentCase, refetch, canEdit } = useCaseContext()
 
   const { loading, downloadAttachment, overwriteAttachment, error } =
     useAttachments()
@@ -47,22 +40,22 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
       return
     }
 
-    if (!activeCase.applicationId) {
+    if (!currentCase.applicationId) {
       return
     }
 
     overwriteAttachment({
       attachmentId,
-      caseId: activeCase.id,
-      applicationId: activeCase?.applicationId,
+      caseId: currentCase.id,
+      applicationId: currentCase?.applicationId,
       file,
       onSuccess: () => {
-        refetchCase && refetchCase()
+        refetch()
       },
     })
   }
 
-  if (activeCase.attachments.length === 0) {
+  if (currentCase.attachments.length === 0) {
     return (
       <AlertMessage
         type="warning"
@@ -89,7 +82,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
         borderColor="blue200"
       >
         <Stack space={2}>
-          {activeCase.attachments.map((a, i) => {
+          {currentCase.attachments.map((a, i) => {
             return (
               <Box
                 key={i}
@@ -129,6 +122,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
                         onChange={(e) => onFileUpload(a.id, e)}
                       />
                       <Button
+                        disabled={!canEdit}
                         variant="text"
                         icon="share"
                         iconType="outline"
@@ -141,6 +135,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
                   )}
                   <Box>
                     <Button
+                      disabled={!canEdit}
                       variant="text"
                       icon="download"
                       iconType="outline"
@@ -148,7 +143,7 @@ export const Attachments = ({ activeCase, refetchCase }: Props) => {
                       loading={loading}
                       onClick={() =>
                         downloadAttachment({
-                          caseId: activeCase.id,
+                          caseId: currentCase.id,
                           attachmentId: a.id,
                         })
                       }

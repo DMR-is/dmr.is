@@ -36,6 +36,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     categoryOptions,
     typeOptions,
     isValidatingTypes,
+    canEdit,
   } = useCaseContext()
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
@@ -118,6 +119,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           label={formatMessage(messages.grunnvinnsla.institution)}
         />
         <OJOISelect
+          isDisabled={!canEdit}
           width="half"
           name="department"
           isValidating={isUpdatingDepartment}
@@ -137,6 +139,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           }}
         />
         <OJOISelect
+          isDisabled={!canEdit}
           width="half"
           isLoading={isValidatingTypes}
           isValidating={isUpdatingType}
@@ -156,6 +159,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           }}
         />
         <OJOIInput
+          disabled={!canEdit}
           textarea
           name="advertTitle"
           isValidating={isUpdatingTitle}
@@ -173,6 +177,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             />
           )}
           <OJOISelect
+            isDisabled={!canEdit}
             width="half"
             label={formatMessage(messages.grunnvinnsla.categories)}
             options={categoryOptions}
@@ -189,6 +194,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           <Inline space={1} flexWrap="wrap">
             {currentCase.advertCategories?.map((category, i) => (
               <OJOITag
+                disabled={!canEdit}
                 isValidating={isUpdatingCategory}
                 key={i}
                 variant="blue"
