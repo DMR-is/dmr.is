@@ -10,6 +10,7 @@ type Props = {
   activeCase: Case
   caseStep: CaseStep
   canPublishFix: boolean
+  loading?: boolean
   updateAdvertHtmlTrigger: () => void
   refetch?: () => void
 }
@@ -18,6 +19,7 @@ export const FormFooter = ({
   activeCase,
   caseStep,
   canPublishFix,
+  loading,
   updateAdvertHtmlTrigger,
   refetch,
 }: Props) => {
@@ -51,6 +53,7 @@ export const FormFooter = ({
         updateAdvertHtmlTrigger={updateAdvertHtmlTrigger}
         canPublishFix={canPublishFix}
         refetch={refetch}
+        loading={loading}
       />
     </Box>
   )

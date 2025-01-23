@@ -30,6 +30,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -69,9 +70,16 @@ export class CaseServiceMock implements ICaseService {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-  updateAdvert(
+  updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')

@@ -44,6 +44,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -477,7 +478,7 @@ export class CaseController {
   @Route({
     method: 'delete',
     path: ':id/correction',
-    operationId: 'Add correction',
+    operationId: 'Delete correction',
     summary: 'Delete correction from DB',
     params: [{ name: 'id', type: 'string', required: true }],
     bodyType: DeleteCaseAdvertCorrection,
@@ -572,6 +573,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/update',
+    operationId: 'updateCaseAndAddCorrection',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html + add correction details',
+    bodyType: UpdateAdvertHtmlCorrection,
+  })
+  async updateAdvertHtmlCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/html',
     operationId: 'updateAdvertHtml',
     params: [{ name: 'id', type: 'string', required: true }],
@@ -582,7 +598,7 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateAdvertByHtml(id, body))
   }
 
   // TODO: ADD THIS BACK IN.

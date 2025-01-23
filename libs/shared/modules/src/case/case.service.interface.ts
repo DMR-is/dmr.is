@@ -19,6 +19,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -154,9 +155,15 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>>
 
-  updateAdvert(
+  updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 }

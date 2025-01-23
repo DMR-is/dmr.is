@@ -750,6 +750,56 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/correction": {
+      "post": {
+        "operationId": "Add correction",
+        "summary": "Add correction to case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCaseAdvertCorrection"
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "Delete correction",
+        "summary": "Delete correction from DB",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteCaseAdvertCorrection"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/categories": {
       "put": {
         "operationId": "updateCategories",
@@ -861,6 +911,32 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateCaseStatusBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/cases/{id}/update": {
+      "put": {
+        "operationId": "updateCaseAndAddCorrection",
+        "summary": "Update advert html + add correction details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvertHtmlCorrection"
+              }
             }
           }
         },
@@ -3178,6 +3254,32 @@
         "properties": { "title": { "type": "string" } },
         "required": ["title"]
       },
+      "AddCaseAdvertCorrection": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the correction"
+          },
+          "description": {
+            "type": "string",
+            "description": "The correction description"
+          },
+          "documentHtml": { "type": "string", "nullable": true },
+          "documentPdfUrl": { "type": "string", "nullable": true }
+        },
+        "required": ["title", "description"]
+      },
+      "DeleteCaseAdvertCorrection": {
+        "type": "object",
+        "properties": {
+          "correctionId": {
+            "type": "string",
+            "description": "Id of the correction to delete"
+          }
+        },
+        "required": ["correctionId"]
+      },
       "UpdateCategoriesBody": {
         "type": "object",
         "properties": {
@@ -3201,10 +3303,28 @@
         },
         "required": ["status"]
       },
+      "UpdateAdvertHtmlCorrection": {
+        "type": "object",
+        "properties": {
+          "advertHtml": { "type": "string", "description": "Advert HTML" },
+          "documentPdfUrl": { "type": "string", "nullable": true },
+          "title": {
+            "type": "string",
+            "description": "Title of the correction"
+          },
+          "description": {
+            "type": "string",
+            "description": "The correction description"
+          },
+          "documentHtml": { "type": "string", "nullable": true }
+        },
+        "required": ["advertHtml", "title", "description"]
+      },
       "UpdateAdvertHtmlBody": {
         "type": "object",
         "properties": {
-          "advertHtml": { "type": "string", "description": "Advert HTML" }
+          "advertHtml": { "type": "string", "description": "Advert HTML" },
+          "documentPdfUrl": { "type": "string", "nullable": true }
         },
         "required": ["advertHtml"]
       },
@@ -3469,12 +3589,59 @@
         },
         "required": ["id", "title", "html"]
       },
+      "AdvertCorrection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the correction"
+          },
+          "description": {
+            "type": "string",
+            "description": "The correction description"
+          },
+          "advertId": {
+            "type": "string",
+            "description": "Id of the advert being corrected"
+          },
+          "documentHtml": { "type": "string" },
+          "documentPdfUrl": { "type": "string" },
+          "createdDate": {
+            "type": "string",
+            "nullable": false,
+            "example": "2024-01-01T09:00:00Z"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": false,
+            "example": "2024-01-20T09:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "advertId",
+          "createdDate",
+          "updatedDate"
+        ]
+      },
       "Case": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "advertId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the advert the case is related to.",
+            "nullable": true
           },
           "applicationId": {
             "type": "string",
@@ -3619,10 +3786,16 @@
           "additions": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CaseAddition" }
+          },
+          "advertCorrections": {
+            "description": "Corrections made to the related advert.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertCorrection" }
           }
         },
         "required": [
           "id",
+          "advertId",
           "applicationId",
           "year",
           "caseNumber",

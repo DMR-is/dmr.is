@@ -29,6 +29,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -433,6 +434,59 @@ export class CaseService implements ICaseService {
   @Transactional()
   async updateAdvert(
     caseId: string,
+    body: UpdateAdvertHtmlCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const { advertHtml, ...rest } = body
+
+    const advertPromise = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId,
+      },
+      transaction,
+    })
+
+    const now = new Date().toISOString()
+
+    const docUrl =
+      advertPromise?.advert?.documentPdfUrl || `${caseId}_${now}.pdf`
+
+    if (!advertPromise?.advert?.documentPdfUrl) {
+      this.logger.error(
+        `Failed to get advert pdf url<${advertPromise?.advertId}>, in case<${caseId}`,
+        {
+          caseId: caseId,
+          advertId: advertPromise?.advertId,
+          category: LOGGING_CATEGORY,
+          pdfName: docUrl,
+        },
+      )
+    }
+
+    const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
+
+    await this.createPdfAndUpload(caseId, pdfUrl)
+    await this.updateAdvertByHtml(
+      caseId,
+      { advertHtml, documentPdfUrl: pdfUrl },
+      transaction,
+    )
+    await this.postCaseCorrection(
+      caseId,
+      {
+        ...rest,
+        documentHtml: advertHtml,
+        documentPdfUrl: pdfUrl,
+      },
+      transaction,
+    )
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvertByHtml(
+    caseId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
@@ -465,6 +519,7 @@ export class CaseService implements ICaseService {
       hasAdvertResult.advertId,
       {
         documentHtml: body.advertHtml,
+        ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
       },
     )
 
@@ -486,6 +541,48 @@ export class CaseService implements ICaseService {
     }
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle({ logArgs: false })
+  private async createPdfAndUpload(
+    caseId: string,
+    fileName: string,
+  ): Promise<ResultWrapper<{ url: string }>> {
+    const advertPdf = await this.pdfService.generatePdfByCaseId(caseId)
+
+    if (!advertPdf.result.ok) {
+      this.logger.warn('Failed to get pdf for case', {
+        error: advertPdf.result.error,
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    if (advertPdf.result.ok) {
+      const bucket = getS3Bucket()
+      const key = `adverts/${fileName}`
+      const upload = await this.s3.uploadObject(
+        bucket,
+        key,
+        fileName,
+        advertPdf.result.value,
+      )
+
+      if (!upload.result.ok) {
+        this.logger.warn('Failed to upload pdf to s3', {
+          error: upload.result.error,
+          category: LOGGING_CATEGORY,
+        })
+      } else {
+        this.logger.debug('Uploaded pdf to s3', {
+          url: upload.result.value,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
+
+    return ResultWrapper.ok({
+      url: advertPdf.result.ok ? fileName : '',
+    })
   }
 
   @LogAndHandle()
@@ -546,39 +643,11 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
-    const advertPdf = await this.pdfService.getPdfByCaseId(caseId)
-
-    if (!advertPdf.result.ok) {
-      this.logger.warn('Failed to get pdf for case', {
-        error: advertPdf.result.error,
-        category: LOGGING_CATEGORY,
-      })
-    }
 
     const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
     const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
-    if (advertPdf.result.ok) {
-      const bucket = getS3Bucket()
-      const key = `adverts/${pdfFileName}`
-      const upload = await this.s3.uploadObject(
-        bucket,
-        key,
-        pdfFileName,
-        advertPdf.result.value,
-      )
 
-      if (!upload.result.ok) {
-        this.logger.warn('Failed to upload pdf to s3', {
-          error: upload.result.error,
-          category: LOGGING_CATEGORY,
-        })
-      } else {
-        this.logger.debug('Uploaded pdf to s3', {
-          url: upload.result.value,
-          category: LOGGING_CATEGORY,
-        })
-      }
-    }
+    await this.createPdfAndUpload(caseId, pdfFileName)
 
     const advertCreateResult = await this.journalService.create(
       {

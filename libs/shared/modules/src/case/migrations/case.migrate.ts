@@ -66,7 +66,7 @@ export const caseMigrate = (model: CaseModel): Case => {
       additions: model.additions
         ? model.additions.map((add) => caseAdditionMigrate(add))
         : [],
-      corrections: model.advert?.corrections
+      advertCorrections: model.advert?.corrections
         ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
         : undefined,
     }

@@ -122,7 +122,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     const dmrClient = createDmrClient()
 
     const { cases, paging, totalCases } = await dmrClient.getPublishedCases({
-      department: tab ? tab : CaseDepartmentTabs[0].value,
+      department: tab ? tab : CaseDepartmentTabs[1].value,
       search: search,
     })
 

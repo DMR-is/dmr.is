@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDateString,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   Max,
@@ -15,6 +16,7 @@ import {
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-type'
+import { AdvertCorrection } from '../adverts/advert-correction.dto'
 import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
@@ -292,4 +294,15 @@ export class Case {
   @ValidateNested({ each: true })
   @Type(() => CaseAddition)
   additions!: CaseAddition[]
+
+  @ApiProperty({
+    type: [AdvertCorrection],
+    description: 'Corrections made to the related advert.',
+    required: false,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => AdvertCorrection)
+  @IsArray()
+  @IsOptional()
+  readonly advertCorrections?: AdvertCorrection[]
 }
