@@ -38,3 +38,12 @@ export enum AdditionType {
   Html = 'html',
   File = 'file',
 }
+
+export enum CaseActionEnum {
+  SUBMIT = 'SUBMIT',
+  ASSIGN_USER = 'ASSIGN_USER',
+  ASSIGN_SELF = 'ASSIGN_SELF',
+  UPDATE_STATUS = 'UPDATE_STATUS',
+  COMMENT_INTERNAL = 'INTERNAL_COMMENT',
+  COMMENT_EXTERNAL = 'EXTERNAL_COMMENT',
+}
