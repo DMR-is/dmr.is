@@ -162,6 +162,7 @@ export enum APIRoutes {
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
+  UpdateAdvertWithCorrection = '/api/cases/:id/updateAdvertWithCorrection',
   UpdateCategories = '/api/cases/:id/updateCategories',
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',

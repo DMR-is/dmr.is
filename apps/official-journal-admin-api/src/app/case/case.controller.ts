@@ -12,6 +12,7 @@ import {
 } from '@dmr.is/modules'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
+  AddCaseAdvertCorrection,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -20,6 +21,7 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
+  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseCommentResponse,
   GetCaseCommentsQuery,
@@ -46,6 +48,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
@@ -498,6 +501,21 @@ export class CaseController {
   }
 
   @Route({
+    method: 'post',
+    path: ':id/correction',
+    operationId: 'Add correction',
+    summary: 'Add correction to case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: AddCaseAdvertCorrection,
+  })
+  async postCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: AddCaseAdvertCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.postCaseCorrection(id, body))
+  }
+
+  @Route({
     method: 'put',
     path: ':id/categories',
     operationId: 'updateCategories',
@@ -583,6 +601,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/update',
+    operationId: 'updateCaseAndAddCorrection',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html + add correction details',
+    bodyType: UpdateAdvertHtmlCorrection,
+  })
+  async updateAdvertHtmlCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/html',
     operationId: 'updateAdvertHtml',
     params: [{ name: 'id', type: 'string', required: true }],
@@ -594,7 +627,7 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+    ResultWrapper.unwrap(await this.caseService.updateAdvertByHtml(id, body))
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
