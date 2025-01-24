@@ -516,21 +516,6 @@ export class CaseController {
   }
 
   @Route({
-    method: 'delete',
-    path: ':id/correction',
-    operationId: 'Delete correction',
-    summary: 'Delete correction from DB',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: DeleteCaseAdvertCorrection,
-  })
-  async deleteCorrection(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: DeleteCaseAdvertCorrection,
-  ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.deleteCorrection(id, body))
-  }
-
-  @Route({
     method: 'put',
     path: ':id/categories',
     operationId: 'updateCategories',

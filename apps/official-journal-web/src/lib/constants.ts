@@ -174,7 +174,6 @@ export enum APIRoutes {
   CreateMainCategoryCategories = '/api/mainCategories/:id/categories/create',
   CreateComment = '/api/cases/:id/comments/create',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
-  CreateCorrection = '/api/cases/:id/correction/create',
   DeleteMainCategory = '/api/mainCategories/:id/delete',
   DeleteMainCategoryCategory = '/api/mainCategories/:id/categories/:cid/delete',
   PublishCases = '/api/cases/publish',

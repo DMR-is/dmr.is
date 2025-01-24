@@ -587,24 +587,33 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     const { advertHtml, ...rest } = body
 
-    const advertPromise = await this.casePublishedAdvertsModel.findOne({
-      where: {
-        caseId,
-      },
+    const activeCase = await this.caseModel.findByPk(caseId, {
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['documentPdfUrl', 'id'],
+        },
+      ],
       transaction,
     })
 
+    if (!activeCase) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
     const now = new Date().toISOString()
 
-    const docUrl =
-      advertPromise?.advert?.documentPdfUrl || `${caseId}_${now}.pdf`
+    const docUrl = activeCase?.advert?.documentPdfUrl || `${caseId}_${now}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
 
-    if (!advertPromise?.advert?.documentPdfUrl) {
+    if (!activeCase?.advert?.documentPdfUrl) {
       this.logger.error(
-        `Failed to get advert pdf url<${advertPromise?.advertId}>, in case<${caseId}`,
+        `Failed to get advert pdf url<${activeCase?.advertId}>, in case<${caseId}`,
         {
           caseId: caseId,
-          advertId: advertPromise?.advertId,
+          advertId: activeCase?.advertId,
           category: LOGGING_CATEGORY,
           pdfName: docUrl,
         },
@@ -613,21 +622,27 @@ export class CaseService implements ICaseService {
 
     const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
 
-    await this.createPdfAndUpload(caseId, pdfUrl)
-    await this.updateAdvertByHtml(
-      caseId,
-      { advertHtml, documentPdfUrl: pdfUrl },
-      transaction,
-    )
-    await this.postCaseCorrection(
-      caseId,
-      {
-        ...rest,
-        documentHtml: advertHtml,
-        documentPdfUrl: pdfUrl,
-      },
-      transaction,
-    )
+    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfUrl))
+    const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
+      this.updateAdvertByHtml(
+        caseId,
+        { advertHtml, documentPdfUrl: pdfUrl },
+        transaction,
+      ),
+      this.postCaseCorrection(
+        caseId,
+        {
+          ...rest,
+          documentHtml: advertHtml,
+          documentPdfUrl: pdfUrl,
+        },
+        transaction,
+      ),
+    ])
+
+    ResultWrapper.unwrap(updateAdvertCheck)
+    ResultWrapper.unwrap(postCaseCorrectionCheck)
+
     return ResultWrapper.ok()
   }
 
@@ -695,7 +710,7 @@ export class CaseService implements ICaseService {
   private async createPdfAndUpload(
     caseId: string,
     fileName: string,
-  ): Promise<ResultWrapper<{ url: string }>> {
+  ): Promise<ResultWrapper> {
     const advertPdf = await this.pdfService.generatePdfByCaseId(caseId)
 
     if (!advertPdf.result.ok) {
@@ -728,9 +743,7 @@ export class CaseService implements ICaseService {
       }
     }
 
-    return ResultWrapper.ok({
-      url: advertPdf.result.ok ? fileName : '',
-    })
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -1017,7 +1030,7 @@ export class CaseService implements ICaseService {
           ...body,
           advertId: advertId,
         },
-        { transaction: transaction, validate: true },
+        { transaction: transaction },
       )
 
       return ResultWrapper.ok()
