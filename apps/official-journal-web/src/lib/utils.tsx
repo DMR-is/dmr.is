@@ -1,10 +1,11 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
+import { ComponentProps } from 'react'
 import { z } from 'zod'
 
-import type { IconMapIcon } from '@island.is/island-ui/core'
-import { StringOption } from '@island.is/island-ui/core'
+import type { Icon, IconMapIcon } from '@island.is/island-ui/core'
+import { StringOption, Text } from '@island.is/island-ui/core'
 
 import {
   BaseEntity,
@@ -169,6 +170,82 @@ type StepsType = {
   notes?: React.ReactNode[]
   isActive: boolean
   isComplete: boolean
+}
+
+type ParsedComment = {
+  title: React.ReactNode
+  icon: ComponentProps<typeof Icon>['icon']
+  internal: boolean
+}
+
+export const parseComment = (comment: CaseComment) => {
+  let cmt: ParsedComment = {
+    title: '',
+
+    icon: 'arrowForward',
+    internal: comment.internal,
+  }
+
+  switch (comment.title) {
+    case CaseCommentType.InnsentAf: {
+      cmt = {
+        ...cmt,
+        title: (
+          <Text variant="h5" as="p" fontWeight="regular">
+            {comment.title} <strong>{comment.creator}</strong>
+          </Text>
+        ),
+      }
+      break
+    }
+    case CaseCommentType.MerkirSérMálið:
+    case CaseCommentType.GerirAthugasemd:
+    case CaseCommentType.SkráirSkilaboð: {
+      cmt = {
+        ...cmt,
+        title: (
+          <Text variant="h5" fontWeight="regular" as="p">
+            <strong>{comment.creator}</strong> {comment.title}
+          </Text>
+        ),
+      }
+
+      if (comment.title === CaseCommentType.SkráirSkilaboð) {
+        cmt.icon = 'arrowBack'
+      }
+
+      if (comment.title === CaseCommentType.GerirAthugasemd) {
+        cmt.icon = 'pencil'
+      }
+
+      break
+    }
+    case CaseCommentType.FærirMálÁ:
+    case CaseCommentType.FærirMálÍStöðuna: {
+      cmt = {
+        ...cmt,
+        title: (
+          <Text variant="h5" fontWeight="regular" as="p">
+            <strong>{comment.creator}</strong> {comment.title}{' '}
+            <strong>{comment.receiver}</strong>
+          </Text>
+        ),
+      }
+      break
+    }
+    default: {
+      cmt = {
+        ...cmt,
+        title: (
+          <Text variant="h5" as="p" fontWeight="regular">
+            {comment.title} <strong>{comment.creator}</strong>
+          </Text>
+        ),
+      }
+    }
+  }
+
+  return cmt
 }
 
 export const commentToNode = (comment: CaseComment) => {

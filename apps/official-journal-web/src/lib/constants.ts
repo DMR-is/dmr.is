@@ -16,6 +16,8 @@ export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 
 export const COMMENTS_TO_HIDE = 4
 
+export const COMMENTS_TO_SHOW = 5
+
 export enum Routes {
   Dashboard = '/',
   MainCategories = '/yfirflokkar',
