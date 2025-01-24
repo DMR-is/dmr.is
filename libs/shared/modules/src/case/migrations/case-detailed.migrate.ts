@@ -2,7 +2,7 @@ import { CaseCommentSourceEnum, CaseDetailed } from '@dmr.is/shared/dto'
 
 import { adminUserMigrate } from '../../admin-user/migrations/admin-user.migrate'
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
-import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
+import { caseCommentMigrate } from '../../comment/v1/migrations/case-comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'

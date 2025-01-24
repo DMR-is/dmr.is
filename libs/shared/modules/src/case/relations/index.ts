@@ -3,7 +3,7 @@ import { Includeable } from 'sequelize'
 import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdminUserRoleModel } from '../../admin-user/models/user-role.model'
 import { AdvertTypeModel } from '../../advert-type/models'
-import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/models'
+import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/v1/models'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,

@@ -25,7 +25,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
-import { ICommentService } from '../../../comment/comment.service.interface'
+import { ICommentService } from '../../../comment/v1/comment.service.interface'
 import { AdvertCategoryModel } from '../../../journal/models'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
