@@ -1,0 +1,7 @@
+export * from './comment.service.interface'
+export * from './comment.service'
+export * from './comment.module'
+export * from './dto/comment.dto'
+export * from './migrations'
+export * from './models/case-action.model'
+export * from './models/comment.model'

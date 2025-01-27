@@ -39,12 +39,36 @@ export enum AdditionType {
   File = 'file',
 }
 
+/**
+ * Actions that can be performed on a case
+ */
 export enum CaseActionEnum {
+  /**
+   * When a case is submitted by an institution/application-system
+   */
   SUBMIT = 'SUBMIT',
+  /**
+   * When a admin assigns a case to another admin user
+   */
   ASSIGN_USER = 'ASSIGN_USER',
+  /**
+   * When a admin assigns a case to themselves
+   */
   ASSIGN_SELF = 'ASSIGN_SELF',
+  /**
+   * When a admin updates the status of the case
+   */
   UPDATE_STATUS = 'UPDATE_STATUS',
+  /**
+   * When a admin adds a comment to the case
+   */
   COMMENT_INTERNAL = 'INTERNAL_COMMENT',
+  /**
+   * When a external adds a comment to the case, available for all users
+   */
   COMMENT_EXTERNAL = 'EXTERNAL_COMMENT',
+  /**
+   * When a application adds a comment to the case, available for all users
+   */
   COMMENT_APPLICATION = 'APPLICATION_COMMENT',
 }

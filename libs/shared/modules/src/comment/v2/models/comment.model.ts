@@ -14,7 +14,7 @@ import { CaseModel, CaseStatusModel } from '../../../case/models'
 import { AdvertInvolvedPartyModel } from '../../../journal/models'
 import { CaseActionModel } from './case-action.model'
 
-@Table({ tableName: 'COMMENT_V2', timestamps: false })
+@Table({ tableName: 'comment_v2', timestamps: false })
 export class CommentModel extends Model {
   @PrimaryKey
   @Column({
@@ -86,6 +86,7 @@ export class CommentModel extends Model {
   })
   caseStatusReceiverId!: string | null
 
+  @ForeignKey(() => AdminUserModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: true,
@@ -103,7 +104,10 @@ export class CommentModel extends Model {
   @BelongsTo(() => CaseModel)
   case!: CaseModel
 
-  @BelongsTo(() => CaseStatusModel)
+  @BelongsTo(() => CaseStatusModel, {
+    foreignKey: 'case_status_id',
+    as: 'createdCaseStatus',
+  })
   createdCaseStatus!: CaseStatusModel
 
   @BelongsTo(() => CaseActionModel)
@@ -112,15 +116,24 @@ export class CommentModel extends Model {
   @BelongsTo(() => ApplicationUserModel)
   applicationUserCreator?: ApplicationUserModel
 
-  @BelongsTo(() => AdminUserModel)
+  @BelongsTo(() => AdminUserModel, {
+    foreignKey: 'admin_user_creator_id',
+    as: 'adminUserCreator',
+  })
   adminUserCreator?: AdminUserModel
 
   @BelongsTo(() => AdvertInvolvedPartyModel)
   institutionCreator?: AdvertInvolvedPartyModel
 
-  @BelongsTo(() => CaseStatusModel)
+  @BelongsTo(() => CaseStatusModel, {
+    foreignKey: 'case_status_receiver_id',
+    as: 'caseStatusReceiver',
+  })
   caseStatusReceiver?: CaseStatusModel
 
-  @BelongsTo(() => AdminUserModel)
+  @BelongsTo(() => AdminUserModel, {
+    foreignKey: 'admin_user_receiver_id',
+    as: 'adminUserReceiver',
+  })
   adminUserReceiver?: AdminUserModel
 }

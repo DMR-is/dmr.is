@@ -1,5 +1,4 @@
 import { Transaction } from 'sequelize'
-import { CaseActionEnum } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -7,6 +6,7 @@ import {
   AssignSelfCommentBody,
   AssignUserCommentBody,
   ExternalCommentBody,
+  GetComment,
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
@@ -15,52 +15,45 @@ import {
 export interface ICommentServiceV2 {
   createSubmitComment(
     caseId: string,
-    action: CaseActionEnum,
     body: SubmitCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createAssignUserComment(
     caseId: string,
-    action: CaseActionEnum,
     body: AssignUserCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createAssignSelfComment(
     caseId: string,
-    action: CaseActionEnum,
     body: AssignSelfCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createUpdateStatusComment(
     caseId: string,
-    action: CaseActionEnum,
     body: UpdateStatusCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createInternalComment(
     caseId: string,
-    action: CaseActionEnum,
     body: InternalCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createExternalComment(
     caseId: string,
-    action: CaseActionEnum,
     body: ExternalCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 
   createApplicationComment(
     caseId: string,
-    action: CaseActionEnum,
     body: ApplicationCommentBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<GetComment>>
 }
 
 export const ICommentServiceV2 = Symbol('ICommentServiceV2')

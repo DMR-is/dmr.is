@@ -1,6 +1,14 @@
-import { CaseActionEnum, CaseStatus } from '@dmr.is/shared/dto'
+import { BaseEntity, CaseActionEnum, CaseStatus } from '@dmr.is/shared/dto'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+
+export class CommentCreatorDto extends OmitType(BaseEntity, [
+  'slug',
+] as const) {}
+
+export class CommentReceiverDto extends OmitType(BaseEntity, [
+  'slug',
+] as const) {}
 
 export class CommentDto {
   @ApiProperty({
@@ -11,9 +19,10 @@ export class CommentDto {
 
   @ApiProperty({
     type: String,
-    description: 'ISO string of the age of the comment',
+    description:
+      'ISO string representation of the date the comment was created',
   })
-  ageIso!: string
+  created!: string
 
   @ApiProperty({
     enum: CaseActionEnum,
@@ -29,24 +38,25 @@ export class CommentDto {
   status!: CaseStatus
 
   @ApiProperty({
-    type: String,
+    type: CommentCreatorDto,
+    nullable: true,
     description: 'The creator of the comment',
   })
-  creator!: string
+  creator!: CommentCreatorDto | null
 
   @ApiProperty({
-    description: 'The receiver of the comment',
-    type: String,
+    type: CommentReceiverDto,
     nullable: true,
+    description: 'The receiver of the comment',
   })
-  receiver?: string
+  receiver!: CommentReceiverDto | null
 
   @ApiProperty({
     type: String,
     description: 'The comment',
     nullable: true,
   })
-  comment?: string
+  comment!: string | null
 }
 
 class CommentFields {
@@ -55,35 +65,35 @@ class CommentFields {
     description:
       'Should be passed if the comment is created by an application user',
   })
-  applicationUserCreatorId?: string
+  applicationUserCreatorId!: string
 
   @ApiProperty({
     type: String,
     description:
       'Should be passed when an admin user is responsible for the action taken',
   })
-  adminUserCreatorId?: string
+  adminUserCreatorId!: string
 
   @ApiProperty({
     type: String,
     description:
       'Should be passed when an institution is responsible for the action taken',
   })
-  institutionCreatorId?: string
+  institutionCreatorId!: string
 
   @ApiProperty({
     type: String,
     description:
       'Should be passed when an case status is receiving the action taken',
   })
-  caseStatusReceiverId?: string
+  caseStatusReceiverId!: string
 
   @ApiProperty({
     type: String,
     description:
       'Should be passed when an admin user is receiving the action taken',
   })
-  adminUserReceiverId?: string
+  adminUserReceiverId!: string
 
   @ApiProperty({
     type: String,
@@ -123,3 +133,10 @@ export class ApplicationCommentBody extends PickType(CommentFields, [
   'applicationUserCreatorId',
   'comment',
 ]) {}
+
+export class GetComment {
+  @ApiProperty({
+    type: CommentDto,
+  })
+  comment!: CommentDto
+}
