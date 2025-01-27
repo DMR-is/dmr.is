@@ -24,6 +24,7 @@ import {
   AssignUserCommentBody,
   ExternalCommentBody,
   GetComment,
+  GetComments,
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
@@ -47,6 +48,116 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  async getCommentById(
+    caseId: string,
+    commentId: string,
+  ): Promise<ResultWrapper<GetComment>> {
+    const comment = await this.commentModel.findByPk(commentId, {
+      include: [
+        {
+          attributes: ['id'],
+          model: CaseModel,
+          required: true,
+          where: {
+            id: caseId,
+          },
+        },
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          as: 'createdCaseStatus',
+        },
+        { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
+        {
+          model: AdminUserModel,
+          as: 'adminUserCreator',
+        },
+        {
+          model: AdminUserModel,
+          as: 'adminUserReceiver',
+        },
+        {
+          model: ApplicationUserModel,
+          include: [
+            {
+              model: AdvertInvolvedPartyModel,
+            },
+          ],
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          as: 'caseStatusReceiver',
+        },
+      ],
+    })
+
+    if (!comment) {
+      this.logger.warn(`Comment with id ${commentId} not found`, {
+        commentId,
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+      })
+      throw new NotFoundException(`Comment with id ${commentId} not found`)
+    }
+
+    const migrated = commentMigrate(comment)
+
+    return ResultWrapper.ok({ comment: migrated })
+  }
+
+  @LogAndHandle()
+  async getComments(caseId: string): Promise<ResultWrapper<GetComments>> {
+    const comments = await this.commentModel.findAll({
+      where: {
+        caseId: caseId,
+      },
+      include: [
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          as: 'createdCaseStatus',
+        },
+        { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
+        {
+          model: AdminUserModel,
+          as: 'adminUserCreator',
+        },
+        {
+          model: AdminUserModel,
+          as: 'adminUserReceiver',
+        },
+        {
+          model: ApplicationUserModel,
+          include: [
+            {
+              model: AdvertInvolvedPartyModel,
+            },
+          ],
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+          as: 'caseStatusReceiver',
+        },
+      ],
+      order: [['created', 'ASC']],
+    })
+
+    return ResultWrapper.ok({
+      comments: comments.map((comment) => commentMigrate(comment)),
+    })
+  }
 
   @Transactional()
   private async getCreateValues(

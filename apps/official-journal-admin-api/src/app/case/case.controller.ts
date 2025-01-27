@@ -14,7 +14,6 @@ import {
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AdminUser,
-  CaseActionEnum,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -106,64 +105,6 @@ export class CaseController {
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
-
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Post('test/:caseId')
-  async test(@Param('caseId') caseId: string, @CurrentUser() user: AdminUser) {
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createSubmitComment(
-    //     caseId,
-    //     {
-    //       institutionCreatorId: '7ccc4a14-5350-4f82-9aa4-5af712af2fd9',
-    //     },
-    //   ),
-    // )
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createAssignUserComment(
-    //     caseId,
-    //     {
-    //       adminUserCreatorId: user.id,
-    //       adminUserReceiverId: 'f450279c-b07e-4f92-a5ae-d8f93360cafe',
-    //     },
-    //   ),
-    // )
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createAssignSelfComment(
-    //     caseId,
-    //     {
-    //       adminUserCreatorId: user.id,
-    //     },
-    //   ),
-    // )
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createUpdateStatusComment(
-    //     caseId,
-    //     {
-    //       adminUserCreatorId: user.id,
-    //       caseStatusReceiverId: 'e926beb2-4001-4315-aed9-e4eec2ca963d',
-    //     },
-    //   ),
-    // )
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createInternalComment(caseId, {
-    //     adminUserCreatorId: user.id,
-    //     comment: 'Hello there',
-    //   }),
-    // )
-    // return ResultWrapper.unwrap(
-    //   await this.commentServiceV2.createExternalComment(caseId, {
-    //     adminUserCreatorId: user.id,
-    //     comment: 'Hello there again',
-    //   }),
-    // )
-    return ResultWrapper.unwrap(
-      await this.commentServiceV2.createApplicationComment(caseId, {
-        applicationUserCreatorId: 'f93461d3-7667-4e7b-86b9-83b4f1f97592',
-        comment: 'Hello there from the application system',
-      }),
-    )
-  }
 
   @Route({
     path: 'nextPublicationNumber/:departmentId',

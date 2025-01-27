@@ -140,3 +140,10 @@ export class GetComment {
   })
   comment!: CommentDto
 }
+
+export class GetComments {
+  @ApiProperty({
+    type: [CommentDto],
+  })
+  comments!: CommentDto[]
+}

@@ -7,12 +7,20 @@ import {
   AssignUserCommentBody,
   ExternalCommentBody,
   GetComment,
+  GetComments,
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
 } from './dto/comment.dto'
 
 export interface ICommentServiceV2 {
+  getCommentById(
+    caseId: string,
+    commentId: string,
+  ): Promise<ResultWrapper<GetComment>>
+
+  getComments(caseId: string): Promise<ResultWrapper<GetComments>>
+
   createSubmitComment(
     caseId: string,
     body: SubmitCommentBody,
