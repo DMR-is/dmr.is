@@ -3,7 +3,19 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { CaseActionEnum } from '@dmr.is/shared/dto'
+import {
+  ApplicationCommentBody,
+  AssignSelfCommentBody,
+  AssignUserCommentBody,
+  CaseActionEnum,
+  ExternalCommentBody,
+  GetComment,
+  GetComments,
+  GetCommentsQuery,
+  InternalCommentBody,
+  SubmitCommentBody,
+  UpdateStatusCommentBody,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -18,18 +30,6 @@ import { ApplicationUserModel } from '../../application-user/models'
 import { CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { ICommentServiceV2 } from './comment.service.interface'
-import {
-  ApplicationCommentBody,
-  AssignSelfCommentBody,
-  AssignUserCommentBody,
-  ExternalCommentBody,
-  GetComment,
-  GetComments,
-  GetCommentsQuery,
-  InternalCommentBody,
-  SubmitCommentBody,
-  UpdateStatusCommentBody,
-} from './dto'
 import { commentMigrate } from './migrations'
 import { CaseActionModel, CommentModel, CommentsModel } from './models'
 

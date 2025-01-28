@@ -1,6 +1,4 @@
 import { Transaction } from 'sequelize'
-import { ResultWrapper } from '@dmr.is/types'
-
 import {
   ApplicationCommentBody,
   AssignSelfCommentBody,
@@ -12,7 +10,8 @@ import {
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
-} from './dto'
+} from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentServiceV2 {
   getCommentById(

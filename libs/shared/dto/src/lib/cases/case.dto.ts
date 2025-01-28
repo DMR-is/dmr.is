@@ -19,6 +19,7 @@ import { AdminUser } from '../admin-user'
 import { ApplicationAttachment } from '../attachments'
 import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
+import { CommentDto } from '../comments/comment.dto'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
 import { BaseEntity } from '../entity'
@@ -26,7 +27,6 @@ import { Institution } from '../institutions'
 import { Paging } from '../paging'
 import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
-import { User } from '../users/user.dto'
 import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseStatus } from './case-status.dto'
@@ -262,7 +262,7 @@ export class CaseDetailed {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CaseComment)
-  comments!: CaseComment[]
+  comments!: CommentDto[]
 
   @ApiProperty({
     type: [Signature],

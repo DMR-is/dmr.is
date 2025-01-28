@@ -13,7 +13,7 @@ import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
 } from '../../attachments/models'
-import { CaseCommentModel, CaseCommentsModel } from '../../comment/v1/models'
+import { CommentModel, CommentsModel } from '../../comment/v2'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -204,10 +204,10 @@ export class CaseModel extends Model {
   })
   channels?: CaseChannelModel[]
 
-  @BelongsToMany(() => CaseCommentModel, {
-    through: { model: () => CaseCommentsModel },
+  @BelongsToMany(() => CommentModel, {
+    through: { model: () => CommentsModel },
   })
-  comments?: CaseCommentModel[]
+  comments?: CommentModel[]
 
   @BelongsToMany(() => SignatureModel, {
     through: { model: () => CaseSignaturesModel },
