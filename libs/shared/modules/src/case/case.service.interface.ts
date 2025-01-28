@@ -1,9 +1,11 @@
 import { Transaction } from 'sequelize'
 import {
   AdminUser,
+  AddCaseAdvertCorrection,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
   GetCasesQuery,
@@ -22,6 +24,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -140,6 +143,18 @@ export interface ICaseService {
     departmentId: string,
   ): Promise<ResultWrapper<GetNextPublicationNumberResponse>>
 
+  postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   getCommunicationStatuses(): Promise<
     ResultWrapper<GetCommunicationSatusesResponse>
   >
@@ -157,9 +172,15 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>>
 
-  updateAdvert(
+  updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 }

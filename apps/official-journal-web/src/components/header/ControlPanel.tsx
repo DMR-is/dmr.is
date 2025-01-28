@@ -1,13 +1,29 @@
 // import { usePathname } from 'next/navigation'
 
-import { Box, DropdownMenu } from '@island.is/island-ui/core'
+import { useState } from 'react'
+import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
+
+import {
+  Box,
+  DropdownMenu,
+  Icon,
+  Inline,
+  LinkV2,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { PagePaths } from '../../lib/constants'
 import * as styles from './ControlPanel.css'
-import { messages } from './messages'
 export const ControlPanel = () => {
   const { formatMessage } = useFormatMessage()
+  const [toggle, setToggle] = useState(false)
+  const popover = usePopoverState({
+    placement: 'bottom-start',
+    visible: toggle,
+    gutter: 0,
+  })
   // const pathBranch = usePathname().split('/')[1]
 
   // const activePath = PagePaths.find(
@@ -22,15 +38,82 @@ export const ControlPanel = () => {
   })
 
   return (
-    <Box className={styles.controlPanel}>
-      <div className={styles.controlPanelWrapper}>
-        <div>
-          <div className={styles.controlPanelTitle}>
-            {formatMessage(messages.general.controlPanelProject)}
-          </div>
-        </div>
-        <DropdownMenu icon="chevronDown" title={'Stjórnborð'} items={paths} />
-      </div>
-    </Box>
+    <>
+      <PopoverDisclosure
+        {...popover}
+        className={styles.controlPanel}
+        onClick={() => setToggle((prev) => !prev)}
+      >
+        <Box width="full">
+          <Inline justifyContent="spaceBetween">
+            <Stack space={0} align="left">
+              <Text>Stjórnartíðindi</Text>
+              <Text textAlign="left" variant="small" fontWeight="semiBold">
+                Stjórnborð
+              </Text>
+            </Stack>
+            <Box
+              height="full"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+            >
+              <Box
+                className={styles.controlPanelChevron({
+                  color: 'white',
+                })}
+              >
+                <Icon
+                  size="small"
+                  color="blue400"
+                  type="outline"
+                  icon={toggle ? 'chevronUp' : 'chevronDown'}
+                />
+              </Box>
+            </Box>
+          </Inline>
+        </Box>
+      </PopoverDisclosure>
+      <Popover {...popover}>
+        <Box
+          className={styles.dropdownMenu}
+          background="white"
+          borderColor="standard"
+          borderLeftWidth="standard"
+          borderRightWidth="standard"
+        >
+          <Stack space={0}>
+            {paths.map((path) => (
+              <LinkV2 href={path.href} key={path.href}>
+                <Box
+                  borderBottomWidth="standard"
+                  borderColor="standard"
+                  paddingX={2}
+                  paddingY={1}
+                >
+                  <Inline justifyContent="spaceBetween">
+                    <Text variant="small" fontWeight="semiBold">
+                      {path.title}
+                    </Text>
+                    <Box
+                      className={styles.controlPanelChevron({
+                        color: 'blue',
+                      })}
+                    >
+                      <Icon
+                        color="blue400"
+                        size="small"
+                        type="outline"
+                        icon="arrowForward"
+                      />
+                    </Box>
+                  </Inline>
+                </Box>
+              </LinkV2>
+            ))}
+          </Stack>
+        </Box>
+      </Popover>
+    </>
   )
 }

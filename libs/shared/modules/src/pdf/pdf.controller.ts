@@ -34,7 +34,7 @@ export class PdfController {
   async getPdfByCaseId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfRespone> {
-    const pdf = (await this.pdfService.getPdfByCaseId(id)).unwrap()
+    const pdf = (await this.pdfService.generatePdfByCaseId(id)).unwrap()
 
     const result = pdf.toString('base64')
     return {

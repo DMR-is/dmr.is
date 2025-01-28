@@ -17,6 +17,7 @@ import {
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { PIE_CHART_DIMENSION } from '../../lib/constants'
+import { toFixed } from '../../lib/utils'
 import { messages } from './messages'
 import * as styles from './Statistics.css'
 
@@ -128,7 +129,7 @@ export const StatisticsPieCharts = ({ data, loading }: Props) => {
                 <Text variant="medium">{item.value}</Text>
               </T.Data>
               <T.Data align="center" style={{ paddingBlock: theme.spacing[1] }}>
-                <Text variant="medium"> {item.percentage}%</Text>
+                <Text variant="medium"> {toFixed(item.percentage, 1)}%</Text>
               </T.Data>
             </T.Row>
           ))}

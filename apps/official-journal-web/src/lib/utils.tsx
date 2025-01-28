@@ -25,6 +25,10 @@ import {
   Routes,
 } from './constants'
 
+export const toFixed = (num: number, fixed: number) => {
+  return num % 1 === 0 ? num : num.toFixed(fixed)
+}
+
 export const formatDate = (date: string, df = 'dd.MM.yyyy') => {
   try {
     return format(new Date(date), df, { locale: is })

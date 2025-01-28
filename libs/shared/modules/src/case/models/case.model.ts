@@ -3,6 +3,7 @@ import {
   BelongsToMany,
   Column,
   DataType,
+  ForeignKey,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -19,6 +20,7 @@ import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
+  AdvertModel,
 } from '../../journal/models'
 import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
 import { CaseAdditionModel } from './case-addition.model'
@@ -194,6 +196,13 @@ export class CaseModel extends Model {
 
   @BelongsTo(() => AdvertTypeModel, 'advert_type_id')
   advertType!: AdvertTypeModel
+
+  @ForeignKey(() => AdvertModel)
+  @Column({ type: DataType.UUID, field: 'advert_id', allowNull: true })
+  advertId?: string
+
+  @BelongsTo(() => AdvertModel, 'advert_id')
+  advert?: AdvertModel
 
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => CaseCategoriesModel },

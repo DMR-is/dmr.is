@@ -5,11 +5,13 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminUser,
+  AddCaseAdvertCorrection,
   AdvertStatus,
   Case,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
   GetCasesQuery,
@@ -28,6 +30,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -67,7 +70,9 @@ import {
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
@@ -121,6 +126,9 @@ export class CaseService implements ICaseService {
 
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
+
+    @InjectModel(AdvertCorrectionModel)
+    private advertCorrectionModel: typeof AdvertCorrectionModel,
 
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
@@ -285,6 +293,9 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Unpublished)
     ).unwrap()
 
+    // TODO: Remove PUBLISHED_CASE_ADVERTS table
+    // Then remove all casePublishedAdvertsModel references
+    // Use advertId from case directly instead.
     const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
       where: {
         caseId: id,
@@ -592,6 +603,74 @@ export class CaseService implements ICaseService {
   @Transactional()
   async updateAdvert(
     caseId: string,
+    body: UpdateAdvertHtmlCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const { advertHtml, ...rest } = body
+
+    const activeCase = await this.caseModel.findByPk(caseId, {
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['documentPdfUrl', 'id'],
+        },
+      ],
+      transaction,
+    })
+
+    if (!activeCase) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const now = new Date().toISOString()
+
+    const docUrl = activeCase?.advert?.documentPdfUrl || `${caseId}_${now}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
+
+    if (!activeCase?.advert?.documentPdfUrl) {
+      this.logger.error(
+        `Failed to get advert pdf url<${activeCase?.advertId}>, in case<${caseId}`,
+        {
+          caseId: caseId,
+          advertId: activeCase?.advertId,
+          category: LOGGING_CATEGORY,
+          pdfName: docUrl,
+        },
+      )
+    }
+
+    const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
+
+    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfUrl))
+    const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
+      this.updateAdvertByHtml(
+        caseId,
+        { advertHtml, documentPdfUrl: pdfUrl },
+        transaction,
+      ),
+      this.postCaseCorrection(
+        caseId,
+        {
+          ...rest,
+          documentHtml: advertHtml,
+          documentPdfUrl: pdfUrl,
+        },
+        transaction,
+      ),
+    ])
+
+    ResultWrapper.unwrap(updateAdvertCheck)
+    ResultWrapper.unwrap(postCaseCorrectionCheck)
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvertByHtml(
+    caseId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
@@ -624,6 +703,7 @@ export class CaseService implements ICaseService {
       hasAdvertResult.advertId,
       {
         documentHtml: body.advertHtml,
+        ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
       },
     )
 
@@ -642,6 +722,46 @@ export class CaseService implements ICaseService {
         code: 500,
         message: 'Failed to update advert',
       })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle({ logArgs: false })
+  private async createPdfAndUpload(
+    caseId: string,
+    fileName: string,
+  ): Promise<ResultWrapper> {
+    const advertPdf = await this.pdfService.generatePdfByCaseId(caseId)
+
+    if (!advertPdf.result.ok) {
+      this.logger.warn('Failed to get pdf for case', {
+        error: advertPdf.result.error,
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    if (advertPdf.result.ok) {
+      const bucket = getS3Bucket()
+      const key = `adverts/${fileName}`
+      const upload = await this.s3.uploadObject(
+        bucket,
+        key,
+        fileName,
+        advertPdf.result.value,
+      )
+
+      if (!upload.result.ok) {
+        this.logger.warn('Failed to upload pdf to s3', {
+          error: upload.result.error,
+          category: LOGGING_CATEGORY,
+        })
+      } else {
+        this.logger.debug('Uploaded pdf to s3', {
+          url: upload.result.value,
+          category: LOGGING_CATEGORY,
+        })
+      }
     }
 
     return ResultWrapper.ok()
@@ -705,39 +825,11 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
-    const advertPdf = await this.pdfService.getPdfByCaseId(caseId)
-
-    if (!advertPdf.result.ok) {
-      this.logger.warn('Failed to get pdf for case', {
-        error: advertPdf.result.error,
-        category: LOGGING_CATEGORY,
-      })
-    }
 
     const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
     const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
-    if (advertPdf.result.ok) {
-      const bucket = getS3Bucket()
-      const key = `adverts/${pdfFileName}`
-      const upload = await this.s3.uploadObject(
-        bucket,
-        key,
-        pdfFileName,
-        advertPdf.result.value,
-      )
 
-      if (!upload.result.ok) {
-        this.logger.warn('Failed to upload pdf to s3', {
-          error: upload.result.error,
-          category: LOGGING_CATEGORY,
-        })
-      } else {
-        this.logger.debug('Uploaded pdf to s3', {
-          url: upload.result.value,
-          category: LOGGING_CATEGORY,
-        })
-      }
-    }
+    await this.createPdfAndUpload(caseId, pdfFileName)
 
     const advertCreateResult = await this.journalService.create(
       {
@@ -774,6 +866,7 @@ export class CaseService implements ICaseService {
     const updatePromise = this.caseModel.update(
       {
         publicationNumber: number,
+        advertId: advertCreateResult.result.value.advert.id,
       },
       {
         where: {
@@ -783,6 +876,7 @@ export class CaseService implements ICaseService {
       },
     )
 
+    // TODO: Remove relation promise with casePublishedAdvertsModel removal
     const relationPromise = this.casePublishedAdvertsModel.create(
       {
         caseId: caseId,
@@ -892,6 +986,10 @@ export class CaseService implements ICaseService {
       include: [
         ...casesDetailedIncludes,
         {
+          model: AdvertModel,
+          include: [AdvertCorrectionModel],
+        },
+        {
           model: AdvertDepartmentModel,
         },
         {
@@ -917,6 +1015,100 @@ export class CaseService implements ICaseService {
 
     return ResultWrapper.ok({
       case: caseDetailedMigrate(caseLookup),
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['advertId'],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const { advertId } = caseLookup
+
+    if (!advertId) {
+      return ResultWrapper.err({
+        code: 409,
+        message: 'Advert id not found, case not published.',
+      })
+    }
+
+    try {
+      await this.advertCorrectionModel.create<AdvertCorrectionModel>(
+        {
+          ...body,
+          advertId: advertId,
+        },
+        { transaction: transaction },
+      )
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Failed to create correction',
+      })
+    }
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['advertId'],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const { advertId } = caseLookup
+
+    if (!advertId) {
+      return ResultWrapper.err({
+        code: 409,
+        message: 'Advert id not found, case not published.',
+      })
+    }
+
+    const correctionLookup = await this.advertCorrectionModel.findOne({
+      where: {
+        id: body.correctionId,
+        advertId: advertId,
+      },
+      transaction,
+    })
+
+    if (!correctionLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Correction not found for this case',
+      })
+    }
+
+    await correctionLookup.destroy({ transaction })
+
+    return ResultWrapper.ok({
+      message: 'Correction deleted successfully',
     })
   }
 

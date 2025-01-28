@@ -12,6 +12,7 @@ import { ICommentServiceV2 } from '../comment/v2'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertModel,
 } from '../journal/models'
@@ -170,6 +171,10 @@ describe('CaseService', () => {
         },
         {
           provide: getModelToken(CasePublishedAdvertsModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(AdvertCorrectionModel),
           useClass: jest.fn(() => ({})),
         },
         {

@@ -3,12 +3,15 @@ import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
+  AddCaseAdvertCorrection,
+  Case,
   CaseComment,
   CaseCommunicationStatus,
   CaseDetailed,
   CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
+  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   DepartmentSlugEnum,
   GetCaseCommentsQuery,
@@ -31,6 +34,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
   UpdateCasePriceBody,
@@ -85,9 +89,16 @@ export class CaseServiceMock {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-  updateAdvert(
+  updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  updateAdvert(
+    caseId: string,
+    body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
@@ -265,6 +276,20 @@ export class CaseServiceMock {
   }
 
   getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+    throw new Error('Method not implemented.')
+  }
+
+  postCaseCorrection(
+    caseId: string,
+    body: AddCaseAdvertCorrection,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+
+  deleteCorrection(
+    caseId: string,
+    body: DeleteCaseAdvertCorrection,
+  ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
 

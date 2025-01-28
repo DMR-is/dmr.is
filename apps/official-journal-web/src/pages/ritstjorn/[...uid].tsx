@@ -23,7 +23,10 @@ import { Meta } from '../../components/meta/Meta'
 import { CaseDetailed, CaseStatusEnum } from '../../gen/fetch'
 import { useRejectCase, useUpdateEmployee } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
-import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
+import {
+  UpdateAvertAndCorrectionTriggerArgs,
+  useUpdateAdvertAndCorrection,
+} from '../../hooks/api/update'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
@@ -55,20 +58,24 @@ export default function CaseSingle(
   const [isFixing, setIsFixing] = useState(false)
   const [canPublishFixedChanges, setCanPublishFixedChanges] = useState(false)
   const [updatedAdvertHtml, setUpdatedAdvertHtml] = useState('')
+  const [newCorrection, setNewCorrection] =
+    useState<UpdateAvertAndCorrectionTriggerArgs>()
 
-  const { trigger: updateAdvertHtmlTrigger } = useUpdateAdvertHtml({
-    caseId: data.thisCase.id,
-    options: {
-      onSuccess: () => {
-        setIsFixing(false)
-        setCanPublishFixedChanges(false)
+  const { trigger: updateAdvertHtmlTrigger, isMutating: loading } =
+    useUpdateAdvertAndCorrection({
+      options: {
+        onSuccess: () => {
+          setIsFixing(false)
+          setCanPublishFixedChanges(false)
+          setNewCorrection(undefined)
+        },
+        onError: () => {
+          setIsFixing(false)
+          setCanPublishFixedChanges(false)
+          setNewCorrection(undefined)
+        },
       },
-      onError: () => {
-        setIsFixing(false)
-        setCanPublishFixedChanges(false)
-      },
-    },
-  })
+    })
 
   const { trigger: rejectCase } = useRejectCase({
     options: {
@@ -264,6 +271,13 @@ export default function CaseSingle(
               data={thisCase}
               timestamp={new Date().toISOString()}
               onAdvertHtmlChange={(html) => setUpdatedAdvertHtml(html)}
+              onCorrectionDelete={() => setNewCorrection(undefined)}
+              onCorrectionAdd={(correction) => {
+                if (isFixing) {
+                  setCanPublishFixedChanges(true)
+                }
+                setNewCorrection(correction)
+              }}
             />
           )}
 
@@ -285,9 +299,20 @@ export default function CaseSingle(
             activeCase={thisCase}
             caseStep={step}
             canPublishFix={canPublishFixedChanges}
-            updateAdvertHtmlTrigger={() =>
-              updateAdvertHtmlTrigger({ advertHtml: updatedAdvertHtml })
-            }
+            loading={loading}
+            updateAdvertHtmlTrigger={() => {
+              if (newCorrection) {
+                updateAdvertHtmlTrigger({
+                  advertHtml:
+                    updatedAdvertHtml === ''
+                      ? thisCase.html
+                      : updatedAdvertHtml,
+                  caseId: data.thisCase.id,
+                  description: newCorrection?.description,
+                  title: newCorrection?.title,
+                })
+              }
+            }}
           />
         </Stack>
       </FormShell>
