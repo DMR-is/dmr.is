@@ -4,10 +4,9 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CaseModel } from '../../case/models'
-import { CaseActionModel } from './models/case-action.model'
-import { CommentModel } from './models/comment.model'
 import { CommentServiceV2 } from './comment.service'
 import { ICommentServiceV2 } from './comment.service.interface'
+import { CaseActionModel, CommentModel } from './models'
 
 @Module({
   imports: [

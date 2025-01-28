@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AdminUser, CaseActionEnum } from '@dmr.is/shared/dto'
+import { CaseActionEnum } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -17,6 +17,7 @@ import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { ApplicationUserModel } from '../../application-user/models'
 import { CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
+import { ICommentServiceV2 } from './comment.service.interface'
 import {
   ApplicationCommentBody,
   AssignSelfCommentBody,
@@ -28,11 +29,9 @@ import {
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
-} from './dto/comment.dto'
-import { CaseActionModel } from './models/case-action.model'
-import { CommentModel } from './models/comment.model'
-import { ICommentServiceV2 } from './comment.service.interface'
+} from './dto'
 import { commentMigrate } from './migrations'
+import { CaseActionModel, CommentModel, CommentsModel } from './models'
 
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
@@ -45,9 +44,32 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     @InjectModel(CaseActionModel)
     private readonly caseActionModel: typeof CaseActionModel,
+
+    @InjectModel(CommentsModel)
+    private readonly commentsModel: typeof CommentsModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  @Transactional()
+  private async addCommentToCase(
+    caseId: string,
+    commentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.commentsModel.create(
+      {
+        caseId: caseId,
+        commentId: commentId,
+      },
+      {
+        transaction,
+      },
+    )
+
+    return ResultWrapper.ok()
+  }
 
   @LogAndHandle()
   async deleteComment(
@@ -55,13 +77,23 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     commentId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.commentModel.destroy({
+    const commentsPromise = this.commentsModel.destroy({
+      where: {
+        commentId: commentId,
+        caseId: caseId,
+      },
+      transaction,
+    })
+
+    const commentPromise = this.commentModel.destroy({
       where: {
         id: commentId,
         caseId: caseId,
       },
       transaction,
     })
+
+    await Promise.all([commentsPromise, commentPromise])
 
     return ResultWrapper.ok()
   }
@@ -309,6 +341,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -371,6 +406,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     }
 
     const migrated = commentMigrate(newComment)
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -429,6 +467,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -490,6 +531,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -546,6 +590,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -606,6 +653,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -670,6 +720,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     const migrated = commentMigrate(newComment, involvedPartyId)
 
+    ResultWrapper.unwrap(
+      await this.addCommentToCase(caseId, commentId, transaction),
+    )
     return ResultWrapper.ok({ comment: migrated })
   }
 }
