@@ -20,7 +20,7 @@ import { StepLeidretting } from '../../components/form-steps/StepLeidretting'
 import { StepTilbuid } from '../../components/form-steps/StepTilbuid'
 import { StepYfirlestur } from '../../components/form-steps/StepYfirlestur'
 import { Meta } from '../../components/meta/Meta'
-import { CaseDetailed, CaseStatusTitleEnum } from '../../gen/fetch'
+import { CaseDetailed, CaseStatusEnum } from '../../gen/fetch'
 import { useRejectCase, useUpdateEmployee } from '../../hooks/api'
 import { useUnpublishCase } from '../../hooks/api/post/useUnpublish'
 import {
@@ -129,8 +129,7 @@ export default function CaseSingle(
 
   const fixStep = step === 'leidretting'
 
-  const isCaseRejected =
-    thisCase.status.title === CaseStatusTitleEnum.BirtinguHafnað
+  const isCaseRejected = thisCase.status.title === CaseStatusEnum.BirtinguHafnað
 
   return (
     <>

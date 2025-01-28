@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -27,12 +28,14 @@ class UpdateAdvertHtmlHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateAdvertHtml({
-      id: id,
-      updateAdvertHtmlBody: {
-        advertHtml: parsed.data.advertHtml,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateAdvertHtml({
+        id: id,
+        updateAdvertHtmlBody: {
+          advertHtml: parsed.data.advertHtml,
+        },
+      })
 
     return void res.status(200).end()
   }

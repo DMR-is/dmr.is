@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript'
 import { CaseStatusEnum } from '@dmr.is/shared/dto'
 
-import { CaseCommentModel } from '../../comment/models'
+import { CaseCommentModel } from '../../comment/v1/models'
 import { CaseModel } from './case.model'
 
 @Table({ tableName: 'case_status', timestamps: false })

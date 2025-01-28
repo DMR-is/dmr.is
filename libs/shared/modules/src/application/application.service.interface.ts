@@ -8,7 +8,7 @@ import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
-  GetCaseCommentsResponse,
+  GetComments,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
@@ -31,9 +31,7 @@ export interface IApplicationService {
 
   postApplication(id: string): Promise<ResultWrapper>
 
-  getComments(
-    applicationId: string,
-  ): Promise<ResultWrapper<GetCaseCommentsResponse>>
+  getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 
   postComment(
     applicationId: string,

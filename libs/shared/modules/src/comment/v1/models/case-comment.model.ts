@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript'
 import { CaseCommentSourceEnum } from '@dmr.is/shared/dto'
 
-import { CaseModel, CaseStatusModel } from '../../case/models'
+import { CaseModel, CaseStatusModel } from '../../../case/models'
 import { CaseCommentTypeModel } from './case-comment-type.model'
 
 @Table({ tableName: 'case_comment', timestamps: false })

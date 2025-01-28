@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 const bodySchema = z.object({
@@ -26,12 +27,14 @@ class UpdateCategoryHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateCategories({
-      id: id,
-      updateCategoriesBody: {
-        categoryIds: parsed.data.categoryIds,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateCategories({
+        id: id,
+        updateCategoriesBody: {
+          categoryIds: parsed.data.categoryIds,
+        },
+      })
 
     return res.status(200).end()
   }

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -25,12 +26,14 @@ class UpdatePreviousStatusHandler {
 
     const client = createDmrClient()
 
-    await client.updatePreviousStatus({
-      id: id,
-      updateNextStatusBody: {
-        currentStatus: currentStatus,
-      },
-    })
+    await client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updatePreviousStatus({
+        id: id,
+        updateNextStatusBody: {
+          currentStatus: currentStatus,
+        },
+      })
 
     return res.status(204).end()
   }

@@ -222,3 +222,66 @@ VALUES
     'Fylgiskjöl',
     'fylgiskjol'
   );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '55380dcf-5c3a-482c-8e9c-b1e6de9cf9d0',
+    'SUBMIT',
+    'submit'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    'ec9b74d4-90c2-4108-9b5c-0218f0b62f20',
+    'ASSIGN_USER',
+    'assign_user'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '4489a67f-e9e7-418d-a110-4663da3f1531',
+    'ASSIGN_SELF',
+    'assign_self'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '9976b939-f4c1-460a-8630-ae536a5f64bb',
+    'UPDATE_STATUS',
+    'update_status'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '73345349-a180-4db0-b53c-fc7c76d75fcf',
+    'INTERNAL_COMMENT',
+    'internal_comment'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '5809fd9a-0507-447b-9aee-1e01a2c1275a',
+    'EXTERNAL_COMMENT',
+    'external_comment'
+  );
+
+INSERT INTO
+  case_action(id, title, slug)
+VALUES
+  (
+    '1e1b7653-5b1f-4dde-9406-b554e124aada',
+    'APPLICATION_COMMENT',
+    'application_comment'
+  );

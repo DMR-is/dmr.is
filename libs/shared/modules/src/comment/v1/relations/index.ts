@@ -1,4 +1,4 @@
-import { CaseStatusModel } from '../../case/models'
+import { CaseStatusModel } from '../../../case/models'
 import { CaseCommentModel, CaseCommentTypeModel } from '../models'
 
 /**

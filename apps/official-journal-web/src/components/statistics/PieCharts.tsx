@@ -12,7 +12,7 @@ import {
 import { theme } from '@island.is/island-ui/theme'
 
 import {
-  CaseStatusTitleEnum,
+  CaseStatusEnum,
   GetStatisticsDepartmentResponse,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -36,13 +36,13 @@ export const StatisticsPieCharts = ({ data, loading }: Props) => {
 
   const mapTitleToColor = (name: string) => {
     switch (name) {
-      case CaseStatusTitleEnum.Innsent:
+      case CaseStatusEnum.Innsent:
         return theme.color.dark400
-      case CaseStatusTitleEnum.Grunnvinnsla:
+      case CaseStatusEnum.Grunnvinnsla:
         return theme.color.blue400
-      case CaseStatusTitleEnum.Yfirlestur:
+      case CaseStatusEnum.Yfirlestur:
         return theme.color.mint600
-      case CaseStatusTitleEnum.Tilbúið:
+      case CaseStatusEnum.Tilbúið:
         return theme.color.roseTinted400
       default:
         return theme.color.black

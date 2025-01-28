@@ -18,8 +18,8 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IApplicationService } from '../application/application.service.interface'
-import { IUtilityService } from '../utility/utility.module'
+import { IApplicationService } from '../../application/application.service.interface'
+import { IUtilityService } from '../../utility/utility.module'
 import { caseCommentMigrate } from './migrations/case-comment.migrate'
 import { CaseCommentModel } from './models/case-comment.model'
 import { CaseCommentTypeModel } from './models/case-comment-type.model'

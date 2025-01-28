@@ -21,8 +21,7 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
   useEffect(() => {
     if (!baseText && !currentDiff) {
       try {
-        const baseParsed = JSON.parse(activeCase.comments?.[0]?.state).answers
-          ?.advert?.html
+        const baseParsed = ''
 
         const currentActive = activeCase.html
 

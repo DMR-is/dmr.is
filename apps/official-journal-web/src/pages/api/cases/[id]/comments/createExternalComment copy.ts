@@ -3,13 +3,13 @@ import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { createDmrClient } from '../../../../../lib/api/createClient'
 
-const bodySchema = z.object({
-  departmentId: z.string(),
+const commentBodySchema = z.object({
+  comment: z.string(),
 })
 
-class UpdateDepartmentHandler {
+class CreateExternalCommentHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -20,27 +20,25 @@ class UpdateDepartmentHandler {
       return res.status(400).end()
     }
 
-    const parsed = bodySchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      return res.status(400).end()
-    }
+    commentBodySchema.parse(req.body)
 
     const dmrClient = createDmrClient()
 
-    await dmrClient
+    const body: z.infer<typeof commentBodySchema> = req.body
+
+    const addCommentResponse = await dmrClient
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateDepartment({
+      .createExternalComment({
         id: id,
-        updateCaseDepartmentBody: {
-          departmentId: parsed.data.departmentId,
+        externalCommentBodyDto: {
+          comment: body.comment,
         },
       })
 
-    return res.status(200).end()
+    return res.status(200).json(addCommentResponse)
   }
 }
 
-const instance = new UpdateDepartmentHandler()
+const instance = new CreateExternalCommentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

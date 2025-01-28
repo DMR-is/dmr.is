@@ -1,11 +1,11 @@
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { USER_ROLES } from '@dmr.is/constants'
-import { Roles, Route, TimeLog } from '@dmr.is/decorators'
+import { CurrentUser, Roles, Route, TimeLog } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ICaseService,
-  ICommentService,
+  ICommentServiceV2,
   IJournalService,
   RoleGuard,
   TokenJwtAuthGuard,
@@ -13,9 +13,7 @@ import {
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
-  CaseCommentSourceEnum,
-  CaseCommentTypeTitleEnum,
-  CaseCommunicationStatus,
+  AdminUser,
   CaseStatusEnum,
   CreateCaseResponse,
   CreateMainCategory,
@@ -23,9 +21,7 @@ import {
   DefaultSearchParams,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
-  GetCaseCommentResponse,
-  GetCaseCommentsQuery,
-  GetCaseCommentsResponse,
+  ExternalCommentBodyDto,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -36,15 +32,17 @@ import {
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
   GetCategoriesResponse,
+  GetComment,
+  GetComments,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
+  InternalCommentBodyDto,
   MainCategory,
   PostApplicationAttachmentBody,
   PostApplicationBody,
-  PostCaseCommentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
@@ -71,11 +69,13 @@ import {
   Get,
   Inject,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -97,8 +97,8 @@ export class CaseController {
     @Inject(IJournalService)
     private readonly journalService: IJournalService,
 
-    @Inject(ICommentService)
-    private readonly commentService: ICommentService,
+    @Inject(ICommentServiceV2)
+    private readonly commentServiceV2: ICommentServiceV2,
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -531,6 +531,8 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     method: 'put',
     path: ':id/status/next',
@@ -543,10 +545,15 @@ export class CaseController {
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateNextStatusBody,
+    @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCaseNextStatus(id, body))
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseNextStatus(id, body, user),
+    )
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     method: 'put',
     path: ':id/status/previous',
@@ -559,12 +566,15 @@ export class CaseController {
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateNextStatusBody,
+    @CurrentUser() user: AdminUser,
   ): Promise<void> {
     ResultWrapper.unwrap(
-      await this.caseService.updateCasePreviousStatus(id, body),
+      await this.caseService.updateCasePreviousStatus(id, body, user),
     )
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     method: 'put',
     path: ':id/assign/:userId',
@@ -579,10 +589,15 @@ export class CaseController {
   async assign(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
+    @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateEmployee(id, userId))
+    ResultWrapper.unwrap(
+      await this.caseService.updateEmployee(id, userId, user),
+    )
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     method: 'put',
     path: ':id/status',
@@ -595,8 +610,11 @@ export class CaseController {
   async updateStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseStatusBody,
+    @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateCaseStatus(id, body))
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseStatus(id, body, user),
+    )
   }
 
   @Route({
@@ -731,77 +749,66 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.rejectCase(id))
   }
 
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     path: ':id/comments',
     operationId: 'getComments',
     summary: 'Get case comments',
-    responseType: GetCaseCommentsResponse,
+    responseType: GetComments,
     params: [{ name: 'id', type: 'string', required: true }],
-    query: [{ type: GetCaseCommentsQuery }],
   })
   @TimeLog()
   async getComments(
     @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetCaseCommentsResponse> {
+  ): Promise<GetComments> {
+    return ResultWrapper.unwrap(await this.commentServiceV2.getComments(id))
+  }
+
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
+  @Post(':id/comments/v2/internal')
+  @ApiOperation({ operationId: 'createInternalComment' })
+  @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({ type: InternalCommentBodyDto })
+  @ApiResponse({ status: 200, type: GetComment })
+  @TimeLog()
+  async createCommentInternal(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @CurrentUser() user: AdminUser,
+    @Body() body: InternalCommentBodyDto,
+  ): Promise<GetComment> {
     return ResultWrapper.unwrap(
-      await this.commentService.getComments(
-        id,
-        false,
-        CaseCommentSourceEnum.API,
-      ),
+      await this.commentServiceV2.createInternalComment(id, {
+        adminUserCreatorId: user.id,
+        comment: body.comment,
+      }),
     )
   }
 
-  @Route({
-    path: ':id/comments/:commentId',
-    operationId: 'getComment',
-    summary: 'Get case comment',
-    params: [
-      { name: 'id', type: 'string', required: true },
-      { name: 'commentId', type: 'string', required: true },
-    ],
-    responseType: GetCaseCommentResponse,
-  })
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
+  @Post(':id/comments/v2/external')
+  @ApiOperation({ operationId: 'createExternalComment' })
+  @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({ type: ExternalCommentBodyDto })
+  @ApiResponse({ status: 200, type: GetComment })
   @TimeLog()
-  async getComment(
+  async createCommentExternal(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Param('commentId', new UUIDValidationPipe()) commentId: string,
-  ): Promise<GetCaseCommentResponse> {
+    @CurrentUser() user: AdminUser,
+    @Body() body: ExternalCommentBodyDto,
+  ): Promise<GetComment> {
     return ResultWrapper.unwrap(
-      await this.commentService.getComment(
-        id,
-        commentId,
-        CaseCommentSourceEnum.API,
-      ),
+      await this.commentServiceV2.createExternalComment(id, {
+        adminUserCreatorId: user.id,
+        comment: body.comment,
+      }),
     )
   }
 
-  @Route({
-    method: 'post',
-    path: ':id/comments',
-    operationId: 'createComment',
-    summary: 'Add comment to case',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: PostCaseCommentBody,
-  })
-  @TimeLog()
-  async createComment(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: PostCaseCommentBody,
-  ): Promise<void> {
-    ResultWrapper.unwrap(await this.commentService.createComment(id, body))
-
-    //If it's a message, update the application status to "waiting for answers"
-    if (body.type === CaseCommentTypeTitleEnum.Message) {
-      ResultWrapper.unwrap(
-        await this.caseService.updateCaseCommunicationStatusByStatus(
-          id,
-          CaseCommunicationStatus.WaitingForAnswers,
-        ),
-      )
-    }
-  }
-
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
   @Route({
     method: 'delete',
     path: ':id/comments/:commentId',
@@ -817,7 +824,9 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
+    ResultWrapper.unwrap(
+      await this.commentServiceV2.deleteComment(id, commentId),
+    )
   }
 
   @Get('/with-publication-number/:department')
