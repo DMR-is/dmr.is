@@ -5,10 +5,11 @@ import {
   IAdminUserService,
   IApplicationService,
   ICaseService,
-  ICommentService,
+  ICommentServiceV2,
   IJournalService,
 } from '@dmr.is/modules'
 import {
+  AdminUser,
   Case,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
@@ -25,7 +26,7 @@ import { CaseController } from './case.controller'
 
 describe('CaseController', () => {
   let caseService: ICaseService
-  let commentService: ICommentService
+  let commentService: ICommentServiceV2
   let caseController: CaseController
 
   const comment = {
@@ -80,7 +81,7 @@ describe('CaseController', () => {
           })),
         },
         {
-          provide: ICommentService,
+          provide: ICommentServiceV2,
           useClass: jest.fn(() => ({
             createComment: () => ({}),
             deleteComment: () => ({}),
@@ -111,7 +112,7 @@ describe('CaseController', () => {
     }).compile()
 
     caseService = moduleRef.get<ICaseService>(ICaseService)
-    commentService = moduleRef.get<ICommentService>(ICommentService)
+    commentService = moduleRef.get<ICommentServiceV2>(ICommentServiceV2)
     caseController = moduleRef.get<CaseController>(CaseController)
   })
 
@@ -135,21 +136,17 @@ describe('CaseController', () => {
 
   describe('createComment', () => {
     it('should create comment', async () => {
-      const createSpy = jest.spyOn(commentService, 'createComment')
+      const createSpy = jest.spyOn(commentService, 'createInternalComment')
 
       jest
-        .spyOn(commentService, 'createComment')
+        .spyOn(commentService, 'createInternalComment')
         .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
-      await caseController.createComment(activeCase.id, {
-        comment: null,
-        creator: 'Stofnun x',
-        internal: true,
-        receiver: null,
-        source: CaseCommentSourceEnum.API,
-        type: CaseCommentTypeTitleEnum.Submit,
-        storeState: false,
-      })
+      await caseController.createCommentInternal(
+        activeCase.id,
+        { id: 'f450279c-b07e-4f92-a5ae-d8f93360cafe' } as unknown as AdminUser,
+        { comment: 'Hello world' },
+      )
 
       expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
         comment: null,

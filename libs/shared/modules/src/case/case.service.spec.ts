@@ -8,7 +8,7 @@ import { Test } from '@nestjs/testing'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { ICommentService } from '../comment/comment.service.interface'
+import { ICommentServiceV2 } from '../comment/v2'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -36,7 +36,7 @@ import {
 
 describe('CaseService', () => {
   let caseService: ICaseService
-  let commentService: ICommentService
+  let commentService: ICommentServiceV2
   let applicationService: IApplicationService
   let journalService: IJournalService
   let signatureService: ISignatureService
@@ -63,7 +63,7 @@ describe('CaseService', () => {
           useClass: CaseService,
         },
         {
-          provide: ICommentService,
+          provide: ICommentServiceV2,
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
@@ -195,7 +195,7 @@ describe('CaseService', () => {
     }).compile()
 
     caseService = app.get<ICaseService>(ICaseService)
-    commentService = app.get<ICommentService>(ICommentService)
+    commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
