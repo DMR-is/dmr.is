@@ -8,6 +8,7 @@ import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
+  GetComments,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
@@ -15,8 +16,6 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { GetComments } from '../comment/v2'
 
 import 'multer'
 

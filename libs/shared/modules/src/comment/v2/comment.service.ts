@@ -20,6 +20,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Inject,
+  Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -29,13 +30,16 @@ import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { ApplicationUserModel } from '../../application-user/models'
 import { CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
+import { commentMigrate } from './migrations/comment.migrate'
+import { CaseActionModel } from './models/case-action.model'
+import { CommentModel } from './models/comment.model'
+import { CommentsModel } from './models/comments.model'
 import { ICommentServiceV2 } from './comment.service.interface'
-import { commentMigrate } from './migrations'
-import { CaseActionModel, CommentModel, CommentsModel } from './models'
 
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 
+@Injectable()
 export class CommentServiceV2 implements ICommentServiceV2 {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

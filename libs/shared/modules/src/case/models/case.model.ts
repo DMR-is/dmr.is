@@ -13,7 +13,8 @@ import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
 } from '../../attachments/models'
-import { CommentModel, CommentsModel } from '../../comment/v2'
+import { CommentModel } from '../../comment/v2/models/comment.model'
+import { CommentsModel } from '../../comment/v2/models/comments.model'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,

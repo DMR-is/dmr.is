@@ -1,5 +1,3 @@
 export * from './comment.service.interface'
 export * from './comment.service'
 export * from './comment.module'
-export * from './migrations'
-export * from './models'
