@@ -6,7 +6,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
 import {} from '../case/case.module'
-import { CommentModuleV1 } from '../comment/v1'
+import { CommentModuleV2 } from '../comment/v2'
 import { UtilityModule } from '../utility/utility.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
@@ -36,7 +36,7 @@ import { SignatureModule } from '../signature/signature.module'
     ApplicationUserModule,
     SignatureModule,
     forwardRef(() => SharedCaseModule),
-    forwardRef(() => CommentModuleV1),
+    forwardRef(() => CommentModuleV2),
     forwardRef(() => UtilityModule),
   ],
   controllers: [],

@@ -4,6 +4,7 @@ import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdminUser,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -30,7 +31,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
-import { ICommentService } from '../../../comment/v1'
+import { ICommentServiceV2 } from '../../../comment/v2'
 import { IUtilityService } from '../../../utility/utility.module'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
 import { CaseCategoriesModel, CaseModel } from '../../models'
@@ -46,7 +47,8 @@ export class CaseUpdateService implements ICaseUpdateService {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
-    @Inject(ICommentService) private readonly commentService: ICommentService,
+    @Inject(ICommentServiceV2)
+    private readonly commentService: ICommentServiceV2,
 
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
@@ -124,9 +126,33 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateEmployee(
     id: string,
     userId: string,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseRes = (await this.utilityService.caseLookup(id)).unwrap()
+
+    if (caseRes.assignedUserId === userId) {
+      ResultWrapper.unwrap(
+        await this.commentService.createAssignSelfComment(
+          id,
+          {
+            adminUserCreatorId: currentUser.id,
+          },
+          transaction,
+        ),
+      )
+    } else {
+      ResultWrapper.unwrap(
+        await this.commentService.createAssignUserComment(
+          id,
+          {
+            adminUserCreatorId: currentUser.id,
+            adminUserReceiverId: userId,
+          },
+          transaction,
+        ),
+      )
+    }
 
     await this.caseModel.update(
       {
@@ -140,21 +166,21 @@ export class CaseUpdateService implements ICaseUpdateService {
       },
     )
 
-    await this.commentService.createComment(
-      id,
-      {
-        internal: true,
-        type: caseRes.assignedUserId
-          ? CaseCommentTypeTitleEnum.Assign
-          : CaseCommentTypeTitleEnum.AssignSelf,
-        source: CaseCommentSourceEnum.API,
-        storeState: false,
-        comment: null,
-        creator: 'Ármann Árni',
-        receiver: 'Pálina',
-      },
-      transaction,
-    )
+    // await this.commentService.createComment(
+    //   id,
+    //   {
+    //     internal: true,
+    //     type: caseRes.assignedUserId
+    //       ? CaseCommentTypeTitleEnum.Assign
+    //       : CaseCommentTypeTitleEnum.AssignSelf,
+    //     source: CaseCommentSourceEnum.API,
+    //     storeState: false,
+    //     comment: null,
+    //     creator: 'Ármann Árni',
+    //     receiver: 'Pálina',
+    //   },
+    //   transaction,
+    // )
 
     return ResultWrapper.ok()
   }
@@ -255,25 +281,17 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const status = (
       await this.utilityService.caseStatusLookup(body.status)
     ).unwrap()
 
-    await this.commentService.createComment(
-      id,
-      {
-        internal: true,
-        type: CaseCommentTypeTitleEnum.UpdateStatus,
-        comment: null,
-        source: CaseCommentSourceEnum.API,
-        storeState: false,
-        creator: 'Ármann Árni',
-        receiver: status.title,
-      },
-      transaction,
-    )
+    await this.commentService.createUpdateStatusComment(id, {
+      adminUserCreatorId: '1',
+      caseStatusReceiverId: status.id,
+    })
 
     await this.caseModel.update(
       {
@@ -295,6 +313,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCaseNextStatus(
     id: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const currentStatus = (
@@ -326,7 +345,12 @@ export class CaseUpdateService implements ICaseUpdateService {
       await this.utilityService.caseStatusLookup(nextStatus, transaction),
     )
 
-    return this.updateCaseStatus(id, { status: nextStatus }, transaction)
+    return this.updateCaseStatus(
+      id,
+      { status: nextStatus },
+      currentUser,
+      transaction,
+    )
   }
 
   @LogAndHandle()
@@ -334,6 +358,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCasePreviousStatus(
     id: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const currentStatus = (
@@ -365,7 +390,12 @@ export class CaseUpdateService implements ICaseUpdateService {
       await this.utilityService.caseStatusLookup(prevStatus, transaction),
     )
 
-    return this.updateCaseStatus(id, { status: prevStatus }, transaction)
+    return this.updateCaseStatus(
+      id,
+      { status: prevStatus },
+      currentUser,
+      transaction,
+    )
   }
 
   @LogAndHandle()

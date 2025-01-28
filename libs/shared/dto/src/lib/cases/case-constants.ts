@@ -44,31 +44,31 @@ export enum AdditionType {
  */
 export enum CaseActionEnum {
   /**
-   * When a case is submitted by an institution/application-system
+   * When case is submitted by an institution/application-system
    */
   SUBMIT = 'SUBMIT',
   /**
-   * When a admin assigns a case to another admin user
+   * When admin assigns a case to another admin user
    */
   ASSIGN_USER = 'ASSIGN_USER',
   /**
-   * When a admin assigns a case to themselves
+   * When admin assigns a case to themselves
    */
   ASSIGN_SELF = 'ASSIGN_SELF',
   /**
-   * When a admin updates the status of the case
+   * When admin updates the status of the case
    */
   UPDATE_STATUS = 'UPDATE_STATUS',
   /**
-   * When a admin adds a comment to the case
+   * When admin adds a comment to the case, only available for admins
    */
   COMMENT_INTERNAL = 'INTERNAL_COMMENT',
   /**
-   * When a external adds a comment to the case, available for all users
+   * When admin adds external comment to the case, available for all users
    */
   COMMENT_EXTERNAL = 'EXTERNAL_COMMENT',
   /**
-   * When a application adds a comment to the case, available for all users
+   * When application user adds a comment to the case, available for all users
    */
   COMMENT_APPLICATION = 'APPLICATION_COMMENT',
 }

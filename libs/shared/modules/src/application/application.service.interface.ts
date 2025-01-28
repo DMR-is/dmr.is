@@ -8,7 +8,6 @@ import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
-  GetCaseCommentsResponse,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
@@ -16,6 +15,8 @@ import {
   UpdateApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { GetComments } from '../comment/v2'
 
 import 'multer'
 
@@ -31,9 +32,7 @@ export interface IApplicationService {
 
   postApplication(id: string): Promise<ResultWrapper>
 
-  getComments(
-    applicationId: string,
-  ): Promise<ResultWrapper<GetCaseCommentsResponse>>
+  getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 
   postComment(
     applicationId: string,

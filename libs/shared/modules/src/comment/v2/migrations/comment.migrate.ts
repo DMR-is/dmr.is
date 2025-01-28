@@ -69,8 +69,6 @@ export const commentMigrate = (
     }
   }
 
-  console.log('receiver', receiver)
-
   if (creator === null) {
     throw new InternalServerErrorException()
   }
@@ -82,6 +80,6 @@ export const commentMigrate = (
     action: model.caseAction.title,
     creator: creator,
     receiver: receiver,
-    comment: model.comment ? model.comment : null,
+    comment: model.comment,
   }
 }

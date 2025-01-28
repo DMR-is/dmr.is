@@ -3,14 +3,13 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { CaseActionEnum } from '@dmr.is/shared/dto'
+import { AdminUser, CaseActionEnum } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
   Inject,
   InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -25,6 +24,7 @@ import {
   ExternalCommentBody,
   GetComment,
   GetComments,
+  GetCommentsQuery,
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
@@ -48,6 +48,23 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  async deleteComment(
+    caseId: string,
+    commentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.commentModel.destroy({
+      where: {
+        id: commentId,
+        caseId: caseId,
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
+  }
 
   @LogAndHandle()
   async getCommentById(
@@ -113,7 +130,18 @@ export class CommentServiceV2 implements ICommentServiceV2 {
   }
 
   @LogAndHandle()
-  async getComments(caseId: string): Promise<ResultWrapper<GetComments>> {
+  async getComments(
+    caseId: string,
+    query?: GetCommentsQuery,
+  ): Promise<ResultWrapper<GetComments>> {
+    const whereParams = {}
+
+    if (query?.action) {
+      Object.assign(whereParams, {
+        title: { [Op.eq]: query.action },
+      })
+    }
+
     const comments = await this.commentModel.findAll({
       where: {
         caseId: caseId,
@@ -124,7 +152,11 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           attributes: ['id', 'title', 'slug'],
           as: 'createdCaseStatus',
         },
-        { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
+        {
+          model: CaseActionModel,
+          attributes: ['id', 'title', 'slug'],
+          where: whereParams,
+        },
         {
           model: AdminUserModel,
           as: 'adminUserCreator',
@@ -553,6 +585,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
+        { model: AdminUserModel, as: 'adminUserCreator' },
         {
           model: AdvertInvolvedPartyModel,
           attributes: ['id', 'title', 'slug'],

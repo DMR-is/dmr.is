@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+import { AdminUser } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -8,6 +9,7 @@ import {
   ExternalCommentBody,
   GetComment,
   GetComments,
+  GetCommentsQuery,
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
@@ -19,7 +21,16 @@ export interface ICommentServiceV2 {
     commentId: string,
   ): Promise<ResultWrapper<GetComment>>
 
-  getComments(caseId: string): Promise<ResultWrapper<GetComments>>
+  getComments(
+    caseId: string,
+    query?: GetCommentsQuery,
+  ): Promise<ResultWrapper<GetComments>>
+
+  deleteComment(
+    caseId: string,
+    commentId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 
   createSubmitComment(
     caseId: string,

@@ -124,8 +124,16 @@ export class InternalCommentBody extends PickType(CommentFields, [
   'comment',
 ]) {}
 
+export class InternalCommentBodyDto extends PickType(CommentFields, [
+  'comment',
+]) {}
+
 export class ExternalCommentBody extends PickType(CommentFields, [
   'adminUserCreatorId',
+  'comment',
+]) {}
+
+export class ExternalCommentBodyDto extends PickType(CommentFields, [
   'comment',
 ]) {}
 
@@ -146,4 +154,12 @@ export class GetComments {
     type: [CommentDto],
   })
   comments!: CommentDto[]
+}
+
+export class GetCommentsQuery {
+  @ApiProperty({
+    enum: CaseActionEnum,
+    required: false,
+  })
+  action?: CaseActionEnum
 }

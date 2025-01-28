@@ -5,8 +5,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
-import { CommentModuleV1 } from '../comment/v1/'
-import commentModels from '../comment/v1/models'
+import { CommentModuleV2 } from '../comment/v2'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
@@ -45,7 +44,6 @@ const API_MOCK = process.env.API_MOCK === 'true'
 @Module({
   imports: [
     SequelizeModule.forFeature([
-      ...commentModels,
       ...caseModels,
       ...advertModels,
       AdvertDepartmentModel,
@@ -53,10 +51,10 @@ const API_MOCK = process.env.API_MOCK === 'true'
     LoggingModule,
     SharedJournalModule,
     SignatureModule,
+    CommentModuleV2,
     forwardRef(() => PdfModule),
     forwardRef(() => S3Module),
     forwardRef(() => AttachmentsModule),
-    forwardRef(() => CommentModuleV1),
     forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),
     forwardRef(() => SharedJournalModule),

@@ -10,9 +10,9 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTemplateDetails,
   AdvertTemplateType,
-  AdvertTemplateTypeEnums,
   Application,
   ApplicationUser,
+  CaseActionEnum,
   CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
@@ -49,7 +49,7 @@ import {
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
-import { ICommentService } from '../comment/v1/comment.service.interface'
+import { GetComments, ICommentServiceV2 } from '../comment/v2'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -66,8 +66,8 @@ export class ApplicationService implements IApplicationService {
     private readonly attachmentService: IAttachmentService,
     @Inject(forwardRef(() => IUtilityService))
     private readonly utilityService: IUtilityService,
-    @Inject(ICommentService)
-    private readonly commentService: ICommentService,
+    @Inject(ICommentServiceV2)
+    private readonly commentService: ICommentServiceV2,
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     @Inject(IAuthService)
@@ -381,20 +381,24 @@ export class ApplicationService implements IApplicationService {
         ),
       )
 
-      ResultWrapper.unwrap(
-        await this.commentService.createComment(
-          caseLookup.id,
-          {
-            internal: true,
-            type: CaseCommentTypeTitleEnum.Submit,
-            source: CaseCommentSourceEnum.Application,
-            creator: caseLookup.involvedParty.title,
-            comment: null,
-            receiver: null,
-          },
-          transaction,
-        ),
-      )
+      // ResultWrapper.unwrap(
+      //   await this.commentService.createComment(
+      //     caseLookup.id,
+      //     {
+      //       internal: true,
+      //       type: CaseCommentTypeTitleEnum.Submit,
+      //       source: CaseCommentSourceEnum.Application,
+      //       creator: caseLookup.involvedParty.title,
+      //       comment: null,
+      //       receiver: null,
+      //     },
+      //     transaction,
+      //   ),
+      // )
+
+      await this.commentService.createSubmitComment(caseLookup.id, {
+        institutionCreatorId: caseLookup.involvedParty.id,
+      })
 
       return ResultWrapper.ok()
     } catch (error) {
@@ -451,22 +455,18 @@ export class ApplicationService implements IApplicationService {
   @LogAndHandle()
   async getComments(
     applicationId: string,
-  ): Promise<ResultWrapper<GetCaseCommentsResponse>> {
+  ): Promise<ResultWrapper<GetComments>> {
     const caseResponse = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
-    const commentsResult = (
-      await this.commentService.getComments(
-        caseResponse.id,
-        false,
-        CaseCommentSourceEnum.Application,
-      )
-    ).unwrap()
+    const comments = ResultWrapper.unwrap(
+      await this.commentService.getComments(caseResponse.id, {
+        action: CaseActionEnum.COMMENT_APPLICATION,
+      }),
+    )
 
-    return ResultWrapper.ok({
-      comments: commentsResult.comments,
-    })
+    return ResultWrapper.ok(comments)
   }
 
   /**
@@ -478,30 +478,17 @@ export class ApplicationService implements IApplicationService {
   @LogAndHandle()
   async postComment(
     applicationId: string,
-    commentBody: PostApplicationComment,
+    body: PostApplicationComment,
     applicationUser: ApplicationUser,
   ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
     ).unwrap()
 
-    const institution = applicationUser.involvedParties.find(
-      (party) => party.id === caseLookup.involvedPartyId,
-    )
-
-    const creator = `${applicationUser.firstName} ${applicationUser.lastName}${
-      institution ? ` (${institution.title})` : ''
-    }`
-
     ResultWrapper.unwrap(
-      await this.commentService.createComment(caseLookup.id, {
-        creator: creator,
-        source: CaseCommentSourceEnum.Application,
-        type: CaseCommentTypeTitleEnum.Message,
-        comment: commentBody.comment,
-        receiver: null,
-        internal: false,
-        storeState: true,
+      await this.commentService.createApplicationComment(caseLookup.id, {
+        applicationUserCreatorId: applicationUser.id,
+        comment: body.comment,
       }),
     )
 
