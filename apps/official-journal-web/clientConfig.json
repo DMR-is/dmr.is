@@ -1306,13 +1306,6 @@
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "description": "Type of the comment",
-            "required": false,
-            "name": "internal",
-            "in": "query",
-            "schema": { "enum": [], "type": "number" }
           }
         ],
         "responses": {
@@ -1320,18 +1313,18 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCaseCommentsResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/GetComments" }
               }
             }
           }
         },
         "security": [{ "bearer": [] }]
-      },
+      }
+    },
+    "/api/v1/cases/{id}/comments/v2/internal": {
       "post": {
-        "operationId": "createComment",
-        "summary": "Add comment to case",
+        "operationId": "createInternalComment",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1344,46 +1337,61 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PostCaseCommentBody" }
+              "schema": {
+                "$ref": "#/components/schemas/InternalCommentBodyDto"
+              }
             }
           }
         },
-        "responses": { "201": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetComment" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/{id}/comments/{commentId}": {
-      "get": {
-        "operationId": "getComment",
-        "summary": "Get case comment",
+    "/api/v1/cases/{id}/comments/v2/external": {
+      "post": {
+        "operationId": "createExternalComment",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "commentId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalCommentBodyDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCaseCommentResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/GetComment" }
               }
             }
           }
         },
         "security": [{ "bearer": [] }]
-      },
+      }
+    },
+    "/api/v1/cases/{id}/comments/{commentId}": {
       "delete": {
         "operationId": "deleteComment",
         "summary": "Delete comment from case",
@@ -3034,7 +3042,7 @@
       },
       "CaseStatusEnum": {
         "type": "string",
-        "description": "Statuses to be counted",
+        "description": "Status of the case",
         "enum": [
           "Innsent",
           "Grunnvinnsla",
@@ -3061,18 +3069,8 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
           },
           "title": {
-            "type": "string",
-            "enum": [
-              "Innsent",
-              "Grunnvinnsla",
-              "Yfirlestur",
-              "Tilbúið",
-              "Útgefið",
-              "Tekið úr birtingu",
-              "Birtingu hafnað"
-            ],
             "example": "Innsent",
-            "description": "Status of the case"
+            "$ref": "#/components/schemas/CaseStatusEnum"
           },
           "slug": {
             "type": "string",
@@ -3390,84 +3388,71 @@
         },
         "required": ["id", "email", "phone"]
       },
-      "CaseCommentType": {
+      "CaseActionEnum": {
         "type": "string",
+        "description": "The action that created the comment",
         "enum": [
-          "Innsent af:",
-          "færir mál á",
-          "merkir sér málið.",
-          "færir mál í stöðuna:",
-          "gerir athugasemd.",
-          "skráir skilaboð"
+          "SUBMIT",
+          "ASSIGN_USER",
+          "ASSIGN_SELF",
+          "UPDATE_STATUS",
+          "INTERNAL_COMMENT",
+          "EXTERNAL_COMMENT",
+          "APPLICATION_COMMENT"
         ]
       },
-      "CaseCommentDirection": {
-        "type": "string",
-        "description": "Was the comment sent or received.",
-        "enum": ["sent", "received"]
-      },
-      "CaseComment": {
+      "CommentCreatorDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "id": { "type": "string", "description": "Id of the entity" },
+          "title": { "type": "string", "description": "Title of the entity" }
+        },
+        "required": ["id", "title"]
+      },
+      "CommentReceiverDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Id of the entity" },
+          "title": { "type": "string", "description": "Title of the entity" }
+        },
+        "required": ["id", "title"]
+      },
+      "CommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "The id of the comment" },
+          "created": {
             "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "description": "Id of the case comment."
+            "description": "ISO string representation of the date the comment was created"
           },
-          "internal": {
-            "type": "boolean",
-            "description": "Is the comment internal."
-          },
-          "title": {
-            "example": "f. 2 dögum",
-            "$ref": "#/components/schemas/CaseCommentType"
-          },
+          "action": { "$ref": "#/components/schemas/CaseActionEnum" },
           "caseStatus": {
-            "type": "string",
-            "enum": [
-              "Innsent",
-              "Grunnvinnsla",
-              "Yfirlestur",
-              "Tilbúið",
-              "Útgefið",
-              "Tekið úr birtingu",
-              "Birtingu hafnað"
-            ],
-            "description": "Case status of when the comment was created."
+            "description": "The status of the case when the comment was created",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
           },
-          "age": {
-            "type": "string",
-            "example": "f. 2 dögum",
-            "description": "String representation of the age of the case comment."
-          },
-          "ageIso": {
-            "type": "string",
-            "description": "ISO date format representation of the age of the case comment."
-          },
-          "direction": { "$ref": "#/components/schemas/CaseCommentDirection" },
           "creator": {
-            "type": "string",
-            "description": "Who created the comment "
+            "description": "The creator of the comment",
+            "allOf": [{ "$ref": "#/components/schemas/CommentCreatorDto" }]
           },
           "receiver": {
-            "type": "string",
-            "description": "Who received the comment"
+            "nullable": true,
+            "description": "The receiver of the comment",
+            "allOf": [{ "$ref": "#/components/schemas/CommentReceiverDto" }]
           },
-          "comment": { "type": "string", "description": "The comment itself" },
-          "state": { "type": "string", "description": "The comment itself" }
+          "comment": {
+            "type": "string",
+            "description": "The comment",
+            "nullable": true
+          }
         },
         "required": [
           "id",
-          "internal",
-          "title",
+          "created",
+          "action",
           "caseStatus",
-          "age",
-          "ageIso",
-          "direction",
           "creator",
           "receiver",
-          "comment",
-          "state"
+          "comment"
         ]
       },
       "SignatureType": {
@@ -3767,7 +3752,7 @@
               }
             },
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseComment" }
+            "items": { "$ref": "#/components/schemas/CommentDto" }
           },
           "signatures": {
             "type": "array",
@@ -3894,49 +3879,32 @@
         },
         "required": ["caseIds"]
       },
-      "GetCaseCommentsResponse": {
+      "GetComments": {
         "type": "object",
         "properties": {
           "comments": {
-            "description": "List of case comments.",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseComment" }
+            "items": { "$ref": "#/components/schemas/CommentDto" }
           }
         },
         "required": ["comments"]
       },
-      "GetCaseCommentResponse": {
+      "InternalCommentBodyDto": {
+        "type": "object",
+        "properties": { "comment": { "type": "string" } },
+        "required": ["comment"]
+      },
+      "GetComment": {
         "type": "object",
         "properties": {
-          "comment": {
-            "description": "The comment that was found or null.",
-            "allOf": [{ "$ref": "#/components/schemas/CaseComment" }]
-          }
+          "comment": { "$ref": "#/components/schemas/CommentDto" }
         },
         "required": ["comment"]
       },
-      "CaseCommentSource": { "type": "string", "enum": ["API", "Application"] },
-      "PostCaseCommentBody": {
+      "ExternalCommentBodyDto": {
         "type": "object",
-        "properties": {
-          "internal": {
-            "type": "boolean",
-            "description": "Is the comment internal"
-          },
-          "type": { "$ref": "#/components/schemas/CaseCommentType" },
-          "source": { "$ref": "#/components/schemas/CaseCommentSource" },
-          "comment": {
-            "type": "string",
-            "description": "The case comment itself"
-          },
-          "creator": { "type": "string" },
-          "receiver": { "type": "string" },
-          "storeState": {
-            "type": "boolean",
-            "description": "Store the state of the application"
-          }
-        },
-        "required": ["internal", "type", "source", "comment", "creator"]
+        "properties": { "comment": { "type": "string" } },
+        "required": ["comment"]
       },
       "GetCasesWithPublicationNumber": {
         "type": "object",

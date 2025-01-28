@@ -29,7 +29,7 @@ export const useAddComment = ({ caseId, options }: UseAddCommentParams) => {
     Key,
     AddCommentTriggerArgs
   >(
-    caseId ? APIRoutes.CreateComment.replace(':id', caseId) : null,
+    caseId ? APIRoutes.CreatInternalComment.replace(':id', caseId) : null,
     (url: string, { arg }: { arg: AddCommentTriggerArgs }) =>
       fetcher<Response, AddCommentTriggerArgs>(url, {
         arg: { withAuth: true, method: 'POST', body: arg },

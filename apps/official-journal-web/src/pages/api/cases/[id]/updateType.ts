@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -33,12 +34,14 @@ class UpdateTypeHandler {
     const dmrClient = createDmrClient()
 
     try {
-      await dmrClient.updateCaseType({
-        id: id,
-        updateCaseTypeBody: {
-          typeId: parsed.data.typeId,
-        },
-      })
+      await dmrClient
+        .withMiddleware(new AuthMiddleware(req.headers.authorization))
+        .updateCaseType({
+          id: id,
+          updateCaseTypeBody: {
+            typeId: parsed.data.typeId,
+          },
+        })
     } catch (error) {
       if (error instanceof Error) {
         logger.debug(`Failed to update type on case<${id}>`, {

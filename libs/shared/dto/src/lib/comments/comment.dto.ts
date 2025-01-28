@@ -1,6 +1,7 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
-import { CaseActionEnum, CaseStatus } from '../cases'
+import { CaseActionEnum } from '../cases/case-constants'
+import { CaseStatus } from '../cases/case-status.dto'
 import { BaseEntity } from '../entity'
 
 export class CommentCreatorDto extends OmitType(BaseEntity, [
@@ -36,14 +37,13 @@ export class CommentDto {
     type: CaseStatus,
     description: 'The status of the case when the comment was created',
   })
-  status!: CaseStatus
+  caseStatus!: CaseStatus
 
   @ApiProperty({
     type: CommentCreatorDto,
-    nullable: true,
     description: 'The creator of the comment',
   })
-  creator!: CommentCreatorDto | null
+  creator!: CommentCreatorDto
 
   @ApiProperty({
     type: CommentReceiverDto,

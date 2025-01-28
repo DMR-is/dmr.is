@@ -7,7 +7,7 @@ import {
   SkeletonLoader,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
+import { Case, CaseStatusEnum } from '../../gen/fetch'
 import { useCase } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { HTMLEditor } from '../editor/Editor'
@@ -69,8 +69,7 @@ export const StepLeidretting = ({
     )
   }
 
-  const isRejected =
-    caseData.status.title === CaseStatusTitleEnum.BirtinguHafnað
+  const isRejected = caseData.status.title === CaseStatusEnum.BirtinguHafnað
 
   return (
     <GridContainer>

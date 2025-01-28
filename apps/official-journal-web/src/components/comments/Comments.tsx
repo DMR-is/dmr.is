@@ -3,11 +3,15 @@ import AnimateHeight from 'react-animate-height'
 
 import { Box, Button, Icon, Tabs, Tag, Text } from '@island.is/island-ui/core'
 
-import { CaseDetailed } from '../../gen/fetch'
+import { CaseActionEnum, CaseDetailed } from '../../gen/fetch'
 import { useCase, useDeleteComment } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { COMMENTS_TO_HIDE } from '../../lib/constants'
-import { commentToNode, getCommentIcon } from '../../lib/utils'
+import {
+  commentToNode,
+  convertDateToDaysAgo,
+  getCommentIcon,
+} from '../../lib/utils'
 import { AddCommentTab } from './AddCommentTab'
 import * as styles from './Comments.css'
 import { messages } from './messages'
@@ -45,9 +49,9 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
   const sortedComments = useMemo(() => {
     return activeCase.comments.sort((a, b) => {
       if (order === 'asc') {
-        return new Date(a.ageIso).getTime() - new Date(b.ageIso).getTime()
+        return new Date(a.created).getTime() - new Date(b.created).getTime()
       } else {
-        return new Date(b.ageIso).getTime() - new Date(a.ageIso).getTime()
+        return new Date(b.created).getTime() - new Date(a.created).getTime()
       }
     })
   }, [activeCase.comments, order])
@@ -102,6 +106,8 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
               return null
             }
 
+            const age = convertDateToDaysAgo(c.created)
+
             return (
               <Fragment key={c.id}>
                 <Box
@@ -128,7 +134,7 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
                       <Text>{commentToNode(c)}</Text>
                       {c.comment ? <Text>{c.comment}</Text> : null}
                     </div>
-                    <Text whiteSpace="nowrap">{c.age}</Text>
+                    <Text whiteSpace="nowrap">{age}</Text>
                   </Box>
                   <Box display="flex" justifyContent="spaceBetween">
                     <Button
@@ -152,11 +158,17 @@ export const Comments = ({ activeCase, onAddCommentSuccess }: Props) => {
                       </Box>
                     </Button>
                     <Box>
-                      <Tag variant={c.internal ? 'mint' : 'darkerBlue'}>
+                      <Tag
+                        variant={
+                          c.action === CaseActionEnum.APPLICATIONCOMMENT
+                            ? 'mint'
+                            : 'darkerBlue'
+                        }
+                      >
                         {formatMessage(
-                          c.internal
-                            ? messages.comments.internalComment
-                            : messages.comments.externalComment,
+                          c.action === CaseActionEnum.APPLICATIONCOMMENT
+                            ? messages.comments.externalComment
+                            : messages.comments.internalComment,
                         )}
                       </Tag>
                     </Box>

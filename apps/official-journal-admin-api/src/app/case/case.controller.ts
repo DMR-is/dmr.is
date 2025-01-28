@@ -72,6 +72,7 @@ import {
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -736,6 +737,7 @@ export class CaseController {
   @Post(':id/comments/v2/internal')
   @ApiOperation({ operationId: 'createInternalComment' })
   @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({ type: InternalCommentBodyDto })
   @ApiResponse({ status: 200, type: GetComment })
   @TimeLog()
   async createCommentInternal(
@@ -756,6 +758,7 @@ export class CaseController {
   @Post(':id/comments/v2/external')
   @ApiOperation({ operationId: 'createExternalComment' })
   @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({ type: ExternalCommentBodyDto })
   @ApiResponse({ status: 200, type: GetComment })
   @TimeLog()
   async createCommentExternal(

@@ -76,7 +76,7 @@ export const commentMigrate = (
   return {
     id: model.id,
     created: model.created,
-    status: model.createdCaseStatus,
+    caseStatus: model.createdCaseStatus,
     action: model.caseAction.title,
     creator: creator,
     receiver: receiver,
