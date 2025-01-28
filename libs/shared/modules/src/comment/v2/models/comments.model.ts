@@ -9,7 +9,6 @@ import {
 } from 'sequelize-typescript'
 
 import { CaseModel } from '../../../case/models'
-import { CaseCommentModel } from '../../v1'
 import { CommentModel } from './comment.model'
 
 @Table({ tableName: 'case_comments_v2', timestamps: false })
@@ -35,6 +34,6 @@ export class CommentsModel extends Model {
   @BelongsTo(() => CaseModel)
   case!: CaseModel
 
-  @BelongsTo(() => CaseCommentModel)
-  caseComment!: CaseCommentModel
+  @BelongsTo(() => CommentModel)
+  caseComment!: CommentModel
 }

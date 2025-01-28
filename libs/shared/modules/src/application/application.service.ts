@@ -13,15 +13,13 @@ import {
   Application,
   ApplicationUser,
   CaseActionEnum,
-  CaseCommentSourceEnum,
-  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
-  GetCaseCommentsResponse,
+  GetComments,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
@@ -49,7 +47,7 @@ import {
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
-import { GetComments, ICommentServiceV2 } from '../comment/v2'
+import { ICommentServiceV2 } from '../comment/v2'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -66,7 +64,7 @@ export class ApplicationService implements IApplicationService {
     private readonly attachmentService: IAttachmentService,
     @Inject(forwardRef(() => IUtilityService))
     private readonly utilityService: IUtilityService,
-    @Inject(ICommentServiceV2)
+    @Inject(forwardRef(() => ICommentServiceV2))
     private readonly commentService: ICommentServiceV2,
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
@@ -380,21 +378,6 @@ export class ApplicationService implements IApplicationService {
           transaction,
         ),
       )
-
-      // ResultWrapper.unwrap(
-      //   await this.commentService.createComment(
-      //     caseLookup.id,
-      //     {
-      //       internal: true,
-      //       type: CaseCommentTypeTitleEnum.Submit,
-      //       source: CaseCommentSourceEnum.Application,
-      //       creator: caseLookup.involvedParty.title,
-      //       comment: null,
-      //       receiver: null,
-      //     },
-      //     transaction,
-      //   ),
-      // )
 
       await this.commentService.createSubmitComment(caseLookup.id, {
         institutionCreatorId: caseLookup.involvedParty.id,
