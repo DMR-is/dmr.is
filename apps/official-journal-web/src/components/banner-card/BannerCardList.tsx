@@ -22,7 +22,7 @@ export const BannerCardList = ({ cards }: Props) => {
   return (
     <GridRow className={styles.bannerCardList}>
       {cards.map((item, index) => (
-        <GridColumn span={['1/1', '1/2', '1/2', '1/3']} key={index}>
+        <GridColumn span={['1/1', '1/3', '1/3', '1/3']} key={index}>
           <BannerCard
             title={
               typeof item.title === 'object'
