@@ -1,7 +1,7 @@
 import { Transaction } from 'sequelize'
 import {
-  AdminUser,
   AddCaseAdvertCorrection,
+  AdminUser,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,

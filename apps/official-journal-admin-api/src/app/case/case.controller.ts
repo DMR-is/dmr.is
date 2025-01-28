@@ -619,6 +619,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/update',
+    operationId: 'updateCaseAndAddCorrection',
+    params: [{ name: 'id', type: 'string', required: true }],
+    summary: 'Update advert html + add correction details',
+    bodyType: UpdateAdvertHtmlCorrection,
+  })
+  async updateAdvertHtmlCorrection(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertHtmlCorrection,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/html',
     operationId: 'updateAdvertHtml',
     params: [{ name: 'id', type: 'string', required: true }],

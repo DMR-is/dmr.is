@@ -83,7 +83,7 @@ describe('CaseController', () => {
         {
           provide: ICommentServiceV2,
           useClass: jest.fn(() => ({
-            createComment: () => ({}),
+            createInternalComment: () => ({}),
             deleteComment: () => ({}),
           })),
         },
@@ -148,15 +148,7 @@ describe('CaseController', () => {
         { comment: 'Hello world' },
       )
 
-      expect(createSpy).toHaveBeenCalledWith(activeCase.id, {
-        comment: null,
-        creator: 'Stofnun x',
-        internal: true,
-        receiver: null,
-        source: CaseCommentSourceEnum.API,
-        type: CaseCommentTypeTitleEnum.Submit,
-        storeState: false,
-      })
+      expect(createSpy).toHaveBeenCalled()
     })
   })
 

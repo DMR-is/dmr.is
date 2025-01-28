@@ -959,6 +959,32 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/update": {
+      "put": {
+        "operationId": "updateCaseAndAddCorrection",
+        "summary": "Update advert html + add correction details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvertHtmlCorrection"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/html": {
       "put": {
         "operationId": "updateAdvertHtml",
@@ -3401,6 +3427,21 @@
           }
         },
         "required": ["status"]
+      },
+      "UpdateAdvertHtmlCorrection": {
+        "type": "object",
+        "properties": {
+          "advertHtml": { "type": "string", "description": "Advert HTML" },
+          "title": {
+            "type": "string",
+            "description": "Title of the correction"
+          },
+          "description": {
+            "type": "string",
+            "description": "The correction description"
+          }
+        },
+        "required": ["advertHtml", "title", "description"]
       },
       "UpdateAdvertHtmlBody": {
         "type": "object",
