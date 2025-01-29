@@ -40,7 +40,7 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
         setBaseText('')
       }
     }
-  }, [activeCase?.comments])
+  }, [activeCase.history])
 
   if (!activeText || !baseText) {
     return null
