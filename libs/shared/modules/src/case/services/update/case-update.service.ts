@@ -166,22 +166,6 @@ export class CaseUpdateService implements ICaseUpdateService {
       },
     )
 
-    // await this.commentService.createComment(
-    //   id,
-    //   {
-    //     internal: true,
-    //     type: caseRes.assignedUserId
-    //       ? CaseCommentTypeTitleEnum.Assign
-    //       : CaseCommentTypeTitleEnum.AssignSelf,
-    //     source: CaseCommentSourceEnum.API,
-    //     storeState: false,
-    //     comment: null,
-    //     creator: 'Ármann Árni',
-    //     receiver: 'Pálina',
-    //   },
-    //   transaction,
-    // )
-
     return ResultWrapper.ok()
   }
 

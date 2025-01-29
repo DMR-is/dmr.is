@@ -14,6 +14,7 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
   AdminUser,
+  CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseResponse,
   CreateMainCategory,
@@ -799,6 +800,24 @@ export class CaseController {
     @CurrentUser() user: AdminUser,
     @Body() body: ExternalCommentBodyDto,
   ): Promise<GetComment> {
+    const communicationStatusUpdateResult =
+      await this.caseService.updateCaseCommunicationStatusByStatus(
+        id,
+        CaseCommunicationStatus.WaitingForAnswers,
+      )
+
+    if (!communicationStatusUpdateResult.result.ok) {
+      this.logger.warn(
+        'Failed to update communication status when creating external comment',
+        {
+          caseId: id,
+          error: communicationStatusUpdateResult.result.error,
+          category: LOG_CATEGORY,
+          context: 'CaseController',
+        },
+      )
+    }
+
     return ResultWrapper.unwrap(
       await this.commentServiceV2.createExternalComment(id, {
         adminUserCreatorId: user.id,
