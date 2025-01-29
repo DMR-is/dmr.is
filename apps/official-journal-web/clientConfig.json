@@ -3740,6 +3740,153 @@
           "updatedDate"
         ]
       },
+      "HistoryDepartment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert department, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert department.",
+            "example": "A deild"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert department, used in URLs and API requests.",
+            "example": "a-deild"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": {
+            "example": "Innsent",
+            "$ref": "#/components/schemas/CaseStatusEnum"
+          },
+          "slug": {
+            "type": "string",
+            "example": "innsent",
+            "description": "Slug of the case staus"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryInstition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the institution, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the institution",
+            "example": "Dómsmálaráðuneytið"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the institution, used in URLs and API requests.",
+            "example": "domsmalaraduneytid"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryEmployee": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "displayName": { "type": "string" }
+        },
+        "required": ["id", "displayName"]
+      },
+      "CaseHistory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id of the history record."
+          },
+          "caseId": {
+            "type": "string",
+            "description": "Id of the case the history record is related to."
+          },
+          "department": {
+            "description": "Department the case was submitted to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryDepartment" }]
+          },
+          "type": {
+            "description": "Type of the advert the case is related to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryType" }]
+          },
+          "status": {
+            "description": "Status of the case.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryStatus" }]
+          },
+          "institution": {
+            "description": "Institution the case was submitted to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryInstition" }]
+          },
+          "assignedTo": {
+            "description": "Employee the case was assigned to.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/HistoryEmployee" }]
+          },
+          "title": { "type": "string", "description": "Title of the advert" },
+          "html": { "type": "string", "description": "HTML of the advert" },
+          "requestedPublicationDate": {
+            "type": "string",
+            "description": "Requested publication date of the advert",
+            "nullable": true
+          },
+          "created": {
+            "type": "string",
+            "description": "ISO representation of the date the case was created."
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "department",
+          "type",
+          "status",
+          "institution",
+          "assignedTo",
+          "title",
+          "html",
+          "requestedPublicationDate",
+          "created"
+        ]
+      },
       "CaseDetailed": {
         "type": "object",
         "properties": {
@@ -3901,6 +4048,11 @@
             "description": "Corrections made to the related advert.",
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertCorrection" }
+          },
+          "history": {
+            "description": "History of the case.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseHistory" }
           }
         },
         "required": [
@@ -3932,7 +4084,8 @@
           "comments",
           "signatures",
           "attachments",
-          "additions"
+          "additions",
+          "history"
         ]
       },
       "GetCaseResponse": {

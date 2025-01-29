@@ -72,7 +72,6 @@ import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
   AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
