@@ -1,5 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -176,17 +177,21 @@ export class CaseService implements ICaseService {
       })
     }
 
+    const historyId = uuid()
     await this.caseHistoryModel.create(
       {
+        id: historyId,
         caseId: caseLookup.id,
         departmentId: caseLookup.departmentId,
         typeId: caseLookup.advertTypeId,
         statusId: caseLookup.statusId,
-        institutionId: caseLookup.involvedPartyId,
+        involvedPartyId: caseLookup.involvedPartyId,
         adminUserId: caseLookup.assignedUserId,
         title: caseLookup.advertTitle,
         html: caseLookup.html,
-        requestedPublicationDate: caseLookup.requestedPublicationDate,
+        requestedPublicationDate: new Date(
+          caseLookup.requestedPublicationDate,
+        ).toISOString(),
         created: now,
       },
       { transaction },
@@ -1033,8 +1038,14 @@ export class CaseService implements ICaseService {
    * because we want to use multiple transactions
    */
   @LogAndHandle()
-  createCase(body: PostApplicationBody): Promise<ResultWrapper> {
-    return this.createService.createCase(body)
+  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+    const { id } = ResultWrapper.unwrap(
+      await this.createService.createCase(body),
+    )
+
+    await this.createCaseHistory(id)
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

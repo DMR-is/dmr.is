@@ -184,7 +184,10 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
-  createCaseHistory(caseId: string): Promise<ResultWrapper>
+  createCaseHistory(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')
