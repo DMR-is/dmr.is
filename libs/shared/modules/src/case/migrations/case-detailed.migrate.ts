@@ -1,8 +1,8 @@
-import { CaseCommentSourceEnum, CaseDetailed } from '@dmr.is/shared/dto'
+import { CaseDetailed } from '@dmr.is/shared/dto'
 
 import { adminUserMigrate } from '../../admin-user/migrations/admin-user.migrate'
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
-import { caseCommentMigrate } from '../../comment/migrations/case-comment.migrate'
+import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
@@ -54,9 +54,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
       ? model.signatures.map((s) => signatureMigrate(s))
       : [],
     comments: model.comments
-      ? model.comments.map((c) =>
-          caseCommentMigrate(c, CaseCommentSourceEnum.API),
-        )
+      ? model.comments.map((c) => commentMigrate(c))
       : [],
     attachments: model.attachments
       ? model.attachments.map((a) => attachmentMigrate(a))

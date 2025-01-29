@@ -1,6 +1,6 @@
 import { Stack } from '@island.is/island-ui/core'
 
-import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
+import { Case, CaseStatusEnum } from '../../gen/fetch'
 import { generateCaseLink } from '../../lib/utils'
 import { CaseCard } from '../cards/CaseCard'
 
@@ -22,7 +22,7 @@ export const CasePublishingList = ({ cases }: Props) => {
           title={c.advertTitle}
           categories={c.advertCategories.map((c) => c.title)}
           link={generateCaseLink(
-            c.status.title as unknown as CaseStatusTitleEnum,
+            c.status.title as unknown as CaseStatusEnum,
             c.id,
           )}
         />

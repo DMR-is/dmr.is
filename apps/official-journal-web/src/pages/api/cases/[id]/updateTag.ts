@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -27,12 +28,14 @@ class UpdateTagHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateTag({
-      id: id,
-      updateTagBody: {
-        tagId: parsed.data.tagId,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateTag({
+        id: id,
+        updateTagBody: {
+          tagId: parsed.data.tagId,
+        },
+      })
     return res.status(200).end()
   }
 }

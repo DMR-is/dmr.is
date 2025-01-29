@@ -5,6 +5,7 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
+  AdminUser,
   AdvertStatus,
   Case,
   CaseCommunicationStatus,
@@ -365,9 +366,15 @@ export class CaseService implements ICaseService {
   updateEmployee(
     caseId: string,
     userId: string,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateEmployee(caseId, userId, transaction)
+    return this.updateService.updateEmployee(
+      caseId,
+      userId,
+      currentUser,
+      transaction,
+    )
   }
   @LogAndHandle()
   @Transactional()
@@ -382,9 +389,15 @@ export class CaseService implements ICaseService {
   async updateCaseStatus(
     caseId: string,
     body: UpdateCaseStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.updateService.updateCaseStatus(caseId, body, transaction)
+    await this.updateService.updateCaseStatus(
+      caseId,
+      body,
+      currentUser,
+      transaction,
+    )
 
     if (body.status !== CaseStatusEnum.Unpublished) {
       return ResultWrapper.ok()
@@ -455,9 +468,15 @@ export class CaseService implements ICaseService {
   updateCaseNextStatus(
     caseId: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseNextStatus(caseId, body, transaction)
+    return this.updateService.updateCaseNextStatus(
+      caseId,
+      body,
+      currentUser,
+      transaction,
+    )
   }
 
   @LogAndHandle()
@@ -465,11 +484,13 @@ export class CaseService implements ICaseService {
   updateCasePreviousStatus(
     caseId: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCasePreviousStatus(
       caseId,
       body,
+      currentUser,
       transaction,
     )
   }

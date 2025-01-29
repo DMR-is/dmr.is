@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -26,10 +27,12 @@ class UpdateEmployeeHandler {
       return res.status(400).end()
     }
 
-    await dmrClient.assignEmployee({
-      id: id,
-      userId: parsed.data.userId,
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .assignEmployee({
+        id: id,
+        userId: parsed.data.userId,
+      })
 
     return res.status(204).end()
   }

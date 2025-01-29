@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import {
   AddCaseAdvertCorrection,
+  AdminUser,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -73,19 +74,26 @@ export interface ICaseService {
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-  updateEmployee(id: string, userId: string): Promise<ResultWrapper>
+  updateEmployee(
+    id: string,
+    userId: string,
+    currentUser: AdminUser,
+  ): Promise<ResultWrapper>
   updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
+    currentUser: AdminUser,
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     id: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     id: string,
     body: UpdateNextStatusBody,
+    currentUser: AdminUser,
   ): Promise<ResultWrapper>
 
   rejectCase(id: string): Promise<ResultWrapper>
