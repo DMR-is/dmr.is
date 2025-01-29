@@ -61,6 +61,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdminUserModel } from '../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
@@ -72,6 +73,7 @@ import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
   AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
@@ -88,6 +90,7 @@ import { ICaseUpdateService } from './services/update/case-update.service.interf
 import { ICaseService } from './case.service.interface'
 import {
   CaseCommunicationStatusModel,
+  CaseHistoryModel,
   CaseModel,
   CasePublishedAdvertsModel,
   CaseStatusModel,
@@ -132,9 +135,64 @@ export class CaseService implements ICaseService {
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(CaseHistoryModel)
+    private readonly caseHistoryModel: typeof CaseHistoryModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseHistory(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const now = new Date().toISOString()
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: [
+        'id',
+        'departmentId',
+        'statusId',
+        'advertTypeId',
+        'involvedPartyId',
+        'assignedUserId',
+        'advertTitle',
+        'html',
+        'requestedPublicationDate',
+      ],
+      transaction,
+    })
+
+    if (caseLookup === null) {
+      this.logger.warn(`Tried to create case history, but case is not found`, {
+        caseId,
+        category: LOGGING_CATEGORY,
+        context: 'CaseService',
+      })
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    await this.caseHistoryModel.create(
+      {
+        caseId: caseLookup.id,
+        departmentId: caseLookup.departmentId,
+        typeId: caseLookup.advertTypeId,
+        statusId: caseLookup.statusId,
+        institutionId: caseLookup.involvedPartyId,
+        adminUserId: caseLookup.assignedUserId,
+        title: caseLookup.advertTitle,
+        html: caseLookup.html,
+        requestedPublicationDate: caseLookup.requestedPublicationDate,
+        created: now,
+      },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {

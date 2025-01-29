@@ -5,8 +5,6 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminUser,
-  CaseCommentSourceEnum,
-  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UpdateAdvertHtmlBody,
@@ -272,11 +270,6 @@ export class CaseUpdateService implements ICaseUpdateService {
       await this.utilityService.caseStatusLookup(body.status)
     ).unwrap()
 
-    await this.commentService.createUpdateStatusComment(id, {
-      adminUserCreatorId: '1',
-      caseStatusReceiverId: status.id,
-    })
-
     await this.caseModel.update(
       {
         statusId: status.id,
@@ -288,6 +281,11 @@ export class CaseUpdateService implements ICaseUpdateService {
         transaction,
       },
     )
+
+    await this.commentService.createUpdateStatusComment(id, {
+      adminUserCreatorId: currentUser.id,
+      caseStatusReceiverId: status.id,
+    })
 
     return ResultWrapper.ok()
   }
