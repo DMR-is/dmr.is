@@ -4,6 +4,7 @@ import { StringOption } from '@island.is/island-ui/core'
 
 import {
   AdminUser,
+  AdvertCorrection,
   AdvertType,
   CaseDetailed,
   CaseStatusEnum,
@@ -89,6 +90,10 @@ type CaseState = {
   canEdit: boolean
   lastFetched: string
   isPublishedOrRejected: boolean
+  corrections: AdvertCorrection[]
+  localCorrection: AdvertCorrection | undefined
+  setLocalCorrection: (correction: AdvertCorrection | undefined) => void
+  canUpdateAdvert: boolean
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -106,6 +111,10 @@ export const CaseContext = createContext<CaseState>({
   canEdit: false,
   lastFetched: new Date().toISOString(),
   isPublishedOrRejected: false,
+  corrections: [],
+  localCorrection: undefined,
+  setLocalCorrection: () => undefined,
+  canUpdateAdvert: false,
 })
 
 type CaseProviderProps = {
@@ -131,6 +140,12 @@ export const CaseProvider = ({
 }: CaseProviderProps) => {
   const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
   const [lastFetched, setLastFetched] = useState(new Date().toISOString())
+  const [localCorrection, setLocalCorrection] = useState<AdvertCorrection>()
+
+  const adCorrections = currentCase.advertCorrections ?? []
+  const lCorrection = localCorrection ? [localCorrection] : []
+  const corrections = [...lCorrection, ...adCorrections]
+
   const { mutate, isLoading, error, isValidating } = useCase({
     caseId: initalCase.id,
     options: {
@@ -181,6 +196,8 @@ export const CaseProvider = ({
     currentCase.status.title,
   )
 
+  const canUpdateAdvert = localCorrection !== undefined
+
   return (
     <CaseContext.Provider
       value={{
@@ -198,6 +215,10 @@ export const CaseProvider = ({
         canEdit,
         lastFetched,
         isPublishedOrRejected,
+        corrections,
+        localCorrection,
+        setLocalCorrection,
+        canUpdateAdvert,
       }}
     >
       {children}

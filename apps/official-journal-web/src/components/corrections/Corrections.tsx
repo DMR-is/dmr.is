@@ -1,20 +1,14 @@
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 
 import { Box, GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { AdvertCorrection } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { formatDate } from '../../lib/utils'
 import { AddCorrection } from './AddCorrection'
 import { DeleteCorrections } from './DeleteButton'
 
 export const Corrections = () => {
-  const [localCorrection, setLocalCorrection] = useState<AdvertCorrection>()
-  const { currentCase } = useCaseContext()
-
-  const adCorrections = currentCase.advertCorrections ?? []
-  const lCorrection = localCorrection ? [localCorrection] : []
-  const corrections = [...lCorrection, ...adCorrections]
+  const { currentCase, corrections, setLocalCorrection } = useCaseContext()
 
   return (
     <Box
@@ -24,7 +18,7 @@ export const Corrections = () => {
       background="purple100"
     >
       <Box>
-        {corrections?.map((c, i) => {
+        {corrections?.map((c) => {
           return (
             <Fragment key={c.id}>
               <Box
@@ -54,7 +48,6 @@ export const Corrections = () => {
                     <GridColumn span={['6/12']}>
                       <DeleteCorrections
                         onDelete={() => {
-                          // onDeleteCorrection()
                           setLocalCorrection(undefined)
                         }}
                         title={c.title}
@@ -81,7 +74,6 @@ export const Corrections = () => {
           <Box borderTopWidth={'standard'} borderColor="blue200">
             <AddCorrection
               onAddSuccess={(correction) => {
-                // onCorrectionAdd(correction)
                 setLocalCorrection({
                   id: 'new',
                   title: correction.title,
