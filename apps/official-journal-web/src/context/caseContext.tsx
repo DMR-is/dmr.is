@@ -88,6 +88,7 @@ type CaseState = {
   error?: Error
   canEdit: boolean
   lastFetched: string
+  isPublishedOrRejected: boolean
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -104,6 +105,7 @@ export const CaseContext = createContext<CaseState>({
   typeOptions: [],
   canEdit: false,
   lastFetched: new Date().toISOString(),
+  isPublishedOrRejected: false,
 })
 
 type CaseProviderProps = {
@@ -169,6 +171,16 @@ export const CaseProvider = ({
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
 
+  const isPublishedOrRejectedStatuses = [
+    CaseStatusEnum.ÚTgefið,
+    CaseStatusEnum.BirtinguHafnað,
+    CaseStatusEnum.TekiðÚrBirtingu,
+  ]
+
+  const isPublishedOrRejected = isPublishedOrRejectedStatuses.includes(
+    currentCase.status.title,
+  )
+
   return (
     <CaseContext.Provider
       value={{
@@ -185,6 +197,7 @@ export const CaseProvider = ({
         error,
         canEdit,
         lastFetched,
+        isPublishedOrRejected,
       }}
     >
       {children}

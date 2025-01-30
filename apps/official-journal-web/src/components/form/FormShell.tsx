@@ -241,7 +241,10 @@ export const FormShell = ({ children }: FormShellType) => {
                       updateTag({ tagId: opt.value })
                     }}
                   />
-                  <Box background="white" borderRadius="large">
+                  <Box
+                    background={prevStatus ? 'white' : 'blueberry100'}
+                    borderRadius="large"
+                  >
                     <Button
                       disabled={
                         prevStatus === null ||
@@ -251,7 +254,7 @@ export const FormShell = ({ children }: FormShellType) => {
                       fluid
                       variant="ghost"
                       size="small"
-                      preTextIcon="arrowBack"
+                      preTextIcon={prevStatus ? 'arrowBack' : undefined}
                       loading={isUpdatingPrevCaseStatus}
                       onClick={() => updatePrevStatus()}
                     >
@@ -276,7 +279,7 @@ export const FormShell = ({ children }: FormShellType) => {
                       fluid
                       loading={isUpdatingNextCaseStatus}
                       size="small"
-                      icon="arrowForward"
+                      icon={nextStatus ? 'arrowForward' : undefined}
                       onClick={() => updateCaseNextStatus()}
                     >
                       <Text color="white" variant="small" fontWeight="semiBold">
@@ -289,7 +292,7 @@ export const FormShell = ({ children }: FormShellType) => {
                     <LinkV2
                       href={`${Routes.PublishingOverview}?department=${currentCase.advertDepartment.title}`}
                     >
-                      <Button size="small" fluid icon="arrowForward">
+                      <Button size="small" fluid>
                         <Text
                           color="white"
                           variant="small"
