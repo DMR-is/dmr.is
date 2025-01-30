@@ -33,7 +33,7 @@ import { IApplicationService } from '../../../application/application.service.in
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IUtilityService } from '../../../utility/utility.module'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
-import { CaseCategoriesModel, CaseModel } from '../../models'
+import { CaseCategoriesModel, CaseModel, CaseStatusModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
 
 const LOGGING_CATEGORY = 'case-update-service'
@@ -312,16 +312,26 @@ export class CaseUpdateService implements ICaseUpdateService {
   @Transactional()
   async updateCaseNextStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const currentStatus = (
-      await this.utilityService.caseStatusLookup(
-        body.currentStatus,
-        transaction,
-      )
-    ).unwrap()
+    const caseLookup = await this.caseModel.findByPk(id, {
+      attributes: ['id', 'statusId'],
+      transaction,
+      include: [
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+      ],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
 
     const allowedStatuses = [
       CaseStatusEnum.Submitted,
@@ -329,17 +339,17 @@ export class CaseUpdateService implements ICaseUpdateService {
       CaseStatusEnum.InReview,
     ]
 
-    if (!allowedStatuses.includes(currentStatus.title)) {
+    if (!allowedStatuses.includes(caseLookup.status.title)) {
       /**
        * Case status not in a state where it can be updated, so we return early
        */
       this.logger.debug(
-        `Case status<${currentStatus.title}> is not in allowed statuses`,
+        `Case status<${caseLookup.status.title}> is not in allowed statuses`,
       )
       return ResultWrapper.ok()
     }
 
-    const nextStatus = getNextStatus(currentStatus.title)
+    const nextStatus = getNextStatus(caseLookup.status.title)
 
     ResultWrapper.unwrap(
       await this.utilityService.caseStatusLookup(nextStatus, transaction),
@@ -357,16 +367,26 @@ export class CaseUpdateService implements ICaseUpdateService {
   @Transactional()
   async updateCasePreviousStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const currentStatus = (
-      await this.utilityService.caseStatusLookup(
-        body.currentStatus,
-        transaction,
-      )
-    ).unwrap()
+    const caseLookup = await this.caseModel.findByPk(id, {
+      attributes: ['id', 'statusId'],
+      transaction,
+      include: [
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+      ],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
 
     const allowedStatuses = [
       CaseStatusEnum.InProgress,
@@ -374,17 +394,17 @@ export class CaseUpdateService implements ICaseUpdateService {
       CaseStatusEnum.ReadyForPublishing,
     ]
 
-    if (!allowedStatuses.includes(currentStatus.title)) {
+    if (!allowedStatuses.includes(caseLookup.status.title)) {
       /**
        * Case status not in a state where it can be updated, so we return early
        */
       this.logger.debug(
-        `Case status<${currentStatus.title}> is not in allowed statuses`,
+        `Case status<${caseLookup.status.title}> is not in allowed statuses`,
       )
       return ResultWrapper.ok()
     }
 
-    const prevStatus = getPreviousStatus(currentStatus.title)
+    const prevStatus = getPreviousStatus(caseLookup.status.title)
 
     ResultWrapper.unwrap(
       await this.utilityService.caseStatusLookup(prevStatus, transaction),

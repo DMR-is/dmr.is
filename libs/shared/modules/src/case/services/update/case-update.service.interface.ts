@@ -44,14 +44,12 @@ export interface ICaseUpdateService {
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper>

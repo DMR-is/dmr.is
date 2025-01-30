@@ -1,6 +1,7 @@
 import {
   Box,
   Breadcrumbs,
+  Button,
   Divider,
   GridColumn,
   GridContainer,
@@ -10,11 +11,19 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { useUpdateEmployee } from '../../hooks/api'
+import {
+  useUpdateEmployee,
+  useUpdateNextCaseStatus,
+  useUpdatePreviousCaseStatus,
+} from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseSingle'
-import { generateSteps } from '../../lib/utils'
+import {
+  generateSteps,
+  getNextStatus,
+  getPreviousStatus,
+} from '../../lib/utils'
 import { FormStepperV2 } from '../form-stepper/FormStepperV2'
 import { Section } from '../form-stepper/Section'
 import { FormStepperThemes } from '../form-stepper/types'
@@ -47,6 +56,36 @@ export const FormShell = ({ children }: FormShellType) => {
       },
     })
 
+  const {
+    trigger: updateCaseNextStatus,
+    isMutating: isUpdatingNextCaseStatus,
+  } = useUpdateNextCaseStatus({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Staða máls uppfærð')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að færa máli í næsta stig')
+      },
+    },
+  })
+
+  const { trigger: updatePrevStatus, isMutating: isUpdatingPrevCaseStatus } =
+    useUpdatePreviousCaseStatus({
+      caseId: currentCase.id,
+      options: {
+        onSuccess: () => {
+          refetch()
+          toast.success('Staða máls uppfærð')
+        },
+        onError: () => {
+          toast.error('Ekki tókst að færa máli í fyrri stig')
+        },
+      },
+    })
+
   const breadcrumbs = [
     {
       title: formatMessage(messages.breadcrumbs.dashboard),
@@ -60,6 +99,9 @@ export const FormShell = ({ children }: FormShellType) => {
       title: formatMessage(messages.breadcrumbs.case),
     },
   ]
+
+  const prevStatus = getPreviousStatus(currentCase.status.title)
+  const nextStatus = getNextStatus(currentCase.status.title)
 
   return (
     <Box className={styles.root}>
@@ -156,6 +198,41 @@ export const FormShell = ({ children }: FormShellType) => {
                     )}
                     options={tagOptions}
                   />
+                  <Box background="white" borderRadius="large">
+                    <Button
+                      disabled={prevStatus === null || isUpdatingPrevCaseStatus}
+                      fluid
+                      variant="ghost"
+                      size="small"
+                      preTextIcon="arrowBack"
+                      loading={isUpdatingPrevCaseStatus}
+                      onClick={() => updatePrevStatus()}
+                    >
+                      <Text
+                        color="blue400"
+                        variant="small"
+                        fontWeight="semiBold"
+                      >
+                        {prevStatus
+                          ? `Færa mál í ${prevStatus}`
+                          : `${currentCase.status.title}`}
+                      </Text>
+                    </Button>
+                  </Box>
+                  <Button
+                    disabled={nextStatus === null || isUpdatingNextCaseStatus}
+                    fluid
+                    loading={isUpdatingNextCaseStatus}
+                    size="small"
+                    icon="arrowForward"
+                    onClick={() => updateCaseNextStatus()}
+                  >
+                    <Text color="white" variant="small" fontWeight="semiBold">
+                      {nextStatus
+                        ? `Færa mál í ${nextStatus}`
+                        : `${currentCase.status.title}`}
+                    </Text>
+                  </Button>
                   <Divider weight="purple200" />
                   <FormStepperV2
                     sections={steps.map((step, i) => (

@@ -538,13 +538,11 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCaseNextStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(
       caseId,
-      body,
       currentUser,
       transaction,
     )
@@ -554,13 +552,11 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCasePreviousStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCasePreviousStatus(
       caseId,
-      body,
       currentUser,
       transaction,
     )

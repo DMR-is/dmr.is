@@ -87,13 +87,11 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
   ): Promise<ResultWrapper>
 

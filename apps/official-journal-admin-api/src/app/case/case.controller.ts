@@ -556,20 +556,14 @@ export class CaseController {
     path: ':id/status/next',
     operationId: 'updateNextStatus',
     summary: 'Update case status to next.',
-    bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
   @TimeLog()
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    const updateResults = await this.caseService.updateCaseNextStatus(
-      id,
-      body,
-      user,
-    )
+    const updateResults = await this.caseService.updateCaseNextStatus(id, user)
 
     if (!updateResults.result.ok) {
       throw new HttpException(
@@ -597,18 +591,15 @@ export class CaseController {
     path: ':id/status/previous',
     operationId: 'updatePreviousStatus',
     summary: 'Update case status to previous.',
-    bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
   @TimeLog()
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
     const updateResults = await this.caseService.updateCasePreviousStatus(
       id,
-      body,
       user,
     )
 

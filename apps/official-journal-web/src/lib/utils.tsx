@@ -629,3 +629,39 @@ export const sliceFirstAndLast = <T,>(arr: T[], count: number): T[] => {
 
   return [arr[0], ...arr.slice(-count)]
 }
+
+export const getPreviousStatus = (
+  status: CaseStatusEnum,
+): CaseStatusEnum | null => {
+  switch (status) {
+    case CaseStatusEnum.Innsent:
+      return null
+    case CaseStatusEnum.Grunnvinnsla:
+      return CaseStatusEnum.Innsent
+    case CaseStatusEnum.Yfirlestur:
+      return CaseStatusEnum.Grunnvinnsla
+    case CaseStatusEnum.Tilbúið:
+      return CaseStatusEnum.Yfirlestur
+    default: {
+      return null
+    }
+  }
+}
+
+export const getNextStatus = (
+  status: CaseStatusEnum,
+): CaseStatusEnum | null => {
+  switch (status) {
+    case CaseStatusEnum.Innsent:
+      return CaseStatusEnum.Grunnvinnsla
+    case CaseStatusEnum.Grunnvinnsla:
+      return CaseStatusEnum.Yfirlestur
+    case CaseStatusEnum.Yfirlestur:
+      return CaseStatusEnum.Tilbúið
+    case CaseStatusEnum.Tilbúið:
+      return null
+    default: {
+      return null
+    }
+  }
+}

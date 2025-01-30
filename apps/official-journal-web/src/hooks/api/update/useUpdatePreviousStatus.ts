@@ -3,10 +3,6 @@ import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
-type UpdatePreviousCaseStatusTriggerArgs = {
-  currentStatus: string
-}
-
 export type UpdatePreviousCaseStatusParams = {
   caseId: string
   options?: SWRUpdatePreviousCaseStatusOptions
@@ -16,31 +12,22 @@ type SWRUpdatePreviousCaseStatusOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  UpdatePreviousCaseStatusTriggerArgs
+  undefined
 >
 
 export const useUpdatePreviousCaseStatus = ({
   caseId,
   options,
 }: UpdatePreviousCaseStatusParams) => {
-  const { trigger, isMutating } = swrMutation<
-    Response,
-    Error,
-    Key,
-    UpdatePreviousCaseStatusTriggerArgs
-  >(
+  const { trigger, isMutating } = swrMutation<Response, Error, Key, undefined>(
     APIRoutes.UpdatePreviousCaseStatus,
-    (url: string, { arg }: { arg: UpdatePreviousCaseStatusTriggerArgs }) =>
-      fetcher<Response, UpdatePreviousCaseStatusTriggerArgs>(
-        url.replace(':id', caseId),
-        {
-          arg: {
-            withAuth: true,
-            method: 'POST',
-            body: arg,
-          },
+    (url: string) =>
+      fetcher<Response>(url.replace(':id', caseId), {
+        arg: {
+          withAuth: true,
+          method: 'POST',
         },
-      ),
+      }),
     {
       ...options,
       throwOnError: false,
