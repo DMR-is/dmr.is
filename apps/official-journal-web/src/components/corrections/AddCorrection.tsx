@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Box, Button, Input, Stack } from '@island.is/island-ui/core'
+import { Box, Button, Inline, Input, Stack } from '@island.is/island-ui/core'
 
 import { UpdateAvertAndCorrectionTriggerArgs } from '../../hooks/api/update'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -49,23 +49,26 @@ export const AddCorrection = ({ caseId, onAddSuccess }: Props) => {
           }
           textarea
         />
-        <Button
-          disabled={!inputValue.description || !inputValue.title}
-          onClick={() => {
-            onAddSuccess({
-              caseId: caseId,
-              title: inputValue.title ?? '',
-              description: inputValue.description ?? '',
-              advertHtml: '',
-            })
-            setInputValue({
-              title: '',
-              description: '',
-            })
-          }}
-        >
-          {formatMessage(messages.corrections.save)}
-        </Button>
+        <Inline justifyContent="flexEnd">
+          <Button
+            size="small"
+            disabled={!inputValue.description || !inputValue.title}
+            onClick={() => {
+              onAddSuccess({
+                caseId: caseId,
+                title: inputValue.title ?? '',
+                description: inputValue.description ?? '',
+                advertHtml: '',
+              })
+              setInputValue({
+                title: '',
+                description: '',
+              })
+            }}
+          >
+            {formatMessage(messages.corrections.save)}
+          </Button>
+        </Inline>
       </Stack>
     </Box>
   )
