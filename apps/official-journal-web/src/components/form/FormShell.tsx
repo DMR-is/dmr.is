@@ -13,9 +13,11 @@ import {
 } from '@island.is/island-ui/core'
 
 import {
+  useRejectCase,
   useUpdateEmployee,
   useUpdateNextCaseStatus,
   useUpdatePreviousCaseStatus,
+  useUpdateTag,
 } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -44,6 +46,19 @@ export const FormShell = ({ children }: FormShellType) => {
     useCaseContext()
 
   const steps = generateSteps(currentCase)
+
+  const { trigger: updateTag } = useUpdateTag({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Merking máls uppfært')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra merkingu málsins')
+      },
+    },
+  })
 
   const { trigger: assignEmployee, isMutating: isAssigning } =
     useUpdateEmployee({
@@ -89,6 +104,18 @@ export const FormShell = ({ children }: FormShellType) => {
       },
     })
 
+  const { trigger: rejectCase } = useRejectCase({
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Máli hafnað')
+      },
+      onError: () => {
+        toast.error('Ekki tókst að hafna máli')
+      },
+    },
+  })
+
   const breadcrumbs = [
     {
       title: formatMessage(messages.breadcrumbs.dashboard),
@@ -102,6 +129,15 @@ export const FormShell = ({ children }: FormShellType) => {
       title: formatMessage(messages.breadcrumbs.case),
     },
   ]
+
+  const handleRejectCase = () => {
+    const confirmReject = window.confirm(
+      'Ertu viss um að þú viljir hafna máli?',
+    )
+    if (confirmReject) {
+      rejectCase({ caseId: currentCase.id })
+    }
+  }
 
   const prevStatus = getPreviousStatus(currentCase.status.title)
   const nextStatus = getNextStatus(currentCase.status.title)
@@ -200,6 +236,10 @@ export const FormShell = ({ children }: FormShellType) => {
                       (tag) => tag.value === currentCase.tag.id,
                     )}
                     options={tagOptions}
+                    onChange={(opt) => {
+                      if (!opt) return
+                      updateTag({ tagId: opt.value })
+                    }}
                   />
                   <Box background="white" borderRadius="large">
                     <Button
@@ -260,7 +300,18 @@ export const FormShell = ({ children }: FormShellType) => {
                       </Button>
                     </LinkV2>
                   )}
-
+                  <Button
+                    disabled={!canEdit}
+                    fluid
+                    colorScheme="destructive"
+                    size="small"
+                    icon="close"
+                    onClick={() => handleRejectCase()}
+                  >
+                    <Text color="white" variant="small" fontWeight="semiBold">
+                      Hafna máli
+                    </Text>
+                  </Button>
                   <Divider weight="purple200" />
                   <FormStepperV2
                     sections={steps.map((step, i) => (
