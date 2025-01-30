@@ -150,7 +150,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   }
 
   @LogAndHandle()
-  async getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
+  async generatePdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const activeCase = caseDetailedMigrate(caseLookup)
 

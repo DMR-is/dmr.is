@@ -12,6 +12,7 @@ import { AdvertTypeModel } from '../../advert-type/models'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'
+import { AdvertCorrectionModel } from './advert-correction.model'
 import { AdvertDepartmentModel } from './advert-department.model'
 import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
 import { AdvertStatusModel } from './advert-status.model'
@@ -87,4 +88,7 @@ export class AdvertModel extends Model {
 
   @HasMany(() => AdvertAttachmentsModel, 'advert_id')
   attachments!: AdvertAttachmentsModel[]
+
+  @HasMany(() => AdvertCorrectionModel, 'advert_id')
+  corrections?: AdvertCorrectionModel[]
 }

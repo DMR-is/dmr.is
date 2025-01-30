@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -27,12 +28,14 @@ class UpdatePaidHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updatePaid({
-      id: id,
-      updatePaidBody: {
-        paid: parsed.data.paid,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updatePaid({
+        id: id,
+        updatePaidBody: {
+          paid: parsed.data.paid,
+        },
+      })
     return res.status(204).end()
   }
 }

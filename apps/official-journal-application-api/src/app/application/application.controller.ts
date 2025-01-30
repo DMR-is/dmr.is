@@ -15,13 +15,13 @@ import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
-  GetCaseCommentsResponse,
   GetPresignedUrlBody,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
   Signature,
+  GetComments,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -156,12 +156,12 @@ export class ApplicationController {
     path: ':id/comments',
     operationId: 'getComments',
     params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetCaseCommentsResponse,
+    responseType: GetComments,
   })
   async getComments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @CurrentUser() user: ApplicationUser,
-  ): Promise<GetCaseCommentsResponse> {
+  ): Promise<GetComments> {
     return ResultWrapper.unwrap(
       await this.applicationService.getComments(applicationId),
     )

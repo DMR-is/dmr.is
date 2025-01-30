@@ -6,7 +6,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
 import {} from '../case/case.module'
-import { CommentModule } from '../comment/comment.module'
+import { CommentModuleV2 } from '../comment/v2'
 import { UtilityModule } from '../utility/utility.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
@@ -17,7 +17,7 @@ export { ApplicationService } from './application.service'
 import { ApplicationUserModule } from '../application-user/application-user.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import caseModels from '../case/models'
-import commentModels from '../comment/models'
+import commentModels from '../comment/v1/models'
 import advertModels from '../journal/models'
 import { S3Module } from '../s3/s3.module'
 import { SignatureModule } from '../signature/signature.module'
@@ -35,8 +35,8 @@ import { SignatureModule } from '../signature/signature.module'
     AttachmentsModule,
     ApplicationUserModule,
     SignatureModule,
+    CommentModuleV2,
     forwardRef(() => SharedCaseModule),
-    forwardRef(() => CommentModule),
     forwardRef(() => UtilityModule),
   ],
   controllers: [],

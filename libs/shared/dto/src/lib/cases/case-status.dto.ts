@@ -11,6 +11,7 @@ export class CaseStatus {
 
   @ApiProperty({
     enum: CaseStatusEnum,
+    enumName: 'CaseStatusEnum',
     example: 'Innsent',
     description: 'Status of the case',
   })

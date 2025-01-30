@@ -22,11 +22,11 @@ export const CaseFields = () => {
   const { canEdit } = useCaseContext()
 
   const commonToggle = useToggle(true)
-  const publishingToggle = useToggle(true)
-  const advertToggle = useToggle(true)
-  const attachmentToggle = useToggle(true)
-  const messageToggle = useToggle(true)
-  const commentToggle = useToggle(true)
+  const publishingToggle = useToggle(false)
+  const advertToggle = useToggle(false)
+  const attachmentToggle = useToggle(false)
+  const messageToggle = useToggle(false)
+  const commentToggle = useToggle(false)
 
   const expandAll = () => {
     commonToggle.setToggle(true)

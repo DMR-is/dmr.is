@@ -7,6 +7,7 @@ type Props = {
   caseId: string
   fixStep: boolean
   canPublishFix: boolean
+  loading?: boolean
   updateAdvertHtmlTrigger: () => void
   refetch?: () => void
 }
@@ -14,6 +15,7 @@ type Props = {
 export const FixStep = ({
   fixStep,
   canPublishFix,
+  loading,
   updateAdvertHtmlTrigger,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
@@ -28,6 +30,7 @@ export const FixStep = ({
       colorScheme="destructive"
       icon="arrowForward"
       onClick={updateAdvertHtmlTrigger}
+      loading={loading}
     >
       {formatMessage(messages.paging.confirmFixStep)}
     </Button>

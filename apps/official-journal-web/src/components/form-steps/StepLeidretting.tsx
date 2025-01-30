@@ -7,9 +7,10 @@ import {
   SkeletonLoader,
 } from '@island.is/island-ui/core'
 
-import { Case, CaseStatusTitleEnum } from '../../gen/fetch'
-import { useCase } from '../../hooks/api'
+import { Case, CaseStatusEnum } from '../../gen/fetch'
+import { UpdateAvertAndCorrectionTriggerArgs, useCase } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Corrections } from '../corrections/Corrections'
 import { HTMLEditor } from '../editor/Editor'
 import { editorWrapper } from '../editor/Editor.css'
 import { messages } from './messages'
@@ -20,6 +21,8 @@ type Props = {
   canPublish: boolean
   timestamp: string
   onAdvertHtmlChange?: (html: string) => void
+  onCorrectionAdd: (correction: UpdateAvertAndCorrectionTriggerArgs) => void
+  onCorrectionDelete: () => void
 }
 
 export const StepLeidretting = ({
@@ -27,6 +30,8 @@ export const StepLeidretting = ({
   isFixing,
   timestamp,
   onAdvertHtmlChange,
+  onCorrectionDelete,
+  onCorrectionAdd,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -69,8 +74,7 @@ export const StepLeidretting = ({
     )
   }
 
-  const isRejected =
-    caseData.status.title === CaseStatusTitleEnum.BirtinguHafnað
+  const isRejected = caseData.status.title === CaseStatusEnum.BirtinguHafnað
 
   return (
     <GridContainer>
@@ -110,6 +114,17 @@ export const StepLeidretting = ({
                 .join(' ')}
             />
           </Box>
+        </GridColumn>
+      </GridRow>
+      <GridRow marginBottom={2} rowGap={2} alignItems="center">
+        <GridColumn span={['12/12']}>
+          <Corrections
+            caseId={caseData.id}
+            advertCorrections={caseData.advertCorrections}
+            onCorrectionAdd={onCorrectionAdd}
+            onDeleteCorrection={onCorrectionDelete}
+            isFixing={isFixing}
+          />
         </GridColumn>
       </GridRow>
     </GridContainer>

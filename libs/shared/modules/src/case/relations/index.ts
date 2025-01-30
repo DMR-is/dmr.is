@@ -3,7 +3,10 @@ import { Includeable } from 'sequelize'
 import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdminUserRoleModel } from '../../admin-user/models/user-role.model'
 import { AdvertTypeModel } from '../../advert-type/models'
-import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/models'
+import { ApplicationUserModel } from '../../application-user/models'
+import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/v1/models'
+import { CaseActionModel } from '../../comment/v2/models/case-action.model'
+import { CommentModel } from '../../comment/v2/models/comment.model'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -22,6 +25,7 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from '../models'
+import { CaseHistoryModel } from '../models/case-history.model'
 
 export const casesDetailedIncludes = [
   CaseTagModel,
@@ -38,8 +42,43 @@ export const casesDetailedIncludes = [
     include: [{ model: AdminUserRoleModel }],
   },
   {
-    model: CaseCommentModel,
-    include: [CaseCommentTypeModel, CaseStatusModel],
+    model: CommentModel,
+    include: [
+      {
+        model: CaseStatusModel,
+        attributes: ['id', 'title', 'slug'],
+        as: 'createdCaseStatus',
+      },
+      {
+        model: CaseActionModel,
+        attributes: ['id', 'title', 'slug'],
+      },
+      {
+        model: AdminUserModel,
+        as: 'adminUserCreator',
+      },
+      {
+        model: AdminUserModel,
+        as: 'adminUserReceiver',
+      },
+      {
+        model: ApplicationUserModel,
+        include: [
+          {
+            model: AdvertInvolvedPartyModel,
+          },
+        ],
+      },
+      {
+        model: AdvertInvolvedPartyModel,
+        attributes: ['id', 'title', 'slug'],
+      },
+      {
+        model: CaseStatusModel,
+        attributes: ['id', 'title', 'slug'],
+        as: 'caseStatusReceiver',
+      },
+    ],
   },
   {
     model: SignatureModel,
@@ -54,6 +93,16 @@ export const casesDetailedIncludes = [
         model: SignatureMemberModel,
         as: 'members',
       },
+    ],
+  },
+  {
+    model: CaseHistoryModel,
+    include: [
+      { model: CaseStatusModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertTypeModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertInvolvedPartyModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdminUserModel },
     ],
   },
 ]

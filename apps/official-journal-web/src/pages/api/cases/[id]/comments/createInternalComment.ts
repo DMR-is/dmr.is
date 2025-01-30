@@ -1,16 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { CaseCommentSource, CaseCommentType } from '../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../lib/api/createClient'
 
 const commentBodySchema = z.object({
-  caseId: z.string(),
-  internal: z.boolean(),
   comment: z.string(),
-  creator: z.string(),
-  receiver: z.string().optional(),
 })
 
 class CreateCommentHandler {
@@ -30,20 +26,14 @@ class CreateCommentHandler {
 
     const body: z.infer<typeof commentBodySchema> = req.body
 
-    const addCommentResponse = await dmrClient.createComment({
-      id: id,
-      postCaseCommentBody: {
-        comment: body.comment,
-        internal: body.internal,
-        creator: body.creator,
-        receiver: body.receiver,
-        source: CaseCommentSource.API,
-        storeState: false,
-        type: body.internal
-          ? CaseCommentType.GerirAthugasemd
-          : CaseCommentType.SkráirSkilaboð,
-      },
-    })
+    const addCommentResponse = await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .createInternalComment({
+        id: id,
+        internalCommentBodyDto: {
+          comment: body.comment,
+        },
+      })
 
     return res.status(200).json(addCommentResponse)
   }

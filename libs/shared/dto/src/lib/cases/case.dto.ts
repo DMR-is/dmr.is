@@ -16,9 +16,10 @@ import {
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { AdminUser } from '../admin-user'
+import { AdvertCorrection } from '../adverts/advert-correction.dto'
 import { ApplicationAttachment } from '../attachments'
-import { CaseComment } from '../case-comments/case-comment.dto'
 import { Category } from '../categories'
+import { CommentDto } from '../comments/comment.dto'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
 import { BaseEntity } from '../entity'
@@ -26,9 +27,9 @@ import { Institution } from '../institutions'
 import { Paging } from '../paging'
 import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
-import { User } from '../users/user.dto'
 import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
+import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
 
 export class CaseDetailed {
@@ -39,6 +40,16 @@ export class CaseDetailed {
   @IsString()
   @IsUUID()
   readonly id!: string
+
+  @ApiProperty({
+    type: String,
+    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+    description: 'Id of the advert the case is related to.',
+    nullable: true,
+  })
+  @IsString()
+  @IsUUID()
+  advertId?: string
 
   @ApiProperty({
     type: String,
@@ -244,7 +255,7 @@ export class CaseDetailed {
   channels!: CaseChannel[]
 
   @ApiProperty({
-    type: () => [CaseComment],
+    type: () => [CommentDto],
     description: 'Comments on the case.',
     example: {
       id: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
@@ -261,8 +272,8 @@ export class CaseDetailed {
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CaseComment)
-  comments!: CaseComment[]
+  @Type(() => CommentDto)
+  comments!: CommentDto[]
 
   @ApiProperty({
     type: [Signature],
@@ -287,6 +298,26 @@ export class CaseDetailed {
   @ValidateNested({ each: true })
   @Type(() => CaseAddition)
   additions!: CaseAddition[]
+
+  @ApiProperty({
+    type: [AdvertCorrection],
+    description: 'Corrections made to the related advert.',
+    required: false,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => AdvertCorrection)
+  @IsArray()
+  @IsOptional()
+  readonly advertCorrections?: AdvertCorrection[]
+
+  @ApiProperty({
+    type: [CaseHistory],
+    description: 'History of the case.',
+  })
+  @ValidateNested({ each: true })
+  @Type(() => CaseHistory)
+  @IsArray()
+  history!: CaseHistory[]
 }
 
 export class Case extends PickType(CaseDetailed, [

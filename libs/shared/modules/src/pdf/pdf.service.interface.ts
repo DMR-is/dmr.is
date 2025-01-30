@@ -1,7 +1,7 @@
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface IPdfService {
-  getPdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>>
+  generatePdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>>
 
   getPdfByApplicationId(applicationId: string): Promise<ResultWrapper<Buffer>>
 }

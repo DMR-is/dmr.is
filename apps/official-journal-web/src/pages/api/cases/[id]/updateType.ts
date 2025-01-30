@@ -1,8 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+import { OJOIWebException } from 'apps/official-journal-web/src/lib/constants'
 
 const bodySchema = z.object({
   typeId: z.string(),
@@ -13,18 +15,26 @@ class UpdateTypeHandler {
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id: string }
+    const check = bodySchema.safeParse(req.body)
 
-    const client = createDmrClient()
-    const { typeId } = bodySchema.parse(req.body)
+    if(!check.success) {
+      return void res.status(400).json(OJOIWebException.badRequest())
+    }
 
-    await client.updateCaseType({
-      id,
-      updateCaseTypeBody: {
-        typeId,
-      },
-    })
+    const dmrClient = createDmrClient()
 
-    return void res.status(204).end()
+    try {
+      await dmrClient
+        .withMiddleware(new AuthMiddleware(req.headers.authorization))
+        .updateCaseType({
+          id: id,
+          updateCaseTypeBody: {
+            typeId: check.data.typeId,
+          },
+        })
+        return void res.status(200).end()
+    }
+
   }
 }
 

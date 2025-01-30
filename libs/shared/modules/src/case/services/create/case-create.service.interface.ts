@@ -6,7 +6,7 @@ export interface ICaseCreateService {
   createCase(
     body: PostApplicationBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<{ id: string }>>
 
   createCaseChannel(
     caseId: string,

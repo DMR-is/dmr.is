@@ -12,6 +12,7 @@ import {
   GridContainer,
   GridRow,
   Hidden,
+  Inline,
   Logo,
 } from '@island.is/island-ui/core'
 
@@ -40,13 +41,17 @@ export const Header = ({ headerWhite }: HeaderType) => {
   }, [session?.invalid])
 
   return (
-    <header className={cn(styles.header, { white: headerWhite })}>
-      <Hidden print={true}>
+    <Hidden print={true}>
+      <header className={cn(styles.header, { white: headerWhite })}>
         <GridContainer>
           <GridRow>
             <GridColumn span="12/12">
-              <Columns alignY="center">
-                <Column width="content">
+              <Inline alignY="center" justifyContent="spaceBetween">
+                <Inline
+                  space={[1, 1, 2, 3]}
+                  justifyContent="flexStart"
+                  alignY="center"
+                >
                   <FocusableBox href={'/'} data-testid="link-back-home">
                     <Hidden above="md">
                       <Logo id="header-logo-icon" width={40} iconOnly />
@@ -55,44 +60,37 @@ export const Header = ({ headerWhite }: HeaderType) => {
                       <Logo id="header-logo" width={160} />
                     </Hidden>
                   </FocusableBox>
-                </Column>
-                <Hidden below="lg">
-                  <Column>
-                    <Box paddingX={3}>
-                      <ControlPanel />
-                    </Box>
-                  </Column>
-                </Hidden>
-                <Column>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="flexEnd"
-                    width="full"
-                  >
-                    {session?.user ? (
-                      <DropdownMenu
-                        title={session.user.displayName}
-                        icon="chevronDown"
-                        menuLabel={formatMessage(messages.auth.user)}
-                        items={[
-                          {
-                            title: formatMessage(messages.auth.logout),
-                            onClick: (e) => {
-                              e.preventDefault()
-                              logOut()
-                            },
+                  <ControlPanel />
+                </Inline>
+
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="flexEnd"
+                  width="full"
+                >
+                  {session?.user ? (
+                    <DropdownMenu
+                      title={session.user.displayName}
+                      icon="chevronDown"
+                      menuLabel={formatMessage(messages.auth.user)}
+                      items={[
+                        {
+                          title: formatMessage(messages.auth.logout),
+                          onClick: (e) => {
+                            e.preventDefault()
+                            logOut()
                           },
-                        ]}
-                      />
-                    ) : null}
-                  </Box>
-                </Column>
-              </Columns>
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </Box>
+              </Inline>
             </GridColumn>
           </GridRow>
         </GridContainer>
-      </Hidden>
-    </header>
+      </header>
+    </Hidden>
   )
 }

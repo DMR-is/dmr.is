@@ -8,10 +8,11 @@ import { Test } from '@nestjs/testing'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { ICommentService } from '../comment/comment.service.interface'
+import { ICommentServiceV2 } from '../comment/v2'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertModel,
 } from '../journal/models'
@@ -28,6 +29,7 @@ import {
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
+  CaseHistoryModel,
   CaseModel,
   CasePublishedAdvertsModel,
   CaseStatusModel,
@@ -36,13 +38,14 @@ import {
 
 describe('CaseService', () => {
   let caseService: ICaseService
-  let commentService: ICommentService
+  let commentService: ICommentServiceV2
   let applicationService: IApplicationService
   let journalService: IJournalService
   let signatureService: ISignatureService
   let attachmentService: IAttachmentService
   let s3Service: IS3Service
   let caseModel: CaseModel
+  let caseHistoryModel: CaseHistoryModel
   let advertModel: AdvertModel
   let categoriesModel: CaseCategoriesModel
   let advertCategoryModel: AdvertCategoryModel
@@ -63,7 +66,7 @@ describe('CaseService', () => {
           useClass: CaseService,
         },
         {
-          provide: ICommentService,
+          provide: ICommentServiceV2,
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
@@ -173,6 +176,14 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
+          provide: getModelToken(AdvertCorrectionModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CaseHistoryModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: AdvertCategoryModel,
           useClass: jest.fn(() => ({})),
         },
@@ -195,7 +206,7 @@ describe('CaseService', () => {
     }).compile()
 
     caseService = app.get<ICaseService>(ICaseService)
-    commentService = app.get<ICommentService>(ICommentService)
+    commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)

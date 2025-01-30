@@ -22,8 +22,11 @@ export const OriginalCompare = ({ disclosure }: Props) => {
   const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
 
   const html = useMemo(() => {
-    const baseParsed = JSON.parse(activeCase.comments?.[0]?.state).answers
-      ?.advert?.html
+    const baseParsed = (
+      activeCase.history.length > 0
+        ? activeCase.history[0].html
+        : activeCase.html
+    ) as HTMLText
 
     if (activeText === 'base') return baseParsed
 
@@ -33,7 +36,7 @@ export const OriginalCompare = ({ disclosure }: Props) => {
     )
 
     return diffText.diff
-  }, [activeCase.html, activeCase.comments, activeText])
+  }, [activeCase.html, activeCase.history])
 
   const diffShowing = activeText === 'diff'
   return (

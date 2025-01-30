@@ -7,8 +7,6 @@ import { BaseEntity } from '@dmr.is/shared/dto'
 import {
   AdditionType,
   Application,
-  CaseCommentSourceEnum,
-  CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CaseTagEnum,
@@ -25,8 +23,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
-import { ICommentService } from '../../../comment/comment.service.interface'
-import { AdvertCategoryModel } from '../../../journal/models'
+import { ICommentServiceV2 } from '../../../comment/v2'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import {
@@ -89,7 +86,8 @@ export class CaseCreateService implements ICaseCreateService {
     private readonly attachmentService: IAttachmentService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
-    @Inject(ICommentService) private readonly commentService: ICommentService,
+    @Inject(ICommentServiceV2)
+    private readonly commentService: ICommentServiceV2,
     @InjectModel(CaseChannelModel)
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
@@ -343,7 +341,9 @@ export class CaseCreateService implements ICaseCreateService {
   }
 
   @LogAndHandle()
-  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+  async createCase(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper<{ id: string }>> {
     const { application } = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
@@ -351,7 +351,7 @@ export class CaseCreateService implements ICaseCreateService {
     const valuesResult = await this.getCreateCaseBody(application)
 
     if (!valuesResult.result.ok) {
-      return valuesResult
+      return ResultWrapper.err({ code: 500, message: 'Failed to create case' })
     }
 
     const values = valuesResult.result.value
@@ -364,29 +364,9 @@ export class CaseCreateService implements ICaseCreateService {
 
     const caseId = createCaseResult.result.value.id
 
-    const institution = (
-      await this.utilityService.institutionLookup(
-        values.caseBody.involvedPartyId,
-      )
-    ).unwrap()
-
-    const commentResults = await this.commentService.createComment(caseId, {
-      internal: true,
-      type: CaseCommentTypeTitleEnum.Submit,
-      creator: institution.title,
-      source: CaseCommentSourceEnum.Application,
-      comment: null,
-      receiver: null,
-      storeState: true,
+    await this.commentService.createSubmitComment(caseId, {
+      institutionCreatorId: values.caseBody.involvedPartyId,
     })
-
-    if (!commentResults.result.ok) {
-      this.logger.warn(`Failed to create comment for case<${caseId}>`, {
-        error: commentResults.result.error,
-        category: LOGGING_CATEGORY,
-        caseId: caseId,
-      })
-    }
 
     const categegoryPromises = await Promise.all(
       values.categories.map((cat) => this.createCaseCategory(caseId, cat.id)),
@@ -448,7 +428,10 @@ export class CaseCreateService implements ICaseCreateService {
           applicationId: application.id,
         },
       )
-      return attachmentsLookup
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get attachments',
+      })
     }
 
     const attachments = attachmentsLookup.result.value.attachments

@@ -5,6 +5,7 @@ import { CaseCategoriesModel } from './case-categories.model'
 import { CaseChannelModel } from './case-channel.model'
 import { CaseChannelsModel } from './case-channels.model'
 import { CaseCommunicationStatusModel } from './case-communication-status.model'
+import { CaseHistoryModel } from './case-history.model'
 import { CasePublishedAdvertsModel } from './case-published-adverts'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
@@ -20,6 +21,7 @@ export {
   CasePublishedAdvertsModel,
   CaseAdditionModel,
   CaseAdditionsModel,
+  CaseHistoryModel,
 }
 
 export const models = [
@@ -33,6 +35,7 @@ export const models = [
   CasePublishedAdvertsModel,
   CaseAdditionModel,
   CaseAdditionsModel,
+  CaseHistoryModel,
 ]
 
 export default models

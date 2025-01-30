@@ -3,6 +3,8 @@ import {
   BelongsToMany,
   Column,
   DataType,
+  ForeignKey,
+  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -13,11 +15,13 @@ import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
 } from '../../attachments/models'
-import { CaseCommentModel, CaseCommentsModel } from '../../comment/models'
+import { CommentModel } from '../../comment/v2/models/comment.model'
+import { CommentsModel } from '../../comment/v2/models/comments.model'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
+  AdvertModel,
 } from '../../journal/models'
 import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
 import { CaseAdditionModel } from './case-addition.model'
@@ -26,6 +30,7 @@ import { CaseCategoriesModel } from './case-categories.model'
 import { CaseChannelModel } from './case-channel.model'
 import { CaseChannelsModel } from './case-channels.model'
 import { CaseCommunicationStatusModel } from './case-communication-status.model'
+import { CaseHistoryModel } from './case-history.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
 
@@ -194,6 +199,13 @@ export class CaseModel extends Model {
   @BelongsTo(() => AdvertTypeModel, 'advert_type_id')
   advertType!: AdvertTypeModel
 
+  @ForeignKey(() => AdvertModel)
+  @Column({ type: DataType.UUID, field: 'advert_id', allowNull: true })
+  advertId?: string
+
+  @BelongsTo(() => AdvertModel, 'advert_id')
+  advert?: AdvertModel
+
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => CaseCategoriesModel },
   })
@@ -204,10 +216,10 @@ export class CaseModel extends Model {
   })
   channels?: CaseChannelModel[]
 
-  @BelongsToMany(() => CaseCommentModel, {
-    through: { model: () => CaseCommentsModel },
+  @BelongsToMany(() => CommentModel, {
+    through: { model: () => CommentsModel },
   })
-  comments?: CaseCommentModel[]
+  comments?: CommentModel[]
 
   @BelongsToMany(() => SignatureModel, {
     through: { model: () => CaseSignaturesModel },
@@ -223,4 +235,7 @@ export class CaseModel extends Model {
     through: { model: () => CaseAdditionsModel },
   })
   additions?: CaseAdditionModel[]
+
+  @HasMany(() => CaseHistoryModel)
+  history!: CaseHistoryModel[]
 }

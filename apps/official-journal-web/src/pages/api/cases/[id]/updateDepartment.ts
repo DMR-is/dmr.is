@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -27,12 +28,14 @@ class UpdateDepartmentHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateDepartment({
-      id: id,
-      updateCaseDepartmentBody: {
-        departmentId: parsed.data.departmentId,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateDepartment({
+        id: id,
+        updateCaseDepartmentBody: {
+          departmentId: parsed.data.departmentId,
+        },
+      })
 
     return res.status(204).end()
   }
