@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
   Stack,
   Text,
   toast,
@@ -18,6 +19,7 @@ import {
 } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseSingle'
 import {
   generateSteps,
@@ -38,7 +40,8 @@ type FormShellType = {
 export const FormShell = ({ children }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, employeeOptions, tagOptions, refetch } = useCaseContext()
+  const { currentCase, employeeOptions, tagOptions, canEdit, refetch } =
+    useCaseContext()
 
   const steps = generateSteps(currentCase)
 
@@ -200,7 +203,11 @@ export const FormShell = ({ children }: FormShellType) => {
                   />
                   <Box background="white" borderRadius="large">
                     <Button
-                      disabled={prevStatus === null || isUpdatingPrevCaseStatus}
+                      disabled={
+                        prevStatus === null ||
+                        isUpdatingPrevCaseStatus ||
+                        !canEdit
+                      }
                       fluid
                       variant="ghost"
                       size="small"
@@ -219,20 +226,41 @@ export const FormShell = ({ children }: FormShellType) => {
                       </Text>
                     </Button>
                   </Box>
-                  <Button
-                    disabled={nextStatus === null || isUpdatingNextCaseStatus}
-                    fluid
-                    loading={isUpdatingNextCaseStatus}
-                    size="small"
-                    icon="arrowForward"
-                    onClick={() => updateCaseNextStatus()}
-                  >
-                    <Text color="white" variant="small" fontWeight="semiBold">
-                      {nextStatus
-                        ? `Færa mál í ${nextStatus}`
-                        : `${currentCase.status.title}`}
-                    </Text>
-                  </Button>
+                  {nextStatus ? (
+                    <Button
+                      disabled={
+                        nextStatus === null ||
+                        isUpdatingNextCaseStatus ||
+                        !canEdit
+                      }
+                      fluid
+                      loading={isUpdatingNextCaseStatus}
+                      size="small"
+                      icon="arrowForward"
+                      onClick={() => updateCaseNextStatus()}
+                    >
+                      <Text color="white" variant="small" fontWeight="semiBold">
+                        {nextStatus
+                          ? `Færa mál í ${nextStatus}`
+                          : `${currentCase.status.title}`}
+                      </Text>
+                    </Button>
+                  ) : (
+                    <LinkV2
+                      href={`${Routes.PublishingOverview}?department=${currentCase.advertDepartment.title}`}
+                    >
+                      <Button size="small" fluid icon="arrowForward">
+                        <Text
+                          color="white"
+                          variant="small"
+                          fontWeight="semiBold"
+                        >
+                          Fara í útgáfu
+                        </Text>
+                      </Button>
+                    </LinkV2>
+                  )}
+
                   <Divider weight="purple200" />
                   <FormStepperV2
                     sections={steps.map((step, i) => (

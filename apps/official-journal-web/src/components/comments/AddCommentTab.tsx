@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Box, Button, Input, Stack } from '@island.is/island-ui/core'
+import { Box, Button, Inline, Input, Stack } from '@island.is/island-ui/core'
 
 import { useAddComment } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
@@ -48,18 +48,21 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
           onChange={(e) => setCommentValue(e.target.value)}
           textarea
         />
-        <Button
-          disabled={!commentValue}
-          onClick={() => {
-            if (internal) {
-              createInternalComment({ comment: commentValue })
-            } else {
-              createExternalComment({ comment: commentValue })
-            }
-          }}
-        >
-          {formatMessage(messages.comments.save)}
-        </Button>
+        <Inline justifyContent="flexEnd">
+          <Button
+            size="small"
+            disabled={!commentValue}
+            onClick={() => {
+              if (internal) {
+                createInternalComment({ comment: commentValue })
+              } else {
+                createExternalComment({ comment: commentValue })
+              }
+            }}
+          >
+            {formatMessage(messages.comments.save)}
+          </Button>
+        </Inline>
       </Stack>
     </Box>
   )
