@@ -18,6 +18,8 @@ export const COMMENTS_TO_HIDE = 4
 
 export const COMMENTS_TO_SHOW = 5
 
+export const NOTIFICATION_PORTAL_ID = 'notification-portal'
+
 export enum Routes {
   Dashboard = '/',
   MainCategories = '/yfirflokkar',

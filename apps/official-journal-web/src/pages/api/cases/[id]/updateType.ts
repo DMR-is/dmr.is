@@ -4,7 +4,7 @@ import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
-import { OJOIWebException } from 'apps/official-journal-web/src/lib/constants'
+import { OJOIWebException } from '../../../../lib/constants'
 
 const bodySchema = z.object({
   typeId: z.string(),
@@ -17,24 +17,21 @@ class UpdateTypeHandler {
     const { id } = req.query as { id: string }
     const check = bodySchema.safeParse(req.body)
 
-    if(!check.success) {
+    if (!check.success) {
       return void res.status(400).json(OJOIWebException.badRequest())
     }
 
     const dmrClient = createDmrClient()
 
-    try {
-      await dmrClient
-        .withMiddleware(new AuthMiddleware(req.headers.authorization))
-        .updateCaseType({
-          id: id,
-          updateCaseTypeBody: {
-            typeId: check.data.typeId,
-          },
-        })
-        return void res.status(200).end()
-    }
-
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateCaseType({
+        id: id,
+        updateCaseTypeBody: {
+          typeId: check.data.typeId,
+        },
+      })
+    return void res.status(200).end()
   }
 }
 
