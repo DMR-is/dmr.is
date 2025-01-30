@@ -29,6 +29,7 @@ import {
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
+  CaseHistoryModel,
   CaseModel,
   CasePublishedAdvertsModel,
   CaseStatusModel,
@@ -44,6 +45,7 @@ describe('CaseService', () => {
   let attachmentService: IAttachmentService
   let s3Service: IS3Service
   let caseModel: CaseModel
+  let caseHistoryModel: CaseHistoryModel
   let advertModel: AdvertModel
   let categoriesModel: CaseCategoriesModel
   let advertCategoryModel: AdvertCategoryModel
@@ -175,6 +177,10 @@ describe('CaseService', () => {
         },
         {
           provide: getModelToken(AdvertCorrectionModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CaseHistoryModel),
           useClass: jest.fn(() => ({})),
         },
         {
