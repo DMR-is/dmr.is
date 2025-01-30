@@ -6,7 +6,7 @@ import {
   AdminUser,
   AdvertType,
   CaseDetailed,
-  CaseStatusTitleEnum,
+  CaseStatusEnum,
   CaseTag,
   CaseTagTitleEnum,
   Category,
@@ -23,7 +23,7 @@ const emptyCase = {
   caseNumber: '',
   status: {
     id: '',
-    title: '' as CaseStatusTitleEnum,
+    title: '' as CaseStatusEnum,
     slug: '',
   },
   tag: {
@@ -70,6 +70,8 @@ const emptyCase = {
   signatures: [],
   attachments: [],
   additions: [],
+  advertId: '',
+  history: [],
 }
 
 type CaseState = {

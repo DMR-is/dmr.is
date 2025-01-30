@@ -101,6 +101,17 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     })
   }
 
+  const latestSelectedCategory =
+    currentCase.advertCategories.length > 0
+      ? categoryOptions.find(
+          (cat) =>
+            cat.value ===
+            currentCase.advertCategories[
+              currentCase.advertCategories.length - 1
+            ].id,
+        )
+      : null
+
   return (
     <AccordionItem
       id="commonFields"
@@ -182,6 +193,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             label={formatMessage(messages.grunnvinnsla.categories)}
             options={categoryOptions}
             isValidating={isUpdatingCategory}
+            value={latestSelectedCategory}
             onChange={(opt) => {
               if (!opt) {
                 return toast.warning('Eitthvað fór úrskeiðis')

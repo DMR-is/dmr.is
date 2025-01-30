@@ -130,6 +130,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       pageSize: 100,
     })
 
+    console.log(types)
+
     return {
       props: deleteUndefined({
         session,

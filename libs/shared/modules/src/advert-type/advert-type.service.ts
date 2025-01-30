@@ -86,7 +86,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       ],
     })
 
-    const mapped = typesLookup.rows.map(advertTypeMigrate)
+    const mapped = typesLookup.rows.map((type) => advertTypeMigrate(type))
     const paging = generatePaging(mapped, offset, limit, typesLookup.count)
 
     return ResultWrapper.ok({
@@ -126,7 +126,9 @@ export class AdvertTypeService implements IAdvertTypeService {
       limit: pageSize,
     })
 
-    const mapped = mainTypesLookup.rows.map(advertMainTypeMigrate)
+    const mapped = mainTypesLookup.rows.map((mainType) =>
+      advertMainTypeMigrate(mainType),
+    )
     const paging = generatePaging(mapped, page, pageSize, mainTypesLookup.count)
 
     return ResultWrapper.ok({

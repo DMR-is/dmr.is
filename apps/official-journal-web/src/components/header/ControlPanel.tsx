@@ -83,13 +83,13 @@ export const ControlPanel = () => {
           borderRightWidth="standard"
         >
           <Stack space={0}>
-            {paths.map((path) => (
+            {paths.map((path, i) => (
               <LinkV2 href={path.href} key={path.href}>
                 <Box
+                  borderTopWidth={i === 0 ? 'standard' : undefined}
                   borderBottomWidth="standard"
                   borderColor="standard"
-                  paddingX={2}
-                  paddingY={1}
+                  padding={2}
                 >
                   <Inline justifyContent="spaceBetween">
                     <Text variant="small" fontWeight="semiBold">
