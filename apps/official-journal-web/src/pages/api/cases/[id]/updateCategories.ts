@@ -36,7 +36,7 @@ class UpdateCategoryHandler {
         },
       })
 
-    return res.status(200).end()
+    return res.status(204).end()
   }
 }
 

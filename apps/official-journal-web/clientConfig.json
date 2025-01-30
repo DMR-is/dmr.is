@@ -668,6 +668,30 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/fasttrack": {
+      "put": {
+        "operationId": "updateFasttrack",
+        "summary": "Update fasttrack status of case",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFasttrackBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/tag": {
       "put": {
         "operationId": "updateTag",
@@ -877,14 +901,6 @@
             "schema": { "type": "string" }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateNextStatusBody" }
-            }
-          }
-        },
         "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }]
       }
@@ -901,14 +917,6 @@
             "schema": { "type": "string" }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateNextStatusBody" }
-            }
-          }
-        },
         "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }]
       }
@@ -3353,6 +3361,11 @@
         "properties": { "paid": { "type": "boolean" } },
         "required": ["paid"]
       },
+      "UpdateFasttrackBody": {
+        "type": "object",
+        "properties": { "fasttrack": { "type": "boolean" } },
+        "required": ["fasttrack"]
+      },
       "UpdateTagBody": {
         "type": "object",
         "properties": { "tagId": { "type": "string" } },
@@ -3411,11 +3424,6 @@
           "categoryIds": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["categoryIds"]
-      },
-      "UpdateNextStatusBody": {
-        "type": "object",
-        "properties": { "currentStatus": { "type": "string" } },
-        "required": ["currentStatus"]
       },
       "UpdateCaseStatusBody": {
         "type": "object",

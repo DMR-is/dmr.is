@@ -1,62 +1,76 @@
-import { Box, ResponsiveSpace, Text } from '@island.is/island-ui/core'
+import {
+  Box,
+  Button,
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Inline,
+  ModalBase,
+  Text,
+} from '@island.is/island-ui/core'
 
-import { HTMLEditor } from '../editor/Editor'
-import * as s from './AdvertDisplay.css'
+import { useCaseContext } from '../../hooks/useCaseContext'
+import { formatDate } from '../../lib/utils'
+import * as styles from './AdvertDisplay.css'
 
-export type AdvertDisplayProps = {
-  advertNumber?: string
-  signatureDate?: string
-  advertType: string
-  advertSubject: string
-  advertText: string
-  signatureHtml?: string
-  isLegacy: boolean
-  paddingTop?: ResponsiveSpace
+type Props = {
+  disclosure: React.ComponentProps<typeof ModalBase>['disclosure']
 }
+export const AdvertDisplay = ({ disclosure }: Props) => {
+  const { currentCase } = useCaseContext()
 
-export const AdvertDisplay = ({
-  advertNumber,
-  signatureDate,
-  advertType,
-  advertSubject,
-  advertText,
-  isLegacy,
-  signatureHtml,
-  paddingTop,
-}: AdvertDisplayProps) => {
-  if (!advertText) {
-    return null
-  }
+  const signatureDate = currentCase.signatures.slice(-1)[0]?.date
+
+  const signatureHTML = currentCase.signatures.map((s) => s.html).join('')
 
   return (
-    <Box
-      border="standard"
-      borderColor="purple200"
-      borderRadius="large"
-      padding={[2, 3, 4]}
-      paddingTop={paddingTop}
-      className={s.wrapper}
-    >
-      {(advertNumber || signatureDate) && (
-        <Box
-          display="flex"
-          justifyContent="spaceBetween"
-          marginBottom={[2, 3, 4]}
-        >
-          <Text variant="eyebrow" color="purple400">
-            {advertNumber && `Nr. ${advertNumber}`}
-          </Text>
-          <Text variant="eyebrow" color="purple400">
-            {signatureDate && `Undirritað: ${signatureDate}`}
-          </Text>
-        </Box>
+    <ModalBase baseId="myDialog" disclosure={disclosure}>
+      {({ closeModal }) => (
+        <GridContainer>
+          <GridRow>
+            <GridColumn span="12/12">
+              <Box className={styles.modalBackground}>
+                <Inline justifyContent="flexEnd">
+                  <Button
+                    onClick={closeModal}
+                    icon="close"
+                    circle
+                    iconType="outline"
+                  />
+                </Inline>
+                <Box className={styles.wrapper}>
+                  <Box
+                    border="standard"
+                    borderColor="purple200"
+                    borderRadius="large"
+                    padding={[2, 3, 4]}
+                    background="white"
+                  >
+                    <Box display="flex" justifyContent="spaceBetween">
+                      <Text variant="eyebrow" color="purple400">
+                        Nr. {currentCase.caseNumber}
+                      </Text>
+                      <Text variant="eyebrow" color="purple400">
+                        {formatDate(signatureDate)}
+                      </Text>
+                    </Box>
+                    <Box textAlign="center" marginBottom={[2, 3, 4]}>
+                      <Text variant="h3">{currentCase.advertType.title}</Text>
+                      <Text variant="h4">{currentCase.advertTitle}</Text>
+                    </Box>
+                    <Box
+                      className={styles.bodyText}
+                      dangerouslySetInnerHTML={{
+                        __html: currentCase.html + signatureHTML,
+                      }}
+                    ></Box>
+                  </Box>
+                </Box>
+              </Box>
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
       )}
-      <Box textAlign="center" marginBottom={[2, 3, 4]}>
-        <Text variant="intro">{advertType}</Text>
-        <Text variant="h4">{advertSubject}</Text>
-      </Box>
-      <HTMLEditor defaultValue={advertText} readonly={true} />
-      <HTMLEditor defaultValue={signatureHtml} readonly={true} />
-    </Box>
+    </ModalBase>
   )
 }

@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+import { OJOIWebException } from '../../../../lib/constants'
 
 const bodySchema = z.object({
   typeId: z.string(),
@@ -13,53 +13,24 @@ const bodySchema = z.object({
 class UpdateTypeHandler {
   @LogMethod(false)
   @HandleApiException()
-  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const { id } = req.query as { id?: string }
+    const { id } = req.query as { id: string }
+    const check = bodySchema.safeParse(req.body)
 
-    if (!id) {
-      return void res.status(400).end()
-    }
-
-    const parsed = bodySchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      logger.debug(
-        `Validation on body failed when updating type on case<${id}>`,
-        { body: req.body, caseId: id },
-      )
-      return void res.status(400).end()
+    if (!check.success) {
+      return void res.status(400).json(OJOIWebException.badRequest())
     }
 
     const dmrClient = createDmrClient()
 
-    try {
-      await dmrClient
-        .withMiddleware(new AuthMiddleware(req.headers.authorization))
-        .updateCaseType({
-          id: id,
-          updateCaseTypeBody: {
-            typeId: parsed.data.typeId,
-          },
-        })
-    } catch (error) {
-      if (error instanceof Error) {
-        logger.debug(`Failed to update type on case<${id}>`, {
-          error: {
-            message: error.message,
-            stack: error.stack,
-          },
-          caseId: id,
-        })
-      } else {
-        logger.debug(`Failed to update type on case<${id}>`, {
-          error: error,
-          caseId: id,
-        })
-      }
-      return void res.status(500).end()
-    }
-
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateCaseType({
+        id: id,
+        updateCaseTypeBody: {
+          typeId: check.data.typeId,
+        },
+      })
     return void res.status(200).end()
   }
 }

@@ -1,50 +1,48 @@
 import cn from 'classnames'
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Button, Drawer } from '@island.is/island-ui/core'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-browser'
 import { getDiff, HTMLDump } from '@island.is/regulations-tools/html'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { CaseDetailed } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import * as s from './OriginalCompare.css'
 
-export type OriginalCompareProps = {
-  activeCase: CaseDetailed
+type Props = {
+  disclosure?: React.ComponentProps<typeof Drawer>['disclosure']
 }
 
-export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
-  const [activeText, setActiveText] = useState<'base' | 'diff'>('base')
-  const [baseText, setBaseText] = useState<HTMLText>('')
-  const [currentDiff, setCurrentDiff] = useState<HTMLText>('')
+export const OriginalCompare = ({ disclosure }: Props) => {
+  const {
+    currentCase: activeCase,
+    lastFetched,
+    isValidating,
+  } = useCaseContext()
+  const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
+  // we only want to compare to the lastest change so we never updated this, only on mount
+  const [orignal, _setOriginal] = useState(
+    activeCase.history[activeCase.history.length - 1].html,
+  )
 
-  useEffect(() => {
-    if (!baseText && !currentDiff) {
-      try {
-        const baseParsed = (
-          activeCase.history.length > 0
-            ? activeCase.history[0].html
-            : activeCase.html
-        ) as HTMLText
+  // we can implement in the future to compare to the base based on the indexes of the history array
+  // for now we use the lastest changes to compare to that
+  const [base, _setBase] = useState(
+    activeCase.history.length > 0
+      ? activeCase.history[0].html
+      : activeCase.html,
+  )
 
-        const currentActive = activeCase.html
+  const html = useMemo(() => {
+    if (activeText === 'base') return orignal as HTMLText
 
-        const diffText = getDiff(
-          dirtyClean(baseParsed as HTMLText),
-          dirtyClean(currentActive as HTMLText),
-        )
+    const diffText = getDiff(
+      dirtyClean(base as HTMLText),
+      dirtyClean(activeCase.html as HTMLText),
+    )
 
-        setBaseText(baseParsed)
-        setCurrentDiff(diffText.diff)
-      } catch (e) {
-        setBaseText('')
-      }
-    }
-  }, [activeCase.history])
-
-  if (!activeText || !baseText) {
-    return null
-  }
+    return diffText.diff
+  }, [activeCase.html, activeText])
 
   const diffShowing = activeText === 'diff'
   return (
@@ -53,11 +51,15 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
         baseId="diff_drawer"
         ariaLabel="Sýna breytingar á meginmáli"
         disclosure={
-          <Button
-            title="Skoða upprunalega útgáfu"
-            circle
-            icon="document"
-          ></Button>
+          disclosure ? (
+            disclosure
+          ) : (
+            <Button
+              title="Skoða breytingar á meginmáli"
+              circle
+              icon="document"
+            />
+          )
         }
       >
         <Button
@@ -70,12 +72,16 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
           }}
           variant="text"
         >
-          {diffShowing ? 'Sjá grunntexta' : 'Sjá breytingar'}{' '}
+          {diffShowing ? 'Sjá grunntexta' : 'Sjá breytingar'}
         </Button>
-        <HTMLDump
-          className={cn(s.editor, s.diff)}
-          html={diffShowing ? currentDiff : baseText}
-        />
+
+        {!isValidating === true && (
+          <HTMLDump
+            key={lastFetched}
+            className={cn(s.editor, s.diff)}
+            html={html}
+          />
+        )}
       </Drawer>
     </>
   )

@@ -1,45 +1,41 @@
 import { useState } from 'react'
 
-import { Box, Button, Input, Stack } from '@island.is/island-ui/core'
+import { Box, Button, Inline, Input, Stack } from '@island.is/island-ui/core'
 
-import { CommunicationStatus } from '../../gen/fetch'
 import { useAddComment } from '../../hooks/api'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 
 type Props = {
-  caseId: string
+  placeholder: string
   internal: boolean
-  userId: string
-  currentStatus: CommunicationStatus
-  inputPlaceholder?: string
-  onAddCommentSuccess?: () => void
-  onUpdateStatusSuccess?: () => void
 }
-
-export const AddCommentTab = ({
-  caseId,
-  internal,
-  userId,
-  inputPlaceholder,
-  onAddCommentSuccess,
-}: Props) => {
+export const AddCommentTab = ({ internal, placeholder }: Props) => {
   const { formatMessage } = useFormatMessage()
+  const { currentCase, refetch } = useCaseContext()
 
   const [commentValue, setCommentValue] = useState('')
 
-  const { trigger: onAddComment, isMutating } = useAddComment({
-    caseId: caseId,
+  const {
+    createExternalComment,
+    createInternalComment,
+    isCreatingExternalComment,
+    isCreatingInternalComment,
+  } = useAddComment({
+    caseId: currentCase.id,
     options: {
       onSuccess: () => {
         setCommentValue('')
-        onAddCommentSuccess && onAddCommentSuccess()
+        refetch()
       },
     },
   })
 
+  const isMutating = isCreatingExternalComment || isCreatingInternalComment
+
   return (
-    <Box marginTop={2}>
+    <Box>
       <Stack space={2}>
         <Input
           disabled={isMutating}
@@ -47,24 +43,26 @@ export const AddCommentTab = ({
           type="text"
           name="comment"
           label={formatMessage(messages.comments.label)}
-          placeholder={inputPlaceholder}
+          placeholder={placeholder}
           value={commentValue}
           onChange={(e) => setCommentValue(e.target.value)}
           textarea
         />
-        <Button
-          disabled={!commentValue}
-          onClick={() => {
-            onAddComment({
-              caseId: caseId,
-              internal: internal,
-              comment: commentValue,
-              creator: '', // TODO: Get user from context
-            })
-          }}
-        >
-          {formatMessage(messages.comments.save)}
-        </Button>
+        <Inline justifyContent="flexEnd">
+          <Button
+            size="small"
+            disabled={!commentValue}
+            onClick={() => {
+              if (internal) {
+                createInternalComment({ comment: commentValue })
+              } else {
+                createExternalComment({ comment: commentValue })
+              }
+            }}
+          >
+            {formatMessage(messages.comments.save)}
+          </Button>
+        </Inline>
       </Stack>
     </Box>
   )

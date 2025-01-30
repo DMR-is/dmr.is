@@ -5,10 +5,6 @@ import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
-const updateNextStatusSchema = z.object({
-  currentStatus: z.string(),
-})
-
 class UpdateNextStatusHandler {
   @LogMethod(false)
   @HandleApiException()
@@ -18,9 +14,7 @@ class UpdateNextStatusHandler {
       id?: string
     }
 
-    const { currentStatus } = updateNextStatusSchema.parse(req.body)
-
-    if (!id || !currentStatus) {
+    if (!id) {
       return res.status(400).end()
     }
 
@@ -30,9 +24,6 @@ class UpdateNextStatusHandler {
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .updateNextStatus({
         id: id,
-        updateNextStatusBody: {
-          currentStatus: currentStatus,
-        },
       })
 
     return res.status(204).end()

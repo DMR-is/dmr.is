@@ -54,6 +54,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateMainCategory,
   UpdateNextStatusBody,
   UpdatePaidBody,
@@ -405,6 +406,21 @@ export class CaseController {
 
   @Route({
     method: 'put',
+    path: ':id/fasttrack',
+    operationId: 'updateFasttrack',
+    summary: 'Update fasttrack status of case',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateFasttrackBody,
+  })
+  async updateFasttrack(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateFasttrackBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.updateCaseFasttrack(id, body))
+  }
+
+  @Route({
+    method: 'put',
     path: ':id/tag',
     operationId: 'updateTag',
     summary: 'Update tag value of case',
@@ -540,20 +556,14 @@ export class CaseController {
     path: ':id/status/next',
     operationId: 'updateNextStatus',
     summary: 'Update case status to next.',
-    bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
   @TimeLog()
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    const updateResults = await this.caseService.updateCaseNextStatus(
-      id,
-      body,
-      user,
-    )
+    const updateResults = await this.caseService.updateCaseNextStatus(id, user)
 
     if (!updateResults.result.ok) {
       throw new HttpException(
@@ -581,18 +591,15 @@ export class CaseController {
     path: ':id/status/previous',
     operationId: 'updatePreviousStatus',
     summary: 'Update case status to previous.',
-    bodyType: UpdateNextStatusBody,
     params: [{ name: 'id', type: 'string', required: true }],
   })
   @TimeLog()
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
     const updateResults = await this.caseService.updateCasePreviousStatus(
       id,
-      body,
       user,
     )
 
@@ -709,7 +716,30 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateAdvertByHtml(id, body))
+    const updatedHtmlResult = await this.caseService.updateAdvertByHtml(
+      id,
+      body,
+    )
+
+    if (!updatedHtmlResult.result.ok) {
+      throw new HttpException(
+        updatedHtmlResult.result.error.message,
+        updatedHtmlResult.result.error.code,
+      )
+    }
+
+    const historyResults = await this.caseService.createCaseHistory(id)
+
+    if (!historyResults.result.ok) {
+      this.logger.warn('Failed to create case history', {
+        caseId: id,
+        error: historyResults.result.error,
+        category: LOG_CATEGORY,
+        context: 'CaseController',
+      })
+    }
+
+    return
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)

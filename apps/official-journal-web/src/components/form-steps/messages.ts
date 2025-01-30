@@ -62,8 +62,17 @@ export const messages = {
       defaultMessage: 'Búið er að greiða',
       description: '',
     },
+    attachments: {
+      id: 'web.components.steps.grunnvinnsla:attachments',
+      defaultMessage: 'Fylgiskjöl',
+      description: '',
+    },
+    message: {
+      id: 'web.components.steps.grunnvinnsla:message',
+      defaultMessage: 'Skilaboð til ritstjóra',
+      description: '',
+    },
   }),
-
   yfirlestur: defineMessages({
     group1title: {
       id: 'web.components.steps.yfirlestur:group1title',

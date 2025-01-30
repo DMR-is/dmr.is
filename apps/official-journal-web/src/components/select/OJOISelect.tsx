@@ -1,20 +1,54 @@
-import { Select, SkeletonLoader } from '@island.is/island-ui/core'
+import {
+  Box,
+  BoxProps,
+  Select,
+  SkeletonLoader,
+} from '@island.is/island-ui/core'
 
-type Props<T> = React.ComponentProps<typeof Select<T>>
+import { OJOIInput } from './OJOIInput'
+
+type Props<T> = React.ComponentProps<typeof Select<T>> & {
+  width?: BoxProps['width']
+  isValidating?: boolean
+}
 
 export const OJOISelect = <T,>({
   filterConfig,
   isLoading,
+  isValidating,
+  width,
   ...rest
 }: Props<T>) => {
-  return isLoading ? (
-    <SkeletonLoader height={64} borderRadius="standard" />
-  ) : (
-    <Select
-      size="sm"
-      backgroundColor="blue"
-      {...rest}
-      filterConfig={{ matchFrom: 'start' }}
-    />
+  let valueString = ''
+  if (typeof rest.value === 'string') {
+    valueString = rest.value
+  }
+
+  if (rest.value && 'label' in rest.value) {
+    valueString = rest.value.label as string
+  }
+
+  return (
+    <Box width={width}>
+      {isLoading ? (
+        <SkeletonLoader height={64} borderRadius="standard" />
+      ) : isValidating ? (
+        <OJOIInput
+          name=""
+          disabled
+          label={rest.label}
+          value={valueString}
+          isValidating
+        />
+      ) : (
+        <Select
+          size="sm"
+          backgroundColor="blue"
+          isLoading={true}
+          {...rest}
+          filterConfig={{ matchFrom: 'start' }}
+        />
+      )}
+    </Box>
   )
 }

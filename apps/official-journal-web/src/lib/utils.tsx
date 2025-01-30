@@ -1,12 +1,14 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
+import { ComponentProps } from 'react'
 import { z } from 'zod'
 
-import type { IconMapIcon } from '@island.is/island-ui/core'
-import { StringOption } from '@island.is/island-ui/core'
+import type { Icon, IconMapIcon } from '@island.is/island-ui/core'
+import { Stack, StringOption, Text } from '@island.is/island-ui/core'
 
 import {
+  BaseEntity,
   CaseActionEnum,
   CaseDetailed,
   CaseStatusEnum,
@@ -234,16 +236,22 @@ export const commentToNode = (comment: CommentDto) => {
     case CaseActionEnum.APPLICATIONCOMMENT:
     case CaseActionEnum.INTERNALCOMMENT: {
       return (
-        <>
-          <strong>{comment.creator.title}</strong> gerir athugasemd.
-        </>
+        <Stack space={1}>
+          <span>
+            <strong>{comment.creator.title}</strong> gerir athugasemd.
+          </span>
+          <Text>{comment.comment}</Text>
+        </Stack>
       )
     }
     case CaseActionEnum.EXTERNALCOMMENT: {
       return (
-        <>
-          <strong>{comment.creator.title}</strong> skráir skilaboð.
-        </>
+        <Stack space={1}>
+          <span>
+            <strong>{comment.creator.title}</strong> skráir skilaboð.
+          </span>
+          <Text>{comment.comment}</Text>
+        </Stack>
       )
     }
     default: {
@@ -270,7 +278,11 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
       isActive: statusIndex === 0,
       isComplete: statusIndex > 0,
       notes: activeCase.comments
-        .filter((c) => c.caseStatus.title === CaseStatusEnum.Innsent)
+        .filter(
+          (c) =>
+            c.caseStatus.title === CaseStatusEnum.Innsent &&
+            displayTypes.includes(c.action),
+        )
         ?.map((c) => commentToNode(c)),
     },
     {
@@ -279,7 +291,11 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
       isActive: statusIndex === 1,
       isComplete: statusIndex > 1,
       notes: activeCase.comments
-        .filter((c) => c.caseStatus.title === CaseStatusEnum.Grunnvinnsla)
+        .filter(
+          (c) =>
+            c.caseStatus.title === CaseStatusEnum.Grunnvinnsla &&
+            displayTypes.includes(c.action),
+        )
         ?.map((c) => commentToNode(c)),
     },
     {
@@ -288,7 +304,11 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
       isActive: statusIndex === 2,
       isComplete: statusIndex > 2,
       notes: activeCase.comments
-        .filter((c) => c.caseStatus.title === CaseStatusEnum.Yfirlestur)
+        .filter(
+          (c) =>
+            c.caseStatus.title === CaseStatusEnum.Yfirlestur &&
+            displayTypes.includes(c.action),
+        )
         ?.map((c) => commentToNode(c)),
     },
     {
@@ -297,7 +317,11 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
       isActive: statusIndex === 3,
       isComplete: statusIndex > 3,
       notes: activeCase.comments
-        .filter((c) => c.caseStatus.title === CaseStatusEnum.Tilbúið)
+        .filter(
+          (c) =>
+            c.caseStatus.title === CaseStatusEnum.Tilbúið &&
+            displayTypes.includes(c.action),
+        )
         ?.map((c) => commentToNode(c)),
     },
     {
@@ -333,27 +357,11 @@ export const getCaseProcessingSearchParams = (
   return params
 }
 
-type GenerateOptionsParams = {
-  label: string
-  queryKey: string
-  options: { id: string; slug: string; title: string }[] | undefined
-}
-
-export const generateOptions = ({
-  label,
-  queryKey,
-  options,
-}: GenerateOptionsParams) => {
-  return {
-    label,
-    queryKey,
-    options: options
-      ? options.map((option) => ({
-          label: option.title,
-          value: option.slug,
-        }))
-      : [],
-  }
+export const createOptions = <T extends BaseEntity>(arr: T[]) => {
+  return arr.map((item) => ({
+    label: item.title,
+    value: item.id,
+  }))
 }
 
 export const getSignatureDate = (signatures: Signature[]) => {
@@ -612,5 +620,48 @@ export const transformQueryToCasesWithStatusCountParams = (
     status: check.data,
     statuses: statuses.success ? statuses.data : undefined,
     ...rest,
+  }
+}
+
+export const sliceFirstAndLast = <T,>(arr: T[], count: number): T[] => {
+  if (arr.length === 0 || count === 0) return []
+  if (arr.length <= count) return arr
+
+  return [arr[0], ...arr.slice(-count)]
+}
+
+export const getPreviousStatus = (
+  status: CaseStatusEnum,
+): CaseStatusEnum | null => {
+  switch (status) {
+    case CaseStatusEnum.Innsent:
+      return null
+    case CaseStatusEnum.Grunnvinnsla:
+      return CaseStatusEnum.Innsent
+    case CaseStatusEnum.Yfirlestur:
+      return CaseStatusEnum.Grunnvinnsla
+    case CaseStatusEnum.Tilbúið:
+      return CaseStatusEnum.Yfirlestur
+    default: {
+      return null
+    }
+  }
+}
+
+export const getNextStatus = (
+  status: CaseStatusEnum,
+): CaseStatusEnum | null => {
+  switch (status) {
+    case CaseStatusEnum.Innsent:
+      return CaseStatusEnum.Grunnvinnsla
+    case CaseStatusEnum.Grunnvinnsla:
+      return CaseStatusEnum.Yfirlestur
+    case CaseStatusEnum.Yfirlestur:
+      return CaseStatusEnum.Tilbúið
+    case CaseStatusEnum.Tilbúið:
+      return null
+    default: {
+      return null
+    }
   }
 }

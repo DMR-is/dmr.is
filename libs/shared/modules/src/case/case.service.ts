@@ -39,6 +39,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -198,6 +199,14 @@ export class CaseService implements ICaseService {
     )
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  updateCaseFasttrack(
+    caseId: string,
+    body: UpdateFasttrackBody,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateFasttrack(caseId, body)
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {
@@ -529,13 +538,11 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCaseNextStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(
       caseId,
-      body,
       currentUser,
       transaction,
     )
@@ -545,13 +552,11 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCasePreviousStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCasePreviousStatus(
       caseId,
-      body,
       currentUser,
       transaction,
     )

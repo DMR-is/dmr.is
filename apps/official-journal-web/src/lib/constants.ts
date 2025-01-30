@@ -16,6 +16,10 @@ export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 
 export const COMMENTS_TO_HIDE = 4
 
+export const COMMENTS_TO_SHOW = 5
+
+export const NOTIFICATION_PORTAL_ID = 'notification-portal'
+
 export enum Routes {
   Dashboard = '/',
   MainCategories = '/yfirflokkar',
@@ -137,8 +141,6 @@ export const fetcher = async <TData, TBody = never>(
   return res.json()
 }
 
-export const NOTIFICATION_PORTAL_ID = 'notification-portal'
-
 export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',
@@ -167,6 +169,7 @@ export enum APIRoutes {
   UpdateTitle = '/api/cases/:id/updateTitle',
   UpdatePublishDate = '/api/cases/:id/updatePublishDate',
   UpdatePaid = '/api/cases/:id/updatePaid',
+  UpdateFasttrack = '/api/cases/:id/updateFasttrack',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
   UpdateMainCategory = '/api/mainCategories/:id/update',

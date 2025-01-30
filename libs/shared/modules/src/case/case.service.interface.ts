@@ -32,6 +32,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -86,13 +87,11 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     id: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
   ): Promise<ResultWrapper>
 
@@ -124,6 +123,11 @@ export interface ICaseService {
 
   updateCaseTitle(caseId: string, body: UpdateTitleBody): Promise<ResultWrapper>
   updateCasePaid(caseId: string, body: UpdatePaidBody): Promise<ResultWrapper>
+
+  updateCaseFasttrack(
+    caseId: string,
+    body: UpdateFasttrackBody,
+  ): Promise<ResultWrapper>
 
   updateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
 

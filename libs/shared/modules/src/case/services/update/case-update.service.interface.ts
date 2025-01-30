@@ -10,6 +10,7 @@ import {
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
+  UpdateFasttrackBody,
   UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
@@ -21,6 +22,12 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface ICaseUpdateService {
   updateCase(
     body: UpdateCaseBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateFasttrack(
+    caseId: string,
+    body: UpdateFasttrackBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
   updateEmployee(
@@ -37,14 +44,12 @@ export interface ICaseUpdateService {
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     caseId: string,
-    body: UpdateNextStatusBody,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper>

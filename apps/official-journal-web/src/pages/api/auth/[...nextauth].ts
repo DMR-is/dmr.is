@@ -1,10 +1,10 @@
 import { decode } from 'jsonwebtoken'
-import NextAuth, { AuthOptions, User } from 'next-auth'
+import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 import { AuthMiddleware } from '@dmr.is/middleware'
-import { AdminUserRole } from '@dmr.is/shared/dto'
+import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
@@ -35,7 +35,7 @@ async function authorize(nationalId: string, accessToken: string) {
         throw new Error('Member not found')
       }
 
-      return member as User
+      return member as AdminUser
     }
 
     return null
@@ -78,6 +78,7 @@ export const authOptions: AuthOptions = {
         if (user.accessToken) {
           token.accessToken = user.accessToken
         }
+        token.adminUserId = user.id
         token.refreshToken = user.refreshToken
         token.idToken = user.idToken
         token.isRefreshTokenExpired = false
@@ -120,6 +121,7 @@ export const authOptions: AuthOptions = {
         roles: token.roles as AdminUserRole[],
         displayName: token.displayName as string,
         nationalId: token.nationalId,
+        id: token.adminUserId as string,
       }
 
       // Add tokens to session
@@ -168,6 +170,7 @@ export const authOptions: AuthOptions = {
 
         user.roles = authMember.roles
         user.displayName = authMember.displayName
+        user.id = authMember.id
 
         return true
       }
