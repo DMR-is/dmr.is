@@ -29,6 +29,7 @@ import { Signature } from '../signatures'
 import { CaseTag } from '../tags'
 import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
+import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
 
 export class CaseDetailed {
@@ -308,6 +309,15 @@ export class CaseDetailed {
   @IsArray()
   @IsOptional()
   readonly advertCorrections?: AdvertCorrection[]
+
+  @ApiProperty({
+    type: [CaseHistory],
+    description: 'History of the case.',
+  })
+  @ValidateNested({ each: true })
+  @Type(() => CaseHistory)
+  @IsArray()
+  history!: CaseHistory[]
 }
 
 export class Case extends PickType(CaseDetailed, [

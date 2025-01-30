@@ -379,9 +379,19 @@ export class ApplicationService implements IApplicationService {
         ),
       )
 
-      await this.commentService.createSubmitComment(caseLookup.id, {
-        institutionCreatorId: caseLookup.involvedParty.id,
-      })
+      ResultWrapper.unwrap(
+        await this.commentService.createSubmitComment(
+          caseLookup.id,
+          {
+            institutionCreatorId: caseLookup.involvedParty.id,
+          },
+          transaction,
+        ),
+      )
+
+      ResultWrapper.unwrap(
+        await this.caseService.createCaseHistory(caseLookup.id, transaction),
+      )
 
       return ResultWrapper.ok()
     } catch (error) {

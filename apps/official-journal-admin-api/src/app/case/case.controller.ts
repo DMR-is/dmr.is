@@ -68,6 +68,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
   Inject,
   Param,
   Post,
@@ -548,9 +549,29 @@ export class CaseController {
     @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCaseNextStatus(id, body, user),
+    const updateResults = await this.caseService.updateCaseNextStatus(
+      id,
+      body,
+      user,
     )
+
+    if (!updateResults.result.ok) {
+      throw new HttpException(
+        updateResults.result.error.message,
+        updateResults.result.error.code,
+      )
+    }
+
+    const historyResults = await this.caseService.createCaseHistory(id)
+
+    if (!historyResults.result.ok) {
+      this.logger.warn('Failed to create case history', {
+        caseId: id,
+        error: historyResults.result.error,
+        category: LOG_CATEGORY,
+        context: 'CaseController',
+      })
+    }
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
@@ -569,9 +590,29 @@ export class CaseController {
     @Body() body: UpdateNextStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCasePreviousStatus(id, body, user),
+    const updateResults = await this.caseService.updateCasePreviousStatus(
+      id,
+      body,
+      user,
     )
+
+    if (!updateResults.result.ok) {
+      throw new HttpException(
+        updateResults.result.error.message,
+        updateResults.result.error.code,
+      )
+    }
+
+    const historyResults = await this.caseService.createCaseHistory(id)
+
+    if (!historyResults.result.ok) {
+      this.logger.warn('Failed to create case history', {
+        caseId: id,
+        error: historyResults.result.error,
+        category: LOG_CATEGORY,
+        context: 'CaseController',
+      })
+    }
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
@@ -613,9 +654,31 @@ export class CaseController {
     @Body() body: UpdateCaseStatusBody,
     @CurrentUser() user: AdminUser,
   ): Promise<void> {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCaseStatus(id, body, user),
+    const updateResults = await this.caseService.updateCaseStatus(
+      id,
+      body,
+      user,
     )
+
+    if (!updateResults.result.ok) {
+      throw new HttpException(
+        updateResults.result.error.message,
+        updateResults.result.error.code,
+      )
+    }
+
+    const historyResults = await this.caseService.createCaseHistory(id)
+
+    if (!historyResults.result.ok) {
+      this.logger.warn('Failed to create case history', {
+        caseId: id,
+        error: historyResults.result.error,
+        category: LOG_CATEGORY,
+        context: 'CaseController',
+      })
+    }
+
+    return
   }
 
   @Route({

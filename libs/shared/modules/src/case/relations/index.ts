@@ -25,6 +25,7 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from '../models'
+import { CaseHistoryModel } from '../models/case-history.model'
 
 export const casesDetailedIncludes = [
   CaseTagModel,
@@ -92,6 +93,16 @@ export const casesDetailedIncludes = [
         model: SignatureMemberModel,
         as: 'members',
       },
+    ],
+  },
+  {
+    model: CaseHistoryModel,
+    include: [
+      { model: CaseStatusModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertTypeModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdvertInvolvedPartyModel, attributes: ['id', 'title', 'slug'] },
+      { model: AdminUserModel },
     ],
   },
 ]

@@ -4,6 +4,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -29,6 +30,7 @@ import { CaseCategoriesModel } from './case-categories.model'
 import { CaseChannelModel } from './case-channel.model'
 import { CaseChannelsModel } from './case-channels.model'
 import { CaseCommunicationStatusModel } from './case-communication-status.model'
+import { CaseHistoryModel } from './case-history.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
 
@@ -233,4 +235,7 @@ export class CaseModel extends Model {
     through: { model: () => CaseAdditionsModel },
   })
   additions?: CaseAdditionModel[]
+
+  @HasMany(() => CaseHistoryModel)
+  history!: CaseHistoryModel[]
 }

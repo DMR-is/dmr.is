@@ -1,5 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -61,6 +62,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdminUserModel } from '../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
@@ -89,6 +91,7 @@ import { ICaseUpdateService } from './services/update/case-update.service.interf
 import { ICaseService } from './case.service.interface'
 import {
   CaseCommunicationStatusModel,
+  CaseHistoryModel,
   CaseModel,
   CasePublishedAdvertsModel,
   CaseStatusModel,
@@ -133,9 +136,68 @@ export class CaseService implements ICaseService {
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(CaseHistoryModel)
+    private readonly caseHistoryModel: typeof CaseHistoryModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseHistory(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const now = new Date().toISOString()
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: [
+        'id',
+        'departmentId',
+        'statusId',
+        'advertTypeId',
+        'involvedPartyId',
+        'assignedUserId',
+        'advertTitle',
+        'html',
+        'requestedPublicationDate',
+      ],
+      transaction,
+    })
+
+    if (caseLookup === null) {
+      this.logger.warn(`Tried to create case history, but case is not found`, {
+        caseId,
+        category: LOGGING_CATEGORY,
+        context: 'CaseService',
+      })
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    const historyId = uuid()
+    await this.caseHistoryModel.create(
+      {
+        id: historyId,
+        caseId: caseLookup.id,
+        departmentId: caseLookup.departmentId,
+        typeId: caseLookup.advertTypeId,
+        statusId: caseLookup.statusId,
+        involvedPartyId: caseLookup.involvedPartyId,
+        adminUserId: caseLookup.assignedUserId,
+        title: caseLookup.advertTitle,
+        html: caseLookup.html,
+        requestedPublicationDate: new Date(
+          caseLookup.requestedPublicationDate,
+        ).toISOString(),
+        created: now,
+      },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {
@@ -976,8 +1038,14 @@ export class CaseService implements ICaseService {
    * because we want to use multiple transactions
    */
   @LogAndHandle()
-  createCase(body: PostApplicationBody): Promise<ResultWrapper> {
-    return this.createService.createCase(body)
+  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+    const { id } = ResultWrapper.unwrap(
+      await this.createService.createCase(body),
+    )
+
+    await this.createCaseHistory(id)
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

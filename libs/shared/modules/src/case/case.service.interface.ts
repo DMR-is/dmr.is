@@ -183,6 +183,11 @@ export interface ICaseService {
     body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  createCaseHistory(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')

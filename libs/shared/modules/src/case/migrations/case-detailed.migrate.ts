@@ -12,12 +12,14 @@ import { CaseModel } from '../models'
 import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status.migrate'
+import { caseHistoryMigrate } from './case-history.migrate'
 import { caseStatusMigrate } from './case-status.migrate'
 import { caseTagMigrate } from './case-tag.migrate'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
     id: model.id,
+    advertId: model.advertId,
     applicationId: model?.applicationId,
     year: model.year,
     caseNumber: model.caseNumber,
@@ -65,5 +67,6 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     advertCorrections: model.advert?.corrections
       ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
       : undefined,
+    history: model.history.map((h) => caseHistoryMigrate(h)),
   }
 }

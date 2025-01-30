@@ -21,7 +21,11 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
   useEffect(() => {
     if (!baseText && !currentDiff) {
       try {
-        const baseParsed = ''
+        const baseParsed = (
+          activeCase.history.length > 0
+            ? activeCase.history[0].html
+            : activeCase.html
+        ) as HTMLText
 
         const currentActive = activeCase.html
 
@@ -36,7 +40,7 @@ export const OriginalCompare = ({ activeCase }: OriginalCompareProps) => {
         setBaseText('')
       }
     }
-  }, [activeCase?.comments])
+  }, [activeCase.history])
 
   if (!activeText || !baseText) {
     return null

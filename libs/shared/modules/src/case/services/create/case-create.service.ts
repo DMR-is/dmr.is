@@ -341,7 +341,9 @@ export class CaseCreateService implements ICaseCreateService {
   }
 
   @LogAndHandle()
-  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+  async createCase(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper<{ id: string }>> {
     const { application } = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
@@ -349,7 +351,7 @@ export class CaseCreateService implements ICaseCreateService {
     const valuesResult = await this.getCreateCaseBody(application)
 
     if (!valuesResult.result.ok) {
-      return valuesResult
+      return ResultWrapper.err({ code: 500, message: 'Failed to create case' })
     }
 
     const values = valuesResult.result.value
@@ -426,7 +428,10 @@ export class CaseCreateService implements ICaseCreateService {
           applicationId: application.id,
         },
       )
-      return attachmentsLookup
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get attachments',
+      })
     }
 
     const attachments = attachmentsLookup.result.value.attachments
