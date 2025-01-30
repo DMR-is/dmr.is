@@ -1,5 +1,5 @@
 import cn from 'classnames'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Button, Drawer } from '@island.is/island-ui/core'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-browser'
@@ -20,23 +20,29 @@ export const OriginalCompare = ({ disclosure }: Props) => {
     isValidating,
   } = useCaseContext()
   const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
+  // we only want to compare to the lastest change so we never updated this, only on mount
+  const [orignal, _setOriginal] = useState(
+    activeCase.history[activeCase.history.length - 1].html,
+  )
+
+  // we can implement in the future to compare to the base based on the indexes of the history array
+  // for now we use the lastest changes to compare to that
+  const [base, _setBase] = useState(
+    activeCase.history.length > 0
+      ? activeCase.history[0].html
+      : activeCase.html,
+  )
 
   const html = useMemo(() => {
-    const baseParsed = (
-      activeCase.history.length > 0
-        ? activeCase.history[0].html
-        : activeCase.html
-    ) as HTMLText
-
-    if (activeText === 'base') return baseParsed
+    if (activeText === 'base') return orignal as HTMLText
 
     const diffText = getDiff(
-      dirtyClean(baseParsed as HTMLText),
+      dirtyClean(base as HTMLText),
       dirtyClean(activeCase.html as HTMLText),
     )
 
     return diffText.diff
-  }, [activeCase.html, activeCase.history])
+  }, [activeCase.html, activeText])
 
   const diffShowing = activeText === 'diff'
   return (

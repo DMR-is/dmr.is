@@ -716,7 +716,30 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ): Promise<void> {
-    ResultWrapper.unwrap(await this.caseService.updateAdvertByHtml(id, body))
+    const updatedHtmlResult = await this.caseService.updateAdvertByHtml(
+      id,
+      body,
+    )
+
+    if (!updatedHtmlResult.result.ok) {
+      throw new HttpException(
+        updatedHtmlResult.result.error.message,
+        updatedHtmlResult.result.error.code,
+      )
+    }
+
+    const historyResults = await this.caseService.createCaseHistory(id)
+
+    if (!historyResults.result.ok) {
+      this.logger.warn('Failed to create case history', {
+        caseId: id,
+        error: historyResults.result.error,
+        category: LOG_CATEGORY,
+        context: 'CaseController',
+      })
+    }
+
+    return
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
