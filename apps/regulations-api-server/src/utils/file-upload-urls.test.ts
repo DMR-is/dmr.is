@@ -1,6 +1,6 @@
 import { RegName } from '@island.is/regulations-tools/types'
 
-import { DRAFTS_FOLDER, FILE_SERVER, MEDIA_BUCKET_FOLDER } from '../constants'
+// import { DRAFTS_FOLDER, FILE_SERVER, MEDIA_BUCKET_FOLDER } from '../constants'
 
 import { _fileUrlsMapper } from './file-upload-urls'
 
@@ -8,6 +8,12 @@ const defaultRegName = '0123/2004' as RegName
 const regulationDraftId = '0cb3a68b-f368-4d01-a594-ba73e0dc396d'
 
 // ---------------------------------------------------------------------------
+
+// ALL TESTS WILL BE SKIPPED FOR NOW
+// TODO: ADD TESTS and ENV VARS BACK IN WHEN FILE UPLOAD FUNCTIONALITY IS RE-ENABLED
+const DRAFTS_FOLDER = ''
+const FILE_SERVER = ''
+const MEDIA_BUCKET_FOLDER = ''
 
 const devPrefix = MEDIA_BUCKET_FOLDER ? MEDIA_BUCKET_FOLDER + '/' : ''
 
@@ -34,9 +40,6 @@ const testMapping = (tests: TestProps, regName: RegName = defaultRegName) => {
     })),
   ).toEqual(expected)
 }
-
-// ALL TESTS WILL BE SKIPPED FOR NOW
-// TODO: ADD TESTS BACK IN WHEN FILE UPLOAD FUNCTIONALITY IS RE-ENABLED
 
 // ---------------------------------------------------------------------------
 
