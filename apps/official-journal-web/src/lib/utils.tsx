@@ -5,7 +5,7 @@ import { ComponentProps } from 'react'
 import { z } from 'zod'
 
 import type { Icon, IconMapIcon } from '@island.is/island-ui/core'
-import { StringOption, Text } from '@island.is/island-ui/core'
+import { Stack, StringOption, Text } from '@island.is/island-ui/core'
 
 import {
   BaseEntity,
@@ -236,16 +236,22 @@ export const commentToNode = (comment: CommentDto) => {
     case CaseActionEnum.APPLICATIONCOMMENT:
     case CaseActionEnum.INTERNALCOMMENT: {
       return (
-        <>
-          <strong>{comment.creator.title}</strong> gerir athugasemd.
-        </>
+        <Stack space={1}>
+          <span>
+            <strong>{comment.creator.title}</strong> gerir athugasemd.
+          </span>
+          <Text>{comment.comment}</Text>
+        </Stack>
       )
     }
     case CaseActionEnum.EXTERNALCOMMENT: {
       return (
-        <>
-          <strong>{comment.creator.title}</strong> skráir skilaboð.
-        </>
+        <Stack space={1}>
+          <span>
+            <strong>{comment.creator.title}</strong> skráir skilaboð.
+          </span>
+          <Text>{comment.comment}</Text>
+        </Stack>
       )
     }
     default: {

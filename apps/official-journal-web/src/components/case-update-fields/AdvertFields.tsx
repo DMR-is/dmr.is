@@ -72,7 +72,6 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
           <OriginalCompare
             disclosure={
               <Button
-                disabled={!canEdit}
                 variant="utility"
                 icon="document"
                 iconType="outline"
@@ -85,7 +84,6 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
           <AdvertDisplay
             disclosure={
               <Button
-                disabled={!canEdit}
                 variant="utility"
                 size="small"
                 icon="open"

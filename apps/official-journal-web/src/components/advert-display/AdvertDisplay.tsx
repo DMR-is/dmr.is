@@ -38,12 +38,13 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                     iconType="outline"
                   />
                 </Inline>
-                <Box className={styles.wrapper} background="white">
+                <Box className={styles.wrapper}>
                   <Box
                     border="standard"
                     borderColor="purple200"
                     borderRadius="large"
                     padding={[2, 3, 4]}
+                    background="white"
                   >
                     <Box display="flex" justifyContent="spaceBetween">
                       <Text variant="eyebrow" color="purple400">

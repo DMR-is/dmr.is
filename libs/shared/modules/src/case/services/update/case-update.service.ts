@@ -142,17 +142,15 @@ export class CaseUpdateService implements ICaseUpdateService {
   @LogAndHandle()
   @Transactional()
   async updateEmployee(
-    id: string,
-    userId: string,
+    caseId: string,
+    targetUserId: string,
     currentUser: AdminUser,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const caseRes = (await this.utilityService.caseLookup(id)).unwrap()
-
-    if (caseRes.assignedUserId === userId) {
+    if (currentUser.id === targetUserId) {
       ResultWrapper.unwrap(
         await this.commentService.createAssignSelfComment(
-          id,
+          caseId,
           {
             adminUserCreatorId: currentUser.id,
           },
@@ -162,10 +160,10 @@ export class CaseUpdateService implements ICaseUpdateService {
     } else {
       ResultWrapper.unwrap(
         await this.commentService.createAssignUserComment(
-          id,
+          caseId,
           {
             adminUserCreatorId: currentUser.id,
-            adminUserReceiverId: userId,
+            adminUserReceiverId: targetUserId,
           },
           transaction,
         ),
@@ -174,11 +172,11 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await this.caseModel.update(
       {
-        assignedUserId: userId,
+        assignedUserId: targetUserId,
       },
       {
         where: {
-          id,
+          id: caseId,
         },
         transaction,
       },
