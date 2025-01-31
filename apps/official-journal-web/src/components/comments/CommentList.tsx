@@ -38,18 +38,17 @@ export const CommentList = () => {
     })
   }, [currentCase.comments, expanded.toggle, orderAsc.toggle])
 
-  if (comments.length === 0) {
-    return (
-      <AlertMessage
-        type="info"
-        title="Engar athugasemdir"
-        message="Engar athugasemdir fundust fyrir þetta mál"
-      />
-    )
-  }
-
   return (
     <Stack space={1}>
+      {comments.length === 0 && (
+        <Box paddingTop={[2, 2, 3]}>
+          <AlertMessage
+            type="info"
+            title="Engar athugasemdir"
+            message="Engar athugasemdir fundust fyrir þetta mál"
+          />
+        </Box>
+      )}
       {totalComments > COMMENTS_TO_SHOW && (
         <Box
           padding={[2, 2, 3]}
