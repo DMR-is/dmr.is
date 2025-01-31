@@ -4,22 +4,14 @@ import file_type from 'file-type'
 import fetch from 'node-fetch'
 import { PassThrough, Readable } from 'stream'
 
-// import {
-//   AWS_BUCKET_NAME,
-//   AWS_REGION_NAME,
-//   DRAFTS_FOLDER,
-//   FILE_SERVER,
-//   MEDIA_BUCKET_FOLDER,
-//   OLD_SERVER,
-// } from '../constants';
-
-// TODO: ADD TESTS and ENV VARS BACK IN WHEN FILE UPLOAD FUNCTIONALITY IS RE-ENABLED
-const DRAFTS_FOLDER = ''
-const FILE_SERVER = ''
-const MEDIA_BUCKET_FOLDER = ''
-const AWS_BUCKET_NAME = ''
-const AWS_REGION_NAME = ''
-const OLD_SERVER = ''
+import {
+  AWS_BUCKET_NAME,
+  AWS_REGION_NAME,
+  DRAFTS_FOLDER,
+  FILE_SERVER,
+  MEDIA_BUCKET_FOLDER,
+  OLD_SERVER,
+} from '../constants'
 
 const QUERY_REPLACEMENT = '__q__'
 
