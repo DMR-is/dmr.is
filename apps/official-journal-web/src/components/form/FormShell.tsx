@@ -12,8 +12,10 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
+import { CaseStatusEnum } from '../../gen/fetch'
 import {
   useRejectCase,
+  useUpdateAdvertAndCorrection,
   useUpdateEmployee,
   useUpdateNextCaseStatus,
   useUpdatePreviousCaseStatus,
@@ -42,8 +44,16 @@ type FormShellType = {
 export const FormShell = ({ children }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, employeeOptions, tagOptions, canEdit, refetch } =
-    useCaseContext()
+  const {
+    currentCase,
+    employeeOptions,
+    tagOptions,
+    canEdit,
+    isPublishedOrRejected,
+    canUpdateAdvert,
+    localCorrection,
+    refetch,
+  } = useCaseContext()
 
   const steps = generateSteps(currentCase)
 
@@ -115,6 +125,19 @@ export const FormShell = ({ children }: FormShellType) => {
       },
     },
   })
+
+  const { trigger: correctAdvert, isMutating: isCorrecting } =
+    useUpdateAdvertAndCorrection({
+      options: {
+        onSuccess: () => {
+          refetch()
+          toast.success('Leiðrétting birt')
+        },
+        onError: () => {
+          toast.error('Ekki tókst að birta leiðréttingu')
+        },
+      },
+    })
 
   const breadcrumbs = [
     {
@@ -241,7 +264,10 @@ export const FormShell = ({ children }: FormShellType) => {
                       updateTag({ tagId: opt.value })
                     }}
                   />
-                  <Box background="white" borderRadius="large">
+                  <Box
+                    background={prevStatus ? 'white' : 'blueberry100'}
+                    borderRadius="large"
+                  >
                     <Button
                       disabled={
                         prevStatus === null ||
@@ -251,7 +277,7 @@ export const FormShell = ({ children }: FormShellType) => {
                       fluid
                       variant="ghost"
                       size="small"
-                      preTextIcon="arrowBack"
+                      preTextIcon={prevStatus ? 'arrowBack' : undefined}
                       loading={isUpdatingPrevCaseStatus}
                       onClick={() => updatePrevStatus()}
                     >
@@ -276,7 +302,7 @@ export const FormShell = ({ children }: FormShellType) => {
                       fluid
                       loading={isUpdatingNextCaseStatus}
                       size="small"
-                      icon="arrowForward"
+                      icon={nextStatus ? 'arrowForward' : undefined}
                       onClick={() => updateCaseNextStatus()}
                     >
                       <Text color="white" variant="small" fontWeight="semiBold">
@@ -289,7 +315,7 @@ export const FormShell = ({ children }: FormShellType) => {
                     <LinkV2
                       href={`${Routes.PublishingOverview}?department=${currentCase.advertDepartment.title}`}
                     >
-                      <Button size="small" fluid icon="arrowForward">
+                      <Button size="small" fluid>
                         <Text
                           color="white"
                           variant="small"
@@ -300,18 +326,43 @@ export const FormShell = ({ children }: FormShellType) => {
                       </Button>
                     </LinkV2>
                   )}
-                  <Button
-                    disabled={!canEdit}
-                    fluid
-                    colorScheme="destructive"
-                    size="small"
-                    icon="close"
-                    onClick={() => handleRejectCase()}
-                  >
-                    <Text color="white" variant="small" fontWeight="semiBold">
-                      Hafna máli
-                    </Text>
-                  </Button>
+                  {!isPublishedOrRejected && (
+                    <Button
+                      disabled={!canEdit}
+                      fluid
+                      colorScheme="destructive"
+                      size="small"
+                      icon="close"
+                      onClick={() => handleRejectCase()}
+                    >
+                      <Text color="white" variant="small" fontWeight="semiBold">
+                        Hafna máli
+                      </Text>
+                    </Button>
+                  )}
+                  {isPublishedOrRejected && (
+                    <Button
+                      disabled={!canUpdateAdvert}
+                      fluid
+                      size="small"
+                      icon="pencil"
+                      iconType="outline"
+                      loading={isCorrecting}
+                      onClick={() => {
+                        if (!localCorrection) return
+                        correctAdvert({
+                          advertHtml: currentCase.html,
+                          caseId: currentCase.id,
+                          description: localCorrection.description,
+                          title: localCorrection.title,
+                        })
+                      }}
+                    >
+                      <Text color="white" variant="small" fontWeight="semiBold">
+                        Birta leiðréttingu
+                      </Text>
+                    </Button>
+                  )}
                   <Divider weight="purple200" />
                   <FormStepperV2
                     sections={steps.map((step, i) => (

@@ -1,45 +1,14 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment } from 'react'
 
 import { Box, GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { AdvertCorrection } from '../../gen/fetch'
-import { UpdateAvertAndCorrectionTriggerArgs } from '../../hooks/api'
-import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { formatDate } from '../../lib/utils'
 import { AddCorrection } from './AddCorrection'
 import { DeleteCorrections } from './DeleteButton'
-import { messages } from './messages'
-type Props = {
-  caseId: string
-  advertCorrections?: AdvertCorrection[]
-  isFixing?: boolean
-  onCorrectionAdd: (correction: UpdateAvertAndCorrectionTriggerArgs) => void
-  onDeleteCorrection: () => void
-}
 
-export const Corrections = ({
-  caseId,
-  advertCorrections,
-  isFixing,
-  onCorrectionAdd,
-  onDeleteCorrection,
-}: Props) => {
-  const { formatMessage } = useFormatMessage()
-  const [localCorrection, setLocalCorrection] = useState<AdvertCorrection>()
-
-  if (!advertCorrections?.length) {
-    null
-  }
-
-  useEffect(() => {
-    if (!isFixing) {
-      setLocalCorrection(undefined)
-    }
-  }, [isFixing])
-
-  const adCorrections = advertCorrections ?? []
-  const lCorrection = localCorrection ? [localCorrection] : []
-  const corrections = [...lCorrection, ...adCorrections]
+export const Corrections = () => {
+  const { currentCase, corrections, setLocalCorrection } = useCaseContext()
 
   return (
     <Box
@@ -48,11 +17,8 @@ export const Corrections = ({
       marginTop={2}
       background="purple100"
     >
-      <Box display="flex" justifyContent="spaceBetween" alignItems="center">
-        <Text variant="h5">{formatMessage(messages.corrections.title)}</Text>
-      </Box>
       <Box>
-        {corrections?.map((c, i) => {
+        {corrections?.map((c) => {
           return (
             <Fragment key={c.id}>
               <Box
@@ -82,7 +48,6 @@ export const Corrections = ({
                     <GridColumn span={['6/12']}>
                       <DeleteCorrections
                         onDelete={() => {
-                          onDeleteCorrection()
                           setLocalCorrection(undefined)
                         }}
                         title={c.title}
@@ -105,31 +70,25 @@ export const Corrections = ({
             </Fragment>
           )
         })}
-        {isFixing ? (
-          <Box marginTop={4} padding={4} background="white">
-            <Box
-              borderTopWidth={isFixing ? 'standard' : undefined}
-              borderColor="blue200"
-            >
-              <AddCorrection
-                onAddSuccess={(correction) => {
-                  onCorrectionAdd(correction)
-                  setLocalCorrection({
-                    id: 'new',
-                    title: correction.title,
-                    description: correction.description,
-                    advertId: '',
-                    documentHtml: '',
-                    documentPdfUrl: '',
-                    createdDate: '',
-                    updatedDate: '',
-                  })
-                }}
-                caseId={caseId}
-              />
-            </Box>
+        <Box marginTop={4} padding={4} background="white">
+          <Box borderTopWidth={'standard'} borderColor="blue200">
+            <AddCorrection
+              onAddSuccess={(correction) => {
+                setLocalCorrection({
+                  id: 'new',
+                  title: correction.title,
+                  description: correction.description,
+                  advertId: '',
+                  documentHtml: '',
+                  documentPdfUrl: '',
+                  createdDate: '',
+                  updatedDate: '',
+                })
+              }}
+              caseId={currentCase.id}
+            />
           </Box>
-        ) : undefined}
+        </Box>
       </Box>
     </Box>
   )

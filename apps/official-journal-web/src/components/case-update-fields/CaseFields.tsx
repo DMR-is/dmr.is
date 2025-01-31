@@ -13,13 +13,14 @@ import { useToggle } from '../../hooks/useToggle'
 import { IconButton } from '../icon-button/IconButton'
 import { AdvertFields } from './AdvertFields'
 import { AttachmentFields } from './AttachmentsFields'
+import { CaseCorrectionFields } from './CaseCorrectionField'
 import { CommentFields } from './CommentFields'
 import { CommonFields } from './CommonFields'
 import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
 
 export const CaseFields = () => {
-  const { canEdit } = useCaseContext()
+  const { canEdit, isPublishedOrRejected } = useCaseContext()
 
   const commonToggle = useToggle(true)
   const publishingToggle = useToggle(false)
@@ -27,6 +28,7 @@ export const CaseFields = () => {
   const attachmentToggle = useToggle(false)
   const messageToggle = useToggle(false)
   const commentToggle = useToggle(false)
+  const correctionToggle = useToggle(false)
 
   const expandAll = () => {
     commonToggle.setToggle(true)
@@ -35,6 +37,7 @@ export const CaseFields = () => {
     attachmentToggle.setToggle(true)
     messageToggle.setToggle(true)
     commentToggle.setToggle(true)
+    correctionToggle.setToggle(true)
   }
 
   const closeAll = () => {
@@ -44,6 +47,7 @@ export const CaseFields = () => {
     attachmentToggle.setToggle(false)
     messageToggle.setToggle(false)
     commentToggle.setToggle(false)
+    correctionToggle.setToggle(false)
   }
 
   const isSomeOpen =
@@ -52,7 +56,8 @@ export const CaseFields = () => {
     advertToggle.toggle ||
     attachmentToggle.toggle ||
     messageToggle.toggle ||
-    commentToggle.toggle
+    commentToggle.toggle ||
+    correctionToggle.toggle
 
   return (
     <GridContainer>
@@ -105,6 +110,12 @@ export const CaseFields = () => {
                 toggle={commentToggle.toggle}
                 onToggle={commentToggle.onToggle}
               />
+              {isPublishedOrRejected && (
+                <CaseCorrectionFields
+                  toggle={correctionToggle.toggle}
+                  onToggle={correctionToggle.onToggle}
+                />
+              )}
             </Accordion>
           </Stack>
         </GridColumn>
