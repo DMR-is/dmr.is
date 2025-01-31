@@ -16,10 +16,12 @@ import * as styles from './AdvertDisplay.css'
 type Props = {
   disclosure: React.ComponentProps<typeof ModalBase>['disclosure']
 }
-export const AdvertDisplay = ({ disclosure }: Props) => {
+export const AdvertPreview = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
 
   const signatureDate = currentCase.signatures.slice(-1)[0]?.date
+
+  const signatureHTML = currentCase.signatures.map((s) => s.html).join('')
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -59,7 +61,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                     <Box
                       className={styles.bodyText}
                       dangerouslySetInnerHTML={{
-                        __html: currentCase.html,
+                        __html: currentCase.html + signatureHTML,
                       }}
                     ></Box>
                   </Box>

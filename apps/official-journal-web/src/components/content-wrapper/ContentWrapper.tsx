@@ -1,6 +1,6 @@
 import { MessageDescriptor } from 'react-intl'
 
-import { ArrowLink, Box, Text } from '@island.is/island-ui/core'
+import { ArrowLink, Box, Text, TextProps } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './ContentWrapper.css'
@@ -11,6 +11,8 @@ type Props = {
   title?: string | MessageDescriptor
   link?: string
   linkText?: string | MessageDescriptor
+  titleVariant?: TextProps['variant']
+  titleAs?: TextProps['as']
 }
 
 export const ContentWrapper = ({
@@ -19,6 +21,8 @@ export const ContentWrapper = ({
   title,
   link,
   linkText,
+  titleVariant = 'h4',
+  titleAs = 'h3',
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -29,7 +33,7 @@ export const ContentWrapper = ({
       })}
     >
       {title && (
-        <Text marginBottom={2} variant="h4" as="h3">
+        <Text marginBottom={2} variant={titleVariant} as={titleAs}>
           {formatMessage(title)}
         </Text>
       )}
