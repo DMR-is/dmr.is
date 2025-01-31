@@ -2,6 +2,11 @@
   "name": "dmr.is",
   "version": "0.0.2",
   "license": "MIT",
+  "workspaces": {
+    "packages": [
+      "apps/regulations-api-server"
+    ]
+  },
   "engines": {
     "npm": "please-use-yarn",
     "node": "20.15.0",
@@ -34,7 +39,7 @@
     "@nestjs/testing": "^10.3.10",
     "@nx-tools/container-metadata": "^5.1.0",
     "@nx-tools/nx-container": "^5.1.0",
-    "@nx/esbuild": "^17.2.5",
+    "@nx/esbuild": "17.3.2",
     "@nx/eslint": "^17.2.5",
     "@nx/eslint-plugin": "^17.2.5",
     "@nx/jest": "17.3.2",
@@ -86,6 +91,7 @@
     "jest-environment-node": "^29.4.1",
     "nx": "^17.2.5",
     "open-next": "^2.3.7",
+    "pagedjs-cli": "^0.4.3",
     "prettier": "^2.6.2",
     "react-refresh": "^0.10.0",
     "sass": "1.62.1",
@@ -97,6 +103,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.567.0",
     "@aws-sdk/s3-request-presigner": "^3.637.0",
+    "@fastify/autoload": "~5.7.1",
+    "@fastify/sensible": "~5.2.0",
     "@island.is/regulations-tools": "^0.9.0",
     "@nestjs/common": "^10.3.10",
     "@nestjs/core": "^10.3.10",
@@ -123,6 +131,7 @@
     "date-fns": "^2.28.0",
     "dd-trace": "^5.2.0",
     "downshift": "^5.4.3",
+    "fastify-plugin": "~4.5.0",
     "framer-motion": "^11.0.26",
     "hypher": "^0.2.5",
     "js-base64": "2.5.2",
