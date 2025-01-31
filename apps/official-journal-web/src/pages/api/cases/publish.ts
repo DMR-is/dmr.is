@@ -1,34 +1,42 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { logger } from '@dmr.is/logging'
 
 import { createDmrClient } from '../../../lib/api/createClient'
+import { OJOIWebException } from '../../../lib/constants'
+
+const publishCasesBodySchema = z.object({
+  caseIds: z.array(z.string()),
+})
 
 class PublishCasesHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const dmrClient = createDmrClient()
+    try {
+      const dmrClient = createDmrClient()
 
-    const { caseIds } = req.body
+      const check = publishCasesBodySchema.safeParse(req.body)
 
-    if (!caseIds) {
-      return res.status(400).end()
+      if (!check.success) {
+        return res.status(400).json(OJOIWebException.badRequest())
+      }
+
+      await dmrClient.publish({
+        postCasePublishBody: {
+          caseIds: check.data.caseIds,
+        },
+      })
+      return res.status(204).end()
+    } catch (error) {
+      logger.warn('Failed to publish cases', {
+        context: 'PublishCasesHandler',
+        error,
+      })
+
+      return res.status(500).json(OJOIWebException.serverError())
     }
-
-    if (!Array.isArray(caseIds)) {
-      return res.status(400).end()
-    }
-
-    if (!caseIds.length) {
-      return res.status(400).end()
-    }
-
-    await dmrClient.publish({
-      postCasePublishBody: {
-        caseIds: req.body.caseIds.join(','),
-      },
-    })
-    return res.status(204).end()
   }
 }
 
