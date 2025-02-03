@@ -3112,8 +3112,7 @@
             "description": "Description of the main category"
           },
           "departmentId": { "type": "string" }
-        },
-        "required": ["departmentId"]
+        }
       },
       "CaseStatusEnum": {
         "type": "string",
