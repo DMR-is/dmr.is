@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import slugify from 'slugify'
+import { value } from 'submodules/island.is/libs/island-ui/core/src/lib/DatePicker/DatePicker.css'
+import { Department } from '@dmr.is/shared/dto'
 
 import {
   AlertMessage,
   Box,
   Button,
+  Divider,
   GridColumn,
   GridContainer,
   GridRow,
@@ -17,9 +20,14 @@ import {
 } from '@island.is/island-ui/core'
 
 import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
+import { label } from '../../components/editor/EditorInput.mixins'
 import { Section } from '../../components/section/Section'
 import { Category, MainCategory, UpdateMainCategory } from '../../gen/fetch'
-import { useCategories, useMainCategories } from '../../hooks/api'
+import {
+  useCategories,
+  useDepartments,
+  useMainCategories,
+} from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
 
 type NewMainCategory = {
@@ -27,6 +35,7 @@ type NewMainCategory = {
   slug: string
   description: string
   categories: Category[]
+  departmentId: string
 }
 
 export default function CasePublishingOverview() {
@@ -34,17 +43,21 @@ export default function CasePublishingOverview() {
     useState<MainCategory | null>(null)
 
   const [categoriesToBeAdded, setCategoriesToBeAdded] = useState<Category[]>([])
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department['id']>()
 
   const [newMainCategory, setNewMainCategory] = useState<NewMainCategory>({
     title: '',
     slug: '',
     description: '',
+    departmentId: '',
     categories: [],
   })
 
   const [updateBody, setUpdateBody] = useState<UpdateMainCategory>({
     description: '',
     title: '',
+    departmentId: '',
   })
 
   const {
@@ -82,6 +95,7 @@ export default function CasePublishingOverview() {
         slug: '',
         description: '',
         categories: [],
+        departmentId: '',
       })
     },
     onDeleteMainCategorySuccess: () => {
@@ -100,6 +114,7 @@ export default function CasePublishingOverview() {
       pageSize: 1000,
     },
   })
+  const { departments } = useDepartments()
 
   const mainCategoryOptions = mainCategories?.map((category) => ({
     label: category.title,
@@ -152,6 +167,7 @@ export default function CasePublishingOverview() {
     setUpdateBody({
       description: mainCategory.description,
       title: mainCategory.title,
+      departmentId: mainCategory.departmentId,
     })
     setSelectedMainCategory(mainCategory)
   }
@@ -203,12 +219,20 @@ export default function CasePublishingOverview() {
     setCategoriesToBeAdded([...filteredCategories])
   }
 
+  const canCreateMainCategory =
+    newMainCategory.title.length > 0 &&
+    newMainCategory.description.length > 0 &&
+    selectedDepartment
+
   const onCreateMainCategory = () => {
-    createMainCategory({
-      title: newMainCategory.title,
-      description: newMainCategory.description,
-      categories: newMainCategory.categories.map((category) => category.id),
-    })
+    if (canCreateMainCategory) {
+      createMainCategory({
+        title: newMainCategory.title,
+        description: newMainCategory.description,
+        categories: newMainCategory.categories.map((category) => category.id),
+        departmentId: selectedDepartment,
+      })
+    }
   }
 
   const onDeleteMainCategoryCategory = (
@@ -217,9 +241,6 @@ export default function CasePublishingOverview() {
   ) => {
     deleteMainCategoryCategory(mainCategoryId, categoryId)
   }
-
-  const canCreateMainCategory =
-    newMainCategory.title.length > 0 && newMainCategory.description.length > 0
 
   return (
     <Section>
@@ -314,6 +335,43 @@ export default function CasePublishingOverview() {
                         }
                       />
                     </Box>
+
+                    <Box>
+                      <Divider />
+                    </Box>
+                    <Box>
+                      <Select
+                        backgroundColor="blue"
+                        size="sm"
+                        placeholder="Velja deild"
+                        label="Tengja deild við yfirflokk"
+                        options={departments?.map((dept) => ({
+                          label: dept.title,
+                          value: dept.id,
+                        }))}
+                        defaultValue={
+                          selectedMainCategory.departmentId
+                            ? {
+                                label:
+                                  departments?.find(
+                                    (dept) =>
+                                      dept.id ===
+                                      selectedMainCategory.departmentId,
+                                  )?.title ?? '',
+                                value: selectedMainCategory.departmentId,
+                              }
+                            : undefined
+                        }
+                        onChange={(option) =>
+                          setUpdateBody({
+                            ...updateBody,
+                            departmentId:
+                              option?.value ??
+                              selectedMainCategory.departmentId,
+                          })
+                        }
+                      />
+                    </Box>
                     <Box
                       display="flex"
                       justifyContent="spaceBetween"
@@ -348,7 +406,7 @@ export default function CasePublishingOverview() {
                           onDeleteMainCategory(selectedMainCategory.id)
                         }
                       >
-                        Eyða flokk
+                        Eyða flokki
                       </Button>
                     </Box>
                   </Stack>
@@ -451,6 +509,24 @@ export default function CasePublishingOverview() {
                     </Stack>
                   </Box>
                   <Box>
+                    <Divider />
+                  </Box>
+                  <Box>
+                    <Select
+                      backgroundColor="blue"
+                      size="sm"
+                      placeholder="Velja deild"
+                      label="Tengja deild við yfirflokk"
+                      options={departments?.map((dept) => ({
+                        label: dept.title,
+                        value: dept.id,
+                      }))}
+                      onChange={(option) =>
+                        setSelectedDepartment(option?.value)
+                      }
+                    />
+                  </Box>
+                  <Box>
                     <Button
                       disabled={!canCreateMainCategory}
                       size="small"
@@ -526,7 +602,7 @@ export default function CasePublishingOverview() {
                 </Stack>
               </ContentWrapper>
               <ContentWrapper
-                title="Bæta flokk við yfirflokk"
+                title="Bæta flokki við yfirflokk"
                 background="white"
               >
                 <Stack space={[2, 2, 3]}>

@@ -2,11 +2,12 @@ import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Category,
   CreateAdvert,
+  CreateMainCategory,
   DefaultSearchParams,
   Department,
   GetAdvertResponse,
@@ -23,7 +24,6 @@ import {
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
-  MainCategory,
   UpdateAdvertBody,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
@@ -287,24 +287,38 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async insertMainCategory(
-    model: MainCategory,
+    model: CreateMainCategory,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     if (!model) {
       throw new BadRequestException()
     }
 
-    const mainCategory = await this.advertMainCategoryModel.create({
-      title: model.title,
-      slug: model.slug,
-      description: model.description,
-    })
+    const newMainCatId = uuid()
 
-    const relations = model.categories.map((cat) =>
-      this.advertCategoryCategoriesModel.create({
-        mainCategoryId: mainCategory.id,
-        categoryId: cat.id,
-      }),
+    const mainCategory = await this.advertMainCategoryModel.create(
+      {
+        id: newMainCatId,
+        title: model.title,
+        slug: slugify(model.title, { lower: true }),
+        description: model.description,
+        departmentId: model.departmentId,
+      },
+      {
+        transaction,
+      },
+    )
+
+    const relations = model.categories.map((id) =>
+      this.advertCategoryCategoriesModel.create(
+        {
+          mainCategoryId: newMainCatId,
+          categoryId: id,
+        },
+        { transaction },
+      ),
     )
 
     await Promise.all(relations)
@@ -397,6 +411,9 @@ export class JournalService implements IJournalService {
         title: body.title ? body.title : found.title,
         slug: body.title ? slugify(body.title, { lower: true }) : found.slug,
         description: body.description ? body.description : found.description,
+        departmentId: body.departmentId
+          ? body.departmentId
+          : found.departmentId,
       }
 
       await found.update(updateBody, {

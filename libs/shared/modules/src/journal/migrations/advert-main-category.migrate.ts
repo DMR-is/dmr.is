@@ -12,6 +12,7 @@ export function advertMainCategoryMigrate(
     slug: model.slug,
     title: model.title,
     categories: model.categories?.map(advertCategoryMigrate) ?? [],
+    departmentId: model.departmentId,
   }
   return result
 }

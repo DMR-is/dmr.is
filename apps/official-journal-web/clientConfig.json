@@ -3029,6 +3029,11 @@
             "description": "Slug of the main category, used in URLs and API requests.",
             "example": "domstolar-og-rettarfar"
           },
+          "departmentId": {
+            "type": "string",
+            "description": "Department linked to category.",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
           "description": {
             "type": "string",
             "description": "Description of the main category, used on front page.",
@@ -3040,7 +3045,14 @@
             "items": { "$ref": "#/components/schemas/Category" }
           }
         },
-        "required": ["id", "title", "slug", "description", "categories"]
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "departmentId",
+          "description",
+          "categories"
+        ]
       },
       "GetMainCategoriesResponse": {
         "type": "object",
@@ -3068,13 +3080,14 @@
             "type": "string",
             "description": "Description of the main category"
           },
+          "departmentId": { "type": "string" },
           "categories": {
             "description": "Sub categories under this main category",
             "type": "array",
             "items": { "type": "string" }
           }
         },
-        "required": ["title", "description", "categories"]
+        "required": ["title", "description", "departmentId", "categories"]
       },
       "CreateMainCategoryCategories": {
         "type": "object",
@@ -3097,8 +3110,10 @@
           "description": {
             "type": "string",
             "description": "Description of the main category"
-          }
-        }
+          },
+          "departmentId": { "type": "string" }
+        },
+        "required": ["departmentId"]
       },
       "CaseStatusEnum": {
         "type": "string",

@@ -29,6 +29,13 @@ export class MainCategory {
   readonly slug!: string
 
   @ApiProperty({
+    description: 'Department linked to category.',
+    example: '00000000-0000-0000-0000-000000000000',
+    type: String,
+  })
+  readonly departmentId!: string
+
+  @ApiProperty({
     description: 'Description of the main category, used on front page.',
     example: 'Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur.',
     required: true,

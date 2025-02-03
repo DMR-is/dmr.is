@@ -2,6 +2,7 @@ import { Transaction } from 'sequelize'
 import {
   Category,
   CreateAdvert,
+  CreateMainCategory,
   DefaultSearchParams,
   Department,
   GetAdvertResponse,
@@ -53,7 +54,8 @@ export interface IJournalService {
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetMainCategoriesResponse>>
   insertMainCategory(
-    model: MainCategory,
+    model: CreateMainCategory,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<GetMainCategoryResponse>>
 
   insertMainCategoryCategories(

@@ -26,6 +26,7 @@ type CreateMainCategoryParams = {
   title: string
   description: string
   categories: string[]
+  departmentId: string
 }
 
 type UpdateMainCategoryParams = {

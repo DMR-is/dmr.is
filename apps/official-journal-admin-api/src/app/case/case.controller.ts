@@ -255,16 +255,13 @@ export class CaseController {
       throw new BadRequestException('Invalid sub categories')
     }
 
-    const newCategory: MainCategory = {
-      id: id,
-      title: body.title,
-      slug: slugify(body.title, { lower: true }),
-      description: body.description,
-      categories: subCategoriesLookup.result.value.categories,
-    }
-
     ResultWrapper.unwrap(
-      await this.journalService.insertMainCategory(newCategory),
+      await this.journalService.insertMainCategory({
+        categories: body.categories,
+        title: body.title,
+        description: body.description,
+        departmentId: body.departmentId,
+      }),
     )
   }
 

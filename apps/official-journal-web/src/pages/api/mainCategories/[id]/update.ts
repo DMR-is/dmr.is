@@ -9,6 +9,7 @@ import { createDmrClient } from '../../../../lib/api/createClient'
 const createMainCategorySchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
+  departmentId: z.string().optional(),
 })
 
 class UpdateMainCategoryHandler {
@@ -36,6 +37,7 @@ class UpdateMainCategoryHandler {
       updateMainCategory: {
         title: parsed.data.title,
         description: parsed.data.description,
+        departmentId: parsed.data.departmentId,
       },
     })
 

@@ -18,4 +18,11 @@ export class UpdateMainCategory {
   })
   @IsString()
   readonly description?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsString()
+  readonly departmentId?: string
 }
