@@ -15,6 +15,7 @@ import {
   Advert,
   Category,
   CreateAdvert,
+  CreateMainCategory,
   Department,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
@@ -34,7 +35,6 @@ import {
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
-  MainCategory,
   UpdateAdvertBody,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
@@ -91,7 +91,7 @@ export class MockJournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   insertMainCategory(
-    model: MainCategory,
+    model: CreateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }

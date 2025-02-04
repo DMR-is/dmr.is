@@ -18,6 +18,12 @@ export class CreateMainCategory {
   readonly description!: string
 
   @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  readonly departmentId!: string
+
+  @ApiProperty({
     type: [String],
     description: 'Sub categories under this main category',
   })

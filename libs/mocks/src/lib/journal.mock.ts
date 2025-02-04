@@ -184,6 +184,7 @@ const MOCK_MAIN_CATEGORY_DOMSTOLAR: MainCategory = {
   title: 'Dómstólar og réttarfar',
   categories: [],
   slug: 'domstolar',
+  departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   description:
     'Hæstiréttur, lögmenn, lögreglumál, lögfræði, kjaradómur, refsilög, hegningarög, dómsmál og landsdómur.',
 }
@@ -193,6 +194,7 @@ const MOCK_MAIN_CATEGORY_SJAVARUTVEGUR: MainCategory = {
   title: 'Sjávarútvegur, fiskveiðar og fiskirækt',
   categories: [],
   slug: 'sjavarutvegur',
+  departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   description: 'Sjávarútvegur, Veiði - friðun, fiskeldi og hafnarmál.',
 }
 
@@ -201,6 +203,7 @@ const MOCK_MAIN_CATEGORY_LANDBUNADUR: MainCategory = {
   title: 'Landbúnaður',
   categories: [],
   slug: 'landbunadur',
+  departmentId: '637291f2-f7f4-405d-8586-ef88b59cab00',
   description: 'Fóður, hross, hundar, dýravernd og landbúnaður.',
 }
 
