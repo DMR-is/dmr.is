@@ -23,6 +23,7 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
+  GetSimilarAdvertsResponse,
   Institution,
   UpdateAdvertBody,
   UpdateMainCategory,
@@ -729,6 +730,88 @@ export class JournalService implements IJournalService {
           pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
         },
       },
+    })
+  }
+
+  @LogAndHandle()
+  async getSimilarAdverts(
+    advertId: string,
+    limit = 5,
+  ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
+    const originalAdvert = await this.advertModel.findByPk(advertId, {
+      include: [
+        { model: AdvertDepartmentModel, as: 'department' },
+        { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
+        { model: AdvertCategoryModel, as: 'categories', attributes: ['id'] },
+      ],
+    })
+
+    if (!originalAdvert) {
+      throw new NotFoundException(`Advert with ID ${advertId} not found.`)
+    }
+
+    const departmentId = originalAdvert.department?.id
+    const involvedPartyId = originalAdvert.involvedParty?.id
+    const categoryIds = originalAdvert?.categories?.map((c) => c.id) ?? []
+
+    const categoryIdsString = categoryIds.map((id) => `'${id}'`).join(',')
+
+    const whereParams: any = {
+      id: { [Op.ne]: advertId },
+      [Op.or]: [
+        departmentId ? { departmentId } : undefined,
+        involvedPartyId ? { involvedPartyId } : undefined,
+        categoryIds.length
+          ? {
+              id: {
+                [Op.in]: Sequelize.literal(
+                  `(SELECT "advert_id" FROM "advert_categories" WHERE "category_id" IN (${categoryIdsString}))`,
+                ),
+              },
+            }
+          : undefined,
+      ].filter((condition) => condition !== undefined),
+    }
+
+    const similarAdverts = await this.advertModel.findAll({
+      where: whereParams,
+      include: [
+        { model: AdvertDepartmentModel, as: 'department' },
+        { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
+        AdvertAttachmentsModel,
+        AdvertStatusModel,
+        {
+          model: AdvertTypeModel,
+          as: 'type',
+          include: [
+            {
+              model: AdvertDepartmentModel,
+            },
+          ],
+        },
+        {
+          model: AdvertCategoryModel,
+          as: 'categories',
+          through: { attributes: [] },
+          required: true,
+        },
+      ],
+      order: [
+        [
+          Sequelize.literal(`CASE
+            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 1
+            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 2
+            ELSE 3 END`),
+          'ASC',
+        ],
+      ],
+      limit: limit,
+    })
+
+    const mapped = similarAdverts.map(advertMigrate)
+
+    return ResultWrapper.ok({
+      adverts: mapped,
     })
   }
 

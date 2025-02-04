@@ -41,3 +41,12 @@ export class GetAdvertsResponse {
   })
   readonly paging!: Paging
 }
+
+export class GetSimilarAdvertsResponse {
+  @ApiProperty({
+    description: 'List of adverts',
+    required: true,
+    type: [Advert],
+  })
+  readonly adverts!: Array<Advert>
+}
