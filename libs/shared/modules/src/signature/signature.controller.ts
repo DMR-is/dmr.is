@@ -1,14 +1,30 @@
-import { Route } from '@dmr.is/decorators'
+import { Route, TimeLog } from '@dmr.is/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
   UpdateSignatureBody,
+  UpdateSignatureMember,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Inject,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common'
+import {
+  ApiBody,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger'
 
 import { ISignatureService } from './signature.service.interface'
 
@@ -115,6 +131,55 @@ export class SignatureController {
   async getSignatures(@Query() params?: DefaultSearchParams) {
     return ResultWrapper.unwrap(
       await this.signatureService.getSignatures(params),
+    )
+  }
+
+  @Put(':signatureId/members/:memberId')
+  @ApiOperation({ operationId: 'updateSignatureMemeber' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'memberId', type: String, required: true })
+  @ApiBody({ type: UpdateSignatureMember })
+  @ApiNoContentResponse({ status: 204 })
+  @TimeLog()
+  async updateSignatureMember(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('memberId', new UUIDValidationPipe()) memberId: string,
+    @Body() body: UpdateSignatureMember,
+  ) {
+    ResultWrapper.unwrap(
+      await this.signatureService.updateSignatureMember(
+        signatureId,
+        memberId,
+        body,
+      ),
+    )
+  }
+
+  @Post(':signatureId/members')
+  @ApiOperation({ operationId: 'addMemberToSignature' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiNoContentResponse({ status: 204 })
+  @TimeLog()
+  async addMemberToSignature(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.signatureService.addSignatureMember(signatureId),
+    )
+  }
+
+  @Delete(':signatureId/members/:memberId')
+  @ApiOperation({ operationId: 'removeMemberFromSignature' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'memberId', type: String, required: true })
+  @ApiNoContentResponse({ status: 204 })
+  @TimeLog()
+  async removeMemberFromSignature(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('memberId', new UUIDValidationPipe()) memberId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.signatureService.removeSignatureMember(signatureId, memberId),
     )
   }
 }

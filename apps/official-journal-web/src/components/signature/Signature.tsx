@@ -118,7 +118,7 @@ export const Signature = ({ signature }: Props) => {
       </ContentWrapper>
       <ContentWrapper titleVariant="h5" titleAs="h5" title="Undirritað af">
         <Stack dividers space={2}>
-          <Stack space={4}>
+          <Stack space={2} dividers>
             {signature.members.map((m, j) => {
               return (
                 <SignatureMember

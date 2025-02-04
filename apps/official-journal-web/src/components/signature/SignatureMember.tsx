@@ -1,6 +1,7 @@
 import debounce from 'lodash/debounce'
 
 import {
+  Box,
   Button,
   Column,
   Columns,
@@ -58,26 +59,26 @@ export const SignatureMember = ({
       </Columns>
       <Columns space={2}>
         <Column>
-          <OJOIInput
-            label="Texti undir"
-            name="signature-member-below"
-            defaultValue={textBelow}
-            onChange={(e) => debouncedChange('textBelow', e.target.value)}
-          />
+          <Inline justifyContent="spaceBetween" alignY="center">
+            <OJOIInput
+              label="Texti undir"
+              name="signature-member-below"
+              defaultValue={textBelow}
+              onChange={(e) => debouncedChange('textBelow', e.target.value)}
+            />
+            <Button
+              disabled={!onDelete}
+              icon="trash"
+              variant="utility"
+              iconType="outline"
+              size="small"
+              onClick={() => onDelete && onDelete()}
+            >
+              Eyða meðlim
+            </Button>
+          </Inline>
         </Column>
       </Columns>
-      <Inline justifyContent="flexEnd">
-        <Button
-          disabled={!onDelete}
-          icon="trash"
-          iconType="outline"
-          size="small"
-          colorScheme="destructive"
-          onClick={() => onDelete()}
-        >
-          Eyða
-        </Button>
-      </Inline>
     </Stack>
   )
 }

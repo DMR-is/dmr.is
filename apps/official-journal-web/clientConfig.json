@@ -1770,6 +1770,69 @@
         "responses": { "200": { "description": "" } }
       }
     },
+    "/api/v1/signatures/{signatureId}/members/{memberId}": {
+      "put": {
+        "operationId": "updateSignatureMemeber",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSignatureMember" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      },
+      "delete": {
+        "operationId": "removeMemberFromSignature",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/{signatureId}/members": {
+      "post": {
+        "operationId": "addMemberToSignature",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/advert-types/types": {
       "get": {
         "operationId": "getTypes",
@@ -3568,6 +3631,10 @@
       "SignatureMember": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the signature member"
+          },
           "text": {
             "type": "string",
             "description": "The name/title/w.e. of the signature member"
@@ -3589,7 +3656,7 @@
             "description": "The text that comes after the signature name"
           }
         },
-        "required": ["text"]
+        "required": ["id", "text"]
       },
       "Signature": {
         "type": "object",
@@ -4271,15 +4338,6 @@
           "date": {
             "type": "string",
             "description": "Date when the institution signed the signature"
-          },
-          "involvedPartyId": {
-            "type": "string",
-            "description": "The id of the involved party"
-          },
-          "members": {
-            "description": "The members of the signature",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/UpdateSignatureMember" }
           },
           "chairman": {
             "description": "The chairman of the signature",

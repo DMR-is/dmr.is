@@ -193,6 +193,10 @@ export class CaseCreateService implements ICaseCreateService {
     const internalCaseNumber = internalCaseNumberResult.result.value
     const type = typeResult.result.value
     const department = departmentResult.result.value
+    const requestedDate = application.answers.advert.requestedDate
+    const { fastTrack } = getFastTrack(new Date(requestedDate))
+    const involvedPartyId = application.answers.advert.involvedPartyId
+    const message = application.answers.advert?.message ?? null
 
     const channels =
       application.answers.advert.channels?.map((channel) => {
@@ -218,14 +222,21 @@ export class CaseCreateService implements ICaseCreateService {
 
     const signatureBody = Array.isArray(signature)
       ? signature.map((signature) =>
-          getSignatureBody(caseId, signature, additionalSignature),
+          getSignatureBody(
+            caseId,
+            involvedPartyId,
+            signature,
+            additionalSignature,
+          ),
         )
-      : [getSignatureBody(caseId, signature, additionalSignature)]
-
-    const requestedDate = application.answers.advert.requestedDate
-    const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedPartyId = application.answers.advert.involvedPartyId
-    const message = application.answers.advert?.message ?? null
+      : [
+          getSignatureBody(
+            caseId,
+            involvedPartyId,
+            signature,
+            additionalSignature,
+          ),
+        ]
 
     const additions = (application.answers.advert.additions?.filter(
       (addition) => addition.content !== undefined,

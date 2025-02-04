@@ -5,6 +5,7 @@ import {
   GetSignatureResponse,
   GetSignaturesResponse,
   UpdateSignatureBody,
+  UpdateSignatureMember,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -45,6 +46,24 @@ export interface ISignatureService {
   ): Promise<ResultWrapper>
   deleteSignature(
     signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  addSignatureMember(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  removeSignatureMember(
+    signatureId: string,
+    memberId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateSignatureMember(
+    signatureId: string,
+    memberId: string,
+    body: UpdateSignatureMember,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 }

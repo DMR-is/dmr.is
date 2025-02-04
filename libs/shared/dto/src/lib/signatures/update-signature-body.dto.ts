@@ -39,26 +39,6 @@ export class UpdateSignatureBody {
   @IsDateString()
   date?: string
 
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: 'The id of the involved party',
-  })
-  @IsOptional()
-  @IsUUID()
-  involvedPartyId?: string
-
-  @ApiProperty({
-    type: [UpdateSignatureMember],
-    required: false,
-    description: 'The members of the signature',
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateSignatureMember)
-  members?: UpdateSignatureMember[]
-
   /**
    * The chairman of the signature,
    * if chairman is not provided then the type of the signature is regular
