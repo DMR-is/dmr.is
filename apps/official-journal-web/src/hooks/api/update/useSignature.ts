@@ -1,7 +1,11 @@
-import { Key } from 'swr'
+import useSWR, { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { UpdateSignatureBody, UpdateSignatureMember } from '../../../gen/fetch'
+import {
+  GetSignatureResponse,
+  UpdateSignatureBody,
+  UpdateSignatureMember,
+} from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdateSignatureTriggerArgs = UpdateSignatureBody
@@ -57,6 +61,24 @@ export const useSignature = ({
   addSignatureMemberOptions,
   deleteSignatureMemberOptions,
 }: UseUpdateSignatureParams) => {
+  const { data, isLoading, isValidating, error } = useSWR<
+    GetSignatureResponse,
+    Error
+  >(
+    signatureId ? [APIRoutes.Signature] : null,
+    (url: string) =>
+      fetcher<GetSignatureResponse>(url.replace(':id', signatureId), {
+        arg: {
+          method: 'GET',
+        },
+      }),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateOnMount: true,
+    },
+  )
+
   const { trigger: updateSignature, isMutating: isUpdatingSignature } =
     swrMutation<Response, Error, Key, UpdateSignatureTriggerArgs>(
       APIRoutes.Signature,
@@ -103,7 +125,7 @@ export const useSignature = ({
 
   const { trigger: addSignatureMember, isMutating: isAddingSignatureMember } =
     swrMutation<Response, Error, Key, undefined>(
-      APIRoutes.SignatureMember,
+      APIRoutes.SignatureMembers,
       (url: string) =>
         fetcher<Response, undefined>(url.replace(':id', signatureId), {
           arg: {
@@ -139,6 +161,7 @@ export const useSignature = ({
   )
 
   return {
+    signature: data?.signature,
     updateSignature,
     isUpdatingSignature,
     updateSignatureMember,
