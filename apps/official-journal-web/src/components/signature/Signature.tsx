@@ -12,7 +12,7 @@ import {
 
 import {
   Signature as SignatureDto,
-  SignatureMember as SignatureMemberDto,
+  UpdateSignatureMember,
 } from '../../gen/fetch'
 import { useSignature } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
@@ -27,7 +27,14 @@ type Props = {
 
 export const Signature = ({ signature }: Props) => {
   const { refetch, canEdit } = useCaseContext()
-  const { updateSignature, isUpdatingSignature } = useSignature({
+  const {
+    updateSignature,
+    isUpdatingSignature,
+    addSignatureMember,
+    isAddingSignatureMember,
+    removeSignatureMember,
+    updateSignatureMember,
+  } = useSignature({
     signatureId: signature.id,
     updateSignatureOptions: {
       onSuccess: () => {
@@ -39,47 +46,52 @@ export const Signature = ({ signature }: Props) => {
         toast.error('Ekki tókst að uppfæra undirritun')
       },
     },
+    addSignatureMemberOptions: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Undirritara bætt við')
+      },
+      onError: () => {
+        refetch()
+        toast.error('Ekki tókst að bæta við undirritanda')
+      },
+    },
+    deleteSignatureMemberOptions: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Undirritara eytt')
+      },
+      onError: () => {
+        refetch()
+        toast.error('Ekki tókst að eyða undirritanda')
+      },
+    },
+    updateSignatureMemberOptions: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Meðlimur undirritunar uppfærður')
+      },
+      onError: () => {
+        refetch()
+        toast.error('Ekki tókst að uppfæra meðlim undirritunar')
+      },
+    },
   })
 
   const debouncedInstitutionChange = debounce(updateSignature, 500)
+
+  const debouncedMemberChange = debounce(updateSignatureMember, 500)
 
   const onInstitutionChange = (value: string) => {
     debouncedInstitutionChange.cancel()
     debouncedInstitutionChange({ institution: value })
   }
 
-  const handleMemberChange = (
-    key: keyof SignatureMemberDto,
-    value: string,
-    index: number,
-  ) => {
-    const members = signature.members.map((m, i) =>
-      i === index ? { ...m, [key]: value } : m,
-    )
-
-    updateSignature({
-      members: members,
-    })
-  }
-
-  const canDelete = signature.members.length > 1 && canEdit
-  const handleDelete = (index: number) => {
-    updateSignature({
-      members: signature.members.filter((_, i) => i !== index),
-    })
-  }
-
-  const handleAddMember = () => {
-    updateSignature({
-      members: [
-        ...signature.members,
-        {
-          text: '',
-          textAbove: '',
-          textAfter: '',
-          textBelow: '',
-        },
-      ],
+  const onMemberChange = (memberId: string, member: UpdateSignatureMember) => {
+    debouncedMemberChange.cancel()
+    debouncedMemberChange({
+      memberId: memberId,
+      ...member,
     })
   }
 
@@ -93,6 +105,7 @@ export const Signature = ({ signature }: Props) => {
         <Columns space={2}>
           <Column>
             <OJOIInput
+              disabled={!canEdit}
               isValidating={isUpdatingSignature}
               defaultValue={signature.institution}
               label="Stofnun"
@@ -102,6 +115,7 @@ export const Signature = ({ signature }: Props) => {
           </Column>
           <Column>
             <DatePicker
+              disabled={!canEdit}
               locale="is"
               label="Dagsetning undirritunar"
               name="signature-date"
@@ -119,23 +133,28 @@ export const Signature = ({ signature }: Props) => {
       <ContentWrapper titleVariant="h5" titleAs="h5" title="Undirritað af">
         <Stack dividers space={2}>
           <Stack space={2} dividers>
-            {signature.members.map((m, j) => {
-              return (
-                <SignatureMember
-                  key={j}
-                  onChange={(key, value) => handleMemberChange(key, value, j)}
-                  onDelete={canDelete ? () => handleDelete(j) : undefined}
-                  {...m}
-                />
-              )
-            })}
+            {signature.members.map((m) => (
+              <SignatureMember
+                onChange={(key, val) =>
+                  onMemberChange(m.id, {
+                    ...m,
+                    [key]: val,
+                  })
+                }
+                onDelete={() => removeSignatureMember({ memberId: m.id })}
+                key={m.id}
+                {...m}
+              />
+            ))}
           </Stack>
           <Inline justifyContent="flexEnd">
             <Button
+              disabled={!canEdit}
               icon="add"
               iconType="outline"
               size="small"
-              onClick={() => handleAddMember()}
+              loading={isAddingSignatureMember}
+              onClick={() => addSignatureMember()}
             >
               Bæta við undirritanda
             </Button>
