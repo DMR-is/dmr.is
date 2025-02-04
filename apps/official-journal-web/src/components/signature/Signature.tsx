@@ -29,7 +29,7 @@ export const Signature = ({ signature }: Props) => {
   const { refetch, canEdit } = useCaseContext()
   const { updateSignature, isUpdatingSignature } = useSignature({
     signatureId: signature.id,
-    options: {
+    updateSignatureOptions: {
       onSuccess: () => {
         refetch()
         toast.success('Undirritun uppfærð')

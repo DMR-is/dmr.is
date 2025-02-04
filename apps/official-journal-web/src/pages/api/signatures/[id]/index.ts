@@ -3,28 +3,15 @@ import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
-
-const signatureMemberSchema = z.object({
-  text: z.string().optional(),
-  textAbove: z.string().optional(),
-  textBelow: z.string().optional(),
-  textBefore: z.string().optional(),
-  textAfter: z.string().optional(),
-})
+import { createDmrClient } from '../../../../lib/api/createClient'
 
 const bodySchema = z.object({
   institution: z.string().optional(),
   date: z.string().optional(),
-  involvedPartyId: z.string().optional(),
-  members: z.array(signatureMemberSchema).optional(),
-  caseId: z.string().optional(),
-  advertId: z.string().optional(),
-  chairman: signatureMemberSchema.optional(),
   additionalSignature: z.string().optional(),
 })
 
-class UpdateSignatureHandler {
+class SignatureHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -62,6 +49,6 @@ class UpdateSignatureHandler {
   }
 }
 
-const instance = new UpdateSignatureHandler()
+const instance = new SignatureHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)
