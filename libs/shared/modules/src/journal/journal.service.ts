@@ -46,6 +46,7 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -742,7 +743,8 @@ export class JournalService implements IJournalService {
       include: [
         { model: AdvertDepartmentModel, as: 'department' },
         { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
-        { model: AdvertCategoryModel, as: 'categories', attributes: ['id'] },
+        { model: AdvertCategoryModel, as: 'categories' },
+        { model: AdvertTypeModel },
       ],
     })
 
@@ -750,65 +752,62 @@ export class JournalService implements IJournalService {
       throw new NotFoundException(`Advert with ID ${advertId} not found.`)
     }
 
-    const departmentId = originalAdvert.department?.id
-    const involvedPartyId = originalAdvert.involvedParty?.id
-    const categoryIds = originalAdvert?.categories?.map((c) => c.id) ?? []
-
-    const categoryIdsString = categoryIds.map((id) => `'${id}'`).join(',')
-
-    const whereParams: any = {
-      id: { [Op.ne]: advertId },
-      [Op.or]: [
-        departmentId ? { departmentId } : undefined,
-        involvedPartyId ? { involvedPartyId } : undefined,
-        categoryIds.length
-          ? {
-              id: {
-                [Op.in]: Sequelize.literal(
-                  `(SELECT "advert_id" FROM "advert_categories" WHERE "category_id" IN (${categoryIdsString}))`,
-                ),
-              },
-            }
-          : undefined,
-      ].filter((condition) => condition !== undefined),
-    }
+    const departmentId = originalAdvert.department.id
+    const involvedPartyId = originalAdvert.involvedParty.id
+    const categoryIds = originalAdvert.categories?.map((c) => c.id) ?? []
 
     const similarAdverts = await this.advertModel.findAll({
-      where: whereParams,
+      where: {
+        id: {
+          [Op.ne]: advertId,
+        },
+      },
       include: [
-        { model: AdvertDepartmentModel, as: 'department' },
-        { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            id: {
+              [Op.eq]: departmentId,
+            },
+          },
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          where: {
+            id: {
+              [Op.eq]: involvedPartyId,
+            },
+          },
+        },
         AdvertAttachmentsModel,
         AdvertStatusModel,
         {
           model: AdvertTypeModel,
-          as: 'type',
-          include: [
-            {
-              model: AdvertDepartmentModel,
-            },
-          ],
+          attributes: ['id', 'title', 'slug'],
         },
         {
           model: AdvertCategoryModel,
-          as: 'categories',
-          through: { attributes: [] },
-          required: true,
+          attributes: ['id', 'title', 'slug'],
+          where: {
+            id: {
+              [Op.in]: categoryIds,
+            },
+          },
         },
       ],
       order: [
         [
           Sequelize.literal(`CASE
-            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 1
-            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 2
-            ELSE 3 END`),
-          'ASC',
+            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 2
+            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 1
+            ELSE 0 END`),
+          'DESC',
         ],
       ],
       limit: limit,
     })
 
-    const mapped = similarAdverts.map(advertMigrate)
+    const mapped = similarAdverts.map((item) => advertSimilarMigrate(item))
 
     return ResultWrapper.ok({
       adverts: mapped,

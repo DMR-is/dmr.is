@@ -3,6 +3,7 @@ import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
 import { Advert } from './advert.dto'
+import { AdvertSimilar } from './advert-similar.dto'
 
 @ApiResponse({
   status: 404,
@@ -44,9 +45,9 @@ export class GetAdvertsResponse {
 
 export class GetSimilarAdvertsResponse {
   @ApiProperty({
-    description: 'List of adverts',
+    description: 'List of similar adverts',
     required: true,
-    type: [Advert],
+    type: [AdvertSimilar],
   })
-  readonly adverts!: Array<Advert>
+  readonly adverts!: Array<AdvertSimilar>
 }
