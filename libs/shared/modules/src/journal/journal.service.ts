@@ -311,14 +311,12 @@ export class JournalService implements IJournalService {
       },
     )
 
-    const relations = model.categories.map((id) =>
-      this.advertCategoryCategoriesModel.create(
-        {
-          mainCategoryId: newMainCatId,
-          categoryId: id,
-        },
-        { transaction },
-      ),
+    const relations = await this.advertCategoryCategoriesModel.bulkCreate(
+      model.categories.map((id) => ({
+        mainCategoryId: newMainCatId,
+        categoryId: id,
+      })),
+      { transaction },
     )
 
     await Promise.all(relations)
