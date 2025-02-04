@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer'
 import {
-  ArrayMinSize,
   IsArray,
   IsDateString,
   IsOptional,
@@ -11,7 +10,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { SignatureMember } from './signature-member.dto'
+import { UpdateSignatureMember } from './signature-member.dto'
 
 /**
  * The update signature body
@@ -20,7 +19,7 @@ import { SignatureMember } from './signature-member.dto'
 export class UpdateSignatureBody {
   @ApiProperty({
     type: String,
-    required: true,
+    required: false,
     description: 'The name of the institution responsible for the signature',
   })
   @IsOptional()
@@ -33,7 +32,7 @@ export class UpdateSignatureBody {
    */
   @ApiProperty({
     type: String,
-    required: true,
+    required: false,
     description: 'Date when the institution signed the signature',
   })
   @IsOptional()
@@ -42,7 +41,7 @@ export class UpdateSignatureBody {
 
   @ApiProperty({
     type: String,
-    required: true,
+    required: false,
     description: 'The id of the involved party',
   })
   @IsOptional()
@@ -50,34 +49,15 @@ export class UpdateSignatureBody {
   involvedPartyId?: string
 
   @ApiProperty({
-    type: [SignatureMember],
-    required: true,
+    type: [UpdateSignatureMember],
+    required: false,
     description: 'The members of the signature',
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SignatureMember)
-  @ArrayMinSize(1)
-  members?: SignatureMember[]
-
-  @ApiProperty({
-    type: String,
-    required: true,
-    description: 'The case id of the signature',
-  })
-  @IsOptional()
-  @IsUUID()
-  caseId?: string
-
-  @ApiProperty({
-    type: String,
-    required: true,
-    description: 'The advert id of the signature',
-  })
-  @IsOptional()
-  @IsUUID()
-  advertId?: string
+  @Type(() => UpdateSignatureMember)
+  members?: UpdateSignatureMember[]
 
   /**
    * The chairman of the signature,
@@ -85,13 +65,13 @@ export class UpdateSignatureBody {
    * @type {SignatureMember}
    */
   @ApiProperty({
-    type: SignatureMember,
+    type: UpdateSignatureMember,
     required: false,
     description: 'The chairman of the signature',
   })
   @IsOptional()
-  @Type(() => SignatureMember)
-  chairman?: SignatureMember
+  @Type(() => UpdateSignatureMember)
+  chairman?: UpdateSignatureMember
 
   @ApiProperty({
     type: String,

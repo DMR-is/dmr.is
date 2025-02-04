@@ -9,20 +9,20 @@ import {
   DefaultSearchParams,
   GetSignatureResponse,
   GetSignaturesResponse,
-  SignatureMember,
   UpdateSignatureBody,
+  UpdateSignatureMember,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import {
-  BadRequestException,
   Inject,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertInvolvedPartyModel } from '../journal/models'
 import { signatureMigrate } from './migrations/signature.migrate'
 import {
   AdvertSignaturesModel,
@@ -33,7 +33,12 @@ import {
   SignatureTypeModel,
 } from './models'
 import { ISignatureService } from './signature.service.interface'
-import { getDefaultOptions, signatureParams, WhereParams } from './utils'
+import {
+  getDefaultOptions,
+  signatureParams,
+  signatureTemplate,
+  WhereParams,
+} from './utils'
 
 export class SignatureService implements ISignatureService {
   constructor(
@@ -56,8 +61,8 @@ export class SignatureService implements ISignatureService {
   @LogAndHandle()
   @Transactional()
   private async updateMember(
-    member: SignatureMemberModel,
-    body: SignatureMember,
+    memberId: string,
+    body: UpdateSignatureMember,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     await this.signatureMemberModel.update(
@@ -69,7 +74,7 @@ export class SignatureService implements ISignatureService {
       },
       {
         where: {
-          id: member.id,
+          id: memberId,
         },
         transaction,
       },
@@ -214,6 +219,39 @@ export class SignatureService implements ISignatureService {
         html: body.html === '' ? '<div></div>' : body.html,
       },
       { transaction, returning: ['id'] },
+    )
+
+    const newSignature = await this.signatureModel.findByPk(
+      createdSignature.id,
+      {
+        include: [
+          {
+            model: SignatureMemberModel,
+            as: 'members',
+          },
+          {
+            model: SignatureTypeModel,
+            as: 'type',
+          },
+          {
+            model: AdvertInvolvedPartyModel,
+            as: 'involvedParty',
+          },
+        ],
+        transaction,
+      },
+    )
+
+    if (!newSignature) {
+      throw new NotFoundException(`Signature<${createdSignature.id}> not found`)
+    }
+
+    const markup = signatureTemplate(newSignature)
+    await newSignature.update(
+      {
+        html: markup,
+      },
+      { transaction },
     )
 
     await this.signatureMembersModel.bulkCreate(
@@ -417,79 +455,86 @@ export class SignatureService implements ISignatureService {
       }
 
       ResultWrapper.unwrap(
-        await this.updateMember(chairman, body.chairman, transaction),
+        await this.updateMember(chairman.id, body.chairman, transaction),
       )
     }
 
     if (body.members) {
-      const members = await this.signatureMembersModel.findAll({
-        where: {
-          signatureId: id,
-        },
-        transaction,
-      })
-
-      const ids = members
-        .map((m) => m.signatureMemberId)
-        .filter((m) => m !== signature.chairmanId)
-
-      await this.signatureMembersModel.destroy({
-        where: {
-          signatureId: id,
-          signatureMemberId: {
-            [Op.in]: ids,
-          },
-        },
-        transaction,
-      })
-
-      await this.signatureMemberModel.destroy({
-        where: {
-          id: ids,
-        },
-        transaction,
-      })
-
-      const newMembers = await this.signatureMemberModel.bulkCreate(
-        body.members.map((m) => ({
-          text: m.text,
-          textAbove: m.textAbove,
-          textBelow: m.textBelow,
-          textAfter: m.textAfter,
-        })),
-        { transaction, returning: true },
-      )
-
-      await this.signatureMembersModel.bulkCreate(
-        newMembers.map((m) => ({
-          signatureId: id,
-          signatureMemberId: m.id,
-        })),
-        { transaction },
-      )
+      // const members = await this.signatureMembersModel.findAll({
+      //   where: {
+      //     signatureId: id,
+      //   },
+      //   transaction,
+      // })
+      // const ids = members
+      //   .map((m) => m.signatureMemberId)
+      //   .filter((m) => m !== signature.chairmanId)
+      // await this.signatureMembersModel.destroy({
+      //   where: {
+      //     signatureId: id,
+      //     signatureMemberId: {
+      //       [Op.in]: ids,
+      //     },
+      //   },
+      //   transaction,
+      // })
+      // await this.signatureMemberModel.destroy({
+      //   where: {
+      //     id: {
+      //       [Op.in]: ids,
+      //     },
+      //   },
+      //   transaction,
+      // })
+      // const newMembers = await this.signatureMemberModel.bulkCreate(
+      //   body.members.map((m) => ({
+      //     text: m.text,
+      //     textAbove: m.textAbove,
+      //     textBelow: m.textBelow,
+      //     textAfter: m.textAfter,
+      //   })),
+      //   { transaction, returning: true },
+      // )
+      // await this.signatureMembersModel.bulkCreate(
+      //   newMembers.map((m) => ({
+      //     signatureId: id,
+      //     signatureMemberId: m.id,
+      //   })),
+      //   { transaction },
+      // )
     }
 
-    if (body.caseId) {
-      await this.caseSignaturesModel.destroy({
-        where: {
-          signatureId: id,
+    const updatedSignature = await this.signatureModel.findByPk(id, {
+      include: [
+        {
+          model: SignatureMemberModel,
+          order: [['createdAt', 'ASC']],
+          as: 'members',
         },
-        transaction,
-      })
+        {
+          model: SignatureTypeModel,
+          as: 'type',
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          as: 'involvedParty',
+        },
+      ],
+      transaction,
+    })
 
-      await this.createCaseSignatures(id, body.caseId, transaction)
+    if (!updatedSignature) {
+      throw new NotFoundException(`Signature<${id}> not found`)
     }
 
-    if (body.advertId) {
-      await this.advertSignaturesModel.destroy({
-        where: {
-          signatureId: id,
-        },
-        transaction,
-      })
+    const newMarkup = signatureTemplate(updatedSignature)
 
-      await this.createAdvertSignatures(id, body.advertId, transaction)
-    }
+    await updatedSignature.update(
+      {
+        html: newMarkup,
+      },
+      { transaction },
+    )
 
     return ResultWrapper.ok()
   }

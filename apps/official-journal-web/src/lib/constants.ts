@@ -163,6 +163,7 @@ export enum APIRoutes {
   UpdatePreviousCaseStatus = '/api/cases/:id/updatePreviousStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
+  UpdateSignature = '/api/signatures/:id',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',
   UpdateAdvertWithCorrection = '/api/cases/:id/updateAdvertWithCorrection',
   UpdateCategories = '/api/cases/:id/updateCategories',

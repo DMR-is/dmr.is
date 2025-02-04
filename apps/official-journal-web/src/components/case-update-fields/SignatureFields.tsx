@@ -1,6 +1,6 @@
 import { AccordionItem } from '@island.is/island-ui/core'
 
-import { Signature } from '../signature/Signature'
+import { Signatures } from '../signature/Signatures'
 
 type Props = {
   toggle: boolean
@@ -17,7 +17,7 @@ export const SignatureFields = ({ toggle, onToggle }: Props) => {
       labelVariant="h5"
       iconVariant="small"
     >
-      <Signature />
+      <Signatures />
     </AccordionItem>
   )
 }

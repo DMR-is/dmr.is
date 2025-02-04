@@ -1,9 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PartialType } from '@nestjs/swagger'
 
 /**
  * Represents a signature member.
  */
 export class SignatureMember {
+  @ApiProperty({
+    type: String,
+    required: true,
+    description: 'The id of the signature member',
+  })
+  id!: string
   /**
    * The name/title/w.e. of the signature member.
    */
@@ -50,4 +56,13 @@ export class SignatureMember {
     description: 'The text that comes after the signature name',
   })
   textAfter?: string
+}
+
+export class UpdateSignatureMember extends PartialType(SignatureMember) {
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'The id of the signature member',
+  })
+  override id!: string
 }
