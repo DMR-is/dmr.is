@@ -28,7 +28,6 @@ import {
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
   CaseStatusEnum,
-  CreateSignatureBody,
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -187,7 +186,7 @@ export const getSignatureBody = (
   involvedPartyId: string,
   signature: ApplicationSignature | ApplicationCommitteeSignature,
   additionalSignature?: string,
-): CreateSignatureBody => {
+) => {
   const hasChairman = 'chairman' in signature
 
   return {
@@ -434,7 +433,7 @@ export const signatureMapper = (
   type: SignatureType,
   caseId: string,
   involvedPartyId: string,
-): CreateSignatureBody[] => {
+) => {
   if (type === SignatureType.Committee) {
     const committeeObject = {
       caseId: caseId,

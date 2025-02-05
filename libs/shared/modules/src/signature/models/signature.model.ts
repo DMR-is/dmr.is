@@ -2,6 +2,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  ForeignKey,
   HasMany,
   Model,
   Table,
@@ -9,8 +10,6 @@ import {
 
 import { CaseModel } from '../../case/models'
 import { AdvertInvolvedPartyModel, AdvertModel } from '../../journal/models'
-import { AdvertSignaturesModel } from './advert-signatures.model'
-import { CaseSignaturesModel } from './case-signatures.model'
 import { SignatureRecordModel } from './signature-record.model'
 
 @Table({ tableName: 'signature', timestamps: false })
@@ -36,6 +35,7 @@ export class SignatureModel extends Model {
   })
   html!: string
 
+  @ForeignKey(() => AdvertInvolvedPartyModel)
   @Column({
     type: DataType.UUID,
     allowNull: false,
@@ -43,6 +43,7 @@ export class SignatureModel extends Model {
   })
   involvedPartyId!: string
 
+  @ForeignKey(() => CaseModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -50,6 +51,7 @@ export class SignatureModel extends Model {
   })
   caseId!: string
 
+  @ForeignKey(() => AdvertModel)
   @Column({
     type: DataType.UUID,
     allowNull: true,
@@ -57,15 +59,21 @@ export class SignatureModel extends Model {
   })
   advertId!: string | null
 
-  @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
+  @Column({
+    type: DataType.DATE,
+    field: 'created',
+  })
+  created!: Date
+
+  @BelongsTo(() => AdvertInvolvedPartyModel)
   involvedParty!: AdvertInvolvedPartyModel
 
-  @BelongsTo(() => CaseSignaturesModel, 'case_id')
+  @BelongsTo(() => CaseModel)
   case!: CaseModel
 
-  @BelongsTo(() => AdvertSignaturesModel, 'advert_id')
+  @BelongsTo(() => AdvertModel)
   advert!: AdvertModel | null
 
-  @HasMany(() => SignatureRecordModel, 'signature_id')
+  @HasMany(() => SignatureRecordModel)
   records!: SignatureRecordModel[]
 }

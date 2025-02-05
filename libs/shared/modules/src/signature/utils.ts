@@ -1,85 +1,16 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
-import { Op } from 'sequelize'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { DefaultSearchParams } from '@dmr.is/shared/dto'
 
-import { AdvertInvolvedPartyModel } from '../journal/models'
-import {
-  SignatureMemberModel,
-  SignatureModel,
-  SignatureTypeModel,
-} from './models'
-
-export const getDefaultOptions = (params?: DefaultSearchParams) => {
-  const page = params?.page || 1
-  const pageSize = params?.pageSize || DEFAULT_PAGE_SIZE
-  return {
-    distinct: true,
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
-    include: [
-      {
-        model: SignatureMemberModel,
-        as: 'members',
-      },
-      {
-        model: SignatureTypeModel,
-        as: 'type',
-      },
-      {
-        model: AdvertInvolvedPartyModel,
-        as: 'involvedParty',
-      },
-    ],
-  }
-}
-
-export type WhereParams = {
-  search?: string
-  involvedPartyId?: string
-  caseId?: string
-  advertId?: string
-  signatureTypeId?: string
-}
-
-type WhereClause = {
-  institution?: {
-    [Op.like]: string
-  }
-  involvedPartyId?: {
-    [Op.eq]: string
-  }
-}
-
-export const signatureParams = (params?: WhereParams) => {
-  // Initialize the where clause object must be declared inside the function to avoid side effects
-  const whereClause: WhereClause = {}
-
-  if (params?.search) {
-    whereClause.institution = {
-      [Op.like]: `%${params.search}%`,
-    }
-  }
-
-  if (params?.involvedPartyId) {
-    whereClause.involvedPartyId = {
-      [Op.eq]: params.involvedPartyId,
-    }
-  }
-
-  return whereClause
-}
+import { SignatureMemberModel } from './models/signature-member.model'
+import { SignatureRecordModel } from './models/signature-record.model'
 
 const memberTemplate = (member: SignatureMemberModel) => {
-  if (!member.text) return ''
-
   const styleObject = {
     marginBottom: member.textBelow ? '0' : '1.5em',
   }
 
   // TODO: add hypante (available in newer versions of island.is submodule (ui core lib))
-  const name = member.text
+  const name = member.name
   const above = member.textAbove
   const after = member.textAfter
   const below = member.textBelow
@@ -99,8 +30,8 @@ const memberTemplate = (member: SignatureMemberModel) => {
   `
 }
 
-export const signatureTemplate = (signature: SignatureModel) => {
-  const membersCount = signature?.members?.length || 0
+export const signatureTemplate = (record: SignatureRecordModel) => {
+  const membersCount = record?.members?.length || 0
 
   const styleObject = {
     display: membersCount > 1 ? 'grid' : 'block',
@@ -112,22 +43,22 @@ export const signatureTemplate = (signature: SignatureModel) => {
         : '1fr 1fr',
   }
 
-  const date = format(new Date(signature.date), 'd MMMM yyyy', {
+  const formattedDate = format(new Date(record.signatureDate), 'd MMMM yyyy', {
     locale: is,
   })
 
-  const chairmanMarkup = signature.chairman
+  const chairmanMarkup = record.chairman
     ? `<div style="margin-bottom: 1.5em;">${memberTemplate(
-        signature.chairman,
+        record.chairman,
       )}</div>`
     : ''
 
   const membersMarkup =
-    signature.members?.map((member) => memberTemplate(member)).join('') ?? ''
+    record.members?.map((member) => memberTemplate(member)).join('') ?? ''
 
   return `
       <div class="signature">
-        <p align="center">${signature.institution} <span class="signature__date">${date}</span></p>
+        <p align="center">${record.institution} <span class="signature__date">${formattedDate}</span></p>
         ${chairmanMarkup}
         <div style="margin-bottom: 1.5em; display: ${styleObject.display}; grid-template-columns: ${styleObject.gridTemplateColumns};" class="signature__content">
         ${membersMarkup}

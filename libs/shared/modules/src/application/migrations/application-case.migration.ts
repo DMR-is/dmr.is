@@ -10,7 +10,7 @@ import {
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   const fullHtml = `
     ${model.html}
-    ${model.signatures?.map((signature) => signature.html).join('')}
+    ${model.signature.html}
   `
 
   return {

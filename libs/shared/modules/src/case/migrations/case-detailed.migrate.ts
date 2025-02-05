@@ -52,9 +52,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     channels: model.channels
       ? model.channels.map((c) => caseChannelMigrate(c))
       : [],
-    signatures: model.signatures
-      ? model.signatures.map((s) => signatureMigrate(s))
-      : [],
+    signature: signatureMigrate(model.signature),
     comments: model.comments
       ? model.comments.map((c) => commentMigrate(c))
       : [],

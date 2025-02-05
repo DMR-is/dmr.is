@@ -80,7 +80,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
-import { SignatureModel } from '../signature/models'
+import { SignatureModel } from '../signature/models/signature.model'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
@@ -891,7 +891,7 @@ export class CaseService implements ICaseService {
       await this.utilityService.advertStatusLookup(AdvertStatus.Published)
     ).unwrap()
 
-    const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
+    const signatureHtml = activeCase.signature.html
 
     const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
     const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`

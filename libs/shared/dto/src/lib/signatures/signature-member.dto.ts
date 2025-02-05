@@ -1,8 +1,5 @@
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger'
-
-/**
- * Represents a signature member.
- */
+;/ */
 export class SignatureMember {
   @ApiProperty({
     type: String,
@@ -10,53 +7,45 @@ export class SignatureMember {
     description: 'The id of the signature member',
   })
   id!: string
-  /**
-   * The name/title/w.e. of the signature member.
-   */
   @ApiProperty({
     type: String,
     required: true,
     description: 'The name/title/w.e. of the signature member',
   })
-  text!: string
+  name!: string
 
-  /**
-   * The text that comes above the signature member value.
-   */
   @ApiProperty({
     type: String,
-    required: false,
+    nullable: true,
     description: 'The text comes above the signature name',
   })
-  textAbove?: string
+  textAbove!: string | null
 
   @ApiProperty({
     type: String,
-    required: false,
+    nullable: true,
     description: 'The text that comes before the signature name',
   })
-  textBefore?: string
+  textBefore!: string | null
 
-  /**
-   * The text that comes below the signature name.
-   */
   @ApiProperty({
     type: String,
-    required: false,
+    nullable: true,
     description: 'The text that comes below the signature name',
   })
-  textBelow?: string
+  textBelow!: string | null
 
-  /**
-   * The text that comes after the signature name.
-   */
   @ApiProperty({
     type: String,
-    required: false,
+    nullable: true,
     description: 'The text that comes after the signature name',
   })
-  textAfter?: string
+  textAfter!: string | null
 }
+
+export class CreateSignatureMember extends OmitType(SignatureMember, [
+  'id',
+] as const) {}
 
 export class UpdateSignatureMember extends PartialType(
   OmitType(SignatureMember, ['id'] as const),

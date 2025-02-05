@@ -170,12 +170,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       `,
         )
         .join(''),
-      signature: activeCase.signatures
-        .map(
-          (signature) =>
-            `<section class="regulation__signature">${signature.html}</section>`,
-        )
-        .join(''),
+      signature: activeCase.signature.html,
     })
 
     const pdfResults = await this.generatePdfFromHtml(markup)

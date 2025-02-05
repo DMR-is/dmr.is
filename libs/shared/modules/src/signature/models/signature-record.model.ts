@@ -1,12 +1,16 @@
 import {
+  BelongsTo,
   Column,
   DataType,
+  ForeignKey,
   HasMany,
+  HasOne,
   Model,
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
+import { SignatureModel } from './signature.model'
 import { SignatureMemberModel } from './signature-member.model'
 
 @Table({ tableName: 'signature_record', timestamps: false })
@@ -38,6 +42,31 @@ export class SignatureRecordModel extends Model {
   })
   additional!: string | null
 
-  @HasMany(() => SignatureMemberModel, 'signature_record_id')
+  @ForeignKey(() => SignatureModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'signature_id',
+  })
+  signatureId!: string
+
+  @ForeignKey(() => SignatureMemberModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'chairman_id',
+  })
+  chairmanId!: string | null
+
+  @BelongsTo(() => SignatureModel, {
+    foreignKey: 'signature_id',
+    as: 'signature',
+  })
+  signature!: SignatureModel
+
+  @HasOne(() => SignatureMemberModel)
+  chairman!: SignatureMemberModel | null
+
+  @HasMany(() => SignatureMemberModel)
   members!: SignatureMemberModel[]
 }

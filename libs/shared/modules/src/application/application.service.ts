@@ -317,34 +317,34 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId),
       )
 
-      const { signatures } = ResultWrapper.unwrap(
-        await this.signatureService.getSignaturesByCaseId(
-          caseLookup.id,
-          undefined,
-          transaction,
-        ),
-      )
+      // const { signatures } = ResultWrapper.unwrap(
+      //   await this.signatureService.getSignaturesByCaseId(
+      //     caseLookup.id,
+      //     undefined,
+      //     transaction,
+      //   ),
+      // )
 
-      Promise.all(
-        signatures.map(async (signature) => {
-          this.signatureService.deleteSignature(signature.id, transaction)
-        }),
-      )
+      // Promise.all(
+      //   signatures.map(async (signature) => {
+      //     this.signatureService.deleteSignature(signature.id, transaction)
+      //   }),
+      // )
 
-      const signatureArray = signatureMapper(
-        application.answers.signatures,
-        application.answers.misc.signatureType,
-        caseLookup.id,
-        caseLookup.involvedPartyId,
-      )
-      Promise.all(
-        signatureArray.map(async (signature) => {
-          await this.signatureService.createCaseSignature(
-            signature,
-            transaction,
-          )
-        }),
-      )
+      // const signatureArray = signatureMapper(
+      //   application.answers.signatures,
+      //   application.answers.misc.signatureType,
+      //   caseLookup.id,
+      //   caseLookup.involvedPartyId,
+      // )
+      // Promise.all(
+      //   signatureArray.map(async (signature) => {
+      //     await this.signatureService.createCaseSignature(
+      //       signature,
+      //       transaction,
+      //     )
+      //   }),
+      // )
 
       ResultWrapper.unwrap(
         await this.caseService.updateCase(

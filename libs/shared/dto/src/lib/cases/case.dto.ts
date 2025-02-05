@@ -276,12 +276,9 @@ export class CaseDetailed {
   comments!: CommentDto[]
 
   @ApiProperty({
-    type: [Signature],
+    type: Signature,
   })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Signature)
-  signatures!: Signature[]
+  signature!: Signature
 
   @ApiProperty({
     type: [ApplicationAttachment],
