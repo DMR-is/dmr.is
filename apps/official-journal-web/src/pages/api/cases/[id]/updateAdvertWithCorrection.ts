@@ -13,8 +13,6 @@ const correctionSchema = z.object({
 })
 
 class CreateCorrectionHandler {
-  private readonly dmrClient = createDmrClient()
-
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -31,7 +29,9 @@ class CreateCorrectionHandler {
 
     const { caseId, ...rest } = body
 
-    await this.dmrClient.updateCaseAndAddCorrection({
+    const dmrClient = createDmrClient()
+
+    await dmrClient.updateCaseAndAddCorrection({
       id: caseId,
       updateAdvertHtmlCorrection: rest,
     })
