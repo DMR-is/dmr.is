@@ -1,5 +1,10 @@
 import { Transaction } from 'sequelize'
-import { CreateSignature, GetSignature } from '@dmr.is/shared/dto'
+import {
+  CreateSignature,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ISignatureService {
@@ -8,6 +13,54 @@ export interface ISignatureService {
     body: CreateSignature,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetSignature>>
+
+  updateSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    body: UpdateSignatureRecord,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
+    body: UpdateSignatureMember,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  getSignatureForInvolvedParty(
+    involvedPartyId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  getSignature(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  getSignatureByCaseId(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  createSignatureMember(
+    signatureId: string,
+    recordId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  deleteSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  createSignatureRecord(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 
   // createCaseSignature(
   //   body: CreateSignatureBody,

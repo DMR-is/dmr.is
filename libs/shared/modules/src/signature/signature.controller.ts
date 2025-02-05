@@ -1,9 +1,30 @@
 import { TimeLog } from '@dmr.is/decorators'
-import { CreateSignature } from '@dmr.is/shared/dto'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import {
+  CreateSignature,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param, Post } from '@nestjs/common'
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common'
+import {
+  ApiBody,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { ISignatureService } from './signature.service.interface'
 
@@ -17,17 +38,138 @@ export class SignatureController {
     private readonly signatureService: ISignatureService,
   ) {}
 
+  @Put(':signatureId/records/:recordId/members/:memberId')
+  @ApiOperation({ operationId: 'updateSignatureMember' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiParam({ name: 'memberId', type: String, required: true })
+  @ApiBody({ type: UpdateSignatureMember })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async updateSignatureMember(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('recordId', new UUIDValidationPipe()) recordId: string,
+    @Param('memberId', new UUIDValidationPipe()) memberId: string,
+    @Body() body: UpdateSignatureMember,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.updateSignatureMember(
+        signatureId,
+        recordId,
+        memberId,
+        body,
+      ),
+    )
+  }
+
+  @Delete(':signatureId/records/:recordId/members/:memberId')
+  @ApiOperation({ operationId: 'deleteSignatureMember' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiParam({ name: 'memberId', type: String, required: true })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async deleteSignatureMember(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('recordId', new UUIDValidationPipe()) recordId: string,
+    @Param('memberId', new UUIDValidationPipe()) memberId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.deleteSignatureMember(
+        signatureId,
+        recordId,
+        memberId,
+      ),
+    )
+  }
+
+  @Post(':signatureId/records/:recordId/members')
+  @ApiOperation({ operationId: 'createSignatureMember' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async createSignatureMember(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('recordId', new UUIDValidationPipe()) recordId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.createSignatureMember(signatureId, recordId),
+    )
+  }
+
+  @Put(':signatureId/records/:recordId')
+  @ApiOperation({ operationId: 'updateSignatureRecord' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiBody({ type: UpdateSignatureRecord })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async updateSignatureRecord(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('recordId', new UUIDValidationPipe()) recordId: string,
+    @Body() body: UpdateSignatureRecord,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.updateSignatureRecord(
+        signatureId,
+        recordId,
+        body,
+      ),
+    )
+  }
+
+  @Post(':signatureId/records')
+  @ApiOperation({ operationId: 'createSignatureRecord' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async createSignatureRecord(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.createSignatureRecord(signatureId),
+    )
+  }
+
   @Post(':caseId')
   @ApiOperation({ operationId: 'createSignature' })
   @ApiParam({ name: 'caseId', type: String, required: true })
   @ApiBody({ type: CreateSignature, required: true })
+  @ApiNoContentResponse()
   @TimeLog()
   async createSignature(
     @Param('caseId') caseId: string,
     @Body() body: CreateSignature,
-  ) {
-    return ResultWrapper.unwrap(
+  ): Promise<void> {
+    ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, body),
+    )
+  }
+
+  @Get('signatures/:caseId')
+  @ApiOperation({ operationId: 'getSignatureByCaseId' })
+  @ApiParam({ name: 'caseId', type: String, required: true })
+  @ApiResponse({ type: GetSignature })
+  @TimeLog()
+  async getSignatureByCaseId(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ): Promise<GetSignature> {
+    return ResultWrapper.unwrap(
+      await this.signatureService.getSignatureByCaseId(caseId),
+    )
+  }
+
+  @Get(':signatureId')
+  @ApiOperation({ operationId: 'getSignature' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiResponse({ type: GetSignature })
+  @TimeLog()
+  async getSignature(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+  ): Promise<GetSignature> {
+    return ResultWrapper.unwrap(
+      await this.signatureService.getSignature(signatureId),
     )
   }
 

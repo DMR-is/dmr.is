@@ -6,11 +6,11 @@ import { Signature } from './Signature'
 export const Signatures = () => {
   const { currentCase } = useCaseContext()
 
-  const { signatures } = currentCase
+  const { signature } = currentCase
 
   return (
     <Stack space={2}>
-      {signatures.map((s, i) => (
+      {signature.records.map((s, i) => (
         <Signature key={i} signature={s} />
       ))}
     </Stack>

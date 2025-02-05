@@ -10,10 +10,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import {
-  Signature as SignatureDto,
-  UpdateSignatureMember,
-} from '../../gen/fetch'
+import { SignatureRecord } from '../../gen/fetch'
 import { useSignature } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { SignatureDislay } from '../advert-display/SignatureDisplay'
@@ -22,7 +19,7 @@ import { OJOIInput } from '../select/OJOIInput'
 import { SignatureMember } from './SignatureMember'
 
 type Props = {
-  signature: SignatureDto
+  signature: SignatureRecord
 }
 
 export const Signature = ({ signature }: Props) => {
@@ -87,13 +84,13 @@ export const Signature = ({ signature }: Props) => {
     debouncedInstitutionChange({ institution: value })
   }
 
-  const onMemberChange = (memberId: string, member: UpdateSignatureMember) => {
-    debouncedMemberChange.cancel()
-    debouncedMemberChange({
-      memberId: memberId,
-      ...member,
-    })
-  }
+  // const onMemberChange = (memberId: string, member: UpdateSignatureMember) => {
+  //   debouncedMemberChange.cancel()
+  //   debouncedMemberChange({
+  //     memberId: memberId,
+  //     ...member,
+  //   })
+  // }
 
   return (
     <Stack space={2}>
@@ -119,7 +116,7 @@ export const Signature = ({ signature }: Props) => {
               locale="is"
               label="Dagsetning undirritunar"
               name="signature-date"
-              selected={new Date(signature.date)}
+              selected={new Date(signature.signatureDate)}
               placeholderText="Dagsetning undirritunar"
               size="sm"
               backgroundColor="blue"
@@ -135,12 +132,7 @@ export const Signature = ({ signature }: Props) => {
           <Stack space={2} dividers>
             {signature.members.map((m) => (
               <SignatureMember
-                onChange={(key, val) =>
-                  onMemberChange(m.id, {
-                    ...m,
-                    [key]: val,
-                  })
-                }
+                onChange={() => console.log('change')}
                 onDelete={() => removeSignatureMember({ memberId: m.id })}
                 key={m.id}
                 {...m}

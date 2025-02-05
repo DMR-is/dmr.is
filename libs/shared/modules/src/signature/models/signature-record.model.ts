@@ -64,7 +64,10 @@ export class SignatureRecordModel extends Model {
   })
   signature!: SignatureModel
 
-  @HasOne(() => SignatureMemberModel)
+  @BelongsTo(() => SignatureMemberModel, {
+    foreignKey: 'chairman_id',
+    as: 'chairman',
+  })
   chairman!: SignatureMemberModel | null
 
   @HasMany(() => SignatureMemberModel)

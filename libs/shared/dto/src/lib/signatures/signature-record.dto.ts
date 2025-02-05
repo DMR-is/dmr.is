@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 import { CreateSignatureMember, SignatureMember } from './signature-member.dto'
 
@@ -67,3 +67,11 @@ export class CreateSignatureRecord {
   })
   members!: CreateSignatureMember[]
 }
+
+export class UpdateSignatureRecord extends PartialType(
+  PickType(CreateSignatureRecord, [
+    'institution',
+    'signatureDate',
+    'additonal',
+  ]),
+) {}

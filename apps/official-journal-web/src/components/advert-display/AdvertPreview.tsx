@@ -18,10 +18,7 @@ type Props = {
 }
 export const AdvertPreview = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
-
-  const signatureDate = currentCase.signatures.slice(-1)[0]?.date
-
-  const signatureHTML = currentCase.signatures.map((s) => s.html).join('')
+  const { signatureDate, html: signatureHtml } = currentCase.signature
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -61,7 +58,7 @@ export const AdvertPreview = ({ disclosure }: Props) => {
                     <Box
                       className={styles.bodyText}
                       dangerouslySetInnerHTML={{
-                        __html: currentCase.html + signatureHTML,
+                        __html: currentCase.html + signatureHtml,
                       }}
                     ></Box>
                   </Box>

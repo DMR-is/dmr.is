@@ -1506,331 +1506,27 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/signatures/involved-party/{id}": {
-      "get": {
-        "operationId": "getSignaturesForInvolvedParty",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "description": "String to search for",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "ids",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": [],
-              "type": "array",
-              "items": { "type": "string" }
-            }
-          },
-          {
-            "name": "page",
-            "description": "Page number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "description": "Page size number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetSignaturesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/signatures/case/{id}": {
-      "get": {
-        "operationId": "getSignaturesByCaseId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "description": "String to search for",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "ids",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": [],
-              "type": "array",
-              "items": { "type": "string" }
-            }
-          },
-          {
-            "name": "page",
-            "description": "Page number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "description": "Page size number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetSignaturesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/signatures/advert/{id}": {
-      "get": {
-        "operationId": "getSignaturesByAdvertId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "description": "String to search for",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "ids",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": [],
-              "type": "array",
-              "items": { "type": "string" }
-            }
-          },
-          {
-            "name": "page",
-            "description": "Page number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "description": "Page size number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetSignaturesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/signatures/{id}": {
-      "get": {
-        "operationId": "getSignatureById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetSignatureResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteSignature",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } }
-      },
-      "put": {
-        "operationId": "updateSignature",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateSignatureBody" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } }
-      }
-    },
-    "/api/v1/signatures": {
-      "get": {
-        "operationId": "getSignatures",
-        "parameters": [
-          {
-            "name": "search",
-            "description": "String to search for",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "ids",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": [],
-              "type": "array",
-              "items": { "type": "string" }
-            }
-          },
-          {
-            "name": "page",
-            "description": "Page number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "description": "Page size number to return.",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": { "200": { "description": "" } }
-      }
-    },
-    "/api/v1/signatures/{signatureId}/members/{memberId}": {
-      "put": {
-        "operationId": "updateSignatureMemeber",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "memberId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "signatureId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateSignatureMember" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } }
-      },
-      "delete": {
-        "operationId": "removeMemberFromSignature",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "memberId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "signatureId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } }
-      }
-    },
-    "/api/v1/signatures/{signatureId}/members": {
+    "/api/v1/signatures/{caseId}": {
       "post": {
-        "operationId": "addMemberToSignature",
+        "operationId": "createSignature",
         "summary": "",
         "parameters": [
           {
-            "name": "signatureId",
+            "name": "caseId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateSignature" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } }
       }
     },
     "/api/v1/advert-types/types": {
@@ -3610,24 +3306,6 @@
           "comment"
         ]
       },
-      "SignatureType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the signature type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the signature type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the signature type"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
       "SignatureMember": {
         "type": "object",
         "properties": {
@@ -3635,71 +3313,95 @@
             "type": "string",
             "description": "The id of the signature member"
           },
-          "text": {
+          "name": {
             "type": "string",
             "description": "The name/title/w.e. of the signature member"
           },
           "textAbove": {
             "type": "string",
+            "nullable": true,
             "description": "The text comes above the signature name"
           },
           "textBefore": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes before the signature name"
           },
           "textBelow": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes below the signature name"
           },
           "textAfter": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes after the signature name"
           }
         },
-        "required": ["id", "text"]
+        "required": [
+          "id",
+          "name",
+          "textAbove",
+          "textBefore",
+          "textBelow",
+          "textAfter"
+        ]
+      },
+      "SignatureRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "institution": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "additonal": { "type": "string", "nullable": true },
+          "chairman": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
+          },
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SignatureMember" }
+          }
+        },
+        "required": [
+          "id",
+          "institution",
+          "signatureDate",
+          "additonal",
+          "chairman",
+          "members"
+        ]
       },
       "Signature": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "description": "The id of the signature" },
-          "institution": {
-            "type": "string",
-            "description": "Institution of the signature"
-          },
-          "date": {
+          "signatureDate": {
             "type": "string",
             "description": "ISO datestring of the signature"
-          },
-          "type": {
-            "description": "The type of the signature",
-            "allOf": [{ "$ref": "#/components/schemas/SignatureType" }]
           },
           "involvedParty": {
             "description": "The involved party of the signature",
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
-          "members": {
-            "description": "Members of the signature",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/SignatureMember" }
-          },
-          "chairman": {
-            "description": "Chairman of the signature",
-            "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
-          },
-          "additionalSignature": {
+          "html": { "type": "string", "description": "HTML of the signature" },
+          "created": {
             "type": "string",
-            "description": "Additional signature name"
+            "description": "ISO datestring of the creation date"
           },
-          "html": { "type": "string", "description": "HTML of the signature" }
+          "records": {
+            "description": "The signature record",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SignatureRecord" }
+          }
         },
         "required": [
           "id",
-          "institution",
-          "date",
-          "type",
+          "signatureDate",
           "involvedParty",
-          "members"
+          "html",
+          "created",
+          "records"
         ]
       },
       "ApplicationAttachmentType": {
@@ -4107,10 +3809,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommentDto" }
           },
-          "signatures": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Signature" }
-          },
+          "signature": { "$ref": "#/components/schemas/Signature" },
           "attachments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ApplicationAttachment" }
@@ -4157,7 +3856,7 @@
           "publicationNumber",
           "channels",
           "comments",
-          "signatures",
+          "signature",
           "attachments",
           "additions",
           "history"
@@ -4282,72 +3981,74 @@
         },
         "required": ["cases"]
       },
-      "GetSignaturesResponse": {
+      "CreateSignatureMember": {
         "type": "object",
         "properties": {
-          "signatures": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Signature" }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["signatures", "paging"]
-      },
-      "GetSignatureResponse": {
-        "type": "object",
-        "properties": {
-          "signature": {
-            "description": "The signature",
-            "allOf": [{ "$ref": "#/components/schemas/Signature" }]
-          }
-        },
-        "required": ["signature"]
-      },
-      "UpdateSignatureMember": {
-        "type": "object",
-        "properties": {
-          "text": {
+          "name": {
             "type": "string",
             "description": "The name/title/w.e. of the signature member"
           },
           "textAbove": {
             "type": "string",
+            "nullable": true,
             "description": "The text comes above the signature name"
           },
           "textBefore": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes before the signature name"
           },
           "textBelow": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes below the signature name"
           },
           "textAfter": {
             "type": "string",
+            "nullable": true,
             "description": "The text that comes after the signature name"
           }
-        }
+        },
+        "required": [
+          "name",
+          "textAbove",
+          "textBefore",
+          "textBelow",
+          "textAfter"
+        ]
       },
-      "UpdateSignatureBody": {
+      "CreateSignatureRecord": {
         "type": "object",
         "properties": {
-          "institution": {
-            "type": "string",
-            "description": "The name of the institution responsible for the signature"
-          },
-          "date": {
-            "type": "string",
-            "description": "Date when the institution signed the signature"
-          },
-          "chairman": {
-            "description": "The chairman of the signature",
-            "allOf": [{ "$ref": "#/components/schemas/UpdateSignatureMember" }]
-          },
-          "additionalSignature": {
-            "type": "string",
-            "description": "Additional signature member name"
+          "institution": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "additonal": { "type": "string" },
+          "chairman": { "$ref": "#/components/schemas/CreateSignatureMember" },
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateSignatureMember" }
           }
-        }
+        },
+        "required": ["institution", "signatureDate", "members"]
+      },
+      "CreateSignature": {
+        "type": "object",
+        "properties": {
+          "signatureDate": {
+            "type": "string",
+            "description": "ISO datestring of the signature"
+          },
+          "involvedPartyId": {
+            "type": "string",
+            "description": "The involved party of the signature"
+          },
+          "records": {
+            "description": "The signature records",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateSignatureRecord" }
+          }
+        },
+        "required": ["signatureDate", "involvedPartyId", "records"]
       },
       "AdvertType": {
         "type": "object",

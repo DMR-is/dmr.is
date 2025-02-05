@@ -19,7 +19,7 @@ type Props = {
 export const AdvertDisplay = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
 
-  const signatureDate = currentCase.signatures.slice(-1)[0]?.date
+  const { signatureDate } = currentCase.signature
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>

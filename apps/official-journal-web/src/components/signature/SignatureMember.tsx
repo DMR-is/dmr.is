@@ -1,15 +1,9 @@
 import debounce from 'lodash/debounce'
 
-import {
-  Box,
-  Button,
-  Column,
-  Columns,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Box, Button, Column, Columns, Stack } from '@island.is/island-ui/core'
 
 import { SignatureMember as SignatureMemberDto } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { OJOIInput } from '../select/OJOIInput'
 
 type Props = SignatureMemberDto & {
@@ -18,7 +12,7 @@ type Props = SignatureMemberDto & {
 }
 
 export const SignatureMember = ({
-  text,
+  name,
   textAbove,
   textAfter,
   textBelow,
@@ -27,14 +21,17 @@ export const SignatureMember = ({
 }: Props) => {
   const debouncedChange = debounce(onChange, 500)
 
+  const { canEdit } = useCaseContext()
+
   return (
     <Stack space={2}>
       <Columns space={2}>
         <Column>
           <OJOIInput
+            disabled={!canEdit}
             label="Texti yfir"
             name="signature-member-above"
-            defaultValue={textAbove}
+            defaultValue={textAbove ?? ''}
             onChange={(e) => debouncedChange('textAbove', e.target.value)}
           />
         </Column>
@@ -42,32 +39,42 @@ export const SignatureMember = ({
       <Columns space={2}>
         <Column>
           <OJOIInput
+            disabled={!canEdit}
             label="Nafn"
             name="signature-member-name"
-            defaultValue={text}
-            onChange={(e) => debouncedChange('text', e.target.value)}
+            defaultValue={name}
+            onChange={(e) => debouncedChange('name', e.target.value)}
           />
         </Column>
         <Column>
           <OJOIInput
+            disabled={!canEdit}
             label="Texti eftir"
             name="signature-member-after"
-            defaultValue={textAfter}
+            defaultValue={textAfter ?? ''}
             onChange={(e) => debouncedChange('textAfter', e.target.value)}
           />
         </Column>
       </Columns>
       <Columns space={2}>
         <Column>
-          <Inline justifyContent="spaceBetween" alignY="center">
-            <OJOIInput
-              label="Texti undir"
-              name="signature-member-below"
-              defaultValue={textBelow}
-              onChange={(e) => debouncedChange('textBelow', e.target.value)}
-            />
+          <OJOIInput
+            disabled={!canEdit}
+            label="Texti undir"
+            name="signature-member-below"
+            defaultValue={textBelow ?? ''}
+            onChange={(e) => debouncedChange('textBelow', e.target.value)}
+          />
+        </Column>
+        <Column>
+          <Box
+            height="full"
+            display="flex"
+            alignItems="center"
+            justifyContent="flexEnd"
+          >
             <Button
-              disabled={!onDelete}
+              disabled={!onDelete || !canEdit}
               icon="trash"
               variant="utility"
               iconType="outline"
@@ -76,7 +83,7 @@ export const SignatureMember = ({
             >
               Eyða meðlim
             </Button>
-          </Inline>
+          </Box>
         </Column>
       </Columns>
     </Stack>

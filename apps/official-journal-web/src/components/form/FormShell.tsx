@@ -252,6 +252,7 @@ export const FormShell = ({ children }: FormShellType) => {
                     backgroundColor={'blue'}
                   />
                   <OJOISelect
+                    isDisabled={!canEdit}
                     backgroundColor={'white'}
                     name="internal-tag"
                     label={formatMessage(statusMessages.yfirlestur.tag)}
