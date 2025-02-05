@@ -19,6 +19,7 @@ import {
 import { yearsRoutes } from './routes/yearsRoutes'
 import { connectSequelize } from './utils/sequelize'
 import { serveRobotsTxt } from './utils/server-utils'
+import { healthCheck } from './routes/health'
 
 // ===========================================================================
 
@@ -110,6 +111,7 @@ fastify.register(ministryRoutes, { prefix: '/api/v1' })
 fastify.register(lawChapterRoutes, { prefix: '/api/v1' })
 fastify.register(yearsRoutes, { prefix: '/api/v1' })
 fastify.register(redirectsRoutes, { prefix: '/api/v1' })
+fastify.register(healthCheck)
 
 serveRobotsTxt(fastify, '/static/robots-api.txt')
 
