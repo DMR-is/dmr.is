@@ -1506,6 +1506,131 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberId}": {
+      "put": {
+        "operationId": "updateSignatureMember",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "recordId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSignatureMember" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      },
+      "delete": {
+        "operationId": "deleteSignatureMember",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "recordId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/{signatureId}/records/{recordId}/members": {
+      "post": {
+        "operationId": "createSignatureMember",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "recordId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/{signatureId}/records/{recordId}": {
+      "put": {
+        "operationId": "updateSignatureRecord",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "recordId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSignatureRecord" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/{signatureId}/records": {
+      "post": {
+        "operationId": "createSignatureRecord",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
+      }
+    },
     "/api/v1/signatures/{caseId}": {
       "post": {
         "operationId": "createSignature",
@@ -1526,7 +1651,55 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } }
+        "responses": { "204": { "description": "" } }
+      }
+    },
+    "/api/v1/signatures/signatures/{caseId}": {
+      "get": {
+        "operationId": "getSignatureByCaseId",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetSignature" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signatures/{signatureId}": {
+      "get": {
+        "operationId": "getSignature",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetSignature" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/advert-types/types": {
@@ -3981,6 +4154,43 @@
         },
         "required": ["cases"]
       },
+      "UpdateSignatureMember": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name/title/w.e. of the signature member"
+          },
+          "textAbove": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text comes above the signature name"
+          },
+          "textBefore": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes before the signature name"
+          },
+          "textBelow": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes below the signature name"
+          },
+          "textAfter": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes after the signature name"
+          }
+        }
+      },
+      "UpdateSignatureRecord": {
+        "type": "object",
+        "properties": {
+          "institution": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "additonal": { "type": "string" }
+        }
+      },
       "CreateSignatureMember": {
         "type": "object",
         "properties": {
@@ -4049,6 +4259,13 @@
           }
         },
         "required": ["signatureDate", "involvedPartyId", "records"]
+      },
+      "GetSignature": {
+        "type": "object",
+        "properties": {
+          "signature": { "$ref": "#/components/schemas/Signature" }
+        },
+        "required": ["signature"]
       },
       "AdvertType": {
         "type": "object",

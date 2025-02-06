@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useState } from 'react'
 
 import { StringOption } from '@island.is/island-ui/core'
 
@@ -9,71 +9,11 @@ import {
   CaseDetailed,
   CaseStatusEnum,
   CaseTag,
-  CaseTagTitleEnum,
   Category,
-  CommunicationStatusTitleEnum,
   Department,
 } from '../gen/fetch'
-import { useAdvertTypes, useCase } from '../hooks/api'
+import { useAdvertTypes, useCase, useSignature } from '../hooks/api'
 import { createOptions } from '../lib/utils'
-
-const emptyCase = {
-  id: '',
-  applicationId: '',
-  year: 0,
-  caseNumber: '',
-  status: {
-    id: '',
-    title: '' as CaseStatusEnum,
-    slug: '',
-  },
-  tag: {
-    id: '',
-    title: '' as CaseTagTitleEnum,
-    slug: '',
-  },
-  involvedParty: {
-    id: '',
-    title: '',
-    slug: '',
-  },
-  createdAt: '',
-  modifiedAt: '',
-  isLegacy: false,
-  assignedTo: null,
-  communicationStatus: {
-    id: '',
-    title: '' as CommunicationStatusTitleEnum,
-    slug: '',
-  },
-  fastTrack: false,
-  publishedAt: '',
-  requestedPublicationDate: '',
-  advertTitle: '',
-  advertDepartment: {
-    id: '',
-    title: '',
-    slug: '',
-  },
-  advertType: {
-    id: '',
-    title: '',
-    slug: '',
-  },
-  advertCategories: [],
-  price: 0,
-  paid: false,
-  message: null,
-  html: '',
-  publicationNumber: '',
-  channels: [],
-  comments: [],
-  signatures: [],
-  attachments: [],
-  additions: [],
-  advertId: '',
-  history: [],
-}
 
 type CaseState = {
   currentCase: CaseDetailed
@@ -94,10 +34,12 @@ type CaseState = {
   localCorrection: AdvertCorrection | undefined
   setLocalCorrection: (correction: AdvertCorrection | undefined) => void
   canUpdateAdvert: boolean
+  refetchSignature: () => void
+  isRefetchingSignature: boolean
 }
 
 export const CaseContext = createContext<CaseState>({
-  currentCase: emptyCase,
+  currentCase: {} as unknown as CaseDetailed,
   refetch: () => undefined,
   isLoading: false,
   isValidating: false,
@@ -115,6 +57,8 @@ export const CaseContext = createContext<CaseState>({
   localCorrection: undefined,
   setLocalCorrection: () => undefined,
   canUpdateAdvert: false,
+  refetchSignature: () => undefined,
+  isRefetchingSignature: false,
 })
 
 type CaseProviderProps = {
@@ -158,6 +102,21 @@ export const CaseProvider = ({
     },
   })
 
+  const { mutate: mutateSignature, isValidating: isRefetchingSignature } =
+    useSignature({
+      signatureId: initalCase.signature.id,
+      options: {
+        keepPreviousData: true,
+        revalidateOnFocus: false,
+        onSuccess: ({ signature }) => {
+          setCurrentCase((prev) => ({
+            ...prev,
+            signature,
+          }))
+        },
+      },
+    })
+
   const { types: fetchedTypes, isValidatingTypes } = useAdvertTypes({
     typesParams: {
       department: currentCase.advertDepartment.id,
@@ -165,6 +124,8 @@ export const CaseProvider = ({
       pageSize: 100,
     },
   })
+
+  const refetchSignature = async () => await mutateSignature()
 
   const refetch = async () => await mutate()
 
@@ -219,6 +180,8 @@ export const CaseProvider = ({
         localCorrection,
         setLocalCorrection,
         canUpdateAdvert,
+        refetchSignature,
+        isRefetchingSignature,
       }}
     >
       {children}

@@ -7,11 +7,16 @@ import {
   Columns,
   DatePicker,
   Inline,
+  SkeletonLoader,
   Stack,
 } from '@island.is/island-ui/core'
 
-import { SignatureRecord } from '../../gen/fetch'
-import { useSignature } from '../../hooks/api'
+import {
+  SignatureMember as SignatureMemberDto,
+  SignatureRecord as SignatureRecordDto,
+  UpdateSignatureRecord,
+} from '../../gen/fetch'
+import { useUpdateSignature } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { SignatureDislay } from '../advert-display/SignatureDisplay'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
@@ -19,78 +24,98 @@ import { OJOIInput } from '../select/OJOIInput'
 import { SignatureMember } from './SignatureMember'
 
 type Props = {
-  signature: SignatureRecord
+  record: SignatureRecordDto
 }
 
-export const Signature = ({ signature }: Props) => {
-  const { refetch, canEdit } = useCaseContext()
+type SignatureRecordKey = keyof UpdateSignatureRecord
+
+export const SignatureRecord = ({ record }: Props) => {
+  const { refetchSignature, currentCase, canEdit } = useCaseContext()
   const {
-    updateSignature,
-    isUpdatingSignature,
+    updateSignatureRecord,
+    isUpdatingSignatureRecord,
     addSignatureMember,
     isAddingSignatureMember,
     removeSignatureMember,
+    isRemovingSignatureMember,
     updateSignatureMember,
-  } = useSignature({
-    signatureId: signature.id,
-    updateSignatureOptions: {
+    isUpdatingSignatureMember,
+  } = useUpdateSignature({
+    signatureId: currentCase.signature.id,
+    updateSignatureRecordOptions: {
       onSuccess: () => {
-        refetch()
         toast.success('Undirritun uppfærð')
+        refetchSignature()
       },
       onError: () => {
-        refetch()
-        toast.error('Ekki tókst að uppfæra undirritun')
+        toast.error('Ekki tókst að vista undirritun')
       },
     },
     addSignatureMemberOptions: {
       onSuccess: () => {
-        refetch()
         toast.success('Undirritara bætt við')
+        refetchSignature()
       },
       onError: () => {
-        refetch()
         toast.error('Ekki tókst að bæta við undirritanda')
       },
     },
     deleteSignatureMemberOptions: {
       onSuccess: () => {
-        refetch()
         toast.success('Undirritara eytt')
+        refetchSignature()
       },
       onError: () => {
-        refetch()
         toast.error('Ekki tókst að eyða undirritanda')
       },
     },
     updateSignatureMemberOptions: {
       onSuccess: () => {
-        refetch()
-        toast.success('Meðlimur undirritunar uppfærður')
+        toast.success('Undirritari uppfærður')
+        refetchSignature()
       },
       onError: () => {
-        refetch()
-        toast.error('Ekki tókst að uppfæra meðlim undirritunar')
+        toast.error('Ekki tókst að uppfæra undirritara')
       },
     },
   })
 
-  const debouncedInstitutionChange = debounce(updateSignature, 500)
-
-  const debouncedMemberChange = debounce(updateSignatureMember, 500)
-
-  const onInstitutionChange = (value: string) => {
-    debouncedInstitutionChange.cancel()
-    debouncedInstitutionChange({ institution: value })
+  const onChangeHandler = (key: SignatureRecordKey, value: string) => {
+    updateSignatureRecord({
+      recordId: record.id,
+      [key]: value,
+    })
   }
 
-  // const onMemberChange = (memberId: string, member: UpdateSignatureMember) => {
-  //   debouncedMemberChange.cancel()
-  //   debouncedMemberChange({
-  //     memberId: memberId,
-  //     ...member,
-  //   })
-  // }
+  const debouncedOnChange = debounce(onChangeHandler, 500)
+
+  const debouncedOnChangeHandler = (key: SignatureRecordKey, value: string) => {
+    debouncedOnChange.cancel()
+    debouncedOnChange(key, value)
+  }
+
+  const onMemberChangeHandler = (
+    memberId: string,
+    key: keyof SignatureMemberDto,
+    value: string,
+  ) => {
+    updateSignatureMember({
+      recordId: record.id,
+      memberId,
+      [key]: value,
+    })
+  }
+
+  const debouncedOnMemberChange = debounce(onMemberChangeHandler, 500)
+
+  const debouncedOnMemberChangeHandler = (
+    memberId: string,
+    key: keyof SignatureMemberDto,
+    value: string,
+  ) => {
+    debouncedOnMemberChange.cancel()
+    debouncedOnMemberChange(memberId, key, value)
+  }
 
   return (
     <Stack space={2}>
@@ -103,11 +128,13 @@ export const Signature = ({ signature }: Props) => {
           <Column>
             <OJOIInput
               disabled={!canEdit}
-              isValidating={isUpdatingSignature}
-              defaultValue={signature.institution}
+              isValidating={isUpdatingSignatureRecord}
+              defaultValue={record.institution}
               label="Stofnun"
               name="institution"
-              onChange={(e) => onInstitutionChange(e.target.value)}
+              onChange={(e) =>
+                debouncedOnChangeHandler('institution', e.target.value)
+              }
             />
           </Column>
           <Column>
@@ -116,12 +143,12 @@ export const Signature = ({ signature }: Props) => {
               locale="is"
               label="Dagsetning undirritunar"
               name="signature-date"
-              selected={new Date(signature.signatureDate)}
+              selected={new Date(record.signatureDate)}
               placeholderText="Dagsetning undirritunar"
               size="sm"
               backgroundColor="blue"
               handleChange={(date) =>
-                updateSignature({ date: date.toISOString() })
+                debouncedOnChangeHandler('signatureDate', date.toISOString())
               }
             />
           </Column>
@@ -130,23 +157,29 @@ export const Signature = ({ signature }: Props) => {
       <ContentWrapper titleVariant="h5" titleAs="h5" title="Undirritað af">
         <Stack dividers space={2}>
           <Stack space={2} dividers>
-            {signature.members.map((m) => (
+            {record.members.map((m) => (
               <SignatureMember
-                onChange={() => console.log('change')}
-                onDelete={() => removeSignatureMember({ memberId: m.id })}
-                key={m.id}
                 {...m}
+                key={m.id}
+                isDeleting={isRemovingSignatureMember}
+                isUpdating={isUpdatingSignatureMember}
+                onChange={(key, value) =>
+                  debouncedOnMemberChangeHandler(m.id, key, value)
+                }
+                onDelete={() =>
+                  removeSignatureMember({ recordId: record.id, memberId: m.id })
+                }
               />
             ))}
           </Stack>
           <Inline justifyContent="flexEnd">
             <Button
               disabled={!canEdit}
+              loading={isAddingSignatureMember}
               icon="add"
               iconType="outline"
               size="small"
-              loading={isAddingSignatureMember}
-              onClick={() => addSignatureMember()}
+              onClick={() => addSignatureMember({ recordId: record.id })}
             >
               Bæta við undirritanda
             </Button>

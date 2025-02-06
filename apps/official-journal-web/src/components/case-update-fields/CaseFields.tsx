@@ -25,10 +25,10 @@ import { SignatureFields } from './SignatureFields'
 export const CaseFields = () => {
   const { canEdit, isPublishedOrRejected } = useCaseContext()
 
-  const commonToggle = useToggle(true)
+  const commonToggle = useToggle(false)
   const publishingToggle = useToggle(false)
   const advertToggle = useToggle(false)
-  const signatureToggle = useToggle(false)
+  const signatureToggle = useToggle(true)
   const attachmentToggle = useToggle(false)
   const messageToggle = useToggle(false)
   const commentToggle = useToggle(false)

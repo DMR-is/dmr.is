@@ -1,7 +1,7 @@
 import { Stack } from '@island.is/island-ui/core'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { Signature } from './Signature'
+import { SignatureRecord } from './Signature'
 
 export const Signatures = () => {
   const { currentCase } = useCaseContext()
@@ -11,7 +11,7 @@ export const Signatures = () => {
   return (
     <Stack space={2}>
       {signature.records.map((s, i) => (
-        <Signature key={i} signature={s} />
+        <SignatureRecord key={i} record={s} />
       ))}
     </Stack>
   )

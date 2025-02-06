@@ -41,7 +41,7 @@ export class SignatureService implements ISignatureService {
 
   @LogAndHandle()
   @Transactional()
-  private async updateSignatureHtml(
+  private async updateSignature(
     signatureId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<SignatureModel>> {
@@ -79,7 +79,20 @@ export class SignatureService implements ISignatureService {
       .map((record) => signatureTemplate(record))
       .join('')
 
-    const updated = await signature.update({ html }, { transaction })
+    const signatureDate = signature.records.reduce((acc, record) => {
+      const recordDate = new Date(record.signatureDate)
+
+      if (recordDate > acc) {
+        acc = recordDate
+      }
+
+      return acc
+    }, new Date())
+
+    const updated = await signature.update(
+      { html, signatureDate: signatureDate.toISOString() },
+      { transaction },
+    )
 
     return ResultWrapper.ok(updated)
   }
@@ -115,8 +128,8 @@ export class SignatureService implements ISignatureService {
       throw new NotFoundException('Signature record not found')
     }
 
-    await record.update(body, { transaction })
-    await this.updateSignatureHtml(signatureId, transaction)
+    await record.update({ ...body }, { transaction })
+    await this.updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
   }
@@ -151,7 +164,7 @@ export class SignatureService implements ISignatureService {
     }
 
     await signatureMember.update(body, { transaction })
-    await this.updateSignatureHtml(signatureId, transaction)
+    await this.updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
   }
@@ -242,7 +255,7 @@ export class SignatureService implements ISignatureService {
     }
 
     const updated = ResultWrapper.unwrap(
-      await this.updateSignatureHtml(signatureId, transaction),
+      await this.updateSignature(signatureId, transaction),
     )
     const mapped = signatureMigrate(updated)
 
@@ -425,7 +438,7 @@ export class SignatureService implements ISignatureService {
       { transaction, returning: ['id'] },
     )
 
-    await this.updateSignatureHtml(signatureId, transaction)
+    await this.updateSignature(signatureId, transaction)
     return ResultWrapper.ok()
   }
 
@@ -458,7 +471,7 @@ export class SignatureService implements ISignatureService {
     }
 
     await signatureMember.destroy({ transaction })
-    await this.updateSignatureHtml(signatureId, transaction)
+    await this.updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
   }
@@ -481,7 +494,7 @@ export class SignatureService implements ISignatureService {
       { transaction },
     )
 
-    await this.updateSignatureHtml(signatureId, transaction)
+    await this.updateSignature(signatureId, transaction)
     return ResultWrapper.ok()
   }
 }

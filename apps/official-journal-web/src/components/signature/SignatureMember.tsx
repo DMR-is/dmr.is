@@ -8,7 +8,9 @@ import { OJOIInput } from '../select/OJOIInput'
 
 type Props = SignatureMemberDto & {
   onChange: (key: keyof SignatureMemberDto, val: string) => void
+  isUpdating?: boolean
   onDelete?: () => void
+  isDeleting?: boolean
 }
 
 export const SignatureMember = ({
@@ -18,6 +20,8 @@ export const SignatureMember = ({
   textBelow,
   onChange,
   onDelete,
+  isUpdating,
+  isDeleting,
 }: Props) => {
   const debouncedChange = debounce(onChange, 500)
 
@@ -28,6 +32,7 @@ export const SignatureMember = ({
       <Columns space={2}>
         <Column>
           <OJOIInput
+            isValidating={isUpdating}
             disabled={!canEdit}
             label="Texti yfir"
             name="signature-member-above"
@@ -39,6 +44,7 @@ export const SignatureMember = ({
       <Columns space={2}>
         <Column>
           <OJOIInput
+            isValidating={isUpdating}
             disabled={!canEdit}
             label="Nafn"
             name="signature-member-name"
@@ -48,6 +54,7 @@ export const SignatureMember = ({
         </Column>
         <Column>
           <OJOIInput
+            isValidating={isUpdating}
             disabled={!canEdit}
             label="Texti eftir"
             name="signature-member-after"
@@ -59,6 +66,7 @@ export const SignatureMember = ({
       <Columns space={2}>
         <Column>
           <OJOIInput
+            isValidating={isUpdating}
             disabled={!canEdit}
             label="Texti undir"
             name="signature-member-below"
@@ -74,6 +82,7 @@ export const SignatureMember = ({
             justifyContent="flexEnd"
           >
             <Button
+              loading={isDeleting}
               disabled={!onDelete || !canEdit}
               icon="trash"
               variant="utility"

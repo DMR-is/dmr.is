@@ -1,28 +1,35 @@
-import useSWR, { Key } from 'swr'
+import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
 import {
-  GetSignatureResponse,
-  UpdateSignatureBody,
   UpdateSignatureMember,
+  UpdateSignatureRecord,
 } from '../../../gen/fetch'
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
-type UpdateSignatureTriggerArgs = UpdateSignatureBody
+type UpdateSignatureRecordTriggerArgs = UpdateSignatureRecord & {
+  recordId: string
+}
 
 type UpdateSignatureMemberTriggerArgs = UpdateSignatureMember & {
+  recordId: string
   memberId: string
+}
+
+type AddSignatureMemberTriggerArgs = {
+  recordId: string
 }
 
 type DeleteSignatureMemberTriggerArgs = {
+  recordId: string
   memberId: string
 }
 
-type SWRUpdateSignatureOptions = SWRMutationConfiguration<
+type SWRUpdateSignatureRecord = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  UpdateSignatureTriggerArgs
+  UpdateSignatureRecordTriggerArgs
 >
 
 type SWRUpdateSignatureMemberOptions = SWRMutationConfiguration<
@@ -36,7 +43,7 @@ type SWRAddSignatureMemberOptions = SWRMutationConfiguration<
   Response,
   Error,
   Key,
-  undefined
+  AddSignatureMemberTriggerArgs
 >
 
 type SWRDeleteSignatureMemberOptions = SWRMutationConfiguration<
@@ -47,69 +54,31 @@ type SWRDeleteSignatureMemberOptions = SWRMutationConfiguration<
 >
 
 type UseUpdateSignatureParams = {
-  updateSignatureOptions?: SWRUpdateSignatureOptions
+  updateSignatureRecordOptions?: SWRUpdateSignatureRecord
   updateSignatureMemberOptions?: SWRUpdateSignatureMemberOptions
   addSignatureMemberOptions?: SWRAddSignatureMemberOptions
   deleteSignatureMemberOptions?: SWRDeleteSignatureMemberOptions
   signatureId: string
 }
 
-export const useSignature = ({
+export const useUpdateSignature = ({
   signatureId,
-  updateSignatureOptions,
+  updateSignatureRecordOptions,
   updateSignatureMemberOptions,
   addSignatureMemberOptions,
   deleteSignatureMemberOptions,
 }: UseUpdateSignatureParams) => {
-  const { data, isLoading, isValidating, error } = useSWR<
-    GetSignatureResponse,
-    Error
-  >(
-    signatureId ? [APIRoutes.Signature] : null,
-    (url: string) =>
-      fetcher<GetSignatureResponse>(url.replace(':id', signatureId), {
-        arg: {
-          method: 'GET',
-        },
-      }),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateOnMount: true,
-    },
-  )
-
-  const { trigger: updateSignature, isMutating: isUpdatingSignature } =
-    swrMutation<Response, Error, Key, UpdateSignatureTriggerArgs>(
-      APIRoutes.Signature,
-      (url: string, { arg }: { arg: UpdateSignatureTriggerArgs }) =>
-        fetcher<Response, UpdateSignatureTriggerArgs>(
-          url.replace(':id', signatureId),
-          {
-            arg: {
-              withAuth: true,
-              method: 'PUT',
-              body: arg,
-            },
-          },
-        ),
-      {
-        ...updateSignatureOptions,
-        throwOnError: false,
-      },
-    )
-
   const {
-    trigger: updateSignatureMember,
-    isMutating: isUpdatingSignatureMember,
-  } = swrMutation<Response, Error, Key, UpdateSignatureMemberTriggerArgs>(
-    APIRoutes.SignatureMember,
-    (url: string, { arg }: { arg: UpdateSignatureMemberTriggerArgs }) => {
-      const { memberId, ...body } = arg
+    trigger: updateSignatureRecord,
+    isMutating: isUpdatingSignatureRecord,
+  } = swrMutation<Response, Error, Key, UpdateSignatureRecordTriggerArgs>(
+    APIRoutes.SignatureRecord,
+    (url: string, { arg }: { arg: UpdateSignatureRecordTriggerArgs }) => {
+      const { recordId, ...body } = arg
       return fetcher<
         Response,
-        Omit<UpdateSignatureMemberTriggerArgs, 'memberId'>
-      >(url.replace(':id', signatureId).replace(':mid', memberId), {
+        Omit<UpdateSignatureRecordTriggerArgs, 'recordId'>
+      >(url.replace(':id', signatureId).replace(':recordId', recordId), {
         arg: {
           withAuth: true,
           method: 'PUT',
@@ -118,21 +87,54 @@ export const useSignature = ({
       })
     },
     {
+      ...updateSignatureRecordOptions,
+      throwOnError: false,
+    },
+  )
+
+  const {
+    trigger: updateSignatureMember,
+    isMutating: isUpdatingSignatureMember,
+  } = swrMutation<Response, Error, Key, UpdateSignatureMemberTriggerArgs>(
+    APIRoutes.SignatureMember,
+    (url: string, { arg }: { arg: UpdateSignatureMemberTriggerArgs }) => {
+      const { memberId, recordId, ...body } = arg
+      return fetcher<
+        Response,
+        Omit<UpdateSignatureMemberTriggerArgs, 'memberId' | 'recordId'>
+      >(
+        url
+          .replace(':id', signatureId)
+          .replace(':recordId', recordId)
+          .replace(':mid', memberId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'PUT',
+            body: body,
+          },
+        },
+      )
+    },
+    {
       ...updateSignatureMemberOptions,
       throwOnError: false,
     },
   )
 
   const { trigger: addSignatureMember, isMutating: isAddingSignatureMember } =
-    swrMutation<Response, Error, Key, undefined>(
+    swrMutation<Response, Error, Key, AddSignatureMemberTriggerArgs>(
       APIRoutes.SignatureMembers,
-      (url: string) =>
-        fetcher<Response, undefined>(url.replace(':id', signatureId), {
-          arg: {
-            withAuth: true,
-            method: 'POST',
+      (url: string, { arg }: { arg: AddSignatureMemberTriggerArgs }) =>
+        fetcher<Response>(
+          url.replace(':id', signatureId).replace(':recordId', arg.recordId),
+          {
+            arg: {
+              withAuth: true,
+              method: 'POST',
+            },
           },
-        }),
+        ),
       {
         ...addSignatureMemberOptions,
         throwOnError: false,
@@ -146,7 +148,10 @@ export const useSignature = ({
     APIRoutes.SignatureMember,
     (url: string, { arg }: { arg: DeleteSignatureMemberTriggerArgs }) =>
       fetcher<Response>(
-        url.replace(':id', signatureId).replace(':mid', arg.memberId),
+        url
+          .replace(':id', signatureId)
+          .replace(':recordId', arg.recordId)
+          .replace(':mid', arg.memberId),
         {
           arg: {
             withAuth: true,
@@ -161,9 +166,8 @@ export const useSignature = ({
   )
 
   return {
-    signature: data?.signature,
-    updateSignature,
-    isUpdatingSignature,
+    updateSignatureRecord,
+    isUpdatingSignatureRecord,
     updateSignatureMember,
     isUpdatingSignatureMember,
     addSignatureMember,
