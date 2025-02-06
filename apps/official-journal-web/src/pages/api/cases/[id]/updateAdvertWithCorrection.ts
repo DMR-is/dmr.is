@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 import { OJOIWebException } from '../../../../lib/constants'
@@ -31,10 +32,12 @@ class CreateCorrectionHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateCaseAndAddCorrection({
-      id: caseId,
-      updateAdvertHtmlCorrection: rest,
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateCaseAndAddCorrection({
+        id: caseId,
+        updateAdvertHtmlCorrection: rest,
+      })
 
     return void res.status(204).end()
   }
