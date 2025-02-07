@@ -19,7 +19,7 @@ yarn install
 To **serve the API locally** with automatic rebuilding on changes, run:
 
 ```bash
-nx serve regulations-api-server
+nx serve regulations-api
 ```
 
 - Runs the API on `http://localhost:3000` (or the configured port).
@@ -32,18 +32,18 @@ nx serve regulations-api-server
 For **development** builds:
 
 ```bash
-nx build regulations-api-server --configuration=development
+nx build regulations-api --configuration=development
 ```
 
 For **production** builds:
 
 ```bash
-nx build regulations-api-server --configuration=production
+nx build regulations-api --configuration=production
 ```
 
 - The output will be located in:
   ```
-  dist/apps/regulations-api-server/
+  apps/regulations-api/dist
   ```
 
 ---
@@ -53,7 +53,7 @@ nx build regulations-api-server --configuration=production
 Once built, you can run the production build manually:
 
 ```bash
-node dist/apps/regulations-api-server/server.js
+node dist/apps/regulations-api/server.js
 ```
 
 All routes can then be accessed under `localhost:3000/api/v1/[route]`
@@ -63,7 +63,7 @@ Set `process.env.PORT` to use a different port.
 ## Run ESLint to check for linting errors
 
 ```bash
-nx lint regulations-api-server
+nx lint regulations-api
 ```
 
 # Routes

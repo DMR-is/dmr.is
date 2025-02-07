@@ -43,6 +43,6 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASSWORD}
     ports:
-      - '5000:5000'
+      - '5001:5000'
     depends_on:
       - ${DB_HOST}

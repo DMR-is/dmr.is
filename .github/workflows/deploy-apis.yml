@@ -25,6 +25,7 @@ jobs:
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
+            regulations-api,
           ]
     name: 'Build and push images: ${{ matrix.api }}'
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -108,6 +109,7 @@ jobs:
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
+            regulations-api,
           ]
     name: Deploy to ${{ matrix.api }} - dev
     steps:

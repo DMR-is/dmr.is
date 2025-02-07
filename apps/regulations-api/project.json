@@ -1,7 +1,7 @@
 {
-  "name": "regulations-api-server",
+  "name": "regulations-api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/regulations-api-server/src",
+  "sourceRoot": "apps/regulations-api/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -10,14 +10,14 @@
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/apps/regulations-api-server",
+        "outputPath": "apps/regulations-api/dist",
         "format": ["cjs"],
         "bundle": true,
-        "main": "apps/regulations-api-server/src/server.ts",
-        "tsConfig": "apps/regulations-api-server/tsconfig.app.json",
+        "main": "apps/regulations-api/src/server.ts",
+        "tsConfig": "apps/regulations-api/tsconfig.app.json",
         "assets": [
           {
-            "input": "apps/regulations-api-server/src",
+            "input": "apps/regulations-api/src",
             "glob": "RegulationPdf.css",
             "output": "."
           }
@@ -48,28 +48,28 @@
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "regulations-api-server:build"
+        "buildTarget": "regulations-api:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "regulations-api-server:build:development"
+          "buildTarget": "regulations-api:build:development"
         },
         "production": {
-          "buildTarget": "regulations-api-server:build:production"
+          "buildTarget": "regulations-api:build:production"
         }
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["apps/regulations-api-server/**/*.ts"]
+        "lintFilePatterns": ["apps/regulations-api/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/regulations-api-server/jest.config.ts",
+        "jestConfig": "apps/regulations-api/jest.config.ts",
         "passWithNoTests": true
       }
     }

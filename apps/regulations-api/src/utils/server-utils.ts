@@ -4,7 +4,7 @@ import { readFileSync } from 'fs'
 
 export const serveRobotsTxt = (server: FastifyInstance, robotsFile: string) => {
   const robotsTxt = readFileSync(
-    process.cwd() + '/apps/regulations-api-server/' + robotsFile,
+    process.cwd() + '/apps/regulations-api/' + robotsFile,
   ).toString()
 
   server.get('/robots.txt', (requst, reply) => {
