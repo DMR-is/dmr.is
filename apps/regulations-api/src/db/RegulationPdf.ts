@@ -168,7 +168,7 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
 const CSS = fs.readFileSync(
-  './dist/apps/regulations-api-server/RegulationPdf.css',
+  './dist/apps/regulations-api/RegulationPdf.css',
 )
 
 const pdfTmplate = (
@@ -253,7 +253,7 @@ const pdfTmplate = (
     `,
       )
       .join('')}
-      
+
     ${appendixes.length ? '</div>' : ''}
 
     ${
