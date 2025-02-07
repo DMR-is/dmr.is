@@ -22,7 +22,7 @@ export class SignatureRecord {
     type: String,
     nullable: true,
   })
-  additonal!: string | null
+  additional!: string | null
 
   @ApiProperty({
     type: SignatureMember,
@@ -53,7 +53,7 @@ export class CreateSignatureRecord {
     type: String,
     required: false,
   })
-  additonal?: string
+  additional?: string
 
   @ApiProperty({
     type: CreateSignatureMember,
@@ -72,6 +72,6 @@ export class UpdateSignatureRecord extends PartialType(
   PickType(CreateSignatureRecord, [
     'institution',
     'signatureDate',
-    'additonal',
+    'additional',
   ]),
 ) {}

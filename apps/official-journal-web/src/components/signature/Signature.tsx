@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce'
-import { toast } from 'react-toastify'
 
 import {
   Button,
@@ -7,11 +6,13 @@ import {
   Columns,
   DatePicker,
   Inline,
-  SkeletonLoader,
   Stack,
+  Text,
+  toast,
 } from '@island.is/island-ui/core'
 
 import {
+  CreateSignatureMemberMemberTypeEnum,
   SignatureMember as SignatureMemberDto,
   SignatureRecord as SignatureRecordDto,
   UpdateSignatureRecord,
@@ -117,6 +118,22 @@ export const SignatureRecord = ({ record }: Props) => {
     debouncedOnMemberChange(memberId, key, value)
   }
 
+  const onAdditionalChangeHandler = (value: string) => {
+    updateSignatureRecord({
+      recordId: record.id,
+      additional: value,
+    })
+  }
+
+  const debouncedOnAdditionalChange = debounce(onAdditionalChangeHandler, 500)
+
+  const debouncedOnAdditionalChangeHandler = (value: string) => {
+    debouncedOnAdditionalChange.cancel()
+    debouncedOnAdditionalChange(value)
+  }
+
+  const { chairman } = record
+
   return (
     <Stack space={2}>
       <ContentWrapper
@@ -154,6 +171,44 @@ export const SignatureRecord = ({ record }: Props) => {
           </Column>
         </Columns>
       </ContentWrapper>
+      <ContentWrapper>
+        <Stack space={2}>
+          <Inline justifyContent="spaceBetween" alignY="center">
+            <Text variant="h5">Formaður</Text>
+            {chairman === null && (
+              <Button
+                variant="utility"
+                size="small"
+                icon="add"
+                onClick={() =>
+                  addSignatureMember({
+                    recordId: record.id,
+                    memberType: CreateSignatureMemberMemberTypeEnum.CHAIRMAN,
+                  })
+                }
+              >
+                Bæta við formanni
+              </Button>
+            )}
+          </Inline>
+          {chairman !== null && (
+            <SignatureMember
+              {...chairman}
+              isDeleting={isRemovingSignatureMember}
+              isUpdating={isUpdatingSignatureMember}
+              onChange={(key, value) =>
+                debouncedOnMemberChangeHandler(chairman.id, key, value)
+              }
+              onDelete={() =>
+                removeSignatureMember({
+                  recordId: record.id,
+                  memberId: chairman.id,
+                })
+              }
+            />
+          )}
+        </Stack>
+      </ContentWrapper>
       <ContentWrapper titleVariant="h5" titleAs="h5" title="Undirritað af">
         <Stack dividers space={2}>
           <Stack space={2} dividers>
@@ -174,18 +229,37 @@ export const SignatureRecord = ({ record }: Props) => {
           </Stack>
           <Inline justifyContent="flexEnd">
             <Button
+              variant="utility"
               disabled={!canEdit}
               loading={isAddingSignatureMember}
               icon="add"
               iconType="outline"
               size="small"
-              onClick={() => addSignatureMember({ recordId: record.id })}
+              onClick={() =>
+                addSignatureMember({
+                  recordId: record.id,
+                  memberType: CreateSignatureMemberMemberTypeEnum.MEMBER,
+                })
+              }
             >
               Bæta við undirritanda
             </Button>
           </Inline>
         </Stack>
       </ContentWrapper>
+      <ContentWrapper title="Aukaundirritun" titleVariant="h5" titleAs="h5">
+        <OJOIInput
+          label="Nafn"
+          name={`${record.id}-additional`}
+          onChange={(e) => debouncedOnAdditionalChangeHandler(e.target.value)}
+        />
+      </ContentWrapper>
+
+      <Inline justifyContent="flexEnd">
+        <Button variant="utility" icon="add" onClick={() => refetchSignature()}>
+          Bæta við auka undirritun
+        </Button>
+      </Inline>
       <SignatureDislay />
     </Stack>
   )

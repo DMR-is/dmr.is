@@ -1566,11 +1566,17 @@
         "responses": { "204": { "description": "" } }
       }
     },
-    "/api/v1/signatures/{signatureId}/records/{recordId}/members": {
+    "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberType}": {
       "post": {
         "operationId": "createSignatureMember",
         "summary": "",
         "parameters": [
+          {
+            "name": "memberType",
+            "required": true,
+            "in": "path",
+            "schema": { "enum": ["CHAIRMAN", "MEMBER"], "type": "string" }
+          },
           {
             "name": "recordId",
             "required": true,
@@ -3526,7 +3532,7 @@
           "id": { "type": "string" },
           "institution": { "type": "string" },
           "signatureDate": { "type": "string" },
-          "additonal": { "type": "string", "nullable": true },
+          "additional": { "type": "string", "nullable": true },
           "chairman": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
@@ -3540,7 +3546,7 @@
           "id",
           "institution",
           "signatureDate",
-          "additonal",
+          "additional",
           "chairman",
           "members"
         ]
@@ -4188,7 +4194,7 @@
         "properties": {
           "institution": { "type": "string" },
           "signatureDate": { "type": "string" },
-          "additonal": { "type": "string" }
+          "additional": { "type": "string" }
         }
       },
       "CreateSignatureMember": {
@@ -4232,7 +4238,7 @@
         "properties": {
           "institution": { "type": "string" },
           "signatureDate": { "type": "string" },
-          "additonal": { "type": "string" },
+          "additional": { "type": "string" },
           "chairman": { "$ref": "#/components/schemas/CreateSignatureMember" },
           "members": {
             "type": "array",

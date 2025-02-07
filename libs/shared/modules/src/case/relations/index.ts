@@ -11,9 +11,6 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
 } from '../../journal/models'
-import { SignatureModel } from '../../signature/models/signature.model'
-import { SignatureMemberModel } from '../../signature/models/signature-member.model'
-import { SignatureRecordModel } from '../../signature/models/signature-record.model'
 import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 import {
   CaseAdditionModel,
@@ -74,25 +71,6 @@ export const casesDetailedIncludes = [
         model: CaseStatusModel,
         attributes: ['id', 'title', 'slug'],
         as: 'caseStatusReceiver',
-      },
-    ],
-  },
-  {
-    model: SignatureModel,
-    include: [
-      AdvertInvolvedPartyModel,
-      {
-        model: SignatureRecordModel,
-        include: [
-          {
-            model: SignatureMemberModel,
-            as: 'chairman',
-          },
-          {
-            model: SignatureMemberModel,
-            as: 'members',
-          },
-        ],
       },
     ],
   },

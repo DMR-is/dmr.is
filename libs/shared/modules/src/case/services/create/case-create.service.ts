@@ -404,7 +404,7 @@ export class CaseCreateService implements ICaseCreateService {
             ? application.answers.signatures.regular.map((signature) => ({
                 institution: signature.institution,
                 signatureDate: signature.date,
-                additonal:
+                additional:
                   application.answers.signatures.additionalSignature?.regular,
                 members: signature.members.map((member) => ({
                   name: member.name,
@@ -419,7 +419,7 @@ export class CaseCreateService implements ICaseCreateService {
                   institution:
                     application.answers.signatures.committee.institution,
                   signatureDate: application.answers.signatures.committee.date,
-                  additonal:
+                  additional:
                     application.answers.signatures.additionalSignature
                       ?.committee,
                   members: application.answers.signatures.committee.members.map(

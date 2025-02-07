@@ -1,5 +1,5 @@
 import { TimeLog } from '@dmr.is/decorators'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CreateSignature,
   GetSignature,
@@ -26,6 +26,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
+import { MemberTypeEnum } from './lib/types'
 import { ISignatureService } from './signature.service.interface'
 
 @Controller({
@@ -83,18 +84,25 @@ export class SignatureController {
     )
   }
 
-  @Post(':signatureId/records/:recordId/members')
+  @Post(':signatureId/records/:recordId/members/:memberType')
   @ApiOperation({ operationId: 'createSignatureMember' })
   @ApiParam({ name: 'signatureId', type: String, required: true })
   @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiParam({ name: 'memberType', enum: MemberTypeEnum, required: true })
   @ApiNoContentResponse()
   @TimeLog()
   async createSignatureMember(
     @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
     @Param('recordId', new UUIDValidationPipe()) recordId: string,
+    @Param('memberType', new EnumValidationPipe(MemberTypeEnum))
+    memberType: MemberTypeEnum,
   ): Promise<void> {
     ResultWrapper.unwrap(
-      await this.signatureService.createSignatureMember(signatureId, recordId),
+      await this.signatureService.createSignatureMember(
+        signatureId,
+        recordId,
+        memberType,
+      ),
     )
   }
 

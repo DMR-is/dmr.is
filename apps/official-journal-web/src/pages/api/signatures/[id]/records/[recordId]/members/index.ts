@@ -1,8 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
+import { CreateSignatureMemberMemberTypeEnum } from '../../../../../../../gen/fetch'
 import { createDmrClient } from '../../../../../../../lib/api/createClient'
+
+const bodyShema = z.object({
+  memberType: z.nativeEnum(CreateSignatureMemberMemberTypeEnum),
+})
 
 class SignatureMembersHandler {
   @LogMethod(false)
@@ -22,6 +28,11 @@ class SignatureMembersHandler {
       recordId: string
     }
 
+    const parsed = bodyShema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).end()
+    }
+
     const dmrClient = createDmrClient()
 
     await dmrClient
@@ -29,6 +40,7 @@ class SignatureMembersHandler {
       .createSignatureMember({
         signatureId: id,
         recordId: recordId,
+        memberType: parsed.data.memberType,
       })
 
     return res.status(204).end()

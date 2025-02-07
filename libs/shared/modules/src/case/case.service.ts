@@ -81,6 +81,8 @@ import {
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { SignatureModel } from '../signature/models/signature.model'
+import { SignatureMemberModel } from '../signature/models/signature-member.model'
+import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
@@ -1078,6 +1080,44 @@ export class CaseService implements ICaseService {
           },
           required: false,
           include: [ApplicationAttachmentTypeModel],
+        },
+        {
+          model: SignatureModel,
+          include: [
+            AdvertInvolvedPartyModel,
+            {
+              model: SignatureRecordModel,
+              as: 'records',
+              include: [
+                {
+                  model: SignatureMemberModel,
+                  as: 'chairman',
+                },
+                {
+                  model: SignatureMemberModel,
+                  order: [['created', 'ASC']],
+                  as: 'members',
+                  required: false,
+                  where: {
+                    [Op.or]: [
+                      // Exclude chairman using Sequelize.where
+                      Sequelize.where(
+                        Sequelize.col('signature.records.members.id'),
+                        Op.ne,
+                        Sequelize.col('signature.records.chairman_id'),
+                      ),
+                      // Include all members if chairman_id is NULL
+                      Sequelize.where(
+                        Sequelize.col('signature.records.chairman_id'),
+                        Op.is,
+                        null,
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
         },
       ],
     })

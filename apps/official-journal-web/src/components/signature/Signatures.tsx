@@ -8,6 +8,8 @@ export const Signatures = () => {
 
   const { signature } = currentCase
 
+  console.log(signature)
+
   return (
     <Stack space={2}>
       {signature.records.map((s, i) => (

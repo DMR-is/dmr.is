@@ -2,6 +2,7 @@ import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
 import {
+  CreateSignatureMemberMemberTypeEnum,
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '../../../gen/fetch'
@@ -18,6 +19,7 @@ type UpdateSignatureMemberTriggerArgs = UpdateSignatureMember & {
 
 type AddSignatureMemberTriggerArgs = {
   recordId: string
+  memberType: CreateSignatureMemberMemberTypeEnum
 }
 
 type DeleteSignatureMemberTriggerArgs = {
@@ -126,12 +128,13 @@ export const useUpdateSignature = ({
     swrMutation<Response, Error, Key, AddSignatureMemberTriggerArgs>(
       APIRoutes.SignatureMembers,
       (url: string, { arg }: { arg: AddSignatureMemberTriggerArgs }) =>
-        fetcher<Response>(
+        fetcher<Response, Omit<AddSignatureMemberTriggerArgs, 'recordId'>>(
           url.replace(':id', signatureId).replace(':recordId', arg.recordId),
           {
             arg: {
               withAuth: true,
               method: 'POST',
+              body: arg,
             },
           },
         ),

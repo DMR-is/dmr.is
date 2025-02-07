@@ -7,6 +7,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { MemberTypeEnum } from './lib/types'
+
 export interface ISignatureService {
   createSignature(
     caseId: string,
@@ -47,7 +49,7 @@ export interface ISignatureService {
   createSignatureMember(
     signatureId: string,
     recordId: string,
-    transaction?: Transaction,
+    memberType: MemberTypeEnum,
   ): Promise<ResultWrapper>
 
   deleteSignatureMember(

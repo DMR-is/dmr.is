@@ -10,8 +10,8 @@ export const signatureRecordMigrate = (
     id: model.id,
     institution: model.institution,
     signatureDate: model.signatureDate,
-    additonal: model.additional ?? null,
-    chairman: model.chairman ?? null,
+    additional: model.additional ?? null,
+    chairman: model.chairman ? signatureMemberMigrate(model.chairman) : null,
     members: model.members.map((m) => signatureMemberMigrate(m)),
   }
 }
