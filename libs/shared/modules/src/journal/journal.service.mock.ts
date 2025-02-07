@@ -34,6 +34,7 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
+  GetSimilarAdvertsResponse,
   Institution,
   UpdateAdvertBody,
   UpdateMainCategory,
@@ -121,6 +122,12 @@ export class MockJournalService implements IJournalService {
   updateInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getSimilarAdverts(
+    advertId: string,
+    limit = 10,
+  ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
     throw new Error('Method not implemented.')
   }
 

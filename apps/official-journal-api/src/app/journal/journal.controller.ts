@@ -18,6 +18,7 @@ import {
   GetDepartmentsResponse,
   GetInstitutionsResponse,
   GetMainCategoriesResponse,
+  GetSimilarAdvertsResponse,
   ValidationResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -46,6 +47,18 @@ export class JournalController {
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetAdvertResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
+  }
+
+  @Route({
+    path: '/adverts/similar/:id',
+    operationId: 'getSimilarAdvertsById',
+    params: [{ name: 'id', type: 'string', required: true }],
+    responseType: GetSimilarAdvertsResponse,
+  })
+  async similarAdverts(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetSimilarAdvertsResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getSimilarAdverts(id))
   }
 
   @Route({

@@ -18,6 +18,7 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
+  GetSimilarAdvertsResponse,
   Institution,
   MainCategory,
   UpdateAdvertBody,
@@ -30,6 +31,10 @@ export interface IJournalService {
   getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>>
+  getSimilarAdverts(
+    advertId: string,
+    limit?: number,
+  ): Promise<ResultWrapper<GetSimilarAdvertsResponse>>
   create(
     model: CreateAdvert,
     transaction?: Transaction,

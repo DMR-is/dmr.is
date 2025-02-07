@@ -23,6 +23,7 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
+  GetSimilarAdvertsResponse,
   Institution,
   UpdateAdvertBody,
   UpdateMainCategory,
@@ -45,6 +46,7 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -729,6 +731,86 @@ export class JournalService implements IJournalService {
           pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
         },
       },
+    })
+  }
+
+  @LogAndHandle()
+  async getSimilarAdverts(
+    advertId: string,
+    limit = 5,
+  ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
+    const originalAdvert = await this.advertModel.findByPk(advertId, {
+      include: [
+        { model: AdvertDepartmentModel, as: 'department' },
+        { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
+        { model: AdvertCategoryModel, as: 'categories' },
+        { model: AdvertTypeModel },
+      ],
+    })
+
+    if (!originalAdvert) {
+      throw new NotFoundException(`Advert with ID ${advertId} not found.`)
+    }
+
+    const departmentId = originalAdvert.department.id
+    const involvedPartyId = originalAdvert.involvedParty.id
+    const categoryIds = originalAdvert.categories?.map((c) => c.id) ?? []
+
+    const similarAdverts = await this.advertModel.findAll({
+      where: {
+        id: {
+          [Op.ne]: advertId,
+        },
+      },
+      include: [
+        {
+          model: AdvertDepartmentModel,
+          where: {
+            id: {
+              [Op.eq]: departmentId,
+            },
+          },
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          where: {
+            id: {
+              [Op.eq]: involvedPartyId,
+            },
+          },
+        },
+        AdvertAttachmentsModel,
+        AdvertStatusModel,
+        {
+          model: AdvertTypeModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: AdvertCategoryModel,
+          attributes: ['id', 'title', 'slug'],
+          where: {
+            id: {
+              [Op.in]: categoryIds,
+            },
+          },
+        },
+      ],
+      order: [
+        [
+          Sequelize.literal(`CASE
+            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 2
+            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 1
+            ELSE 0 END`),
+          'DESC',
+        ],
+      ],
+      limit: limit,
+    })
+
+    const mapped = similarAdverts.map((item) => advertSimilarMigrate(item))
+
+    return ResultWrapper.ok({
+      adverts: mapped,
     })
   }
 
