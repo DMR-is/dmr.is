@@ -44,6 +44,14 @@ export class SignatureService implements ISignatureService {
   private async _getSignature(signatureId: string, transaction?: Transaction) {
     const signature = await this.signatureModel.findByPk(signatureId, {
       include: SIGNATURE_INCLUDES,
+      order: [
+        [
+          { model: SignatureRecordModel, as: 'records' },
+          'signatureDate',
+          'ASC',
+        ],
+        [Sequelize.literal('"records.members.created"'), 'ASC'],
+      ],
       transaction,
     })
 
@@ -56,6 +64,14 @@ export class SignatureService implements ISignatureService {
     const signature = await this.signatureModel.findOne({
       where: whereParams,
       include: SIGNATURE_INCLUDES,
+      order: [
+        [
+          { model: SignatureRecordModel, as: 'records' },
+          'signatureDate',
+          'ASC',
+        ],
+        [Sequelize.literal('"records.members.created"'), 'ASC'],
+      ],
       transaction,
     })
 
@@ -462,7 +478,7 @@ export class SignatureService implements ISignatureService {
       {
         id: recordId,
         institution: '',
-        signatureDate: new Date(),
+        signatureDate: new Date().toISOString(),
         additional: '',
         signatureId: signatureId,
         chairmanId: null,

@@ -1095,7 +1095,6 @@ export class CaseService implements ICaseService {
                 },
                 {
                   model: SignatureMemberModel,
-                  order: [['created', 'ASC']],
                   as: 'members',
                   required: false,
                   where: {
@@ -1119,6 +1118,11 @@ export class CaseService implements ICaseService {
             },
           ],
         },
+      ],
+      order: [
+        [Sequelize.literal('"comments.created"'), 'ASC'],
+        [Sequelize.literal('"signature.records.signatureDate"'), 'ASC'],
+        [Sequelize.literal('"signature.records.members.created"'), 'ASC'],
       ],
     })
 

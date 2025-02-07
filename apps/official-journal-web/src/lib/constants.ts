@@ -165,6 +165,7 @@ export enum APIRoutes {
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   Signature = '/api/signatures/:id',
   SignatureRecord = '/api/signatures/:id/records/:recordId',
+  SignatureRecords = '/api/signatures/:id/records',
   SignatureMember = '/api/signatures/:id/records/:recordId/members/:mid',
   SignatureMembers = '/api/signatures/:id/records/:recordId/members',
   UpdateAdvertHtml = '/api/cases/:id/updateAdvertHtml',

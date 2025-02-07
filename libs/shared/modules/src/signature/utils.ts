@@ -64,10 +64,10 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
   const membersMarkup =
     members.map((member) => memberTemplate(member)).join('') ?? ''
 
-  const additionalMarkup = `<p align="right" text-a><em>${record.additional}</em></p>`
+  const additionalMarkup = `<p style="margin-top: 1.5em;" align="right" text-a><em>${record.additional}</em></p>`
 
   return `
-      <div class="signature">
+      <div class="signature" style="margin-bottom: 1.5em;">
         <p align="center">${
           record.institution
         } <span class="signature__date">${formattedDate}</span></p>
@@ -105,7 +105,6 @@ export const SIGNATURE_INCLUDES: Includeable[] = [
       },
       {
         model: SignatureMemberModel,
-        order: [['created', 'ASC']],
         as: 'members',
         required: false,
         where: whereClause,

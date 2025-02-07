@@ -95,6 +95,7 @@ export const CaseProvider = ({
     options: {
       keepPreviousData: true,
       revalidateOnFocus: false,
+      refreshInterval: 0,
       onSuccess: (data) => {
         setCurrentCase(data._case)
         setLastFetched(new Date().toISOString())
@@ -108,6 +109,7 @@ export const CaseProvider = ({
       options: {
         keepPreviousData: true,
         revalidateOnFocus: false,
+        refreshInterval: 0,
         onSuccess: ({ signature }) => {
           setCurrentCase((prev) => ({
             ...prev,

@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce'
+import { useCallback } from 'react'
 
 import {
   Button,
@@ -19,7 +20,6 @@ import {
 } from '../../gen/fetch'
 import { useUpdateSignature } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { SignatureDislay } from '../advert-display/SignatureDisplay'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
 import { SignatureMember } from './SignatureMember'
@@ -43,6 +43,15 @@ export const SignatureRecord = ({ record }: Props) => {
     isUpdatingSignatureMember,
   } = useUpdateSignature({
     signatureId: currentCase.signature.id,
+    addSignatureRecordOptions: {
+      onSuccess: () => {
+        toast.success('Auka undirritun bætt við')
+        refetchSignature()
+      },
+      onError: () => {
+        toast.error('Ekki tóskt að bæta við undirritun')
+      },
+    },
     updateSignatureRecordOptions: {
       onSuccess: () => {
         toast.success('Undirritun uppfærð')
@@ -81,21 +90,16 @@ export const SignatureRecord = ({ record }: Props) => {
     },
   })
 
-  const onChangeHandler = (key: SignatureRecordKey, value: string) => {
+  const updateRecord = (key: SignatureRecordKey, value: string) => {
     updateSignatureRecord({
       recordId: record.id,
       [key]: value,
     })
   }
 
-  const debouncedOnChange = debounce(onChangeHandler, 500)
+  const handleRecordChange = useCallback(debounce(updateRecord, 500), [])
 
-  const debouncedOnChangeHandler = (key: SignatureRecordKey, value: string) => {
-    debouncedOnChange.cancel()
-    debouncedOnChange(key, value)
-  }
-
-  const onMemberChangeHandler = (
+  const updateMember = (
     memberId: string,
     key: keyof SignatureMemberDto,
     value: string,
@@ -107,30 +111,16 @@ export const SignatureRecord = ({ record }: Props) => {
     })
   }
 
-  const debouncedOnMemberChange = debounce(onMemberChangeHandler, 500)
+  const handleMemberchange = useCallback(debounce(updateMember, 500), [])
 
-  const debouncedOnMemberChangeHandler = (
-    memberId: string,
-    key: keyof SignatureMemberDto,
-    value: string,
-  ) => {
-    debouncedOnMemberChange.cancel()
-    debouncedOnMemberChange(memberId, key, value)
-  }
-
-  const onAdditionalChangeHandler = (value: string) => {
+  const updateAdditional = (value: string) => {
     updateSignatureRecord({
       recordId: record.id,
       additional: value,
     })
   }
 
-  const debouncedOnAdditionalChange = debounce(onAdditionalChangeHandler, 500)
-
-  const debouncedOnAdditionalChangeHandler = (value: string) => {
-    debouncedOnAdditionalChange.cancel()
-    debouncedOnAdditionalChange(value)
-  }
+  const handleAdditionChange = useCallback(debounce(updateAdditional, 500), [])
 
   const { chairman } = record
 
@@ -150,7 +140,7 @@ export const SignatureRecord = ({ record }: Props) => {
               label="Stofnun"
               name="institution"
               onChange={(e) =>
-                debouncedOnChangeHandler('institution', e.target.value)
+                handleRecordChange('institution', e.target.value)
               }
             />
           </Column>
@@ -165,7 +155,7 @@ export const SignatureRecord = ({ record }: Props) => {
               size="sm"
               backgroundColor="blue"
               handleChange={(date) =>
-                debouncedOnChangeHandler('signatureDate', date.toISOString())
+                handleRecordChange('signatureDate', date.toISOString())
               }
             />
           </Column>
@@ -177,6 +167,7 @@ export const SignatureRecord = ({ record }: Props) => {
             <Text variant="h5">Formaður</Text>
             {chairman === null && (
               <Button
+                disabled={!canEdit}
                 variant="utility"
                 size="small"
                 icon="add"
@@ -197,7 +188,7 @@ export const SignatureRecord = ({ record }: Props) => {
               isDeleting={isRemovingSignatureMember}
               isUpdating={isUpdatingSignatureMember}
               onChange={(key, value) =>
-                debouncedOnMemberChangeHandler(chairman.id, key, value)
+                handleMemberchange(chairman.id, key, value)
               }
               onDelete={() =>
                 removeSignatureMember({
@@ -218,9 +209,7 @@ export const SignatureRecord = ({ record }: Props) => {
                 key={m.id}
                 isDeleting={isRemovingSignatureMember}
                 isUpdating={isUpdatingSignatureMember}
-                onChange={(key, value) =>
-                  debouncedOnMemberChangeHandler(m.id, key, value)
-                }
+                onChange={(key, value) => handleMemberchange(m.id, key, value)}
                 onDelete={() =>
                   removeSignatureMember({ recordId: record.id, memberId: m.id })
                 }
@@ -249,18 +238,12 @@ export const SignatureRecord = ({ record }: Props) => {
       </ContentWrapper>
       <ContentWrapper title="Aukaundirritun" titleVariant="h5" titleAs="h5">
         <OJOIInput
+          disabled={!canEdit}
           label="Nafn"
           name={`${record.id}-additional`}
-          onChange={(e) => debouncedOnAdditionalChangeHandler(e.target.value)}
+          onChange={(e) => handleAdditionChange(e.target.value)}
         />
       </ContentWrapper>
-
-      <Inline justifyContent="flexEnd">
-        <Button variant="utility" icon="add" onClick={() => refetchSignature()}>
-          Bæta við auka undirritun
-        </Button>
-      </Inline>
-      <SignatureDislay />
     </Stack>
   )
 }

@@ -27,6 +27,13 @@ type DeleteSignatureMemberTriggerArgs = {
   memberId: string
 }
 
+type SWRAddSignatureRecord = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  undefined
+>
+
 type SWRUpdateSignatureRecord = SWRMutationConfiguration<
   Response,
   Error,
@@ -56,6 +63,7 @@ type SWRDeleteSignatureMemberOptions = SWRMutationConfiguration<
 >
 
 type UseUpdateSignatureParams = {
+  addSignatureRecordOptions?: SWRAddSignatureRecord
   updateSignatureRecordOptions?: SWRUpdateSignatureRecord
   updateSignatureMemberOptions?: SWRUpdateSignatureMemberOptions
   addSignatureMemberOptions?: SWRAddSignatureMemberOptions
@@ -65,11 +73,28 @@ type UseUpdateSignatureParams = {
 
 export const useUpdateSignature = ({
   signatureId,
+  addSignatureRecordOptions,
   updateSignatureRecordOptions,
   updateSignatureMemberOptions,
   addSignatureMemberOptions,
   deleteSignatureMemberOptions,
 }: UseUpdateSignatureParams) => {
+  const { trigger: addSignatureRecord, isMutating: isAddingSignatureRecord } =
+    swrMutation<Response, Error, Key, undefined>(
+      APIRoutes.SignatureRecords,
+      (url: string) =>
+        fetcher<Response>(url.replace(':id', signatureId), {
+          arg: {
+            withAuth: true,
+            method: 'POST',
+          },
+        }),
+      {
+        ...addSignatureRecordOptions,
+        throwOnError: false,
+      },
+    )
+
   const {
     trigger: updateSignatureRecord,
     isMutating: isUpdatingSignatureRecord,
@@ -169,6 +194,8 @@ export const useUpdateSignature = ({
   )
 
   return {
+    addSignatureRecord,
+    isAddingSignatureRecord,
     updateSignatureRecord,
     isUpdatingSignatureRecord,
     updateSignatureMember,

@@ -30,7 +30,7 @@ export function Transactional() {
             `Using existing transaction for ${originalMethod.name}`,
             {
               context: LOGGING_CONTEXT,
-              id: get(currentTransaction, '_localTraceId'),
+              traceId: get(currentTransaction, '_localTraceId'),
             },
           )
           return originalMethod.apply(this, args)
