@@ -9,6 +9,7 @@ import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 import Banner from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
 import { Main } from '../components/main/Main'
+import { PageLoader } from '../components/page-loader/page-loader'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
 
@@ -69,6 +70,7 @@ export const Layout = ({
         }}
       >
         <Provider>
+          <PageLoader />
           <Page component="div">
             <Head>
               {preloadedFonts.map((href, index) => {
