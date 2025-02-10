@@ -72,6 +72,23 @@
         "jestConfig": "apps/regulations-api/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
+      }
+    },
+    "dev-services": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose up -d",
+        "cwd": "apps/regulations-api"
+      }
     }
   },
   "tags": []
