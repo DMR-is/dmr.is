@@ -127,6 +127,21 @@ export class SignatureController {
     )
   }
 
+  @Delete(':signatureId/records/:recordId')
+  @ApiOperation({ operationId: 'deleteSignatureRecord' })
+  @ApiParam({ name: 'signatureId', type: String, required: true })
+  @ApiParam({ name: 'recordId', type: String, required: true })
+  @ApiNoContentResponse()
+  @TimeLog()
+  async deleteSignatureRecord(
+    @Param('signatureId', new UUIDValidationPipe()) signatureId: string,
+    @Param('recordId', new UUIDValidationPipe()) recordId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.signatureService.deleteSignatureRecord(signatureId, recordId),
+    )
+  }
+
   @Post(':signatureId/records')
   @ApiOperation({ operationId: 'createSignatureRecord' })
   @ApiParam({ name: 'signatureId', type: String, required: true })

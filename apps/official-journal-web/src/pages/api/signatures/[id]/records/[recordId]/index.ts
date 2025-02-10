@@ -18,6 +18,8 @@ class SignatureRecordHandler {
     switch (req.method) {
       case 'PUT':
         return void (await this.update(req, res))
+      case 'DELETE':
+        return void (await this.delete(req, res))
       default:
         return res.status(405).end()
     }
@@ -40,6 +42,21 @@ class SignatureRecordHandler {
         signatureId: id,
         recordId: recordId,
         updateSignatureRecord: parsed.data,
+      })
+
+    return res.status(204).end()
+  }
+
+  private async delete(req: NextApiRequest, res: NextApiResponse) {
+    const { id, recordId } = req.query as { id: string; recordId: string }
+
+    const dmrClient = createDmrClient()
+
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .deleteSignatureRecord({
+        signatureId: id,
+        recordId: recordId,
       })
 
     return res.status(204).end()

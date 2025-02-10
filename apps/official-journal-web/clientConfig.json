@@ -1620,6 +1620,25 @@
           }
         },
         "responses": { "204": { "description": "" } }
+      },
+      "delete": {
+        "operationId": "deleteSignatureRecord",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "recordId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } }
       }
     },
     "/api/v1/signatures/{signatureId}/records": {

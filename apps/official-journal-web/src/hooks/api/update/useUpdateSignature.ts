@@ -27,6 +27,10 @@ type DeleteSignatureMemberTriggerArgs = {
   memberId: string
 }
 
+type DeleteSignatureRecordTriggerArgs = {
+  recordId: string
+}
+
 type SWRAddSignatureRecord = SWRMutationConfiguration<
   Response,
   Error,
@@ -62,12 +66,20 @@ type SWRDeleteSignatureMemberOptions = SWRMutationConfiguration<
   DeleteSignatureMemberTriggerArgs
 >
 
+type DeleteSignatureRecordOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  DeleteSignatureRecordTriggerArgs
+>
+
 type UseUpdateSignatureParams = {
   addSignatureRecordOptions?: SWRAddSignatureRecord
   updateSignatureRecordOptions?: SWRUpdateSignatureRecord
   updateSignatureMemberOptions?: SWRUpdateSignatureMemberOptions
   addSignatureMemberOptions?: SWRAddSignatureMemberOptions
   deleteSignatureMemberOptions?: SWRDeleteSignatureMemberOptions
+  deleteSignatureRecordOptions?: DeleteSignatureRecordOptions
   signatureId: string
 }
 
@@ -78,6 +90,7 @@ export const useUpdateSignature = ({
   updateSignatureMemberOptions,
   addSignatureMemberOptions,
   deleteSignatureMemberOptions,
+  deleteSignatureRecordOptions,
 }: UseUpdateSignatureParams) => {
   const { trigger: addSignatureRecord, isMutating: isAddingSignatureRecord } =
     swrMutation<Response, Error, Key, undefined>(
@@ -193,6 +206,27 @@ export const useUpdateSignature = ({
     },
   )
 
+  const {
+    trigger: removeSignatureRecord,
+    isMutating: isRemovingSignatureRecord,
+  } = swrMutation<Response, Error, Key, DeleteSignatureRecordTriggerArgs>(
+    APIRoutes.SignatureRecord,
+    (url: string, { arg }: { arg: DeleteSignatureRecordTriggerArgs }) =>
+      fetcher<Response>(
+        url.replace(':id', signatureId).replace(':recordId', arg.recordId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'DELETE',
+          },
+        },
+      ),
+    {
+      ...deleteSignatureRecordOptions,
+      throwOnError: false,
+    },
+  )
+
   return {
     addSignatureRecord,
     isAddingSignatureRecord,
@@ -204,5 +238,7 @@ export const useUpdateSignature = ({
     isAddingSignatureMember,
     removeSignatureMember,
     isRemovingSignatureMember,
+    removeSignatureRecord,
+    isRemovingSignatureRecord,
   }
 }

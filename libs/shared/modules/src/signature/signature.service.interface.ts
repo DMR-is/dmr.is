@@ -64,6 +64,12 @@ export interface ISignatureService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
+  deleteSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   // createCaseSignature(
   //   body: CreateSignatureBody,
   //   transaction?: Transaction,

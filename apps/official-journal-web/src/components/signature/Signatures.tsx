@@ -24,10 +24,12 @@ export const Signatures = () => {
   })
 
   return (
-    <Stack space={2}>
-      {signature.records.map((record) => (
-        <SignatureRecord key={record.id} record={record} />
-      ))}
+    <Stack space={4}>
+      <Stack space={4} dividers>
+        {signature.records.map((record) => (
+          <SignatureRecord key={record.id} record={record} />
+        ))}
+      </Stack>
       <Inline justifyContent="flexEnd">
         <Button
           disabled={!canEdit}
@@ -36,7 +38,7 @@ export const Signatures = () => {
           icon="add"
           onClick={() => addSignatureRecord()}
         >
-          Bæta við auka undirritun
+          Bæta við undirritunar kafla
         </Button>
       </Inline>
       <SignatureDislay />

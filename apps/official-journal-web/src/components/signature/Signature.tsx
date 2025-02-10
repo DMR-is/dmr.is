@@ -41,6 +41,8 @@ export const SignatureRecord = ({ record }: Props) => {
     isRemovingSignatureMember,
     updateSignatureMember,
     isUpdatingSignatureMember,
+    removeSignatureRecord,
+    isRemovingSignatureRecord,
   } = useUpdateSignature({
     signatureId: currentCase.signature.id,
     addSignatureRecordOptions: {
@@ -86,6 +88,15 @@ export const SignatureRecord = ({ record }: Props) => {
       },
       onError: () => {
         toast.error('Ekki tókst að uppfæra undirritara')
+      },
+    },
+    deleteSignatureRecordOptions: {
+      onSuccess: () => {
+        toast.success('Undirritunar kafla eytt')
+        refetchSignature()
+      },
+      onError: () => {
+        toast.error('Ekki tókst að eyða undirritunar kafla')
       },
     },
   })
@@ -145,19 +156,35 @@ export const SignatureRecord = ({ record }: Props) => {
             />
           </Column>
           <Column>
-            <DatePicker
-              disabled={!canEdit}
-              locale="is"
-              label="Dagsetning undirritunar"
-              name="signature-date"
-              selected={new Date(record.signatureDate)}
-              placeholderText="Dagsetning undirritunar"
-              size="sm"
-              backgroundColor="blue"
-              handleChange={(date) =>
-                handleRecordChange('signatureDate', date.toISOString())
-              }
-            />
+            <Stack space={2}>
+              <DatePicker
+                disabled={!canEdit}
+                locale="is"
+                label="Dagsetning undirritunar"
+                name="signature-date"
+                selected={new Date(record.signatureDate)}
+                placeholderText="Dagsetning undirritunar"
+                size="sm"
+                backgroundColor="blue"
+                handleChange={(date) =>
+                  handleRecordChange('signatureDate', date.toISOString())
+                }
+              />
+              <Inline justifyContent="flexEnd">
+                <Button
+                  disabled={!canEdit}
+                  loading={isRemovingSignatureRecord}
+                  onClick={() => removeSignatureRecord({ recordId: record.id })}
+                  variant="utility"
+                  size="small"
+                  colorScheme="destructive"
+                  icon="trash"
+                  iconType="outline"
+                >
+                  Eyða undirritunar kafla
+                </Button>
+              </Inline>
+            </Stack>
           </Column>
         </Columns>
       </ContentWrapper>
@@ -240,6 +267,7 @@ export const SignatureRecord = ({ record }: Props) => {
         <OJOIInput
           disabled={!canEdit}
           label="Nafn"
+          defaultValue={record.additional ?? ''}
           name={`${record.id}-additional`}
           onChange={(e) => handleAdditionChange(e.target.value)}
         />

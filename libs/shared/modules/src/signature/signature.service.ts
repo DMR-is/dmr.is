@@ -489,4 +489,49 @@ export class SignatureService implements ISignatureService {
     await this._updateSignature(signatureId, transaction)
     return ResultWrapper.ok()
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const record = await this.signatureRecordModel.findByPk(recordId, {
+      include: [
+        {
+          model: SignatureModel,
+          where: {
+            id: signatureId,
+          },
+        },
+      ],
+      transaction,
+    })
+
+    if (!record) {
+      this.logger.warn('Signature record not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+      })
+
+      throw new NotFoundException('Signature record not found')
+    }
+
+    const members = await this.signatureMemberModel.findAll({
+      where: {
+        signatureRecordId: recordId,
+      },
+      transaction,
+    })
+
+    await record.update({ chairmanId: null }, { transaction })
+    await Promise.all(members.map((member) => member.destroy({ transaction })))
+    await record.destroy({ transaction })
+    await this._updateSignature(signatureId, transaction)
+
+    return ResultWrapper.ok()
+  }
 }
