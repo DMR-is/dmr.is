@@ -20,8 +20,8 @@ import {
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
-  Signature,
   GetComments,
+  GetSignature,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -39,7 +39,6 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
-  NotFoundException,
 } from '@nestjs/common'
 import {
   UUIDValidationPipe,
@@ -434,32 +433,22 @@ export class ApplicationController {
   @ApiResponse({
     status: 200,
     description: 'Successful signature get.',
-    type: Signature,
+    type: GetSignature,
   })
   @Route({
     path: '/involved-party/:involvedPartyId',
     method: 'get',
     operationId: 'getSignaturesForInvolvedParty',
     params: [{ name: 'involvedPartyId', type: 'string', required: true }],
-    responseType: Signature,
+    responseType: GetSignature,
   })
   async getSignaturesForInvolvedParty(
     @Param('involvedPartyId', new UUIDValidationPipe()) involvedPartyId: string,
   ) {
     const res = ResultWrapper.unwrap(
-      await this.signatureService.getSignatureForInvolvedParty(
-        involvedPartyId,
-        undefined,
-        true,
-      ),
+      await this.signatureService.getSignatureForInvolvedParty(involvedPartyId),
     )
 
-    const signature = res.signatures[0]
-
-    if (!signature) {
-      throw new NotFoundException('Signature not found')
-    }
-
-    return signature
+    return res
   }
 }

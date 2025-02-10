@@ -852,7 +852,7 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const activeCase = await this.caseModel.findByPk(caseId, {
-      include: [...casesDetailedIncludes],
+      include: [...casesDetailedIncludes, { model: SignatureModel }],
     })
 
     if (!activeCase) {
