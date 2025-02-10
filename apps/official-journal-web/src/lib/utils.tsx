@@ -1,31 +1,22 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
-import { ComponentProps } from 'react'
 import { z } from 'zod'
 
-import type { Icon, IconMapIcon } from '@island.is/island-ui/core'
-import { Stack, StringOption, Text } from '@island.is/island-ui/core'
+import { Stack, Text } from '@island.is/island-ui/core'
 
 import {
   BaseEntity,
   CaseActionEnum,
   CaseDetailed,
   CaseStatusEnum,
-  CaseTagTitleEnum,
   CommentDto,
   DepartmentEnum,
   GetCasesRequest,
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
-  Signature,
 } from '../gen/fetch'
-import {
-  FALLBACK_DOMAIN,
-  JSON_ENDING,
-  OJOIWebException,
-  Routes,
-} from './constants'
+import { OJOIWebException, Routes } from './constants'
 
 export const toFixed = (num: number, fixed: number) => {
   return num % 1 === 0 ? num : num.toFixed(fixed)
@@ -37,29 +28,6 @@ export const formatDate = (date: string, df = 'dd.MM.yyyy') => {
   } catch (e) {
     throw new Error(`Could not format date: ${date}`)
   }
-}
-
-export const safelyExtractPathnameFromUrl = (url?: string) => {
-  if (!url) return ''
-
-  let pathname = new URL(url, FALLBACK_DOMAIN).pathname
-
-  if (pathname.endsWith(JSON_ENDING)) {
-    pathname = pathname.slice(0, pathname.indexOf(JSON_ENDING))
-  }
-
-  // Handle client side getServerSideProps calls
-  if (pathname.startsWith('/_next/data')) {
-    // The pathname looks like this then: '/_next/data/${bundleId}/...'
-
-    // We split it to get: ['', '_next', 'data', `${bundleId}`, ...]
-    const sections = pathname.split('/')
-
-    // Then join the sections back together only keeping what makes up the url
-    pathname = `/${sections.slice(4).join('/')}`
-  }
-
-  return pathname
 }
 
 export const mapTabIdToCaseStatus = (param?: string) => {
@@ -77,15 +45,6 @@ export const mapTabIdToCaseStatus = (param?: string) => {
     default:
       return CaseStatusEnum.Innsent
   }
-}
-
-export const enumToOptions = (
-  obj: typeof CaseStatusEnum | typeof CaseTagTitleEnum,
-): StringOption[] => {
-  return Object.entries(obj).map(([_, value]) => ({
-    label: value,
-    value: value,
-  }))
 }
 
 const caseStatusToIndex: Record<CaseStatusEnum, number> = {
@@ -131,37 +90,6 @@ export type CaseStep =
   | 'yfirlestur'
   | 'tilbuid'
   | 'leidretting'
-
-export const caseSteps: Array<CaseStep> = [
-  'innsent',
-  'grunnvinnsla',
-  'yfirlestur',
-  'tilbuid',
-  'leidretting',
-]
-
-export const caseStatusToCaseStep = (
-  status: string | CaseStep,
-): CaseStep | null => {
-  if (
-    status === 'innsent' ||
-    status === 'grunnvinnsla' ||
-    status === 'yfirlestur' ||
-    status === 'tilbuid'
-  ) {
-    return status
-  }
-
-  if (
-    status === 'utgefid' ||
-    status === 'birtingu-hafnad' ||
-    status === 'tekid-ur-birtingu'
-  ) {
-    return 'leidretting'
-  }
-
-  return null
-}
 
 type StepsType = {
   step: CaseStep
@@ -341,56 +269,12 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
   ]
 }
 
-type CaseProccessingSearchParams = {
-  tab?: string
-}
-
-export const getCaseProcessingSearchParams = (
-  query: ParsedUrlQuery,
-): CaseProccessingSearchParams => {
-  const params: CaseProccessingSearchParams = {}
-
-  if (query?.tab) {
-    params.tab = Array.isArray(query.tab) ? query.tab[0] : query.tab
-  }
-
-  return params
-}
-
 export const createOptions = <T extends BaseEntity>(arr: T[]) => {
   return arr.map((item) => ({
     label: item.title,
     value: item.id,
   }))
 }
-
-export const getSignatureDate = (signatures: Signature[]) => {
-  if (signatures.length === 0) {
-    return null
-  }
-
-  return signatures[0].date
-}
-
-export const getCommentIcon = (comment: CommentDto): IconMapIcon => {
-  if (comment.action === CaseActionEnum.INTERNALCOMMENT) {
-    return 'pencil'
-  }
-
-  if (comment.action === CaseActionEnum.EXTERNALCOMMENT) {
-    return 'arrowBack'
-  }
-
-  return 'arrowForward'
-}
-
-export const mapLetterToDepartmentSlug = (letter: string) =>
-  letter === 'a' ? 'a-deild' : letter === 'b' ? 'b-deild' : 'c-deild'
-
-export const mapDepartmentSlugToLetter = (slug: string) =>
-  slug === 'a-deild' ? 'a' : slug === 'b-deild' ? 'b' : 'c'
-
-export const getTimestamp = () => new Date().toISOString()
 
 export const deleteUndefined = <T,>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
