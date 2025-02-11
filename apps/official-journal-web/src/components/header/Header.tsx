@@ -1,4 +1,5 @@
 import cn from 'classnames'
+import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 
@@ -28,17 +29,18 @@ type HeaderType = {
 
 export const Header = ({ headerWhite }: HeaderType) => {
   const { formatMessage } = useFormatMessage()
+  const pathName = usePathname()
   const { data: session } = useSession()
   const logOut = useLogOut()
 
   useEffect(() => {
-    if (session?.invalid === true) {
+    if (session?.invalid === true && session?.user) {
       // Make sure to log out if the session is invalid
       // This is just a front-end logout for the user's convenience
       // The session is invalidated on the server side
       logOut()
     }
-  }, [session?.invalid])
+  }, [session?.invalid, pathName])
 
   return (
     <Hidden print={true}>

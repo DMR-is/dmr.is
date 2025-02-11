@@ -1,5 +1,6 @@
 import { GetServerSideProps } from 'next'
 import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 
 import {
   Box,
@@ -21,6 +22,7 @@ type Props = {
 }
 
 export default function Login({ prevUrl }: Props) {
+  const [loading, setLoading] = useState(false)
   return (
     <GridContainer>
       <GridRow marginTop={[2, 2, 3]}>
@@ -45,11 +47,18 @@ export default function Login({ prevUrl }: Props) {
               </Text>
               <Box marginTop={[2, 2, 3]}>
                 <Button
-                  onClick={() =>
-                    signIn(identityServerId, { callbackUrl: prevUrl })
-                  }
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    try {
+                      setLoading(true)
+                      await signIn(identityServerId, { callbackUrl: prevUrl })
+                    } catch (error) {
+                      setLoading(false)
+                    }
+                  }}
                   icon="person"
                   iconType="outline"
+                  loading={loading}
                 >
                   Skrá inn með rafrænum skilríkjum
                 </Button>
