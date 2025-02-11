@@ -1,6 +1,9 @@
 name: Deploy APIs to AWS Dev
 
 on:
+  push:
+    branches:
+      - get-it-working-on-dev
   workflow_run:
     workflows: ['Monorepo pipeline - quality']
     branches: ['main']
@@ -22,13 +25,13 @@ jobs:
       matrix:
         api:
           [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
+#            official-journal-api,
+#            official-journal-admin-api,
+#            official-journal-application-api,
             regulations-api,
           ]
     name: 'Build and push images: ${{ matrix.api }}'
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,39 +102,39 @@ jobs:
           INPUT_TAGS: ${{ steps.meta.outputs.tags }}
           INPUT_PUSH: true
 
-  deploy-to-dev:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    strategy:
-      matrix:
-        api:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
-            regulations-api,
-          ]
-    name: Deploy to ${{ matrix.api }} - dev
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
-          role-session-name: GitHub-Action-Role
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Deploy to Amazon ECS
-        run: |
-          aws ecs update-service \
-            --cluster dev-dmr-utgafa \
-            --service ${{ matrix.api }} \
-            --force-new-deployment
-
-      - name: Wait for service to stabilize
-        run: |
-          aws ecs wait services-stable \
-            --cluster dev-dmr-utgafa \
-            --services ${{ matrix.api }}
+#  deploy-to-dev:
+#    runs-on: ubuntu-latest
+#    needs: build-and-push
+#    strategy:
+#      matrix:
+#        api:
+#          [
+#            official-journal-api,
+#            official-journal-admin-api,
+#            official-journal-application-api,
+#            regulations-api,
+#          ]
+#    name: Deploy to ${{ matrix.api }} - dev
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
+#          role-session-name: GitHub-Action-Role
+#          aws-region: ${{ env.AWS_REGION }}
+#
+#      - name: Deploy to Amazon ECS
+#        run: |
+#          aws ecs update-service \
+#            --cluster dev-dmr-utgafa \
+#            --service ${{ matrix.api }} \
+#            --force-new-deployment
+#
+#      - name: Wait for service to stabilize
+#        run: |
+#          aws ecs wait services-stable \
+#            --cluster dev-dmr-utgafa \
+#            --services ${{ matrix.api }}
