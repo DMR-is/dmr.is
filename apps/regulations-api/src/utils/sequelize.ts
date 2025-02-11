@@ -12,12 +12,12 @@ export let db: Sequelize;
 
 export const connectSequelize = async () => {
   db = await new Sequelize({
-    dialect: 'mysql',
-    host: process.env.MYSQL_HOST,
-    port: parseInt(process.env.MYSQL_PORT ?? ''),
-    username: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASS,
-    database: process.env.MYSQL_DB,
+    dialect: 'postgres',
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT ?? ''),
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
     storage: ':memory:',
     logging: process.env.DATABASE_QUERY_LOGGING === 'true',
     models: [
@@ -29,13 +29,6 @@ export const connectSequelize = async () => {
       DB_Regulation_LawChapter,
       DB_Task,
     ],
-    // Options passed down to the `mysql2` driver
-    pool: {
-      max: Number(process.env.DATABASE_CONNECTION_LIMIT) || 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000,
-    },
   });
 
   return db;
