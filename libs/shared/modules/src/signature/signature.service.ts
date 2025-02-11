@@ -61,10 +61,13 @@ export class SignatureService implements ISignatureService {
   @Transactional()
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private async _findSignature(whereParams = {}, transaction?: Transaction) {
-    const signature = await this.signatureModel.findOne({
+    // we always return the latest signature
+    const signature = await this.signatureModel.findAll({
       where: whereParams,
       include: SIGNATURE_INCLUDES,
+      subQuery: false,
       order: [
+        ['created', 'DESC'],
         [
           { model: SignatureRecordModel, as: 'records' },
           'signatureDate',
@@ -75,7 +78,9 @@ export class SignatureService implements ISignatureService {
       transaction,
     })
 
-    return signature
+    return Array.isArray(signature) && signature.length > 0
+      ? signature[0]
+      : null
   }
 
   @LogAndHandle()
@@ -228,7 +233,7 @@ export class SignatureService implements ISignatureService {
     await this.signatureModel.create(
       {
         id: signatureId,
-        signatureDate: body.signatureDate,
+        signatureDate: now.toISOString(),
         html: '',
         involvedPartyId: body.involvedPartyId,
         caseId: caseId,
