@@ -5,6 +5,7 @@ import {
   DataType,
   ForeignKey,
   HasMany,
+  HasOne,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -23,7 +24,7 @@ import {
   AdvertInvolvedPartyModel,
   AdvertModel,
 } from '../../journal/models'
-import { CaseSignaturesModel, SignatureModel } from '../../signature/models'
+import { SignatureModel } from '../../signature/models/signature.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
@@ -221,10 +222,8 @@ export class CaseModel extends Model {
   })
   comments?: CommentModel[]
 
-  @BelongsToMany(() => SignatureModel, {
-    through: { model: () => CaseSignaturesModel },
-  })
-  signatures?: SignatureModel[]
+  @HasOne(() => SignatureModel)
+  signature!: SignatureModel
 
   @BelongsToMany(() => ApplicationAttachmentModel, {
     through: { model: () => CaseAttachmentsModel },

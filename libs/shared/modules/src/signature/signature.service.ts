@@ -1,556 +1,536 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { SignatureTypeSlug } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  CreateSignatureBody,
-  DefaultSearchParams,
-  GetSignatureResponse,
-  GetSignaturesResponse,
-  SignatureMember,
-  UpdateSignatureBody,
+  CreateSignature,
+  CreateSignatureMember,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
 
-import {
-  BadRequestException,
-  Inject,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { MemberTypeEnum } from './lib/types'
 import { signatureMigrate } from './migrations/signature.migrate'
-import {
-  AdvertSignaturesModel,
-  CaseSignaturesModel,
-  SignatureMemberModel,
-  SignatureMembersModel,
-  SignatureModel,
-  SignatureTypeModel,
-} from './models'
+import { SignatureModel } from './models/signature.model'
+import { SignatureMemberModel } from './models/signature-member.model'
+import { SignatureRecordModel } from './models/signature-record.model'
 import { ISignatureService } from './signature.service.interface'
-import { getDefaultOptions, signatureParams, WhereParams } from './utils'
+import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
 
+const LOGGING_CONTEXT = 'SignatureService'
+const LOGGING_CATEGORY = 'signature-service'
+
+@Injectable()
 export class SignatureService implements ISignatureService {
   constructor(
     @InjectModel(SignatureModel)
     private readonly signatureModel: typeof SignatureModel,
-    @InjectModel(AdvertSignaturesModel)
-    private readonly advertSignaturesModel: typeof AdvertSignaturesModel,
-    @InjectModel(CaseSignaturesModel)
-    private readonly caseSignaturesModel: typeof CaseSignaturesModel,
     @InjectModel(SignatureMemberModel)
     private readonly signatureMemberModel: typeof SignatureMemberModel,
-    @InjectModel(SignatureMembersModel)
-    private readonly signatureMembersModel: typeof SignatureMembersModel,
-    @InjectModel(SignatureTypeModel)
-    private readonly signatureTypeModel: typeof SignatureTypeModel,
+    @InjectModel(SignatureRecordModel)
+    private readonly signatureRecordModel: typeof SignatureRecordModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private readonly sequelize: Sequelize,
   ) {}
 
-  @LogAndHandle()
   @Transactional()
-  private async updateMember(
-    member: SignatureMemberModel,
-    body: SignatureMember,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    await this.signatureMemberModel.update(
-      {
-        text: body.text,
-        textAbove: body.textAbove,
-        textBelow: body.textBelow,
-        textAfter: body.textAfter,
-      },
-      {
-        where: {
-          id: member.id,
-        },
-        transaction,
-      },
-    )
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  private async findSignatures(
-    params?: DefaultSearchParams,
-    where?: WhereParams,
-    mostRecent?: boolean,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    const defaultOptions = getDefaultOptions(params)
-
-    const signatures = await this.signatureModel.findAndCountAll({
-      ...defaultOptions,
-      ...(mostRecent && { order: [['date', 'DESC']], limit: 1 }),
-      where: signatureParams(where),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private async _getSignature(signatureId: string, transaction?: Transaction) {
+    const signature = await this.signatureModel.findByPk(signatureId, {
+      include: SIGNATURE_INCLUDES,
+      order: [
+        [
+          { model: SignatureRecordModel, as: 'records' },
+          'signatureDate',
+          'ASC',
+        ],
+        [Sequelize.literal('"records.members.created"'), 'ASC'],
+      ],
       transaction,
     })
 
-    const migrated = signatures.rows.map((s) => signatureMigrate(s))
-    const paging = generatePaging(
-      migrated,
-      params?.page,
-      params?.pageSize,
-      signatures.count,
-    )
+    return signature
+  }
 
-    return ResultWrapper.ok({
-      signatures: migrated,
-      paging,
+  @Transactional()
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private async _findSignature(whereParams = {}, transaction?: Transaction) {
+    const signature = await this.signatureModel.findOne({
+      where: whereParams,
+      include: SIGNATURE_INCLUDES,
+      order: [
+        [
+          { model: SignatureRecordModel, as: 'records' },
+          'signatureDate',
+          'ASC',
+        ],
+        [Sequelize.literal('"records.members.created"'), 'ASC'],
+      ],
+      transaction,
     })
+
+    return signature
   }
 
   @LogAndHandle()
   @Transactional()
-  private async createCaseSignatures(
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private async _updateSignature(
     signatureId: string,
-    caseId: string,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    await this.caseSignaturesModel.create(
-      {
-        signatureId,
-        caseId,
-      },
+  ): Promise<ResultWrapper<SignatureModel>> {
+    const signature = await this._getSignature(signatureId, transaction)
+
+    if (!signature) {
+      this.logger.warn('Signature not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+      })
+
+      throw new NotFoundException('Signature not found')
+    }
+
+    const html = signature.records
+      .map((record) => signatureTemplate(record))
+      .join('')
+
+    const signatureDate = signature.records.reduce((acc, record) => {
+      const recordDate = new Date(record.signatureDate)
+
+      if (recordDate > acc) {
+        acc = recordDate
+      }
+
+      return acc
+    }, new Date())
+
+    const updated = await signature.update(
+      { html, signatureDate: signatureDate.toISOString() },
       { transaction },
     )
+
+    return ResultWrapper.ok(updated)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    body: UpdateSignatureRecord,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const record = await this.signatureRecordModel.findByPk(recordId, {
+      include: [
+        {
+          model: SignatureModel,
+          where: {
+            id: signatureId,
+          },
+        },
+      ],
+      transaction,
+    })
+
+    if (!record) {
+      this.logger.warn('Signature record not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+      })
+
+      throw new NotFoundException('Signature record not found')
+    }
+
+    await record.update({ ...body }, { transaction })
+    await this._updateSignature(signatureId, transaction)
+
+    return ResultWrapper.ok()
+  }
+
+  async updateSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
+    body: UpdateSignatureMember,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const signatureMember = await this.signatureMemberModel.findByPk(memberId, {
+      include: [
+        {
+          model: SignatureRecordModel,
+          where: { signatureId: signatureId },
+        },
+      ],
+      transaction,
+    })
+
+    if (!signatureMember) {
+      this.logger.warn('Signature member not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+        member_id: memberId,
+      })
+
+      throw new NotFoundException('Signature member not found')
+    }
+
+    await signatureMember.update(body, { transaction })
+    await this._updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
   }
 
   @LogAndHandle()
   @Transactional()
-  private async createAdvertSignatures(
-    signatureId: string,
-    advertId: string,
+  async createSignatureRecordMember(
+    recordId: string,
+    body: CreateSignatureMember,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    await this.advertSignaturesModel.create(
+  ): Promise<ResultWrapper<{ id: string }>> {
+    const memberId = uuid()
+
+    const createResult = await this.signatureMemberModel.create(
       {
-        signatureId,
-        advertId,
+        id: memberId,
+        name: body.name,
+        textAbove: body.textAbove,
+        textAfter: body.textAfter,
+        textBelow: body.textBelow,
+        signatureRecordId: recordId,
       },
-      { transaction },
+      { transaction, returning: ['id'] },
     )
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({ id: createResult.id })
   }
 
   @LogAndHandle()
   @Transactional()
   async createSignature(
-    body: CreateSignatureBody,
+    caseId: string,
+    body: CreateSignature,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<{ id: string }>> {
+  ): Promise<ResultWrapper<GetSignature>> {
     const signatureId = uuid()
+    const now = new Date()
 
-    const chairman = body.chairman
-      ? await this.signatureMemberModel.create(
-          {
-            text: body.chairman.text,
-            textAbove: body.chairman.textAbove,
-            textBelow: body.chairman.textBelow,
-            textAfter: body.chairman.textAfter,
-          },
-          { transaction, returning: true },
-        )
-      : null
-
-    const members = await this.signatureMemberModel.bulkCreate(
-      body.members.map((m) => ({
-        text: m.text,
-        textAbove: m.textAbove,
-        textBelow: m.textBelow,
-        textAfter: m.textAfter,
-      })),
-      { transaction, returning: true },
-    )
-
-    if (chairman) {
-      await this.signatureMemberModel.create(
-        {
-          text: chairman.text,
-          textAbove: chairman.textAbove,
-          textBelow: chairman.textBelow,
-          textAfter: chairman.textAfter,
-        },
-        { transaction, returning: true },
-      )
-    }
-
-    const type = await this.signatureTypeModel.findOne({
-      where: {
-        slug: chairman
-          ? SignatureTypeSlug.Committee
-          : SignatureTypeSlug.Regular,
-      },
-      transaction,
-    })
-
-    if (!type) {
-      this.logger.error('Signature type not found', {
-        category: 'Signature',
-      })
-      throw new InternalServerErrorException()
-    }
-
-    const createdSignature = await this.signatureModel.create(
+    await this.signatureModel.create(
       {
-        institution: body.institution,
-        date: body.date,
+        id: signatureId,
+        signatureDate: body.signatureDate,
+        html: '',
         involvedPartyId: body.involvedPartyId,
-        typeId: type.id,
-        chairmanId: chairman ? chairman.id : null,
-        additionalSignature: body.additionalSignature,
-        html: body.html === '' ? '<div></div>' : body.html,
-      },
-      { transaction, returning: ['id'] },
-    )
-
-    await this.signatureMembersModel.bulkCreate(
-      members.map((m) => ({
-        signatureId: createdSignature.id,
-        signatureMemberId: m.id,
-      })),
-      { transaction },
-    )
-
-    await this.caseSignaturesModel.create(
-      {
-        signatureId: createdSignature.id,
-        caseId: body.caseId,
+        caseId: caseId,
+        advertId: null,
+        created: now,
       },
       { transaction },
     )
 
-    return ResultWrapper.ok({
-      id: signatureId,
-    })
-  }
+    for (const recordBody of body.records) {
+      const recordId = uuid()
 
-  @LogAndHandle()
-  @Transactional()
-  async createCaseSignature(
-    body: CreateSignatureBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<{ id: string }>> {
-    const createdSignature = (
-      await this.createSignature(body, transaction)
-    ).unwrap()
+      const record = await this.signatureRecordModel.create(
+        {
+          id: recordId,
+          institution: recordBody.institution,
+          signatureDate: recordBody.signatureDate,
+          additional: recordBody.additional,
+          signatureId: signatureId,
+          chairmanId: null,
+        },
+        { transaction },
+      )
 
-    return ResultWrapper.ok({ id: createdSignature.id })
-  }
+      if (recordBody.chairman) {
+        const { id: chairmanId } = ResultWrapper.unwrap(
+          await this.createSignatureRecordMember(
+            recordId,
+            recordBody.chairman,
+            transaction,
+          ),
+        )
 
-  @LogAndHandle()
-  @Transactional()
-  async getSignature(
-    id: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignatureResponse>> {
-    const defaultOptions = getDefaultOptions()
-    const signature = await this.signatureModel.findByPk(id, {
-      ...defaultOptions,
-      transaction,
-    })
+        await record.update({ chairmanId: chairmanId }, { transaction })
+      }
 
-    if (!signature) {
-      throw new NotFoundException(`Signature<${id}> not found`)
+      for (const memberBody of recordBody.members) {
+        ResultWrapper.unwrap(
+          await this.createSignatureRecordMember(
+            recordId,
+            memberBody,
+            transaction,
+          ),
+        )
+      }
     }
 
-    return ResultWrapper.ok({
-      signature: signatureMigrate(signature),
-    })
-  }
+    const updated = ResultWrapper.unwrap(
+      await this._updateSignature(signatureId, transaction),
+    )
+    const mapped = signatureMigrate(updated)
 
-  @LogAndHandle()
-  @Transactional()
-  async getSignatures(
-    params?: DefaultSearchParams,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(params, params, undefined, transaction)
+    return ResultWrapper.ok({
+      signature: mapped,
+    })
   }
 
   @LogAndHandle()
   @Transactional()
   async getSignatureForInvolvedParty(
     involvedPartyId: string,
-    params?: DefaultSearchParams,
-    mostRecent?: boolean,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    return await this.findSignatures(
-      params,
+  ): Promise<ResultWrapper<GetSignature>> {
+    const signature = await this._findSignature(
       { involvedPartyId },
-      mostRecent,
       transaction,
     )
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getSignaturesByCaseId(
-    caseId: string,
-    params?: DefaultSearchParams,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    const defaultOptions = getDefaultOptions(params)
-
-    const caseSignatures = await this.caseSignaturesModel.findAndCountAll({
-      ...defaultOptions,
-      where: {
-        caseId,
-      },
-      include: [
-        {
-          model: SignatureModel,
-          include: defaultOptions.include,
-        },
-      ],
-      transaction,
-    })
-
-    const migrated = caseSignatures.rows.map((s) =>
-      signatureMigrate(s.signature),
-    )
-    const paging = generatePaging(
-      migrated,
-      params?.page,
-      params?.pageSize,
-      caseSignatures.count,
-    )
-
-    return ResultWrapper.ok({
-      signatures: migrated,
-      paging,
-    })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getSignaturesByAdvertId(
-    advertId: string,
-    params?: DefaultSearchParams,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>> {
-    const defaultOptions = getDefaultOptions(params)
-
-    const advertSignatures = await this.advertSignaturesModel.findAndCountAll({
-      ...defaultOptions,
-      where: {
-        advertId,
-      },
-      include: [
-        {
-          model: SignatureModel,
-          include: defaultOptions.include,
-        },
-      ],
-      transaction,
-    })
-
-    const migrated = advertSignatures.rows.map((s) =>
-      signatureMigrate(s.signature),
-    )
-    const paging = generatePaging(
-      migrated,
-      params?.page,
-      params?.pageSize,
-      advertSignatures.count,
-    )
-
-    return ResultWrapper.ok({
-      signatures: migrated,
-      paging,
-    })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updateSignature(
-    id: string,
-    body: UpdateSignatureBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const signature = await this.signatureModel.findByPk(id, {
-      transaction,
-    })
 
     if (!signature) {
-      throw new NotFoundException(`Signature<${id}> not found`)
+      this.logger.warn('Signature not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        involved_party_id: involvedPartyId,
+      })
+
+      throw new NotFoundException('Signature not found')
     }
 
-    await this.signatureModel.update(
-      {
-        institution: body.institution,
-        date: body.date,
-        involvedPartyId: body.involvedPartyId,
-        additionalSignature: body.additionalSignature,
-      },
-      {
-        where: {
-          id: id,
+    const mapped = signatureMigrate(signature)
+
+    return ResultWrapper.ok({
+      signature: mapped,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getSignature(signatureId: string, transaction?: Transaction) {
+    const signature = await this._getSignature(signatureId, transaction)
+
+    if (!signature) {
+      this.logger.warn('Signature not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+      })
+
+      throw new NotFoundException('Signature not found')
+    }
+
+    const mapped = signatureMigrate(signature)
+
+    return ResultWrapper.ok({
+      signature: mapped,
+    })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getSignatureByCaseId(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>> {
+    const signature = await this._findSignature({ caseId }, transaction)
+
+    if (!signature) {
+      this.logger.warn('Signature not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        case_id: caseId,
+      })
+
+      throw new NotFoundException('Signature not found')
+    }
+
+    const mapped = signatureMigrate(signature)
+
+    return ResultWrapper.ok({
+      signature: mapped,
+    })
+  }
+
+  async createSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberType: MemberTypeEnum,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const memberId = uuid()
+
+    const record = await this.signatureRecordModel.findByPk(recordId, {
+      include: [
+        {
+          model: SignatureModel,
+          where: {
+            id: signatureId,
+          },
         },
+      ],
+      transaction,
+    })
+
+    if (!record) {
+      this.logger.warn('Signature record not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+      })
+
+      throw new NotFoundException('Signature record not found')
+    }
+
+    await this.signatureMemberModel.create(
+      {
+        id: memberId,
+        name: '',
+        textAbove: '',
+        textAfter: '',
+        textBelow: '',
+        signatureRecordId: record.id,
+      },
+      { transaction, returning: ['id'] },
+    )
+
+    if (memberType === MemberTypeEnum.CHAIRMAN) {
+      await record.update({ chairmanId: memberId }, { transaction })
+    }
+
+    await this._updateSignature(signatureId, transaction)
+    return ResultWrapper.ok()
+  }
+
+  async deleteSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const recordPromise = this.signatureRecordModel.findByPk(recordId, {
+      include: [
+        {
+          model: SignatureModel,
+          where: {
+            id: signatureId,
+          },
+        },
+      ],
+      transaction,
+    })
+    const signatureMemberPromise = this.signatureMemberModel.findByPk(
+      memberId,
+      {
+        include: [
+          {
+            model: SignatureRecordModel,
+            where: { signatureId: signatureId },
+          },
+        ],
         transaction,
       },
     )
 
-    if (body.chairman) {
-      const chairman = await this.signatureMemberModel.findByPk(
-        signature.chairmanId,
-        { transaction },
-      )
+    const [record, signatureMember] = await Promise.all([
+      recordPromise,
+      signatureMemberPromise,
+    ])
 
-      if (!chairman) {
-        throw new NotFoundException(
-          `Chairman<${signature.chairmanId}> not found`,
-        )
-      }
+    if (!record || !signatureMember) {
+      this.logger.warn('Signature member not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+        member_id: memberId,
+      })
 
-      ResultWrapper.unwrap(
-        await this.updateMember(chairman, body.chairman, transaction),
-      )
+      throw new NotFoundException('Signature member not found')
     }
 
-    if (body.members) {
-      const members = await this.signatureMembersModel.findAll({
-        where: {
-          signatureId: id,
-        },
-        transaction,
-      })
-
-      const ids = members
-        .map((m) => m.signatureMemberId)
-        .filter((m) => m !== signature.chairmanId)
-
-      await this.signatureMembersModel.destroy({
-        where: {
-          signatureId: id,
-          signatureMemberId: {
-            [Op.in]: ids,
-          },
-        },
-        transaction,
-      })
-
-      await this.signatureMemberModel.destroy({
-        where: {
-          id: ids,
-        },
-        transaction,
-      })
-
-      const newMembers = await this.signatureMemberModel.bulkCreate(
-        body.members.map((m) => ({
-          text: m.text,
-          textAbove: m.textAbove,
-          textBelow: m.textBelow,
-          textAfter: m.textAfter,
-        })),
-        { transaction, returning: true },
-      )
-
-      await this.signatureMembersModel.bulkCreate(
-        newMembers.map((m) => ({
-          signatureId: id,
-          signatureMemberId: m.id,
-        })),
-        { transaction },
-      )
+    if (memberId === record.chairmanId) {
+      await record.update({ chairmanId: null }, { transaction })
     }
+    await signatureMember.destroy({ transaction })
+    await this._updateSignature(signatureId, transaction)
 
-    if (body.caseId) {
-      await this.caseSignaturesModel.destroy({
-        where: {
-          signatureId: id,
-        },
-        transaction,
-      })
+    return ResultWrapper.ok()
+  }
 
-      await this.createCaseSignatures(id, body.caseId, transaction)
-    }
+  async createSignatureRecord(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const recordId = uuid()
 
-    if (body.advertId) {
-      await this.advertSignaturesModel.destroy({
-        where: {
-          signatureId: id,
-        },
-        transaction,
-      })
+    await this.signatureRecordModel.create(
+      {
+        id: recordId,
+        institution: '',
+        signatureDate: new Date().toISOString(),
+        additional: '',
+        signatureId: signatureId,
+        chairmanId: null,
+      },
+      { transaction },
+    )
 
-      await this.createAdvertSignatures(id, body.advertId, transaction)
-    }
-
+    await this._updateSignature(signatureId, transaction)
     return ResultWrapper.ok()
   }
 
   @LogAndHandle()
   @Transactional()
-  async deleteSignature(
+  async deleteSignatureRecord(
     signatureId: string,
+    recordId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const signature = await this.signatureModel.findByPk(signatureId, {
+    const record = await this.signatureRecordModel.findByPk(recordId, {
+      include: [
+        {
+          model: SignatureModel,
+          where: {
+            id: signatureId,
+          },
+        },
+      ],
       transaction,
     })
 
-    if (!signature) {
-      throw new NotFoundException(`Signature<${signatureId}> not found`)
+    if (!record) {
+      this.logger.warn('Signature record not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+        record_id: recordId,
+      })
+
+      throw new NotFoundException('Signature record not found')
     }
 
-    await this.caseSignaturesModel.destroy({
+    const members = await this.signatureMemberModel.findAll({
       where: {
-        signatureId,
+        signatureRecordId: recordId,
       },
       transaction,
     })
 
-    await this.advertSignaturesModel.destroy({
-      where: {
-        signatureId,
-      },
-      transaction,
-    })
-
-    const members = await this.signatureMembersModel.findAll({
-      where: {
-        signatureId,
-      },
-      transaction,
-    })
-
-    const ids = members.map((m) => m.signatureMemberId)
-
-    await this.signatureMembersModel.destroy({
-      where: {
-        signatureId,
-      },
-      transaction,
-    })
-
-    await this.signatureMemberModel.destroy({
-      where: {
-        id: ids,
-      },
-      transaction,
-    })
-
-    await this.signatureModel.destroy({
-      where: {
-        id: signatureId,
-      },
-      transaction,
-    })
+    await record.update({ chairmanId: null }, { transaction })
+    await Promise.all(members.map((member) => member.destroy({ transaction })))
+    await record.destroy({ transaction })
+    await this._updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
   }

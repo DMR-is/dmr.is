@@ -80,7 +80,9 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
-import { SignatureModel } from '../signature/models'
+import { SignatureModel } from '../signature/models/signature.model'
+import { SignatureMemberModel } from '../signature/models/signature-member.model'
+import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
@@ -850,7 +852,7 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const activeCase = await this.caseModel.findByPk(caseId, {
-      include: [...casesDetailedIncludes],
+      include: [...casesDetailedIncludes, { model: SignatureModel }],
     })
 
     if (!activeCase) {
@@ -891,7 +893,7 @@ export class CaseService implements ICaseService {
       await this.utilityService.advertStatusLookup(AdvertStatus.Published)
     ).unwrap()
 
-    const signatureHtml = activeCase.signatures?.map((s) => s.html).join('')
+    const signatureHtml = activeCase.signature.html
 
     const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
     const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
@@ -1079,6 +1081,48 @@ export class CaseService implements ICaseService {
           required: false,
           include: [ApplicationAttachmentTypeModel],
         },
+        {
+          model: SignatureModel,
+          include: [
+            AdvertInvolvedPartyModel,
+            {
+              model: SignatureRecordModel,
+              as: 'records',
+              include: [
+                {
+                  model: SignatureMemberModel,
+                  as: 'chairman',
+                },
+                {
+                  model: SignatureMemberModel,
+                  as: 'members',
+                  required: false,
+                  where: {
+                    [Op.or]: [
+                      // Exclude chairman using Sequelize.where
+                      Sequelize.where(
+                        Sequelize.col('signature.records.members.id'),
+                        Op.ne,
+                        Sequelize.col('signature.records.chairman_id'),
+                      ),
+                      // Include all members if chairman_id is NULL
+                      Sequelize.where(
+                        Sequelize.col('signature.records.chairman_id'),
+                        Op.is,
+                        null,
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      order: [
+        [Sequelize.literal('"comments.created"'), 'ASC'],
+        [Sequelize.literal('"signature.records.signatureDate"'), 'ASC'],
+        [Sequelize.literal('"signature.records.members.created"'), 'ASC'],
       ],
     })
 

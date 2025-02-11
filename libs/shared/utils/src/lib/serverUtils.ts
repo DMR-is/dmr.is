@@ -5,6 +5,7 @@ import {
   Transaction,
   ValidationError,
 } from 'sequelize'
+import { v4 as uuid } from 'uuid'
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
@@ -27,7 +28,6 @@ import {
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
   CaseStatusEnum,
-  CreateSignatureBody,
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -183,27 +183,32 @@ export const enumMapper = <T extends EnumType>(
 
 export const getSignatureBody = (
   caseId: string,
+  involvedPartyId: string,
   signature: ApplicationSignature | ApplicationCommitteeSignature,
   additionalSignature?: string,
-): CreateSignatureBody => {
+) => {
   const hasChairman = 'chairman' in signature
 
   return {
     caseId: caseId,
     date: signature.date,
     institution: signature.institution,
-    involvedPartyId: 'e5a35cf9-dc87-4da7-85a2-06eb5d43812f', // TODO: add auth set to dómsmálaráðuneytið
-    members: signature.members.map((member) => ({
-      text: member.name,
-      textAbove: member.above,
-      textAfter: member.after,
-      textBefore: member.before,
-      textBelow: member.below,
-    })),
+    involvedPartyId: involvedPartyId,
+    members: signature.members.map((member) => {
+      return {
+        id: uuid(),
+        text: member.name,
+        textAbove: member.above,
+        textAfter: member.after,
+        textBefore: member.before,
+        textBelow: member.below,
+      }
+    }),
     additionalSignature: additionalSignature,
     html: signature.html,
     chairman: hasChairman
       ? {
+          id: uuid(),
           text: signature.chairman.name,
           textAbove: signature.chairman.above,
           textAfter: signature.chairman.after,
@@ -428,7 +433,7 @@ export const signatureMapper = (
   type: SignatureType,
   caseId: string,
   involvedPartyId: string,
-): CreateSignatureBody[] => {
+) => {
   if (type === SignatureType.Committee) {
     const committeeObject = {
       caseId: caseId,
@@ -437,6 +442,7 @@ export const signatureMapper = (
       date: signatures.committee.date,
       html: signatures.committee.html,
       chairman: {
+        id: uuid(),
         text: signatures.committee.chairman.name,
         textAbove: signatures.committee.chairman.above,
         textAfter: signatures.committee.chairman.after,
@@ -444,6 +450,7 @@ export const signatureMapper = (
         textBefore: signatures.committee.chairman.before,
       },
       members: signatures.committee.members.map((item) => ({
+        id: uuid(),
         text: item.name,
         textAbove: item.above,
         textAfter: item.after,
@@ -461,6 +468,7 @@ export const signatureMapper = (
     date: signature.date,
     html: signature.html,
     members: signature.members.map((item) => ({
+      id: uuid(),
       text: item.name,
       textAbove: item.above,
       textAfter: item.after,

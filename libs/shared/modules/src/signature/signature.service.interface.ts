@@ -1,52 +1,126 @@
 import { Transaction } from 'sequelize'
 import {
-  CreateSignatureBody,
-  DefaultSearchParams,
-  GetSignatureResponse,
-  GetSignaturesResponse,
-  UpdateSignatureBody,
+  CreateSignature,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { MemberTypeEnum } from './lib/types'
+
 export interface ISignatureService {
   createSignature(
-    body: CreateSignatureBody,
+    caseId: string,
+    body: CreateSignature,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  updateSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    body: UpdateSignatureRecord,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
-  createCaseSignature(
-    body: CreateSignatureBody,
+  updateSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
+    body: UpdateSignatureMember,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<{ id: string }>>
+  ): Promise<ResultWrapper>
 
-  getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
-  getSignatures(
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetSignaturesResponse>>
   getSignatureForInvolvedParty(
     involvedPartyId: string,
-    params?: DefaultSearchParams,
-    mostRecent?: boolean,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>>
-  getSignaturesByCaseId(
+  ): Promise<ResultWrapper<GetSignature>>
+
+  getSignature(
+    signatureId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  getSignatureByCaseId(
     caseId: string,
-    params?: DefaultSearchParams,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<GetSignaturesResponse>>
-  getSignaturesByAdvertId(
-    advertId: string,
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetSignaturesResponse>>
-  updateSignature(
-    id: string,
-    body: UpdateSignatureBody,
+  ): Promise<ResultWrapper<GetSignature>>
+
+  createSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberType: MemberTypeEnum,
+  ): Promise<ResultWrapper>
+
+  deleteSignatureMember(
+    signatureId: string,
+    recordId: string,
+    memberId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-  deleteSignature(
+
+  createSignatureRecord(
     signatureId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  deleteSignatureRecord(
+    signatureId: string,
+    recordId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  // createCaseSignature(
+  //   body: CreateSignatureBody,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper<{ id: string }>>
+
+  // getSignature(id: string): Promise<ResultWrapper<GetSignatureResponse>>
+  // getSignatures(
+  //   params?: DefaultSearchParams,
+  // ): Promise<ResultWrapper<GetSignaturesResponse>>
+  // getSignatureForInvolvedParty(
+  //   involvedPartyId: string,
+  //   params?: DefaultSearchParams,
+  //   mostRecent?: boolean,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper<GetSignaturesResponse>>
+  // getSignaturesByCaseId(
+  //   caseId: string,
+  //   params?: DefaultSearchParams,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper<GetSignaturesResponse>>
+  // getSignaturesByAdvertId(
+  //   advertId: string,
+  //   params?: DefaultSearchParams,
+  // ): Promise<ResultWrapper<GetSignaturesResponse>>
+  // updateSignature(
+  //   id: string,
+  //   body: UpdateSignatureBody,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper>
+  // deleteSignature(
+  //   signatureId: string,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper>
+
+  // addSignatureMember(
+  //   signatureId: string,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper>
+
+  // removeSignatureMember(
+  //   signatureId: string,
+  //   memberId: string,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper>
+
+  // updateSignatureMember(
+  //   signatureId: string,
+  //   memberId: string,
+  //   body: UpdateSignatureMember,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper>
 }
 
 export const ISignatureService = Symbol('ISignatureService')

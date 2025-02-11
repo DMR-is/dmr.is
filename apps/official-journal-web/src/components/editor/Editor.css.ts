@@ -103,7 +103,7 @@ const wrapper = style({
   maxHeight: '800px',
 })
 
-export const classes: EditorClasses & { editorNoMinHeight: string } = {
+export const classes: EditorClasses = {
   wrapper,
 
   editingpane: style({
@@ -136,24 +136,6 @@ export const classes: EditorClasses & { editorNoMinHeight: string } = {
 
       [`${isImpact} &`]: {
         top: 0,
-      },
-    },
-  }),
-
-  editorNoMinHeight: style({
-    position: 'relative',
-    maxHeight: 'calc(100vh - 10rem)',
-    width: '100%',
-    caretColor: theme.color.blue400,
-    padding: spacing[3],
-    paddingTop: spacing[2],
-    overflowY: 'auto',
-    ':focus': {
-      outline: 'none',
-    },
-    selectors: {
-      [`${containerDisabled} &`]: {
-        cursor: 'default',
       },
     },
   }),
@@ -424,6 +406,18 @@ export const classes: EditorClasses & { editorNoMinHeight: string } = {
     paddingRight: spacing[1],
     opacity: 0.67,
   }),
+}
+
+const { wrapper: wrapperClass, ...rest } = classes
+
+const wrapperNoMinHeight = style({
+  minHeight: 'auto',
+  maxHeight: 'auto',
+})
+
+export const classesNoMinHeight: EditorClasses = {
+  ...rest,
+  wrapper: wrapperNoMinHeight,
 }
 
 // ---------------------------------------------------------------------------

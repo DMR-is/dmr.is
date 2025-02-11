@@ -3,9 +3,9 @@ import { LoggingModule } from '@dmr.is/logging'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import caseModels from '../case/models'
-import advertModels from '../journal/models'
-import models from './models'
+import { SignatureModel } from './models/signature.model'
+import { SignatureMemberModel } from './models/signature-member.model'
+import { SignatureRecordModel } from './models/signature-record.model'
 import { SignatureService } from './signature.service'
 import { ISignatureService } from './signature.service.interface'
 
@@ -13,7 +13,11 @@ export { SignatureController } from './signature.controller'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([...models, ...advertModels, ...caseModels]),
+    SequelizeModule.forFeature([
+      SignatureModel,
+      SignatureRecordModel,
+      SignatureMemberModel,
+    ]),
     LoggingModule,
   ],
   controllers: [],

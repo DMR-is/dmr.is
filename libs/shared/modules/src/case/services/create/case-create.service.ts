@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { BaseEntity } from '@dmr.is/shared/dto'
@@ -12,7 +13,6 @@ import {
   CaseTagEnum,
   CreateCaseBody,
   CreateCaseChannelBody,
-  CreateSignatureBody,
   PostApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -71,8 +71,8 @@ interface CreateCaseBodyValues {
   }
   categories: BaseEntity[]
   channels: CreateCaseChannelBody[]
-  signature: CreateSignatureBody[]
   additions: CreateAddtionBody[]
+  signatureDate: string
 }
 
 @Injectable()
@@ -193,6 +193,27 @@ export class CaseCreateService implements ICaseCreateService {
     const internalCaseNumber = internalCaseNumberResult.result.value
     const type = typeResult.result.value
     const department = departmentResult.result.value
+    const requestedDate = application.answers.advert.requestedDate
+    const { fastTrack } = getFastTrack(new Date(requestedDate))
+    const involvedPartyId = application.answers.advert.involvedPartyId
+    const message = application.answers.advert?.message ?? null
+
+    const findLatestYear = (dateStrings: string[]) => {
+      const dates = dateStrings.map((date) => new Date(date))
+      return dates.reduce(
+        (prev, current) => (prev > current ? prev : current),
+        new Date(),
+      )
+    }
+
+    const signatureDate =
+      application.answers.misc.signatureType === SignatureType.Regular
+        ? findLatestYear(
+            application.answers.signatures.regular.map(
+              (signature) => signature.date,
+            ),
+          )
+        : new Date(application.answers.signatures.committee.date)
 
     const channels =
       application.answers.advert.channels?.map((channel) => {
@@ -201,31 +222,6 @@ export class CaseCreateService implements ICaseCreateService {
           phone: channel.phone,
         }
       }) ?? []
-
-    const signatureType = application.answers.misc.signatureType
-    const signature = application.answers.signatures[signatureType]
-
-    // This is important, because the signature year is used to determine the year of the case
-    // not the creation date of the case
-    const signatureDate = Array.isArray(signature)
-      ? new Date(signature[0].date)
-      : new Date(signature.date)
-
-    const additionalSignature =
-      application.answers.signatures.additionalSignature !== undefined
-        ? application.answers.signatures.additionalSignature[signatureType]
-        : undefined
-
-    const signatureBody = Array.isArray(signature)
-      ? signature.map((signature) =>
-          getSignatureBody(caseId, signature, additionalSignature),
-        )
-      : [getSignatureBody(caseId, signature, additionalSignature)]
-
-    const requestedDate = application.answers.advert.requestedDate
-    const { fastTrack } = getFastTrack(new Date(requestedDate))
-    const involvedPartyId = application.answers.advert.involvedPartyId
-    const message = application.answers.advert?.message ?? null
 
     const additions = (application.answers.advert.additions?.filter(
       (addition) => addition.content !== undefined,
@@ -266,8 +262,8 @@ export class CaseCreateService implements ICaseCreateService {
       },
       categories: application.answers.advert.categories,
       channels: channels,
-      signature: signatureBody,
       additions: additionsBody,
+      signatureDate: signatureDate.toISOString(),
     })
   }
 
@@ -399,21 +395,46 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
-    const signaturePromises = await Promise.all(
-      values.signature.map((signatureBody) =>
-        this.signatureService.createCaseSignature(signatureBody),
-      ),
+    ResultWrapper.unwrap(
+      await this.signatureService.createSignature(caseId, {
+        involvedPartyId: values.caseBody.involvedPartyId,
+        signatureDate: values.signatureDate,
+        records:
+          application.answers.misc.signatureType === SignatureType.Regular
+            ? application.answers.signatures.regular.map((signature) => ({
+                institution: signature.institution,
+                signatureDate: signature.date,
+                additional:
+                  application.answers.signatures.additionalSignature?.regular,
+                members: signature.members.map((member) => ({
+                  name: member.name,
+                  textAbove: member.above ?? null,
+                  textBefore: member.before ?? null,
+                  textAfter: member.after ?? null,
+                  textBelow: member.below ?? null,
+                })),
+              }))
+            : [
+                {
+                  institution:
+                    application.answers.signatures.committee.institution,
+                  signatureDate: application.answers.signatures.committee.date,
+                  additional:
+                    application.answers.signatures.additionalSignature
+                      ?.committee,
+                  members: application.answers.signatures.committee.members.map(
+                    (member) => ({
+                      name: member.name ?? null,
+                      textAbove: member.above ?? null,
+                      textBefore: member.before ?? null,
+                      textAfter: member.after ?? null,
+                      textBelow: member.below ?? null,
+                    }),
+                  ),
+                },
+              ],
+      }),
     )
-
-    signaturePromises.forEach((result) => {
-      if (!result.result.ok) {
-        this.logger.warn(`Failed to create signature for case<${caseId}>`, {
-          error: result.result.error,
-          category: LOGGING_CATEGORY,
-          caseId: caseId,
-        })
-      }
-    })
 
     const attachmentsLookup = await this.attachmentService.getAllAttachments(
       application.id,
@@ -458,7 +479,7 @@ export class CaseCreateService implements ICaseCreateService {
       ),
     )
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({ id: caseId })
   }
 
   async createCaseAddition(

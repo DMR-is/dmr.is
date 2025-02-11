@@ -4,7 +4,6 @@ import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdminUserRoleModel } from '../../admin-user/models/user-role.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import { ApplicationUserModel } from '../../application-user/models'
-import { CaseCommentModel, CaseCommentTypeModel } from '../../comment/v1/models'
 import { CaseActionModel } from '../../comment/v2/models/case-action.model'
 import { CommentModel } from '../../comment/v2/models/comment.model'
 import {
@@ -12,11 +11,6 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
 } from '../../journal/models'
-import {
-  SignatureMemberModel,
-  SignatureModel,
-  SignatureTypeModel,
-} from '../../signature/models'
 import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 import {
   CaseAdditionModel,
@@ -77,21 +71,6 @@ export const casesDetailedIncludes = [
         model: CaseStatusModel,
         attributes: ['id', 'title', 'slug'],
         as: 'caseStatusReceiver',
-      },
-    ],
-  },
-  {
-    model: SignatureModel,
-    include: [
-      SignatureTypeModel,
-      AdvertInvolvedPartyModel,
-      {
-        model: SignatureMemberModel,
-        as: 'chairman',
-      },
-      {
-        model: SignatureMemberModel,
-        as: 'members',
       },
     ],
   },

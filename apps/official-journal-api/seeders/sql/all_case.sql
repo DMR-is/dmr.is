@@ -188,24 +188,6 @@ VALUES
   );
 
 INSERT INTO
-  signature_type (id, title, slug)
-VALUES
-  (
-    '1b15e5a8-a548-4d0e-a79f-0c8d50520d29',
-    'Hefðbundin undirritun',
-    'hefdbundin-undirritun'
-  );
-
-INSERT INTO
-  signature_type (id, title, slug)
-VALUES
-  (
-    'b8b85c12-9d08-4267-9e4e-d6ae8b34ef4e',
-    'Undirritun nefndar',
-    'undirritun-nefndar'
-  );
-
-INSERT INTO
   application_attachment_type(id, title, slug)
 VALUES
   (
