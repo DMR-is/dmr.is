@@ -90,6 +90,10 @@ export const ControlPanel = () => {
                   borderBottomWidth="standard"
                   borderColor="standard"
                   padding={2}
+                  onClick={() => {
+                    setToggle(false)
+                    popover.hide()
+                  }}
                 >
                   <Inline justifyContent="spaceBetween">
                     <Text variant="small" fontWeight="semiBold">
