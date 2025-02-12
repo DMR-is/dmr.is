@@ -15,7 +15,7 @@ export class TokenService {
       })
 
       const response = await axios.post(
-        process.env.ISLAND_IS_TOKEN_URL!,
+        `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/token`,
         params.toString(),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
       )
