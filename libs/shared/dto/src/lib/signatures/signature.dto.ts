@@ -49,13 +49,6 @@ export class Signature {
 export class CreateSignature {
   @ApiProperty({
     type: String,
-    description: 'ISO datestring of the signature',
-    required: true,
-  })
-  signatureDate!: string
-
-  @ApiProperty({
-    type: String,
     description: 'The involved party of the signature',
     required: true,
   })

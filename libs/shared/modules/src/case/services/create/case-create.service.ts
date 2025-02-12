@@ -398,7 +398,6 @@ export class CaseCreateService implements ICaseCreateService {
     ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, {
         involvedPartyId: values.caseBody.involvedPartyId,
-        signatureDate: values.signatureDate,
         records:
           application.answers.misc.signatureType === SignatureType.Regular
             ? application.answers.signatures.regular.map((signature) => ({
