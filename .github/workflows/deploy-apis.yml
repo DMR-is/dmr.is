@@ -111,6 +111,7 @@ jobs:
             official-journal-application-api,
             regulations-api,
           ]
+      fail-fast: false
     name: Deploy to ${{ matrix.api }} - dev
     steps:
       - name: Checkout
