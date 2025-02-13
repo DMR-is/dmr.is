@@ -1,24 +1,28 @@
-import axios from 'axios'
 import { decode } from 'jsonwebtoken'
+
+import { identityServerConfig } from '../identityProvider'
+
 const renewalSeconds = 10
-import { identityServerConfig, identityServerId } from '../identityProvider'
 
 export class TokenService {
   static async refreshAccessToken(refreshToken: string): Promise<any | null> {
     try {
-      const params = new URLSearchParams({
-        client_id: identityServerConfig.clientId,
-        client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET!,
-        grant_type: 'refresh_token',
-        redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL!,
-        refresh_token: refreshToken,
-      })
-
-      const response = await axios.post(
+      const postRefresh = await fetch(
         `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/token`,
-        params.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: identityServerConfig.clientId,
+            client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET!,
+            grant_type: 'refresh_token',
+            redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL!,
+            refresh_token: refreshToken,
+          }),
+        },
       )
+
+      const response = await postRefresh.json()
 
       return [response.data.access_token, response.data.refresh_token]
     } catch (error) {
