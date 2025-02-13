@@ -22,7 +22,13 @@ export function HandleApiException(
         const res = args[1]
 
         if (isResponse(error)) {
-          const errorResponse = await error.json()
+          let errorResponse
+          const contentType = error.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            errorResponse = await error.json()
+          } else {
+            errorResponse = await error.text()
+          }
 
           logger.error(`${service}.${method}`, {
             error: {
