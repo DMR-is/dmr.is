@@ -455,7 +455,10 @@ export class ApplicationService implements IApplicationService {
 
     const comments = ResultWrapper.unwrap(
       await this.commentService.getComments(caseResponse.id, {
-        action: CaseActionEnum.COMMENT_APPLICATION,
+        action: [
+          CaseActionEnum.COMMENT_APPLICATION,
+          CaseActionEnum.COMMENT_EXTERNAL,
+        ],
       }),
     )
 

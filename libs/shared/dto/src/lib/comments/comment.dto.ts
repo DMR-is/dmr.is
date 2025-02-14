@@ -159,8 +159,8 @@ export class GetComments {
 
 export class GetCommentsQuery {
   @ApiProperty({
-    enum: CaseActionEnum,
+    enum: [CaseActionEnum],
     required: false,
   })
-  action?: CaseActionEnum
+  action?: CaseActionEnum[]
 }
