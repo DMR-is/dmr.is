@@ -167,9 +167,7 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const CSS = fs.readFileSync(
-  './dist/apps/regulations-api/RegulationPdf.css',
-)
+const CSS = fs.readFileSync('./apps/regulations-api/dist/RegulationPdf.css')
 
 const pdfTmplate = (
   regulation: RegulationMaybeDiff | InputRegulation,
