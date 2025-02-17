@@ -1,4 +1,6 @@
 import { isDefined } from 'class-validator'
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
 import {
   BaseError,
   DatabaseError,
@@ -16,15 +18,13 @@ import {
   PAGING_MAXIMUM_PAGE_SIZE,
   PDF_RETRY_ATTEMPTS,
   PDF_RETRY_DELAY,
-  SignatureType,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
-  ApplicationCommitteeSignature,
-  ApplicationSignature,
-  ApplicationSignatures,
+  ApplicationSignatureMember,
+  ApplicationSignatureRecord,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
   CaseStatusEnum,
@@ -33,7 +33,6 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
-  BadRequestException,
   FileTypeValidator,
   HttpException,
   MaxFileSizeValidator,
@@ -179,44 +178,6 @@ export const enumMapper = <T extends EnumType>(
   }
 
   throw new Error(`EnumMapper: ${val} not found in ${enumType}`)
-}
-
-export const getSignatureBody = (
-  caseId: string,
-  involvedPartyId: string,
-  signature: ApplicationSignature | ApplicationCommitteeSignature,
-  additionalSignature?: string,
-) => {
-  const hasChairman = 'chairman' in signature
-
-  return {
-    caseId: caseId,
-    date: signature.date,
-    institution: signature.institution,
-    involvedPartyId: involvedPartyId,
-    members: signature.members.map((member) => {
-      return {
-        id: uuid(),
-        text: member.name,
-        textAbove: member.above,
-        textAfter: member.after,
-        textBefore: member.before,
-        textBelow: member.below,
-      }
-    }),
-    additionalSignature: additionalSignature,
-    html: signature.html,
-    chairman: hasChairman
-      ? {
-          id: uuid(),
-          text: signature.chairman.name,
-          textAbove: signature.chairman.above,
-          textAfter: signature.chairman.after,
-          textBefore: signature.chairman.before,
-          textBelow: signature.chairman.below,
-        }
-      : undefined,
-  }
 }
 
 export const getNextStatus = (status: CaseStatusEnum): CaseStatusEnum => {
@@ -428,56 +389,6 @@ export const getPageSize = (pageSize: number | undefined): number => {
   return pageSize
 }
 
-export const signatureMapper = (
-  signatures: ApplicationSignatures,
-  type: SignatureType,
-  caseId: string,
-  involvedPartyId: string,
-) => {
-  if (type === SignatureType.Committee) {
-    const committeeObject = {
-      caseId: caseId,
-      involvedPartyId: involvedPartyId,
-      institution: signatures.committee.institution,
-      date: signatures.committee.date,
-      html: signatures.committee.html,
-      chairman: {
-        id: uuid(),
-        text: signatures.committee.chairman.name,
-        textAbove: signatures.committee.chairman.above,
-        textAfter: signatures.committee.chairman.after,
-        textBelow: signatures.committee.chairman.below,
-        textBefore: signatures.committee.chairman.before,
-      },
-      members: signatures.committee.members.map((item) => ({
-        id: uuid(),
-        text: item.name,
-        textAbove: item.above,
-        textAfter: item.after,
-        textBelow: item.below,
-        textBefore: item.before,
-      })),
-    }
-    return [committeeObject]
-  }
-
-  return signatures.regular.map((signature) => ({
-    caseId: caseId,
-    involvedPartyId: involvedPartyId,
-    institution: signature.institution,
-    date: signature.date,
-    html: signature.html,
-    members: signature.members.map((item) => ({
-      id: uuid(),
-      text: item.name,
-      textAbove: item.above,
-      textAfter: item.after,
-      textBelow: item.below,
-      textBefore: item.before,
-    })),
-  }))
-}
-
 export const retryAsync = async <T>(
   asyncFn: () => Promise<T>,
   retries: number | undefined = PDF_RETRY_ATTEMPTS,
@@ -553,4 +464,86 @@ export const getTemplateDetails = (): AdvertTemplateDetails[] => {
   })
 
   return res
+}
+
+const memberTemplate = (member: ApplicationSignatureMember) => {
+  const styleObject = {
+    marginBottom: member?.below ? '0' : '1.5em',
+  }
+
+  const name = member?.name ?? ''
+  const above = member?.above ?? ''
+  const after = member?.after ?? ''
+  const below = member?.below ?? ''
+
+  const aboveMarkup = above
+    ? `<p style="margin-bottom: 0;" align="center">${above}</p>`
+    : ''
+  const afterMarkup = after ? ` ${after}` : ''
+  const belowMarkup = below ? `<p align="center">${below}</p>` : ''
+
+  return `
+    <div class="signature__member">
+      ${aboveMarkup}
+      <p style="margin-bottom: ${styleObject.marginBottom}" align="center"><strong>${name}</strong>${afterMarkup}</p>
+      ${belowMarkup}
+    </div>
+  `
+}
+
+const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
+  const membersCount = record.members?.length ?? 0
+
+  const styleObject = {
+    display: membersCount > 1 ? 'grid' : 'block',
+    gridTemplateColumns:
+      membersCount === 1
+        ? '1fr'
+        : membersCount === 3
+        ? '1fr 1fr 1fr'
+        : '1fr 1fr',
+    rowGap: '1.5em',
+  }
+
+  const formattedDate = record.signatureDate
+    ? format(new Date(record.signatureDate), 'd. MMMM yyyy.', {
+        locale: is,
+      })
+    : ''
+
+  const chairmanMarkup = record.chairman
+    ? `<div style="margin-bottom: 1.5em;">${memberTemplate(
+        record.chairman,
+      )}</div>`
+    : ''
+
+  const membersMarkup =
+    record.members?.map((member) => memberTemplate(member)).join('') ?? ''
+
+  const additionalMarkup = record.additional
+    ? `<p style="margin-top: 1.5em;" align="right" text-a><em>${record.additional}</em></p>`
+    : ''
+
+  return `
+      <div class="signature" style="margin-bottom: 1.5em;">
+        <p align="center"><em>${record.institution} <span class="signature__date">${formattedDate}</span></em></p>
+        ${chairmanMarkup}
+        <div style="display: ${styleObject.display}; grid-template-columns: ${styleObject.gridTemplateColumns}; row-gap: ${styleObject.rowGap};" class="signature__content">
+        ${membersMarkup}
+        </div>
+        ${additionalMarkup}
+      </div>`
+}
+
+export const applicationSignatureTemplate = (
+  records?: ApplicationSignatureRecord[],
+) => {
+  if (!records) {
+    return ''
+  }
+
+  const recordsMarkup =
+    records?.map((record) => signatureRecordTemplate(record)).join('') ?? ''
+
+  return recordsMarkup
 }

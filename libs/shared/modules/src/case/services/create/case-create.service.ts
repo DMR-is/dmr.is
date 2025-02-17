@@ -16,7 +16,7 @@ import {
   PostApplicationBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack, getSignatureBody } from '@dmr.is/utils'
+import { getFastTrack } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -209,11 +209,15 @@ export class CaseCreateService implements ICaseCreateService {
     const signatureDate =
       application.answers.misc.signatureType === SignatureType.Regular
         ? findLatestYear(
-            application.answers.signatures.regular.map(
-              (signature) => signature.date,
-            ),
+            application.answers.signatures?.regular?.records?.map(
+              (signature) => signature.signatureDate,
+            ) ?? [],
           )
-        : new Date(application.answers.signatures.committee.date)
+        : findLatestYear(
+            application.answers.signatures?.committee?.records?.map(
+              (signature) => signature.signatureDate,
+            ) ?? [],
+          )
 
     const channels =
       application.answers.advert.channels?.map((channel) => {
@@ -395,43 +399,39 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
+    const regularSignature = application.answers.signatures.regular
+    const committeeSignature = application.answers.signatures.committee
+    const signatureType = application.answers.misc.signatureType
+
     ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, {
         involvedPartyId: values.caseBody.involvedPartyId,
-        records:
-          application.answers.misc.signatureType === SignatureType.Regular
-            ? application.answers.signatures.regular.map((signature) => ({
-                institution: signature.institution,
-                signatureDate: signature.date,
-                additional:
-                  application.answers.signatures.additionalSignature?.regular,
-                members: signature.members.map((member) => ({
-                  name: member.name,
-                  textAbove: member.above ?? null,
-                  textBefore: member.before ?? null,
-                  textAfter: member.after ?? null,
-                  textBelow: member.below ?? null,
-                })),
-              }))
-            : [
-                {
-                  institution:
-                    application.answers.signatures.committee.institution,
-                  signatureDate: application.answers.signatures.committee.date,
-                  additional:
-                    application.answers.signatures.additionalSignature
-                      ?.committee,
-                  members: application.answers.signatures.committee.members.map(
-                    (member) => ({
-                      name: member.name ?? null,
-                      textAbove: member.above ?? null,
-                      textBefore: member.before ?? null,
-                      textAfter: member.after ?? null,
-                      textBelow: member.below ?? null,
-                    }),
-                  ),
-                },
-              ],
+        records: (
+          (signatureType === SignatureType.Regular
+            ? regularSignature?.records
+            : committeeSignature?.records) ?? []
+        ).map((rec) => ({
+          institution: rec.institution,
+          signatureDate: rec.signatureDate,
+          additional: rec?.additional,
+          members:
+            rec?.members.map((member) => ({
+              name: member.name,
+              textAbove: member.above ?? null,
+              textBelow: member.below ?? null,
+              textAfter: member.after ?? null,
+              textBefore: null,
+            })) ?? [],
+          chairman: rec?.chairman
+            ? {
+                ...rec.chairman,
+                textAbove: rec.chairman.above ?? null,
+                textBelow: rec.chairman.below ?? null,
+                textAfter: rec.chairman.after ?? null,
+                textBefore: null,
+              }
+            : undefined,
+        })),
       }),
     )
 
