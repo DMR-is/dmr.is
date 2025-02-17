@@ -68,8 +68,8 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const signatureHtml = applicationSignatureTemplate(
       signatureType === SignatureType.Regular
-        ? answers.signatures?.regular?.records
-        : answers.signatures?.committee?.records,
+        ? answers.signature?.regular?.records
+        : answers.signature?.committee?.records,
     )
 
     let additionHtml = ''
