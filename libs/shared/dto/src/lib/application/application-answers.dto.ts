@@ -21,5 +21,5 @@ export class ApplicationAnswers {
     type: ApplicationSignatures,
     description: 'Signature answers',
   })
-  signatures!: ApplicationSignatures
+  signature!: ApplicationSignatures
 }
