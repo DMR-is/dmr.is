@@ -8,7 +8,7 @@ import {
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-import { retryAsync } from '@dmr.is/utils'
+import { applicationSignatureTemplate, retryAsync } from '@dmr.is/utils'
 
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
@@ -64,20 +64,13 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     }
 
     const { answers } = applicationLookup.result.value.application
+    const signatureType = answers.misc.signatureType as SignatureType
 
-    let signatureHtml = ''
-
-    switch (answers.misc.signatureType) {
-      case SignatureType.Committee:
-        signatureHtml += `<section class="regulation__signature">${answers.signatures.committee?.html}</section>`
-        break
-      case SignatureType.Regular:
-        signatureHtml += answers.signatures.regular?.map(
-          (signature) =>
-            `<section class="regulation__signature">${signature.html}</section>`,
-        )
-        break
-    }
+    const signatureHtml = applicationSignatureTemplate(
+      signatureType === SignatureType.Regular
+        ? answers.signatures?.regular?.records
+        : answers.signatures?.committee?.records,
+    )
 
     let additionHtml = ''
 
@@ -85,13 +78,13 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       additionHtml = answers.advert.additions
         .map(
           (addition) => `
-          <section class="appendix">
-            <h2 class="appendix__title">${addition.title}</h2>
-            <div class="appendix__text">
-              ${cleanupSingleEditorOutput(addition.content as HTMLText)}
-            </div>
-          </section>
-        `,
+            <section class="appendix">
+              <h2 class="appendix__title">${addition.title}</h2>
+              <div class="appendix__text">
+                ${cleanupSingleEditorOutput(addition.content as HTMLText)}
+              </div>
+            </section>
+          `,
         )
         .join('')
     }

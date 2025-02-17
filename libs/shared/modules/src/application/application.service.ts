@@ -31,7 +31,6 @@ import {
   calculatePriceForApplication,
   getTemplate,
   getTemplateDetails,
-  signatureMapper,
 } from '@dmr.is/utils'
 
 import {

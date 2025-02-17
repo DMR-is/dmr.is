@@ -2,36 +2,13 @@ import { IsDateString, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-class AdditionalSignature {
-  @ApiProperty({
-    type: String,
-    description: 'Message to the regular',
-  })
-  @IsOptional()
-  regular?: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Message to the committee',
-  })
-  @IsOptional()
-  committee?: string
-}
-
-class ApplicationSignatureMember {
+export class ApplicationSignatureMember {
   @ApiProperty({
     type: String,
     description: 'Name of the member',
   })
   @IsString()
   name!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Text before the name member',
-  })
-  @IsOptional()
-  before?: string
 
   @ApiProperty({
     type: String,
@@ -55,7 +32,7 @@ class ApplicationSignatureMember {
   after?: string
 }
 
-export class ApplicationSignature {
+export class ApplicationSignatureRecord {
   @ApiProperty({
     type: String,
     description: 'Institution of the signature',
@@ -68,56 +45,46 @@ export class ApplicationSignature {
     description: 'Date when the signature was signed',
   })
   @IsDateString()
-  date!: string
+  signatureDate!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Additioanl signature name',
+  })
+  @IsOptional()
+  additional?: string
+
+  @ApiProperty({
+    type: ApplicationSignatureMember,
+    description: 'Chairman of the signature',
+  })
+  chairman?: ApplicationSignatureMember
 
   @ApiProperty({
     type: [ApplicationSignatureMember],
     description: 'Members of the signature',
   })
   members!: ApplicationSignatureMember[]
-
-  @ApiProperty({
-    type: String,
-    description: 'The html contents of the signature',
-  })
-  html!: string
 }
 
-export class ApplicationCommitteeSignature extends ApplicationSignature {
+export class ApplicationSignatureRecords {
   @ApiProperty({
-    type: ApplicationSignatureMember,
-    description: 'The title of the committee',
-  })
-  @IsString()
-  chairman!: ApplicationSignatureMember
-}
-
-/**
- * Properties in this class are set to optional.
- * Because the submittee can only choose either one and not both (regular || committee).
- * Then we use the signature type to determine which one is chosen.
- * @see ApplicationMisc
- */
-export class ApplicationSignatures {
-  @ApiProperty({
-    type: AdditionalSignature,
-    example: 'Some message to the applicant',
-    description: 'Message to the applicant',
-  })
-  @IsOptional()
-  additionalSignature?: AdditionalSignature
-
-  @ApiProperty({
-    type: [ApplicationSignature],
+    type: [ApplicationSignatureRecord],
     description: 'Regular signature',
   })
-  @IsOptional()
-  regular!: ApplicationSignature[]
+  records?: ApplicationSignatureRecord[]
+}
+
+export class ApplicationSignatures {
+  @ApiProperty({
+    type: ApplicationSignatureRecords,
+    description: 'Regular signature',
+  })
+  regular?: ApplicationSignatureRecords
 
   @ApiProperty({
-    type: ApplicationCommitteeSignature,
+    type: ApplicationSignatureRecords,
     description: 'Committee signature',
   })
-  @IsOptional()
-  committee!: ApplicationCommitteeSignature
+  committee?: ApplicationSignatureRecords
 }
