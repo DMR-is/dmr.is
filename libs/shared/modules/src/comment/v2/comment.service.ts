@@ -174,7 +174,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
 
     if (query?.action) {
       Object.assign(whereParams, {
-        title: { [Op.eq]: query.action },
+        title: { [Op.in]: query.action },
       })
     }
 
