@@ -798,8 +798,8 @@ export class JournalService implements IJournalService {
       order: [
         [
           Sequelize.literal(`CASE
-            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 2
-            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 1
+            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 2
+            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 1
             ELSE 0 END`),
           'DESC',
         ],
