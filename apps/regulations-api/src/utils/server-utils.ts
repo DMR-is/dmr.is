@@ -1,10 +1,11 @@
 import { DAY, SECOND } from '@hugsmidjan/qj/time'
 import { FastifyInstance } from 'fastify'
 import { readFileSync } from 'fs'
+import path from 'path'
 
 export const serveRobotsTxt = (server: FastifyInstance, robotsFile: string) => {
   const robotsTxt = readFileSync(
-    process.cwd() + '/apps/regulations-api/' + robotsFile,
+     path.resolve(__dirname, robotsFile)
   ).toString()
 
   server.get('/robots.txt', (requst, reply) => {

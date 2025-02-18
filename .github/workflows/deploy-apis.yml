@@ -6,6 +6,9 @@ on:
     branches: ['main']
     types:
       - completed
+  push:
+    branches:
+      - fix-regulations-ecs
 
 env:
   AWS_REGION: eu-west-1
@@ -20,15 +23,14 @@ jobs:
   build-and-push:
     strategy:
       matrix:
-        api:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
+        api: [
+            # official-journal-api,
+            # official-journal-admin-api,
+            # official-journal-application-api,
             regulations-api,
           ]
     name: 'Build and push images: ${{ matrix.api }}'
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,11 +106,10 @@ jobs:
     needs: build-and-push
     strategy:
       matrix:
-        api:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
+        api: [
+            # official-journal-api,
+            # official-journal-admin-api,
+            # official-journal-application-api,
             regulations-api,
           ]
       fail-fast: false

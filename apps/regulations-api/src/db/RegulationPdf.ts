@@ -17,6 +17,7 @@ import { exec } from 'child_process'
 import fs from 'fs'
 import { readFile, unlink, writeFile } from 'fs/promises'
 import fetch from 'node-fetch'
+import path from 'path'
 
 import {
   AWS_BUCKET_NAME,
@@ -167,7 +168,7 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const CSS = fs.readFileSync('./apps/regulations-api/dist/RegulationPdf.css')
+const CSS = fs.readFileSync(path.resolve(__dirname, 'RegulationPdf.css'))
 
 const pdfTmplate = (
   regulation: RegulationMaybeDiff | InputRegulation,
