@@ -52,8 +52,10 @@ export const getLimitAndOffset = ({
   page = DEFAULT_PAGE_NUMBER,
   pageSize = DEFAULT_PAGE_SIZE,
 }: GetLimitAndOffsetParams) => {
+  const pageToUse = page < 1 ? DEFAULT_PAGE_NUMBER : page
+
   const limit = pageSize
-  const offset = (page - 1) * limit
+  const offset = (pageToUse - 1) * limit
   return {
     offset,
     limit,
