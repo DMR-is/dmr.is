@@ -707,6 +707,11 @@ export class CaseUpdateService implements ICaseUpdateService {
       throw new BadRequestException('Case not found')
     }
 
+    await caseLookup.update({
+      advertTitle: body.title,
+      transaction,
+    })
+
     if (caseLookup.applicationId) {
       try {
         ResultWrapper.unwrap(

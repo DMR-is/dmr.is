@@ -4,6 +4,7 @@ import {
   CreatedAt,
   DataType,
   DefaultScope,
+  ForeignKey,
   HasOne,
   Model,
   Table,
@@ -44,6 +45,7 @@ export class AdvertTypeModel extends Model {
   @BelongsTo(() => AdvertDepartmentModel, 'department_id')
   department!: AdvertDepartmentModel
 
+  @ForeignKey(() => AdvertMainTypeModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: true,
@@ -51,7 +53,7 @@ export class AdvertTypeModel extends Model {
   })
   mainTypeId?: string
 
-  @HasOne(() => AdvertMainTypeModel, 'id')
+  @BelongsTo(() => AdvertMainTypeModel)
   mainType?: AdvertMainTypeModel
 
   @CreatedAt

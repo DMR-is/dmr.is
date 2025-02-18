@@ -22,6 +22,7 @@ import {
   S3UploadFilesResponse,
   GetComments,
   GetSignature,
+  GetApplicationAdvertsQuery,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -29,6 +30,7 @@ import 'multer'
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Inject,
   MaxFileSizeValidator,
@@ -56,6 +58,7 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -80,6 +83,22 @@ export class ApplicationController {
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  @UseGuards(ApplicationAuthGaurd)
+  @WithCase(false)
+  @Get('/adverts')
+  @ApiOperation({
+    operationId: 'getAdvertCopies',
+  })
+  @ApiQuery({ type: GetApplicationAdvertsQuery, required: false })
+  @ApiResponse({
+    type: GetApplicationResponse,
+  })
+  async getAdvertCopies(@Query() query: GetApplicationAdvertsQuery) {
+    return ResultWrapper.unwrap(
+      await this.applicationService.getApplicationAdverts(query),
+    )
+  }
 
   /**
    * Retrieves the price of an application.
