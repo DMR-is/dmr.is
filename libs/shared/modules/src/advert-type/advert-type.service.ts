@@ -289,7 +289,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       const createBody = {
         id: id,
-        title: body.title,
+        title: body.title.toUpperCase(),
         slug: slug,
         departmentId: body.departmentId,
         mainTypeId: body.mainTypeId,
