@@ -841,7 +841,17 @@ export class JournalService implements IJournalService {
 
     if (params?.search) {
       Object.assign(whereParams, {
-        subject: { [Op.iLike]: searchCondition },
+        [Op.or]: [
+          {
+            subject: { [Op.iLike]: searchCondition },
+          },
+          [
+            Sequelize.where(
+              Sequelize.literal(`CONCAT(serial_number, '/', publication_year)`),
+              { [Op.iLike]: searchCondition },
+            ),
+          ],
+        ],
       })
     }
 
