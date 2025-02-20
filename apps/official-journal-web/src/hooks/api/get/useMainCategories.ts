@@ -18,8 +18,8 @@ export const useMainCategories = ({
     GetMainCategoriesResponse,
     Error
   >(
-    [APIRoutes.GetMainCategories, params],
-    ([url, params]: readonly [string, SearchParams]) =>
+    [APIRoutes.MainCategories, params],
+    ([url, params]: [string, SearchParams]) =>
       fetcher(url, {
         arg: {
           method: 'GET',

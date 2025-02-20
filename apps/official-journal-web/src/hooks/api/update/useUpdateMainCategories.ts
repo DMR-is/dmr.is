@@ -33,7 +33,7 @@ type DeleteMainCategoryCategoryTriggerArgs = {
 export const useUpdateMainCategories = () => {
   const { trigger: createMainCategoryTrigger, isMutating: isCreating } =
     useSWRMutation<Response, Error, Key, CreateMainCategoryParams>(
-      APIRoutes.CreateMainCategory,
+      APIRoutes.MainCategory,
       (url: string, { arg }: { arg: CreateMainCategoryParams }) =>
         fetcher<Response, CreateMainCategoryParams>(url, {
           arg: { method: 'POST', body: arg },
@@ -52,7 +52,7 @@ export const useUpdateMainCategories = () => {
     Key,
     CreateMainCategoryCategoriesTriggerArgs
   >(
-    APIRoutes.CreateMainCategoryCategories,
+    APIRoutes.MainCategoryCategories,
     (url: string, { arg }: { arg: CreateMainCategoryCategoriesTriggerArgs }) =>
       fetcher<Response, CreateMainCategoryCategoriesTriggerArgs>(
         url.replace(':id', arg.mainCategoryId),
@@ -67,7 +67,7 @@ export const useUpdateMainCategories = () => {
 
   const { trigger: deleteMainCategoryTrigger, isMutating: isDeleting } =
     useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
-      APIRoutes.DeleteMainCategory,
+      APIRoutes.MainCategory,
       (url: string, { arg }: { arg: DeleteMainCategoryTriggerArgs }) =>
         fetcher<Response>(url.replace(':id', arg.mainCategoryId), {
           arg: {
@@ -88,7 +88,7 @@ export const useUpdateMainCategories = () => {
     Key,
     DeleteMainCategoryCategoryTriggerArgs
   >(
-    APIRoutes.DeleteMainCategoryCategory,
+    APIRoutes.MainCategoryCategory,
     (url: string, { arg }: { arg: DeleteMainCategoryCategoryTriggerArgs }) =>
       fetcher<Response>(
         url.replace(':id', arg.mainCategoryId).replace(':cid', arg.categoryId),
@@ -103,7 +103,7 @@ export const useUpdateMainCategories = () => {
     trigger: updateMainCategoryTrigger,
     isMutating: isUpdatingMainCategory,
   } = useSWRMutation<Response, Error, Key, UpdateMainCategoryParams>(
-    APIRoutes.UpdateMainCategory,
+    APIRoutes.MainCategory,
     (url: string, { arg }: { arg: UpdateMainCategoryParams }) =>
       fetcher<Response, UpdateMainCategoryParams>(
         url.replace(':id', arg.mainCategoryId),
