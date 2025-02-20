@@ -2,13 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
 
-import { createDmrClient } from '../../../lib/api/createClient'
-import { OJOIWebException } from '../../../lib/constants'
-import { SearchParams } from '../../../lib/types'
+import { createDmrClient } from '../../../../lib/api/createClient'
+import { OJOIWebException } from '../../../../lib/constants'
 
 const LOG_CATEGORY = 'get-main-categories-handler'
 
-class MainCategoriesHandler {
+class MainCategoryHandler {
   private readonly client = createDmrClient()
 
   @LogMethod(false)
@@ -16,10 +15,10 @@ class MainCategoriesHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
-        case 'GET':
-          return void (await this.get(req, res))
-        case 'POST':
-          return void (await this.create(req, res))
+        case 'PUT':
+          return void (await this.update(req, res))
+        case 'DELETE':
+          return void (await this.delete(req, res))
         default:
           return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
@@ -33,27 +32,24 @@ class MainCategoriesHandler {
     }
   }
 
-  private async get(req: NextApiRequest, res: NextApiResponse) {
-    const { page, pageSize, search } = req.query as SearchParams
-
-    const categories = await this.client.getMainCategories({
-      page: page,
-      pageSize: pageSize,
-      search: search,
+  private async delete(req: NextApiRequest, res: NextApiResponse) {
+    await this.client.deleteMainCategory({
+      id: req.query.id as string,
     })
 
-    return res.status(200).json(categories)
+    return res.status(204).end()
   }
 
-  private async create(req: NextApiRequest, res: NextApiResponse) {
-    await this.client.createMainCategory({
-      createMainCategory: req.body,
+  private async update(req: NextApiRequest, res: NextApiResponse) {
+    await this.client.updateMainCategory({
+      id: req.query.id as string,
+      updateMainCategory: req.body,
     })
 
     return void res.status(200).end()
   }
 }
 
-const instance = new MainCategoriesHandler()
+const instance = new MainCategoryHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

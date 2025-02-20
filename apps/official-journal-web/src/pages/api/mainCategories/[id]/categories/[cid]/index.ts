@@ -1,20 +1,32 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Delete, HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import { createDmrClient } from '../../../../../../lib/api/createClient'
+import { OJOIWebException } from '../../../../../../lib/constants'
 
 class DeleteMainCategoryCategoryHandler {
   @LogMethod(false)
   @HandleApiException()
-  @Delete()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
+    try {
+      switch (req.method) {
+        case 'DELETE':
+          return void (await this.deleteMainCategoryCategory(req, res))
+        default:
+          return void res.status(405).json(OJOIWebException.methodNotAllowed())
+      }
+    } catch (error) {
+      return void res.status(500).json(OJOIWebException.serverError())
+    }
+  }
+
+  private async deleteMainCategoryCategory(
+    req: NextApiRequest,
+    res: NextApiResponse,
+  ) {
     const { id: mainCategoryId, cid: categoryId } = req.query as {
       id: string
       cid: string
-    }
-
-    if (!mainCategoryId || !categoryId) {
-      return res.status(400).end()
     }
 
     const dmrClient = createDmrClient()
