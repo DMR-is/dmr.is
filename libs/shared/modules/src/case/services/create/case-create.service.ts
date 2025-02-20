@@ -401,7 +401,8 @@ export class CaseCreateService implements ICaseCreateService {
 
     const regularSignature = application.answers.signature.regular
     const committeeSignature = application.answers.signature.committee
-    const signatureType = application.answers.misc.signatureType
+    const signatureType =
+      application.answers.misc.signatureType ?? SignatureType.Regular
 
     ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, {

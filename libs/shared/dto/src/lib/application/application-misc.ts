@@ -6,5 +6,5 @@ export class ApplicationMisc {
   @ApiProperty({
     enum: SignatureType,
   })
-  signatureType!: SignatureType
+  signatureType?: SignatureType
 }
