@@ -535,14 +535,23 @@ export class ApplicationService implements IApplicationService {
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-      transaction,
-    )
-
     let caseId: string | null = null
-    if (caseLookup.result.ok) {
-      caseId = caseLookup.result.value.id
+    try {
+      const caseLookup = await this.utilityService.caseLookupByApplicationId(
+        applicationId,
+      )
+
+      if (caseLookup.result.ok) {
+        caseId = caseLookup.result.value.id
+      }
+    } catch (e) {
+      // Display a warning when no case is found.
+      // This is not an error, as the case might not exist yet, and that's perfectly fine.
+      // No transactional rollback is needed.
+      this.logger.warn('Could not find case for application', {
+        category: LOGGING_CATEGORY,
+        error: e,
+      })
     }
 
     const applicationAttachmentCreation =
