@@ -1,689 +1,100 @@
-import { useState } from 'react'
-import slugify from 'slugify'
-import { value } from 'submodules/island.is/libs/island-ui/core/src/lib/DatePicker/DatePicker.css'
-import { Department } from '@dmr.is/shared/dto'
+import { GetServerSideProps } from 'next'
+import { getSession } from 'next-auth/react'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import {
-  AlertMessage,
-  Box,
-  Button,
-  Divider,
   GridColumn,
   GridContainer,
   GridRow,
-  Icon,
-  Inline,
-  Input,
-  Select,
   Stack,
-  Tag,
 } from '@island.is/island-ui/core'
 
-import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
-import { label } from '../../components/editor/EditorInput.mixins'
+import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
+import { MainCategories } from '../../components/categories/MainCategories'
 import { Section } from '../../components/section/Section'
-import { Category, MainCategory, UpdateMainCategory } from '../../gen/fetch'
-import {
-  useCategories,
-  useDepartments,
-  useMainCategories,
-} from '../../hooks/api'
+import { CategoryProvider } from '../../context/mainCategoryContext'
+import { Category, Department, MainCategory } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
+import { createDmrClient } from '../../lib/api/createClient'
+import { Routes } from '../../lib/constants'
+import { loginRedirect } from '../../lib/utils'
 
-type NewMainCategory = {
-  title: string
-  slug: string
-  description: string
+type Props = {
+  mainCategories: MainCategory[]
   categories: Category[]
-  departmentId: string
+  departments: Department[]
 }
 
-export default function CasePublishingOverview() {
-  const [selectedMainCategory, setSelectedMainCategory] =
-    useState<MainCategory | null>(null)
-
-  const [categoriesToBeAdded, setCategoriesToBeAdded] = useState<Category[]>([])
-  const [selectedDepartment, setSelectedDepartment] =
-    useState<Department['id']>()
-
-  const [newMainCategory, setNewMainCategory] = useState<NewMainCategory>({
-    title: '',
-    slug: '',
-    description: '',
-    departmentId: '',
-    categories: [],
-  })
-
-  const [updateBody, setUpdateBody] = useState<UpdateMainCategory>({
-    description: '',
-    title: '',
-    departmentId: '',
-  })
-
-  const {
-    mainCategories,
-    isLoading,
-    isCreating,
-    isDeleting,
-    isUpdatingMainCategory,
-    isDeletingMainCategoryCategory,
-    isCreatingMainCategoryCategories,
-    createMainCategory,
-    deleteMainCategory,
-    updateMainCategory,
-    deleteMainCategoryCategory,
-    createMainCategoryCategories,
-  } = useMainCategories({
-    onGetMainCategoriesSuccess: (data) => {
-      if (!selectedMainCategory) {
-        return
-      }
-
-      const found = data?.mainCategories.find(
-        (category) => category.id === selectedMainCategory.id,
-      )
-
-      if (!found) {
-        return
-      }
-
-      setSelectedMainCategory(found)
-    },
-    onCreateMainCategorySuccess: () => {
-      setNewMainCategory({
-        title: '',
-        slug: '',
-        description: '',
-        categories: [],
-        departmentId: '',
-      })
-    },
-    onDeleteMainCategorySuccess: () => {
-      setSelectedMainCategory(null)
-    },
-    onCreateMainCategoryCategoriesSuccess: () => {
-      setCategoriesToBeAdded([])
-    },
-    params: {
-      pageSize: 100,
-    },
-  })
-
-  const { data: categoriesData } = useCategories({
-    params: {
-      pageSize: 1000,
-    },
-  })
-  const { departments } = useDepartments()
-
-  const mainCategoryOptions = mainCategories?.map((category) => ({
-    label: category.title,
-    value: category.id,
-  }))
-
-  const onNewMainCategoryCategoriesChange = (id: string | undefined) => {
-    if (!id) {
-      return
-    }
-
-    const found = categoriesData?.categories.find(
-      (category) => category.id === id,
-    )
-
-    const isAlreadyAdded = newMainCategory.categories.find(
-      (category) => category.id === id,
-    )
-
-    if (isAlreadyAdded && found) {
-      const filteredCategories = newMainCategory.categories.filter(
-        (cat) => cat.id !== found.id,
-      )
-      setNewMainCategory({ ...newMainCategory, categories: filteredCategories })
-    }
-
-    if (!isAlreadyAdded && found) {
-      setNewMainCategory({
-        ...newMainCategory,
-        categories: [...newMainCategory.categories, found],
-      })
-    }
-  }
-
-  const onRemoveNewMainCategoryCategory = (categoryId: string) => {
-    const filteredCategories = newMainCategory.categories.filter(
-      (category) => category.id !== categoryId,
-    )
-    setNewMainCategory({ ...newMainCategory, categories: filteredCategories })
-  }
-
-  const onMainCategoryChange = (id: string | undefined) => {
-    const mainCategory = mainCategories?.find((category) => category.id === id)
-
-    if (!mainCategory) {
-      setSelectedMainCategory(null)
-      return
-    }
-
-    setUpdateBody({
-      description: mainCategory.description,
-      title: mainCategory.title,
-      departmentId: mainCategory.departmentId,
-    })
-    setSelectedMainCategory(mainCategory)
-  }
-
-  const onDeleteMainCategory = (mainCategoryId: string) => {
-    if (!selectedMainCategory) {
-      return
-    }
-
-    const confirmed = confirm(
-      `Ertu viss um að þú viljir eyða flokkinum "${selectedMainCategory.title}"?`,
-    )
-
-    if (confirmed) {
-      deleteMainCategory(mainCategoryId)
-    }
-  }
-
-  const onCategoryChange = (id: string | undefined) => {
-    if (!id) {
-      return
-    }
-
-    const found = categoriesData?.categories.find(
-      (category) => category.id === id,
-    )
-
-    const isAlreadyAdded = categoriesToBeAdded.find(
-      (category) => category.id === id,
-    )
-
-    if (isAlreadyAdded && found) {
-      const filteredCategories = categoriesToBeAdded.filter(
-        (cat) => cat.id !== found.id,
-      )
-      setCategoriesToBeAdded([...filteredCategories])
-    }
-
-    if (!isAlreadyAdded && found) {
-      setCategoriesToBeAdded([...categoriesToBeAdded, found])
-    }
-  }
-
-  const onCategoryRemove = (id: string) => {
-    const filteredCategories = categoriesToBeAdded.filter(
-      (category) => category.id !== id,
-    )
-
-    setCategoriesToBeAdded([...filteredCategories])
-  }
-
-  const canCreateMainCategory =
-    newMainCategory.title.length > 0 &&
-    newMainCategory.description.length > 0 &&
-    selectedDepartment
-
-  const onCreateMainCategory = () => {
-    if (canCreateMainCategory) {
-      createMainCategory({
-        title: newMainCategory.title,
-        description: newMainCategory.description,
-        categories: newMainCategory.categories.map((category) => category.id),
-        departmentId: selectedDepartment,
-      })
-    }
-  }
-
-  const onDeleteMainCategoryCategory = (
-    mainCategoryId: string,
-    categoryId: string,
-  ) => {
-    deleteMainCategoryCategory(mainCategoryId, categoryId)
-  }
-
+export default function CasePublishingOverview({
+  mainCategories,
+  categories,
+  departments,
+}: Props) {
   return (
-    <Section>
-      <GridContainer>
-        <GridRow rowGap={[2, 2, 3]}>
-          <GridColumn
-            span={['12/12', '12/12', '6/12']}
-            paddingBottom={[0, 2, 3]}
-          >
-            <Stack space={[2, 2, 3]}>
-              <ContentWrapper title="Yfirflokkar" background="white">
-                <Box display="flex" justifyContent="flexStart">
-                  <Select
-                    key={selectedMainCategory?.title}
-                    isLoading={isLoading}
-                    backgroundColor="blue"
-                    placeholder="Veldu yfirflokk"
-                    label="Veldu yfirflokk"
-                    size="sm"
-                    defaultValue={
-                      selectedMainCategory && {
-                        label: selectedMainCategory?.title,
-                        value: selectedMainCategory?.id,
-                      }
-                    }
-                    options={mainCategoryOptions}
-                    onChange={(option) => onMainCategoryChange(option?.value)}
-                  />
-                </Box>
-              </ContentWrapper>
-              {selectedMainCategory !== null && (
-                <ContentWrapper
-                  title={`Breyta yfirflokki ${selectedMainCategory?.title}`}
-                  background="white"
-                >
-                  <Stack space={[2, 2, 3]}>
-                    <Box
-                      display="flex"
-                      rowGap={2}
-                      columnGap={2}
-                      flexWrap="wrap"
-                    >
-                      <Box flexGrow={1}>
-                        <Input
-                          backgroundColor="blue"
-                          size="sm"
-                          name="current-category-name"
-                          placeholder="Heiti yfirflokks"
-                          label="Heiti yfirflokks"
-                          defaultValue={selectedMainCategory.title}
-                          value={updateBody.title}
-                          onChange={(e) =>
-                            setUpdateBody({
-                              ...updateBody,
-                              title: e.target.value,
-                            })
-                          }
-                        />
-                      </Box>
-                      <Box flexGrow={1}>
-                        <Input
-                          backgroundColor="blue"
-                          size="sm"
-                          readOnly
-                          name="current-category-name"
-                          placeholder="Slóð"
-                          label="Slóð"
-                          value={
-                            updateBody.title
-                              ? slugify(updateBody.title, { lower: true })
-                              : ''
-                          }
-                        />
-                      </Box>
-                    </Box>
-                    <Box>
-                      <Input
-                        backgroundColor="blue"
-                        textarea
-                        name="current-category-description"
-                        size="sm"
-                        placeholder="Lýsing á yfirflokk"
-                        label="Lýsing á yfirflokk"
-                        rows={3}
-                        defaultValue={selectedMainCategory.description}
-                        value={updateBody.description}
-                        onChange={(e) =>
-                          setUpdateBody({
-                            ...updateBody,
-                            description: e.target.value,
-                          })
-                        }
-                      />
-                    </Box>
-
-                    <Box>
-                      <Divider />
-                    </Box>
-                    <Box>
-                      <Select
-                        backgroundColor="blue"
-                        size="sm"
-                        placeholder="Velja deild"
-                        label="Tengja deild við yfirflokk"
-                        options={departments?.map((dept) => ({
-                          label: dept.title,
-                          value: dept.id,
-                        }))}
-                        defaultValue={
-                          selectedMainCategory.departmentId
-                            ? {
-                                label:
-                                  departments?.find(
-                                    (dept) =>
-                                      dept.id ===
-                                      selectedMainCategory.departmentId,
-                                  )?.title ?? '',
-                                value: selectedMainCategory.departmentId,
-                              }
-                            : undefined
-                        }
-                        onChange={(option) =>
-                          setUpdateBody({
-                            ...updateBody,
-                            departmentId:
-                              option?.value ??
-                              selectedMainCategory.departmentId,
-                          })
-                        }
-                      />
-                    </Box>
-                    <Box
-                      display="flex"
-                      justifyContent="spaceBetween"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      rowGap={2}
-                      columnGap={2}
-                    >
-                      <Button
-                        size="small"
-                        variant="ghost"
-                        icon="pencil"
-                        iconType="outline"
-                        loading={isUpdatingMainCategory}
-                        onClick={() =>
-                          updateMainCategory({
-                            mainCategoryId: selectedMainCategory.id,
-                            ...updateBody,
-                          })
-                        }
-                      >
-                        Uppfæra flokk
-                      </Button>
-                      <Button
-                        loading={isDeleting}
-                        size="small"
-                        variant="ghost"
-                        colorScheme="destructive"
-                        icon="trash"
-                        iconType="outline"
-                        onClick={() =>
-                          onDeleteMainCategory(selectedMainCategory.id)
-                        }
-                      >
-                        Eyða flokki
-                      </Button>
-                    </Box>
-                  </Stack>
-                </ContentWrapper>
-              )}
-              <ContentWrapper
-                title="Búa til nýjan yfirflokk"
-                background="white"
-              >
-                <Stack space={[2, 2, 3]}>
-                  <Box display="flex" rowGap={2} columnGap={2} flexWrap="wrap">
-                    <Box flexGrow={1}>
-                      <Input
-                        backgroundColor="blue"
-                        size="sm"
-                        name="maincategory-name"
-                        placeholder="Heiti yfirflokks"
-                        label="Heiti yfirflokks"
-                        onChange={(e) =>
-                          setNewMainCategory({
-                            ...newMainCategory,
-                            title: e.target.value,
-                            slug: slugify(e.target.value, { lower: true }),
-                          })
-                        }
-                        value={newMainCategory.title}
-                      />
-                    </Box>
-                    <Box flexGrow={1}>
-                      <Input
-                        backgroundColor="blue"
-                        size="sm"
-                        readOnly
-                        name="maincategory-name"
-                        placeholder="Slóð"
-                        label="Slóð"
-                        value={newMainCategory.slug}
-                      />
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Input
-                      backgroundColor="blue"
-                      name="maincategory-description"
-                      size="sm"
-                      placeholder="Lýsing á yfirflokk"
-                      label="Lýsing á yfirflokk"
-                      rows={3}
-                      textarea
-                      onChange={(e) =>
-                        setNewMainCategory({
-                          ...newMainCategory,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </Box>
-                  <Box>
-                    <Stack space={[2, 2, 3]}>
-                      <Select
-                        backgroundColor="blue"
-                        size="sm"
-                        placeholder="Veldu flokka"
-                        label="Veldu flokka sem á að bæta við"
-                        options={categoriesData?.categories.map((category) => ({
-                          label: category.title,
-                          value: category.id,
-                        }))}
-                        onChange={(option) =>
-                          onNewMainCategoryCategoriesChange(option?.value)
-                        }
-                      />
-                      {newMainCategory.categories.length > 0 && (
-                        <Inline space={2}>
-                          {newMainCategory.categories.map((category) => (
-                            <Tag
-                              key={category.id}
-                              outlined
-                              onClick={() =>
-                                onRemoveNewMainCategoryCategory(category.id)
-                              }
-                            >
-                              <Box
-                                display="flex"
-                                alignItems="center"
-                                rowGap={2}
-                                columnGap={2}
-                              >
-                                {category.title}
-                                <Icon
-                                  size="small"
-                                  icon="trash"
-                                  type="outline"
-                                />
-                              </Box>
-                            </Tag>
-                          ))}
-                        </Inline>
-                      )}
-                    </Stack>
-                  </Box>
-                  <Box>
-                    <Divider />
-                  </Box>
-                  <Box>
-                    <Select
-                      backgroundColor="blue"
-                      size="sm"
-                      placeholder="Velja deild"
-                      label="Tengja deild við yfirflokk"
-                      options={departments?.map((dept) => ({
-                        label: dept.title,
-                        value: dept.id,
-                      }))}
-                      onChange={(option) =>
-                        setSelectedDepartment(option?.value)
-                      }
-                    />
-                  </Box>
-                  <Box>
-                    <Button
-                      disabled={!canCreateMainCategory}
-                      size="small"
-                      variant="ghost"
-                      icon="add"
-                      loading={isCreating}
-                      iconType="outline"
-                      onClick={() => onCreateMainCategory()}
-                    >
-                      Búa til yfirflokk
-                    </Button>
-                  </Box>
-                </Stack>
-              </ContentWrapper>
-            </Stack>
-          </GridColumn>
-          <GridColumn
-            span={['12/12', '12/12', '6/12']}
-            paddingBottom={[2, 2, 3]}
-          >
-            <Stack space={[2, 2, 3]}>
-              <ContentWrapper
-                title={`Undirflokkar${
-                  selectedMainCategory ? ` ${selectedMainCategory.title}` : ''
-                }`}
-                background="white"
-              >
-                <Stack space={[2, 2, 3]}>
-                  {selectedMainCategory === null && (
-                    <AlertMessage
-                      type="info"
-                      title="Enginn yfirflokkur valinn"
-                      message="Veldu yfirflokk til að sjá undirflokka"
-                    />
-                  )}
-
-                  {selectedMainCategory &&
-                    selectedMainCategory.categories.length === 0 && (
-                      <AlertMessage
-                        type="info"
-                        title="Engir undirflokkar"
-                        message="Engir undirflokkar fyrir valinn yfirflokk"
-                      />
-                    )}
-                  <Inline space={2}>
-                    {selectedMainCategory &&
-                      selectedMainCategory.categories.map((category) => (
-                        <Box cursor="pointer">
-                          <Tag
-                            variant="mint"
-                            key={category.id}
-                            disabled={isDeletingMainCategoryCategory}
-                          >
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              rowGap={2}
-                              columnGap={2}
-                              onClick={() =>
-                                onDeleteMainCategoryCategory(
-                                  selectedMainCategory.id,
-                                  category.id,
-                                )
-                              }
-                            >
-                              {category.title}
-                              <Icon size="small" icon="trash" type="outline" />
-                            </Box>
-                          </Tag>
-                        </Box>
-                      ))}
-                  </Inline>
-                </Stack>
-              </ContentWrapper>
-              <ContentWrapper
-                title="Bæta flokki við yfirflokk"
-                background="white"
-              >
-                <Stack space={[2, 2, 3]}>
-                  <Box display="flex" justifyContent="flexStart">
-                    <Select
-                      backgroundColor="blue"
-                      isDisabled={
-                        selectedMainCategory === null ||
-                        isCreatingMainCategoryCategories
-                      }
-                      size="sm"
-                      placeholder="Veldu flokka"
-                      label="Veldu þá flokka sem á að bæta við"
-                      options={categoriesData?.categories.map((category) => ({
-                        label: category.title,
-                        value: category.id,
-                      }))}
-                      onChange={(option) => onCategoryChange(option?.value)}
-                    />
-                  </Box>
-                  {categoriesToBeAdded.length > 0 && (
-                    <Inline space={2}>
-                      {categoriesToBeAdded.map((category) => (
-                        <Box cursor="pointer">
-                          <Tag
-                            key={category.id}
-                            outlined
-                            onClick={() => onCategoryRemove(category.id)}
-                          >
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              rowGap={2}
-                              columnGap={2}
-                            >
-                              {category.title}
-                              <Icon size="small" icon="trash" type="outline" />
-                            </Box>
-                          </Tag>
-                        </Box>
-                      ))}
-                    </Inline>
-                  )}
-                  <Button
-                    disabled={
-                      categoriesToBeAdded.length === 0 ||
-                      selectedMainCategory === null
-                    }
-                    size="small"
-                    variant="ghost"
-                    icon="add"
-                    iconType="outline"
-                    onClick={() => {
-                      if (!selectedMainCategory) return
-                      createMainCategoryCategories(
-                        selectedMainCategory.id,
-                        categoriesToBeAdded.map((category) => category.id),
-                      )
-                    }}
-                  >
-                    Bæta við flokkum
-                  </Button>
-                </Stack>
-              </ContentWrapper>
-            </Stack>
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+    <CategoryProvider
+      initalMainCategories={mainCategories}
+      initalCategories={categories}
+      initalDepartments={departments}
+    >
+      <Section>
+        <GridContainer>
+          <GridRow>
+            <GridColumn span={['12/12', '6/12']}>
+              <Stack space={4}>
+                <MainCategories />
+                <CreateMainCategory />
+              </Stack>
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}></GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Section>
+    </CategoryProvider>
   )
 }
-export const getServerSideProps = async () => {
+
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const session = await getSession({ req })
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: false,
     },
   }
 
+  if (!session) {
+    return loginRedirect(Routes.MainCategories)
+  }
+
+  const client = createDmrClient()
+
+  const mainCategoriesPromise = client
+    .withMiddleware(new AuthMiddleware(session.accessToken))
+    .getMainCategories({
+      pageSize: 1000,
+    })
+
+  const categoriesPromise = client
+    .withMiddleware(new AuthMiddleware(session.accessToken))
+    .getCategories({
+      pageSize: 1000,
+    })
+
+  const departmentsPromise = client
+    .withMiddleware(new AuthMiddleware(session.accessToken))
+    .getDepartments({ pageSize: 10 })
+
+  const [mainCategories, categories, departments] = await Promise.all([
+    mainCategoriesPromise,
+    categoriesPromise,
+    departmentsPromise,
+  ])
+
   return {
     props: {
       layout,
+      mainCategories: mainCategories.mainCategories,
+      categories: categories.categories,
+      departments: departments.departments,
     },
   }
 }
