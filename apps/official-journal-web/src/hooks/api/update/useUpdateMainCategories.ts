@@ -1,5 +1,5 @@
 import { Key } from 'swr'
-import useSWRMutation from 'swr/mutation'
+import useSWRMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
@@ -10,38 +10,90 @@ type CreateMainCategoryParams = {
   departmentId: string
 }
 
+type CreateMainCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  CreateMainCategoryParams
+>
+
 type UpdateMainCategoryParams = {
   mainCategoryId: string
   title?: string
   description?: string
 }
 
+type UpdateMainCateogoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  UpdateMainCategoryParams
+>
+
 type CreateMainCategoryCategoriesTriggerArgs = {
   mainCategoryId: string
   categoryIds: string[]
 }
 
+type CreateMainCategoryCategoriesOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  CreateMainCategoryCategoriesTriggerArgs
+>
+
 type DeleteMainCategoryTriggerArgs = {
   mainCategoryId: string
 }
+
+type DeleteMainCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  DeleteMainCategoryTriggerArgs
+>
 
 type DeleteMainCategoryCategoryTriggerArgs = {
   mainCategoryId: string
   categoryId: string
 }
 
-export const useUpdateMainCategories = () => {
-  const { trigger: createMainCategoryTrigger, isMutating: isCreating } =
-    useSWRMutation<Response, Error, Key, CreateMainCategoryParams>(
-      APIRoutes.MainCategory,
-      (url: string, { arg }: { arg: CreateMainCategoryParams }) =>
-        fetcher<Response, CreateMainCategoryParams>(url, {
-          arg: { method: 'POST', body: arg },
-        }),
-      {
-        throwOnError: false,
-      },
-    )
+type DeleteMainCategoryCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  DeleteMainCategoryCategoryTriggerArgs
+>
+
+type UseUpdateMainCategoriesParams = {
+  createMainCategoryOptions?: CreateMainCategoryOptions
+  updateMainCategoryOptions?: UpdateMainCateogoryOptions
+  createMainCategoryCategoriesOptions?: CreateMainCategoryCategoriesOptions
+  deleteMainCategoryOptions?: DeleteMainCategoryOptions
+  deleteMainCategoryCategoryOptions?: DeleteMainCategoryCategoryOptions
+}
+
+export const useUpdateMainCategories = ({
+  createMainCategoryOptions,
+  updateMainCategoryOptions,
+  createMainCategoryCategoriesOptions,
+  deleteMainCategoryCategoryOptions,
+  deleteMainCategoryOptions,
+}: UseUpdateMainCategoriesParams = {}) => {
+  const {
+    trigger: createMainCategoryTrigger,
+    isMutating: isCreatingMainCategory,
+  } = useSWRMutation<Response, Error, Key, CreateMainCategoryParams>(
+    APIRoutes.MainCategories,
+    (url: string, { arg }: { arg: CreateMainCategoryParams }) =>
+      fetcher<Response, CreateMainCategoryParams>(url, {
+        arg: { method: 'POST', body: arg },
+      }),
+    {
+      throwOnError: false,
+      ...createMainCategoryOptions,
+    },
+  )
 
   const {
     trigger: createMainCategoryCategoriesTrigger,
@@ -62,6 +114,7 @@ export const useUpdateMainCategories = () => {
       ),
     {
       throwOnError: false,
+      ...createMainCategoryCategoriesOptions,
     },
   )
 
@@ -76,6 +129,7 @@ export const useUpdateMainCategories = () => {
         }),
       {
         throwOnError: false,
+        ...deleteMainCategoryOptions,
       },
     )
 
@@ -96,6 +150,7 @@ export const useUpdateMainCategories = () => {
       ),
     {
       throwOnError: false,
+      ...deleteMainCategoryCategoryOptions,
     },
   )
 
@@ -108,56 +163,32 @@ export const useUpdateMainCategories = () => {
       fetcher<Response, UpdateMainCategoryParams>(
         url.replace(':id', arg.mainCategoryId),
         {
-          arg: { method: 'PUT', body: arg },
+          arg: {
+            method: 'PUT',
+            body: {
+              mainCategoryId: arg.mainCategoryId,
+              description: arg.description,
+              title: arg.title,
+            },
+          },
         },
       ),
     {
       throwOnError: false,
+      ...updateMainCategoryOptions,
     },
   )
 
-  const deleteMainCategory = (id: string) => {
-    deleteMainCategoryTrigger({ mainCategoryId: id })
-  }
-
-  const deleteMainCategoryCategory = (
-    mainCategoryId: string,
-    categoryId: string,
-  ) => {
-    deleteMainCategoryCategoryTrigger({
-      mainCategoryId,
-      categoryId,
-    })
-  }
-
-  const createMainCategory = (params: CreateMainCategoryParams) => {
-    createMainCategoryTrigger(params)
-  }
-
-  const createMainCategoryCategories = (
-    mainCategoryId: string,
-    categoryIds: string[],
-  ) => {
-    createMainCategoryCategoriesTrigger({
-      mainCategoryId,
-      categoryIds,
-    })
-  }
-
-  const updateMainCategory = (params: UpdateMainCategoryParams) => {
-    updateMainCategoryTrigger(params)
-  }
-
   return {
     isDeleting,
-    isCreating,
+    isCreatingMainCategory,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     isUpdatingMainCategory,
-    deleteMainCategoryCategory,
-    createMainCategory,
-    createMainCategoryCategories,
-    deleteMainCategory,
-    updateMainCategory,
+    deleteMainCategoryCategoryTrigger,
+    createMainCategoryTrigger,
+    createMainCategoryCategoriesTrigger,
+    deleteMainCategoryTrigger,
+    updateMainCategoryTrigger,
   }
 }

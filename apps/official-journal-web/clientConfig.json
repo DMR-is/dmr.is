@@ -4283,10 +4283,6 @@
       "CreateSignature": {
         "type": "object",
         "properties": {
-          "signatureDate": {
-            "type": "string",
-            "description": "ISO datestring of the signature"
-          },
           "involvedPartyId": {
             "type": "string",
             "description": "The involved party of the signature"
@@ -4297,7 +4293,7 @@
             "items": { "$ref": "#/components/schemas/CreateSignatureRecord" }
           }
         },
-        "required": ["signatureDate", "involvedPartyId", "records"]
+        "required": ["involvedPartyId", "records"]
       },
       "GetSignature": {
         "type": "object",

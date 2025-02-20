@@ -237,24 +237,6 @@ export class CaseController {
   })
   @TimeLog()
   async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
-    const id = uuid()
-
-    const subCategoriesLookup = await this.journalService.getCategories({
-      ids: body.categories,
-      pageSize: body.categories.length,
-    })
-
-    if (!subCategoriesLookup.result.ok) {
-      this.logger.warn(
-        `Failed to get sub categories for main category creation`,
-        {
-          error: subCategoriesLookup.result.error,
-          category: LOG_CATEGORY,
-        },
-      )
-      throw new BadRequestException('Invalid sub categories')
-    }
-
     ResultWrapper.unwrap(
       await this.journalService.insertMainCategory({
         categories: body.categories,

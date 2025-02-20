@@ -23,7 +23,7 @@ class MainCategoryHandler {
           return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error(`Error in GetMainCategoriesHandler`, {
+      logger.error(`Error in MainCategoryHandler`, {
         error,
         category: LOG_CATEGORY,
       })
@@ -46,7 +46,7 @@ class MainCategoryHandler {
       updateMainCategory: req.body,
     })
 
-    return void res.status(200).end()
+    return void res.status(204).end()
   }
 }
 

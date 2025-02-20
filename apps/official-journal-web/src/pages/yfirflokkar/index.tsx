@@ -11,6 +11,7 @@ import {
 
 import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
 import { MainCategories } from '../../components/categories/MainCategories'
+import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/mainCategoryContext'
 import { Category, Department, MainCategory } from '../../gen/fetch'
@@ -41,8 +42,12 @@ export default function CasePublishingOverview({
           <GridRow>
             <GridColumn span={['12/12', '6/12']}>
               <Stack space={4}>
-                <MainCategories />
-                <CreateMainCategory />
+                <ContentWrapper title={'Yfirflokkar'}>
+                  <MainCategories />
+                </ContentWrapper>
+                <ContentWrapper title="Stofna nýjan yfirflokk">
+                  <CreateMainCategory />
+                </ContentWrapper>
               </Stack>
             </GridColumn>
             <GridColumn span={['12/12', '6/12']}></GridColumn>
