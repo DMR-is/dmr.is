@@ -21,6 +21,7 @@ type UpdateMainCategoryParams = {
   mainCategoryId: string
   title?: string
   description?: string
+  departmentId?: string
 }
 
 type UpdateMainCateogoryOptions = SWRMutationConfiguration<
@@ -32,7 +33,7 @@ type UpdateMainCateogoryOptions = SWRMutationConfiguration<
 
 type CreateMainCategoryCategoriesTriggerArgs = {
   mainCategoryId: string
-  categoryIds: string[]
+  categories: string[]
 }
 
 type CreateMainCategoryCategoriesOptions = SWRMutationConfiguration<
@@ -118,20 +119,22 @@ export const useUpdateMainCategories = ({
     },
   )
 
-  const { trigger: deleteMainCategoryTrigger, isMutating: isDeleting } =
-    useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
-      APIRoutes.MainCategory,
-      (url: string, { arg }: { arg: DeleteMainCategoryTriggerArgs }) =>
-        fetcher<Response>(url.replace(':id', arg.mainCategoryId), {
-          arg: {
-            method: 'DELETE',
-          },
-        }),
-      {
-        throwOnError: false,
-        ...deleteMainCategoryOptions,
-      },
-    )
+  const {
+    trigger: deleteMainCategoryTrigger,
+    isMutating: isDeletingMainCategory,
+  } = useSWRMutation<Response, Error, Key, DeleteMainCategoryTriggerArgs>(
+    APIRoutes.MainCategory,
+    (url: string, { arg }: { arg: DeleteMainCategoryTriggerArgs }) =>
+      fetcher<Response>(url.replace(':id', arg.mainCategoryId), {
+        arg: {
+          method: 'DELETE',
+        },
+      }),
+    {
+      throwOnError: false,
+      ...deleteMainCategoryOptions,
+    },
+  )
 
   const {
     trigger: deleteMainCategoryCategoryTrigger,
@@ -180,7 +183,7 @@ export const useUpdateMainCategories = ({
   )
 
   return {
-    isDeleting,
+    isDeletingMainCategory,
     isCreatingMainCategory,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,

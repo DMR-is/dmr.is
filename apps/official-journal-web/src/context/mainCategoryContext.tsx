@@ -30,7 +30,7 @@ type CategoryState = {
   departmentOptions: DepartmentOption[]
   selectedMainCategory: MainCategory | null
   selectedCategory: Category | null
-  setSelectedMainCategory: (mainCategory: MainCategory) => void
+  setSelectedMainCategory: (mainCategory: MainCategory | null) => void
   setSelectedCategory: (category: Category) => void
   refetchMainCategories: () => void
   refetchCategories: () => void
@@ -94,6 +94,16 @@ export const CategoryProvider = ({
       revalidateOnFocus: false,
       onSuccess: (data) => {
         setMainCategories(data.mainCategories)
+
+        if (selectedMainCategory) {
+          const updatedMainCategory = data.mainCategories.find(
+            (mainCategory) => mainCategory.id === selectedMainCategory.id,
+          )
+
+          if (updatedMainCategory) {
+            setSelectedMainCategory(updatedMainCategory)
+          }
+        }
       },
     },
   })

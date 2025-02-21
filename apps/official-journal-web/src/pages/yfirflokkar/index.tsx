@@ -7,11 +7,12 @@ import {
   GridContainer,
   GridRow,
   Stack,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
 import { MainCategories } from '../../components/categories/MainCategories'
-import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
+import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
 import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/mainCategoryContext'
 import { Category, Department, MainCategory } from '../../gen/fetch'
@@ -39,19 +40,24 @@ export default function CasePublishingOverview({
     >
       <Section>
         <GridContainer>
-          <GridRow>
-            <GridColumn span={['12/12', '6/12']}>
-              <Stack space={4}>
-                <ContentWrapper title={'Yfirflokkar'}>
+          <Stack space={4}>
+            <GridRow>
+              <GridColumn span="12/12">
+                <Text variant="h2">Yfirflokkar málaflokka</Text>
+              </GridColumn>
+            </GridRow>
+            <GridRow>
+              <GridColumn span={['12/12', '6/12']}>
+                <Stack space={4}>
                   <MainCategories />
-                </ContentWrapper>
-                <ContentWrapper title="Stofna nýjan yfirflokk">
                   <CreateMainCategory />
-                </ContentWrapper>
-              </Stack>
-            </GridColumn>
-            <GridColumn span={['12/12', '6/12']}></GridColumn>
-          </GridRow>
+                </Stack>
+              </GridColumn>
+              <GridColumn span={['12/12', '6/12']}>
+                <UpdateMainCategory />
+              </GridColumn>
+            </GridRow>
+          </Stack>
         </GridContainer>
       </Section>
     </CategoryProvider>

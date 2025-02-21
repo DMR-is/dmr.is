@@ -37,7 +37,9 @@ class MainCategoryCategoriesHandler {
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .createMainCategoryCategories({
         mainCategoryId: req.query.id as string,
-        createMainCategoryCategories: req.body,
+        createMainCategoryCategories: {
+          categories: req.body.categories,
+        },
       })
 
     return void res.status(204).end()
