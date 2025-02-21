@@ -105,8 +105,8 @@ export const authOptions: AuthOptions = {
           token.refreshToken = refreshToken
         } catch (error: any) {
           logger.warn('Error refreshing access token.', error)
-          const errorMessage = error?.response?.data?.error
 
+          const errorMessage = error?.error
           if (errorMessage === 'invalid_grant') {
             token.isRefreshTokenExpired = true
           }

@@ -42,6 +42,7 @@ import {
   GetTagsResponse,
   InternalCommentBodyDto,
   MainCategory,
+  PostApplicationAssetBody,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
@@ -957,5 +958,23 @@ export class CaseController {
     return ResultWrapper.unwrap(
       await this.caseService.getCasesWithPublicationNumber(department, params),
     )
+  }
+
+  @UseGuards(TokenJwtAuthGuard, RoleGuard)
+  @Roles(USER_ROLES.Admin)
+  @Route({
+    method: 'post',
+    path: ':caseId/upload-assets',
+    operationId: 'uploadApplicationAttachment',
+    summary: 'Upload attachment like images',
+    params: [{ name: 'caseId', type: 'string', required: true }],
+    bodyType: PostApplicationAssetBody,
+    responseType: PresignedUrlResponse,
+  })
+  @TimeLog()
+  async uploadApplicationAttachment(
+    @Body() body: PostApplicationAssetBody,
+  ): Promise<PresignedUrlResponse> {
+    return (await this.caseService.uploadAttachments(body.key)).unwrap()
   }
 }

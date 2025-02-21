@@ -14,6 +14,8 @@ export const JSON_ENDING = '.json'
 
 export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 
+export const DOCUMENT_ASSETS = 'assets'
+
 export const COMMENTS_TO_HIDE = 4
 
 export const COMMENTS_TO_SHOW = 5

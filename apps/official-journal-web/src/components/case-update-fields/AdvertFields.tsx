@@ -13,6 +13,7 @@ import {
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useFileUploader } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
 import { messages } from '../form-steps/messages'
@@ -51,6 +52,11 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     })
   }
 
+  const fileUploader = useFileUploader(
+    currentCase.applicationId ?? 'no-application-id',
+    currentCase.id,
+  )
+
   return (
     <AccordionItem
       id="advertFields"
@@ -66,6 +72,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
             readonly={!canEdit}
             defaultValue={currentCase.html}
             onChange={(val) => onChangeHandler(val)}
+            handleUpload={fileUploader()}
           />
         </Box>
         <Inline space={2} justifyContent="flexEnd">

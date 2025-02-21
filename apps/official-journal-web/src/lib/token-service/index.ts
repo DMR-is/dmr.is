@@ -24,7 +24,7 @@ export class TokenService {
 
       const response = await postRefresh.json()
 
-      return [response.data.access_token, response.data.refresh_token]
+      return [response.access_token, response.refresh_token]
     } catch (error) {
       throw new Error(`Token refresh failed: ${JSON.stringify(error)}`)
     }
