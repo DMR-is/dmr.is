@@ -28,10 +28,12 @@ type CategoryState = {
   categoryOptions: CategoryOption[]
   departments: Department[]
   departmentOptions: DepartmentOption[]
+  selectedDepartment: Department | null
   selectedMainCategory: MainCategory | null
   selectedCategory: Category | null
   setSelectedMainCategory: (mainCategory: MainCategory | null) => void
   setSelectedCategory: (category: Category) => void
+  setSelectedDepartment: (department: Department | null) => void
   refetchMainCategories: () => void
   refetchCategories: () => void
 }
@@ -47,8 +49,10 @@ export const CategoryContext = createContext<CategoryState>({
   departmentOptions: [],
   selectedMainCategory: null,
   selectedCategory: null,
+  selectedDepartment: null,
   setSelectedMainCategory: () => undefined,
   setSelectedCategory: () => undefined,
+  setSelectedDepartment: () => undefined,
   refetchMainCategories: () => undefined,
   refetchCategories: () => undefined,
 })
@@ -80,6 +84,9 @@ export const CategoryProvider = ({
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   )
+
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department | null>(null)
 
   const {
     mutate: refetchMainCategories,
@@ -155,8 +162,10 @@ export const CategoryProvider = ({
         departmentOptions,
         selectedMainCategory,
         selectedCategory,
+        selectedDepartment,
         setSelectedMainCategory,
         setSelectedCategory,
+        setSelectedDepartment,
         refetchMainCategories: refetchMainCategories,
         refetchCategories: refetchCategories,
       }}

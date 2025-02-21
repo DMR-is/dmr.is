@@ -14,7 +14,7 @@ import { CreateMainCategory } from '../../components/categories/CreateMainCatego
 import { MainCategories } from '../../components/categories/MainCategories'
 import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
 import { Section } from '../../components/section/Section'
-import { CategoryProvider } from '../../context/mainCategoryContext'
+import { CategoryProvider } from '../../context/categoryContext'
 import { Category, Department, MainCategory } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
@@ -55,6 +55,11 @@ export default function CasePublishingOverview({
               </GridColumn>
               <GridColumn span={['12/12', '6/12']}>
                 <UpdateMainCategory />
+              </GridColumn>
+            </GridRow>
+            <GridRow>
+              <GridColumn span="12/12">
+                <Text variant="h2">Málaflokkar</Text>
               </GridColumn>
             </GridRow>
           </Stack>

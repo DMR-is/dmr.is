@@ -27,7 +27,6 @@ export const UpdateMainCategory = () => {
 
   const {
     updateMainCategoryTrigger,
-    isUpdatingMainCategory,
     deleteMainCategoryTrigger,
     isDeletingMainCategory,
     deleteMainCategoryCategoryTrigger,

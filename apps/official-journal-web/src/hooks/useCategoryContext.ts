@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import { CategoryContext } from '../context/mainCategoryContext'
+import { CategoryContext } from '../context/categoryContext'
 
 export const useCategoryContext = () => {
   if (!CategoryContext) {
