@@ -562,7 +562,7 @@ export function useFileUploader(applicationId: string, caseId: string) {
 
       if (!fileExtension) {
         failure(`Skráargerð ekki í boði`)
-        throw new Error('File extension not found')
+        return
       }
 
       try {
@@ -601,7 +601,7 @@ export function useFileUploader(applicationId: string, caseId: string) {
           return
         }
 
-        success(key) // Þetta þarf að vera direct slóð á myndina eftir upload (örugglega gegnum proxy?)
+        success(key)
       } catch (error) {
         failure(
           'Vandamál við að hlaða upp myndum. Vinsamlegast reynið aftur síðar.',
