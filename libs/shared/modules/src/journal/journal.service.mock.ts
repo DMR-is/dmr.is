@@ -54,6 +54,9 @@ export class MockJournalService implements IJournalService {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using MockJournalService')
   }
+  deleteCategory(id: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
   insertMainCategoryCategories(
     mainCategoryId: string,
     categoryIds: string[],
@@ -105,7 +108,7 @@ export class MockJournalService implements IJournalService {
   getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  insertCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>> {
+  insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
   updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>> {

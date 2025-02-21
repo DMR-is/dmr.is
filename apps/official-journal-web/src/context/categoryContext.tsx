@@ -32,7 +32,7 @@ type CategoryState = {
   selectedMainCategory: MainCategory | null
   selectedCategory: Category | null
   setSelectedMainCategory: (mainCategory: MainCategory | null) => void
-  setSelectedCategory: (category: Category) => void
+  setSelectedCategory: (category: Category | null) => void
   setSelectedDepartment: (department: Department | null) => void
   refetchMainCategories: () => void
   refetchCategories: () => void

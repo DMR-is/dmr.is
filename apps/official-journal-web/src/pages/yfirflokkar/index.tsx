@@ -10,6 +10,8 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { Categories } from '../../components/categories/Categories'
+import { CreateCategory } from '../../components/categories/CreateCategory'
 import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
 import { MainCategories } from '../../components/categories/MainCategories'
 import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
@@ -60,6 +62,14 @@ export default function CasePublishingOverview({
             <GridRow>
               <GridColumn span="12/12">
                 <Text variant="h2">Málaflokkar</Text>
+              </GridColumn>
+            </GridRow>
+            <GridRow>
+              <GridColumn span={['12/12', '6/12']}>
+                <Stack space={4}>
+                  <Categories />
+                  <CreateCategory />
+                </Stack>
               </GridColumn>
             </GridRow>
           </Stack>

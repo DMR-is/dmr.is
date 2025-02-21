@@ -437,24 +437,41 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async insertCategory(
-    model: Category,
+    title: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetCategoryResponse>> {
-    if (!model) {
+    if (!title) {
       throw new BadRequestException()
     }
 
+    const slug = slugify(title, { lower: true })
+
     const category = await this.advertCategoryModel.create(
       {
-        title: model.title,
-        slug: model.slug,
+        title,
+        slug,
       },
       {
         transaction,
+        returning: true,
       },
     )
 
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
+  }
+
+  @LogAndHandle()
+  async deleteCategory(id: string): Promise<ResultWrapper> {
+    if (!id) {
+      return ResultWrapper.err({
+        message: 'No id provided',
+        code: 400,
+      })
+    }
+
+    await this.advertCategoryModel.destroy({ where: { id } })
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

@@ -17,6 +17,7 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseResponse,
+  CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
@@ -245,6 +246,28 @@ export class CaseController {
         departmentId: body.departmentId,
       }),
     )
+  }
+
+  @Route({
+    method: 'post',
+    path: 'categories',
+    operationId: 'createCategory',
+    summary: 'Create category',
+    bodyType: CreateCategory,
+  })
+  async createCategory(@Body() body: CreateCategory) {
+    ResultWrapper.unwrap(await this.journalService.insertCategory(body.title))
+  }
+
+  @Route({
+    method: 'delete',
+    path: 'categories',
+    operationId: 'deleteCategory',
+    summary: 'Delete category',
+    params: [{ name: 'id', type: 'string', required: true }],
+  })
+  async deleteCategory(@Param('id') id: string): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.deleteCategory(id))
   }
 
   @Route({

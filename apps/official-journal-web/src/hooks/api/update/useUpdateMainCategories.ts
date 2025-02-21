@@ -3,6 +3,17 @@ import useSWRMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
+type CreateCategoryParams = {
+  title: string
+}
+
+type CreateCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  CreateCategoryParams
+>
+
 type CreateMainCategoryParams = {
   title: string
   description: string
@@ -67,6 +78,7 @@ type DeleteMainCategoryCategoryOptions = SWRMutationConfiguration<
 >
 
 type UseUpdateMainCategoriesParams = {
+  createCategoryOptions?: CreateCategoryOptions
   createMainCategoryOptions?: CreateMainCategoryOptions
   updateMainCategoryOptions?: UpdateMainCateogoryOptions
   createMainCategoryCategoriesOptions?: CreateMainCategoryCategoriesOptions
@@ -75,12 +87,26 @@ type UseUpdateMainCategoriesParams = {
 }
 
 export const useUpdateMainCategories = ({
+  createCategoryOptions,
   createMainCategoryOptions,
   updateMainCategoryOptions,
   createMainCategoryCategoriesOptions,
   deleteMainCategoryCategoryOptions,
   deleteMainCategoryOptions,
 }: UseUpdateMainCategoriesParams = {}) => {
+  const { trigger: createCategoryTrigger, isMutating: isCreatingCategory } =
+    useSWRMutation<Response, Error, Key, CreateCategoryParams>(
+      APIRoutes.Categories,
+      (url: string, { arg }: { arg: CreateCategoryParams }) =>
+        fetcher<Response, CreateCategoryParams>(url, {
+          arg: { method: 'POST', body: arg },
+        }),
+      {
+        throwOnError: false,
+        ...createCategoryOptions,
+      },
+    )
+
   const {
     trigger: createMainCategoryTrigger,
     isMutating: isCreatingMainCategory,
@@ -183,11 +209,13 @@ export const useUpdateMainCategories = ({
   )
 
   return {
+    isCreatingCategory,
     isDeletingMainCategory,
     isCreatingMainCategory,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     isUpdatingMainCategory,
+    createCategoryTrigger,
     deleteMainCategoryCategoryTrigger,
     createMainCategoryTrigger,
     createMainCategoryCategoriesTrigger,

@@ -83,7 +83,8 @@ export interface IJournalService {
   getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>>
-  insertCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>>
+  insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>>
+  deleteCategory(id: string): Promise<ResultWrapper>
   updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>>
 
   getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>>
