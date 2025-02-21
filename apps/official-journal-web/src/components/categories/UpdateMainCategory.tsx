@@ -164,7 +164,11 @@ export const UpdateMainCategory = () => {
             textarea
             rows={4}
             defaultValue={selectedMainCategory?.description}
-            onChange={(e) => updateDescription(e.target.value)}
+            onChange={(e) => {
+              if (!e.target.value) return
+              updateDescription.cancel()
+              updateDescription(e.target.value)
+            }}
           />
           <OJOISelect
             isValidating={isLoadingSubCategories}
