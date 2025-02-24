@@ -22,6 +22,7 @@ import {
   Institution,
   MainCategory,
   UpdateAdvertBody,
+  UpdateCategory,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -85,7 +86,10 @@ export interface IJournalService {
   ): Promise<ResultWrapper<GetCategoriesResponse>>
   insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>>
   deleteCategory(id: string): Promise<ResultWrapper>
-  updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>>
+  updateCategory(
+    id: string,
+    model: UpdateCategory,
+  ): Promise<ResultWrapper<GetCategoryResponse>>
 
   getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>>
   getInstitutions(

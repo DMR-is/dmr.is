@@ -54,6 +54,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCategory,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
@@ -260,8 +261,23 @@ export class CaseController {
   }
 
   @Route({
+    method: 'put',
+    path: 'categories/:id',
+    operationId: 'updateCategory',
+    summary: 'Update category',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCategory,
+  })
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() body: UpdateCategory,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.updateCategory(id, body))
+  }
+
+  @Route({
     method: 'delete',
-    path: 'categories',
+    path: 'categories/:id',
     operationId: 'deleteCategory',
     summary: 'Delete category',
     params: [{ name: 'id', type: 'string', required: true }],

@@ -14,6 +14,7 @@ import { Categories } from '../../components/categories/Categories'
 import { CreateCategory } from '../../components/categories/CreateCategory'
 import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
 import { MainCategories } from '../../components/categories/MainCategories'
+import { UpdateCategory } from '../../components/categories/UpdateCategory'
 import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
 import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/categoryContext'
@@ -70,6 +71,9 @@ export default function CasePublishingOverview({
                   <Categories />
                   <CreateCategory />
                 </Stack>
+              </GridColumn>
+              <GridColumn span={['12/12', '6/12']}>
+                <UpdateCategory />
               </GridColumn>
             </GridRow>
           </Stack>

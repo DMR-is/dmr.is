@@ -12,6 +12,8 @@ export const Categories = () => {
     mainCategoryOptions,
     categoryOptions,
     selectedCategory,
+    isValidatingCategories,
+    isValidatingMainCategories,
     setSelectedCategory,
   } = useCategoryContext()
 
@@ -25,7 +27,7 @@ export const Categories = () => {
       label: category.title,
       value: category,
     }))
-  }, [selectedMainCategory])
+  }, [selectedMainCategory, categoryOptions])
 
   const filteredMainCategoryOptions = useMemo(() => {
     if (!selectedCategory) return mainCategoryOptions
@@ -43,6 +45,7 @@ export const Categories = () => {
       <Stack space={2}>
         <OJOISelect
           isClearable
+          isValidating={isValidatingMainCategories}
           label="Sía eftir yfirflokk"
           options={filteredMainCategoryOptions}
           noOptionsMessage="Enginn yfirflokkur til"
@@ -54,8 +57,13 @@ export const Categories = () => {
         />
         <OJOISelect
           isClearable
+          isValidating={isValidatingCategories}
           label="Veldu málaflokk"
           options={filteredCategoryOptions}
+          noOptionsMessage="Enginn málaflokkur fannst"
+          value={filteredCategoryOptions.find(
+            (opt) => opt.value.id === selectedCategory?.id,
+          )}
           onChange={(opt) => {
             if (!opt) return setSelectedCategory(null)
 

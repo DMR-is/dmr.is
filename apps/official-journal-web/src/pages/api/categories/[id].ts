@@ -13,19 +13,30 @@ class CategoryHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
+        case 'PUT':
+          return void (await this.update(req, res))
         case 'DELETE':
           return void (await this.delete(req, res))
         default:
           return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error(`Error in CategoriesHandler`, {
+      logger.error(`Error in CategoryHandler`, {
         error,
-        category: 'categories-handler',
+        category: 'category-handler',
       })
 
       return void res.status(500).json(OJOIWebException.serverError())
     }
+  }
+
+  private async update(req: NextApiRequest, res: NextApiResponse) {
+    await this.client.updateCategory({
+      id: req.query.id as string,
+      updateCategory: req.body,
+    })
+
+    return res.status(204).end()
   }
 
   private async delete(req: NextApiRequest, res: NextApiResponse) {
@@ -33,7 +44,7 @@ class CategoryHandler {
       id: req.query.id as string,
     })
 
-    return void res.status(204).end()
+    return res.status(204).end()
   }
 }
 

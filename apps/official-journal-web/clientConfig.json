@@ -275,20 +275,6 @@
         },
         "responses": { "201": { "description": "" } },
         "security": [{ "bearer": [] }]
-      },
-      "delete": {
-        "operationId": "deleteCategory",
-        "summary": "Delete category",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/cases/main-categories": {
@@ -409,6 +395,44 @@
           },
           {
             "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/cases/categories/{id}": {
+      "put": {
+        "operationId": "updateCategory",
+        "summary": "Update category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCategory" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteCategory",
+        "summary": "Delete category",
+        "parameters": [
+          {
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -3084,6 +3108,15 @@
           }
         },
         "required": ["title"]
+      },
+      "UpdateCategory": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the main category."
+          }
+        }
       },
       "CreateMainCategoryCategories": {
         "type": "object",

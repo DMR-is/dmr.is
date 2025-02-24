@@ -14,6 +14,29 @@ type CreateCategoryOptions = SWRMutationConfiguration<
   CreateCategoryParams
 >
 
+type UpdateCategoryParams = {
+  id: string
+  title: string
+}
+
+type UpdateCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  UpdateCategoryParams
+>
+
+type DeleteCategoryParams = {
+  id: string
+}
+
+type DeleteCategoryOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  DeleteCategoryParams
+>
+
 type CreateMainCategoryParams = {
   title: string
   description: string
@@ -79,6 +102,8 @@ type DeleteMainCategoryCategoryOptions = SWRMutationConfiguration<
 
 type UseUpdateMainCategoriesParams = {
   createCategoryOptions?: CreateCategoryOptions
+  updateCategoryOptions?: UpdateCategoryOptions
+  deleteCategoryOptions?: DeleteCategoryOptions
   createMainCategoryOptions?: CreateMainCategoryOptions
   updateMainCategoryOptions?: UpdateMainCateogoryOptions
   createMainCategoryCategoriesOptions?: CreateMainCategoryCategoriesOptions
@@ -88,6 +113,8 @@ type UseUpdateMainCategoriesParams = {
 
 export const useUpdateMainCategories = ({
   createCategoryOptions,
+  updateCategoryOptions,
+  deleteCategoryOptions,
   createMainCategoryOptions,
   updateMainCategoryOptions,
   createMainCategoryCategoriesOptions,
@@ -104,6 +131,32 @@ export const useUpdateMainCategories = ({
       {
         throwOnError: false,
         ...createCategoryOptions,
+      },
+    )
+
+  const { trigger: updateCategoryTrigger, isMutating: isUpdatingCategory } =
+    useSWRMutation<Response, Error, Key, UpdateCategoryParams>(
+      APIRoutes.Category,
+      (url: string, { arg }: { arg: UpdateCategoryParams }) =>
+        fetcher<Response, UpdateCategoryParams>(url.replace(':id', arg.id), {
+          arg: { method: 'PUT', body: arg },
+        }),
+      {
+        throwOnError: false,
+        ...updateCategoryOptions,
+      },
+    )
+
+  const { trigger: deleteCategoryTrigger, isMutating: isDeletingCategory } =
+    useSWRMutation<Response, Error, Key, DeleteCategoryParams>(
+      APIRoutes.Category,
+      (url: string, { arg }: { arg: DeleteCategoryParams }) =>
+        fetcher<Response, DeleteCategoryParams>(url.replace(':id', arg.id), {
+          arg: { method: 'DELETE' },
+        }),
+      {
+        throwOnError: false,
+        ...deleteCategoryOptions,
       },
     )
 
@@ -210,12 +263,16 @@ export const useUpdateMainCategories = ({
 
   return {
     isCreatingCategory,
+    isUpdatingCategory,
+    isDeletingCategory,
     isDeletingMainCategory,
     isCreatingMainCategory,
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     isUpdatingMainCategory,
     createCategoryTrigger,
+    updateCategoryTrigger,
+    deleteCategoryTrigger,
     deleteMainCategoryCategoryTrigger,
     createMainCategoryTrigger,
     createMainCategoryCategoriesTrigger,

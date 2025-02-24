@@ -26,6 +26,8 @@ type CategoryState = {
   isValidatingMainCategories: boolean
   categories: Category[]
   categoryOptions: CategoryOption[]
+  categoryError?: Error
+  isValidatingCategories: boolean
   departments: Department[]
   departmentOptions: DepartmentOption[]
   selectedDepartment: Department | null
@@ -45,6 +47,8 @@ export const CategoryContext = createContext<CategoryState>({
   isValidatingMainCategories: false,
   categories: [],
   categoryOptions: [],
+  categoryError: undefined,
+  isValidatingCategories: false,
   departments: [],
   departmentOptions: [],
   selectedMainCategory: null,
@@ -115,7 +119,11 @@ export const CategoryProvider = ({
     },
   })
 
-  const { mutate: refetchCategories } = useCategories({
+  const {
+    mutate: refetchCategories,
+    error: categoryError,
+    isValidating: isValidatingCategories,
+  } = useCategories({
     params: {
       pageSize: 1000,
     },
@@ -124,6 +132,16 @@ export const CategoryProvider = ({
       revalidateOnFocus: false,
       onSuccess: (data) => {
         setCategories(data.categories)
+
+        if (selectedCategory) {
+          const updatedCategory = data.categories.find(
+            (category) => category.id === selectedCategory.id,
+          )
+
+          if (updatedCategory) {
+            setSelectedCategory(updatedCategory)
+          }
+        }
       },
     },
   })
@@ -158,6 +176,8 @@ export const CategoryProvider = ({
         isValidatingMainCategories,
         categories,
         categoryOptions,
+        categoryError,
+        isValidatingCategories,
         departments,
         departmentOptions,
         selectedMainCategory,

@@ -111,7 +111,10 @@ export class MockJournalService implements IJournalService {
   insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  updateCategory(model: Category): Promise<ResultWrapper<GetCategoryResponse>> {
+  updateCategory(
+    id: string,
+    model: Category,
+  ): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
   getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>> {
