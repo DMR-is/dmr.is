@@ -851,11 +851,11 @@ export class CaseService implements ICaseService {
     caseId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const activeCase = await this.caseModel.findByPk(caseId, {
+    const caseToPublish = await this.caseModel.findByPk(caseId, {
       include: [...casesDetailedIncludes, { model: SignatureModel }],
     })
 
-    if (!activeCase) {
+    if (!caseToPublish) {
       return ResultWrapper.err({
         code: 404,
         message: 'Case not found',
@@ -868,55 +868,34 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Published)
     ).unwrap()
 
-    await this.caseModel.update(
-      {
-        statusId: caseStatus.id,
-        publishedAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-      },
-    )
-
-    const number = (
+    const serial = (
       await this.utilityService.getNextPublicationNumber(
-        activeCase.departmentId,
+        caseToPublish.departmentId,
         transaction,
       )
     ).unwrap()
 
-    const advertStatus = (
-      await this.utilityService.advertStatusLookup(AdvertStatus.Published)
-    ).unwrap()
+    const signatureHtml = caseToPublish.signature.html
 
-    const signatureHtml = activeCase.signature.html
-
-    const slug = activeCase.department.slug.replace('-deild', '').toUpperCase()
-    const pdfFileName = `${slug}_nr_${number}_${activeCase.year}.pdf`
+    const departmentPrefix = caseToPublish.department.slug
+      .replace('-deild', '')
+      .toUpperCase()
+    const pdfFileName = `${departmentPrefix}_nr_${serial}_${caseToPublish.year}.pdf`
 
     await this.createPdfAndUpload(caseId, pdfFileName)
 
     const advertCreateResult = await this.journalService.create(
       {
-        departmentId: activeCase.departmentId,
-        typeId: activeCase.advertTypeId,
-        involvedPartyId: activeCase.involvedParty.id,
-        categoryIds: activeCase.categories
-          ? activeCase.categories.map((c) => c.id)
-          : [],
-        statusId: advertStatus.id,
-        subject: activeCase.advertTitle,
-        publicationNumber: number,
-        publicationDate: now,
-        signatureDate: now, // TODO: Replace with signature
-        isLegacy: activeCase.isLegacy,
-        documentHtml: activeCase.html + signatureHtml,
-        documentPdfUrl: pdfFileName,
-        attachments: [],
+        departmentId: caseToPublish.departmentId,
+        typeId: caseToPublish.advertTypeId,
+        involvedPartyId: caseToPublish.involvedParty.id,
+        subject: caseToPublish.advertTitle,
+        serial: serial,
+        categories: caseToPublish.categories?.map((c) => c.id) ?? [],
+        publicationDate: now.toISOString(),
+        signatureDate: caseToPublish.signature.signatureDate,
+        content: caseToPublish.html + signatureHtml,
+        pdfUrl: pdfFileName,
       },
       transaction,
     )
@@ -932,10 +911,13 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const updatePromise = this.caseModel.update(
+    await caseToPublish.update(
       {
-        publicationNumber: number,
+        publicationNumber: serial,
         advertId: advertCreateResult.result.value.advert.id,
+        statusId: caseStatus.id,
+        publishedAt: now.toISOString(),
+        updatedAt: now.toISOString(),
       },
       {
         where: {
@@ -944,17 +926,6 @@ export class CaseService implements ICaseService {
         transaction: transaction,
       },
     )
-
-    // TODO: Remove relation promise with casePublishedAdvertsModel removal
-    const relationPromise = this.casePublishedAdvertsModel.create(
-      {
-        caseId: caseId,
-        advertId: advertCreateResult.result.value.advert.id,
-      },
-      { transaction: transaction },
-    )
-
-    await Promise.all([updatePromise, relationPromise])
 
     return ResultWrapper.ok()
   }
@@ -1414,45 +1385,24 @@ export class CaseService implements ICaseService {
 
   private async processCaseToPublish(
     ids: string[],
+    transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
-    const transaction = await this.sequelize.transaction()
-    let success = true
     for (const id of ids) {
       this.logger.debug(`Publishing case<${id}>`, {
         id: id,
         category: LOGGING_CATEGORY,
       })
-      const publishResult = await this.publishCase(id, transaction)
-
-      if (!publishResult.result.ok) {
-        this.logger.error(`Failed to publish case<${id}>`, {
-          id: id,
-          error: publishResult.result.error,
-          category: LOGGING_CATEGORY,
-        })
-        success = false
-        break
-      }
+      await this.publishCase(id, transaction)
     }
 
-    if (!success) {
-      this.logger.error('Failed to publish cases', {
-        category: LOGGING_CATEGORY,
-      })
-      await transaction.rollback()
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to publish cases',
-      })
-    }
-
-    await transaction.commit()
     return ResultWrapper.ok()
   }
 
   @LogAndHandle()
+  @Transactional()
   async publishCases(
     body: PostCasePublishBody,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     const { caseIds } = body
 
@@ -1460,7 +1410,7 @@ export class CaseService implements ICaseService {
       throw new BadRequestException()
     }
 
-    return await this.processCaseToPublish(caseIds)
+    return await this.processCaseToPublish(caseIds, transaction)
   }
 
   @LogAndHandle()

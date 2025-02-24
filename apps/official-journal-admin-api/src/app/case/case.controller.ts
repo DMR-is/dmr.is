@@ -1,4 +1,3 @@
-import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { USER_ROLES } from '@dmr.is/constants'
 import { CurrentUser, Roles, Route, TimeLog } from '@dmr.is/decorators'
@@ -20,7 +19,6 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
-  DeleteCaseAdvertCorrection,
   DepartmentEnum,
   ExternalCommentBodyDto,
   GetCaseResponse,
@@ -41,7 +39,6 @@ import {
   GetNextPublicationNumberResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
-  MainCategory,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCasePublishBody,
@@ -56,7 +53,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
-  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,

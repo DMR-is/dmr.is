@@ -158,3 +158,75 @@ export class Advert {
   })
   readonly corrections?: AdvertCorrection[]
 }
+
+export class CreateAdvert {
+  @ApiProperty({
+    type: String,
+    description: 'The department id the advert is for.',
+    required: true,
+  })
+  departmentId!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The type id the advert is for.',
+    required: true,
+  })
+  typeId!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The involved party id the advert is for.',
+    required: true,
+  })
+  involvedPartyId!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The subject of the advert.',
+    required: true,
+  })
+  subject!: string
+
+  @ApiProperty({
+    type: Number,
+    description: 'The serial number of the advert.',
+    required: true,
+  })
+  serial!: number
+
+  @ApiProperty({
+    type: String,
+    description: 'The publication date of the advert.',
+    required: true,
+  })
+  publicationDate!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The signature date of the advert.',
+    required: true,
+  })
+  signatureDate!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The html contents of the advert',
+    required: true,
+  })
+  content!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The pdf url of the advert',
+    required: true,
+  })
+  pdfUrl!: string
+
+  @ApiProperty({
+    type: [String],
+    description: 'The category ids of the advert',
+    required: true,
+  })
+  categories!: string[]
+}
