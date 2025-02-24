@@ -556,7 +556,7 @@ export function useFileUploader(applicationId: string, caseId: string) {
   const fileUploader =
     (): EditorFileUploader => async (blobInfo, success, failure, progress) => {
       const file = blobInfo.blob() as File
-      const key = `applications/${applicationId}/${DOCUMENT_ASSETS}/${file.name}`
+      const key = `${DOCUMENT_ASSETS}/${applicationId}/${file.name}`
 
       const fileExtension = file.name.split('.').pop()
 
@@ -580,7 +580,7 @@ export function useFileUploader(applicationId: string, caseId: string) {
         }
 
         const json = await response.json()
-        const { url } = json
+        const { url, cdn } = json
 
         if (!url) {
           failure(`Ekki tókst að vista skjal í gagnageymslu: slóð ekki í svari`)
@@ -601,7 +601,9 @@ export function useFileUploader(applicationId: string, caseId: string) {
           return
         }
 
-        success(key)
+        const urlRes = `${cdn}/${key}`
+
+        success(urlRes)
       } catch (error) {
         failure(
           'Vandamál við að hlaða upp myndum. Vinsamlegast reynið aftur síðar.',

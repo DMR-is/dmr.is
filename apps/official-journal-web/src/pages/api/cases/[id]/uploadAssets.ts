@@ -44,6 +44,7 @@ class UploadAssetHandler {
 
     return res.status(200).json({
       url: response.url,
+      cdn: process.env.ADVERTS_CDN_URL,
     })
   }
 }
