@@ -1503,4 +1503,14 @@ export class CaseService implements ICaseService {
     // return the presigned url for the client to upload the new attachment
     return ResultWrapper.ok({ url: signedUrl.url })
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async uploadAttachments(
+    key: string,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    const signedUrl = (await this.s3.getPresignedUrl(key)).unwrap()
+
+    return Promise.resolve(ResultWrapper.ok({ url: signedUrl.url }))
+  }
 }

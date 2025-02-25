@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator'
+import { IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -9,6 +9,7 @@ export class UpdateMainCategory {
     required: false,
   })
   @IsString()
+  @IsOptional()
   readonly title?: string
 
   @ApiProperty({
@@ -17,6 +18,7 @@ export class UpdateMainCategory {
     required: false,
   })
   @IsString()
+  @IsOptional()
   readonly description?: string
 
   @ApiProperty({
@@ -24,5 +26,6 @@ export class UpdateMainCategory {
     required: false,
   })
   @IsString()
+  @IsOptional()
   readonly departmentId?: string
 }

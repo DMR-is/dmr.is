@@ -14,6 +14,8 @@ export const JSON_ENDING = '.json'
 
 export const ADDITIONAL_DOCUMENTS = 'fylgiskjol'
 
+export const DOCUMENT_ASSETS = 'assets'
+
 export const COMMENTS_TO_HIDE = 4
 
 export const COMMENTS_TO_SHOW = 5
@@ -152,8 +154,6 @@ export enum APIRoutes {
   GetCasesWithDepartmentCount = '/api/cases/withDepartmentCount',
   GetCasesWithPublicationNumber = '/api/cases/withPublicationNumber',
   GetDepartments = '/api/cases/departments',
-  GetCategories = '/api/cases/categories',
-  GetMainCategories = '/api/mainCategories',
   GetTags = '/api/cases/tags',
   GetNextPublicationNumber = '/api/cases/nextPublicationNumber',
   GetCommunicationStatuses = '/api/cases/communicationStatuses',
@@ -177,14 +177,15 @@ export enum APIRoutes {
   UpdateFasttrack = '/api/cases/:id/updateFasttrack',
   UpdateTag = '/api/cases/:id/updateTag',
   UpdateCommunicationStatus = '/api/cases/:id/updateCommunicationStatus',
-  UpdateMainCategory = '/api/mainCategories/:id/update',
-  CreateMainCategory = '/api/mainCategories/create',
-  CreateMainCategoryCategories = '/api/mainCategories/:id/categories/create',
+  Categories = '/api/categories',
+  Category = '/api/categories/:id',
+  MainCategories = '/api/mainCategories',
+  MainCategory = '/api/mainCategories/:id',
+  MainCategoryCategories = '/api/mainCategories/:id/categories',
+  MainCategoryCategory = '/api/mainCategories/:id/categories/:cid',
   CreatInternalComment = '/api/cases/:id/comments/createInternalComment',
   CreatExternalComment = '/api/cases/:id/comments/createExternalComment',
   DeleteComment = '/api/cases/:id/comments/:cid/delete',
-  DeleteMainCategory = '/api/mainCategories/:id/delete',
-  DeleteMainCategoryCategory = '/api/mainCategories/:id/categories/:cid/delete',
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',

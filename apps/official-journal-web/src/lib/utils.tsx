@@ -4,6 +4,7 @@ import { ParsedUrlQuery } from 'querystring'
 import { z } from 'zod'
 
 import { Stack, Text } from '@island.is/island-ui/core'
+import { EditorFileUploader } from '@island.is/regulations-tools/EditorFrame'
 
 import {
   BaseEntity,
@@ -16,6 +17,7 @@ import {
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
 } from '../gen/fetch'
+import { DOCUMENT_ASSETS } from '../lib/constants'
 import { OJOIWebException, Routes } from './constants'
 
 export const toFixed = (num: number, fixed: number) => {
@@ -548,4 +550,65 @@ export const getNextStatus = (
       return null
     }
   }
+}
+
+export function useFileUploader(applicationId: string, caseId: string) {
+  const fileUploader =
+    (): EditorFileUploader => async (blobInfo, success, failure, progress) => {
+      const file = blobInfo.blob() as File
+      const key = `${DOCUMENT_ASSETS}/${applicationId}/${file.name}`
+
+      const fileExtension = file.name.split('.').pop()
+
+      if (!fileExtension) {
+        failure(`Skráargerð ekki í boði`)
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/cases/${caseId}/uploadAssets`, {
+          method: 'POST',
+          body: JSON.stringify({
+            key,
+            caseId,
+          }),
+        })
+
+        if (!response.ok) {
+          failure(`Ekki tókst búa til s3 lykil`)
+          return
+        }
+
+        const json = await response.json()
+        const { url, cdn } = json
+
+        if (!url) {
+          failure(`Ekki tókst að vista skjal í gagnageymslu: slóð ekki í svari`)
+          return
+        }
+
+        const didUpload = await fetch(url, {
+          headers: {
+            'Content-Type': file.type,
+            'Content-Length': file.size.toString(),
+          },
+          method: 'PUT',
+          body: file,
+        })
+
+        if (!didUpload.ok) {
+          failure(`Ekki tókst að hlaða upp skjali í gagnageymslu S3`)
+          return
+        }
+
+        const urlRes = `${cdn}/${key}`
+
+        success(urlRes)
+      } catch (error) {
+        failure(
+          'Vandamál við að hlaða upp myndum. Vinsamlegast reynið aftur síðar.',
+        )
+      }
+    }
+  return fileUploader
 }
