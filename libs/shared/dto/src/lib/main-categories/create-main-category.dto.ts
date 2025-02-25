@@ -1,6 +1,6 @@
 import { IsArray, IsString, IsUUID } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 export class CreateMainCategory {
   @ApiProperty({
@@ -31,3 +31,9 @@ export class CreateMainCategory {
   @IsArray()
   readonly categories!: string[]
 }
+
+export class CreateCategory extends PickType(CreateMainCategory, [
+  'title',
+] as const) {}
+
+export class UpdateCategory extends PartialType(CreateCategory) {}

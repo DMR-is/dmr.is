@@ -17,6 +17,7 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseResponse,
+  CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
@@ -54,6 +55,7 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
+  UpdateCategory,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
@@ -238,24 +240,6 @@ export class CaseController {
   })
   @TimeLog()
   async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
-    const id = uuid()
-
-    const subCategoriesLookup = await this.journalService.getCategories({
-      ids: body.categories,
-      pageSize: body.categories.length,
-    })
-
-    if (!subCategoriesLookup.result.ok) {
-      this.logger.warn(
-        `Failed to get sub categories for main category creation`,
-        {
-          error: subCategoriesLookup.result.error,
-          category: LOG_CATEGORY,
-        },
-      )
-      throw new BadRequestException('Invalid sub categories')
-    }
-
     ResultWrapper.unwrap(
       await this.journalService.insertMainCategory({
         categories: body.categories,
@@ -264,6 +248,43 @@ export class CaseController {
         departmentId: body.departmentId,
       }),
     )
+  }
+
+  @Route({
+    method: 'post',
+    path: 'categories',
+    operationId: 'createCategory',
+    summary: 'Create category',
+    bodyType: CreateCategory,
+  })
+  async createCategory(@Body() body: CreateCategory) {
+    ResultWrapper.unwrap(await this.journalService.insertCategory(body.title))
+  }
+
+  @Route({
+    method: 'put',
+    path: 'categories/:id',
+    operationId: 'updateCategory',
+    summary: 'Update category',
+    params: [{ name: 'id', type: 'string', required: true }],
+    bodyType: UpdateCategory,
+  })
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() body: UpdateCategory,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.updateCategory(id, body))
+  }
+
+  @Route({
+    method: 'delete',
+    path: 'categories/:id',
+    operationId: 'deleteCategory',
+    summary: 'Delete category',
+    params: [{ name: 'id', type: 'string', required: true }],
+  })
+  async deleteCategory(@Param('id') id: string): Promise<void> {
+    ResultWrapper.unwrap(await this.journalService.deleteCategory(id))
   }
 
   @Route({

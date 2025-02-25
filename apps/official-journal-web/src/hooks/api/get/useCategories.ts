@@ -20,7 +20,7 @@ export const useCategories = ({
     GetCategoriesResponse,
     Error
   >(
-    [APIRoutes.GetCategories, params],
+    [APIRoutes.Categories, params],
     ([url, qsp]: [url: string, qsp: SearchParams]) =>
       fetcher(url, {
         arg: {
