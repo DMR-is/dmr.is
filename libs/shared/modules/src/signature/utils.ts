@@ -51,9 +51,13 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
         : '1fr 1fr',
   }
 
-  const formattedDate = format(new Date(record.signatureDate), 'd MMMM yyyy', {
-    locale: is,
-  })
+  const formattedDate = format(
+    new Date(record.signatureDate),
+    'd. MMMM yyyy.',
+    {
+      locale: is,
+    },
+  )
 
   const chairmanMarkup = record.chairman
     ? `<div style="margin-bottom: 1.5em;">${memberTemplate(
@@ -68,9 +72,13 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
 
   return `
       <div class="signature" style="margin-bottom: 1.5em;">
-        <p align="center">${
-          record.institution
-        } <span class="signature__date">${formattedDate}</span></p>
+        <p align="center">
+          <em>
+            ${
+              record.institution
+            } <span class="signature__date">${formattedDate}</span>
+          </em>
+        </p>
         ${chairmanMarkup}
         <div style="display: ${styleObject.display}; grid-template-columns: ${
     styleObject.gridTemplateColumns
