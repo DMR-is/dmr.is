@@ -206,8 +206,13 @@ export class CaseCreateService implements ICaseCreateService {
       )
     }
 
+    const signatureType =
+      application.answers.misc?.signatureType === SignatureType.Committee
+        ? SignatureType.Committee
+        : SignatureType.Regular
+
     const signatureDate =
-      application.answers.misc.signatureType === SignatureType.Regular
+      signatureType === SignatureType.Regular
         ? findLatestYear(
             application.answers.signature?.regular?.records?.map(
               (signature) => signature.signatureDate,
@@ -402,7 +407,9 @@ export class CaseCreateService implements ICaseCreateService {
     const regularSignature = application.answers.signature.regular
     const committeeSignature = application.answers.signature.committee
     const signatureType =
-      application.answers.misc.signatureType ?? SignatureType.Regular
+      application.answers.misc?.signatureType === SignatureType.Committee
+        ? SignatureType.Committee
+        : SignatureType.Regular
 
     ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, {
