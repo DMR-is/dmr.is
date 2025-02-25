@@ -501,6 +501,11 @@ export class ApplicationService implements IApplicationService {
       }),
     )
 
+    await this.caseService.updateCaseCommunicationStatusByStatus(
+      caseLookup.id,
+      CaseCommunicationStatus.HasAnswers,
+    )
+
     return ResultWrapper.ok()
   }
 
