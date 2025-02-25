@@ -7,7 +7,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param } from '@nestjs/common'
+import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
 import { ApiBody } from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -56,15 +56,15 @@ export class PdfController {
         required: true,
       },
     ],
-    responseType: GetPdfRespone,
+    query: [{ type: GetPdfBody }],
   })
   @ApiBody({ type: GetPdfBody, required: false })
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: GetPdfBody = { showDate: true },
+    @Query() params: GetPdfBody,
   ): Promise<GetPdfRespone> {
     const pdf = (
-      await this.pdfService.getPdfByApplicationId(id, body.showDate)
+      await this.pdfService.getPdfByApplicationId(id, params.showDate)
     ).unwrap()
 
     const result = pdf.toString('base64')
