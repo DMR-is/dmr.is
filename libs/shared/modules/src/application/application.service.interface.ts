@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AdvertTemplateDetails,
@@ -5,6 +6,8 @@ import {
   ApplicationUser,
   CasePriceResponse,
   GetAdvertTemplateResponse,
+  GetApplicationAdverts,
+  GetApplicationAdvertsQuery,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -89,6 +92,11 @@ export interface IApplicationService {
   getApplicationAdvertTemplates(): Promise<
     ResultWrapper<AdvertTemplateDetails[]>
   >
+
+  getApplicationAdverts(
+    query: GetApplicationAdvertsQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAdverts>>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

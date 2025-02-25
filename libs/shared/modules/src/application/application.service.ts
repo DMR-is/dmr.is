@@ -1,4 +1,4 @@
-import { Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import {
   ApplicationEvent,
@@ -16,6 +16,8 @@ import {
   CaseCommunicationStatus,
   CasePriceResponse,
   GetAdvertTemplateResponse,
+  GetApplicationAdverts,
+  GetApplicationAdvertsQuery,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
@@ -29,6 +31,8 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import {
   calculatePriceForApplication,
+  generatePaging,
+  getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
 } from '@dmr.is/utils'
@@ -42,14 +46,23 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
+import {
+  AdvertCategoriesModel,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertModel,
+} from '../journal/models'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
+import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
 import { IApplicationService } from './application.service.interface'
 import { applicationCaseMigrate } from './migrations'
 
@@ -73,6 +86,7 @@ export class ApplicationService implements IApplicationService {
     private readonly signatureService: ISignatureService,
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
+    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
@@ -610,5 +624,82 @@ export class ApplicationService implements IApplicationService {
       key,
       transaction,
     )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getApplicationAdverts(
+    query: GetApplicationAdvertsQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAdverts>> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query?.page,
+      pageSize: query?.pageSize,
+    })
+
+    const whereClause = {}
+
+    if (query?.search) {
+      Object.assign(whereClause, {
+        [Op.or]: [
+          {
+            subject: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+          },
+        ],
+      })
+    }
+
+    const adverts = await this.advertModel.findAndCountAll({
+      distinct: true,
+      limit,
+      offset,
+      attributes: [
+        'id',
+        'subject',
+        'documentHtml',
+        'publicationYear',
+        'serialNumber',
+      ],
+      where: whereClause,
+      include: [
+        {
+          model: AdvertDepartmentModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+        {
+          model: AdvertTypeModel,
+          attributes: ['id', 'title', 'slug'],
+          include: [
+            {
+              model: AdvertMainTypeModel,
+              attributes: ['id', 'title', 'slug'],
+              required: false,
+            },
+          ],
+        },
+        {
+          model: AdvertCategoryModel,
+          attributes: ['id', 'title', 'slug'],
+        },
+      ],
+      order: [
+        ['publicationYear', 'DESC'],
+        ['serialNumber', 'DESC'],
+      ],
+      transaction,
+    })
+
+    const migrated = adverts.rows.map((advert) =>
+      applicationAdvertMigrate(advert),
+    )
+
+    const paging = generatePaging(migrated, offset + 1, limit, adverts.count)
+
+    return ResultWrapper.ok({
+      adverts: migrated,
+      paging,
+    })
   }
 }
