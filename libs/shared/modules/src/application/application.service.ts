@@ -510,7 +510,14 @@ export class ApplicationService implements IApplicationService {
   async getPresignedUrl(
     key: string,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
-    return this.s3Service.getPresignedUrl(key)
+    const urlRes = ResultWrapper.unwrap(
+      await this.s3Service.getPresignedUrl(key),
+    )
+    return ResultWrapper.ok({
+      url: urlRes.url,
+      cdn: process.env.ADVERTS_CDN_URL,
+      key,
+    })
   }
 
   /**

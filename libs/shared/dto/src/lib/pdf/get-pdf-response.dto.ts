@@ -7,3 +7,13 @@ export class GetPdfRespone {
   })
   content!: string
 }
+
+export class GetPdfBody {
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    default: true,
+    description: 'Show date in PDF',
+  })
+  showDate?: boolean
+}

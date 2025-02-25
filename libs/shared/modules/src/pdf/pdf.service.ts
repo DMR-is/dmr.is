@@ -44,6 +44,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
   async getPdfByApplicationId(
     applicationId: string,
+    showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
     const applicationLookup = await this.utilityService.applicationLookup(
       applicationId,
@@ -89,13 +90,17 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         .join('')
     }
 
-    const markup = advertPdfTemplate({
+    let markup = advertPdfTemplate({
       title: answers.advert.title,
       type: answers.advert.type.title,
       content: cleanupSingleEditorOutput(answers.advert.html as HTMLText),
       additions: additionHtml,
       signature: signatureHtml,
     })
+
+    if (!showDate) {
+      markup = markup + '<style>.signature__date { display: none; }</style>'
+    }
 
     const pdf = (await this.generatePdfFromHtml(markup)).unwrap()
 

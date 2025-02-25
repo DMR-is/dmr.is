@@ -5,4 +5,16 @@ export class PresignedUrlResponse {
     type: String,
   })
   url!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  cdn?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  key?: string
 }

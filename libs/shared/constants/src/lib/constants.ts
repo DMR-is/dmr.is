@@ -57,6 +57,7 @@ export enum SignatureTypeSlug {
 export enum AttachmentTypeParam {
   OriginalDocument = 'frumrit',
   AdditonalDocument = 'fylgiskjol',
+  Assets = 'assets',
 }
 
 export enum AttachmentTypeEnum {
