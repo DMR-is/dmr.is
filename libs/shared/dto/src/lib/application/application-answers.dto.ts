@@ -15,7 +15,7 @@ export class ApplicationAnswers {
     type: ApplicationMisc,
     description: 'Misc answers',
   })
-  misc!: ApplicationMisc
+  misc?: ApplicationMisc
 
   @ApiProperty({
     type: ApplicationSignatures,

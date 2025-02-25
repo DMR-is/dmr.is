@@ -64,7 +64,10 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     }
 
     const { answers } = applicationLookup.result.value.application
-    const signatureType = answers.misc.signatureType as SignatureType
+    const signatureType =
+      answers.misc?.signatureType === SignatureType.Committee
+        ? SignatureType.Committee
+        : SignatureType.Regular
 
     const signatureHtml = applicationSignatureTemplate(
       signatureType === SignatureType.Regular
