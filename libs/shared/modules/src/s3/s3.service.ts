@@ -8,6 +8,7 @@ import {
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
+import { fromIni } from '@aws-sdk/credential-providers'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ONE_HOUR } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
@@ -36,6 +37,9 @@ const LOGGING_CATEGORY = 's3-service'
 export class S3Service implements IS3Service {
   private readonly client = new S3Client({
     region: process.env.AWS_REGION ?? 'eu-west-1',
+    credentials: process.env.AWS_CREDENTIALS_SOURCE
+      ? fromIni({ profile: process.env.AWS_CREDENTIALS_SOURCE })
+      : undefined,
   })
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     if (!this.client) {

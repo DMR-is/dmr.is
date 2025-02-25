@@ -45,3 +45,12 @@ export class PostApplicationAttachmentBody {
   @IsNumber()
   fileSize!: number
 }
+
+export class PostApplicationAssetBody {
+  @ApiProperty({
+    type: String,
+    required: true,
+  })
+  @IsString()
+  key!: string
+}

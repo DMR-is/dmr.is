@@ -23,6 +23,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  S3UploadFilesResponse,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
@@ -192,6 +193,8 @@ export interface ICaseService {
     caseId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

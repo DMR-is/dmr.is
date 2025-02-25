@@ -1506,6 +1506,43 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{caseId}/upload-assets": {
+      "post": {
+        "operationId": "uploadApplicationAttachment",
+        "summary": "Upload attachment like images",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostApplicationAssetBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUrlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberId}": {
       "put": {
         "operationId": "updateSignatureMember",
@@ -4193,6 +4230,11 @@
         },
         "required": ["cases"]
       },
+      "PostApplicationAssetBody": {
+        "type": "object",
+        "properties": { "key": { "type": "string" } },
+        "required": ["key"]
+      },
       "UpdateSignatureMember": {
         "type": "object",
         "properties": {
@@ -4283,10 +4325,6 @@
       "CreateSignature": {
         "type": "object",
         "properties": {
-          "signatureDate": {
-            "type": "string",
-            "description": "ISO datestring of the signature"
-          },
           "involvedPartyId": {
             "type": "string",
             "description": "The involved party of the signature"
@@ -4297,7 +4335,7 @@
             "items": { "$ref": "#/components/schemas/CreateSignatureRecord" }
           }
         },
-        "required": ["signatureDate", "involvedPartyId", "records"]
+        "required": ["involvedPartyId", "records"]
       },
       "GetSignature": {
         "type": "object",
