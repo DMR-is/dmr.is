@@ -51,6 +51,7 @@ import {
   enumMapper,
   generatePaging,
   getLimitAndOffset,
+  getPublicationTemplate,
   getS3Bucket,
 } from '@dmr.is/utils'
 
@@ -884,6 +885,11 @@ export class CaseService implements ICaseService {
 
     await this.createPdfAndUpload(caseId, pdfFileName)
 
+    const publicationHtml = getPublicationTemplate(
+      caseToPublish.department.title,
+      now,
+    )
+
     const advertCreateResult = await this.journalService.create(
       {
         departmentId: caseToPublish.departmentId,
@@ -894,7 +900,7 @@ export class CaseService implements ICaseService {
         categories: caseToPublish.categories?.map((c) => c.id) ?? [],
         publicationDate: now.toISOString(),
         signatureDate: caseToPublish.signature.signatureDate,
-        content: caseToPublish.html + signatureHtml,
+        content: caseToPublish.html + signatureHtml + publicationHtml,
         pdfUrl: pdfFileName,
       },
       transaction,
