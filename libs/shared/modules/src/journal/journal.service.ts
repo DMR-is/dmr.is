@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdvertStatus,
   Category,
   CreateAdvert,
   CreateMainCategory,
@@ -91,6 +92,9 @@ export class JournalService implements IJournalService {
     private advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertCategoryCategoriesModel)
     private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
+
+    @InjectModel(AdvertStatusModel)
+    private advertStatusModel: typeof AdvertStatusModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
@@ -101,45 +105,50 @@ export class JournalService implements IJournalService {
     model: CreateAdvert,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertResponse>> {
-    const publicationYear = model.publicationDate.getFullYear()
-    const localId = model.id ? model.id : uuid()
+    const id = uuid()
+
+    const status = await this.advertStatusModel.findOne({
+      where: { title: { [Op.eq]: AdvertStatus.Published } },
+    })
+
+    if (!status) {
+      this.logger.error('Advert status not found', {
+        category: LOGGING_CATEGORY,
+        metadata: { status: AdvertStatus.Published },
+      })
+      throw new InternalServerErrorException('Advert status not found')
+    }
+
+    const publicationYear = new Date(model.publicationDate).getFullYear()
 
     const ad = await this.advertModel.create(
       {
-        id: localId,
+        id: id,
         departmentId: model.departmentId,
         typeId: model.typeId,
-        statusId: model.statusId,
+        statusId: status.id,
         involvedPartyId: model.involvedPartyId,
         subject: model.subject,
-        serialNumber: model.publicationNumber,
+        serialNumber: model.serial,
         publicationYear: publicationYear,
         publicationDate: model.publicationDate,
         signatureDate: model.signatureDate,
-        documentHtml: model.documentHtml,
-        documentPdfUrl: model.documentPdfUrl,
-        isLegacy: model.isLegacy,
+        documentHtml: model.content,
+        documentPdfUrl: model.pdfUrl,
+        isLegacy: false,
       },
       {
         transaction,
+        returning: ['id'],
       },
     )
 
-    const categories = await this.advertCategoryModel.findAll({
-      where: {
-        id: {
-          [Op.in]: model.categoryIds,
-        },
-      },
-      transaction,
-    })
-
     await Promise.all(
-      categories.map((c) => {
+      model.categories.map((id) => {
         this.advertCategoriesModel.create(
           {
             advert_id: ad.id,
-            category_id: c.id,
+            category_id: id,
           },
           { transaction },
         )

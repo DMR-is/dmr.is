@@ -42,6 +42,28 @@ export default function ConfirmPublishing({ cases }: Props) {
     },
   })
 
+  const handleConfirm = () => {
+    const hasPublicationDateToday = cases.every(
+      (c) =>
+        new Date(c.requestedPublicationDate).toDateString() ===
+        new Date().toDateString(),
+    )
+
+    if (!hasPublicationDateToday) {
+      const didConfirm = confirm(
+        'Ertu viss um að þú viljir gefa út mál sem ekki er með umbeðinn birtingar dag í dag?',
+      )
+
+      if (didConfirm) {
+        trigger({ caseIds: cases.map((c) => c.id) })
+      }
+
+      return
+    }
+
+    trigger({ caseIds: cases.map((c) => c.id) })
+  }
+
   return (
     <Section paddingTop="off">
       <GridContainer>
@@ -77,7 +99,7 @@ export default function ConfirmPublishing({ cases }: Props) {
                   <Button variant="ghost">Tilbaka í útgáfu mála</Button>
                 </LinkV2>
                 <Button
-                  onClick={() => trigger({ caseIds: cases.map((c) => c.id) })}
+                  onClick={() => handleConfirm()}
                   disabled={isMutating}
                   loading={isMutating}
                   icon="arrowForward"
