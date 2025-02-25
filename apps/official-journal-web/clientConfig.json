@@ -33,18 +33,16 @@
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
+          },
+          {
+            "required": false,
+            "description": "Show date in PDF",
+            "name": "showDate",
+            "in": "query",
+            "schema": { "default": true, "type": "boolean" }
           }
         ],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
-              }
-            }
-          }
-        }
+        "responses": { "200": { "description": "" } }
       }
     },
     "/api/v1/pdf/case/{id}/url": {
@@ -3403,7 +3401,11 @@
       },
       "PresignedUrlResponse": {
         "type": "object",
-        "properties": { "url": { "type": "string" } },
+        "properties": {
+          "url": { "type": "string" },
+          "cdn": { "type": "string" },
+          "key": { "type": "string" }
+        },
         "required": ["url"]
       },
       "PostApplicationAttachmentBody": {

@@ -296,7 +296,10 @@ export class ApplicationController {
     @Param('type', new EnumValidationPipe(AttachmentTypeParam))
     type: AttachmentTypeParam,
   ): Promise<PresignedUrlResponse> {
-    const key = `applications/${applicationId}/${type}/${body.fileName}.${body.fileType}`
+    let key = `applications/${applicationId}/${type}/${body.fileName}.${body.fileType}`
+    if (type === AttachmentTypeParam.Assets) {
+      key = `${type}/${applicationId}/${body.fileName}.${body.fileType}`
+    }
 
     return ResultWrapper.unwrap(
       await this.applicationService.getPresignedUrl(key),
