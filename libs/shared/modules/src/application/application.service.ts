@@ -163,7 +163,7 @@ export class ApplicationService implements IApplicationService {
     try {
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(applicationId)
-      ).unwrap()
+      ).unwrap() // weird, unwrapa hér.
 
       /**
        * If price has not been set we return default price
@@ -175,8 +175,9 @@ export class ApplicationService implements IApplicationService {
         price: price,
       })
     } catch (error) {
-      // ResultWrapper.unwrap(await this.getApplication(applicationId))
+      // ResultWrapper.unwrap(await this.getApplication(applicationId)) remove?
 
+      //en ef eitthvað annað gerist? eitthvað óvænt?
       // case does not exist, calculate price
       const price = calculatePriceForApplication()
 
@@ -191,7 +192,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
     const res = await this.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`, // ætti þetta að vera env?
       {
         method: 'GET',
       },
@@ -225,7 +226,7 @@ export class ApplicationService implements IApplicationService {
     event: ApplicationEvent,
   ): Promise<ResultWrapper> {
     const res = await this.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`, //env
       {
         method: 'PUT',
         body: new URLSearchParams({
@@ -249,7 +250,7 @@ export class ApplicationService implements IApplicationService {
     answers: UpdateApplicationBody,
   ): Promise<ResultWrapper> {
     const res = await this.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`, //env
       {
         method: 'PUT',
         headers: {
@@ -260,7 +261,7 @@ export class ApplicationService implements IApplicationService {
     )
 
     if (!res.ok) {
-      const info = await res.json()
+      const info = await res.json() // fyrst json , svo text fyrir neðan.
       const { status, statusText } = res
       this.logger.warn(`Could not update application<${id}>`, {
         category: LOGGING_CATEGORY,
@@ -305,6 +306,7 @@ export class ApplicationService implements IApplicationService {
   ): Promise<ResultWrapper> {
     ResultWrapper
     try {
+      //promise.all?
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(
           applicationId,
@@ -345,6 +347,8 @@ export class ApplicationService implements IApplicationService {
       //   }),
       // )
 
+      //promise all hér líka.
+      //jafnvel commit/rollback?
       ResultWrapper.unwrap(
         await this.caseService.updateCase(
           {
@@ -369,6 +373,7 @@ export class ApplicationService implements IApplicationService {
       )
 
       ResultWrapper.unwrap(
+        //sleppa unwrap?
         await this.caseService.updateCaseCommunicationStatus(
           caseLookup.id,
           {
@@ -379,6 +384,7 @@ export class ApplicationService implements IApplicationService {
       )
 
       ResultWrapper.unwrap(
+        //sleppa unwrap?
         await this.commentService.createSubmitComment(
           caseLookup.id,
           {
@@ -389,12 +395,14 @@ export class ApplicationService implements IApplicationService {
       )
 
       ResultWrapper.unwrap(
+        //sleppa unwrap?
         await this.caseService.createCaseHistory(caseLookup.id, transaction),
       )
 
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
+        //þannig ef eitthvað af þessu klikkar, þá er búið til case?
         return await this.caseService.createCase({
           applicationId,
         })
@@ -417,9 +425,7 @@ export class ApplicationService implements IApplicationService {
   async getApplicationAdvertTemplates(): Promise<
     ResultWrapper<AdvertTemplateDetails[]>
   > {
-    const res = getTemplateDetails()
-
-    return ResultWrapper.ok(res)
+    return ResultWrapper.ok(getTemplateDetails())
   }
 
   /**
@@ -453,6 +459,7 @@ export class ApplicationService implements IApplicationService {
     ).unwrap()
 
     const comments = ResultWrapper.unwrap(
+      // sameina.
       await this.commentService.getComments(caseResponse.id, {
         action: [
           CaseActionEnum.COMMENT_APPLICATION,

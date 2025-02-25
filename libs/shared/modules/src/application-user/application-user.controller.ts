@@ -69,6 +69,7 @@ export class ApplicationUserController {
   })
   @LogMethod()
   async getApplicationUsers(@Query() query: ApplicationUserQuery) {
+    //unwrap
     const results = await this.applicationUserService.getUsers(query)
 
     if (!results.result.ok) {
@@ -93,6 +94,7 @@ export class ApplicationUserController {
   })
   @LogMethod()
   async getApplicationUser(@Param('id') id: string) {
+    // unwrap
     const results = await this.applicationUserService.getUser(id)
 
     if (!results.result.ok) {
@@ -119,6 +121,7 @@ export class ApplicationUserController {
   })
   @LogMethod()
   async createApplicationUser(@Body() body: CreateApplicationUser) {
+    //unwrap
     const results = await this.applicationUserService.createUser(body)
 
     if (!results.result.ok) {
@@ -140,6 +143,7 @@ export class ApplicationUserController {
   @ApiNoContentResponse()
   @LogMethod()
   async deleteApplicationUser(@Param('id') id: string) {
+    //unwrap
     const results = await this.applicationUserService.deleteUser(id)
 
     if (!results.result.ok) {
@@ -167,7 +171,7 @@ export class ApplicationUserController {
     @Param('id') id: string,
     @Body() body: UpdateApplicationUser,
   ) {
-    const results = await this.applicationUserService.updateUser(id, body)
+    const results = await this.applicationUserService.updateUser(id, body) // unwrap
 
     if (!results.result.ok) {
       throw new HttpException(

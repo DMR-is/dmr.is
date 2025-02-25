@@ -110,6 +110,7 @@ export class AttachmentService implements IAttachmentService {
     transaction,
   }: CreateAttachmentParams): Promise<ResultWrapper<{ id: string }>> {
     ResultWrapper.unwrap(
+      // þarf?
       await this.handleReUpload(
         params.applicationId,
         params.body.originalFileName,
@@ -117,7 +118,8 @@ export class AttachmentService implements IAttachmentService {
       ),
     )
 
-    const foundAttachmentType = (
+    const foundAttachmentType = //     ResultWrapper.unwrap(
+    (
       await this.attachmentTypeLookup(params.attachmentType, transaction)
     ).unwrap()
 
@@ -140,6 +142,7 @@ export class AttachmentService implements IAttachmentService {
     )
 
     await this.applicationAttachmentsModel.create(
+      // async?
       {
         applicationId: params.applicationId,
         attachmentId: attachment.id,
@@ -231,7 +234,7 @@ export class AttachmentService implements IAttachmentService {
   async getCaseAttachment(
     caseId: string,
     attachmentId: string,
-    transaction?: Transaction,
+    transaction?: Transaction, // hér og decorator?
   ): Promise<ResultWrapper<GetApplicationAttachmentResponse>> {
     const found = await this.caseAttachmentsModel.findOne({
       where: {
@@ -264,7 +267,7 @@ export class AttachmentService implements IAttachmentService {
   async getAttachments(
     applicationId: string,
     type: AttachmentTypeParam,
-    transaction?: Transaction,
+    transaction?: Transaction, //same
   ): Promise<ResultWrapper<GetApplicationAttachmentsResponse>> {
     const typeLookup = (
       await this.attachmentTypeLookup(type, transaction)

@@ -407,6 +407,7 @@ export class CaseUpdateService implements ICaseUpdateService {
     const prevStatus = getPreviousStatus(caseLookup.status.title)
 
     ResultWrapper.unwrap(
+      // do we need unwrap ?
       await this.utilityService.caseStatusLookup(prevStatus, transaction),
     )
 

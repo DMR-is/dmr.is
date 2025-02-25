@@ -41,7 +41,7 @@ export class StatisticsService implements IStatisticsService {
   ) {}
 
   @LogAndHandle()
-  async getDepartment(
+  async getDepartment( // setja þetta upp sem db function ?
     slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const submittedCountQuery = this.caseModel.count({
@@ -245,6 +245,7 @@ export class StatisticsService implements IStatisticsService {
 
   @LogAndHandle()
   private async getGeneralOverviewCount(): Promise<
+    //function líka hér,
     ResultWrapper<GetStatisticsOverviewResponse>
   > {
     const unassignedQuery = this.caseModel.count({
@@ -579,7 +580,7 @@ export class StatisticsService implements IStatisticsService {
     const [todayPublishingCount, pastDuePublishingCount] = await Promise.all([
       todayCount,
       pastDueCount,
-    ])
+    ]) //Can we find out if we can run a single function query here to speed up.
 
     const result: GetStatisticsOverviewResponse = {
       categories: [

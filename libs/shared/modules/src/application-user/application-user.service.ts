@@ -42,7 +42,7 @@ export class ApplicationUserService implements IApplicationUserService {
   async createUser(
     body: CreateApplicationUser,
   ): Promise<ResultWrapper<GetApplicationUser>> {
-    const transaction = await this.sequelize.transaction()
+    const transaction = await this.sequelize.transaction() // decorator
     try {
       const userId = uuid()
 
@@ -54,7 +54,7 @@ export class ApplicationUserService implements IApplicationUserService {
           lastName: body.lastName,
           email: body.email,
         },
-        { transaction },
+        { transaction }, // can this return so we dont have to findByPK?
       )
 
       await this.userInvolvedPartyModel.bulkCreate(
@@ -99,18 +99,19 @@ export class ApplicationUserService implements IApplicationUserService {
       })
     }
   }
+
   async updateUser(
     id: string,
     body: UpdateApplicationUser,
   ): Promise<ResultWrapper<GetApplicationUser>> {
-    const transaction = await this.sequelize.transaction()
+    const transaction = await this.sequelize.transaction() // decorator
     try {
       const user = await this.applicationUserModel.findByPk(id, {
         transaction,
       })
 
       if (!user) {
-        await transaction.rollback()
+        await transaction.rollback() //why
         return ResultWrapper.err({
           code: 404,
           message: 'User not found',
@@ -118,6 +119,7 @@ export class ApplicationUserService implements IApplicationUserService {
       }
 
       await user.update(
+        // can this return useeeer
         {
           firstName: body.firstName,
           lastName: body.lastName,
@@ -128,6 +130,7 @@ export class ApplicationUserService implements IApplicationUserService {
 
       if (body.involvedPartyIds && body.involvedPartyIds?.length > 0) {
         await this.userInvolvedPartyModel.destroy({
+          // no no destroy
           where: {
             applicationUserId: id,
           },
@@ -163,6 +166,7 @@ export class ApplicationUserService implements IApplicationUserService {
       await transaction.commit()
 
       const migrated = applicationUserMigrate(updatedUser)
+
       return ResultWrapper.ok({ user: migrated })
     } catch (error) {
       await transaction.rollback()
@@ -178,7 +182,7 @@ export class ApplicationUserService implements IApplicationUserService {
     }
   }
   async deleteUser(id: string): Promise<ResultWrapper> {
-    const transaction = await this.sequelize.transaction()
+    const transaction = await this.sequelize.transaction() // decorator
     try {
       const user = await this.applicationUserModel.findByPk(id, {
         transaction,
@@ -194,12 +198,14 @@ export class ApplicationUserService implements IApplicationUserService {
 
       await Promise.all([
         await this.userInvolvedPartyModel.destroy({
+          // no no
           where: {
             applicationUserId: id,
           },
           transaction,
         }),
         await this.applicationUserModel.destroy({
+          // no no
           where: {
             id,
           },
@@ -316,7 +322,7 @@ export class ApplicationUserService implements IApplicationUserService {
     institutionId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ hasInvolvedParty: boolean }>> {
-    const userLookup = await this.getUser(id, transaction)
+    const userLookup = await this.getUser(id, transaction) // unwrap?
 
     if (!userLookup.result.ok) {
       return ResultWrapper.err({

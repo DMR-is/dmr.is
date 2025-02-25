@@ -61,7 +61,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared/dto' // We should really split this up in to multiple files/api routes
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -163,7 +163,7 @@ export class CaseController {
   }
 
   @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
+  @Roles(USER_ROLES.Admin) // should admin roles be mixed in with common roles?
   @Route({
     path: 'categories',
     operationId: 'getCategories',
@@ -237,7 +237,7 @@ export class CaseController {
   })
   @TimeLog()
   async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
-    const id = uuid()
+    const id = uuid() //remove
 
     const subCategoriesLookup = await this.journalService.getCategories({
       ids: body.categories,
@@ -315,7 +315,7 @@ export class CaseController {
   /**
    * Returns cases with status count, by default count cases for every status.
    * @param status - Status of the cases to be returned
-   */
+   */ //should we set these comments to all routes?
   async getCasesWithStatusCount(
     @Param('status', new EnumValidationPipe(CaseStatusEnum))
     status: CaseStatusEnum,
@@ -364,9 +364,13 @@ export class CaseController {
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
     @Body() body: PostApplicationAttachmentBody,
   ): Promise<PresignedUrlResponse> {
-    return (
-      await this.caseService.overwriteCaseAttachment(caseId, attachmentId, body)
-    ).unwrap()
+    return ResultWrapper.unwrap(
+      await this.caseService.overwriteCaseAttachment(
+        caseId,
+        attachmentId,
+        body,
+      ),
+    )
   }
 
   @Route({
@@ -897,6 +901,7 @@ export class CaseController {
       )
 
     if (!communicationStatusUpdateResult.result.ok) {
+      // should this not return or throw?  is it ok to create a comment if the status is not changed?
       this.logger.warn(
         'Failed to update communication status when creating external comment',
         {

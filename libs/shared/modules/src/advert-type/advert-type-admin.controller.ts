@@ -27,6 +27,7 @@ import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
+// Ætti þessi ekki að hafa auth guard?
 export class AdvertTypeAdminController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -43,6 +44,7 @@ export class AdvertTypeAdminController {
   @ApiResponse({ status: 500, type: AdvertTypeError })
   @LogMethod()
   async createType(@Body() body: CreateAdvertTypeBody): Promise<GetAdvertType> {
+    //result wrapper?
     const result = await this.advertTypeService.createType(body)
 
     if (!result.result.ok) {
@@ -131,7 +133,7 @@ export class AdvertTypeAdminController {
   async createMainTypesBulk(
     @Body() body: CreateAdvertMainTypeBulk,
   ): Promise<void> {
-    const transaction = await this.sequelize.transaction()
+    const transaction = await this.sequelize.transaction() // þetta inn í serviceið, gerum multiple service kall og transaction þaðan.
     const promises = body.mainTypes.map((item) =>
       this.advertTypeService.createMainType(item, transaction),
     )
@@ -142,7 +144,7 @@ export class AdvertTypeAdminController {
     if (errors.length > 0) {
       await transaction.rollback()
 
-      throw new AdvertTypeError('Ekki tókst að búa til allar tegundir', 500)
+      throw new AdvertTypeError('Ekki tókst að búa til allar tegundir', 500) // Íslenska ?
     }
 
     await transaction.commit()

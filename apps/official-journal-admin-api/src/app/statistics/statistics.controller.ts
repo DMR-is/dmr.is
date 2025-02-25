@@ -25,6 +25,7 @@ import { IStatisticsService } from './statistics.service.interface'
 @ApiBearerAuth()
 @Controller({
   version: '1',
+  //enginn path hér?
 })
 export class StatisticsController {
   constructor(
@@ -49,7 +50,7 @@ export class StatisticsController {
   }
 
   // @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  // @Roles(USER_ROLES.Admin)
+  // @Roles(USER_ROLES.Admin) er þetta intentional?
   @Get('/overview/:type')
   @ApiOperation({ operationId: 'getStatisticsOverview' })
   @ApiParam({ name: 'type', enum: StatisticsOverviewQueryType, required: true })

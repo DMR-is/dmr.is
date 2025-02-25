@@ -138,7 +138,7 @@ export class AdvertTypeService implements IAdvertTypeService {
   }
 
   @LogAndHandle()
-  @Transactional()
+  @Transactional() // af hverju er sumt transactional en ekki annað?
   async getTypeById(
     id: string,
     transaction?: Transaction,
@@ -232,7 +232,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       if (!mapped.result.ok) {
         return ResultWrapper.err({
           code: 500,
-          message: 'Ekki tóskt að búa til yfirflokk',
+          message: 'Ekki tókst að búa til yfirflokk',
         })
       }
 
@@ -309,12 +309,13 @@ export class AdvertTypeService implements IAdvertTypeService {
           },
         ],
         transaction: transaction,
-      })
+      }) // af hverju er verið að búa til týpu, og svo sækja hana aftur?
 
       if (!newType) {
         this.logger.warn(`Advert type not found after creation`, {
           category: LOGGING_CATEGORY,
         })
+        //Ættiru ekki að throw-a til að rollbacka?
         return ResultWrapper.err({
           code: 404,
           message: `Ekki tókst að búa til tegund`,
@@ -358,6 +359,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     body: UpdateAdvertMainType,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertMainType>> {
+    //getum við lagað þetta fall? þrjú gagnagrunnsköll, sem gæti verið eitt.
     try {
       const mainType = await this.advertMainTypeModel.findByPk(id, {
         include: [

@@ -181,6 +181,7 @@ export class JournalController {
     )
 
     return {
+      // getum við látið caseservice-ið skila þessu?
       cases: casesResponse.cases.map((c) => ({
         id: c.id,
         title: c.advertType.title + ' ' + c.advertTitle,

@@ -280,6 +280,7 @@ export class AdminUserService implements IAdminUserService {
       )
 
       await user.destroy({
+        // viljum við eyða notanda? Ættum við frekar að deleted = true?
         transaction,
       })
 
