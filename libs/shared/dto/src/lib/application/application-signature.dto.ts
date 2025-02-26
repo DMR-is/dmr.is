@@ -49,7 +49,7 @@ export class ApplicationSignatureRecord {
 
   @ApiProperty({
     type: String,
-    description: 'Additioanl signature name',
+    description: 'Additional signature name',
   })
   @IsOptional()
   additional?: string
