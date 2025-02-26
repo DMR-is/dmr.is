@@ -570,18 +570,7 @@
             "name": "status",
             "required": true,
             "in": "path",
-            "schema": {
-              "enum": [
-                "Innsent",
-                "Grunnvinnsla",
-                "Yfirlestur",
-                "Tilbúið",
-                "Útgefið",
-                "Tekið úr birtingu",
-                "Birtingu hafnað"
-              ],
-              "type": "string"
-            }
+            "schema": { "$ref": "#/components/schemas/CaseStatusEnum" }
           }
         ],
         "responses": {
@@ -999,7 +988,7 @@
     },
     "/api/v1/cases/{id}/status": {
       "put": {
-        "operationId": "updateStatus",
+        "operationId": "updateCaseStatus",
         "summary": "",
         "parameters": [
           {
@@ -1336,10 +1325,7 @@
             "name": "department",
             "required": true,
             "in": "path",
-            "schema": {
-              "enum": ["A deild", "B deild", "C deild"],
-              "type": "string"
-            }
+            "schema": { "$ref": "#/components/schemas/DepartmentEnum" }
           }
         ],
         "responses": {
@@ -1538,10 +1524,7 @@
             "name": "department",
             "required": true,
             "in": "path",
-            "schema": {
-              "enum": ["A deild", "B deild", "C deild"],
-              "type": "string"
-            }
+            "schema": { "$ref": "#/components/schemas/DepartmentEnum" }
           }
         ],
         "responses": {
@@ -4219,6 +4202,10 @@
           }
         },
         "required": ["cases", "paging"]
+      },
+      "DepartmentEnum": {
+        "type": "string",
+        "enum": ["A deild", "B deild", "C deild"]
       },
       "DepartmentCounter": {
         "type": "object",

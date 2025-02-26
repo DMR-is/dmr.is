@@ -249,7 +249,11 @@ export class CaseController {
 
   @Get('/status-count/:status')
   @ApiOperation({ operationId: 'getCasesWithStatusCount' })
-  @ApiParam({ name: 'status', enum: CaseStatusEnum })
+  @ApiParam({
+    name: 'status',
+    enum: CaseStatusEnum,
+    enumName: 'CaseStatusEnum',
+  })
   @ApiResponse({ status: 200, type: GetCasesWithStatusCount })
   async getCasesWithStatusCount(
     @Param('status', new EnumValidationPipe(CaseStatusEnum))
@@ -473,7 +477,7 @@ export class CaseController {
   }
 
   @Put(':id/status')
-  @ApiOperation({ operationId: 'updateStatus' })
+  @ApiOperation({ operationId: 'updateCaseStatus' })
   @ApiNoContentResponse()
   async updateStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
@@ -575,7 +579,11 @@ export class CaseController {
 
   @Get('/department-count/:department')
   @ApiOperation({ operationId: 'getCasesWithDepartmentCount' })
-  @ApiParam({ name: 'department', enum: DepartmentEnum })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
+  })
   @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
   async getCasesWithDepartmentCount(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
@@ -681,7 +689,11 @@ export class CaseController {
 
   @Get('/with-publication-number/:department')
   @ApiOperation({ operationId: 'getCasesWithPublicationNumber' })
-  @ApiParam({ name: 'department', enum: DepartmentEnum })
+  @ApiParam({
+    name: 'department',
+    enum: DepartmentEnum,
+    enumName: 'DepartmentEnum',
+  })
   @ApiResponse({ status: 200, type: GetCasesWithPublicationNumber })
   async getCasesWithPublicationNumber(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
