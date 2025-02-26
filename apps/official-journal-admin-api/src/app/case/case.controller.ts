@@ -34,6 +34,7 @@ import {
   GetComments,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
+  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
@@ -155,8 +156,12 @@ export class CaseController {
   @Get('main-categories')
   @ApiOperation({ operationId: 'getMainCategories' })
   @ApiResponse({ status: 200, type: GetMainCategoriesResponse })
-  async mainCategories(): Promise<GetMainCategoriesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getMainCategories())
+  async mainCategories(
+    @Query() query: GetMainCategoriesQueryParams,
+  ): Promise<GetMainCategoriesResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getMainCategories(query),
+    )
   }
 
   @Delete('main-categories/:id')
@@ -351,7 +356,7 @@ export class CaseController {
     )
   }
 
-  @Put('id/publishDate')
+  @Put(':id/publishDate')
   @ApiOperation({ operationId: 'updatePublishDate' })
   @ApiNoContentResponse()
   async updatePublishDate(
@@ -500,8 +505,8 @@ export class CaseController {
     return
   }
 
-  @Put(':id/html-correction')
-  @ApiOperation({ operationId: 'updateAdvertHtmlCorrection' })
+  @Put(':id/update')
+  @ApiOperation({ operationId: 'updateCaseAndAddCorrection' })
   @ApiNoContentResponse()
   async updateAdvertHtmlCorrection(
     @Param('id', new UUIDValidationPipe()) id: string,
@@ -689,6 +694,7 @@ export class CaseController {
   @ApiOperation({ operationId: 'uploadApplicationAttachment' })
   @ApiResponse({ status: 200, type: PresignedUrlResponse })
   async uploadApplicationAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()
