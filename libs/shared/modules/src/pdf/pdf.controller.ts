@@ -56,9 +56,9 @@ export class PdfController {
         required: true,
       },
     ],
-    query: [{ type: GetPdfBody }],
+    responseType: GetPdfRespone,
+    query: [{ type: GetPdfBody, required: false }],
   })
-  @ApiBody({ type: GetPdfBody, required: false })
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Query() params: GetPdfBody,

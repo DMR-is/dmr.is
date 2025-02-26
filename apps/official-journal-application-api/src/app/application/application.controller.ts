@@ -90,7 +90,6 @@ export class ApplicationController {
   @ApiOperation({
     operationId: 'getAdvertCopies',
   })
-  @ApiQuery({ type: GetApplicationAdvertsQuery, required: false })
   @ApiResponse({
     type: GetApplicationResponse,
   })
