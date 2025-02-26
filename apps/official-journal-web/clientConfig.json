@@ -42,7 +42,16 @@
             "schema": { "default": true, "type": "boolean" }
           }
         ],
-        "responses": { "200": { "description": "" } }
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/pdf/case/{id}/url": {
