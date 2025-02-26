@@ -565,6 +565,23 @@
             "in": "query",
             "example": 10,
             "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "Innsent",
+                "Grunnvinnsla",
+                "Yfirlestur",
+                "Tilbúið",
+                "Útgefið",
+                "Tekið úr birtingu",
+                "Birtingu hafnað"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -780,7 +797,7 @@
     },
     "/api/v1/cases/{id}/type": {
       "put": {
-        "operationId": "updateType",
+        "operationId": "updateCaseType",
         "summary": "",
         "parameters": [
           {
@@ -1314,6 +1331,15 @@
             "in": "query",
             "example": 10,
             "schema": { "type": "number" }
+          },
+          {
+            "name": "department",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["A deild", "B deild", "C deild"],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1507,6 +1533,15 @@
             "required": false,
             "in": "query",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "department",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["A deild", "B deild", "C deild"],
+              "type": "string"
+            }
           }
         ],
         "responses": {

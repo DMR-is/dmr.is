@@ -79,6 +79,7 @@ import {
   ApiBearerAuth,
   ApiNoContentResponse,
   ApiOperation,
+  ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -248,6 +249,7 @@ export class CaseController {
 
   @Get('/status-count/:status')
   @ApiOperation({ operationId: 'getCasesWithStatusCount' })
+  @ApiParam({ name: 'status', enum: CaseStatusEnum })
   @ApiResponse({ status: 200, type: GetCasesWithStatusCount })
   async getCasesWithStatusCount(
     @Param('status', new EnumValidationPipe(CaseStatusEnum))
@@ -335,7 +337,7 @@ export class CaseController {
   }
 
   @Put(':id/type')
-  @ApiOperation({ operationId: 'updateType' })
+  @ApiOperation({ operationId: 'updateCaseType' })
   @ApiNoContentResponse()
   async updateType(
     @Param('id', new UUIDValidationPipe()) id: string,
@@ -573,6 +575,7 @@ export class CaseController {
 
   @Get('/department-count/:department')
   @ApiOperation({ operationId: 'getCasesWithDepartmentCount' })
+  @ApiParam({ name: 'department', enum: DepartmentEnum })
   @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
   async getCasesWithDepartmentCount(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
@@ -678,6 +681,7 @@ export class CaseController {
 
   @Get('/with-publication-number/:department')
   @ApiOperation({ operationId: 'getCasesWithPublicationNumber' })
+  @ApiParam({ name: 'department', enum: DepartmentEnum })
   @ApiResponse({ status: 200, type: GetCasesWithPublicationNumber })
   async getCasesWithPublicationNumber(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
