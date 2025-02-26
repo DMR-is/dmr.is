@@ -21,31 +21,36 @@ export class LoggingInterceptor implements NestInterceptor {
     const controller = context.getClass().name
     const method = context.getHandler().name
 
-    logger.info(`Executing ${controller}.${method}`, {
+    logger.debug(`Executing ${controller}.${method}`, {
       context: LOGGING_CONTEXT,
     })
+
+    // TODO: Integrate to datadog alert/slack notification if duration is longer than 2 seconds
 
     return next.handle().pipe(
       tap(() => {
         const end = Date.now()
         const duration = end - startTime
 
+        const message = `${controller}.${method} executed in ${duration}ms`
+
+        const info = {
+          context: LOGGING_CONTEXT,
+          controller,
+          method,
+          duration: `${duration}ms`,
+        }
+
         if (duration < 1000) {
-          logger.info(`${controller}.${method} executed in ${duration}ms`, {
-            context: LOGGING_CONTEXT,
-          })
+          logger.info(message, info)
         }
 
         if (duration >= 1000 && duration < 2000) {
-          logger.warn(`${controller}.${method} executed in ${duration}ms`, {
-            context: LOGGING_CONTEXT,
-          })
+          logger.warn(message, info)
         }
 
         if (duration >= 2000) {
-          logger.error(`${controller}.${method} executed in ${duration}ms`, {
-            context: LOGGING_CONTEXT,
-          })
+          logger.error(message, info)
         }
 
         return
