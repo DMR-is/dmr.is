@@ -4,6 +4,7 @@
     "/api/v1/pdf/case/{id}": {
       "get": {
         "operationId": "getPdfByCaseId",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -13,7 +14,7 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -27,6 +28,7 @@
     "/api/v1/pdf/application/{id}": {
       "get": {
         "operationId": "getPdfByApplicationId",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -35,19 +37,29 @@
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Show date in PDF",
             "name": "showDate",
+            "required": false,
             "in": "query",
+            "description": "Show date in PDF",
             "schema": { "default": true, "type": "boolean" }
           }
         ],
-        "responses": { "200": { "description": "" } }
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPdfRespone" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/pdf/case/{id}/url": {
       "get": {
         "operationId": "getPdfUrlByCaseId",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -57,7 +69,7 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -71,6 +83,7 @@
     "/api/v1/pdf/application/{id}/url": {
       "get": {
         "operationId": "getPdfUrlByApplicationId",
+        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -80,7 +93,7 @@
           }
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -1585,7 +1598,7 @@
         "summary": "",
         "parameters": [
           {
-            "name": "memberId",
+            "name": "signatureId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1597,7 +1610,7 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "signatureId",
+            "name": "memberId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1618,7 +1631,7 @@
         "summary": "",
         "parameters": [
           {
-            "name": "memberId",
+            "name": "signatureId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1630,7 +1643,7 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "signatureId",
+            "name": "memberId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1645,10 +1658,10 @@
         "summary": "",
         "parameters": [
           {
-            "name": "memberType",
+            "name": "signatureId",
             "required": true,
             "in": "path",
-            "schema": { "enum": ["CHAIRMAN", "MEMBER"], "type": "string" }
+            "schema": { "type": "string" }
           },
           {
             "name": "recordId",
@@ -1657,10 +1670,10 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "signatureId",
+            "name": "memberType",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": { "enum": ["CHAIRMAN", "MEMBER"], "type": "string" }
           }
         ],
         "responses": { "204": { "description": "" } }
@@ -1672,13 +1685,13 @@
         "summary": "",
         "parameters": [
           {
-            "name": "recordId",
+            "name": "signatureId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
           },
           {
-            "name": "signatureId",
+            "name": "recordId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1699,13 +1712,13 @@
         "summary": "",
         "parameters": [
           {
-            "name": "recordId",
+            "name": "signatureId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
           },
           {
-            "name": "signatureId",
+            "name": "recordId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1806,59 +1819,59 @@
         "summary": "",
         "parameters": [
           {
-            "required": false,
-            "description": "Search by id",
             "name": "id",
+            "required": false,
             "in": "query",
+            "description": "Search by id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Filter by unassigned",
             "name": "unassigned",
+            "required": false,
             "in": "query",
+            "description": "Filter by unassigned",
             "schema": { "type": "boolean" }
           },
           {
-            "required": false,
-            "description": "Search by main type id",
             "name": "mainType",
+            "required": false,
             "in": "query",
+            "description": "Search by main type id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by title",
             "name": "search",
+            "required": false,
             "in": "query",
+            "description": "Search by title",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by slug",
             "name": "slug",
+            "required": false,
             "in": "query",
+            "description": "Search by slug",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by department slug, title or id",
             "name": "department",
+            "required": false,
             "in": "query",
+            "description": "Search by department slug, title or id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "The page number",
             "name": "page",
+            "required": false,
             "in": "query",
+            "description": "The page number",
             "schema": { "type": "number" }
           },
           {
-            "required": false,
-            "description": "The page size",
             "name": "pageSize",
+            "required": false,
             "in": "query",
+            "description": "The page size",
             "schema": { "type": "number" }
           }
         ],
@@ -1926,7 +1939,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/advert-types/main-types": {
@@ -1935,59 +1949,59 @@
         "summary": "",
         "parameters": [
           {
-            "required": false,
-            "description": "Search by id",
             "name": "id",
+            "required": false,
             "in": "query",
+            "description": "Search by id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Filter by unassigned",
             "name": "unassigned",
+            "required": false,
             "in": "query",
+            "description": "Filter by unassigned",
             "schema": { "type": "boolean" }
           },
           {
-            "required": false,
-            "description": "Search by main type id",
             "name": "mainType",
+            "required": false,
             "in": "query",
+            "description": "Search by main type id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by title",
             "name": "search",
+            "required": false,
             "in": "query",
+            "description": "Search by title",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by slug",
             "name": "slug",
+            "required": false,
             "in": "query",
+            "description": "Search by slug",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "Search by department slug, title or id",
             "name": "department",
+            "required": false,
             "in": "query",
+            "description": "Search by department slug, title or id",
             "schema": { "type": "string" }
           },
           {
-            "required": false,
-            "description": "The page number",
             "name": "page",
+            "required": false,
             "in": "query",
+            "description": "The page number",
             "schema": { "type": "number" }
           },
           {
-            "required": false,
-            "description": "The page size",
             "name": "pageSize",
+            "required": false,
             "in": "query",
+            "description": "The page size",
             "schema": { "type": "number" }
           }
         ],
@@ -2057,7 +2071,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/advert-types/types/{id}": {
@@ -2159,7 +2174,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "delete": {
         "operationId": "deleteType",
@@ -2198,7 +2214,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/advert-types/main-types/{id}": {
@@ -2300,7 +2317,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       },
       "delete": {
         "operationId": "deleteMainType",
@@ -2339,7 +2357,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/advert-types/main-types/bulk": {
@@ -2358,7 +2377,7 @@
           }
         },
         "responses": {
-          "200": { "description": "" },
+          "201": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -2375,7 +2394,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/admin-users/roles": {
@@ -2521,15 +2541,15 @@
         "summary": "",
         "parameters": [
           {
-            "required": false,
             "name": "involvedParty",
+            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "Get application users",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetApplicationUsers" }
@@ -2709,22 +2729,22 @@
         "summary": "",
         "parameters": [
           {
-            "required": false,
-            "example": 1,
             "name": "page",
+            "required": false,
             "in": "query",
+            "example": 1,
             "schema": { "type": "number" }
           },
           {
-            "required": false,
-            "example": 10,
             "name": "pageSize",
+            "required": false,
             "in": "query",
+            "example": 10,
             "schema": { "type": "number" }
           },
           {
-            "required": false,
             "name": "search",
+            "required": false,
             "in": "query",
             "schema": { "type": "string" }
           }
@@ -2774,10 +2794,7 @@
             "name": "slug",
             "required": true,
             "in": "path",
-            "schema": {
-              "enum": ["a-deild", "b-deild", "c-deild"],
-              "type": "string"
-            }
+            "schema": { "$ref": "#/components/schemas/DepartmentSlugEnum" }
           }
         ],
         "responses": {
@@ -2805,8 +2822,7 @@
             "required": true,
             "in": "path",
             "schema": {
-              "enum": ["general", "personal", "inactive", "publishing"],
-              "type": "string"
+              "$ref": "#/components/schemas/StatisticsOverviewQueryType"
             }
           }
         ],
@@ -4729,6 +4745,10 @@
           "title": { "type": "string", "description": "Title of the entity" }
         }
       },
+      "DepartmentSlugEnum": {
+        "type": "string",
+        "enum": ["a-deild", "b-deild", "c-deild"]
+      },
       "StatisticsStatusCount": {
         "type": "object",
         "properties": {
@@ -4755,6 +4775,10 @@
           "total": { "type": "number", "description": "Total number of cases" }
         },
         "required": ["statuses", "total"]
+      },
+      "StatisticsOverviewQueryType": {
+        "type": "string",
+        "enum": ["general", "personal", "inactive", "publishing"]
       },
       "StatisticsOverviewCategory": {
         "type": "object",
