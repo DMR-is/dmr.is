@@ -26,6 +26,8 @@ import { IStatisticsService } from './statistics.service.interface'
 @Controller({
   version: '1',
 })
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@Roles(USER_ROLES.Admin)
 export class StatisticsController {
   constructor(
     @Inject(IStatisticsService)
@@ -33,11 +35,13 @@ export class StatisticsController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
   @Get('/department/:slug')
   @ApiOperation({ operationId: 'getStatisticsForDepartment' })
-  @ApiParam({ name: 'slug', enum: DepartmentSlugEnum, required: true })
+  @ApiParam({
+    name: 'slug',
+    enum: DepartmentSlugEnum,
+    enumName: 'DepartmentSlugEnum',
+  })
   @ApiResponse({ status: 200, type: GetStatisticsDepartmentResponse })
   async department(
     @Param('slug', new EnumValidationPipe(DepartmentSlugEnum))
@@ -48,11 +52,13 @@ export class StatisticsController {
     )
   }
 
-  // @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  // @Roles(USER_ROLES.Admin)
   @Get('/overview/:type')
   @ApiOperation({ operationId: 'getStatisticsOverview' })
-  @ApiParam({ name: 'type', enum: StatisticsOverviewQueryType, required: true })
+  @ApiParam({
+    name: 'type',
+    enum: StatisticsOverviewQueryType,
+    enumName: 'StatisticsOverviewQueryType',
+  })
   @ApiResponse({ status: 200, type: GetStatisticsOverviewResponse })
   async overview(
     @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
