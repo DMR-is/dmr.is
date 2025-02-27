@@ -7,8 +7,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Body, Controller, Inject, Param, Query } from '@nestjs/common'
-import { ApiBody } from '@nestjs/swagger'
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IPdfService } from './pdf.service.interface'
@@ -23,18 +23,9 @@ export class PdfController {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
   ) {}
 
-  @Route({
-    path: '/case/:id',
-    operationId: 'getPdfByCaseId',
-    params: [
-      {
-        name: 'id',
-        type: 'string',
-        required: true,
-      },
-    ],
-    responseType: GetPdfRespone,
-  })
+  @Get('case/:id')
+  @ApiOperation({ operationId: 'getPdfByCaseId' })
+  @ApiResponse({ status: 200, type: GetPdfRespone })
   async getPdfByCaseId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfRespone> {
@@ -46,19 +37,9 @@ export class PdfController {
     }
   }
 
-  @Route({
-    path: 'application/:id',
-    operationId: 'getPdfByApplicationId',
-    params: [
-      {
-        name: 'id',
-        type: 'string',
-        required: true,
-      },
-    ],
-    query: [{ type: GetPdfBody }],
-  })
-  @ApiBody({ type: GetPdfBody, required: false })
+  @Get('application/:id')
+  @ApiOperation({ operationId: 'getPdfByApplicationId' })
+  @ApiResponse({ status: 200, type: GetPdfRespone })
   async getPdfByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Query() params: GetPdfBody,
@@ -73,18 +54,9 @@ export class PdfController {
     }
   }
 
-  @Route({
-    path: 'case/:id/url',
-    operationId: 'getPdfUrlByCaseId',
-    params: [
-      {
-        name: 'id',
-        type: 'string',
-        required: true,
-      },
-    ],
-    responseType: GetPdfUrlResponse,
-  })
+  @Get('case/:id/url')
+  @ApiOperation({ operationId: 'getPdfUrlByCaseId' })
+  @ApiResponse({ status: 200, type: GetPdfUrlResponse })
   async getPdfUrlByCaseId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
@@ -102,18 +74,9 @@ export class PdfController {
     }
   }
 
-  @Route({
-    path: 'application/:id/url',
-    operationId: 'getPdfUrlByApplicationId',
-    params: [
-      {
-        name: 'id',
-        type: 'string',
-        required: true,
-      },
-    ],
-    responseType: GetPdfUrlResponse,
-  })
+  @Get('application/:id/url')
+  @ApiOperation({ operationId: 'getPdfUrlByApplicationId' })
+  @ApiResponse({ status: 200, type: GetPdfUrlResponse })
   async getPdfUrlByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
