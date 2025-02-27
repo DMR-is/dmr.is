@@ -1,4 +1,3 @@
-import { Route } from '@dmr.is/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   GetPdfBody,
@@ -8,7 +7,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IPdfService } from './pdf.service.interface'
