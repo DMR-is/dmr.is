@@ -1,4 +1,3 @@
-import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTypeQuery,
@@ -9,7 +8,7 @@ import {
 } from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
@@ -24,11 +23,9 @@ export class AdvertTypeController {
 
   @Get('/types')
   @ApiOperation({ operationId: 'getTypes' })
-  @ApiQuery({ type: AdvertTypeQuery })
   @ApiResponse({ status: 200, type: GetAdvertTypes })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async getTypes(@Query() query?: AdvertTypeQuery): Promise<GetAdvertTypes> {
     const results = await this.advertTypeService.getTypes(query)
 
@@ -44,11 +41,9 @@ export class AdvertTypeController {
 
   @Get('/main-types')
   @ApiOperation({ operationId: 'getMainTypes' })
-  @ApiQuery({ type: AdvertTypeQuery })
   @ApiResponse({ status: 200, type: GetAdvertMainTypes })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async getMainTypes(
     @Query() query?: AdvertTypeQuery,
   ): Promise<GetAdvertMainTypes> {
@@ -66,12 +61,10 @@ export class AdvertTypeController {
 
   @Get('/types/:id')
   @ApiOperation({ operationId: 'getTypeById' })
-  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, type: GetAdvertType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async getTypeById(@Param('id') id: string): Promise<GetAdvertType> {
     const result = await this.advertTypeService.getTypeById(id)
 
@@ -87,12 +80,10 @@ export class AdvertTypeController {
 
   @Get('/main-types/:id')
   @ApiOperation({ operationId: 'getMainTypeById' })
-  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async getMainTypeById(@Param('id') id: string): Promise<GetAdvertMainType> {
     const result = await this.advertTypeService.getMainTypeById(id)
 
