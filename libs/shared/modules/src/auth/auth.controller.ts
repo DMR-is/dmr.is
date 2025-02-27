@@ -1,6 +1,5 @@
-import { Route } from '@dmr.is/decorators'
-
-import { Controller, Inject } from '@nestjs/common'
+import { Controller, Inject, Post } from '@nestjs/common'
+import { ApiOperation } from '@nestjs/swagger'
 
 import { IAuthService } from './auth.service.interface'
 
@@ -13,11 +12,8 @@ export class AuthController {
     @Inject(IAuthService) private readonly authService: IAuthService,
   ) {}
 
-  @Route({
-    path: 'login',
-    method: 'post',
-    operationId: 'login',
-  })
+  @Post('login')
+  @ApiOperation({ operationId: 'login' })
   async login() {
     return (await this.authService.getCodeVerification()).unwrap()
   }
