@@ -31,10 +31,18 @@ export class RoleGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
 
-    const requiredRoles = this.reflector.get<AdminUserRoleTitle[]>(
+    let requiredRoles = this.reflector.get<AdminUserRoleTitle[] | undefined>(
       ROLES_KEY,
       context.getHandler(),
     )
+
+    if (!requiredRoles) {
+      // check if the controller has role metadata
+      requiredRoles = this.reflector.get<AdminUserRoleTitle[] | undefined>(
+        ROLES_KEY,
+        context.getClass(),
+      )
+    }
 
     try {
       // Check if user has required roles
@@ -54,7 +62,7 @@ export class RoleGuard implements CanActivate {
       const user = userLookup.result.value.user
 
       // if user has any role that is required, return true
-      const hasRole = requiredRoles.some((role) =>
+      const hasRole = requiredRoles?.some((role) =>
         user.roles.some((userRole) => userRole.title === role),
       )
 
