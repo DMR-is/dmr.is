@@ -1,4 +1,4 @@
-import { CurrentUser, Route, WithCase } from '@dmr.is/decorators'
+import { CurrentUser, WithCase } from '@dmr.is/decorators'
 import {
   ApplicationAuthGaurd,
   IApplicationService,
