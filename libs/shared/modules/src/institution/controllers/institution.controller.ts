@@ -1,4 +1,3 @@
-import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetInstitution,
@@ -14,7 +13,7 @@ import {
   Param,
   Query,
 } from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IInstitutionService } from '../institution.service.interface'
 
@@ -30,14 +29,8 @@ export class InstitutionController {
   ) {}
 
   @Get('/:id')
-  @ApiOperation({
-    operationId: 'getInstitution',
-  })
-  @ApiParam({ type: String, name: 'id' })
-  @ApiResponse({
-    status: 200,
-    type: GetInstitution,
-  })
+  @ApiOperation({ operationId: 'getInstitution' })
+  @ApiResponse({ status: 200, type: GetInstitution })
   async getInstitution(@Param('id') id: string) {
     const results = await this.institutionService.getInstitution(id)
 
@@ -52,18 +45,8 @@ export class InstitutionController {
   }
 
   @Get()
-  @ApiOperation({
-    operationId: 'getInstitutions',
-  })
-  @ApiQuery({
-    type: InstitutionQuery,
-    required: false,
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetInstitutions,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'getInstitutions' })
+  @ApiResponse({ status: 200, type: GetInstitutions })
   async getInstitutions(@Query() query: InstitutionQuery) {
     const results = await this.institutionService.getInstitutions(query)
 
