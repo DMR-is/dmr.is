@@ -113,7 +113,7 @@ fastify.register(yearsRoutes, { prefix: '/api/v1' })
 fastify.register(redirectsRoutes, { prefix: '/api/v1' })
 fastify.register(healthCheck)
 
-serveRobotsTxt(fastify, '/static/robots-api.txt')
+serveRobotsTxt(fastify, 'static/robots-api.txt')
 
 const start = async () => {
   try {
