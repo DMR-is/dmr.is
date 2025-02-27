@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript'
-import { LogMethod } from '@dmr.is/decorators'
+import { USER_ROLES } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateAdvertMainTypeBody,
@@ -20,13 +21,23 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common'
-import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger'
 
+import { AdminAuthGuard } from '../guards'
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
+@ApiBearerAuth()
+@UseGuards(AdminAuthGuard)
+@Roles(USER_ROLES.Admin)
 export class AdvertTypeAdminController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -37,11 +48,9 @@ export class AdvertTypeAdminController {
 
   @Post('/types')
   @ApiOperation({ operationId: 'createType' })
-  @ApiBody({ type: CreateAdvertTypeBody })
   @ApiResponse({ status: HttpStatus.CREATED, type: GetAdvertType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async createType(@Body() body: CreateAdvertTypeBody): Promise<GetAdvertType> {
     const result = await this.advertTypeService.createType(body)
 
@@ -57,13 +66,10 @@ export class AdvertTypeAdminController {
 
   @Put('/types/:id')
   @ApiOperation({ operationId: 'updateType' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiBody({ type: UpdateAdvertTypeBody })
   @ApiResponse({ status: 200, type: GetAdvertType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async updateType(
     @Param('id') id: string,
     @Body() body: UpdateAdvertTypeBody,
@@ -82,12 +88,10 @@ export class AdvertTypeAdminController {
 
   @Delete('/types/:id')
   @ApiOperation({ operationId: 'deleteType' })
-  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: HttpStatus.NO_CONTENT })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async deleteType(@Param('id') id: string): Promise<void> {
     const result = await this.advertTypeService.deleteType(id)
 
@@ -101,11 +105,9 @@ export class AdvertTypeAdminController {
 
   @Post('/main-types')
   @ApiOperation({ operationId: 'createMainType' })
-  @ApiBody({ type: CreateAdvertMainTypeBody })
-  @ApiResponse({ status: HttpStatus.CREATED, type: GetAdvertMainType })
+  @ApiResponse({ status: 201, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async createMainType(
     @Body() body: CreateAdvertMainTypeBody,
   ): Promise<GetAdvertMainType> {
@@ -123,11 +125,9 @@ export class AdvertTypeAdminController {
 
   @Post('/main-types/bulk')
   @ApiOperation({ operationId: 'createMainTypesBulk' })
-  @ApiBody({ type: CreateAdvertMainTypeBulk })
-  @ApiResponse({ status: 200 })
+  @ApiCreatedResponse()
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async createMainTypesBulk(
     @Body() body: CreateAdvertMainTypeBulk,
   ): Promise<void> {
@@ -150,13 +150,10 @@ export class AdvertTypeAdminController {
 
   @Put('/main-types/:id')
   @ApiOperation({ operationId: 'updateMainType' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiBody({ type: UpdateAdvertMainType })
   @ApiResponse({ status: 200, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async updateMainType(
     @Param('id') id: string,
     @Body() body: UpdateAdvertMainType,
@@ -175,12 +172,10 @@ export class AdvertTypeAdminController {
 
   @Delete('/main-types/:id')
   @ApiOperation({ operationId: 'deleteMainType' })
-  @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: HttpStatus.NO_CONTENT })
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  @LogMethod()
   async deleteMainType(@Param('id') id: string): Promise<void> {
     const results = await this.advertTypeService.deleteMainType(id)
 
