@@ -4,7 +4,6 @@ import { useDepartments } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { FilterGroup } from '../filter-group/FilterGroup'
-import { Dispatch, SetStateAction } from 'react'
 
 export const DepartmentsFilter = () => {
   const { formatMessage } = useFormatMessage()
