@@ -1,5 +1,6 @@
 import {
   parseAsArrayOf,
+  parseAsInteger,
   parseAsString,
   useQueryState,
 } from 'next-usequerystate'
@@ -42,6 +43,7 @@ export const FilterGroup = ({
   startExpanded = false,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
+  const [_, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const localId = useId()
 
@@ -97,13 +99,14 @@ export const FilterGroup = ({
           return (
             <Checkbox
               checked={isChecked}
-              onChange={(e) =>
+              onChange={(e) => {
                 e.target.checked
                   ? setFilters([...(filters || []), filter.value])
                   : setFilters([
                       ...(filters || []).filter((f) => f !== filter.value),
                     ])
-              }
+                setPage(1)
+              }}
               name={filter.label}
               key={index}
               label={filter.label}

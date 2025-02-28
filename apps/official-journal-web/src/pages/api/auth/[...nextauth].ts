@@ -188,7 +188,7 @@ export const authOptions: AuthOptions = {
       authorization: {
         params: {
           scope: `${identityServerConfig.scope}`,
-          domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}` ?? '',
+          domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           protection: 'pkce',
         },
       },

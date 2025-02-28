@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -7,6 +7,7 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
 import { FilterGroup } from '../filter-group/FilterGroup'
+
 
 export const TypesFilter = () => {
   const { formatMessage } = useFormatMessage()
