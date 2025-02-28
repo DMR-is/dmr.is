@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -8,7 +8,10 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
-export const TypesFilter = () => {
+type Props = {
+  setPage: Dispatch<SetStateAction<number>>
+}
+export const TypesFilter = ({ setPage }: Props) => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
 
@@ -32,6 +35,7 @@ export const TypesFilter = () => {
     <FilterGroup
       search={search}
       setSearch={setSearch}
+      setPage={setPage}
       options={
         types?.map((type) => ({
           label: type.title,

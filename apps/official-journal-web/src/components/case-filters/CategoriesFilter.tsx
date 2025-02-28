@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -8,7 +8,10 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
-export const CategoriesFilter = () => {
+type Props = {
+  setPage: Dispatch<SetStateAction<number>>
+}
+export const CategoriesFilter = ({ setPage }: Props) => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
   const { data, error, isLoading } = useCategories({
@@ -33,6 +36,7 @@ export const CategoriesFilter = () => {
     <FilterGroup
       label="Flokkur"
       queryKey="category"
+      setPage={setPage}
       options={
         data?.categories.map((c) => ({
           label: c.title,

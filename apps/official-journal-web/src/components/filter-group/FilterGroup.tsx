@@ -28,6 +28,7 @@ type Props = {
   search?: string
   searchPlaceholder?: string
   setSearch?: Dispatch<SetStateAction<string>>
+  setPage: Dispatch<SetStateAction<number>>
   startExpanded?: boolean
 }
 
@@ -38,6 +39,7 @@ export const FilterGroup = ({
   search,
   searchPlaceholder,
   setSearch,
+  setPage,
   loading,
   startExpanded = false,
 }: Props) => {
@@ -97,13 +99,14 @@ export const FilterGroup = ({
           return (
             <Checkbox
               checked={isChecked}
-              onChange={(e) =>
+              onChange={(e) => {
                 e.target.checked
                   ? setFilters([...(filters || []), filter.value])
                   : setFilters([
                       ...(filters || []).filter((f) => f !== filter.value),
                     ])
-              }
+                setPage(1)
+              }}
               name={filter.label}
               key={index}
               label={filter.label}

@@ -4,8 +4,13 @@ import { useDepartments } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { FilterGroup } from '../filter-group/FilterGroup'
+import { Dispatch, SetStateAction } from 'react'
 
-export const DepartmentsFilter = () => {
+type Props = {
+  setPage: Dispatch<SetStateAction<number>>
+}
+
+export const DepartmentsFilter = ({ setPage }: Props) => {
   const { formatMessage } = useFormatMessage()
   const { departments, error, isLoading } = useDepartments({
     options: {
@@ -26,6 +31,7 @@ export const DepartmentsFilter = () => {
 
   return (
     <FilterGroup
+      setPage={setPage}
       label="Deild"
       queryKey="department"
       options={
