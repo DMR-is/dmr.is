@@ -569,3 +569,26 @@ export const applicationSignatureTemplate = (
 
   return recordsMarkup
 }
+
+/**
+ *
+ * @param department Ex. "A deild", "B deild", "C deild"
+ * @param publicationDate iso string of the publication date
+ * @returns
+ */
+
+export const getPublicationTemplate = (
+  department: string,
+  publicationDate: string | Date,
+) => {
+  const dateToUse =
+    typeof publicationDate === 'string'
+      ? new Date(publicationDate)
+      : publicationDate
+
+  const formatted = format(dateToUse, 'd. MMMM yyyy', {
+    locale: is,
+  })
+
+  return `<p align="center" style="margin-top: 1.5em;"><strong>${department} - Útgáfud.: ${formatted}</strong></p>`
+}
