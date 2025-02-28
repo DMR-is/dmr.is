@@ -1,6 +1,7 @@
 import debounce from 'lodash/debounce'
 import {
   parseAsArrayOf,
+  parseAsInteger,
   parseAsString,
   useQueryState,
 } from 'next-usequerystate'
@@ -51,6 +52,7 @@ export const CaseFilters = ({
     parseAsArrayOf(parseAsString, ','),
   )
 
+  const [_, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const allFilters = [
     ...((enableDepartments && departments) || []),
     ...((enableTypes && types) || []),
@@ -106,9 +108,10 @@ export const CaseFilters = ({
                   <ActiveFilterTag
                     key={i}
                     label={dep}
-                    onClick={() =>
+                    onClick={() => {
+                      setPage(1)
                       setDepartments(departments.filter((d) => d !== dep))
-                    }
+                    }}
                   />
                 )
               })}
@@ -118,7 +121,10 @@ export const CaseFilters = ({
                   key={i}
                   label={dep}
                   variant="purple"
-                  onClick={() => setTypes(types.filter((d) => d !== dep))}
+                  onClick={() => {
+                    setPage(1)
+                    setTypes(types.filter((d) => d !== dep))
+                  }}
                 />
               ))}
             {enableCategories &&
@@ -127,9 +133,10 @@ export const CaseFilters = ({
                   key={i}
                   label={dep}
                   variant="mint"
-                  onClick={() =>
+                  onClick={() => {
+                    setPage(1)
                     setCategories(categories.filter((d) => d !== dep))
-                  }
+                  }}
                 />
               ))}
           </Inline>
@@ -140,6 +147,7 @@ export const CaseFilters = ({
                 size="small"
                 icon="reload"
                 onClick={() => {
+                  setPage(1)
                   resetFilters()
                 }}
               >
