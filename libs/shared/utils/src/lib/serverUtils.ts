@@ -522,19 +522,37 @@ const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
   const membersMarkup =
     record.members?.map((member) => memberTemplate(member)).join('') ?? ''
 
-  const additionalMarkup = record.additional
-    ? `<p style="margin-top: 1.5em;" align="right" text-a><em>${record.additional}</em></p>`
-    : ''
-
   return `
-      <div class="signature" style="margin-bottom: 1.5em;">
-        <p align="center"><em>${record.institution} <span class="signature__date">${formattedDate}</span></em></p>
+      <div class="signature" style="margin-bottom: 3em;">
+        <p align="center"><em>${
+          record.institution.endsWith(',')
+            ? record.institution
+            : record.institution + ','
+        } <span class="signature__date">${formattedDate}</span></em></p>
         ${chairmanMarkup}
-        <div style="display: ${styleObject.display}; grid-template-columns: ${styleObject.gridTemplateColumns}; row-gap: ${styleObject.rowGap};" class="signature__content">
+        <div style="display: ${styleObject.display}; grid-template-columns: ${
+    styleObject.gridTemplateColumns
+  }; row-gap: ${styleObject.rowGap};" class="signature__content">
         ${membersMarkup}
         </div>
-        ${additionalMarkup}
       </div>`
+}
+
+const filteredRecords = (records: ApplicationSignatureRecord[]) => {
+  if (records.length === 1) {
+    return records
+  }
+
+  // Filter out records that are not the latest
+  const latestDate = records
+    .map((item) => item.signatureDate)
+    .filter(Boolean)
+    .reduce((max, date) => (date > max ? date : max), '')
+
+  return records.map((item) => ({
+    ...item,
+    signatureDate: item.signatureDate === latestDate ? latestDate : '',
+  }))
 }
 
 export const applicationSignatureTemplate = (
@@ -543,9 +561,34 @@ export const applicationSignatureTemplate = (
   if (!records) {
     return ''
   }
+  const sortedRecords = filteredRecords(records)
 
   const recordsMarkup =
-    records?.map((record) => signatureRecordTemplate(record)).join('') ?? ''
+    sortedRecords?.map((record) => signatureRecordTemplate(record)).join('') ??
+    ''
 
   return recordsMarkup
+}
+
+/**
+ *
+ * @param department Ex. "A deild", "B deild", "C deild"
+ * @param publicationDate iso string of the publication date
+ * @returns
+ */
+
+export const getPublicationTemplate = (
+  department: string,
+  publicationDate: string | Date,
+) => {
+  const dateToUse =
+    typeof publicationDate === 'string'
+      ? new Date(publicationDate)
+      : publicationDate
+
+  const formatted = format(dateToUse, 'd. MMMM yyyy', {
+    locale: is,
+  })
+
+  return `<p align="center" style="margin-top: 1.5em;"><strong>${department} - Útgáfud.: ${formatted}</strong></p>`
 }
