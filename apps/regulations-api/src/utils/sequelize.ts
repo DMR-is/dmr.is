@@ -1,3 +1,4 @@
+import pg from 'pg'
 import { Sequelize } from 'sequelize-typescript'
 
 import { DB_LawChapter } from '../models/LawChapter'
@@ -18,6 +19,7 @@ export const connectSequelize = async () => {
     dialect: 'postgres',
     host: process.env.REGULATION_REG_DB_HOST,
     port,
+    dialectModule: pg,
     username: process.env.REGULATION_DB_USER,
     password: process.env.REGULATION_DB_PASSWORD,
     database: process.env.REGULATION_DB_NAME,
