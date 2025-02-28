@@ -1,6 +1,7 @@
 import { isUUID } from 'class-validator'
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -46,31 +47,37 @@ class TypeHandler {
 
   @LogMethod(false)
   private async get(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const type = await this.client.getTypeById({
-      id: id as string,
-    })
+    const type = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getTypeById({
+        id: id as string,
+      })
 
     return res.status(200).json(type)
   }
 
   @LogMethod(false)
   private async update(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const response = await this.client.updateType({
-      id: id,
-      updateAdvertTypeBody: {
-        mainTypeId: req.body.mainTypeId,
-        title: req.body.title,
-      },
-    })
+    const response = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateType({
+        id: id,
+        updateAdvertTypeBody: {
+          mainTypeId: req.body.mainTypeId,
+          title: req.body.title,
+        },
+      })
 
     return res.status(200).json(response)
   }
 
   @LogMethod(false)
   private async delete(id: string, req: NextApiRequest, res: NextApiResponse) {
-    await this.client.deleteType({
-      id: id,
-    })
+    await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .deleteType({
+        id: id,
+      })
 
     return res.status(204).end()
   }

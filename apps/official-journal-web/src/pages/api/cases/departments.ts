@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { SearchParams } from '../../../lib/types'
@@ -12,11 +13,13 @@ class GetDepartmentsHandler {
 
     const { page, pageSize, search } = req.query as SearchParams
 
-    const departments = await dmrClient.getDepartments({
-      page: page,
-      pageSize: pageSize,
-      search: search,
-    })
+    const departments = await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getDepartments({
+        page: page,
+        pageSize: pageSize,
+        search: search,
+      })
 
     return res.status(200).json(departments)
   }

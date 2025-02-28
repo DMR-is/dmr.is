@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../../lib/api/createClient'
 import { OJOIWebException } from '../../../../../lib/constants'
@@ -36,10 +37,12 @@ class MainCategoryCategoryHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.deleteMainCategoryCategory({
-      mainCategoryId: mainCategoryId,
-      categoryId: categoryId,
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .deleteMainCategoryCategory({
+        mainCategoryId: mainCategoryId,
+        categoryId: categoryId,
+      })
     return res.status(204).end()
   }
 }
