@@ -1,7 +1,7 @@
 import { fastify as fast } from 'fastify'
 import fastifyBasicAuth, { FastifyBasicAuthOptions } from 'fastify-basic-auth'
 import fastifyCompress from 'fastify-compress'
-import fastifyElasticsearch from 'fastify-elasticsearch'
+import FastifyOpenSearch from '@fastify/opensearch'
 import fastifyMultipart from 'fastify-multipart'
 import fastifyRateLimiter from 'fastify-rate-limit'
 import fastifyRedis, { FastifyRedisPluginOptions } from 'fastify-redis'
@@ -83,20 +83,12 @@ if (process.env.PROXIED !== 'true') {
   fastify.register(fastifyCompress, { global: true })
 }
 
-const { ELASTIC_CLOUD_ID, ELASTIC_CLOUD_APIKEY_ID, ELASTIC_CLOUD_APIKEY_KEY } =
-  process.env
+const OPENSEARCH_CLUSTER_ENDPOINT = process.env.OPENSEARCH_CLUSTER_ENDPOINT
 
-if (ELASTIC_CLOUD_ID && ELASTIC_CLOUD_APIKEY_ID && ELASTIC_CLOUD_APIKEY_KEY) {
-  fastify.register(fastifyElasticsearch, {
-    cloud: {
-      id: ELASTIC_CLOUD_ID,
-    },
-    auth: {
-      apiKey: {
-        id: ELASTIC_CLOUD_APIKEY_ID,
-        api_key: ELASTIC_CLOUD_APIKEY_KEY,
-      },
-    },
+if (OPENSEARCH_CLUSTER_ENDPOINT) {
+  fastify.register(FastifyOpenSearch, {
+    node: OPENSEARCH_CLUSTER_ENDPOINT,
+    healthcheck: false,
   })
   fastify.register(elasticSearchRoutes, { prefix: '/api/v1' })
   fastify.register(elasticRebuildRoutes, { prefix: '/api/v1' })

@@ -1,12 +1,12 @@
-import { FastifyPluginCallback } from 'fastify';
+import { FastifyPluginCallback } from 'fastify'
 
 import {
   recreateElastic,
   repopulateElastic,
   updateElasticItem,
-} from '../elastic/populate';
-import { searchElastic, SearchQueryParams } from '../elastic/search';
-import { QStr } from '../utils/misc';
+} from '../elastic/populate'
+import { searchElastic, SearchQueryParams } from '../elastic/search'
+import { QStr } from '../utils/misc'
 
 // ---------------------------------------------------------------------------
 
@@ -23,10 +23,13 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
     '/search',
     opts,
     async function (request, reply) {
-      const data = await searchElastic(this.elastic, request.query);
-      reply.send(data);
+      if (this.isOpensearchClient(this.opensearch)) {
+        throw new Error('OpenSearch client not available')
+      }
+      const data = await searchElastic(this.opensearch, request.query)
+      reply.send(data)
     },
-  );
+  )
 
   /**
    * Update single regulation in index by RegName
@@ -36,14 +39,17 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
     '/search/update',
     opts,
     async function (request, reply) {
-      await updateElasticItem(this.elastic, request.query);
+      if (this.isOpensearchClient(this.opensearch)) {
+        throw new Error('OpenSearch client not available')
+      }
+      await updateElasticItem(this.opensearch, request.query)
 
-      reply.send({ success: true });
+      reply.send({ success: true })
     },
-  );
+  )
 
-  done();
-};
+  done()
+}
 
 export const elasticRebuildRoutes: FastifyPluginCallback = (
   fastify,
@@ -61,10 +67,13 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
       onRequest: fastify.basicAuth,
     }),
     async function (request, reply) {
-      const data = await recreateElastic(this.elastic);
-      reply.send(data);
+      if (this.isOpensearchClient(this.opensearch)) {
+        throw new Error('OpenSearch client not available')
+      }
+      const data = await recreateElastic(this.opensearch)
+      reply.send(data)
     },
-  );
+  )
 
   /**
    * Repopulate regulations search index
@@ -77,10 +86,13 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
       onRequest: fastify.basicAuth,
     }),
     async function (request, reply) {
-      const data = await repopulateElastic(this.elastic);
-      reply.send(data);
+      if (this.isOpensearchClient(this.opensearch)) {
+        throw new Error('OpenSearch client not available')
+      }
+      const data = await repopulateElastic(this.opensearch)
+      reply.send(data)
     },
-  );
+  )
 
-  done();
-};
+  done()
+}
