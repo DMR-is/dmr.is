@@ -5950,7 +5950,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nx/next@npm:17.3.2, @nx/next@npm:^17.2.5":
+"@nx/next@npm:17.3.2":
   version: 17.3.2
   resolution: "@nx/next@npm:17.3.2"
   dependencies:
@@ -13269,7 +13269,7 @@ __metadata:
     "@nx/jest": "npm:17.3.2"
     "@nx/js": "npm:17.3.2"
     "@nx/nest": "npm:^17.2.5"
-    "@nx/next": "npm:^17.2.5"
+    "@nx/next": "npm:17.3.2"
     "@nx/node": "npm:17.3.2"
     "@nx/react": "npm:^17.2.5"
     "@nx/webpack": "npm:^17.2.5"
