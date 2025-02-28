@@ -6,6 +6,7 @@ import {
   SharedJournalModule,
   SignatureModule,
 } from '@dmr.is/modules'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import {
   MiddlewareConsumer,
@@ -13,7 +14,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common'
-import { RouterModule } from '@nestjs/core'
+import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CaseModule } from './case/case.module'
@@ -44,6 +45,12 @@ import { StatisticsModule } from './statistics/statistics.module'
         module: SharedJournalModule,
       },
     ]),
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
   ],
 })
 export class AppModule implements NestModule {
