@@ -8,10 +8,8 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
-type Props = {
-  setPage: Dispatch<SetStateAction<number>>
-}
-export const CategoriesFilter = ({ setPage }: Props) => {
+
+export const CategoriesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
   const { data, error, isLoading } = useCategories({
@@ -36,7 +34,6 @@ export const CategoriesFilter = ({ setPage }: Props) => {
     <FilterGroup
       label="Flokkur"
       queryKey="category"
-      setPage={setPage}
       options={
         data?.categories.map((c) => ({
           label: c.title,

@@ -6,11 +6,7 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { FilterGroup } from '../filter-group/FilterGroup'
 import { Dispatch, SetStateAction } from 'react'
 
-type Props = {
-  setPage: Dispatch<SetStateAction<number>>
-}
-
-export const DepartmentsFilter = ({ setPage }: Props) => {
+export const DepartmentsFilter = () => {
   const { formatMessage } = useFormatMessage()
   const { departments, error, isLoading } = useDepartments({
     options: {
@@ -31,7 +27,6 @@ export const DepartmentsFilter = ({ setPage }: Props) => {
 
   return (
     <FilterGroup
-      setPage={setPage}
       label="Deild"
       queryKey="department"
       options={

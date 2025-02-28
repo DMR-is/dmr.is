@@ -91,9 +91,9 @@ export const CaseFilters = ({
             }
           >
             <FilterPopover resetFilters={resetFilters}>
-              {enableTypes && <TypesFilter setPage={setPage} />}
-              {enableDepartments && <DepartmentsFilter setPage={setPage} />}
-              {enableCategories && <CategoriesFilter setPage={setPage} />}
+              {enableTypes && <TypesFilter />}
+              {enableDepartments && <DepartmentsFilter />}
+              {enableCategories && <CategoriesFilter />}
             </FilterPopover>
           </Popover>
         )}
