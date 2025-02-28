@@ -4,7 +4,7 @@ import {
   slugToName,
 } from '@island.is/regulations-tools/utils';
 import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
-import { FastifyRedis } from 'fastify-redis';
+import { FastifyRedis } from '@fastify/redis';
 
 import { getRegulation } from '../db/Regulation';
 import { makeDraftPdf, makePublishedPdf } from '../db/RegulationPdf';
