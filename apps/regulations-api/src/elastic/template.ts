@@ -1,5 +1,5 @@
-import promiseAll from '@hugsmidjan/qj/promiseAllObject';
-import fetch from 'node-fetch';
+import promiseAll from '@hugsmidjan/qj/promiseAllObject'
+import fetch from 'node-fetch'
 
 const getDictionaryFile = async (
   sha: string,
@@ -12,14 +12,14 @@ const getDictionaryFile = async (
     .then((response) => response.text())
     .then((response) => {
       if (response) {
-        return response.split(/\n/).filter(Boolean);
+        return response.split(/\n/).filter(Boolean)
       } else {
-        return [];
+        return []
       }
-    });
-};
+    })
+}
 
-const domainSpecificStopWords = ['reglugerð'];
+const domainSpecificStopWords = ['reglugerð']
 
 export const getSettingsTemplate = async (sha: string, locale: 'is') => {
   const {
@@ -38,7 +38,7 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
     ),
     hyphenwhitelist: getDictionaryFile(sha, locale, 'hyphenwhitelist'),
     // autocompletestop: getDictionaryFile(sha, locale, 'autocompletestop'),
-  });
+  })
 
   return {
     settings: {
@@ -103,8 +103,8 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
         },
       },
     },
-  };
-};
+  }
+}
 
 export const mappingTemplate = {
   properties: {
@@ -164,4 +164,4 @@ export const mappingTemplate = {
       type: 'keyword',
     },
   },
-};
+}

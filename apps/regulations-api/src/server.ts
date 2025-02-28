@@ -1,10 +1,10 @@
 import { fastify as fast } from 'fastify'
 import fastifyBasicAuth, { FastifyBasicAuthOptions } from 'fastify-basic-auth'
 import fastifyCompress from 'fastify-compress'
-import fastifyElasticsearch from 'fastify-elasticsearch'
+import FastifyOpenSearch from '@fastify/opensearch'
 import fastifyMultipart from 'fastify-multipart'
 import fastifyRateLimiter from 'fastify-rate-limit'
-import fastifyRedis, { FastifyRedisPluginOptions } from 'fastify-redis'
+import fastifyRedis from '@fastify/redis'
 
 import { fileUploadRoutes } from './routes/fileUploadRoutes'
 import { lawChapterRoutes } from './routes/lawChapterRoutes'
@@ -36,26 +36,16 @@ fastify.register(fastifyRateLimiter, {
   timeWindow: '1 minute',
 })
 
-const { ROUTES_USERNAME, ROUTES_PASSWORD, PORT, REDIS_URL } = process.env
+const { ROUTES_USERNAME, ROUTES_PASSWORD, PORT, REDIS_URL, REDIS_PASSWORD } = process.env
 
 if (REDIS_URL) {
   console.info('redis active')
-  const url = REDIS_URL
 
-  const tls =
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    (url.indexOf('rediss') ?? -1) >= 0
-      ? {
-          rejectUnauthorized: false,
-        }
-      : undefined
-
-  const redisOptions: FastifyRedisPluginOptions = {
-    url,
-    closeClient: true,
-    tls,
-  }
-  fastify.register(fastifyRedis, redisOptions)
+  fastify.register(fastifyRedis, {
+    host: REDIS_URL ?? '',
+    port: 6379,
+    password: REDIS_PASSWORD ?? '',
+  })
 }
 
 const validate: FastifyBasicAuthOptions['validate'] = (
@@ -83,20 +73,12 @@ if (process.env.PROXIED !== 'true') {
   fastify.register(fastifyCompress, { global: true })
 }
 
-const { ELASTIC_CLOUD_ID, ELASTIC_CLOUD_APIKEY_ID, ELASTIC_CLOUD_APIKEY_KEY } =
-  process.env
+const OPENSEARCH_CLUSTER_ENDPOINT = process.env.OPENSEARCH_CLUSTER_ENDPOINT
 
-if (ELASTIC_CLOUD_ID && ELASTIC_CLOUD_APIKEY_ID && ELASTIC_CLOUD_APIKEY_KEY) {
-  fastify.register(fastifyElasticsearch, {
-    cloud: {
-      id: ELASTIC_CLOUD_ID,
-    },
-    auth: {
-      apiKey: {
-        id: ELASTIC_CLOUD_APIKEY_ID,
-        api_key: ELASTIC_CLOUD_APIKEY_KEY,
-      },
-    },
+if (OPENSEARCH_CLUSTER_ENDPOINT) {
+  fastify.register(FastifyOpenSearch, {
+    node: OPENSEARCH_CLUSTER_ENDPOINT,
+    healthcheck: false,
   })
   fastify.register(elasticSearchRoutes, { prefix: '/api/v1' })
   fastify.register(elasticRebuildRoutes, { prefix: '/api/v1' })
