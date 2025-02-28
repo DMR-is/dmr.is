@@ -71,7 +71,7 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
         },
         analyzer: {
           baseIcelandic: {
-            type: 'custom' as const,
+            type: 'custom',
             tokenizer: 'standard',
             filter: [
               'lowercase',
@@ -83,7 +83,7 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
             // char_filter: ['html_strip'],
           },
           compoundIcelandic: {
-            type: 'custom' as const,
+            type: 'custom',
             tokenizer: 'standard',
             filter: [
               'lowercase',
@@ -96,7 +96,7 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
             // char_filter: ['html_strip'],
           },
           termIcelandic: {
-            type: 'custom' as const,
+            type: 'custom',
             tokenizer: 'standard',
             filter: ['lowercase', 'icelandicSynonym', 'icelandicStop'],
           },
