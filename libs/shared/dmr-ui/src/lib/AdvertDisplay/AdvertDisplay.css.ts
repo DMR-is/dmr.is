@@ -23,8 +23,3 @@ globalStyle(
     display: 'block',
   },
 )
-
-export const wrapper = style({
-  position: 'relative',
-  overflowY: 'auto',
-})

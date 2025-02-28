@@ -2,17 +2,23 @@ import { Box, Text } from '@island.is/island-ui/core'
 
 import * as styles from './AdvertDisplay.css'
 
-type Props = {
+export type AdvertDisplayProps = {
   number?: string
   date?: string
   type?: string
   title?: string
   html?: string
 }
-export const AdvertDisplay = ({ number, date, type, title, html }: Props) => {
+export const AdvertDisplay = ({
+  number,
+  date,
+  type,
+  title,
+  html,
+}: AdvertDisplayProps) => {
   const hasNumberOrDate = number || date
   return (
-    <Box className={styles.wrapper}>
+    <Box position="relative" overflow="auto">
       <Box
         border="standard"
         borderColor="purple200"
