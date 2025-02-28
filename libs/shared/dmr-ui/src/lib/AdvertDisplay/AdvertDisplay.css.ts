@@ -1,6 +1,5 @@
 import { globalStyle, style } from '@vanilla-extract/css'
 
-import { theme } from '@island.is/island-ui/theme'
 import {
   regulationContentStyling,
   regulationTitleStyling,
@@ -9,15 +8,6 @@ import {
 export const bodyText = style({})
 regulationContentStyling(bodyText)
 regulationTitleStyling(bodyText)
-
-export const modalBackground = style({
-  height: '100vh',
-  display: 'grid',
-  gridTemplateRows: 'auto 1fr',
-  rowGap: theme.spacing[2],
-  padding: theme.spacing[2],
-  backgroundColor: `${theme.color.blue100}00`,
-})
 
 globalStyle(
   `
