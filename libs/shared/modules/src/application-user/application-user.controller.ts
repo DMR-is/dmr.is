@@ -1,6 +1,5 @@
-import { Request } from 'express'
 import { USER_ROLES } from '@dmr.is/constants'
-import { LogMethod, Roles } from '@dmr.is/decorators'
+import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationUserQuery,
@@ -21,16 +20,12 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiNoContentResponse,
   ApiOperation,
-  ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -43,10 +38,7 @@ import { IApplicationUserService } from './application-user.service.interface'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Controller({
-  version: '1',
-  path: 'admin-users',
-})
+@Roles(USER_ROLES.Admin, USER_ROLES.Editor)
 export class ApplicationUserController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -54,20 +46,9 @@ export class ApplicationUserController {
     private readonly applicationUserService: IApplicationUserService,
   ) {}
 
-  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Get()
-  @ApiOperation({
-    operationId: 'getApplicationUsers',
-  })
-  @ApiQuery({
-    type: ApplicationUserQuery,
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetApplicationUsers,
-    description: 'Get application users',
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'getApplicationUsers' })
+  @ApiResponse({ status: 200, type: GetApplicationUsers })
   async getApplicationUsers(@Query() query: ApplicationUserQuery) {
     const results = await this.applicationUserService.getUsers(query)
 
@@ -81,17 +62,9 @@ export class ApplicationUserController {
     return results.result.value
   }
 
-  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Get('/:id')
-  @ApiOperation({
-    operationId: 'getApplicationUser',
-  })
-  @ApiParam({ type: 'string', name: 'id' })
-  @ApiResponse({
-    status: 200,
-    type: GetApplicationUser,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'getApplicationUser' })
+  @ApiResponse({ status: 200, type: GetApplicationUser })
   async getApplicationUser(@Param('id') id: string) {
     const results = await this.applicationUserService.getUser(id)
 
@@ -105,19 +78,9 @@ export class ApplicationUserController {
     return results.result.value
   }
 
-  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Post('/')
-  @ApiOperation({
-    operationId: 'createApplicationUser',
-  })
-  @ApiBody({
-    type: CreateApplicationUser,
-  })
-  @ApiResponse({
-    status: 201,
-    type: GetApplicationUser,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'createApplicationUser' })
+  @ApiResponse({ status: 201, type: GetApplicationUser })
   async createApplicationUser(@Body() body: CreateApplicationUser) {
     const results = await this.applicationUserService.createUser(body)
 
@@ -131,14 +94,9 @@ export class ApplicationUserController {
     return results.result.value
   }
 
-  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Delete('/:id')
-  @ApiOperation({
-    operationId: 'deleteApplicationUser',
-  })
-  @ApiParam({ type: 'string', name: 'id' })
+  @ApiOperation({ operationId: 'deleteApplicationUser' })
   @ApiNoContentResponse()
-  @LogMethod()
   async deleteApplicationUser(@Param('id') id: string) {
     const results = await this.applicationUserService.deleteUser(id)
 
@@ -150,19 +108,9 @@ export class ApplicationUserController {
     }
   }
 
-  @Roles(USER_ROLES.Admin, USER_ROLES.Editor)
   @Put('/:id')
-  @ApiOperation({
-    operationId: 'updateApplicationUser',
-  })
-  @ApiBody({
-    type: UpdateApplicationUser,
-  })
-  @ApiParam({ type: 'string', name: 'id' })
-  @ApiResponse({
-    type: GetApplicationUser,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'updateApplicationUser' })
+  @ApiResponse({ type: GetApplicationUser })
   async updateApplicationUser(
     @Param('id') id: string,
     @Body() body: UpdateApplicationUser,

@@ -18,10 +18,7 @@ import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { StatisticsPieCharts } from '../components/statistics/PieCharts'
-import {
-  GetStatisticsForDepartmentSlugEnum,
-  GetStatisticsOverviewTypeEnum,
-} from '../gen/fetch'
+import { DepartmentSlugEnum, StatisticsOverviewQueryType } from '../gen/fetch'
 import { useStatistics } from '../hooks/api'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { LayoutProps } from '../layout/Layout'
@@ -32,12 +29,10 @@ import { deleteUndefined, loginRedirect } from '../lib/utils'
 export default function Dashboard() {
   const { formatMessage } = useFormatMessage()
 
-  const [departmentTab, setDepartmentTab] = useState(
-    GetStatisticsForDepartmentSlugEnum.ADeild,
-  )
+  const [departmentTab, setDepartmentTab] = useState(DepartmentSlugEnum.ADeild)
 
-  const [overviewTab, setOverviewTab] = useState<GetStatisticsOverviewTypeEnum>(
-    GetStatisticsOverviewTypeEnum.General,
+  const [overviewTab, setOverviewTab] = useState<StatisticsOverviewQueryType>(
+    StatisticsOverviewQueryType.General,
   )
 
   const {
@@ -57,13 +52,13 @@ export default function Dashboard() {
 
   const { overviewData: publishingOverviewData } = useStatistics({
     overviewParams: {
-      type: GetStatisticsOverviewTypeEnum.Publishing,
+      type: StatisticsOverviewQueryType.Publishing,
     },
   })
 
   const statisticsTabs: TabType[] = [
     {
-      id: GetStatisticsForDepartmentSlugEnum.ADeild,
+      id: DepartmentSlugEnum.ADeild,
       label: formatMessage(messages.tabs.statistics.a),
       content: (
         <Box background="white" paddingTop={3}>
@@ -75,7 +70,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: GetStatisticsForDepartmentSlugEnum.BDeild,
+      id: DepartmentSlugEnum.BDeild,
       label: formatMessage(messages.tabs.statistics.b),
       content: (
         <Box background="white" paddingTop={3}>
@@ -87,7 +82,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: GetStatisticsForDepartmentSlugEnum.CDeild,
+      id: DepartmentSlugEnum.CDeild,
       label: formatMessage(messages.tabs.statistics.c),
       content: (
         <Box background="white" paddingTop={3}>
@@ -102,7 +97,7 @@ export default function Dashboard() {
 
   const ritstjornTabs = [
     {
-      id: GetStatisticsOverviewTypeEnum.General,
+      id: StatisticsOverviewQueryType.General,
       label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
@@ -111,7 +106,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: GetStatisticsOverviewTypeEnum.Personal,
+      id: StatisticsOverviewQueryType.Personal,
       label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
@@ -120,7 +115,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: GetStatisticsOverviewTypeEnum.Inactive,
+      id: StatisticsOverviewQueryType.Inactive,
       label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
@@ -159,7 +154,7 @@ export default function Dashboard() {
                     label={formatMessage(messages.general.caseStatuses)}
                     selected={overviewTab}
                     onChange={(id) =>
-                      setOverviewTab(id as GetStatisticsOverviewTypeEnum)
+                      setOverviewTab(id as StatisticsOverviewQueryType)
                     }
                     size="sm"
                     tabs={ritstjornTabs}
@@ -185,9 +180,7 @@ export default function Dashboard() {
                 <Tabs
                   label={formatMessage(messages.general.statistics)}
                   selected={departmentTab}
-                  onChange={(id) =>
-                    setDepartmentTab(id as GetStatisticsForDepartmentSlugEnum)
-                  }
+                  onChange={(id) => setDepartmentTab(id as DepartmentSlugEnum)}
                   size="sm"
                   tabs={statisticsTabs}
                 />

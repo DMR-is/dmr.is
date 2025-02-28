@@ -1,5 +1,4 @@
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { Route } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
@@ -19,13 +18,11 @@ import {
   GetInstitutionsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
-  ValidationResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Inject, Param, Query } from '@nestjs/common'
-
-const LOGGING_CATEGORY = 'JournalController'
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 @Controller({
   version: '1',
@@ -37,60 +34,45 @@ export class JournalController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Route({
-    path: '/adverts/:id',
-    operationId: 'getAdvertById',
-    params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetAdvertResponse,
-  })
+  @Get('/adverts/:id')
+  @ApiOperation({ operationId: 'getAdvertById' })
+  @ApiResponse({ status: 200, type: GetAdvertResponse })
   async advert(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetAdvertResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
 
-  @Route({
-    path: '/adverts/similar/:id',
-    operationId: 'getSimilarAdvertsById',
-    params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetSimilarAdvertsResponse,
-  })
+  @Get('/adverts/similar/:id')
+  @ApiOperation({ operationId: 'getSimilarAdvertsById' })
+  @ApiResponse({ status: 200, type: GetSimilarAdvertsResponse })
   async similarAdverts(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetSimilarAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getSimilarAdverts(id))
   }
 
-  @Route({
-    path: '/adverts',
-    operationId: 'getAdverts',
-    query: [{ type: GetAdvertsQueryParams, required: false }],
-    responseType: GetAdvertsResponse,
-  })
+  @Get('/adverts')
+  @ApiOperation({ operationId: 'getAdverts' })
+  @ApiResponse({ status: 200, type: GetAdvertsResponse })
   async adverts(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
   }
 
-  @Route({
-    path: '/departments/:id',
-    operationId: 'getDepartmentById',
-    params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetDepartmentResponse,
-  })
+  @Get('/departments/:id')
+  @ApiOperation({ operationId: 'getDepartmentById' })
+  @ApiResponse({ status: 200, type: GetDepartmentResponse })
   async department(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetDepartmentResponse> {
     return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
   }
 
-  @Route({
-    path: '/departments',
-    operationId: 'getDepartments',
-    query: [{ type: GetDepartmentsQueryParams, required: false }],
-    responseType: GetDepartmentsResponse,
-  })
+  @Get('/departments')
+  @ApiOperation({ operationId: 'getDepartments' })
+  @ApiResponse({ status: 200, type: GetDepartmentsResponse })
   async departments(
     @Query()
     params?: GetDepartmentsQueryParams,
@@ -100,12 +82,9 @@ export class JournalController {
     )
   }
 
-  @Route({
-    path: '/maincategories',
-    operationId: 'getMainCategories',
-    query: [{ type: DefaultSearchParams, required: false }],
-    responseType: GetMainCategoriesResponse,
-  })
+  @Get('/maincategories')
+  @ApiOperation({ operationId: 'getMainCategories' })
+  @ApiResponse({ status: 200, type: GetMainCategoriesResponse })
   async mainCategories(
     @Query()
     params?: DefaultSearchParams,
@@ -115,12 +94,9 @@ export class JournalController {
     )
   }
 
-  @Route({
-    path: '/categories',
-    operationId: 'getCategories',
-    query: [{ type: DefaultSearchParams, required: false }],
-    responseType: GetCategoriesResponse,
-  })
+  @Get('/categories')
+  @ApiOperation({ operationId: 'getCategories' })
+  @ApiResponse({ status: 200, type: GetCategoriesResponse })
   async categories(
     @Query()
     params?: DefaultSearchParams,
@@ -128,12 +104,9 @@ export class JournalController {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
 
-  @Route({
-    path: '/institutions',
-    operationId: 'getInstitutions',
-    query: [{ type: DefaultSearchParams, required: false }],
-    responseType: GetInstitutionsResponse,
-  })
+  @Get('/institutions')
+  @ApiOperation({ operationId: 'getInstitutions' })
+  @ApiResponse({ status: 200, type: GetInstitutionsResponse })
   async institutions(
     @Query()
     params?: DefaultSearchParams,
@@ -143,24 +116,18 @@ export class JournalController {
     )
   }
 
-  @Route({
-    path: '/signatures',
-    operationId: 'getSignatures',
-    query: [{ type: GetAdvertSignatureQuery, required: false }],
-    responseType: GetAdvertSignatureResponse,
-  })
+  @Get('/signatures')
+  @ApiOperation({ operationId: 'getSignatures' })
+  @ApiResponse({ status: 200, type: GetAdvertSignatureResponse })
   async signatures(
     @Query() params?: GetAdvertSignatureQuery,
   ): Promise<GetAdvertSignatureResponse> {
     return ResultWrapper.unwrap(await this.journalService.getSignatures(params))
   }
 
-  @Route({
-    path: '/cases',
-    operationId: 'getCasesInProgress',
-    query: [{ type: DefaultSearchParams, required: false }],
-    responseType: GetCasesInProgressReponse,
-  })
+  @Get('/cases')
+  @ApiOperation({ operationId: 'getCasesInProgress' })
+  @ApiResponse({ status: 200, type: GetCasesInProgressReponse })
   async getCasesInProgress(
     @Query()
     params?: DefaultSearchParams,
@@ -192,37 +159,5 @@ export class JournalController {
       })),
       paging: casesResponse.paging,
     }
-  }
-
-  @Route({
-    path: '/error',
-    operationId: 'error',
-    responseType: ValidationResponse,
-  })
-  error(): void {
-    this.logger.info('Testing to log national id 221101-0101 1212990101')
-
-    this.logger.debug(
-      'about to call the error method (this is a debug message)',
-      { category: LOGGING_CATEGORY },
-    )
-    this.logger.warn(
-      'about to call the error method (this is a warn message)',
-      { category: LOGGING_CATEGORY },
-    )
-
-    try {
-      this.journalService.error()
-    } catch (e) {
-      this.logger.error('caught error from service, spreading error message', {
-        error: { ...(e as Error) },
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    this.logger.warn('calling error method without try/catch', {
-      category: LOGGING_CATEGORY,
-    })
-    this.journalService.error()
   }
 }

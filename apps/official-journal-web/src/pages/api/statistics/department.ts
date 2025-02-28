@@ -3,7 +3,7 @@ import { LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { GetStatisticsForDepartmentSlugEnum } from '../../../gen/fetch'
+import { DepartmentSlugEnum } from '../../../gen/fetch'
 import { createDmrClient } from '../../../lib/api/createClient'
 import { OJOIWebException } from '../../../lib/constants'
 
@@ -31,7 +31,7 @@ class GetStatisticsForDepartmentHandler {
 
   @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const slug = req.query?.slug as GetStatisticsForDepartmentSlugEnum
+    const slug = req.query?.slug as DepartmentSlugEnum
 
     const statistics = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))

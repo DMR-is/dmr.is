@@ -1,5 +1,5 @@
 import { USER_ROLES } from '@dmr.is/constants'
-import { CurrentUser, Roles, Route } from '@dmr.is/decorators'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ICaseService,
@@ -14,7 +14,6 @@ import {
   AdminUser,
   CaseCommunicationStatus,
   CaseStatusEnum,
-  CreateCaseResponse,
   CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
@@ -35,6 +34,7 @@ import {
   GetComments,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
+  GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
@@ -65,26 +65,29 @@ import { ResultWrapper } from '@dmr.is/types'
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   Inject,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
-  ApiBody,
+  ApiNoContentResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger'
 
 const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@Roles(USER_ROLES.Admin)
 @Controller({
   version: '1',
   path: 'cases',
@@ -103,13 +106,9 @@ export class CaseController {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Route({
-    path: 'nextPublicationNumber/:departmentId',
-    operationId: 'getNextPublicationNumber',
-    summary: 'Get next publication number for department',
-    responseType: GetNextPublicationNumberResponse,
-    params: [{ name: 'departmentId', type: 'string', required: true }],
-  })
+  @Get('nextPublicationNumber/:departmentId')
+  @ApiOperation({ operationId: 'getNextPublicationNumber' })
+  @ApiResponse({ status: 200, type: GetNextPublicationNumberResponse })
   async getNextPublicationNumber(
     @Param('departmentId', new UUIDValidationPipe()) departmentId: string,
   ): Promise<GetNextPublicationNumberResponse> {
@@ -118,13 +117,9 @@ export class CaseController {
     )
   }
 
-  @Route({
-    path: 'departments',
-    operationId: 'getDepartments',
-    summary: 'Return all departments',
-    responseType: GetDepartmentsResponse,
-    query: [{ type: DefaultSearchParams }],
-  })
+  @Get('departments')
+  @ApiOperation({ operationId: 'getDepartments' })
+  @ApiResponse({ status: 200, type: GetDepartmentsResponse })
   async departments(
     @Query() params: DefaultSearchParams,
   ): Promise<GetDepartmentsResponse> {
@@ -133,37 +128,25 @@ export class CaseController {
     )
   }
 
-  @Route({
-    path: 'communicationStatuses',
-    operationId: 'getCommunicationStatuses',
-    summary: 'Get communication statuses',
-    responseType: GetCommunicationSatusesResponse,
-  })
+  @Get('communicationStatuses')
+  @ApiOperation({ operationId: 'getCommunicationStatuses' })
+  @ApiResponse({ status: 200, type: GetCommunicationSatusesResponse })
   async communicationStatues(): Promise<GetCommunicationSatusesResponse> {
     return ResultWrapper.unwrap(
       await this.caseService.getCommunicationStatuses(),
     )
   }
 
-  @Route({
-    path: 'tags',
-    operationId: 'getTags',
-    summary: 'Get tags',
-    responseType: GetTagsResponse,
-  })
+  @Get('tags')
+  @ApiOperation({ operationId: 'getTags' })
+  @ApiResponse({ status: 200, type: GetTagsResponse })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    path: 'categories',
-    operationId: 'getCategories',
-    summary: 'Get categories',
-    responseType: GetCategoriesResponse,
-    query: [{ type: DefaultSearchParams }],
-  })
+  @Get('categories')
+  @ApiOperation({ operationId: 'getCategories' })
+  @ApiResponse({ status: 200, type: GetCategoriesResponse })
   async categories(
     @Query()
     params?: DefaultSearchParams,
@@ -171,44 +154,31 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.journalService.getCategories(params))
   }
 
-  @Route({
-    path: 'main-categories',
-    operationId: 'getMainCategories',
-    summary: 'Get main categories',
-    query: [{ type: DefaultSearchParams }],
-    responseType: GetMainCategoriesResponse,
-  })
-  async mainCategories(): Promise<GetMainCategoriesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getMainCategories())
+  @Get('main-categories')
+  @ApiOperation({ operationId: 'getMainCategories' })
+  @ApiResponse({ status: 200, type: GetMainCategoriesResponse })
+  async mainCategories(
+    @Query() query: GetMainCategoriesQueryParams,
+  ): Promise<GetMainCategoriesResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getMainCategories(query),
+    )
   }
 
-  @Route({
-    method: 'delete',
-    path: 'main-categories/:id',
-    params: [{ name: 'id', type: 'string', required: true }],
-    operationId: 'deleteMainCategory',
-    summary: 'Delete main category',
-  })
-  async deleteMainCategory(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<void> {
+  @Delete('main-categories/:id')
+  @ApiOperation({ operationId: 'deleteMainCategory' })
+  @ApiNoContentResponse()
+  async deleteMainCategory(@Param('id', new UUIDValidationPipe()) id: string) {
     ResultWrapper.unwrap(await this.journalService.deleteMainCategory(id))
   }
 
-  @Route({
-    method: 'delete',
-    path: 'main-categories/:mainCategoryId/categories/:categoryId',
-    params: [
-      { name: 'mainCategoryId', type: 'string', required: true },
-      { name: 'categoryId', type: 'string', required: true },
-    ],
-    operationId: 'deleteMainCategoryCategory',
-    summary: 'Delete main category category',
-  })
+  @Delete('main-categories/:mainCategoryId/categories/:categoryId')
+  @ApiOperation({ operationId: 'deleteMainCategoryCategory' })
+  @ApiNoContentResponse()
   async deleteMainCategoryCategory(
     @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
     @Param('categoryId', new UUIDValidationPipe()) categoryId: string,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.journalService.deleteMainCategoryCategory(
         mainCategoryId,
@@ -217,14 +187,10 @@ export class CaseController {
     )
   }
 
-  @Route({
-    method: 'post',
-    path: 'main-categories',
-    operationId: 'createMainCategory',
-    summary: 'Create main category',
-    bodyType: CreateMainCategory,
-  })
-  async createMainCategory(@Body() body: CreateMainCategory): Promise<void> {
+  @Post('main-categories')
+  @ApiOperation({ operationId: 'createMainCategory' })
+  @ApiNoContentResponse()
+  async createMainCategory(@Body() body: CreateMainCategory) {
     ResultWrapper.unwrap(
       await this.journalService.insertMainCategory({
         categories: body.categories,
@@ -235,54 +201,34 @@ export class CaseController {
     )
   }
 
-  @Route({
-    method: 'post',
-    path: 'categories',
-    operationId: 'createCategory',
-    summary: 'Create category',
-    bodyType: CreateCategory,
-  })
+  @Post('categories')
+  @ApiOperation({ operationId: 'createCategory' })
+  @ApiNoContentResponse()
   async createCategory(@Body() body: CreateCategory) {
     ResultWrapper.unwrap(await this.journalService.insertCategory(body.title))
   }
 
-  @Route({
-    method: 'put',
-    path: 'categories/:id',
-    operationId: 'updateCategory',
-    summary: 'Update category',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCategory,
-  })
-  async updateCategory(
-    @Param('id') id: string,
-    @Body() body: UpdateCategory,
-  ): Promise<void> {
+  @Put('categories/:id')
+  @ApiOperation({ operationId: 'updateCategory' })
+  @ApiNoContentResponse()
+  async updateCategory(@Param('id') id: string, @Body() body: UpdateCategory) {
     ResultWrapper.unwrap(await this.journalService.updateCategory(id, body))
   }
 
-  @Route({
-    method: 'delete',
-    path: 'categories/:id',
-    operationId: 'deleteCategory',
-    summary: 'Delete category',
-    params: [{ name: 'id', type: 'string', required: true }],
-  })
-  async deleteCategory(@Param('id') id: string): Promise<void> {
+  @Delete('categories/:id')
+  @ApiOperation({ operationId: 'deleteCategory' })
+  @ApiNoContentResponse()
+  async deleteCategory(@Param('id') id: string) {
     ResultWrapper.unwrap(await this.journalService.deleteCategory(id))
   }
 
-  @Route({
-    method: 'post',
-    path: 'main-categories/:mainCategoryId/categories',
-    operationId: 'createMainCategoryCategories',
-    params: [{ name: 'mainCategoryId', type: 'string', required: true }],
-    bodyType: CreateMainCategoryCategories,
-  })
+  @Post('main-categories/:mainCategoryId/categories')
+  @ApiOperation({ operationId: 'createMainCategoryCategories' })
+  @ApiNoContentResponse()
   async createMainCategoryCategories(
     @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
     @Body() body: CreateMainCategoryCategories,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.journalService.insertMainCategoryCategories(
         mainCategoryId,
@@ -291,18 +237,13 @@ export class CaseController {
     )
   }
 
-  @Route({
-    method: 'put',
-    path: 'main-categories/:id',
-    operationId: 'updateMainCategory',
-    summary: 'Update main category',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateMainCategory,
-  })
+  @Put('main-categories/:id')
+  @ApiOperation({ operationId: 'updateMainCategory' })
+  @ApiNoContentResponse()
   async updateMainCategory(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateMainCategory,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
@@ -312,34 +253,21 @@ export class CaseController {
     name: 'status',
     enum: CaseStatusEnum,
     enumName: 'CaseStatusEnum',
-    description: 'Cases with this status will be returned',
   })
-  @ApiQuery({ type: GetCasesWithStatusCountQuery })
   @ApiResponse({ status: 200, type: GetCasesWithStatusCount })
-  /**
-   * Returns cases with status count, by default count cases for every status.
-   * @param status - Status of the cases to be returned
-   */
   async getCasesWithStatusCount(
     @Param('status', new EnumValidationPipe(CaseStatusEnum))
     status: CaseStatusEnum,
-    @Query() params?: GetCasesQuery,
+    @Query() params?: GetCasesWithStatusCountQuery,
   ): Promise<GetCasesWithStatusCount> {
     return ResultWrapper.unwrap(
       await this.caseService.getCasesWithStatusCount(status, params),
     )
   }
 
-  @Route({
-    path: ':caseId/attachments/:attachmentId',
-    params: [
-      { name: 'caseId', type: 'string', required: true },
-      { name: 'attachmentId', type: 'string', required: true },
-    ],
-    summary: 'Get case attachment',
-    operationId: 'getCaseAttachment',
-    responseType: PresignedUrlResponse,
-  })
+  @Get(':caseId/attachments/:attachmentId')
+  @ApiOperation({ operationId: 'getCaseAttachment' })
+  @ApiResponse({ status: 200, type: PresignedUrlResponse })
   async getCaseAttachment(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
@@ -349,18 +277,9 @@ export class CaseController {
     )
   }
 
-  @Route({
-    method: 'put',
-    path: ':caseId/attachments/:attachmentId',
-    operationId: 'overwriteCaseAttachment',
-    summary: 'Overwrite case attachment',
-    params: [
-      { name: 'caseId', type: 'string', required: true },
-      { name: 'attachmentId', type: 'string', required: true },
-    ],
-    bodyType: PostApplicationAttachmentBody,
-    responseType: PresignedUrlResponse,
-  })
+  @Put(':caseId/attachments/:attachmentId')
+  @ApiOperation({ operationId: 'overwriteCaseAttachment' })
+  @ApiResponse({ status: 200, type: PresignedUrlResponse })
   async overwriteCaseAttachment(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
@@ -371,187 +290,127 @@ export class CaseController {
     ).unwrap()
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/price',
-    operationId: 'updatePrice',
-    summary: 'Update case price',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCasePriceBody,
-  })
+  @Put(':id/price')
+  @ApiOperation({ operationId: 'updatePrice' })
+  @ApiNoContentResponse()
   async updatePrice(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCasePriceBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/paid',
-    operationId: 'updatePaid',
-    summary: 'Update paid status of case',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdatePaidBody,
-  })
+  @Put(':id/paid')
+  @ApiOperation({ operationId: 'updatePaid' })
+  @ApiNoContentResponse()
   async updatePaid(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdatePaidBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/fasttrack',
-    operationId: 'updateFasttrack',
-    summary: 'Update fasttrack status of case',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateFasttrackBody,
-  })
+  @Put(':id/fasttrack')
+  @ApiOperation({ operationId: 'updateFasttrack' })
+  @ApiNoContentResponse()
   async updateFasttrack(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateFasttrackBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseFasttrack(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/tag',
-    operationId: 'updateTag',
-    summary: 'Update tag value of case',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateTagBody,
-  })
+  @Put(':id/tag')
+  @ApiOperation({ operationId: 'updateTag' })
+  @ApiNoContentResponse()
   async updateTag(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateTagBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseTag(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/department',
-    operationId: 'updateDepartment',
-    summary: 'Update department of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCaseDepartmentBody,
-  })
+  @Put(':id/department')
+  @ApiOperation({ operationId: 'updateDepartment' })
+  @ApiNoContentResponse()
   async updateDepartment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseDepartmentBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseDepartment(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/type',
-    operationId: 'updateCaseType',
-    summary: 'Update type of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCaseTypeBody,
-  })
+  @Put(':id/type')
+  @ApiOperation({ operationId: 'updateCaseType' })
+  @ApiNoContentResponse()
   async updateType(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseTypeBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/communicationStatus',
-    operationId: 'updateCommunicationStatus',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCommunicationStatusBody,
-  })
+  @Put(':id/communicationStatus')
+  @ApiOperation({ operationId: 'updateCommunicationStatus' })
+  @ApiNoContentResponse()
   async updateCommunicationStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCommunicationStatusBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseCommunicationStatus(id, body),
     )
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/publishDate',
-    operationId: 'updatePublishDate',
-    summary: 'Update publish date of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdatePublishDateBody,
-  })
+  @Put(':id/publishDate')
+  @ApiOperation({ operationId: 'updatePublishDate' })
+  @ApiNoContentResponse()
   async updatePublishDate(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdatePublishDateBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseRequestedPublishDate(id, body),
     )
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/title',
-    operationId: 'updateTitle',
-    summary: 'Update title of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateTitleBody,
-  })
+  @Put(':id/title')
+  @ApiOperation({ operationId: 'updateTitle' })
+  @ApiNoContentResponse()
   async updateTitle(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateTitleBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseTitle(id, body))
   }
 
-  @Route({
-    method: 'post',
-    path: ':id/correction',
-    operationId: 'Add correction',
-    summary: 'Add correction to case',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: AddCaseAdvertCorrection,
-  })
+  @Post(':id/correction')
+  @ApiOperation({ operationId: 'postCorrection' })
+  @ApiNoContentResponse()
   async postCorrection(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: AddCaseAdvertCorrection,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.postCaseCorrection(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/categories',
-    operationId: 'updateCategories',
-    summary: 'Update categories of case and application',
-    params: [{ name: 'id', type: 'string', required: true }],
-    bodyType: UpdateCategoriesBody,
-  })
+  @Put(':id/categories')
+  @ApiOperation({ operationId: 'updateCategories' })
+  @ApiNoContentResponse()
   async updateCategories(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCategoriesBody,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'put',
-    path: ':id/status/next',
-    operationId: 'updateNextStatus',
-    summary: 'Update case status to next.',
-    params: [{ name: 'id', type: 'string', required: true }],
-  })
+  @Put(':id/status/next')
+  @ApiOperation({ operationId: 'updateNextStatus' })
+  @ApiNoContentResponse()
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @CurrentUser() user: AdminUser,
-  ): Promise<void> {
+  ) {
     const updateResults = await this.caseService.updateCaseNextStatus(id, user)
 
     if (!updateResults.result.ok) {
@@ -573,19 +432,13 @@ export class CaseController {
     }
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'put',
-    path: ':id/status/previous',
-    operationId: 'updatePreviousStatus',
-    summary: 'Update case status to previous.',
-    params: [{ name: 'id', type: 'string', required: true }],
-  })
+  @Put(':id/status/previous')
+  @ApiOperation({ operationId: 'updatePreviousStatus' })
+  @ApiNoContentResponse()
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @CurrentUser() user: AdminUser,
-  ): Promise<void> {
+  ) {
     const updateResults = await this.caseService.updateCasePreviousStatus(
       id,
       user,
@@ -610,43 +463,27 @@ export class CaseController {
     }
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'put',
-    path: ':id/assign/:userId',
-    operationId: 'assignEmployee',
-    summary: 'Updates assigned user on the case.',
-    params: [
-      { name: 'id', type: 'string', required: true },
-      { name: 'userId', type: 'string', required: true },
-    ],
-  })
+  @Put(':id/assign/:userId')
+  @ApiOperation({ operationId: 'assignEmployee' })
+  @ApiNoContentResponse()
   async assign(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
     @CurrentUser() user: AdminUser,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.caseService.updateEmployee(id, userId, user),
     )
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'put',
-    path: ':id/status',
-    operationId: 'updateCaseStatus',
-    params: [{ name: 'id', type: 'string', required: true }],
-    summary: 'Update case status.',
-    bodyType: UpdateCaseStatusBody,
-  })
+  @Put(':id/status')
+  @ApiOperation({ operationId: 'updateCaseStatus' })
+  @ApiNoContentResponse()
   async updateStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseStatusBody,
     @CurrentUser() user: AdminUser,
-  ): Promise<void> {
+  ) {
     const updateResults = await this.caseService.updateCaseStatus(
       id,
       body,
@@ -674,33 +511,23 @@ export class CaseController {
     return
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/update',
-    operationId: 'updateCaseAndAddCorrection',
-    params: [{ name: 'id', type: 'string', required: true }],
-    summary: 'Update advert html + add correction details',
-    bodyType: UpdateAdvertHtmlCorrection,
-  })
+  @Put(':id/update')
+  @ApiOperation({ operationId: 'updateCaseAndAddCorrection' })
+  @ApiNoContentResponse()
   async updateAdvertHtmlCorrection(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlCorrection,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
   }
 
-  @Route({
-    method: 'put',
-    path: ':id/html',
-    operationId: 'updateAdvertHtml',
-    params: [{ name: 'id', type: 'string', required: true }],
-    summary: 'Update advert html',
-    bodyType: UpdateAdvertHtmlBody,
-  })
+  @Put(':id/html')
+  @ApiOperation({ operationId: 'updateAdvertHtml' })
+  @ApiNoContentResponse()
   async updateAdvertHtml(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
-  ): Promise<void> {
+  ) {
     const updatedHtmlResult = await this.caseService.updateAdvertByHtml(
       id,
       body,
@@ -727,41 +554,26 @@ export class CaseController {
     return
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    path: ':id',
-    operationId: 'getCase',
-    summary: 'Get case by ID.',
-    params: [{ name: 'id', type: 'string', required: true }],
-    responseType: GetCaseResponse,
-  })
-  async case(
+  @Get(':id')
+  @ApiOperation({ operationId: 'getCase' })
+  @ApiResponse({ status: 200, type: GetCaseResponse })
+  async getCase(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetCaseResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCase(id))
   }
 
-  @Route({
-    method: 'post',
-    operationId: 'createCase',
-    summary: 'Create case.',
-    bodyType: PostApplicationBody,
-    responseType: CreateCaseResponse,
-  })
-  async createCase(@Body() body: PostApplicationBody): Promise<void> {
+  @Post()
+  @ApiOperation({ operationId: 'createCase' })
+  @ApiNoContentResponse()
+  async createCase(@Body() body: PostApplicationBody) {
     ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
-  // @Roles(USER_ROLES.Admin)
-  @Route({
-    path: '',
-    operationId: 'getCases',
-    summary: 'Get cases',
-    responseType: GetCasesReponse,
-    query: [{ type: GetCasesQuery }],
-  })
-  async cases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
+  @Get()
+  @ApiOperation({ operationId: 'getCases' })
+  @ApiResponse({ status: 200, type: GetCasesReponse })
+  async getCases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
     return ResultWrapper.unwrap(await this.caseService.getCases(params))
   }
 
@@ -772,7 +584,6 @@ export class CaseController {
     enum: DepartmentEnum,
     enumName: 'DepartmentEnum',
   })
-  @ApiQuery({ name: 'query', type: GetCasesWithDepartmentCountQuery })
   @ApiResponse({ status: 200, type: GetCasesWithDepartmentCount })
   async getCasesWithDepartmentCount(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
@@ -784,64 +595,38 @@ export class CaseController {
     )
   }
 
-  @Route({
-    method: 'post',
-    path: 'publish',
-    operationId: 'publish',
-    summary: 'Publish cases',
-    bodyType: PostCasePublishBody,
-  })
-  async publish(@Body() body: PostCasePublishBody): Promise<void> {
+  @Post('publish')
+  @ApiOperation({ operationId: 'publish' })
+  @ApiNoContentResponse()
+  async publish(@Body() body: PostCasePublishBody) {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
   }
 
-  @Route({
-    method: 'post',
-    path: ':id/unpublish',
-    operationId: 'unpublish',
-    params: [{ name: 'id', type: 'string', required: true }],
-    description: 'Unpublish case',
-  })
-  async unpublish(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<void> {
+  @Post(':id/unpublish')
+  @ApiOperation({ operationId: 'unpublish' })
+  @ApiNoContentResponse()
+  async unpublish(@Param('id', new UUIDValidationPipe()) id: string) {
     ResultWrapper.unwrap(await this.caseService.unpublishCase(id))
   }
 
-  @Route({
-    method: 'post',
-    path: ':id/reject',
-    operationId: 'rejectCase',
-    params: [{ name: 'id', type: 'string', required: true }],
-    description: 'Reject case',
-  })
-  async reject(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<void> {
+  @Post(':id/reject')
+  @ApiOperation({ operationId: 'rejectCase' })
+  @ApiNoContentResponse()
+  async reject(@Param('id', new UUIDValidationPipe()) id: string) {
     ResultWrapper.unwrap(await this.caseService.rejectCase(id))
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    path: ':id/comments',
-    operationId: 'getComments',
-    summary: 'Get case comments',
-    responseType: GetComments,
-    params: [{ name: 'id', type: 'string', required: true }],
-  })
+  @Get(':id/comments/v2')
+  @ApiOperation({ operationId: 'getComments' })
+  @ApiResponse({ status: 200, type: GetComments })
   async getComments(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetComments> {
     return ResultWrapper.unwrap(await this.commentServiceV2.getComments(id))
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
   @Post(':id/comments/v2/internal')
   @ApiOperation({ operationId: 'createInternalComment' })
-  @ApiParam({ name: 'id', type: 'string' })
-  @ApiBody({ type: InternalCommentBodyDto })
   @ApiResponse({ status: 200, type: GetComment })
   async createCommentInternal(
     @Param('id', new UUIDValidationPipe()) id: string,
@@ -856,12 +641,8 @@ export class CaseController {
     )
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
   @Post(':id/comments/v2/external')
   @ApiOperation({ operationId: 'createExternalComment' })
-  @ApiParam({ name: 'id', type: 'string' })
-  @ApiBody({ type: ExternalCommentBodyDto })
   @ApiResponse({ status: 200, type: GetComment })
   async createCommentExternal(
     @Param('id', new UUIDValidationPipe()) id: string,
@@ -894,22 +675,13 @@ export class CaseController {
     )
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'delete',
-    path: ':id/comments/:commentId',
-    operationId: 'deleteComment',
-    summary: 'Delete comment from case',
-    params: [
-      { name: 'id', type: 'string', required: true },
-      { name: 'commentId', type: 'string', required: true },
-    ],
-  })
+  @Delete(':id/comments/:commentId')
+  @ApiOperation({ operationId: 'deleteComment' })
+  @ApiNoContentResponse()
   async deleteComment(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
-  ): Promise<void> {
+  ) {
     ResultWrapper.unwrap(
       await this.commentServiceV2.deleteComment(id, commentId),
     )
@@ -922,7 +694,6 @@ export class CaseController {
     enum: DepartmentEnum,
     enumName: 'DepartmentEnum',
   })
-  @ApiQuery({ type: GetCasesWithPublicationNumberQuery })
   @ApiResponse({ status: 200, type: GetCasesWithPublicationNumber })
   async getCasesWithPublicationNumber(
     @Param('department', new EnumValidationPipe(DepartmentEnum))
@@ -935,18 +706,11 @@ export class CaseController {
     )
   }
 
-  @UseGuards(TokenJwtAuthGuard, RoleGuard)
-  @Roles(USER_ROLES.Admin)
-  @Route({
-    method: 'post',
-    path: ':caseId/upload-assets',
-    operationId: 'uploadApplicationAttachment',
-    summary: 'Upload attachment like images',
-    params: [{ name: 'caseId', type: 'string', required: true }],
-    bodyType: PostApplicationAssetBody,
-    responseType: PresignedUrlResponse,
-  })
+  @Post(':caseId/upload-assets')
+  @ApiOperation({ operationId: 'uploadApplicationAttachment' })
+  @ApiResponse({ status: 200, type: PresignedUrlResponse })
   async uploadApplicationAttachment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()

@@ -72,12 +72,4 @@ describe('JournalController', () => {
       expect(results.departments.length).toEqual(0)
     })
   })
-
-  describe('error', () => {
-    it('should throw error', async () => {
-      expect(() => {
-        journalController.error()
-      }).toThrow(/error from service/)
-    })
-  })
 })

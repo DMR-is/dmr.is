@@ -54,10 +54,16 @@ export class ApplicationAuthGaurd implements CanActivate {
       const request = context.switchToHttp().getRequest()
       const auth = request.headers?.authorization
 
-      const withCase = this.reflector.get<boolean>(
+      let withCase = this.reflector.get<boolean>('withCase', context.getClass())
+
+      const handlerCase = this.reflector.get<boolean>(
         'withCase',
         context.getHandler(),
       )
+
+      if (handlerCase !== undefined) {
+        withCase = handlerCase
+      }
 
       let currentUser: ApplicationUser | null = null
       try {

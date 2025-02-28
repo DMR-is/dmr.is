@@ -1,5 +1,5 @@
 import { USER_ROLES } from '@dmr.is/constants'
-import { LogMethod, Roles } from '@dmr.is/decorators'
+import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateInstitution,
@@ -20,10 +20,8 @@ import {
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiNoContentResponse,
   ApiOperation,
-  ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
 
@@ -36,6 +34,7 @@ import { IInstitutionService } from '../institution.service.interface'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
+@Roles(USER_ROLES.Admin)
 export class InstitutionAdminController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -43,19 +42,9 @@ export class InstitutionAdminController {
     private readonly institutionService: IInstitutionService,
   ) {}
 
-  @Roles(USER_ROLES.Admin)
   @Post('/')
-  @ApiOperation({
-    operationId: 'createInstitution',
-  })
-  @ApiBody({
-    type: CreateInstitution,
-  })
-  @ApiResponse({
-    status: 201,
-    type: GetInstitution,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'createInstitution' })
+  @ApiResponse({ status: 201, type: GetInstitution })
   async createInstitution(
     @Body() createInstitution: CreateInstitution,
   ): Promise<GetInstitution> {
@@ -73,20 +62,9 @@ export class InstitutionAdminController {
     return results.result.value
   }
 
-  @Roles(USER_ROLES.Admin)
   @Put('/:id')
-  @ApiOperation({
-    operationId: 'updateInstitution',
-  })
-  @ApiParam({ type: String, name: 'id' })
-  @ApiBody({
-    type: UpdateInstitution,
-  })
-  @ApiResponse({
-    status: 200,
-    type: GetInstitution,
-  })
-  @LogMethod()
+  @ApiOperation({ operationId: 'updateInstitution' })
+  @ApiResponse({ status: 200, type: GetInstitution })
   async updateInstitution(
     @Param('id') id: string,
     @Body() updateInstitution: UpdateInstitution,
@@ -106,14 +84,9 @@ export class InstitutionAdminController {
     return results.result.value
   }
 
-  @Roles(USER_ROLES.Admin)
   @Delete('/:id')
-  @ApiOperation({
-    operationId: 'deleteInstitution',
-  })
-  @ApiParam({ type: String, name: 'id' })
+  @ApiOperation({ operationId: 'deleteInstitution' })
   @ApiNoContentResponse()
-  @LogMethod()
   async deleteInstitution(@Param('id') id: string): Promise<void> {
     const results = await this.institutionService.deleteInstitution(id)
 

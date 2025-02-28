@@ -3,7 +3,7 @@ import { LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { GetStatisticsOverviewTypeEnum } from '../../../gen/fetch'
+import { StatisticsOverviewQueryType } from '../../../gen/fetch'
 import { createDmrClient } from '../../../lib/api/createClient'
 import { OJOIWebException } from '../../../lib/constants'
 
@@ -31,7 +31,7 @@ class GetStatisticsOverviewHandler {
 
   @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const type = req.query?.type as GetStatisticsOverviewTypeEnum
+    const type = req.query?.type as StatisticsOverviewQueryType
 
     const statistics = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
