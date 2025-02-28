@@ -1,4 +1,4 @@
-import { FastifyRedis } from 'fastify-redis';
+import { FastifyRedis } from '@fastify/redis';
 
 export async function get<T = unknown | null>(
   client: FastifyRedis | null,
