@@ -1,1 +1,1 @@
-export * from './lib/shared-dmr-ui'
+export * from './lib/AdvertDisplay/AdvertDisplay'
