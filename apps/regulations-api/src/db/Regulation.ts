@@ -29,6 +29,7 @@ import { db } from '../utils/sequelize'
 
 import { getRegulationLawChapters } from './LawChapter'
 import { getMinistry } from './Ministry'
+import path from 'path'
 
 // ---------------------------------------------------------------------------
 
@@ -448,12 +449,15 @@ export async function getRegulation(
     // -- Már @2021-11-08
     if (/\/original$/.test(routePath)) {
       const jsonFileName =
-        './static-diffs/' + routePath.replace(/\//g, '-') + '.json'
+        'static-diffs/' + routePath.replace(/\//g, '-') + '.json'
       try {
+        const jsonPath = path.join(__dirname, jsonFileName)
+        const matchingRegulation = JSON.parse(
+          readFileSync(jsonPath).toString(),
+        ) as RegulationDiff
+        console.log('✅ Loaded:', jsonPath)
         return {
-          regulation: JSON.parse(
-            readFileSync(jsonFileName).toString(),
-          ) as RegulationDiff,
+          regulation: matchingRegulation,
         }
       } catch (e) {
         /* empty */

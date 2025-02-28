@@ -20,6 +20,16 @@
             "input": "apps/regulations-api/src",
             "glob": "RegulationPdf.css",
             "output": "."
+          },
+          {
+            "input": "apps/regulations-api/static",
+            "glob": "*",
+            "output": "static"
+          },
+          {
+            "input": "apps/regulations-api/static-diffs",
+            "glob": "*",
+            "output": "static-diffs"
           }
         ],
         "external": ["@island.is/regulations-tools"],

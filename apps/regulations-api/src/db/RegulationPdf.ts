@@ -1,4 +1,5 @@
 import arrayToObject from '@hugsmidjan/qj/arrayToObject'
+import path from 'path'
 import { SECOND } from '@hugsmidjan/qj/time'
 import { cleanTitle } from '@island.is/regulations-tools/cleanTitle'
 import { cleanupAllEditorOutputs } from '@island.is/regulations-tools/cleanupEditorOutput'
@@ -167,7 +168,8 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const CSS = fs.readFileSync('./apps/regulations-api/dist/RegulationPdf.css')
+const cssPath = path.join(__dirname, 'RegulationPdf.css')
+const CSS = fs.readFileSync(cssPath, 'utf8')
 
 const pdfTmplate = (
   regulation: RegulationMaybeDiff | InputRegulation,
