@@ -6,17 +6,13 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
-
-type HeroImageProps = {
-  src: string
-  alt: string
-}
+import { ImageProps } from '../Image/Image'
 
 export type HeroProps = {
   title?: string
   description?: string
   breadcrumbs?: React.ReactElement<typeof Breadcrumbs>
-  image?: HeroImageProps
+  image?: ImageProps
   children?: React.ReactNode
 }
 
