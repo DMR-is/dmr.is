@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Delete, HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../../../lib/api/createClient'
 
@@ -16,10 +17,12 @@ class DeleteCommentHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.deleteComment({
-      id: id,
-      commentId: cid,
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .deleteComment({
+        id: id,
+        commentId: cid,
+      })
     return res.status(204).end()
   }
 }

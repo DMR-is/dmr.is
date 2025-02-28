@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../lib/api/createClient'
 import { getStringFromQueryString } from '../../../lib/types'
@@ -16,9 +17,11 @@ class GetNextPublicationNumberHandler {
       return res.status(400).json({ error: 'departmentId is required' })
     }
 
-    const response = await dmrClient.getNextPublicationNumber({
-      departmentId,
-    })
+    const response = await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getNextPublicationNumber({
+        departmentId,
+      })
 
     return res.status(200).json(response)
   }

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
 
@@ -26,12 +27,14 @@ class UpdateFasttrackHandler {
 
     const dmrClient = createDmrClient()
 
-    await dmrClient.updateFasttrack({
-      id: id,
-      updateFasttrackBody: {
-        fasttrack: parsed.data.fastTrack,
-      },
-    })
+    await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateFasttrack({
+        id: id,
+        updateFasttrackBody: {
+          fasttrack: parsed.data.fastTrack,
+        },
+      })
     return res.status(204).end()
   }
 }

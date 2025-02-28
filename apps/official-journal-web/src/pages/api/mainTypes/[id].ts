@@ -1,6 +1,7 @@
 import { isUUID } from 'class-validator'
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -47,30 +48,36 @@ class MainTypeHandler {
 
   @LogMethod(false)
   private async get(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const type = await this.client.getMainTypeById({
-      id: id,
-    })
+    const type = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getMainTypeById({
+        id: id,
+      })
 
     return res.status(200).json(type)
   }
 
   @LogMethod(false)
   private async update(id: string, req: NextApiRequest, res: NextApiResponse) {
-    const response = await this.client.updateMainType({
-      id: id,
-      updateAdvertMainType: {
-        title: req.body.title,
-      },
-    })
+    const response = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .updateMainType({
+        id: id,
+        updateAdvertMainType: {
+          title: req.body.title,
+        },
+      })
 
     return res.status(200).json(response)
   }
 
   @LogMethod(false)
   private async delete(id: string, req: NextApiRequest, res: NextApiResponse) {
-    await this.client.deleteMainType({
-      id: id,
-    })
+    await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .deleteMainType({
+        id: id,
+      })
 
     return res.status(204).end()
   }

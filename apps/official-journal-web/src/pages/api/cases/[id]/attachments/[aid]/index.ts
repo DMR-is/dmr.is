@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../../../../lib/api/createClient'
@@ -83,11 +84,13 @@ class GetCaseAttachmentHandler {
     const dmrClient = createDmrClient()
     const parsed = overrideAttachmentSchema.parse(body)
 
-    const response = await dmrClient.overwriteCaseAttachment({
-      caseId: caseId,
-      attachmentId: attachmentId,
-      postApplicationAttachmentBody: parsed,
-    })
+    const response = await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .overwriteCaseAttachment({
+        caseId: caseId,
+        attachmentId: attachmentId,
+        postApplicationAttachmentBody: parsed,
+      })
 
     return res.status(200).json({
       url: response.url,
@@ -102,10 +105,12 @@ class GetCaseAttachmentHandler {
   ) {
     const dmrClient = createDmrClient()
 
-    const response = await dmrClient.getCaseAttachment({
-      caseId: caseId,
-      attachmentId: attachmentId,
-    })
+    const response = await dmrClient
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getCaseAttachment({
+        caseId: caseId,
+        attachmentId: attachmentId,
+      })
 
     return res.status(200).json({
       url: response.url,

@@ -47,9 +47,11 @@ class CategoriesHandler {
   }
 
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    await this.client.createCategory({
-      createCategory: req.body,
-    })
+    await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .createCategory({
+        createCategory: req.body,
+      })
 
     return void res.status(204).end()
   }

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
+import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { createDmrClient } from '../../../lib/api/createClient'
@@ -45,26 +46,30 @@ class GetMainTypesHandler {
     const offset = tryParseInt(page, DEFAULT_PAGE_NUMBER)
     const limit = tryParseInt(pageSize, DEFAULT_PAGE_SIZE)
 
-    const mainTypes = await this.client.getMainTypes({
-      id: id,
-      slug: slug,
-      department: department,
-      search: search,
-      page: offset,
-      pageSize: limit,
-    })
+    const mainTypes = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .getMainTypes({
+        id: id,
+        slug: slug,
+        department: department,
+        search: search,
+        page: offset,
+        pageSize: limit,
+      })
 
     return res.status(200).json(mainTypes)
   }
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const type = await this.client.createMainType({
-      createAdvertMainTypeBody: {
-        departmentId: req.body.departmentId,
-        title: req.body.title,
-      },
-    })
+    const type = await this.client
+      .withMiddleware(new AuthMiddleware(req.headers.authorization))
+      .createMainType({
+        createAdvertMainTypeBody: {
+          departmentId: req.body.departmentId,
+          title: req.body.title,
+        },
+      })
 
     return res.status(200).json(type)
   }
