@@ -25,9 +25,7 @@ export default function PlayGroundPage() {
           alt: 'Image alt',
         }}
       >
-      >
         <GridRow>
-          <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
               href="#"
@@ -39,7 +37,6 @@ export default function PlayGroundPage() {
             />
           </GridColumn>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
-          <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
               href="#"
               title="Útgáfa"
@@ -49,7 +46,6 @@ export default function PlayGroundPage() {
               }}
             />
           </GridColumn>
-          <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
             <LinkCard
               href="#"
