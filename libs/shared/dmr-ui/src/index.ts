@@ -8,3 +8,6 @@ export * from './lib/Wrapper/Wrapper'
 
 // tables
 export * from './lib/Tables/TrackerTable/TrackerTable'
+
+// charts
+export * from './lib/PieChart/PieChart'

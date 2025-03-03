@@ -1,4 +1,11 @@
-import { Hero, LinkCard, Section, TrackerTable, Wrapper } from '@dmr.is/ui'
+import {
+  Hero,
+  LinkCard,
+  PieChart,
+  Section,
+  TrackerTable,
+  Wrapper,
+} from '@dmr.is/ui'
 
 import {
   GridColumn,
@@ -81,7 +88,37 @@ export default function PlayGroundPage() {
               </Stack>
             </GridColumn>
             <GridColumn span={['12/12', '5/12']}>
-              <Wrapper title="Tölfræði" link="#" linkText="Sjá alla tölfræði" />
+              <Wrapper title="Tölfræði" link="#" linkText="Sjá alla tölfræði">
+                <PieChart
+                  intro="Staða óútgefinna mála."
+                  items={[
+                    {
+                      color: 'dark400',
+                      title: 'Innsent',
+                      count: 1,
+                      percentage: 50,
+                    },
+                    {
+                      color: 'blue400',
+                      title: 'Grunnvinnsla',
+                      count: 2,
+                      percentage: 50,
+                    },
+                    {
+                      color: 'mint400',
+                      title: 'Yfirlestur',
+                      count: 1,
+                      percentage: 50,
+                    },
+                    {
+                      color: 'roseTinted400',
+                      title: 'Tilbúið',
+                      count: 1,
+                      percentage: 50,
+                    },
+                  ]}
+                />
+              </Wrapper>
             </GridColumn>
           </GridRow>
         </GridContainer>
