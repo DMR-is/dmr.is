@@ -17,7 +17,6 @@ import {
   CaseAttachmentsModel,
 } from '../../attachments/models'
 import { CommentModel } from '../../comment/v2/models/comment.model'
-import { CommentsModel } from '../../comment/v2/models/comments.model'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -217,9 +216,7 @@ export class CaseModel extends Model {
   })
   channels?: CaseChannelModel[]
 
-  @BelongsToMany(() => CommentModel, {
-    through: { model: () => CommentsModel },
-  })
+  @HasMany(() => CommentModel)
   comments?: CommentModel[]
 
   @HasOne(() => SignatureModel)

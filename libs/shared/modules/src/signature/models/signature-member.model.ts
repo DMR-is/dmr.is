@@ -2,6 +2,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  DefaultScope,
   ForeignKey,
   Model,
   PrimaryKey,
@@ -9,7 +10,9 @@ import {
 } from 'sequelize-typescript'
 
 import { SignatureRecordModel } from './signature-record.model'
-
+@DefaultScope(() => ({
+  order: [['created', 'ASC']],
+}))
 @Table({ tableName: 'signature_member', timestamps: false })
 export class SignatureMemberModel extends Model {
   @PrimaryKey

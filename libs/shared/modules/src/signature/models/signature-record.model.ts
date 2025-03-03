@@ -2,6 +2,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  DefaultScope,
   ForeignKey,
   HasMany,
   Model,
@@ -11,7 +12,9 @@ import {
 
 import { SignatureModel } from './signature.model'
 import { SignatureMemberModel } from './signature-member.model'
-
+@DefaultScope(() => ({
+  order: [['date', 'ASC']],
+}))
 @Table({ tableName: 'signature_record', timestamps: false })
 export class SignatureRecordModel extends Model {
   @PrimaryKey
