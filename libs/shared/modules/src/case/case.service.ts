@@ -40,7 +40,6 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
@@ -64,7 +63,6 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdminUserModel } from '../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
@@ -1065,6 +1063,7 @@ export class CaseService implements ICaseService {
             {
               model: SignatureRecordModel,
               as: 'records',
+              separate: true,
               include: [
                 {
                   model: SignatureMemberModel,
@@ -1073,18 +1072,25 @@ export class CaseService implements ICaseService {
                 {
                   model: SignatureMemberModel,
                   as: 'members',
+                  separate: true,
                   required: false,
+                  include: [
+                    {
+                      model: SignatureRecordModel,
+                      required: false,
+                    },
+                  ],
                   where: {
                     [Op.or]: [
                       // Exclude chairman using Sequelize.where
                       Sequelize.where(
-                        Sequelize.col('signature.records.members.id'),
+                        Sequelize.col('SignatureMemberModel.id'),
                         Op.ne,
-                        Sequelize.col('signature.records.chairman_id'),
+                        Sequelize.col('record.chairman_id'),
                       ),
                       // Include all members if chairman_id is NULL
                       Sequelize.where(
-                        Sequelize.col('signature.records.chairman_id'),
+                        Sequelize.col('record.chairman_id'),
                         Op.is,
                         null,
                       ),
@@ -1095,11 +1101,6 @@ export class CaseService implements ICaseService {
             },
           ],
         },
-      ],
-      order: [
-        [Sequelize.literal('"comments.created"'), 'ASC'],
-        [Sequelize.literal('"signature.records.signatureDate"'), 'ASC'],
-        [Sequelize.literal('"signature.records.members.created"'), 'ASC'],
       ],
     })
 

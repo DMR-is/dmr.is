@@ -36,6 +36,10 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
+  handleOptimisticUpdate: (
+    newCase: CaseDetailed,
+    cb: () => Promise<Response | void>,
+  ) => void
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -59,6 +63,7 @@ export const CaseContext = createContext<CaseState>({
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
+  handleOptimisticUpdate: () => undefined,
 })
 
 type CaseProviderProps = {
@@ -145,6 +150,14 @@ export const CaseProvider = ({
     })),
   )
 
+  const handleOptimisticUpdate = (
+    newCase: CaseDetailed,
+    cb: () => Promise<Response | void>,
+  ) => {
+    setCurrentCase(newCase)
+    cb()
+  }
+
   const typeOptions = createOptions(fetchedTypes ? fetchedTypes : types)
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
@@ -184,6 +197,7 @@ export const CaseProvider = ({
         canUpdateAdvert,
         refetchSignature,
         isRefetchingSignature,
+        handleOptimisticUpdate,
       }}
     >
       {children}

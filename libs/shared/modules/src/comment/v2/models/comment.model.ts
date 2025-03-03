@@ -2,6 +2,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  DefaultScope,
   ForeignKey,
   Model,
   PrimaryKey,
@@ -14,7 +15,13 @@ import { CaseModel, CaseStatusModel } from '../../../case/models'
 import { AdvertInvolvedPartyModel } from '../../../journal/models'
 import { CaseActionModel } from './case-action.model'
 
-@Table({ tableName: 'comment_v2', timestamps: false })
+@DefaultScope(() => ({
+  order: [['created_at', 'ASC']],
+}))
+@Table({
+  tableName: 'comment_v2',
+  timestamps: false,
+})
 export class CommentModel extends Model {
   @PrimaryKey
   @Column({

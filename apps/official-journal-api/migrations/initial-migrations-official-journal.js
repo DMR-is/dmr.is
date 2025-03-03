@@ -487,6 +487,10 @@ module.exports = {
     ADD CONSTRAINT FK_SIGNATURE_MEMBER_RECORD_ID
     FOREIGN KEY (SIGNATURE_RECORD_ID) REFERENCES SIGNATURE_RECORD (ID);
 
+    CREATE INDEX idx_created_at ON COMMENT_V2 (created_at);
+    CREATE INDEX idx_created on SIGNATURE_MEMBER (created);
+    CREATE INDEX idx_date on SIGNATURE_RECORD (date);
+
     COMMIT;
 
     `)

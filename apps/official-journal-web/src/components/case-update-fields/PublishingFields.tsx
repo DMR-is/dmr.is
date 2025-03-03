@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce'
-import { useEffect, useState } from 'react'
 
 import {
   AccordionItem,
@@ -20,7 +19,6 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
-import { Spinner } from '../spinner/Spinner'
 
 type Props = {
   toggle: boolean
@@ -30,37 +28,10 @@ type Props = {
 export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch, canEdit } = useCaseContext()
+  const { currentCase, refetch, canEdit, handleOptimisticUpdate } =
+    useCaseContext()
 
   const { md } = useBreakpoint()
-
-  const [paid, setPaid] = useState(currentCase.paid)
-  const [paidDelay, setPaidDelay] = useState(false)
-
-  const [fastTrack, setFastTrack] = useState(currentCase.fastTrack)
-  const [fastTrackDelay, setFastTrackDelay] = useState(false)
-
-  useEffect(() => {
-    setPaidDelay(true)
-    const delay = setInterval(() => {
-      setPaidDelay(false)
-    }, 1000)
-
-    return () => {
-      clearInterval(delay)
-    }
-  }, [paid])
-
-  useEffect(() => {
-    setFastTrackDelay(true)
-    const delay = setInterval(() => {
-      setFastTrackDelay(false)
-    }, 1000)
-
-    return () => {
-      clearInterval(delay)
-    }
-  }, [fastTrack])
 
   const { trigger: updatePrice } = useUpdatePrice({
     caseId: currentCase.id,
@@ -79,11 +50,15 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Greiðslustaða auglýsingar hefur verið uppfærð')
+        toast.success('Greiðslustaða auglýsingar hefur verið uppfærð', {
+          toastId: 'paid',
+        })
         refetch()
       },
       onError: () => {
-        toast.error('Ekki tókst að uppfæra greiðslustöðu auglýsingar')
+        toast.error('Ekki tókst að uppfæra greiðslustöðu auglýsingar', {
+          toastId: 'paid',
+        })
       },
     },
   })
@@ -92,11 +67,15 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð')
+        toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð', {
+          toastId: 'fasttrack',
+        })
         refetch()
       },
       onError: () => {
-        toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar')
+        toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar', {
+          toastId: 'fasttrack',
+        })
       },
     },
   })
@@ -158,20 +137,25 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               placeholderText="Dagsetning birtingar"
               selected={new Date(currentCase.requestedPublicationDate)}
               label={formatMessage(messages.grunnvinnsla.publicationDate)}
-              handleChange={(date) =>
-                updatePublishingDate({ date: date.toISOString() })
-              }
+              handleChange={(date) => {
+                const publishingDate = date.toISOString()
+                handleOptimisticUpdate(
+                  { ...currentCase, requestedPublicationDate: publishingDate },
+                  () => updatePublishingDate({ date: publishingDate }),
+                )
+              }}
             />
           )}
           <Inline alignY="center" space={1}>
-            {fastTrackDelay && <Spinner />}
             <Checkbox
-              disabled={fastTrackDelay || !canEdit}
+              disabled={!canEdit}
               checked={currentCase.fastTrack}
               label="Óskað er eftir hraðbirtingu"
               onChange={(e) => {
-                updateFasttrack({ fastTrack: e.target.checked })
-                setFastTrack(e.target.checked)
+                handleOptimisticUpdate(
+                  { ...currentCase, fastTrack: e.target.checked },
+                  () => updateFasttrack({ fastTrack: e.target.checked }),
+                )
               }}
             />
           </Inline>
@@ -189,13 +173,14 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             />
           </Box>
           <Inline alignY="center" space={1}>
-            {paidDelay && <Spinner />}
             <Checkbox
               checked={currentCase.paid}
-              disabled={paidDelay || !canEdit}
+              disabled={!canEdit}
               onChange={(e) => {
-                updatePaid({ paid: e.target.checked })
-                setPaid(e.target.checked)
+                handleOptimisticUpdate(
+                  { ...currentCase, paid: e.target.checked },
+                  () => updatePaid({ paid: e.target.checked }),
+                )
               }}
               label="Búið er að greiða"
             />
