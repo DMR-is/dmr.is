@@ -1,6 +1,6 @@
-import { Hero, LinkCard } from '@dmr.is/ui'
+import { Hero, LinkCard, Section } from '@dmr.is/ui'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import { GridColumn, GridRow } from '@island.is/island-ui/core'
 
 export default function PlayGroundPage() {
   return (
@@ -12,10 +12,9 @@ export default function PlayGroundPage() {
           src: '/assets/banner-image.svg',
           alt: 'Image alt',
         }}
-      />
-      <GridContainer>
+      >
         <GridRow>
-          <GridColumn span="4/12">
+          <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
               href="#"
               title="Ritstjórn"
@@ -25,7 +24,7 @@ export default function PlayGroundPage() {
               }}
             />
           </GridColumn>
-          <GridColumn span="4/12">
+          <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
               href="#"
               title="Útgáfa"
@@ -35,7 +34,7 @@ export default function PlayGroundPage() {
               }}
             />
           </GridColumn>
-          <GridColumn span="4/12">
+          <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
             <LinkCard
               href="#"
               title="Heildarlisti"
@@ -46,7 +45,10 @@ export default function PlayGroundPage() {
             />
           </GridColumn>
         </GridRow>
-      </GridContainer>
+      </Hero>
+      <Section bleed variant="blue">
+        <h2>Hallo</h2>
+      </Section>
     </main>
   )
 }
