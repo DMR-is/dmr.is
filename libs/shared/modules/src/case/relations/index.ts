@@ -37,6 +37,7 @@ export const casesDetailedIncludes = [
   },
   {
     model: CommentModel,
+    separate: true,
     include: [
       {
         model: CaseStatusModel,
