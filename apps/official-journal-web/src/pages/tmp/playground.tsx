@@ -1,4 +1,4 @@
-import { Hero, LinkCard, Section, Wrapper } from '@dmr.is/ui'
+import { Hero, LinkCard, Section, TrackerTable, Wrapper } from '@dmr.is/ui'
 
 import {
   GridColumn,
@@ -56,12 +56,32 @@ export default function PlayGroundPage() {
           <GridRow>
             <GridColumn span={['12/12', '7/12']}>
               <Stack space={3}>
-                <Wrapper title="Ritstjórn" />
-                <Wrapper title="Útgáfa" />
+                <Wrapper title="Ritstjórn" link="#" linkText="Opna ritstjórn">
+                  <TrackerTable
+                    rows={[
+                      { text: '12 innsend mál hafa ekki verið opnuð' },
+                      { text: 'Borist hafa ný svör í 4 málum' },
+                      { text: '4 innsend mál eru með ósk um hraðbirtingu' },
+                      {
+                        text: '0 mál í yfirlestri eru með ósk um hraðbirtingu',
+                      },
+                    ]}
+                  />
+                </Wrapper>
+                <Wrapper title="Útgáfa" link="#" linkText="Opna útgáfuferli">
+                  <TrackerTable
+                    rows={[
+                      { text: '9 tilbúin mál eru áætluð til útgáfu í dag.' },
+                      {
+                        text: '2 mál í yfirlestri eru með liðinn birtingardag.',
+                      },
+                    ]}
+                  />
+                </Wrapper>
               </Stack>
             </GridColumn>
             <GridColumn span={['12/12', '5/12']}>
-              <Wrapper title="Tölfræði" />
+              <Wrapper title="Tölfræði" link="#" linkText="Sjá alla tölfræði" />
             </GridColumn>
           </GridRow>
         </GridContainer>

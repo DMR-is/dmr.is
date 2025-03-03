@@ -18,12 +18,14 @@ export const Wrapper = ({ children, title, link, linkText }: WrapperProps) => {
       padding={4}
     >
       <Stack space={3}>
-        {title && (
-          <Text variant="h3" as="h3">
-            {title}
-          </Text>
-        )}
-        {children}
+        <Stack space={2}>
+          {title && (
+            <Text variant="h3" as="h3">
+              {title}
+            </Text>
+          )}
+          {children}
+        </Stack>
         {link && <ArrowLink href={link}>{linkText}</ArrowLink>}
       </Stack>
     </Box>
