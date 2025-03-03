@@ -3,6 +3,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Hyphen,
   LinkV2,
   Stack,
   Text,
@@ -38,6 +39,7 @@ export const LinkCard = ({
       border="standard"
       borderColor="blueberry200"
       borderRadius="large"
+      background="white"
     >
       <GridContainer>
         <GridRow>
@@ -50,14 +52,14 @@ export const LinkCard = ({
                   color="blue400"
                   fontWeight="semiBold"
                 >
-                  {title}
+                  <Hyphen>{title}</Hyphen>
                 </Text>
               </LinkV2>
               {description && <Text>{description}</Text>}
             </Stack>
           </GridColumn>
           {hasImage && (
-            <GridColumn span={columnSpan.image}>
+            <GridColumn hiddenBelow="lg" span={columnSpan.image}>
               <Box height="full">
                 <Image {...image} />
               </Box>

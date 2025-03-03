@@ -39,30 +39,32 @@ export const Hero = ({
 
   return (
     <GridContainer>
-      <GridRow>
-        {hasTitleOrDescription && (
-          <GridColumn
-            offset={['0', '0', '0', '1/12']}
-            span={columnSpan.content}
-          >
-            <Stack space={2}>
-              {breadcrumbs && breadcrumbs}
-              <Stack space={1}>
-                {title && <Text variant="h1">{title}</Text>}
-                {description && <Text>{description}</Text>}
+      <Stack space={2}>
+        <GridRow>
+          {hasTitleOrDescription && (
+            <GridColumn
+              offset={['0', '0', '0', '1/12']}
+              span={columnSpan.content}
+            >
+              <Stack space={2}>
+                {breadcrumbs && breadcrumbs}
+                <Stack space={1}>
+                  {title && <Text variant="h1">{title}</Text>}
+                  {description && <Text>{description}</Text>}
+                </Stack>
               </Stack>
-            </Stack>
-          </GridColumn>
-        )}
-        {hasImage && (
-          <GridColumn hiddenBelow="lg" span={columnSpan.image}>
-            <img src={image.src} alt={image.alt} />
-          </GridColumn>
-        )}
-      </GridRow>
-      <GridRow>
-        <GridColumn span={['12/12']}>{hasChildren && children}</GridColumn>
-      </GridRow>
+            </GridColumn>
+          )}
+          {hasImage && (
+            <GridColumn hiddenBelow="lg" span={columnSpan.image}>
+              <img src={image.src} alt={image.alt} />
+            </GridColumn>
+          )}
+        </GridRow>
+        <GridRow>
+          <GridColumn span={['12/12']}>{hasChildren && children}</GridColumn>
+        </GridRow>
+      </Stack>
     </GridContainer>
   )
 }
