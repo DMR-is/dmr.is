@@ -2,7 +2,7 @@ import cn from 'classnames'
 
 import * as styles from './Section.css'
 
-type Props = {
+export type SectionProps = {
   children?: React.ReactNode
   className?: string
   variant?: 'default' | 'blue'
@@ -15,7 +15,7 @@ export const Section = ({
   variant = 'default',
   bleed = false,
   paddingTop = 'default',
-}: Props) => {
+}: SectionProps) => {
   return (
     <section
       className={cn(styles.section({ variant, bleed, paddingTop }), className)}

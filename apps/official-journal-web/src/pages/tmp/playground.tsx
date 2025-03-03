@@ -1,6 +1,11 @@
-import { Hero, LinkCard, Section } from '@dmr.is/ui'
+import { Hero, LinkCard, Section, Wrapper } from '@dmr.is/ui'
 
-import { GridColumn, GridRow } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Stack,
+} from '@island.is/island-ui/core'
 
 export default function PlayGroundPage() {
   return (
@@ -47,7 +52,19 @@ export default function PlayGroundPage() {
         </GridRow>
       </Hero>
       <Section bleed variant="blue">
-        <h2>Hallo</h2>
+        <GridContainer>
+          <GridRow>
+            <GridColumn span={['12/12', '7/12']}>
+              <Stack space={3}>
+                <Wrapper title="Ritstjórn" />
+                <Wrapper title="Útgáfa" />
+              </Stack>
+            </GridColumn>
+            <GridColumn span={['12/12', '5/12']}>
+              <Wrapper title="Tölfræði" />
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
       </Section>
     </main>
   )
