@@ -64,10 +64,12 @@ export const CaseTable = ({
   loading = false,
   modalLink,
   columns,
-  rows,
+  rows: maybeRows,
   defaultSort,
   paging,
 }: Props) => {
+  const rows = maybeRows ?? []
+
   const { formatMessage } = useFormatMessage()
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
@@ -92,7 +94,6 @@ export const CaseTable = ({
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     setSortKey(key)
   }
-  const sortedData = rows ?? []
 
   return (
     <>
@@ -126,11 +127,11 @@ export const CaseTable = ({
             )}
           </T.Row>
         </T.Head>
-        {sortedData.length === 0 ? (
+        {rows.length === 0 ? (
           <CaseTableEmpty columns={columns.length} />
         ) : (
           <T.Body>
-            {sortedData.map((row) => (
+            {rows.map((row) => (
               <tr
                 className={styles.tableRow}
                 onMouseOver={() => setHoveredRow(row.case.id)}
