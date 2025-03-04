@@ -121,7 +121,7 @@
     "@fastify/multipart": "8.3.1",
     "@fastify/opensearch": "^1.0.0",
     "@fastify/rate-limit": "9.1.0",
-    "@fastify/redis": "7.0.2",
+    "@fastify/redis": "6.2.0",
     "@fastify/sensible": "~5.2.0",
     "@hugsmidjan/qj": "^4.10.2",
     "@island.is/regulations-tools": "^0.9.2",
