@@ -5,6 +5,8 @@ export * from './lib/Image/Image'
 export * from './lib/LinkCard/LinkCard'
 export * from './lib/Section/Section'
 export * from './lib/Wrapper/Wrapper'
+export * from './lib/ImagePanel/ImagePanel'
+export * from './lib/CallToAction/CallToAction'
 
 // tables
 export * from './lib/Tables/TrackerTable/TrackerTable'

@@ -1,14 +1,11 @@
-import { AppProps } from 'next/app'
-import Head from 'next/head'
+import { AppProps as NextAppProps } from 'next/app'
 
-import './styles.css'
+import { globalStyles } from '@island.is/island-ui/core'
 
-function CustomApp({ Component, pageProps }: AppProps) {
+globalStyles()
+function CustomApp({ Component, pageProps }: NextAppProps) {
   return (
     <>
-      <Head>
-        <title>Welcome to apps/legal-gazette-web!</title>
-      </Head>
       <main className="app">
         <Component {...pageProps} />
       </main>
