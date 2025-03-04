@@ -1,12 +1,11 @@
 import Head from 'next/head'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
+import { Header, PageLoader } from '@dmr.is/ui'
 
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
-import { Header } from '../components/header/Header'
-import { PageLoader } from '../components/page-loader/page-loader'
-import icelandic from '../i18n/strings/is-compiled.json'
+import { PageRoutes } from '../lib/constants'
 
 export type LayoutProps = {
   children?: React.ReactNode
@@ -25,7 +24,7 @@ export const Layout = ({ children }: LayoutProps) => {
     <IntlProvider
       locale="is"
       defaultLocale="is"
-      messages={icelandic}
+      messages={{}}
       onError={(err) => {
         // Chrome only ships with 'en' formatters for NumberFormat and DateTimeFormat.
         // Ignore these errors since we're not using these formatters.
@@ -56,7 +55,12 @@ export const Layout = ({ children }: LayoutProps) => {
               )
             })}
           </Head>
-          <Header />
+          <Header
+            controlPanel={{
+              title: 'Lögbirtingarblaðið',
+              paths: PageRoutes,
+            }}
+          />
           <main>
             {children}
             <ToastContainer />
