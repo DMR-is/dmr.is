@@ -30,6 +30,8 @@ export const useSearchParams = () => {
       published: parseAsBoolean,
       page: parseAsInteger.withDefault(1),
       pageSize: parseAsInteger.withDefault(10),
+      sortBy: parseAsString.withDefault(''),
+      direction: parseAsString.withDefault('asc'),
     },
     {
       history: 'replace',

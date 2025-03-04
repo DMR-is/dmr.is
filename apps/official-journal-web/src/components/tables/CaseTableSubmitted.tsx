@@ -43,7 +43,7 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
     },
     {
       name: 'caseDepartment',
-      sortable: true,
+      sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.submitted.columns.department),
     },

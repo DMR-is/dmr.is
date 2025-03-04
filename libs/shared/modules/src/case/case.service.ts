@@ -212,7 +212,11 @@ export class CaseService implements ICaseService {
 
   async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
-
+    const sortKeys: { [key: string]: string } = {
+      casePublishDate: 'requestedPublicationDate',
+      caseRegistrationDate: 'createdAt',
+    }
+    const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
     const { limit, offset } = getLimitAndOffset(params)
 
     return this.caseModel.findAndCountAll({
@@ -238,7 +242,7 @@ export class CaseService implements ICaseService {
         institution: params?.institution,
         category: params?.category,
       }),
-      order: [['requestedPublicationDate', 'ASC']],
+      order: [[sortBy, params.direction]],
       logging: (_, timing) => {
         this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
           context: LOGGING_QUERY,
