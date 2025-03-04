@@ -1,5 +1,9 @@
 import { Expose, Transform } from 'class-transformer'
 import { IsOptional } from 'class-validator'
+import {
+  DEFAULT_CASE_SORT_BY,
+  DEFAULT_CASE_SORT_DIRECTION,
+} from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -11,6 +15,9 @@ export class SortingQuery {
   })
   @IsOptional()
   @Expose()
+  @Transform(({ value }) => {
+    return value ?? DEFAULT_CASE_SORT_BY
+  })
   sortBy!: string
 
   @ApiProperty({
@@ -21,7 +28,7 @@ export class SortingQuery {
   @IsOptional()
   @Expose()
   @Transform(({ value }) => {
-    return value?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'
+    return value?.toUpperCase() === 'DESC' ? 'DESC' : DEFAULT_CASE_SORT_DIRECTION
   })
   direction!: string
 }

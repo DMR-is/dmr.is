@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { DEFAULT_CASE_SORT_BY, DEFAULT_CASE_SORT_DIRECTION, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
@@ -141,6 +141,8 @@ export class JournalController {
 
     const casesResponse = ResultWrapper.unwrap(
       await this.caseService.getCases({
+        sortBy: DEFAULT_CASE_SORT_BY,
+        direction: DEFAULT_CASE_SORT_DIRECTION,
         page: params?.page ?? DEFAULT_PAGE_NUMBER,
         pageSize: params?.pageSize ?? DEFAULT_PAGE_SIZE,
         status: statuses,
