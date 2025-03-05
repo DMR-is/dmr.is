@@ -9,7 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/legal-gazette-web"
+        "outputPath": "apps/legal-gazette-web/dist"
       },
       "configurations": {
         "development": {
@@ -51,6 +51,16 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
+      }
     }
   },
   "tags": []
