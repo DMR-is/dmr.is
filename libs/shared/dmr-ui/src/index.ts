@@ -13,6 +13,7 @@ export * from './lib/ControlPanel/ControlPanel'
 
 // tables
 export * from './lib/Tables/TrackerTable/TrackerTable'
+export * from './lib/Tables/DataTable/DataTable'
 
 // charts
 export * from './lib/PieChart/PieChart'

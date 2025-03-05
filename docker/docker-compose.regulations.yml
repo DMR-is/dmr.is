@@ -1,0 +1,26 @@
+version: '3'
+
+include:
+  - docker-compose.regulations-db.yml
+
+services:
+  regulations_api:
+    build:
+      context: ../
+      dockerfile: apps/regulations-api/Dockerfile
+    container_name: regulations-api
+    environment:
+      - REGULATION_REG_DB_HOST=${REGULATIONS_DB_HOST}
+      - REGULATION_DB_NAME=${REGULATIONS_DB_NAME}
+      - REGULATION_DB_USER=${REGULATIONS_DB_USER}
+      - REGULATION_DB_PASSWORD=${REGULATIONS_DB_PASSWORD}
+      - REGULATION_DB_PORT=5432
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_URL=${REDIS_URL}
+      - OPENSEARCH_CLUSTER_ENDPOINT=${OPENSEARCH_ENDPOINT}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - regulations_db
+      - redis
+      - opensearch

@@ -1,7 +1,7 @@
 import { DAY, HOUR, SECOND } from '@hugsmidjan/qj/time';
 import { fastify as fast } from 'fastify';
 import proxy, { FastifyHttpProxyOptions } from 'fastify-http-proxy';
-import fastifyRateLimiter from 'fastify-rate-limit';
+import fastifyRateLimiter from '@fastify/rate-limit';
 import { Writable } from 'stream';
 
 import { cacheControl } from './utils/misc';
@@ -106,7 +106,7 @@ const start = async () => {
   try {
     const serverPort = PROXY_PORT || PORT || 3001;
 
-    await fastify.listen(serverPort, '0.0.0.0');
+    fastify.listen({port: Number(serverPort), host: '0.0.0.0', });
 
     console.info('PROXY API up and running on port ' + serverPort);
   } catch (err) {
