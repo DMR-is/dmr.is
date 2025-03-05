@@ -580,6 +580,20 @@
             "schema": { "type": "number" }
           },
           {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "example": "sortBy",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "example": "ASC",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "status",
             "required": true,
             "in": "path",
@@ -1219,6 +1233,20 @@
             "in": "query",
             "example": 10,
             "schema": { "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "example": "sortBy",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "example": "ASC",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1333,6 +1361,20 @@
             "in": "query",
             "example": 10,
             "schema": { "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "example": "sortBy",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "example": "ASC",
+            "schema": { "type": "string" }
           },
           {
             "name": "department",

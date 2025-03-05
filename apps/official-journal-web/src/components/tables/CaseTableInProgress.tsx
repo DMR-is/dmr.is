@@ -37,7 +37,7 @@ export const CaseTableInProgress = ({
     },
     {
       name: 'caseDepartment',
-      sortable: true,
+      sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.department),
     },

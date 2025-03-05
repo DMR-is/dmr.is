@@ -12,6 +12,7 @@ import {
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
 import { PagingQuery } from '../paging'
+import { SortingQuery } from '../sorting'
 
 export class CasesQuery {
   @ApiProperty({
@@ -141,4 +142,8 @@ export class CasesQuery {
   toDate?: string
 }
 
-export class GetCasesQuery extends IntersectionType(CasesQuery, PagingQuery) {}
+export class GetCasesQuery extends IntersectionType(
+  CasesQuery,
+  PagingQuery,
+  SortingQuery,
+) {}

@@ -459,6 +459,8 @@ export const transformQueryToCaseParams = (
     toDate: queryParamToString.parse(query.toDate),
     page: queryParamToNumber.parse(query.page),
     pageSize: queryParamToNumber.parse(query.pageSize),
+    sortBy: queryParamToString.parse(query.sortBy),
+    direction: queryParamToString.parse(query.direction),
   }
 }
 

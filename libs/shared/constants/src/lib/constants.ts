@@ -5,6 +5,9 @@ export const DEFAULT_PAGE_SIZE = 10
 export const DEFAULT_PAGE_NUMBER = 1
 export const PAGING_MAXIMUM_PAGE_SIZE = 100
 
+export const DEFAULT_CASE_SORT_BY = 'requestedPublicationDate'
+export const DEFAULT_CASE_SORT_DIRECTION = 'ASC'
+
 export const ONE_MINUTE = 60
 export const ONE_HOUR = ONE_MINUTE * 60
 
