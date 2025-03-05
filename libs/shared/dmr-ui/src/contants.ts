@@ -1,0 +1,4 @@
+export const DMR_HEADER_HEIGHT = 112
+export const DMR_HEADER_MOBILE_HEIGHT = 80
+export const CONTROL_PANEL_WIDTH = 300
+export const CONTROL_PANEL_MOBILE_WIDTH = 220

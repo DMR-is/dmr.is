@@ -1,4 +1,5 @@
 import {
+  Box,
   Breadcrumbs,
   GridColumn,
   GridContainer,
@@ -46,13 +47,15 @@ export const Hero = ({
               offset={['0', '0', '0', '1/12']}
               span={columnSpan.content}
             >
-              <Stack space={2}>
-                {breadcrumbs && breadcrumbs}
-                <Stack space={1}>
-                  {title && <Text variant="h1">{title}</Text>}
-                  {description && <Text>{description}</Text>}
+              <Box paddingY={[2, 3, 7, 8]}>
+                <Stack space={2}>
+                  {breadcrumbs && breadcrumbs}
+                  <Stack space={1}>
+                    {title && <Text variant="h1">{title}</Text>}
+                    {description && <Text>{description}</Text>}
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Box>
             </GridColumn>
           )}
           {hasImage && (
