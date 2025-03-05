@@ -1,4 +1,4 @@
-name: Deploy APIs to AWS Dev
+name: Deploy Containers to AWS Dev
 
 on:
   workflow_run:
@@ -20,14 +20,15 @@ jobs:
   build-and-push:
     strategy:
       matrix:
-        api:
+        container:
           [
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
             regulations-api,
+            legal-gazette-web,
           ]
-    name: 'Build and push images: ${{ matrix.api }}'
+    name: 'Build and push images: ${{ matrix.container }}'
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +85,7 @@ jobs:
         uses: docker/metadata-action@v4
         id: meta
         with:
-          images: '${{ steps.login-ecr.outputs.registry }}/${{ matrix.api }}'
+          images: '${{ steps.login-ecr.outputs.registry }}/${{ matrix.container }}'
           tags: |
             latest
             type=sha,prefix=sha-
@@ -93,7 +94,7 @@ jobs:
             type=ref,event=tag
 
       - name: Build and push image
-        run: yarn nx run ${{ matrix.api }}:container
+        run: yarn nx run ${{ matrix.container }}:container
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_TAGS: ${{ steps.meta.outputs.tags }}
@@ -104,15 +105,16 @@ jobs:
     needs: build-and-push
     strategy:
       matrix:
-        api:
+        container:
           [
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
             regulations-api,
+            legal-gazette-web,
           ]
       fail-fast: false
-    name: Deploy to ${{ matrix.api }} - dev
+    name: Deploy to ${{ matrix.container }} - dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -128,11 +130,11 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster dev-dmr-utgafa \
-            --service ${{ matrix.api }} \
+            --service ${{ matrix.container }} \
             --force-new-deployment
 
       - name: Wait for service to stabilize
         run: |
           aws ecs wait services-stable \
             --cluster dev-dmr-utgafa \
-            --services ${{ matrix.api }}
+            --services ${{ matrix.container }}
