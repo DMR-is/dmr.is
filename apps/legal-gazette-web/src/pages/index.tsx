@@ -15,9 +15,11 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
+import { Route } from '../lib/constants'
+
 export default function PlayGroundPage() {
   return (
-    <main>
+    <>
       <Hero
         title="Lögbirtingablað"
         description="Umsýslukerfi Lögbirtingablaðs, morem ipsum dolor sit amet, consectetur adipiscing elit."
@@ -29,7 +31,7 @@ export default function PlayGroundPage() {
         <GridRow>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
-              href="#"
+              href={Route.RITSTJORN}
               title="Ritstjórn"
               description="Umsýsla frá innsendingu til útgáfu."
               image={{
@@ -39,7 +41,7 @@ export default function PlayGroundPage() {
           </GridColumn>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
             <LinkCard
-              href="#"
+              href={Route.UTGAFA}
               title="Útgáfa"
               description="Umsýsla frá innsendingu til útgáfu."
               image={{
@@ -49,7 +51,7 @@ export default function PlayGroundPage() {
           </GridColumn>
           <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
             <LinkCard
-              href="#"
+              href={Route.HEILDARYFIRLIT}
               title="Heildarlisti"
               description="Öll mál, bæði í vinnslu og útgefin."
               image={{
@@ -64,7 +66,11 @@ export default function PlayGroundPage() {
           <GridRow>
             <GridColumn span={['12/12', '7/12']}>
               <Stack space={3}>
-                <Wrapper title="Ritstjórn" link="#" linkText="Opna ritstjórn">
+                <Wrapper
+                  title="Ritstjórn"
+                  link={Route.RITSTJORN}
+                  linkText="Opna ritstjórn"
+                >
                   <TrackerTable
                     rows={[
                       { text: '12 innsend mál hafa ekki verið opnuð' },
@@ -76,7 +82,11 @@ export default function PlayGroundPage() {
                     ]}
                   />
                 </Wrapper>
-                <Wrapper title="Útgáfa" link="#" linkText="Opna útgáfuferli">
+                <Wrapper
+                  title="Útgáfa"
+                  link={Route.UTGAFA}
+                  linkText="Opna útgáfuferli"
+                >
                   <TrackerTable
                     rows={[
                       { text: '9 tilbúin mál eru áætluð til útgáfu í dag.' },
@@ -149,6 +159,6 @@ export default function PlayGroundPage() {
           />
         </Stack>
       </Section>
-    </main>
+    </>
   )
 }

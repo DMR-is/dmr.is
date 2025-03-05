@@ -1,29 +1,39 @@
-export const PageRoutes = [
+import { RouteItem } from './types'
+
+export enum Route {
+  STJORNBORD = '/',
+  RITSTJORN = '/ritstjorn',
+  RITSTJORN_ID = '/ritstjorn/[id]',
+  UTGAFA = '/utgafa',
+  HEILDARYFIRLIT = '/heildaryfirlit',
+}
+
+export const Routes: RouteItem[] = [
   {
-    path: '/',
+    path: Route.STJORNBORD,
     pathName: 'Stjórnborð',
     showInNavigation: true,
     children: [
       {
-        path: '/ritstjorn',
+        path: Route.RITSTJORN,
         pathName: 'Ritstjórn',
         showInNavigation: true,
         children: [
           {
-            path: '/ritstjorn/[id]',
+            path: Route.RITSTJORN_ID,
             pathName: 'Ritstjórn',
             showInNavigation: false,
           },
         ],
       },
       {
-        path: '/utgafa',
+        path: Route.UTGAFA,
         pathName: 'Útgáfa',
         showInNavigation: true,
         children: [],
       },
       {
-        path: '/heildaryfirlit',
+        path: Route.HEILDARYFIRLIT,
         pathName: 'Heildaryfirlit',
         showInNavigation: true,
         children: [],

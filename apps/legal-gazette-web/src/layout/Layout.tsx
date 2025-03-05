@@ -5,7 +5,7 @@ import { Header, PageLoader } from '@dmr.is/ui'
 
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
-import { PageRoutes } from '../lib/constants'
+import { Routes } from '../lib/constants'
 
 export type LayoutProps = {
   children?: React.ReactNode
@@ -58,7 +58,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <Header
             controlPanel={{
               title: 'Lögbirtingarblaðið',
-              paths: PageRoutes,
+              paths: Routes,
             }}
           />
           <main>
