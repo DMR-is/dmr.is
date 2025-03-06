@@ -21,7 +21,7 @@ export const useFilters = () => {
     [QueryParams.PAGE]: parseAsInteger.withDefault(DEFAULT_PAGE),
     [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
     [QueryParams.SORT_BY]: parseAsString,
-    [QueryParams.DIRECTION]: parseAsString,
+    [QueryParams.DIRECTION]: parseAsString.withDefault('desc'),
   })
 
   const setParams = (...params: Parameters<typeof setFilters>) => {
@@ -32,6 +32,9 @@ export const useFilters = () => {
     }
 
     Object.entries(incomingParams).forEach(([key, value]) => {
+      if (typeof value === 'string' && !value) {
+        Object.assign(incomingParams, { [key]: null })
+      }
       if (Array.isArray(value) && !value.length) {
         Object.assign(incomingParams, { [key]: null })
       }

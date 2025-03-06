@@ -1,3 +1,6 @@
+import debounce from 'lodash/debounce'
+import { useCallback } from 'react'
+
 import { Inline, Input } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../hooks/useFilters'
@@ -7,7 +10,14 @@ import FilterMenu from '../FilterMenu/FilterMenu'
 
 export const CaseFilters = () => {
   const { params, setParams } = useFilters()
-  const { publication, type } = params
+  const { search, publication, type } = params
+
+  const handleSearch = useCallback(
+    debounce((value: string) => {
+      setParams({ search: value })
+    }, 500),
+    [],
+  )
 
   return (
     <Inline space={2}>
@@ -16,6 +26,8 @@ export const CaseFilters = () => {
         size="sm"
         backgroundColor="blue"
         placeholder="Sláðu inn leitarorð"
+        defaultValue={search}
+        onChange={(e) => handleSearch(e.target.value)}
         icon={{
           name: 'search',
           type: 'outline',
