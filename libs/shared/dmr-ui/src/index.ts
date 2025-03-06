@@ -10,6 +10,7 @@ export * from './lib/CallToAction/CallToAction'
 export * from './lib/Header/Header'
 export * from './lib/PageLoader/PageLoader'
 export * from './lib/ControlPanel/ControlPanel'
+export * from './lib/ImagePanel/ImagePanel'
 
 // tables
 export * from './lib/Tables/TrackerTable/TrackerTable'
