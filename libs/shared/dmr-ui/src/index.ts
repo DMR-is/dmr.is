@@ -11,6 +11,7 @@ export * from './lib/Header/Header'
 export * from './lib/PageLoader/PageLoader'
 export * from './lib/ControlPanel/ControlPanel'
 export * from './lib/ImagePanel/ImagePanel'
+export * from './lib/ActiveFilters/ActiveFilters'
 
 // tables
 export * from './lib/Tables/TrackerTable/TrackerTable'

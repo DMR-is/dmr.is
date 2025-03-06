@@ -6,6 +6,7 @@ export type DataTableColumn = {
   field: string
   fluid?: boolean
   children: React.ReactNode
+  direction?: 'asc' | 'desc'
   onSort?: (field: string) => void
 }
 

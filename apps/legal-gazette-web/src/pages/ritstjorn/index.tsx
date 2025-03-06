@@ -4,6 +4,7 @@ import { Hero } from '@dmr.is/ui'
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { Route, Routes } from '../../lib/constants'
+import { MOCK_FILTERS } from '../../lib/mocks'
 import { routesToBreadcrumbs } from '../../lib/utils'
 
 const CaseFilters = dynamic(() =>
@@ -29,7 +30,7 @@ export default function Ritstjorn() {
           alt: 'Image alt',
         }}
       >
-        <CaseFilters />
+        <CaseFilters filters={MOCK_FILTERS} />
       </Hero>
       <GridContainer>
         <GridRow>

@@ -1,16 +1,21 @@
 import debounce from 'lodash/debounce'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActiveFilters } from '@dmr.is/ui'
 
-import { Inline, Input } from '@island.is/island-ui/core'
+import { Inline, Input, Stack } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../hooks/useFilters'
-import { QueryParams } from '../../lib/constants'
+import { QueryFilterValue } from '../../lib/types'
 import { toggleArrayOption } from '../../lib/utils'
-import FilterMenu from '../FilterMenu/FilterMenu'
+import FilterMenu, { FilterMenuProps } from '../FilterMenu/FilterMenu'
 
-export const CaseFilters = () => {
-  const { params, setParams } = useFilters()
-  const { search, publication, type } = params
+type CaseFiltersProps = {
+  filters: FilterMenuProps<QueryFilterValue>['filters']
+}
+
+export const CaseFilters = ({ filters }: CaseFiltersProps) => {
+  const { params, setParams, activeFilters } = useFilters()
+  const [localSearch, setLocalSearch] = useState(params.search)
 
   const handleSearch = useCallback(
     debounce((value: string) => {
@@ -19,71 +24,87 @@ export const CaseFilters = () => {
     [],
   )
 
+  // when all filters are cleared, clear the search
+  useEffect(() => {
+    if (params.search !== localSearch) {
+      setLocalSearch(params.search)
+    }
+  }, [params.search])
+
+  const activeFilterProps = useMemo(() => {
+    return activeFilters
+      .map((filter) => {
+        const [queryParam, value] = filter
+
+        const currentFilter = filters.find((f) => f.queryParam === queryParam)
+
+        if (!currentFilter) {
+          return null
+        }
+
+        const currentOptions =
+          currentFilter?.options.filter((opt) =>
+            value.includes(opt.value as string),
+          ) || []
+
+        if (currentOptions.length === 0) {
+          return null
+        }
+
+        return {
+          queryParam: queryParam,
+          options: currentOptions.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          })),
+        }
+      })
+      .filter((filter) => filter !== null)
+  }, [activeFilters])
+
   return (
-    <Inline space={2}>
-      <Input
-        name="search"
-        size="sm"
-        backgroundColor="blue"
-        placeholder="Sláðu inn leitarorð"
-        defaultValue={search}
-        onChange={(e) => handleSearch(e.target.value)}
-        icon={{
-          name: 'search',
-          type: 'outline',
-        }}
-      />
-      <FilterMenu
-        onClearAll={() => setParams(null)}
-        filters={[
-          {
-            title: 'Birting',
-            queryParam: QueryParams.PUBLICATION,
-            onToggle: ({ param, option, value }) => {
+    <Stack space={2}>
+      <Inline space={2}>
+        <Input
+          name="search"
+          size="sm"
+          backgroundColor="blue"
+          placeholder="Sláðu inn leitarorð"
+          onChange={(e) => {
+            setLocalSearch(e.target.value)
+            handleSearch(e.target.value)
+          }}
+          value={localSearch}
+          icon={{
+            name: 'search',
+            type: 'outline',
+          }}
+        />
+        <FilterMenu filters={filters} />
+      </Inline>
+      <ActiveFilters
+        onClearLabel="Hreinsa"
+        onClear={() =>
+          setParams(
+            activeFilters.reduce((acc, [key]) => ({ ...acc, [key]: [] }), {}),
+          )
+        }
+        filters={activeFilterProps.flatMap((af) =>
+          af.options.map((opt) => ({
+            label: opt.label,
+            onClick: () => {
               setParams({
-                [param]: toggleArrayOption(publication, option, value),
+                [af.queryParam]: toggleArrayOption(
+                  params[af.queryParam],
+                  opt.value,
+                  false,
+                ),
               })
             },
-            onClear: ({ param }) => setParams({ [param]: null }),
-            options: [
-              {
-                label: 'Mín mál',
-                value: 'min-mal',
-              },
-              {
-                label: 'Mál sem bíða svara',
-                value: 'mal-sem-bida-svara',
-              },
-            ],
-          },
-          {
-            title: 'Tegund',
-            queryParam: QueryParams.TYPE,
-            onToggle: ({ param, option, value }) =>
-              setParams({ [param]: toggleArrayOption(type, option, value) }),
-            onClear: ({ param }) => setParams({ [param]: null }),
-            options: [
-              {
-                label: 'Lög',
-                value: 'log',
-              },
-              {
-                label: 'Reglugerð',
-                value: 'reglugerd',
-              },
-              {
-                label: 'Auglýsing',
-                value: 'auglysing',
-              },
-              {
-                label: 'Reglur',
-                value: 'reglur',
-              },
-            ],
-          },
-        ]}
+          })),
+        )}
       />
-    </Inline>
+    </Stack>
   )
 }
 

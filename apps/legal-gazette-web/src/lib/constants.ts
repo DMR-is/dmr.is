@@ -15,6 +15,19 @@ export enum QueryParams {
   DIRECTION = 'direction',
 }
 
+export enum SortDirection {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
+export const DEFAULT_SORT_DIRECTION = SortDirection.ASC
+
+export const FILTERS_TO_SHOW = [
+  QueryParams.PUBLICATION,
+  QueryParams.TYPE,
+  QueryParams.CATEGORY,
+]
+
 export enum Route {
   STJORNBORD = '/',
   RITSTJORN = '/ritstjorn',
