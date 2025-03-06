@@ -1,57 +1,45 @@
-import { decode } from 'jsonwebtoken'
+import { JWT } from 'next-auth/jwt'
 
 import { identityServerConfig } from '../identityProvider'
 
-const renewalSeconds = 10
-
-export class TokenService {
-  static async refreshAccessToken(refreshToken: string): Promise<any | null> {
-    try {
-      const postRefresh = await fetch(
-        `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/token`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: identityServerConfig.clientId,
-            client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET!,
-            grant_type: 'refresh_token',
-            redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL!,
-            refresh_token: refreshToken,
-          }),
-        },
-      )
-
-      const response = await postRefresh.json()
-
-      return [response.access_token, response.refresh_token]
-    } catch (error) {
-      throw new Error(`Token refresh failed: ${JSON.stringify(error)}`)
-    }
-  }
-}
-
-export const checkTokenExpiry = (
-  accessToken: string,
-  isRefreshTokenExpired: boolean,
-) => {
+export const refreshAccessToken = async (token: JWT) => {
   try {
-    const decoded = decode(accessToken)
-    if (!decoded || typeof decoded === 'string' || !decoded.exp) {
-      return false
+    if (!token.refreshToken) {
+      return { ...token, error: 'RefreshTokenMissing', invalid: true }
     }
+    const response = await fetch(
+      `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/token`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        method: 'POST',
+        body: new URLSearchParams({
+          client_id: identityServerConfig.clientId,
+          client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
+          grant_type: 'refresh_token',
+          redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL ?? '',
+          refresh_token: token.refreshToken,
+        }),
+      },
+    )
+    const refreshedTokens = await response.json()
 
-    if (decoded && !(typeof decoded === 'string') && decoded['exp']) {
-      const expires = new Date(decoded.exp * 1000)
-      // Set renewalTime few seconds before the actual time to make sure we
-      // don't indicate a valid token that could expire before it is used.
-      const renewalTime = new Date(expires.getTime() - renewalSeconds * 1000)
-
-      return new Date() > renewalTime && !isRefreshTokenExpired
+    if (!response.ok) {
+      throw refreshedTokens
     }
-
-    return false
-  } catch {
-    return false
+    const newTokens = refreshedTokens as {
+      access_token: string
+      refresh_token?: string
+      expires_in: number
+    }
+    return {
+      ...token,
+      accessToken: newTokens.access_token,
+      refreshToken: newTokens.refresh_token ?? token.refreshToken,
+      accessTokenExpires: Math.floor(Date.now() / 1000 + newTokens.expires_in),
+    }
+  } catch (error) {
+    return { ...token, error: 'RefreshAccessTokenError', invalid: true }
   }
 }

@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   tagId: z.string(),
 })
 
-class UpdateTagHandler {
+class UpdateTagHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -26,20 +25,15 @@ class UpdateTagHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateTag({
-        id: id,
-        updateTagBody: {
-          tagId: parsed.data.tagId,
-        },
-      })
+    await this.client.updateTag({
+      id: id,
+      updateTagBody: {
+        tagId: parsed.data.tagId,
+      },
+    })
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateTagHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateTagHandler)

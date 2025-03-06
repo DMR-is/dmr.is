@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
+
 const bodySchema = z.object({
   categoryIds: z.array(z.string()),
 })
 
-class UpdateCategoryHandler {
+class UpdateCategoryHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -25,21 +25,16 @@ class UpdateCategoryHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateCategories({
-        id: id,
-        updateCategoriesBody: {
-          categoryIds: parsed.data.categoryIds,
-        },
-      })
+    await this.client.updateCategories({
+      id: id,
+      updateCategoriesBody: {
+        categoryIds: parsed.data.categoryIds,
+      },
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateCategoryHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateCategoryHandler)

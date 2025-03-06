@@ -1,14 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 
-class CategoryHandler {
-  private readonly client = createDmrClient()
-
+class CategoryHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,27 +29,22 @@ class CategoryHandler {
   }
 
   private async update(req: NextApiRequest, res: NextApiResponse) {
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateCategory({
-        id: req.query.id as string,
-        updateCategory: req.body,
-      })
+    await this.client.updateCategory({
+      id: req.query.id as string,
+      updateCategory: req.body,
+    })
 
     return res.status(204).end()
   }
 
   private async delete(req: NextApiRequest, res: NextApiResponse) {
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteCategory({
-        id: req.query.id as string,
-      })
+    await this.client.deleteCategory({
+      id: req.query.id as string,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new CategoryHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, CategoryHandler)

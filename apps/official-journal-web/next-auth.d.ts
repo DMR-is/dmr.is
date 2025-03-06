@@ -9,7 +9,7 @@ declare module 'next-auth' {
   }
 
   interface Session {
-    accessToken?: string
+    accessToken: string
     idToken?: string
     scope?: string | string[]
     expires?: string
@@ -28,5 +28,6 @@ declare module 'next-auth/jwt' {
     name?: string
     email?: string
     invalid?: boolean
+    error?: string
   }
 }

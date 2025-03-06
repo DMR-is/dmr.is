@@ -1,24 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 import { transformQueryToCasesWithStatusCountParams } from '../../../lib/utils'
 
-class GetCasesWithStatusCountHandler {
+class GetCasesWithStatusCountHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-      const dmrClient = createDmrClient()
-
       const params = transformQueryToCasesWithStatusCountParams(req.query)
 
-      const cases = await dmrClient
-        .withMiddleware(new AuthMiddleware(req.headers.authorization))
-        .getCasesWithStatusCount(params)
+      const cases = await this.client.getCasesWithStatusCount(params)
 
       return void res.status(200).json(cases)
     } catch (error) {
@@ -37,6 +32,5 @@ class GetCasesWithStatusCountHandler {
   }
 }
 
-const instance = new GetCasesWithStatusCountHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, GetCasesWithStatusCountHandler)

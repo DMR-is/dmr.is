@@ -1,7 +1,6 @@
 import { GetServerSideProps } from 'next'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth'
 import { useState } from 'react'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
 import {
   GridColumn,
@@ -32,6 +31,7 @@ import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 import { LayoutProps } from '../../layout/Layout'
 import { createDmrClient } from '../../lib/api/createClient'
 import { loginRedirect } from '../../lib/utils'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 type Props = {
   currentUser: AdminUser | null
@@ -290,10 +290,15 @@ export default function UsersPage({ currentUser, roles }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
-  const client = createDmrClient()
+  const session = await getServerSession(req, res, authOptions)
+
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
+  const client = createDmrClient(session.accessToken)
 
   const layout: LayoutProps = {
     showFooter: false,
@@ -303,18 +308,12 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   }
 
-  if (!session) {
-    return loginRedirect(resolvedUrl)
-  }
-
-  const roles = await client
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getRoles()
+  const roles = await client.getRoles()
 
   return {
     props: {
+      session,
       layout,
-      currentUser: session.user,
       roles: roles.roles,
     },
   }

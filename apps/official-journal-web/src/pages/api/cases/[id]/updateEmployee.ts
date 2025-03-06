@@ -1,20 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   userId: z.string(),
 })
 
-class UpdateEmployeeHandler {
+class UpdateEmployeeHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const dmrClient = createDmrClient()
     const { id } = req.query as { id?: string }
 
     if (!id) {
@@ -27,17 +25,14 @@ class UpdateEmployeeHandler {
       return res.status(400).end()
     }
 
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .assignEmployee({
-        id: id,
-        userId: parsed.data.userId,
-      })
+    await this.client.assignEmployee({
+      id: id,
+      userId: parsed.data.userId,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateEmployeeHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateEmployeeHandler)

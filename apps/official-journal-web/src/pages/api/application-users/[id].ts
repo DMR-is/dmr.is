@@ -1,13 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
-class ApplicationUserHandler {
-  private readonly client = createDmrClient()
-
+class ApplicationUserHandler extends RouteHandler {
   @LogMethod(false)
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -33,9 +30,9 @@ class ApplicationUserHandler {
 
   @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const applicationUser = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getApplicationUser({ id: req.query.id as string })
+    const applicationUser = await this.client.getApplicationUser({
+      id: req.query.id as string,
+    })
 
     return res.status(200).json(applicationUser)
   }
@@ -44,12 +41,10 @@ class ApplicationUserHandler {
   private async update(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
 
-    const applicationUser = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateApplicationUser({
-        id: id,
-        updateApplicationUser: req.body,
-      })
+    const applicationUser = await this.client.updateApplicationUser({
+      id: id,
+      updateApplicationUser: req.body,
+    })
 
     return res.status(200).json(applicationUser)
   }
@@ -57,17 +52,13 @@ class ApplicationUserHandler {
   @LogMethod(false)
   private async delete(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteApplicationUser({
-        id: id,
-      })
+    await this.client.deleteApplicationUser({
+      id: id,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new ApplicationUserHandler()
-
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, ApplicationUserHandler)

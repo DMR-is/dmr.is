@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { getToken } from 'next-auth/jwt'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../lib/constants'
 
 const uploadAssetSchema = z.object({
@@ -12,14 +10,13 @@ const uploadAssetSchema = z.object({
   caseId: z.string(),
 })
 
-class UploadAssetHandler {
+class UploadAssetHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const reqbody = JSON.parse(req.body)
     const parsed = uploadAssetSchema.safeParse(reqbody)
-    const auth = await getToken({ req })
 
     if (!parsed.success) {
       return void res
@@ -31,16 +28,12 @@ class UploadAssetHandler {
 
     const { key, caseId } = body
 
-    const dmrClient = createDmrClient()
-
-    const response = await dmrClient
-      .withMiddleware(new AuthMiddleware(auth?.accessToken))
-      .uploadApplicationAttachment({
-        caseId: caseId,
-        postApplicationAssetBody: {
-          key,
-        },
-      })
+    const response = await this.client.uploadApplicationAttachment({
+      caseId: caseId,
+      postApplicationAssetBody: {
+        key,
+      },
+    })
 
     return res.status(200).json({
       url: response.url,
@@ -49,6 +42,5 @@ class UploadAssetHandler {
   }
 }
 
-const instance = new UploadAssetHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UploadAssetHandler)

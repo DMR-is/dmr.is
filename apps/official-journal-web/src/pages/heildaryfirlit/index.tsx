@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth/next'
 
 import {
   GridColumn,
@@ -17,6 +17,7 @@ import { DEPARTMENTS, Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseOverview'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 const CasePublishedTabs = dynamic(
   () => import('../../components/tabs/CasePublishedTabs'),
@@ -62,10 +63,11 @@ export default function PublishedCasesPage() {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   query,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)
