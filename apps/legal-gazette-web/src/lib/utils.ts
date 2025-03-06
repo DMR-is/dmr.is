@@ -1,5 +1,5 @@
 import { Route } from './constants'
-import { RouteItem } from './types'
+import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 
 export const routesToBreadcrumbs = (
   routes: RouteItem[],
@@ -30,31 +30,32 @@ export const routesToBreadcrumbs = (
   }))
 }
 
-export const isOptionSelected = <T>(
-  arr: string[] | string | number | null,
-  opt: T | null,
+export const isArrayOptionSelected = (
+  filter: QueryFilterParam,
+  value: QueryFilterValue,
 ): boolean => {
-  if (arr === null || opt === null) {
-    return false
+  if (filter === null) return false
+  if (value === null) return false
+
+  if (Array.isArray(filter) && typeof value === 'string') {
+    return filter.includes(value)
   }
 
-  return arr.includes(opt)
+  return filter === value
 }
 
-export const toggleArrayOption = <T>(
-  arr: T[] | null,
-  opt: T | null,
+export const toggleArrayOption = (
+  filter: QueryFilterParam,
+  opt: QueryFilterValue,
   checked: boolean,
 ) => {
-  if (arr === null) {
-    return [opt]
+  if (!Array.isArray(filter)) {
+    return checked ? [opt] : []
   }
 
-  if (checked === false) {
-    return arr.filter((o) => o !== opt)
+  if (checked) {
+    return [...filter, opt]
   }
 
-  if (checked === true) {
-    return [...arr, opt]
-  }
+  return filter.filter((f) => f !== opt)
 }

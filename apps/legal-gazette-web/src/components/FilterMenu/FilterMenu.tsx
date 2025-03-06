@@ -12,11 +12,11 @@ import {
 
 import { useFilters } from '../../hooks/useFilters'
 import { QueryParams } from '../../lib/constants'
-import { OptionType } from '../../lib/types'
-import { isOptionSelected } from '../../lib/utils'
+import { OptionType, QueryFilterValue } from '../../lib/types'
+import { isArrayOptionSelected, toggleArrayOption } from '../../lib/utils'
 import * as styles from './FilterMenu.css'
 
-type FilterMenuToggleCallback<T> = ({
+export type FilterMenuToggleCallback<T> = ({
   param,
   option,
   value,
@@ -26,23 +26,26 @@ type FilterMenuToggleCallback<T> = ({
   value: boolean
 }) => void
 
-type FilterMenuClearCallback = ({ param }: { param: QueryParams }) => void
+export type FilterMenuClearCallback = ({
+  param,
+}: {
+  param: QueryParams
+}) => void
 
-type FilterMenuItem<T> = {
+export type FilterMenuItem<T> = {
   title: string
   queryParam: QueryParams
   options: OptionType<T>[]
-  onToggle?: FilterMenuToggleCallback<T>
-  onClear?: FilterMenuClearCallback
 }
 
-type FilterMenuProps<T> = {
+export type FilterMenuProps<T> = {
   filters: FilterMenuItem<T>[]
-  onClearAll?: () => void
 }
 
-export const FilterMenu = <T,>({ filters, onClearAll }: FilterMenuProps<T>) => {
-  const { params } = useFilters()
+export const FilterMenu = <T extends QueryFilterValue>({
+  filters,
+}: FilterMenuProps<T>) => {
+  const { params, setParams } = useFilters()
   const popover = usePopoverState({
     placement: 'bottom-start',
   })
@@ -75,7 +78,7 @@ export const FilterMenu = <T,>({ filters, onClearAll }: FilterMenuProps<T>) => {
                 >
                   <Stack space={2}>
                     {filter.options.map((option, j) => {
-                      const isChecked = isOptionSelected(
+                      const isChecked = isArrayOptionSelected(
                         params[filter.queryParam],
                         option.value,
                       )
@@ -85,30 +88,31 @@ export const FilterMenu = <T,>({ filters, onClearAll }: FilterMenuProps<T>) => {
                           key={j}
                           label={option.label}
                           onChange={(e) => {
-                            if (!filter.onToggle) return
-                            filter.onToggle({
-                              option: option.value,
-                              param: filter.queryParam,
-                              value: e.target.checked,
+                            setParams({
+                              [filter.queryParam]: toggleArrayOption(
+                                params[filter.queryParam],
+                                option.value,
+                                e.target.checked,
+                              ),
                             })
                           }}
                         />
                       )
                     })}
-                    {filter.onClear && (
-                      <Inline justifyContent="flexEnd">
-                        <Button
-                          icon="reload"
-                          variant="text"
-                          size="small"
-                          onClick={() =>
-                            filter.onClear?.({ param: filter.queryParam })
-                          }
-                        >
-                          Hreinsa val
-                        </Button>
-                      </Inline>
-                    )}
+                    <Inline justifyContent="flexEnd">
+                      <Button
+                        icon="reload"
+                        variant="text"
+                        size="small"
+                        onClick={() =>
+                          setParams({
+                            [filter.queryParam]: null,
+                          })
+                        }
+                      >
+                        Hreinsa val
+                      </Button>
+                    </Inline>
                   </Stack>
                 </AccordionItem>
               </Box>
@@ -117,7 +121,7 @@ export const FilterMenu = <T,>({ filters, onClearAll }: FilterMenuProps<T>) => {
         </Box>
         <Box className={styles.filterMenuClearButton}>
           <Button
-            onClick={onClearAll}
+            onClick={() => setParams(null)}
             size="small"
             variant="text"
             icon="reload"

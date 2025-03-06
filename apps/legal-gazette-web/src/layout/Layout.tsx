@@ -8,10 +8,11 @@ import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 import { Routes } from '../lib/constants'
 
 export type LayoutProps = {
+  showFooter?: boolean
   children?: React.ReactNode
 }
 
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = ({ children, showFooter = false }: LayoutProps) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -65,7 +66,7 @@ export const Layout = ({ children }: LayoutProps) => {
             {children}
             <ToastContainer />
           </main>
-          <Footer />
+          {showFooter && <Footer />}
           <style jsx global>{`
             @font-face {
               font-family: 'IBM Plex Sans';
