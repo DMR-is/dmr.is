@@ -1,5 +1,20 @@
 import { RouteItem } from './types'
 
+export const DEFAULT_PAGE = 1
+export const DEFAULT_PAGE_SIZE = 10
+
+export enum QueryParams {
+  SEARCH = 'search',
+  STATUS = 'status',
+  TYPE = 'type',
+  CATEGORY = 'category',
+  PUBLICATION = 'publication',
+  PAGE = 'page',
+  PAGE_SIZE = 'pageSize',
+  SORT_BY = 'sortBy',
+  DIRECTION = 'direction',
+}
+
 export enum Route {
   STJORNBORD = '/',
   RITSTJORN = '/ritstjorn',

@@ -29,3 +29,32 @@ export const routesToBreadcrumbs = (
     title: r.pathName,
   }))
 }
+
+export const isOptionSelected = <T>(
+  arr: string[] | string | number | null,
+  opt: T | null,
+): boolean => {
+  if (arr === null || opt === null) {
+    return false
+  }
+
+  return arr.includes(opt)
+}
+
+export const toggleArrayOption = <T>(
+  arr: T[] | null,
+  opt: T | null,
+  checked: boolean,
+) => {
+  if (arr === null) {
+    return [opt]
+  }
+
+  if (checked === false) {
+    return arr.filter((o) => o !== opt)
+  }
+
+  if (checked === true) {
+    return [...arr, opt]
+  }
+}

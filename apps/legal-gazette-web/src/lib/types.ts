@@ -6,3 +6,8 @@ export type RouteItem = {
   showInNavigation?: boolean
   children?: RouteItem[]
 }
+
+export type OptionType<T> = {
+  label: string
+  value: T
+}
