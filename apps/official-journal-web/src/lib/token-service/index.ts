@@ -1,10 +1,17 @@
 import { JWT } from 'next-auth/jwt'
+import { logger } from '@dmr.is/logging'
 
 import { identityServerConfig } from '../identityProvider'
+
+const LOGGING_CATEGORY = 'refreshAccessToken'
 
 export const refreshAccessToken = async (token: JWT) => {
   try {
     if (!token.refreshToken) {
+      logger.error('Refresh token missing', {
+        error: 'RefreshTokenMissing',
+        category: LOGGING_CATEGORY,
+      })
       return { ...token, error: 'RefreshTokenMissing', invalid: true }
     }
     const response = await fetch(
@@ -33,13 +40,29 @@ export const refreshAccessToken = async (token: JWT) => {
       refresh_token?: string
       expires_in: number
     }
+
+    const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
+
+    logger.info('Token refreshed', {
+      metadata: {
+        timeNow: new Date().toISOString(),
+        prevExpires: new Date(token.accessTokenExpires as number).toISOString(),
+        newExpires: new Date(expiresIn).toISOString(),
+      },
+      category: LOGGING_CATEGORY,
+    })
+
     return {
       ...token,
       accessToken: newTokens.access_token,
       refreshToken: newTokens.refresh_token ?? token.refreshToken,
-      accessTokenExpires: Math.floor(Date.now() / 1000 + newTokens.expires_in),
+      accessTokenExpires: expiresIn,
     }
   } catch (error) {
+    logger.error('Refreshing failed', {
+      error: error as Error,
+      category: LOGGING_CATEGORY,
+    })
     return { ...token, error: 'RefreshAccessTokenError', invalid: true }
   }
 }
