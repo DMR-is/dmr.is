@@ -10,3 +10,8 @@ export enum AdvertStatus {
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
 }
+
+export enum AdvertFeeType {
+  Fixed = 'FIXED',
+  Percentage = 'PERCENTAGE',
+}

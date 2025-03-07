@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
   DatabaseError,
@@ -12,7 +13,6 @@ import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
-  DEFAULT_PRICE,
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
   PAGING_MAXIMUM_PAGE_SIZE,
@@ -43,6 +43,8 @@ import {
   templateGjaldskra,
   templateReglugerd,
 } from './constants'
+
+export const MAX_CHARACTERS_BASE_APPLICATION = 1000
 
 type GetLimitAndOffsetParams = {
   page?: number
@@ -151,12 +153,51 @@ export const getFastTrack = (date: Date) => {
   }
 }
 
-/**
- * Calculates the price for the application
- * For now we dont know how to calculate the price
- * so we will return default price
- */
-export const calculatePriceForApplication = () => DEFAULT_PRICE
+export const mapDepartmentSlugToFeeBaseAndFastTrack = (
+  slug: string,
+): { baseCode: string; fastTrackCode: string } => {
+  switch (slug) {
+    case 'a-deild':
+      return { baseCode: 'A101', fastTrackCode: 'A107' }
+    case 'b-deild':
+      return { baseCode: 'B101', fastTrackCode: 'B107' }
+    case 'c-deild':
+      return { baseCode: 'C101', fastTrackCode: 'C107' }
+    default:
+      return { baseCode: 'A101', fastTrackCode: 'A107' }
+  }
+}
+
+export const feeCodeCalculations = ({
+  base,
+  fastTrack,
+  charModifier,
+  textBody,
+}: {
+  base: number
+  fastTrack: number
+  charModifier: number
+  textBody: string
+}): number => {
+  const characterLength = getHtmlTextLength(textBody)
+
+  const characterFee =
+    characterLength > MAX_CHARACTERS_BASE_APPLICATION
+      ? charModifier * characterLength
+      : 0
+  const total = (base + characterFee) * fastTrack
+
+  return total
+}
+
+export const getHtmlTextLength = (str: string): number => {
+  const sanitized = sanitizeHtml(str, {
+    allowedTags: [],
+    allowedAttributes: {},
+  })
+
+  return sanitized.length
+}
 
 type EnumType = { [s: number]: string }
 

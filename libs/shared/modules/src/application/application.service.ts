@@ -30,11 +30,12 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
-  calculatePriceForApplication,
+  feeCodeCalculations,
   generatePaging,
   getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
+  mapDepartmentSlugToFeeBaseAndFastTrack,
 } from '@dmr.is/utils'
 
 import {
@@ -53,10 +54,12 @@ import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
+import { applicationFeeCodeMigrate } from '../journal/migrations/advert-fee-codes.migrate'
 import {
   AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
+  AdvertFeeCodesModel,
   AdvertModel,
 } from '../journal/models'
 import { IS3Service } from '../s3/s3.service.interface'
@@ -87,6 +90,8 @@ export class ApplicationService implements IApplicationService {
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertFeeCodesModel)
+    private readonly feeCodeModel: typeof AdvertFeeCodesModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
@@ -169,30 +174,10 @@ export class ApplicationService implements IApplicationService {
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
-    /**
-     * First we check if there is an existing case for the application.
-     * If so then we return the price of the case.
-     * If not then we calculate the price of the application.
-     */
     try {
-      const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(applicationId)
-      ).unwrap()
-
-      /**
-       * If price has not been set we return default price
-       */
-
-      const price = caseLookup.price ? caseLookup.price : DEFAULT_PRICE
-
-      return ResultWrapper.ok({
-        price: price,
-      })
+      return await this.getFeeCalculation(applicationId)
     } catch (error) {
-      // ResultWrapper.unwrap(await this.getApplication(applicationId))
-
-      // case does not exist, calculate price
-      const price = calculatePriceForApplication()
+      const price = DEFAULT_PRICE
 
       return ResultWrapper.ok({
         price: price,
@@ -713,5 +698,54 @@ export class ApplicationService implements IApplicationService {
       adverts: migrated,
       paging,
     })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getFeeCalculation(
+    applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ price: number }>> {
+    const res = (await this.getApplication(applicationId)).unwrap()
+
+    const { baseCode, fastTrackCode } = mapDepartmentSlugToFeeBaseAndFastTrack(
+      res.application.answers.advert.department.slug,
+    )
+
+    const characterCode = 'B102' // Only code where we add character length to fee calculation
+    const feeCodesArray = [baseCode, fastTrackCode, characterCode]
+    const feeCodes = await this.feeCodeModel.findAndCountAll({
+      distinct: true,
+      attributes: ['id', 'feeCode', 'feeType', 'value'],
+      where: {
+        feeCode: {
+          [Op.in]: feeCodesArray,
+        },
+      },
+      transaction,
+    })
+
+    const migrated = feeCodes.rows.map((feeCode) =>
+      applicationFeeCodeMigrate(feeCode),
+    )
+
+    const base = migrated.find((f) => f.feeCode === baseCode)?.value
+    const fastTrack = migrated.find((f) => f.feeCode === fastTrackCode)?.value
+    const charModifier = migrated.find(
+      (f) => f.feeCode === characterCode,
+    )?.value
+
+    if (!base || !fastTrack || !charModifier) {
+      return ResultWrapper.ok({ price: DEFAULT_PRICE })
+    }
+
+    const price = feeCodeCalculations({
+      base,
+      fastTrack,
+      charModifier,
+      textBody: res.application.answers?.advert.html,
+    })
+
+    return ResultWrapper.ok({ price })
   }
 }

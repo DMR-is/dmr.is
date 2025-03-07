@@ -11,6 +11,7 @@ module.exports = {
     const allUserSeed = await readFile('./seeders/sql/all_user.sql', 'utf8')
     const allAdvertSeed = await readFile('./seeders/sql/all_advert.sql', 'utf8')
     const allCaseSeed = await readFile('./seeders/sql/all_case.sql', 'utf8')
+    const feeCodesSeed = await readFile('./seeders/sql/fee_codes.sql', 'utf8')
 
     const seed = `
       BEGIN;
@@ -18,6 +19,7 @@ module.exports = {
       ${allAdvertSeed}
       ${allCaseSeed}
       ${allUserSeed}
+      ${feeCodesSeed}
 
       COMMIT;
       `
@@ -68,6 +70,7 @@ module.exports = {
         DROP TABLE IF EXISTS admin_user;
         DROP TABLE IF EXISTS user_role;
         DROP TABLE IF EXISTS advert_involved_party;
+        DROP TABLE IF EXISTS application_fee_codes;
       COMMIT;
     `)
   },
