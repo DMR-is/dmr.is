@@ -5,8 +5,6 @@ import { useEffect } from 'react'
 
 import {
   Box,
-  Column,
-  Columns,
   DropdownMenu,
   FocusableBox,
   GridColumn,
@@ -18,7 +16,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useLogOut } from '../../hooks/useLogOut'
+import { forceLogin, useLogOut } from '../../hooks/useLogOut'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 import { messages } from './messages'
@@ -38,7 +36,7 @@ export const Header = ({ headerWhite }: HeaderType) => {
       // Make sure to log out if the session is invalid
       // This is just a front-end logout for the user's convenience
       // The session is invalidated on the server side
-      logOut()
+      forceLogin(pathName)
     }
   }, [session?.invalid, pathName])
 

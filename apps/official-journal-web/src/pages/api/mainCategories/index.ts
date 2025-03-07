@@ -1,17 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
 
 const LOG_CATEGORY = 'get-main-categories-handler'
 
-class MainCategoriesHandler {
-  private readonly client = createDmrClient()
-
+class MainCategoriesHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,28 +34,23 @@ class MainCategoriesHandler {
   private async get(req: NextApiRequest, res: NextApiResponse) {
     const { page, pageSize, search } = req.query as SearchParams
 
-    const categories = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getMainCategories({
-        page: page,
-        pageSize: pageSize,
-        search: search,
-      })
+    const categories = await this.client.getMainCategories({
+      page: page,
+      pageSize: pageSize,
+      search: search,
+    })
 
     return res.status(200).json(categories)
   }
 
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createMainCategory({
-        createMainCategory: req.body,
-      })
+    await this.client.createMainCategory({
+      createMainCategory: req.body,
+    })
 
     return void res.status(204).end()
   }
 }
 
-const instance = new MainCategoriesHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, MainCategoriesHandler)

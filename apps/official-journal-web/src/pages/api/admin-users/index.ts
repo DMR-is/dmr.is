@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
-class UsersHandler {
-  private readonly client = createDmrClient()
+class UsersHandler extends RouteHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
@@ -27,25 +25,19 @@ class UsersHandler {
   }
 
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const users = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getUsers()
+    const users = await this.client.getUsers()
 
     return res.status(200).json(users)
   }
 
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createUser({
-        createAdminUser: req.body,
-      })
+    await this.client.createUser({
+      createAdminUser: req.body,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UsersHandler()
-
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UsersHandler)

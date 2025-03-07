@@ -1,13 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
-class ApplicationUsersHandler {
-  private readonly client = createDmrClient()
-
+class ApplicationUsersHandler extends RouteHandler {
   @LogMethod(false)
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -33,28 +30,22 @@ class ApplicationUsersHandler {
   private async get(req: NextApiRequest, res: NextApiResponse) {
     const involvedPartyId = req.query.involvedParty as string | undefined
 
-    const applicationUser = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getApplicationUsers({
-        involvedParty: involvedPartyId,
-      })
+    const applicationUser = await this.client.getApplicationUsers({
+      involvedParty: involvedPartyId,
+    })
 
     return res.status(200).json(applicationUser)
   }
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const applicationUser = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createApplicationUser({
-        createApplicationUser: req.body,
-      })
+    const applicationUser = await this.client.createApplicationUser({
+      createApplicationUser: req.body,
+    })
 
     return res.status(201).json(applicationUser)
   }
 }
 
-const instance = new ApplicationUsersHandler()
-
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, ApplicationUsersHandler)

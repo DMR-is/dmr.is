@@ -77,11 +77,9 @@ export class AdvertTypeService implements IAdvertTypeService {
       order: [['title', 'ASC']],
       include: [
         {
-          model: AdvertMainTypeModel,
-        },
-        {
           model: AdvertDepartmentModel,
           where: departmentWhereParams,
+          attributes: ['id', 'title', 'slug'],
         },
       ],
     })

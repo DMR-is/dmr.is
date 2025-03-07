@@ -6,7 +6,6 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
-  Category,
   CreateAdvert,
   CreateMainCategory,
   DefaultSearchParams,
@@ -690,40 +689,28 @@ export class JournalService implements IJournalService {
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
       where: whereParams,
-      include: AdvertMainCategoryModel,
+      include: [
+        {
+          model: AdvertMainCategoryModel,
+          through: {
+            attributes: ['advert_main_category_id', 'advert_category_id'],
+          },
+        },
+      ],
     })
+
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
 
-    // TODO: do this better????
-    const withMainCategories = await Promise.all(
-      mapped.map(async (c) => {
-        const mainCategory = await this.advertCategoryCategoriesModel.findAll({
-          where: { advert_category_id: c.id },
-          include: [AdvertMainCategoryModel],
-        })
-
-        return {
-          ...c,
-          mainCategories: mainCategory.map((m) => ({
-            id: m.mainCategory.id,
-            title: m.mainCategory.title,
-            slug: m.mainCategory.slug,
-            description: m.mainCategory.description,
-          })),
-        }
-      }),
-    )
-
     const paging = generatePaging(
-      withMainCategories,
+      mapped,
       page,
       pageSize,
       categories.count,
     )
 
     return ResultWrapper.ok({
-      categories: withMainCategories,
+      categories: mapped,
       paging,
     })
   }

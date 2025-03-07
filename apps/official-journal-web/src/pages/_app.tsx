@@ -19,15 +19,15 @@ type AppProps<P> = {
 
 export default function App({
   Component,
-  pageProps,
+  pageProps: { session, layout, ...pageProps },
 }: AppProps<InheritedPageProps>) {
   return (
     <SessionProvider
-      session={pageProps.session}
+      session={session}
       refetchInterval={5 * 60}
       basePath="/api/auth"
     >
-      <Layout {...pageProps.layout}>
+      <Layout {...layout}>
         <Component {...pageProps} />
       </Layout>
     </SessionProvider>

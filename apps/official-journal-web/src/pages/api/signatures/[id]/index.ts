@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
-class SignatureHandler {
+class SignatureHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -19,18 +18,13 @@ class SignatureHandler {
   private async get(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id: string }
 
-    const dmrClient = createDmrClient()
-
-    const signatureResponse = await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getSignature({
-        signatureId: id,
-      })
+    const signatureResponse = await this.client.getSignature({
+      signatureId: id,
+    })
 
     return res.status(200).json(signatureResponse)
   }
 }
 
-const instance = new SignatureHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, SignatureHandler)

@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
-class UserHandler {
-  private readonly client = createDmrClient()
+class UserHandler extends RouteHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
@@ -29,11 +27,9 @@ class UserHandler {
   }
 
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const user = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getUserById({
-        id: req.query.id as string,
-      })
+    const user = await this.client.getUserById({
+      id: req.query.id as string,
+    })
 
     return res.status(200).json(user)
   }
@@ -41,29 +37,23 @@ class UserHandler {
   private async update(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
 
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateUser({
-        id: id,
-        updateAdminUser: req.body,
-      })
+    await this.client.updateUser({
+      id: id,
+      updateAdminUser: req.body,
+    })
 
     return res.status(204).end()
   }
 
   private async delete(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteUser({
-        id: id,
-      })
+    await this.client.deleteUser({
+      id: id,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UserHandler()
-
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UserHandler)

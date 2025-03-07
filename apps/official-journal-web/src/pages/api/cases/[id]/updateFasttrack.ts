@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   fastTrack: z.boolean(),
 })
 
-class UpdateFasttrackHandler {
+class UpdateFasttrackHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,20 +24,15 @@ class UpdateFasttrackHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateFasttrack({
-        id: id,
-        updateFasttrackBody: {
-          fasttrack: parsed.data.fastTrack,
-        },
-      })
+    await this.client.updateFasttrack({
+      id: id,
+      updateFasttrackBody: {
+        fasttrack: parsed.data.fastTrack,
+      },
+    })
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateFasttrackHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateFasttrackHandler)

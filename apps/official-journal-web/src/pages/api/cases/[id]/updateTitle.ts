@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   title: z.string(),
 })
 
-class UpdateTitleHandler {
+class UpdateTitleHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -25,21 +24,16 @@ class UpdateTitleHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateTitle({
-        id,
-        updateTitleBody: {
-          title: parsed.data.title,
-        },
-      })
+    await this.client.updateTitle({
+      id,
+      updateTitleBody: {
+        title: parsed.data.title,
+      },
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateTitleHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateTitleHandler)

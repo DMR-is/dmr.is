@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const updatePriceBody = z.object({
   price: z.number(),
 })
 
-class UpdatePriceHandler {
+class UpdatePriceHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -21,21 +20,16 @@ class UpdatePriceHandler {
 
     const price = updatePriceBody.parse(req.body).price
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePrice({
-        id: id,
-        updateCasePriceBody: {
-          price: price,
-        },
-      })
+    await this.client.updatePrice({
+      id: id,
+      updateCasePriceBody: {
+        price: price,
+      },
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePriceHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdatePriceHandler)

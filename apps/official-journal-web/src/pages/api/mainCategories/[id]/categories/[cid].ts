@@ -1,12 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../../lib/constants'
 
-class MainCategoryCategoryHandler {
+class MainCategoryCategoryHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -35,18 +37,13 @@ class MainCategoryCategoryHandler {
       cid: string
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteMainCategoryCategory({
-        mainCategoryId: mainCategoryId,
-        categoryId: categoryId,
-      })
+    await this.client.deleteMainCategoryCategory({
+      mainCategoryId: mainCategoryId,
+      categoryId: categoryId,
+    })
     return res.status(204).end()
   }
 }
 
-const instance = new MainCategoryCategoryHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, MainCategoryCategoryHandler)
