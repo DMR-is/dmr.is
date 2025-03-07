@@ -57,7 +57,7 @@ export function generateInvolvedPartiesInserts(
   involvedParties: Array<InvolvedParty>,
 ) {
   const inserts = involvedParties.map((involvedParty) => {
-    return `INSERT INTO advert_involved_party (id, title, slug) VALUES ('${involvedParty.id}', '${involvedParty.name}','${involvedParty.slug}');`
+    return `INSERT INTO advert_involved_party (id, title, national_id, slug) VALUES ('${involvedParty.id}', '${involvedParty.name}','${involvedParty.national_id}','${involvedParty.slug}');`
   })
 
   return inserts

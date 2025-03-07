@@ -39,6 +39,7 @@ export type DbStatus = Status
 export type InvolvedParty = {
   id: string
   name: string
+  national_id: string
   slug: string
   legacy_id: string
 }

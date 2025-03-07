@@ -56,7 +56,9 @@ const STATUSES_QUERY = `select StatusID, StatusName from adverts group by Status
 
 const INVOLVED_PARTIES_QUERY = `
   -- InvolvedParties should be the same as UserGroups, but in some cases they are not, they're still the person responsible for the advert
-  SELECT InvolvedPartyID, InvolvedPartyName FROM Adverts  GROUP BY InvolvedPartyID, InvolvedPartyName
+  SELECT A.InvolvedPartyID, A.InvolvedPartyName, c.IDNumber FROM Adverts A
+inner join View_AllClients c on c.RecordID = A.InvolvedPartyID
+GROUP BY InvolvedPartyID, InvolvedPartyName,IDNumber
 `
 
 const ADVERTS_QUERY = (limit = 10, offset = 0) => `
@@ -200,6 +202,7 @@ export async function getInvolvedParties(): Promise<DbInvolvedParty[]> {
     const ip = {
       id: involvedParty.InvolvedPartyID,
       name: involvedParty.InvolvedPartyName,
+      national_id: involvedParty.IDNumber.split('-').join(''),
     }
     involvedParties.push(ip)
   })
@@ -288,7 +291,7 @@ export async function getAdvertsCategories() {
   return advertsCategories
 }
 
-export async function savePDF(document: Document) {
+async function savePDF(document: Document) {
   const client = new S3Client({
     region: 'eu-west-1',
     credentials: {
