@@ -744,6 +744,7 @@ export class ApplicationService implements IApplicationService {
       fastTrack,
       charModifier,
       textBody: res.application.answers?.advert.html,
+      publishDate: res.application.answers?.advert.requestedDate,
     })
 
     return ResultWrapper.ok({ price })

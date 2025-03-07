@@ -173,20 +173,27 @@ export const feeCodeCalculations = ({
   fastTrack,
   charModifier,
   textBody,
+  publishDate,
 }: {
   base: number
   fastTrack: number
   charModifier: number
   textBody: string
+  publishDate: string
 }): number => {
   const characterLength = getHtmlTextLength(textBody)
 
+  // If fast track is enabled, we multiply the base fee with the fast track modifier.
+  const { fastTrack: isFastTrack } = getFastTrack(new Date(publishDate))
+  const fastTrackModifier = isFastTrack ? fastTrack : 1
+
+  // If characters arer above base application limit, we multiply the character modifier with the character length.
   const characterFee =
     characterLength > MAX_CHARACTERS_BASE_APPLICATION
       ? charModifier * characterLength
       : 0
-  const total = (base + characterFee) * fastTrack
 
+  const total = (base + characterFee) * fastTrackModifier
   return total
 }
 
