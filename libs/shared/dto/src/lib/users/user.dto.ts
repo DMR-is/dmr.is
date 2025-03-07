@@ -1,36 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { UserRole } from './user-role.dto'
+
 export class User {
   @ApiProperty({
-    description: 'Unique ID for the user, GUID format.',
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
     type: String,
   })
-  readonly id!: string
+  id!: string
 
   @ApiProperty({
-    description: 'First name of the user.',
-    example: 'Jón Gunnar',
-    required: true,
     type: String,
   })
-  name!: string
+  nationalId!: string
 
   @ApiProperty({
-    description: 'Last name of the user.',
-    example: 'Jónsson',
-    required: true,
+    type: String,
+  })
+  firstName!: string
+
+  @ApiProperty({
     type: String,
   })
   lastName!: string
 
   @ApiProperty({
-    description: 'Status of the user',
-    example: true,
-    required: true,
-    type: Boolean,
+    type: String,
   })
-  active!: boolean
+  fullName!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  email!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  displayName!: string
+
+  @ApiProperty({
+    type: [UserRole],
+  })
+  roles!: UserRole[]
 }

@@ -8,5 +8,5 @@ export class GetUsersResponse {
     required: true,
     type: [User],
   })
-  readonly users!: Array<User>
+  readonly users!: User[]
 }

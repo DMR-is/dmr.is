@@ -26,7 +26,7 @@ import {
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
-  GetUsersQueryParams,
+  GetUsersQuery,
   GetUsersResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -293,7 +293,7 @@ export class CaseServiceMock {
     throw new Error('Method not implemented.')
   }
 
-  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
+  getUsers(params?: GetUsersQuery): Promise<GetUsersResponse> {
     const filtered = ALL_MOCK_USERS.filter((user) => {
       if (params?.search && user.id !== params.search) {
         return false
