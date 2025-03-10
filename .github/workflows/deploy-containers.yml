@@ -25,6 +25,7 @@ jobs:
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
+            official-journal-web,
             regulations-api,
             legal-gazette-web,
           ]
@@ -114,6 +115,7 @@ jobs:
             official-journal-api,
             official-journal-admin-api,
             official-journal-application-api,
+            official-journal-web,
             regulations-api,
             legal-gazette-web,
           ]
