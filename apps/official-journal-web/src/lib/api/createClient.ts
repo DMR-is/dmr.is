@@ -16,7 +16,9 @@ const clientConfig = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
-    basePath: 'http://localhost:4000',
+    basePath:
+      process.env.NEXT_PUBLIC_DMR_ADMIN_API_BASE_PATH ??
+      'http://localhost:4000',
   })
 }
 
