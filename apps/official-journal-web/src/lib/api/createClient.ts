@@ -12,4 +12,22 @@ const config = (token: string) => {
   })
 }
 
-export const createDmrClient = (token: string) => new DefaultApi(config(token))
+const clientConfig = (token: string) => {
+  return new Configuration({
+    fetchApi: createEnhancedFetch(),
+    accessToken: token,
+    basePath: 'http://localhost:4000',
+  })
+}
+
+let dmrClient: DefaultApi | undefined
+
+export const getDmrClient = (token: string) => {
+  if (typeof window === 'undefined') {
+    // Server: always make a new dmr client
+    return new DefaultApi(config(token))
+  }
+
+  // Browser: use singleton pattern to keep the same dmr client
+  return (dmrClient ??= new DefaultApi(clientConfig(token)))
+}

@@ -17,7 +17,7 @@ import {
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { messages } from '../../lib/messages/caseSingle'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
@@ -77,7 +77,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     return loginRedirect(resolvedUrl)
   }
 
-  const dmrClient = createDmrClient(session.accessToken)
+  const dmrClient = getDmrClient(session.accessToken)
   const caseId = query.uid?.[0]
 
   if (!caseId) {
