@@ -1,6 +1,10 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus, CaseStatusEnum } from '@dmr.is/shared/dto'
+import {
+  AdvertStatus,
+  CaseStatusEnum,
+  GetStatisticOverviewDashboardResponse,
+} from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
@@ -92,6 +96,21 @@ export class MockStatisticsService implements IStatisticsService {
       },
       total: total,
     })
+  }
+
+  async getOverviewForDashboard(
+    userId: string,
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse[]>> {
+    const overview = (
+      await this.getOverview(StatisticsOverviewQueryType.General)
+    ).unwrap()
+
+    return ResultWrapper.ok([
+      {
+        type: StatisticsOverviewQueryType.General,
+        overview: overview,
+      },
+    ])
   }
 
   getOverview(

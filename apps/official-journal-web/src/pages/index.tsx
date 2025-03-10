@@ -52,6 +52,8 @@ export default function Dashboard() {
     },
   })
 
+  console.log('1', overviewData)
+  console.log('2', publishingOverviewData)
   const statisticsTabs: TabType[] = [
     {
       id: DepartmentSlugEnum.ADeild,

@@ -1,4 +1,4 @@
-import { Op, Sequelize } from 'sequelize'
+import { Op } from 'sequelize'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -11,6 +11,7 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   DepartmentSlugEnum,
+  GetStatisticOverviewDashboardResponse,
 } from '@dmr.is/shared/dto'
 import {
   GetStatisticsDepartmentResponse,
@@ -241,6 +242,38 @@ export class StatisticsService implements IStatisticsService {
       default:
         return this.getGeneralOverviewCount()
     }
+  }
+
+  @LogAndHandle()
+  async getOverviewForDashboard(
+    userId: string,
+  ): Promise<ResultWrapper<Array<GetStatisticOverviewDashboardResponse>>> {
+    const generalCount = (await this.getGeneralOverviewCount()).unwrap()
+    const personalCount = (await this.getPersonalOverviewCount(userId)).unwrap()
+
+    const inactiveCount = (await this.getInactiveOverviewCount()).unwrap()
+    const publishingCount = (await this.getPublishingOverviewCount()).unwrap()
+
+    const results: Array<GetStatisticOverviewDashboardResponse> = [
+      {
+        type: StatisticsOverviewQueryType.General,
+        overview: generalCount,
+      },
+      {
+        type: StatisticsOverviewQueryType.Personal,
+        overview: personalCount,
+      },
+      {
+        type: StatisticsOverviewQueryType.Inactive,
+        overview: inactiveCount,
+      },
+      {
+        type: StatisticsOverviewQueryType.Publishing,
+        overview: publishingCount,
+      },
+    ]
+
+    return ResultWrapper.ok(results)
   }
 
   @LogAndHandle()

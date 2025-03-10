@@ -3,6 +3,8 @@ import { IsArray, IsNumber, ValidateNested } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { StatisticsOverviewQueryType } from './statistics-overview-constants.dto'
+
 export class StatisticsOverviewCategory {
   @ApiProperty({
     type: Number,
@@ -32,4 +34,17 @@ export class GetStatisticsOverviewResponse {
   })
   @IsNumber()
   total!: number
+}
+
+export class GetStatisticOverviewDashboardResponse {
+  @ApiProperty({
+    type: StatisticsOverviewQueryType,
+  })
+  type!: StatisticsOverviewQueryType
+  @ApiProperty({
+    type: GetStatisticsOverviewResponse,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => GetStatisticsOverviewResponse)
+  overview!: GetStatisticsOverviewResponse
 }
