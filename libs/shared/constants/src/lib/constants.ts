@@ -1,4 +1,4 @@
-import { AdminUserRoleTitle } from '@dmr.is/types'
+import { UserRoleTitle } from '@dmr.is/types'
 
 export const DEFAULT_PAGE_SIZE = 10
 
@@ -82,7 +82,7 @@ export const ROLES_KEY = 'roles'
 
 export const WITH_CASE_KEY = 'withCase'
 
-export enum UserRole {
+export enum UserRoleEnum {
   Admin = 'Ritstjóri',
   Editor = 'Fulltrúi',
   User = 'Innsendandi',

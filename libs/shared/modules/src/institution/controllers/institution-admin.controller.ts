@@ -1,4 +1,4 @@
-import { UserRole } from '@dmr.is/constants'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -34,7 +34,7 @@ import { IInstitutionService } from '../institution.service.interface'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRoleEnum.Admin)
 export class InstitutionAdminController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

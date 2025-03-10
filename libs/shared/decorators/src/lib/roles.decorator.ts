@@ -1,5 +1,4 @@
-import { ROLES_KEY } from '@dmr.is/constants'
-import { AdminUserRoleTitle } from '@dmr.is/types'
+import { ROLES_KEY, UserRoleEnum } from '@dmr.is/constants'
 import { SetMetadata } from '@nestjs/common'
 
 /**
@@ -7,5 +6,4 @@ import { SetMetadata } from '@nestjs/common'
  * @param roles Required roles to access this endpoint
  * @returns
  */
-export const Roles = (...roles: AdminUserRoleTitle[]) =>
-  SetMetadata(ROLES_KEY, roles)
+export const Roles = (...roles: UserRoleEnum[]) => SetMetadata(ROLES_KEY, roles)

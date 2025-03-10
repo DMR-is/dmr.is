@@ -11,7 +11,6 @@ import {
   AdvertTemplateDetails,
   AdvertTemplateType,
   Application,
-  ApplicationUser,
   CaseActionEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
@@ -27,6 +26,7 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -488,7 +488,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     body: PostApplicationComment,
-    applicationUser: ApplicationUser,
+    UserDto: UserDto,
   ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
@@ -496,7 +496,7 @@ export class ApplicationService implements IApplicationService {
 
     ResultWrapper.unwrap(
       await this.commentService.createApplicationComment(caseLookup.id, {
-        applicationUserCreatorId: applicationUser.id,
+        applicationUserCreatorId: UserDto.id,
         comment: body.comment,
       }),
     )

@@ -1,16 +1,25 @@
 import {
+  BelongsTo,
+  BelongsToMany,
   Column,
+  CreatedAt,
   DataType,
+  DefaultScope,
   DeletedAt,
   ForeignKey,
-  HasOne,
   Model,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import { AdvertInvolvedPartyModel } from '../../journal/models'
+import { UserInvolvedPartiesModel } from './user-involved-parties.model'
 import { UserRoleModel } from './user-role.model'
 
+@DefaultScope(() => ({
+  include: [UserRoleModel, AdvertInvolvedPartyModel],
+  order: [['first_name', 'ASC']],
+}))
 @Table({ tableName: 'ojoi_user', timestamps: true, paranoid: true })
 export class UserModel extends Model {
   @Column({
@@ -63,13 +72,19 @@ export class UserModel extends Model {
   })
   roleId!: string
 
-  @HasOne(() => UserRoleModel)
+  @BelongsTo(() => UserRoleModel)
   role!: UserRoleModel
 
-  @DeletedAt
-  @Column({ field: 'deleted_at' })
-  override deletedAt!: Date
+  @BelongsToMany(() => AdvertInvolvedPartyModel, {
+    through: { model: () => UserInvolvedPartiesModel },
+  })
+  involvedParties!: AdvertInvolvedPartyModel[]
 
+  @DeletedAt
+  @Column({ field: 'deleted_at', allowNull: true, type: DataType.DATE })
+  override deletedAt!: Date | null
+
+  @CreatedAt
   @Column({ field: 'created_at' })
   override createdAt!: Date
 

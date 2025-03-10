@@ -4,7 +4,6 @@ import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  AdminUser,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UpdateAdvertHtmlBody,
@@ -17,11 +16,11 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils'
@@ -144,7 +143,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateEmployee(
     caseId: string,
     targetUserId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     if (currentUser.id === targetUserId) {
@@ -281,7 +280,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const status = (
@@ -312,7 +311,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   @Transactional()
   async updateCaseNextStatus(
     id: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(id, {
@@ -367,7 +366,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   @Transactional()
   async updateCasePreviousStatus(
     id: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(id, {

@@ -4,7 +4,7 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
+import { GetApplicationResponse } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
@@ -228,7 +228,7 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
-  async userLookup(userId: string): Promise<ResultWrapper<User>> {
+  async userLookup(userId: string): Promise<ResultWrapper> {
     const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
 
     if (!userLookup) {

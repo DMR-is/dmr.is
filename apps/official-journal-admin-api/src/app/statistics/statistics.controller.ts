@@ -1,14 +1,14 @@
-import { UserRole } from '@dmr.is/constants'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
-  AdminUser,
   DepartmentSlugEnum,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -27,7 +27,7 @@ import { IStatisticsService } from './statistics.service.interface'
   version: '1',
 })
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(UserRole.Admin)
+@Roles(UserRoleEnum.Admin)
 export class StatisticsController {
   constructor(
     @Inject(IStatisticsService)
@@ -63,7 +63,7 @@ export class StatisticsController {
   async overview(
     @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
     type: StatisticsOverviewQueryType,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ): Promise<GetStatisticsOverviewResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverview(type, user?.id),

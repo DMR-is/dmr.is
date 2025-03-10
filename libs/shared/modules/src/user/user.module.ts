@@ -1,14 +1,24 @@
 import { LoggingModule } from '@dmr.is/logging'
 
 import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
 
 import { UserModel } from './models/user.model'
+import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
+import { UserRoleModel } from './models/user-role.model'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'
 import { IUserService } from './user.service.interface'
 
 @Module({
-  imports: [UserModel, LoggingModule],
+  imports: [
+    SequelizeModule.forFeature([
+      UserModel,
+      UserRoleModel,
+      UserInvolvedPartiesModel,
+    ]),
+    LoggingModule,
+  ],
   controllers: [UserController],
   providers: [
     {
@@ -16,6 +26,6 @@ import { IUserService } from './user.service.interface'
       useClass: UserService,
     },
   ],
-  exports: [],
+  exports: [IUserService],
 })
 export class UserModule {}

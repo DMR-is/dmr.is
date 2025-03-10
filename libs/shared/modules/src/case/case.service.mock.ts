@@ -307,7 +307,7 @@ export class CaseServiceMock {
     })
 
     return Promise.resolve({
-      users: filtered,
+      users: [],
     })
   }
 }

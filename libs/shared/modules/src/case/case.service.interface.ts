@@ -1,7 +1,6 @@
 import { Transaction } from 'sequelize'
 import {
   AddCaseAdvertCorrection,
-  AdminUser,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -39,6 +38,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -79,21 +79,18 @@ export interface ICaseService {
   updateEmployee(
     id: string,
     userId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
   ): Promise<ResultWrapper>
   updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
-    currentUser: AdminUser,
+    currentUser: UserDto,
   ): Promise<ResultWrapper>
-  updateCaseNextStatus(
-    id: string,
-    currentUser: AdminUser,
-  ): Promise<ResultWrapper>
+  updateCaseNextStatus(id: string, currentUser: UserDto): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     id: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
   ): Promise<ResultWrapper>
 
   rejectCase(id: string): Promise<ResultWrapper>

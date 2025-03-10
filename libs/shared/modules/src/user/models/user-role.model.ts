@@ -1,6 +1,13 @@
-import { Column, DataType, Model, PrimaryKey } from 'sequelize-typescript'
-import { UserRole } from '@dmr.is/constants'
+import {
+  Column,
+  DataType,
+  Model,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
+import { UserRoleEnum } from '@dmr.is/constants'
 
+@Table({ tableName: 'user_role', timestamps: false })
 export class UserRoleModel extends Model {
   @PrimaryKey
   @Column({
@@ -10,10 +17,10 @@ export class UserRoleModel extends Model {
   override id!: string
 
   @Column({
-    type: DataType.ENUM(...Object.values(UserRole)),
+    type: DataType.ENUM(...Object.values(UserRoleEnum)),
     allowNull: false,
   })
-  title!: UserRole
+  title!: UserRoleEnum
 
   @Column({
     type: DataType.STRING,

@@ -1,7 +1,7 @@
-import { UserRole } from '@dmr.is/constants'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { GetUserResponse, UserDto } from '@dmr.is/shared/dto'
+import { GetUserResponse, GetUsersQuery, UserDto } from '@dmr.is/shared/dto'
 
 import {
   Controller,
@@ -9,6 +9,7 @@ import {
   Get,
   Inject,
   InternalServerErrorException,
+  Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
@@ -22,7 +23,7 @@ import { IUserService } from './user.service.interface'
   version: '1',
 })
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(UserRole.Admin, UserRole.Editor)
+@Roles(UserRoleEnum.Admin, UserRoleEnum.Editor)
 export class UserController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -34,8 +35,8 @@ export class UserController {
   @ApiResponse({ status: 401, type: UnauthorizedException })
   @ApiResponse({ status: 403, type: ForbiddenException })
   @ApiResponse({ status: 500, type: InternalServerErrorException })
-  async getUsers(@CurrentUser() user: UserDto) {
-    const results = await this.userService.getUsers(user)
+  async getUsers(@Query() query: GetUsersQuery, @CurrentUser() user: UserDto) {
+    const results = await this.userService.getUsers(query, user)
 
     if (!results.result.ok) {
       throw new InternalServerErrorException('Could not get users')

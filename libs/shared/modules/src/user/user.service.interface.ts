@@ -1,8 +1,25 @@
-import { GetUsersResponse, UserDto } from '@dmr.is/shared/dto'
+import {
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+  UserDto,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface IUserService {
-  getUsers(user: UserDto): Promise<ResultWrapper<GetUsersResponse>>
+  getUsers(
+    query: GetUsersQuery,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetUsersResponse>>
+
+  getUsersByInvolvedPartyId(
+    involvedPartyId: string,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetUsersResponse>>
+
+  getUserByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetUserResponse>>
 }
 
 export const IUserService = Symbol('IUserService')

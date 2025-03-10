@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { UserRole } from './user-role.dto'
+import { UserRoleDto } from './user-role.dto'
 
 export class UserDto {
   @ApiProperty({
@@ -39,16 +39,25 @@ export class UserDto {
   displayName!: string
 
   @ApiProperty({
-    type: [UserRole],
+    type: Date,
   })
-  roles!: UserRole[]
-}
+  createdAt!: Date
 
-export class GetUsersQuery {
   @ApiProperty({
-    type: String,
+    type: Date,
   })
-  search?: string
+  updatedAt!: Date
+
+  @ApiProperty({
+    type: Date,
+    nullable: true,
+  })
+  deletedAt!: Date | null
+
+  @ApiProperty({
+    type: UserRoleDto,
+  })
+  role!: UserRoleDto
 }
 
 export class GetUserResponse {
@@ -75,4 +84,16 @@ export class CreateUserBody extends PickType(UserDto, [
     type: [String],
   })
   roleIds!: string[]
+}
+
+export class GetUsersQuery {
+  @ApiProperty({
+    type: String,
+  })
+  search?: string
+
+  @ApiProperty({
+    type: [String],
+  })
+  involvedPartyId?: [string]
 }

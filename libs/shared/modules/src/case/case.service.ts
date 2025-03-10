@@ -6,7 +6,6 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
-  AdminUser,
   AdvertStatus,
   Case,
   CaseCommunicationStatus,
@@ -44,6 +43,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -442,7 +442,7 @@ export class CaseService implements ICaseService {
   updateEmployee(
     caseId: string,
     userId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateEmployee(
@@ -465,7 +465,7 @@ export class CaseService implements ICaseService {
   async updateCaseStatus(
     caseId: string,
     body: UpdateCaseStatusBody,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     await this.updateService.updateCaseStatus(
@@ -543,7 +543,7 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCaseNextStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(
@@ -557,7 +557,7 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCasePreviousStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCasePreviousStatus(
