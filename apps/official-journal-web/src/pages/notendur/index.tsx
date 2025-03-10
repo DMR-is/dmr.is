@@ -29,7 +29,7 @@ import {
 import { useAdminUsers, useInstitutions } from '../../hooks/api'
 import { useApplicationUsers } from '../../hooks/api/useApplicationUsers'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { loginRedirect } from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
 
@@ -298,7 +298,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
-  const client = createDmrClient(session.accessToken)
+  const client = getDmrClient(session.accessToken)
 
   const layout: LayoutProps = {
     showFooter: false,

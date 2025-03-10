@@ -5,7 +5,7 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
 import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { getDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
 import { refreshAccessToken } from '../../../lib/token-service'
 
@@ -26,7 +26,7 @@ async function authorize(nationalId?: string, accessToken?: string) {
     return null
   }
 
-  const dmrClient = createDmrClient(accessToken)
+  const dmrClient = getDmrClient(accessToken)
 
   try {
     const { user: member } = await dmrClient.getUserByNationalId({

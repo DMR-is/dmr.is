@@ -143,6 +143,17 @@ export const fetcher = async <TData, TBody = never>(
   return res.json()
 }
 
+type SWRFetcherArgs<T> = {
+  func: () => Promise<T>
+}
+export const swrFetcher = async <T>({
+  func,
+}: SWRFetcherArgs<T>): Promise<T> => {
+  const res = await func()
+
+  return res
+}
+
 export enum APIRoutes {
   GetCase = '/api/cases/:id',
   GetCases = '/api/cases',

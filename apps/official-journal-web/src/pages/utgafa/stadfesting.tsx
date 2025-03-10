@@ -18,7 +18,7 @@ import { Section } from '../../components/section/Section'
 import { Case } from '../../gen/fetch'
 import { usePublishCases } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import {
   deleteUndefined,
@@ -159,7 +159,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   try {
-    const client = createDmrClient(session.accessToken)
+    const client = getDmrClient(session.accessToken)
 
     const department = isDepartmentEnum.safeParse(query.department)
 

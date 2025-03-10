@@ -19,7 +19,7 @@ import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/categoryContext'
 import { Category, Department, MainCategory } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
@@ -95,7 +95,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return loginRedirect(Routes.MainCategories)
   }
 
-  const client = createDmrClient(session.accessToken)
+  const client = getDmrClient(session.accessToken)
 
   const mainCategoriesPromise = client.getMainCategories({
     pageSize: 1000,
