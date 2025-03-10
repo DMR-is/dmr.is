@@ -292,22 +292,4 @@ export class CaseServiceMock {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-
-  getUsers(params?: GetUsersQuery): Promise<GetUsersResponse> {
-    const filtered = ALL_MOCK_USERS.filter((user) => {
-      if (params?.search && user.id !== params.search) {
-        return false
-      }
-
-      if (!user.active) {
-        return false
-      }
-
-      return true
-    })
-
-    return Promise.resolve({
-      users: [],
-    })
-  }
 }

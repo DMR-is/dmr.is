@@ -473,6 +473,8 @@ module.exports = {
     CREATE INDEX idx_created on SIGNATURE_MEMBER (created);
     CREATE INDEX idx_date on SIGNATURE_RECORD (date);
 
+    CREATE INDEX idx_national_id on OJOI_USER (national_id);
+
     COMMIT;
 
     `)

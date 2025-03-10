@@ -7,6 +7,7 @@ import {
   DefaultScope,
   DeletedAt,
   ForeignKey,
+  Index,
   Model,
   Table,
   UpdatedAt,
@@ -30,6 +31,7 @@ export class UserModel extends Model {
   })
   override id!: string
 
+  @Index({ name: 'idx_national_id', unique: true })
   @Column({
     type: DataType.STRING,
     allowNull: false,

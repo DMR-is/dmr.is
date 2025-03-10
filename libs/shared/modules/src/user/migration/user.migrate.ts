@@ -1,5 +1,6 @@
 import { UserDto, UserRoleDto } from '@dmr.is/shared/dto'
 
+import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { UserModel } from '../models/user.model'
 import { UserRoleModel } from '../models/user-role.model'
 
@@ -21,6 +22,9 @@ export const userMigrate = (model: UserModel): UserDto => {
     displayName: model.displayName,
     email: model.email,
     role: userRoleMigrate(model.role),
+    involvedParties: model.involvedParties.map((involvedParty) =>
+      advertInvolvedPartyMigrate(involvedParty),
+    ),
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
     deletedAt: model.deletedAt,

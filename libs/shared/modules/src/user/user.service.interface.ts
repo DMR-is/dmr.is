@@ -12,8 +12,8 @@ export interface IUserService {
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>>
 
-  getUsersByInvolvedPartyId(
-    involvedPartyId: string,
+  getUsersByUserInvolvedParties(
+    query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>>
 

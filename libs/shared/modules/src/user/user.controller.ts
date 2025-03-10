@@ -9,11 +9,12 @@ import {
   Get,
   Inject,
   InternalServerErrorException,
+  Param,
   Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
 import { IUserService } from './user.service.interface'
@@ -31,6 +32,7 @@ export class UserController {
   ) {}
 
   @Get('/')
+  @ApiOperation({ operationId: 'getUsers' })
   @ApiResponse({ status: 200, type: GetUserResponse })
   @ApiResponse({ status: 401, type: UnauthorizedException })
   @ApiResponse({ status: 403, type: ForbiddenException })
@@ -40,6 +42,22 @@ export class UserController {
 
     if (!results.result.ok) {
       throw new InternalServerErrorException('Could not get users')
+    }
+
+    return results.result.value
+  }
+
+  @Get('nationalId/:nationalId')
+  @ApiOperation({ operationId: 'getUserByNationalId' })
+  @ApiResponse({ status: 200, type: GetUserResponse })
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
+  async getUserByNationalId(@Param('nationalId') nationalId: string) {
+    const results = await this.userService.getUserByNationalId(nationalId)
+
+    if (!results.result.ok) {
+      throw new InternalServerErrorException('Could not get user')
     }
 
     return results.result.value

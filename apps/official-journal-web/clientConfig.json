@@ -1634,6 +1634,591 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/advert-types/types": {
+      "post": {
+        "operationId": "createType",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAdvertTypeBody" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "get": {
+        "operationId": "getTypes",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "Search by id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "unassigned",
+            "required": false,
+            "in": "query",
+            "description": "Filter by unassigned",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "mainType",
+            "required": false,
+            "in": "query",
+            "description": "Search by main type id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by title",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "slug",
+            "required": false,
+            "in": "query",
+            "description": "Search by slug",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Search by department slug, title or id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page number",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "The page size",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertTypes" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/advert-types/types/{id}": {
+      "put": {
+        "operationId": "updateType",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertTypeBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteType",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "get": {
+        "operationId": "getTypeById",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/advert-types/main-types": {
+      "post": {
+        "operationId": "createMainType",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertMainTypeBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "get": {
+        "operationId": "getMainTypes",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "description": "Search by id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "unassigned",
+            "required": false,
+            "in": "query",
+            "description": "Filter by unassigned",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "mainType",
+            "required": false,
+            "in": "query",
+            "description": "Search by main type id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by title",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "slug",
+            "required": false,
+            "in": "query",
+            "description": "Search by slug",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Search by department slug, title or id",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "The page number",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "The page size",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertMainTypes" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/advert-types/main-types/bulk": {
+      "post": {
+        "operationId": "createMainTypesBulk",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertMainTypeBulk"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/advert-types/main-types/{id}": {
+      "put": {
+        "operationId": "updateMainType",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertMainType" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteMainType",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "get": {
+        "operationId": "getMainTypeById",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberId}": {
       "put": {
         "operationId": "updateSignatureMember",
@@ -1855,847 +2440,6 @@
         }
       }
     },
-    "/api/v1/advert-types/types": {
-      "get": {
-        "operationId": "getTypes",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Search by id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "unassigned",
-            "required": false,
-            "in": "query",
-            "description": "Filter by unassigned",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "mainType",
-            "required": false,
-            "in": "query",
-            "description": "Search by main type id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search by title",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "slug",
-            "required": false,
-            "in": "query",
-            "description": "Search by slug",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Search by department slug, title or id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "The page number",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "The page size",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypes" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "createType",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateAdvertTypeBody" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/advert-types/main-types": {
-      "get": {
-        "operationId": "getMainTypes",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "description": "Search by id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "unassigned",
-            "required": false,
-            "in": "query",
-            "description": "Filter by unassigned",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "mainType",
-            "required": false,
-            "in": "query",
-            "description": "Search by main type id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search by title",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "slug",
-            "required": false,
-            "in": "query",
-            "description": "Search by slug",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Search by department slug, title or id",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "The page number",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "The page size",
-            "schema": { "type": "number" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertMainTypes" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "createMainType",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAdvertMainTypeBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/advert-types/types/{id}": {
-      "get": {
-        "operationId": "getTypeById",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "updateType",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertTypeBody" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "delete": {
-        "operationId": "deleteType",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/advert-types/main-types/{id}": {
-      "get": {
-        "operationId": "getMainTypeById",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "updateMainType",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertMainType" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertMainType" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "delete": {
-        "operationId": "deleteMainType",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/advert-types/main-types/bulk": {
-      "post": {
-        "operationId": "createMainTypesBulk",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAdvertMainTypeBulk"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertTypeError" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/admin-users/roles": {
-      "get": {
-        "operationId": "getRoles",
-        "summary": "",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdminUserRoles" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/admin-users/users": {
-      "get": {
-        "operationId": "getUsers",
-        "summary": "",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdminUsers" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "post": {
-        "operationId": "createUser",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateAdminUser" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/admin-users/users/{id}": {
-      "get": {
-        "operationId": "getUserById",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdminUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "put": {
-        "operationId": "updateUser",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdminUser" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
-      },
-      "delete": {
-        "operationId": "deleteUser",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/admin-users/users/nationalId/{nationalId}": {
-      "get": {
-        "operationId": "getUserByNationalId",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "nationalId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdminUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/application-users": {
-      "get": {
-        "operationId": "getApplicationUsers",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "involvedParty",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetApplicationUsers" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "post": {
-        "operationId": "createApplicationUser",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateApplicationUser" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/application-users/{id}": {
-      "get": {
-        "operationId": "getApplicationUser",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "delete": {
-        "operationId": "deleteApplicationUser",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
-      },
-      "put": {
-        "operationId": "updateApplicationUser",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateApplicationUser" }
-            }
-          }
-        },
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetApplicationUser" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
     "/api/v1/institutions/{id}": {
       "get": {
         "operationId": "getInstitution",
@@ -2825,6 +2569,130 @@
           }
         },
         "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "getUsers",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "example": 1,
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "example": 10,
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "involedPartyIds",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/nationalId/{nationalId}": {
+      "get": {
+        "operationId": "getUserByNationalId",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/statistics/department/{slug}": {
@@ -3283,16 +3151,16 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "AdminUserRole": {
+      "UserRoleDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "slug": { "type": "string" }
+          "id": { "type": "string", "description": "Id of the entity" },
+          "title": { "type": "string", "description": "Title of the entity" },
+          "slug": { "type": "string", "description": "Slug of the entity" }
         },
         "required": ["id", "title", "slug"]
       },
-      "AdminUser": {
+      "UserDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
@@ -3302,10 +3170,18 @@
           "fullName": { "type": "string" },
           "email": { "type": "string" },
           "displayName": { "type": "string" },
-          "roles": {
+          "involvedParties": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUserRole" }
-          }
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
+          "createdAt": { "format": "date-time", "type": "string" },
+          "updatedAt": { "format": "date-time", "type": "string" },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "role": { "$ref": "#/components/schemas/UserRoleDto" }
         },
         "required": [
           "id",
@@ -3315,7 +3191,11 @@
           "fullName",
           "email",
           "displayName",
-          "roles"
+          "involvedParties",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "role"
         ]
       },
       "BaseEntity": {
@@ -3359,7 +3239,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/AdminUser" }]
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "communicationStatus": {
             "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
@@ -4088,7 +3968,7 @@
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/AdminUser" }]
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "communicationStatus": {
             "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
@@ -4345,6 +4225,150 @@
         "properties": { "key": { "type": "string" } },
         "required": ["key"]
       },
+      "CreateAdvertTypeBody": {
+        "type": "object",
+        "properties": {
+          "mainTypeId": {
+            "type": "string",
+            "description": "Id of the main type"
+          },
+          "departmentId": {
+            "type": "string",
+            "description": "Id of the department"
+          },
+          "title": {
+            "type": "string",
+            "description": "Name of the advert type"
+          }
+        },
+        "required": ["departmentId", "title"]
+      },
+      "AdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department of the main advert type",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          }
+        },
+        "required": ["id", "title", "slug", "department"]
+      },
+      "GetAdvertType": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The advert type",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
+          }
+        },
+        "required": ["type"]
+      },
+      "AdvertTypeError": {
+        "type": "object",
+        "properties": {
+          "errorType": {
+            "type": "string",
+            "enum": ["DuplicateError", "ValidationError", "NotFoundError"]
+          },
+          "name": { "type": "string" },
+          "message": { "type": "string" },
+          "severity": { "type": "string", "enum": ["info", "warning", "error"] }
+        },
+        "required": ["errorType", "name", "message", "severity"]
+      },
+      "UpdateAdvertTypeBody": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "New title of the advert type"
+          },
+          "mainTypeId": { "type": "string" }
+        },
+        "required": ["mainTypeId"]
+      },
+      "CreateAdvertMainTypeBody": {
+        "type": "object",
+        "properties": {
+          "departmentId": {
+            "type": "string",
+            "description": "The department id"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          }
+        },
+        "required": ["departmentId", "title"]
+      },
+      "AdvertMainType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          },
+          "department": {
+            "description": "The department this main type belongs to",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          },
+          "types": {
+            "description": "All types under this main type",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertType" }
+          }
+        },
+        "required": ["id", "title", "slug", "department", "types"]
+      },
+      "GetAdvertMainType": {
+        "type": "object",
+        "properties": {
+          "mainType": {
+            "description": "The main advert type",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertMainType" }]
+          }
+        },
+        "required": ["mainType"]
+      },
+      "CreateAdvertMainTypeBulk": {
+        "type": "object",
+        "properties": {
+          "mainTypes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateAdvertMainTypeBody" }
+          }
+        },
+        "required": ["mainTypes"]
+      },
+      "UpdateAdvertMainType": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "New title of the main advert type"
+          }
+        }
+      },
       "UpdateSignatureMember": {
         "type": "object",
         "properties": {
@@ -4454,28 +4478,6 @@
         },
         "required": ["signature"]
       },
-      "AdvertType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          },
-          "department": {
-            "description": "The department of the main advert type",
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          }
-        },
-        "required": ["id", "title", "slug", "department"]
-      },
       "GetAdvertTypes": {
         "type": "object",
         "properties": {
@@ -4491,46 +4493,6 @@
         },
         "required": ["types", "paging"]
       },
-      "AdvertTypeError": {
-        "type": "object",
-        "properties": {
-          "errorType": {
-            "type": "string",
-            "enum": ["DuplicateError", "ValidationError", "NotFoundError"]
-          },
-          "name": { "type": "string" },
-          "message": { "type": "string" },
-          "severity": { "type": "string", "enum": ["info", "warning", "error"] }
-        },
-        "required": ["errorType", "name", "message", "severity"]
-      },
-      "AdvertMainType": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the main advert type"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          },
-          "slug": {
-            "type": "string",
-            "description": "The slug of the main advert type"
-          },
-          "department": {
-            "description": "The department this main type belongs to",
-            "allOf": [{ "$ref": "#/components/schemas/Department" }]
-          },
-          "types": {
-            "description": "All types under this main type",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertType" }
-          }
-        },
-        "required": ["id", "title", "slug", "department", "types"]
-      },
       "GetAdvertMainTypes": {
         "type": "object",
         "properties": {
@@ -4545,216 +4507,6 @@
           }
         },
         "required": ["mainTypes", "paging"]
-      },
-      "GetAdvertType": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "description": "The advert type",
-            "allOf": [{ "$ref": "#/components/schemas/AdvertType" }]
-          }
-        },
-        "required": ["type"]
-      },
-      "GetAdvertMainType": {
-        "type": "object",
-        "properties": {
-          "mainType": {
-            "description": "The main advert type",
-            "allOf": [{ "$ref": "#/components/schemas/AdvertMainType" }]
-          }
-        },
-        "required": ["mainType"]
-      },
-      "CreateAdvertTypeBody": {
-        "type": "object",
-        "properties": {
-          "mainTypeId": {
-            "type": "string",
-            "description": "Id of the main type"
-          },
-          "departmentId": {
-            "type": "string",
-            "description": "Id of the department"
-          },
-          "title": {
-            "type": "string",
-            "description": "Name of the advert type"
-          }
-        },
-        "required": ["departmentId", "title"]
-      },
-      "UpdateAdvertTypeBody": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "New title of the advert type"
-          },
-          "mainTypeId": { "type": "string" }
-        },
-        "required": ["mainTypeId"]
-      },
-      "CreateAdvertMainTypeBody": {
-        "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "string",
-            "description": "The department id"
-          },
-          "title": {
-            "type": "string",
-            "description": "The title of the main advert type"
-          }
-        },
-        "required": ["departmentId", "title"]
-      },
-      "CreateAdvertMainTypeBulk": {
-        "type": "object",
-        "properties": {
-          "mainTypes": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateAdvertMainTypeBody" }
-          }
-        },
-        "required": ["mainTypes"]
-      },
-      "UpdateAdvertMainType": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "New title of the main advert type"
-          }
-        }
-      },
-      "GetAdminUserRoles": {
-        "type": "object",
-        "properties": {
-          "roles": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUserRole" }
-          }
-        },
-        "required": ["roles"]
-      },
-      "GetAdminUsers": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdminUser" }
-          }
-        },
-        "required": ["users"]
-      },
-      "CreateAdminUser": {
-        "type": "object",
-        "properties": {
-          "nationalId": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "displayName": { "type": "string" },
-          "email": { "type": "string" },
-          "roleIds": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": [
-          "nationalId",
-          "firstName",
-          "lastName",
-          "displayName",
-          "email",
-          "roleIds"
-        ]
-      },
-      "GetAdminUser": {
-        "type": "object",
-        "properties": { "user": { "$ref": "#/components/schemas/AdminUser" } },
-        "required": ["user"]
-      },
-      "UpdateAdminUser": {
-        "type": "object",
-        "properties": {
-          "nationalId": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "displayName": { "type": "string" },
-          "email": { "type": "string" },
-          "roleIds": { "type": "array", "items": { "type": "string" } }
-        }
-      },
-      "ApplicationUser": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "description": "The user id" },
-          "nationalId": {
-            "type": "string",
-            "description": "The user national id"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "The user first name"
-          },
-          "lastName": { "type": "string", "description": "The user last name" },
-          "email": { "type": "string", "description": "The user email" },
-          "involvedParties": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Institution" }
-          }
-        },
-        "required": [
-          "id",
-          "nationalId",
-          "firstName",
-          "lastName",
-          "involvedParties"
-        ]
-      },
-      "GetApplicationUsers": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ApplicationUser" }
-          }
-        },
-        "required": ["users"]
-      },
-      "GetApplicationUser": {
-        "type": "object",
-        "properties": {
-          "user": { "$ref": "#/components/schemas/ApplicationUser" }
-        },
-        "required": ["user"]
-      },
-      "CreateApplicationUser": {
-        "type": "object",
-        "properties": {
-          "nationalId": {
-            "type": "string",
-            "description": "The user national id"
-          },
-          "firstName": {
-            "type": "string",
-            "description": "The user first name"
-          },
-          "lastName": { "type": "string", "description": "The user last name" },
-          "email": { "type": "string", "description": "The user email" },
-          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": ["nationalId", "firstName", "lastName", "involvedPartyIds"]
-      },
-      "UpdateApplicationUser": {
-        "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "description": "The user first name"
-          },
-          "lastName": { "type": "string", "description": "The user last name" },
-          "email": { "type": "string", "description": "The user email" },
-          "involvedPartyIds": { "type": "array", "items": { "type": "string" } }
-        }
       },
       "GetInstitution": {
         "type": "object",
@@ -4787,6 +4539,14 @@
           "title": { "type": "string", "description": "Title of the entity" }
         }
       },
+      "GetUserResponse": {
+        "type": "object",
+        "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
+        "required": ["user"]
+      },
+      "UnauthorizedException": { "type": "object", "properties": {} },
+      "ForbiddenException": { "type": "object", "properties": {} },
+      "InternalServerErrorException": { "type": "object", "properties": {} },
       "DepartmentSlugEnum": {
         "type": "string",
         "enum": ["a-deild", "b-deild", "c-deild"]

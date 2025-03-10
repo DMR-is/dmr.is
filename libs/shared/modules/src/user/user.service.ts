@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -8,10 +9,12 @@ import {
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertInvolvedPartyModel } from '../journal/models'
 import { userMigrate } from './migration/user.migrate'
 import { UserModel } from './models/user.model'
 import { IUserService } from './user.service.interface'
@@ -22,11 +25,47 @@ export class UserService implements IUserService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(UserModel) private readonly userModel: typeof UserModel,
   ) {}
-  getUsersByInvolvedPartyId(
-    involvedPartyId: string,
+  async getUsersByUserInvolvedParties(
+    query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>> {
-    throw new Error('Method not implemented.')
+    const involedPartyIds = currentUser.involvedParties.map(
+      (involvedParty) => involvedParty.id,
+    )
+
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+
+    const users = await this.userModel.findAll({
+      limit,
+      offset,
+      include: [
+        {
+          model: AdvertInvolvedPartyModel,
+          where: {
+            id: {
+              required: true,
+              [Op.in]: involedPartyIds,
+            },
+          },
+        },
+      ],
+    })
+
+    const migrated = users.map((user) => userMigrate(user))
+    const paging = generatePaging(
+      users,
+      query.page,
+      query.pageSize,
+      users.length,
+    )
+
+    return ResultWrapper.ok({
+      users: migrated,
+      paging: paging,
+    })
   }
 
   /**
@@ -57,15 +96,57 @@ export class UserService implements IUserService {
     })
   }
 
+  @LogAndHandle()
   async getUsers(
     query: GetUsersQuery,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUsersResponse>> {
-    const users = await this.userModel.findAll()
-    const migrated = users.map((user) => userMigrate(user))
+    const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+
+    if (!isAdmin) {
+      return this.getUsersByUserInvolvedParties(query, currentUser)
+    }
+
+    const whereParams = {}
+    let hasInvolvedPartyFilter = false
+
+    if (query.involedPartyIds?.length) {
+      hasInvolvedPartyFilter = true
+      Object.assign(whereParams, {
+        id: {
+          [Op.in]: query.involedPartyIds,
+        },
+      })
+    }
+
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+
+    const users = await this.userModel.findAndCountAll({
+      limit,
+      offset,
+      include: [
+        {
+          required: hasInvolvedPartyFilter,
+          model: AdvertInvolvedPartyModel,
+          where: whereParams,
+        },
+      ],
+    })
+
+    const migrated = users.rows.map((user) => userMigrate(user))
+    const paging = generatePaging(
+      users.rows,
+      query.page,
+      query.pageSize,
+      users.count,
+    )
 
     return ResultWrapper.ok({
       users: migrated,
+      paging: paging,
     })
   }
 }

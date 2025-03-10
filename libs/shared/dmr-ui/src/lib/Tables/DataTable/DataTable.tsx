@@ -1,4 +1,9 @@
-import { Pagination, Stack, Table as T } from '@island.is/island-ui/core'
+import {
+  Pagination,
+  SkeletonLoader,
+  Stack,
+  Table as T,
+} from '@island.is/island-ui/core'
 import { DataTableHeadCell } from './DataTableHeadCell'
 import { DataTableCell } from './DataTableCell'
 
@@ -11,6 +16,7 @@ export type DataTableColumn = {
 }
 
 export type DataTableProps<T extends readonly DataTableColumn[]> = {
+  loading?: boolean
   columns: T
   rows: Array<{
     [K in T[number]['field']]: React.ReactNode
@@ -28,8 +34,20 @@ export const DataTable = <T extends readonly DataTableColumn[]>({
   columns,
   rows,
   paging,
+  loading = false,
   onPaginate,
 }: DataTableProps<T>) => {
+  if (loading) {
+    return (
+      <SkeletonLoader
+        repeat={5}
+        height={44}
+        space={1}
+        borderRadius="standard"
+      />
+    )
+  }
+
   return (
     <Stack space={4}>
       <T.Table>

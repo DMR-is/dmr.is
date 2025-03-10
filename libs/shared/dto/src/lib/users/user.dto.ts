@@ -1,5 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { Institution } from '../institutions'
+import { Paging, PagingQuery } from '../paging'
 import { UserRoleDto } from './user-role.dto'
 
 export class UserDto {
@@ -39,6 +41,11 @@ export class UserDto {
   displayName!: string
 
   @ApiProperty({
+    type: [Institution],
+  })
+  involvedParties!: Institution[]
+
+  @ApiProperty({
     type: Date,
   })
   createdAt!: Date
@@ -72,6 +79,11 @@ export class GetUsersResponse {
     type: [UserDto],
   })
   users!: UserDto[]
+
+  @ApiProperty({
+    type: Paging,
+  })
+  paging!: Paging
 }
 
 export class CreateUserBody extends PickType(UserDto, [
@@ -86,14 +98,16 @@ export class CreateUserBody extends PickType(UserDto, [
   roleIds!: string[]
 }
 
-export class GetUsersQuery {
+export class GetUsersQuery extends PagingQuery {
   @ApiProperty({
     type: String,
+    required: false,
   })
   search?: string
 
   @ApiProperty({
     type: [String],
+    required: false,
   })
-  involvedPartyId?: [string]
+  involedPartyIds?: [string]
 }
