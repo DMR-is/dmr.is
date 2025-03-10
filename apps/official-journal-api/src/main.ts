@@ -17,6 +17,7 @@ import { openApi } from './openApi'
 
 async function bootstrap() {
   const globalPrefix = 'api'
+  const version = 'v1'
   const swaggerPath = 'swagger'
 
   const app = await NestFactory.create(AppModule, {
@@ -41,7 +42,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000
   await app.listen(port)
   logger.info(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
+    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
   )
 }
 
