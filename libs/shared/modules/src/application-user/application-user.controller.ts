@@ -1,4 +1,4 @@
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRole } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -38,7 +38,7 @@ import { IApplicationUserService } from './application-user.service.interface'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(USER_ROLES.Admin, USER_ROLES.Editor)
+@Roles(UserRole.Admin, UserRole.Editor)
 export class ApplicationUserController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

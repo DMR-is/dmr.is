@@ -33,59 +33,9 @@ INSERT INTO
     LAST_NAME,
     DISPLAY_NAME,
     EMAIL,
-    DELETED,
-    CREATED,
-    UPDATED
-  )
-VALUES
-  (
-    'a235bb11-65e5-4bbd-a99a-f5773380e79d',
-    '0101302719',
-    'Gervimaður',
-    'Evrópa',
-    'GM Evrópa',
-    'gm@evropa.is',
-    false,
-    '2024-10-02T14:11:01.646Z',
-    '2024-10-02T14:11:01.646Z'
-  );
-
-INSERT INTO
-  OJOI_USER (
-    ID,
-    NATIONAL_ID,
-    FIRST_NAME,
-    LAST_NAME,
-    DISPLAY_NAME,
-    EMAIL,
-    DELETED,
-    CREATED,
-    UPDATED
-  )
-VALUES
-  (
-    'db710b5d-8745-4f5f-b22b-c7151847c56a',
-    '0101307789',
-    'Gervimaður',
-    'Útlönd',
-    'GM Útlönd',
-    'gm@utlond.IS',
-    false,
-    '2024-10-02T14:11:01.646Z',
-    '2024-10-02T14:11:01.646Z'
-  );
-
-INSERT INTO
-  OJOI_USER (
-    ID,
-    NATIONAL_ID,
-    FIRST_NAME,
-    LAST_NAME,
-    DISPLAY_NAME,
-    EMAIL,
-    DELETED,
-    CREATED,
-    UPDATED
+    ROLE_ID,
+    CREATED_AT,
+    UPDATED_AT
   )
 VALUES
   (
@@ -95,33 +45,58 @@ VALUES
     'Færeyjar',
     'GM Færeyjar',
     'gm@faereyjar.is',
-    false,
+    '66f472c1-f133-48ba-a74b-318e1920dc24',
     '2024-10-02T14:11:01.646Z',
     '2024-10-02T14:11:01.646Z'
   );
 
 INSERT INTO
-  USER_ROLES (USER_ROLE_ID, USER_ID)
+  OJOI_USER (
+    ID,
+    NATIONAL_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    DISPLAY_NAME,
+    EMAIL,
+    ROLE_ID,
+    CREATED_AT,
+    UPDATED_AT
+  )
 VALUES
   (
-    '66f472c1-f133-48ba-a74b-318e1920dc24',
-    '115e5c5d-e257-4e9a-ad57-e26f4bb890ef'
-  );
-
-INSERT INTO
-  USER_ROLES (USER_ROLE_ID, USER_ID)
-VALUES
-  (
+    'db710b5d-8745-4f5f-b22b-c7151847c56a',
+    '0101307789',
+    'Gervimaður',
+    'Útlönd',
+    'GM Útlönd',
+    'gm@utlond.IS',
     'e75f1c59-d572-4126-b5ee-f29f7498c59a',
-    'db710b5d-8745-4f5f-b22b-c7151847c56a'
+    '2024-10-02T14:11:01.646Z',
+    '2024-10-02T14:11:01.646Z'
   );
 
 INSERT INTO
-  USER_ROLES (USER_ROLE_ID, USER_ID)
+  OJOI_USER (
+    ID,
+    NATIONAL_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    DISPLAY_NAME,
+    EMAIL,
+    ROLE_ID,
+    CREATED_AT,
+    UPDATED_AT
+  )
 VALUES
   (
-    '126d07e7-d3c4-41c7-8178-445028e4dc0f',
-    'a235bb11-65e5-4bbd-a99a-f5773380e79d'
+    'a235bb11-65e5-4bbd-a99a-f5773380e79d',
+    '0101302719',
+    'Gervimaður',
+    'Evrópa',
+    'GM Evrópa',
+    'gm@evropa.is',
+    '126d07e7-d3c4-41c7-8178-445028e4dc0f' '2024-10-02T14:11:01.646Z',
+    '2024-10-02T14:11:01.646Z'
   );
 
 INSERT INTO

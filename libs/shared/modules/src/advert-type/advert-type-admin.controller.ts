@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript'
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRole } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -37,7 +37,7 @@ import { AdvertTypeError } from './advert-type-error'
 @Controller({ path: 'advert-types', version: '1' })
 @ApiBearerAuth()
 @UseGuards(AdminAuthGuard)
-@Roles(USER_ROLES.Admin)
+@Roles(UserRole.Admin)
 export class AdvertTypeAdminController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

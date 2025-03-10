@@ -1,4 +1,4 @@
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRole } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -87,7 +87,7 @@ const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(USER_ROLES.Admin)
+@Roles(UserRole.Admin)
 @Controller({
   version: '1',
   path: 'cases',

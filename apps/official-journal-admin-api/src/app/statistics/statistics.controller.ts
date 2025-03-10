@@ -1,4 +1,4 @@
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRole } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
@@ -27,7 +27,7 @@ import { IStatisticsService } from './statistics.service.interface'
   version: '1',
 })
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(USER_ROLES.Admin)
+@Roles(UserRole.Admin)
 export class StatisticsController {
   constructor(
     @Inject(IStatisticsService)
