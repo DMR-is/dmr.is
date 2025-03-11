@@ -18,7 +18,7 @@ export const useCategories = ({
   params,
 }: UseCategoriesParams = {}) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string, session?.apiBasePath)
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCategoriesResponse,
     Error

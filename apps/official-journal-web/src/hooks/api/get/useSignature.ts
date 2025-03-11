@@ -12,7 +12,7 @@ type UseSignatureParams = {
 
 export const useSignature = ({ signatureId, options }: UseSignatureParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string, session?.apiBasePath)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session ? ['getSignature', session?.user, signatureId] : null,
