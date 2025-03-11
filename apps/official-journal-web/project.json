@@ -9,7 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/official-journal-web"
+        "outputPath": "apps/official-journal-web/dist"
       },
       "configurations": {
         "development": {
@@ -98,6 +98,16 @@
         ],
         "parallel": false,
         "cwd": "apps/official-journal-web"
+      }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
       }
     }
   },
