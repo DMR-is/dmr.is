@@ -86,6 +86,13 @@ export class GetUsersResponse {
   paging!: Paging
 }
 
+export class GetInvoledPartiesByUserResponse {
+  @ApiProperty({
+    type: [Institution],
+  })
+  involvedParties!: Institution[]
+}
+
 export class CreateUserBody extends PickType(UserDto, [
   'nationalId',
   'firstName',
@@ -106,8 +113,16 @@ export class GetUsersQuery extends PagingQuery {
   search?: string
 
   @ApiProperty({
-    type: [String],
+    type: String,
+    description: 'Slug of the institution',
     required: false,
   })
-  involedPartyIds?: [string]
+  involvedParty?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Slug of the role',
+    required: false,
+  })
+  role?: string
 }

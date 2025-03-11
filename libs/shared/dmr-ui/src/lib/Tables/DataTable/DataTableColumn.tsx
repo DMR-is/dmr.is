@@ -1,27 +1,25 @@
 import { Box, Icon, Inline, Table as T, Text } from '@island.is/island-ui/core'
 import * as styles from './DataTable.css'
-export type DataTableHeadCellProps = {
-  field: string
-  fluid?: boolean
-  align?: 'left' | 'right' | 'center'
-  children?: React.ReactNode
-  sortBy?: string
-  onSort?: (field: string) => void
-  direction?: 'asc' | 'desc'
-}
-
-export const DataTableHeadCell = ({
+import { DataTableColumnProps } from './types'
+export const DataTableColumn = ({
   field,
   fluid = false,
+  width,
   align = 'left',
   children,
   onSort,
   direction = 'asc',
   sortBy,
-}: DataTableHeadCellProps) => {
+}: DataTableColumnProps) => {
   const inlineStyles = fluid
-    ? { width: '100%', whiteSpace: 'nowrap' }
-    : { width: 'auto', whiteSpace: 'nowrap' }
+    ? {
+        width: 'auto',
+      }
+    : {
+        minWidth: width ? width : '0px',
+        maxWidth: width ? width : '0px',
+        width: width ? width : '0px',
+      }
 
   const Wrapper = onSort ? 'button' : 'div'
 

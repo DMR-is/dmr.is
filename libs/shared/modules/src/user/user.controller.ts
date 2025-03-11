@@ -2,6 +2,8 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
@@ -65,6 +67,38 @@ export class UserController {
 
     if (!results.result.ok) {
       throw new InternalServerErrorException('Could not get user')
+    }
+
+    return results.result.value
+  }
+
+  @Get('roles')
+  @ApiOperation({ operationId: 'getRolesByUser' })
+  @ApiResponse({ status: 200, type: GetRolesByUserResponse })
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
+  async getRolesByUser(@CurrentUser() currentUser: UserDto) {
+    const results = await this.userService.getRolesByUser(currentUser)
+
+    if (!results.result.ok) {
+      throw new InternalServerErrorException('Could not get roles')
+    }
+
+    return results.result.value
+  }
+
+  @Get('involved-parties')
+  @ApiOperation({ operationId: 'getInvolvedPartiesByUser' })
+  @ApiResponse({ status: 200, type: GetInvoledPartiesByUserResponse })
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
+  async getInvolvedPartiesByUser(@CurrentUser() currentUser: UserDto) {
+    const results = await this.userService.getInvolvedPartiesByUser(currentUser)
+
+    if (!results.result.ok) {
+      throw new InternalServerErrorException('Could not get involved parties')
     }
 
     return results.result.value

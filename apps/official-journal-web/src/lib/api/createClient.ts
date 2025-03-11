@@ -5,10 +5,7 @@ const config = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
-    basePath:
-      process.env.NODE_ENV === 'production'
-        ? process.env.DMR_ADMIN_API_BASE_PATH
-        : 'http://localhost:4000',
+    basePath: 'http://localhost:4000',
   })
 }
 
@@ -16,9 +13,7 @@ const clientConfig = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
-    basePath:
-      process.env.NEXT_PUBLIC_DMR_ADMIN_API_BASE_PATH ??
-      'http://localhost:4000',
+    basePath: 'http://localhost:4000',
   })
 }
 

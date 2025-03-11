@@ -2597,10 +2597,18 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "involedPartyIds",
+            "name": "involvedParty",
             "required": false,
             "in": "query",
-            "schema": { "type": "array", "items": { "type": "string" } }
+            "description": "Slug of the institution",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "description": "Slug of the role",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2662,6 +2670,102 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/users/roles": {
+      "get": {
+        "operationId": "getRolesByUser",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRolesByUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/users/involved-parties": {
+      "get": {
+        "operationId": "getInvolvedPartiesByUser",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInvoledPartiesByUserResponse"
+                }
               }
             }
           },
@@ -4592,6 +4696,27 @@
         "type": "object",
         "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
         "required": ["user"]
+      },
+      "GetRolesByUserResponse": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "description": "Available roles for the current user to fetch",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserRoleDto" }
+          }
+        },
+        "required": ["roles"]
+      },
+      "GetInvoledPartiesByUserResponse": {
+        "type": "object",
+        "properties": {
+          "involvedParties": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          }
+        },
+        "required": ["involvedParties"]
       },
       "DepartmentSlugEnum": {
         "type": "string",

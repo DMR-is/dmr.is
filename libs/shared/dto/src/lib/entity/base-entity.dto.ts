@@ -16,7 +16,7 @@ export class BaseEntity<T = string> {
   id!: string
 
   @ApiProperty({
-    type: String,
+    type: String, // TODO: figure out how to have this be of type T
     description: 'Title of the entity',
   })
   title!: T

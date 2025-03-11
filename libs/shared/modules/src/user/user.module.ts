@@ -3,6 +3,7 @@ import { LoggingModule } from '@dmr.is/logging'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdvertInvolvedPartyModel } from '../journal/models'
 import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
@@ -16,6 +17,7 @@ import { IUserService } from './user.service.interface'
       UserModel,
       UserRoleModel,
       UserInvolvedPartiesModel,
+      AdvertInvolvedPartyModel,
     ]),
     LoggingModule,
   ],

@@ -1,4 +1,6 @@
 import {
+  GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
@@ -20,6 +22,14 @@ export interface IUserService {
   getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>>
+
+  getRolesByUser(
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetRolesByUserResponse>>
+
+  getInvolvedPartiesByUser(
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>>
 }
 
 export const IUserService = Symbol('IUserService')

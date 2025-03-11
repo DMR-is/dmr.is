@@ -26,7 +26,8 @@ export const useUsers = ({ params = {}, options }: UseCaseParams) => {
   )
 
   return {
-    case: data?.users,
+    users: data?.users,
+    paging: data?.paging,
     error,
     isLoading,
     isValidating,
