@@ -1,9 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../lib/constants'
 
 const correctionSchema = z.object({
@@ -13,7 +12,7 @@ const correctionSchema = z.object({
   advertHtml: z.string(),
 })
 
-class CreateCorrectionHandler {
+class CreateCorrectionHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -30,19 +29,14 @@ class CreateCorrectionHandler {
 
     const { caseId, ...rest } = body
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateCaseAndAddCorrection({
-        id: caseId,
-        updateAdvertHtmlCorrection: rest,
-      })
+    await this.client.updateCaseAndAddCorrection({
+      id: caseId,
+      updateAdvertHtmlCorrection: rest,
+    })
 
     return void res.status(204).end()
   }
 }
 
-const instance = new CreateCorrectionHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, CreateCorrectionHandler)

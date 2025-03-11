@@ -25,6 +25,10 @@ export class TokenJwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest()
     const authHeader = request.headers.authorization
 
+    console.log(request.headers)
+
+    console.log('token auth guard access token', authHeader)
+
     if (!authHeader) {
       throw new UnauthorizedException('Authorization header is missing')
     }

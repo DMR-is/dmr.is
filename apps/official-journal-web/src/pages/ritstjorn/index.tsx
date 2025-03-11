@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth/next'
 
 import {
   GridColumn,
@@ -23,6 +23,7 @@ import {
   mapTabIdToCaseStatus,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 const CaseOverviewTabs = dynamic(
   () => import('../../components/tabs/CaseOverviewTabs'),
@@ -75,10 +76,11 @@ export default function CaseProccessingOverviewScreen() {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   query,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)

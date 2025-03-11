@@ -50,6 +50,8 @@ export class RoleGuard implements CanActivate {
         request.user.nationalId,
       )
 
+      console.log('userLookup', userLookup)
+
       if (!userLookup.result.ok) {
         this.logger.warn('Could not find user', {
           error: userLookup.result.error,

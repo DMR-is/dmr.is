@@ -41,15 +41,15 @@ export class LoggingInterceptor implements NestInterceptor {
           duration: `${duration}ms`,
         }
 
-        if (duration < 1000) {
+        if (duration < 30) {
           logger.info(message, info)
         }
 
-        if (duration >= 1000 && duration < 2000) {
+        if (duration >= 30 && duration < 100) {
           logger.warn(message, info)
         }
 
-        if (duration >= 2000) {
+        if (duration >= 100) {
           logger.error(message, info)
         }
 

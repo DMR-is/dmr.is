@@ -1,7 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
-import { getSession } from 'next-auth/react'
-import { Section } from '@dmr.is/ui'
+import { getServerSession } from 'next-auth'
 
 import {
   GridColumn,
@@ -11,20 +10,22 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { Section } from '../../components/section/Section'
 import { LayoutProps } from '../../layout/Layout'
-import { loginRedirect } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
+import { authOptions } from '../api/auth/[...nextauth]'
 
-const UsersTable = dynamic(() => import('../../components/tables/UsersTable'))
+const UserTable = dynamic(() => import('../../components/tables/UsersTable'))
 
 export default function UsersPage() {
   return (
-    <Section>
+    <Section variant="blue">
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12']} paddingBottom={[2, 2, 3]}>
-            <Stack space={2}>
+            <Stack space={[2, 2, 3]}>
               <Text variant="h3">Umsjón notenda og stofnana</Text>
-              <UsersTable />
+              <UserTable />
             </Stack>
           </GridColumn>
         </GridRow>
@@ -35,9 +36,14 @@ export default function UsersPage() {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
+
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
 
   const layout: LayoutProps = {
     showFooter: false,
@@ -47,14 +53,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   }
 
-  if (!session) {
-    return loginRedirect(resolvedUrl)
-  }
-
   return {
-    props: {
+    props: deleteUndefined({
+      session,
       layout,
-      currentUser: session.user,
-    },
+    }),
   }
 }

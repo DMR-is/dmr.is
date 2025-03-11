@@ -2608,7 +2608,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+                "schema": { "$ref": "#/components/schemas/GetUsersResponse" }
               }
             }
           },
@@ -2640,7 +2640,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/users/nationalId/{nationalId}": {
@@ -2692,7 +2693,8 @@
               }
             }
           }
-        }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/statistics/department/{slug}": {
@@ -2929,6 +2931,33 @@
         },
         "required": ["tags"]
       },
+      "CategoryMainCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the main category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the main category.",
+            "example": "Dómstólar og réttarfar"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the main category, used in URLs and API requests.",
+            "example": "domstolar-og-rettarfar"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category, used on front page.",
+            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
+          }
+        },
+        "required": ["id", "title", "slug", "description"]
+      },
       "Category": {
         "type": "object",
         "properties": {
@@ -2947,9 +2976,15 @@
             "type": "string",
             "description": "Slug of the advert category, used in URLs and API requests.",
             "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategories": {
+            "description": "The main category this category belongs to.",
+            "example": "Dómstólar og réttarfar",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": ["id", "title", "slug", "mainCategories"]
       },
       "GetCategoriesResponse": {
         "type": "object",
@@ -4539,14 +4574,25 @@
           "title": { "type": "string", "description": "Title of the entity" }
         }
       },
+      "GetUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["users", "paging"]
+      },
+      "UnauthorizedException": { "type": "object", "properties": {} },
+      "ForbiddenException": { "type": "object", "properties": {} },
+      "InternalServerErrorException": { "type": "object", "properties": {} },
       "GetUserResponse": {
         "type": "object",
         "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
         "required": ["user"]
       },
-      "UnauthorizedException": { "type": "object", "properties": {} },
-      "ForbiddenException": { "type": "object", "properties": {} },
-      "InternalServerErrorException": { "type": "object", "properties": {} },
       "DepartmentSlugEnum": {
         "type": "string",
         "enum": ["a-deild", "b-deild", "c-deild"]

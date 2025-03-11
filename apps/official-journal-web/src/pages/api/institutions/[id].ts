@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
-class InstitutionHandler {
-  private readonly client = createDmrClient()
+class InstitutionHandler extends RouteHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       switch (req.method) {
@@ -29,9 +27,9 @@ class InstitutionHandler {
   }
 
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const institutions = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getInstitution({ id: req.query.id as string })
+    const institutions = await this.client.getInstitution({
+      id: req.query.id as string,
+    })
 
     return res.status(200).json(institutions)
   }
@@ -39,29 +37,23 @@ class InstitutionHandler {
   private async update(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
 
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateInstitution({
-        id: id,
-        updateInstitution: req.body,
-      })
+    await this.client.updateInstitution({
+      id: id,
+      updateInstitution: req.body,
+    })
 
     return res.status(204).end()
   }
 
   private async delete(req: NextApiRequest, res: NextApiResponse) {
     const id = req.query.id as string
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteInstitution({
-        id: id,
-      })
+    await this.client.deleteInstitution({
+      id: id,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new InstitutionHandler()
-
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, InstitutionHandler)

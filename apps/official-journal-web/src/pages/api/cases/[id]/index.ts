@@ -1,33 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { getToken } from 'next-auth/jwt'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
-class GetCaseHandler {
+class GetCaseHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
-    const dmrClient = createDmrClient()
-
     const { id } = req.query as { id?: string }
-    const auth = await getToken({ req })
 
     if (!id) {
       return res.status(400).json({ message: 'Case ID is required' })
     }
 
-    const caseResponse = await dmrClient
-      .withMiddleware(new AuthMiddleware(auth?.accessToken))
-      .getCase({
-        id,
-      })
+    const caseResponse = await this.client.getCase({
+      id,
+    })
 
     return res.status(200).json(caseResponse)
   }
 }
 
-const instance = new GetCaseHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, GetCaseHandler)

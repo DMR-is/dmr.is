@@ -1,4 +1,9 @@
-import { DEFAULT_CASE_SORT_BY, DEFAULT_CASE_SORT_DIRECTION, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import {
+  DEFAULT_CASE_SORT_BY,
+  DEFAULT_CASE_SORT_DIRECTION,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_PAGE_SIZE,
+} from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICaseService, IJournalService } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
@@ -23,6 +28,8 @@ import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
+import { AdvertsToRss } from '../../util/AdvertsToRss'
 
 @Controller({
   version: '1',
@@ -161,5 +168,18 @@ export class JournalController {
       })),
       paging: casesResponse.paging,
     }
+  }
+
+  @Get('/rss/:id')
+  @ApiOperation({ operationId: 'getRssFeed' })
+  @ApiResponse({ status: 200 })
+  async getRssFeed(@Param() param?: { id: string }) {
+    const adverts = ResultWrapper.unwrap(
+      await this.journalService.getAdverts({
+        department: param?.id.toLowerCase(),
+        pageSize: 100,
+      }),
+    )
+    return AdvertsToRss(adverts.adverts, param?.id?.toLowerCase())
   }
 }

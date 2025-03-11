@@ -1,7 +1,12 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { GetUserResponse, GetUsersQuery, UserDto } from '@dmr.is/shared/dto'
+import {
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+  UserDto,
+} from '@dmr.is/shared/dto'
 
 import {
   Controller,
@@ -14,7 +19,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
 import { IUserService } from './user.service.interface'
@@ -23,6 +28,7 @@ import { IUserService } from './user.service.interface'
   path: 'users',
   version: '1',
 })
+@ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor)
 export class UserController {
@@ -33,7 +39,7 @@ export class UserController {
 
   @Get('/')
   @ApiOperation({ operationId: 'getUsers' })
-  @ApiResponse({ status: 200, type: GetUserResponse })
+  @ApiResponse({ status: 200, type: GetUsersResponse })
   @ApiResponse({ status: 401, type: UnauthorizedException })
   @ApiResponse({ status: 403, type: ForbiddenException })
   @ApiResponse({ status: 500, type: InternalServerErrorException })
@@ -54,6 +60,7 @@ export class UserController {
   @ApiResponse({ status: 403, type: ForbiddenException })
   @ApiResponse({ status: 500, type: InternalServerErrorException })
   async getUserByNationalId(@Param('nationalId') nationalId: string) {
+    this.logger.info('Getting user by nationalId', { nationalId })
     const results = await this.userService.getUserByNationalId(nationalId)
 
     if (!results.result.ok) {

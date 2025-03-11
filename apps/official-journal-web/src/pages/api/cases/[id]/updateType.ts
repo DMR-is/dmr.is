@@ -1,16 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../lib/constants'
 
 const bodySchema = z.object({
   typeId: z.string(),
 })
 
-class UpdateTypeHandler {
+class UpdateTypeHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -21,20 +20,15 @@ class UpdateTypeHandler {
       return void res.status(400).json(OJOIWebException.badRequest())
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateCaseType({
-        id: id,
-        updateCaseTypeBody: {
-          typeId: check.data.typeId,
-        },
-      })
+    await this.client.updateCaseType({
+      id: id,
+      updateCaseTypeBody: {
+        typeId: check.data.typeId,
+      },
+    })
     return void res.status(204).end()
   }
 }
 
-const instance = new UpdateTypeHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateTypeHandler)

@@ -1,14 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 
-class TypesHandler {
-  private readonly client = createDmrClient()
-
+class TypesHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -52,38 +49,33 @@ class TypesHandler {
       mainType?: string
     }
 
-    const types = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getTypes({
-        id: id,
-        slug: slug,
-        unassigned: unassigned,
-        department: department,
-        search: search,
-        mainType: mainType,
-        page: page,
-        pageSize: pageSize,
-      })
+    const types = await this.client.getTypes({
+      id: id,
+      slug: slug,
+      unassigned: unassigned,
+      department: department,
+      search: search,
+      mainType: mainType,
+      page: page,
+      pageSize: pageSize,
+    })
 
     return res.status(200).json(types)
   }
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const type = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createType({
-        createAdvertTypeBody: {
-          departmentId: req.body.departmentId,
-          mainTypeId: req.body?.mainTypeId,
-          title: req.body.title,
-        },
-      })
+    const type = await this.client.createType({
+      createAdvertTypeBody: {
+        departmentId: req.body.departmentId,
+        mainTypeId: req.body?.mainTypeId,
+        title: req.body.title,
+      },
+    })
 
     return res.status(201).json(type)
   }
 }
 
-const instance = new TypesHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, TypesHandler)

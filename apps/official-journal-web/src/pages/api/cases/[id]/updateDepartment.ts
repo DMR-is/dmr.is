@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   departmentId: z.string(),
 })
 
-class UpdateDepartmentHandler {
+class UpdateDepartmentHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -26,21 +25,16 @@ class UpdateDepartmentHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateDepartment({
-        id: id,
-        updateCaseDepartmentBody: {
-          departmentId: parsed.data.departmentId,
-        },
-      })
+    await this.client.updateDepartment({
+      id: id,
+      updateCaseDepartmentBody: {
+        departmentId: parsed.data.departmentId,
+      },
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdateDepartmentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdateDepartmentHandler)

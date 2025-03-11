@@ -1,15 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { StatisticsOverviewQueryType } from '../../../gen/fetch'
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 
-class GetStatisticsOverviewHandler {
-  private readonly client = createDmrClient()
-
+class GetStatisticsOverviewHandler extends RouteHandler {
   @LogMethod(false)
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -33,16 +30,13 @@ class GetStatisticsOverviewHandler {
   private async get(req: NextApiRequest, res: NextApiResponse) {
     const type = req.query?.type as StatisticsOverviewQueryType
 
-    const statistics = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getStatisticsOverview({
-        type: type,
-      })
+    const statistics = await this.client.getStatisticsOverview({
+      type: type,
+    })
 
     return res.status(200).json(statistics)
   }
 }
 
-const instance = new GetStatisticsOverviewHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, GetStatisticsOverviewHandler)

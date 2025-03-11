@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   paid: z.boolean(),
 })
 
-class UpdatePaidHandler {
+class UpdatePaidHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -26,20 +25,15 @@ class UpdatePaidHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePaid({
-        id: id,
-        updatePaidBody: {
-          paid: parsed.data.paid,
-        },
-      })
+    await this.client.updatePaid({
+      id: id,
+      updatePaidBody: {
+        paid: parsed.data.paid,
+      },
+    })
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePaidHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdatePaidHandler)

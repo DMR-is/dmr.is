@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   date: z.string(),
 })
 
-class UpdatePublishDateHandler {
+class UpdatePublishDateHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -26,21 +25,16 @@ class UpdatePublishDateHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePublishDate({
-        id: id,
-        updatePublishDateBody: {
-          date: parsed.data.date,
-        },
-      })
+    await this.client.updatePublishDate({
+      id: id,
+      updatePublishDateBody: {
+        date: parsed.data.date,
+      },
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePublishDateHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdatePublishDateHandler)

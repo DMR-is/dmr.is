@@ -7,6 +7,12 @@ export function advertCategoryMigrate(model: AdvertCategoryModel): Category {
     id: model.id,
     slug: model.slug,
     title: model.title,
+    mainCategories: model.mainCategories?.map((mainCategory) => ({
+      id: mainCategory.id,
+      title: mainCategory.title,
+      slug: mainCategory.slug,
+      description: mainCategory.description,
+    })),
   }
   return result
 }
