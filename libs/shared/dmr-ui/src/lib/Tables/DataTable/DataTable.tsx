@@ -31,6 +31,8 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
     )
   }
 
+  const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
+
   return (
     <Stack space={4}>
       <T.Table style={{ tableLayout: layout }}>
@@ -39,6 +41,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
             {columns.map((column, i) => (
               <DataTableColumn key={i} {...column} />
             ))}
+            {hasExpandableRows && <DataTableColumn width="65px" field="" />}
           </T.Row>
         </T.Head>
         <DataTableBody

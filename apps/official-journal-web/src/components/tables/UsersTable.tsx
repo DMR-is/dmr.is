@@ -1,4 +1,4 @@
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
 import { DataTable } from '@dmr.is/ui'
@@ -35,7 +35,7 @@ export const UsersTable = ({
   const [role, setRole] = useQueryState('hlutverk')
   const [search, setSearch] = useQueryState('leit')
 
-  const [localSearch, setLocalSearch] = useState('')
+  const [localSearch, setLocalSearch] = useState(search ?? '')
 
   const pageSizeOptions = [
     {
@@ -190,6 +190,8 @@ export const UsersTable = ({
           },
         ]}
         rows={users?.map((user) => ({
+          isExpandable: true,
+          children: <h2>Hello i am expanded</h2>,
           name: user.displayName,
           email: user.email,
           institution:

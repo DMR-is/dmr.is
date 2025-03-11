@@ -39,3 +39,23 @@ export const emptyRowMessage = style({
   fontStyle: 'italic',
   opacity: 0.5,
 })
+
+export const dataTableRow = recipe({
+  base: {},
+  variants: {
+    expandable: {
+      true: {
+        cursor: 'pointer',
+
+        selectors: {
+          '&:hover': {
+            backgroundColor: theme.color.blue100,
+          },
+        },
+      },
+      false: {
+        cursor: 'default',
+      },
+    },
+  },
+})
