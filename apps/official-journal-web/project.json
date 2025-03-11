@@ -7,6 +7,7 @@
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "apps/official-journal-web/dist"
@@ -102,7 +103,7 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build", "codegen"],
+      "dependsOn": ["build"],
       "options": {
         "engine": "docker",
         "metadata": {
