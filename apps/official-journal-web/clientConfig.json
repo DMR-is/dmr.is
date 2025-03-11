@@ -3134,7 +3134,7 @@
             "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
           }
         },
-        "required": ["id", "title", "slug", "mainCategories"]
+        "required": ["id", "title", "slug"]
       },
       "GetCategoriesResponse": {
         "type": "object",
