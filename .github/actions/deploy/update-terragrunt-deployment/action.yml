@@ -1,0 +1,72 @@
+name: '🚀 Update Terragrunt Deployment'
+description: 'Deploy using Terragrunt apply in infrastructure repository'
+
+inputs:
+  PAT:
+    description: 'The personal access token to use'
+    required: true
+  ENV:
+    description: 'The environment to deploy to'
+    required: true
+  VERSION_TAG:
+    description: 'The version tag to deploy'
+    required: true
+  INFRA_REPO:
+    description: 'The infrastructure repository to deploy to'
+    required: true
+    default: 'DMR-is/infrastructure'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: Homebrew/actions/setup-homebrew@master
+      name: ☕️Set up Homebrew
+      id: set-up-homebrew
+
+    - name: 🗄️Cache Homebrew Bundler RubyGems
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+        key: ubuntu-latest-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+        restore-keys: ubuntu-latest-rubygems-
+
+    - name: 📥 Install Terragrunt
+      shell: bash
+      run: brew install terragrunt tfenv
+
+    - name: Setup Terraform v1.10.1
+      uses: hashicorp/setup-Terraform@v3
+      with:
+        terraform_version: 1.10.1
+
+    - name: Terragrunt version
+      shell: bash
+      run: terragrunt --version
+
+    - name: Terraform version
+      shell: bash
+      run: terraform --version
+
+    - name: 📁 Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.INFRA_REPO }}
+        token: ${{ inputs.PAT }}
+        path: infrastructure
+
+    - name: 🚀 Deploy backend
+      shell: bash
+      id: deploy
+      run: |
+        cd utgafa
+        git pull
+        ./scripts/update_utgafa.sh --environment ${{ inputs.ENV }} --sha ${{ inputs.VERSION_TAG }}
+
+    - name: 💾 Commit
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: 'chore: update Útgáfa to ${{ inputs.VERSION_TAG }}'
+        branch: main
+        skip_fetch: false
+        repository: infrastructure

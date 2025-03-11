@@ -1,0 +1,30 @@
+name: On Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  version-tag:
+    name: 🔖 Version tag images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ECR_REPOSITORY:
+          [
+            official-journal-api,
+            official-journal-admin-api,
+            official-journal-application-api,
+            official-journal-web,
+          ]
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🔖 Re-tag images
+        uses: ./.github/actions/deploy/version-tag
+        with:
+          VERSION_TAG: ${{ github.ref_name }}
+          ECR_REPOSITORY: ${{ matrix.ECR_REPOSITORY }}
