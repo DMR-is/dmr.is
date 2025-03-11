@@ -1,4 +1,4 @@
-import { Op, Sequelize } from 'sequelize'
+import { Op } from 'sequelize'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
