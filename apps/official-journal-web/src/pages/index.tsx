@@ -36,24 +36,16 @@ export default function Dashboard() {
     StatisticsOverviewQueryType.General,
   )
 
-  const { departmentStatistics, isLoadingDepartmentStatistics, overviewData } =
-    useStatistics({
-      departmentParams: {
-        slug: departmentTab,
-      },
-      overviewParams: {
-        type: overviewTab,
-      },
-    })
-
-  const { overviewData: publishingOverviewData } = useStatistics({
-    overviewParams: {
-      type: StatisticsOverviewQueryType.Publishing,
+  const {
+    departmentStatistics,
+    isLoadingDepartmentStatistics,
+    overViewDashboardData,
+  } = useStatistics({
+    departmentParams: {
+      slug: departmentTab,
     },
   })
 
-  console.log('1', overviewData)
-  console.log('2', publishingOverviewData)
   const statisticsTabs: TabType[] = [
     {
       id: DepartmentSlugEnum.ADeild,
@@ -99,7 +91,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="default" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.General]}
+            variant="default"
+          />
         </Box>
       ),
     },
@@ -108,7 +103,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="assigned" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.Personal]}
+            variant="assigned"
+          />
         </Box>
       ),
     },
@@ -117,7 +115,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="inactive" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.Inactive]}
+            variant="inactive"
+          />
         </Box>
       ),
     },
@@ -164,7 +165,11 @@ export default function Dashboard() {
                   linkText={messages.general.openPublishing}
                 >
                   <CasesOverviewList
-                    data={publishingOverviewData}
+                    data={
+                      overViewDashboardData[
+                        StatisticsOverviewQueryType.Publishing
+                      ]
+                    }
                     variant="readyForPublishing"
                   />
                 </ContentWrapper>

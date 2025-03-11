@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -11,9 +12,9 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   DepartmentSlugEnum,
-  GetStatisticOverviewDashboardResponse,
 } from '@dmr.is/shared/dto'
 import {
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
@@ -39,25 +40,30 @@ export class StatisticsService implements IStatisticsService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    private readonly sequelize: Sequelize,
   ) {}
 
   @LogAndHandle()
   async getDepartment(
     slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
-    const submittedCountQuery = this.caseModel.count({
+    const countQuery = await this.caseModel.count({
       benchmark: true,
+      distinct: true,
+      attributes: [
+        'status.title',
+        [this.sequelize.fn('COUNT', 'status.title'), 'count'],
+      ],
+      group: ['status.title', 'department.slug', 'status.id', 'department.id'],
+
       include: [
         {
           model: CaseStatusModel,
-          where: {
-            title: {
-              [Op.eq]: CaseStatusEnum.Submitted,
-            },
-          },
+          attributes: ['title'],
         },
         {
           model: AdvertDepartmentModel,
+          attributes: ['slug'],
           where: {
             slug: {
               [Op.eq]: slug,
@@ -76,138 +82,15 @@ export class StatisticsService implements IStatisticsService {
         ),
     })
 
-    const inProgressCountQuery = this.caseModel.count({
-      benchmark: true,
-      include: [
-        {
-          model: CaseStatusModel,
-          where: {
-            title: {
-              [Op.eq]: CaseStatusEnum.InProgress,
-            },
-          },
-        },
-        {
-          model: AdvertDepartmentModel,
-          where: {
-            slug: {
-              [Op.eq]: slug,
-            },
-          },
-        },
-      ],
-      logging: (_, timing) =>
-        this.logger.info(
-          `getStatisticsForDepartment in progress count query ran in ${timing}ms`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            query: 'getStatisticsForDepartment',
-          },
-        ),
-    })
-
-    const inReviewCountQuery = this.caseModel.count({
-      benchmark: true,
-      include: [
-        {
-          model: CaseStatusModel,
-          where: {
-            title: {
-              [Op.eq]: CaseStatusEnum.InReview,
-            },
-          },
-        },
-        {
-          model: AdvertDepartmentModel,
-          where: {
-            slug: {
-              [Op.eq]: slug,
-            },
-          },
-        },
-      ],
-      logging: (_, timing) =>
-        this.logger.info(
-          `getStatisticsForDepartment in review count query ran in ${timing}ms`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            query: 'getStatisticsForDepartment',
-          },
-        ),
-    })
-
-    const readyForPublishingCountQuery = this.caseModel.count({
-      benchmark: true,
-      include: [
-        {
-          model: CaseStatusModel,
-          where: {
-            title: {
-              [Op.eq]: CaseStatusEnum.ReadyForPublishing,
-            },
-          },
-        },
-        {
-          model: AdvertDepartmentModel,
-          where: {
-            slug: {
-              [Op.eq]: slug,
-            },
-          },
-        },
-      ],
-      logging: (_, timing) =>
-        this.logger.info(
-          `getStatisticsForDepartment ready for publishing count query ran in ${timing}ms`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            query: 'getStatisticsForDepartment',
-          },
-        ),
-    })
-
-    const [
-      submittedCount,
-      inProgressCount,
-      inReviewCount,
-      readyForPublishingCount,
-    ] = await Promise.all([
-      submittedCountQuery,
-      inProgressCountQuery,
-      inReviewCountQuery,
-      readyForPublishingCountQuery,
-    ])
-
-    const total =
-      submittedCount + inProgressCount + inReviewCount + readyForPublishingCount
+    const total = countQuery.reduce((acc, item) => acc + item.count, 0)
 
     const results = {
       total: total,
-      statuses: [
-        {
-          title: CaseStatusEnum.Submitted,
-          count: submittedCount,
-          percentage: total ? (submittedCount / total) * 100 : 0,
-        },
-        {
-          title: CaseStatusEnum.InProgress,
-          count: inProgressCount,
-          percentage: total ? (inProgressCount / total) * 100 : 0,
-        },
-        {
-          title: CaseStatusEnum.InReview,
-          count: inReviewCount,
-          percentage: total ? (inReviewCount / total) * 100 : 0,
-        },
-        {
-          title: CaseStatusEnum.ReadyForPublishing,
-          count: readyForPublishingCount,
-          percentage: total ? (readyForPublishingCount / total) * 100 : 0,
-        },
-      ],
+      statuses: countQuery.map((item) => ({
+        title: item.title as CaseStatusEnum,
+        count: item.count,
+        percentage: total ? (item.count / total) * 100 : 0,
+      })),
     }
 
     return ResultWrapper.ok(results)
@@ -247,31 +130,33 @@ export class StatisticsService implements IStatisticsService {
   @LogAndHandle()
   async getOverviewForDashboard(
     userId: string,
-  ): Promise<ResultWrapper<Array<GetStatisticOverviewDashboardResponse>>> {
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {
     const generalCount = (await this.getGeneralOverviewCount()).unwrap()
     const personalCount = (await this.getPersonalOverviewCount(userId)).unwrap()
 
     const inactiveCount = (await this.getInactiveOverviewCount()).unwrap()
     const publishingCount = (await this.getPublishingOverviewCount()).unwrap()
 
-    const results: Array<GetStatisticOverviewDashboardResponse> = [
-      {
-        type: StatisticsOverviewQueryType.General,
-        overview: generalCount,
-      },
-      {
-        type: StatisticsOverviewQueryType.Personal,
-        overview: personalCount,
-      },
-      {
-        type: StatisticsOverviewQueryType.Inactive,
-        overview: inactiveCount,
-      },
-      {
-        type: StatisticsOverviewQueryType.Publishing,
-        overview: publishingCount,
-      },
-    ]
+    const results: GetStatisticOverviewDashboardResponse = {
+      items: [
+        {
+          overviewType: StatisticsOverviewQueryType.General,
+          overview: generalCount,
+        },
+        {
+          overviewType: StatisticsOverviewQueryType.Personal,
+          overview: personalCount,
+        },
+        {
+          overviewType: StatisticsOverviewQueryType.Inactive,
+          overview: inactiveCount,
+        },
+        {
+          overviewType: StatisticsOverviewQueryType.Publishing,
+          overview: publishingCount,
+        },
+      ],
+    }
 
     return ResultWrapper.ok(results)
   }

@@ -19,7 +19,7 @@ export interface IStatisticsService {
 
   getOverviewForDashboard(
     userId?: string,
-  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse[]>>
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

@@ -2854,6 +2854,26 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/statistics/overview/dashboard": {
+      "get": {
+        "operationId": "getStatisticsOverviewDashboard",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStatisticOverviewDashboardResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/overview/{type}": {
       "get": {
         "operationId": "getStatisticsOverview",
@@ -3061,6 +3081,33 @@
         },
         "required": ["tags"]
       },
+      "CategoryMainCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the main category, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the main category.",
+            "example": "Dómstólar og réttarfar"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the main category, used in URLs and API requests.",
+            "example": "domstolar-og-rettarfar"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the main category, used on front page.",
+            "example": "Hæstiréttur, lögmenn, lögreglumál, dómsmál og landsdómur."
+          }
+        },
+        "required": ["id", "title", "slug", "description"]
+      },
       "Category": {
         "type": "object",
         "properties": {
@@ -3079,9 +3126,15 @@
             "type": "string",
             "description": "Slug of the advert category, used in URLs and API requests.",
             "example": "evropska-efnahagssvaedid"
+          },
+          "mainCategories": {
+            "description": "The main category this category belongs to.",
+            "example": "Dómstólar og réttarfar",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": ["id", "title", "slug", "mainCategories"]
       },
       "GetCategoriesResponse": {
         "type": "object",
@@ -4818,10 +4871,6 @@
         },
         "required": ["statuses", "total"]
       },
-      "StatisticsOverviewQueryType": {
-        "type": "string",
-        "enum": ["general", "personal", "inactive", "publishing"]
-      },
       "StatisticsOverviewCategory": {
         "type": "object",
         "properties": {
@@ -4842,6 +4891,32 @@
           "total": { "type": "number" }
         },
         "required": ["categories", "total"]
+      },
+      "GetStatisticOverviewDashboardItem": {
+        "type": "object",
+        "properties": {
+          "overviewType": { "type": "string" },
+          "overview": {
+            "$ref": "#/components/schemas/GetStatisticsOverviewResponse"
+          }
+        },
+        "required": ["overviewType", "overview"]
+      },
+      "GetStatisticOverviewDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetStatisticOverviewDashboardItem"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "StatisticsOverviewQueryType": {
+        "type": "string",
+        "enum": ["general", "personal", "inactive", "publishing"]
       }
     }
   }

@@ -26,7 +26,7 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
-    NEXT_PUBLIC_DMR_ADMIN_API_BASE_PATH: process.env.DMR_ADMIN_API_BASE_PATH || '',
+    NEXT_PUBLIC_DMR_ADMIN_API_BASE_PATH: process.env.NODE_ENV === 'production' ?  process.env.DMR_ADMIN_API_BASE_PATH : 'http://localhost:4000',
   },
 }
 

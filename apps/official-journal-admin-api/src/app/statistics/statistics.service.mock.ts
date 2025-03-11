@@ -4,8 +4,6 @@ import {
   AdvertStatus,
   CaseStatusEnum,
   GetStatisticOverviewDashboardResponse,
-} from '@dmr.is/shared/dto'
-import {
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
@@ -99,18 +97,9 @@ export class MockStatisticsService implements IStatisticsService {
   }
 
   async getOverviewForDashboard(
-    userId: string,
-  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse[]>> {
-    const overview = (
-      await this.getOverview(StatisticsOverviewQueryType.General)
-    ).unwrap()
-
-    return ResultWrapper.ok([
-      {
-        type: StatisticsOverviewQueryType.General,
-        overview: overview,
-      },
-    ])
+    _userId: string,
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {
+    throw new NotImplementedException()
   }
 
   getOverview(
