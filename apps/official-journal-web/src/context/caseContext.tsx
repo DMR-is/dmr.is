@@ -1,4 +1,6 @@
+import { useSession } from 'next-auth/react'
 import { createContext, useState } from 'react'
+import useSWR from 'swr'
 
 import { StringOption } from '@island.is/island-ui/core'
 
@@ -11,8 +13,12 @@ import {
   CaseTag,
   Category,
   Department,
+  GetAdvertTypes,
 } from '../gen/fetch'
-import { useAdvertTypes, useCase, useSignature } from '../hooks/api'
+import { useCase, useSignature } from '../hooks/api'
+import { getDmrClient } from '../lib/api/createClient'
+import { OJOIWebException, swrFetcher } from '../lib/constants'
+import { SearchParams } from '../lib/types'
 import { createOptions } from '../lib/utils'
 
 type CaseState = {
@@ -124,13 +130,31 @@ export const CaseProvider = ({
       },
     })
 
-  const { types: fetchedTypes, isValidatingTypes } = useAdvertTypes({
-    typesParams: {
-      department: currentCase.advertDepartment.id,
-      page: 1,
-      pageSize: 100,
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.accessToken as string)
+
+  const typesParams = {
+    department: currentCase.advertDepartment.id,
+    page: 1,
+    pageSize: 100,
+  }
+
+  const { data: advertTypes, isValidating: isValidatingTypes } = useSWR<
+    GetAdvertTypes,
+    OJOIWebException
+  >(
+    session ? ['getAdvertTypes', typesParams] : null,
+    ([_key, params]: [string, SearchParams]) =>
+      swrFetcher({
+        func: () => dmrClient.getTypes(params),
+      }),
+
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
     },
-  })
+  )
 
   const refetchSignature = async () => await mutateSignature()
 
@@ -158,7 +182,7 @@ export const CaseProvider = ({
     cb()
   }
 
-  const typeOptions = createOptions(fetchedTypes ? fetchedTypes : types)
+  const typeOptions = createOptions(advertTypes ? advertTypes.types : types)
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
 
