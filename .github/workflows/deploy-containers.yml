@@ -93,7 +93,7 @@ jobs:
           images: '${{ steps.login-ecr.outputs.registry }}/${{ matrix.container }}'
           tags: |
             latest
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=ref,event=branch
             type=ref,event=pr
             type=ref,event=tag
