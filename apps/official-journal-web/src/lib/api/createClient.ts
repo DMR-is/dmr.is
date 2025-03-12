@@ -1,15 +1,9 @@
+import getConfig from 'next/config'
+
 import { Configuration, DefaultApi } from '../../gen/fetch'
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-const getApiUrl = async () => {
-  if (typeof window === 'undefined') {
-    return process.env.DMR_ADMIN_API_BASE_PATH
-  }
-  const res = await fetch('/api/apiUrl')
-  const { url } = await res.json()
-  return url
-}
-
+const { publicRuntimeConfig } = getConfig()
 const config = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
@@ -22,7 +16,9 @@ const config = (token: string) => {
 }
 
 const clientConfig = (token: string, basePath: string) => {
-  getApiUrl()
+  // Test to see if publicRuntimeConfig is available in new deployment
+  // eslint-disable-next-line no-console
+  console.log('publicRuntimeConfig', publicRuntimeConfig)
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
