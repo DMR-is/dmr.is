@@ -18,15 +18,15 @@ import { CaseStatusEnum, DepartmentEnum } from '../gen/fetch'
 export const useSearchParams = () => {
   const [searchParams, setSearchParams] = useQueryStates(
     {
-      search: parseAsString.withDefault(''),
+      search: parseAsString,
       department: parseAsArrayOf(
         parseAsStringEnum(Object.values(DepartmentEnum)),
-      ).withDefault([]),
+      ),
       status: parseAsArrayOf(
         parseAsStringEnum<CaseStatusEnum>(Object.values(CaseStatusEnum)),
       ).withDefault([]),
-      category: parseAsArrayOf(parseAsString).withDefault([]),
-      type: parseAsArrayOf(parseAsString).withDefault([]),
+      category: parseAsArrayOf(parseAsString),
+      type: parseAsArrayOf(parseAsString),
       published: parseAsBoolean,
       page: parseAsInteger.withDefault(1),
       pageSize: parseAsInteger.withDefault(10),

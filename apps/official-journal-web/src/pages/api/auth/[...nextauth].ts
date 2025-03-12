@@ -109,6 +109,12 @@ export const authOptions: AuthOptions = {
 
       // Add tokens to session
       session.accessToken = token.accessToken as string
+
+      session.apiBasePath =
+        process.env.NODE_ENV === 'production'
+          ? (process.env.DMR_ADMIN_API_BASE_PATH as string)
+          : ('http://localhost:4000' as string)
+
       session.idToken = token.idToken as string
 
       // If token is invalid, set invalid flag to session

@@ -6,6 +6,7 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
   AdminUser,
   DepartmentSlugEnum,
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
@@ -49,6 +50,15 @@ export class StatisticsController {
   ): Promise<GetStatisticsDepartmentResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getDepartment(slug),
+    )
+  }
+
+  @Get('/overview/dashboard')
+  @ApiOperation({ operationId: 'getStatisticsOverviewDashboard' })
+  @ApiResponse({ status: 200, type: GetStatisticOverviewDashboardResponse })
+  async dashboardOverview(@CurrentUser() user: AdminUser) {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getOverviewForDashboard(user.id),
     )
   }
 
