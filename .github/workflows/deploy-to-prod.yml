@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  AWS_PROD_ACCOUNT_ID: 635856480163
+  AWS_PROD_ACCOUNT_ID: 704383808130
   ENV: prod
 
 jobs:
