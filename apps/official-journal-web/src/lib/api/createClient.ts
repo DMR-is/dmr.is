@@ -1,39 +1,34 @@
-import getConfig from 'next/config'
-
 import { Configuration, DefaultApi } from '../../gen/fetch'
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-const { publicRuntimeConfig } = getConfig()
-const config = (token: string) => {
-  return new Configuration({
-    fetchApi: createEnhancedFetch(),
-    accessToken: token,
-    basePath:
-      process.env.NODE_ENV === 'production'
-        ? process.env.DMR_ADMIN_API_BASE_PATH
-        : 'http://localhost:4000',
-  })
+const getPath = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:4000'
+  }
+
+  if (typeof window === 'undefined') {
+    return process.env.DMR_ADMIN_API_BASE_PATH as string
+  }
+  return `https://admin-api.${window.location.host}`
 }
 
-const clientConfig = (token: string, basePath: string) => {
-  // Test to see if publicRuntimeConfig is available in new deployment
-  // eslint-disable-next-line no-console
-  console.log('publicRuntimeConfig', publicRuntimeConfig)
+export const config = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
-    basePath: basePath,
+    basePath: getPath(),
   })
 }
 
 let dmrClient: DefaultApi | undefined
 
-export const getDmrClient = (token: string, basePath?: string) => {
+export const getDmrClient = (accessToken: string) => {
   if (typeof window === 'undefined') {
     // Server: always make a new dmr client
-    return new DefaultApi(config(token))
+
+    return new DefaultApi(config(accessToken))
   }
 
   // Browser: use singleton pattern to keep the same dmr client
-  return (dmrClient ??= new DefaultApi(clientConfig(token, basePath as string)))
+  return (dmrClient ??= new DefaultApi(config(accessToken)))
 }

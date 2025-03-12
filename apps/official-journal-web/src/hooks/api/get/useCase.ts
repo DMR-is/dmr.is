@@ -12,7 +12,7 @@ type UseCaseParams = {
 
 export const useCase = ({ caseId, options }: UseCaseParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string, session?.apiBasePath)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session ? ['getCase', session?.user, caseId] : null,

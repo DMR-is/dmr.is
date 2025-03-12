@@ -17,7 +17,7 @@ export const TypesFilter = () => {
   const [search, setSearch] = useState('')
 
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string, session?.apiBasePath)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const {
     data,
