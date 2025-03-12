@@ -47,6 +47,10 @@
     "defaultMessage": "Útskrá",
     "description": ""
   },
+  "web.components.auth:user": {
+    "defaultMessage": "Notandi",
+    "description": ""
+  },
   "web.components.cards:moreLink": {
     "defaultMessage": "Sjá nánar",
     "description": ""
@@ -75,6 +79,14 @@
     "defaultMessage": "Hætta við",
     "description": ""
   },
+  "web.components.comments:comments-hide": {
+    "defaultMessage": "Fela athugasemdir",
+    "description": ""
+  },
+  "web.components.comments:comments-show": {
+    "defaultMessage": "Sýna athugasemdir",
+    "description": ""
+  },
   "web.components.comments:day": {
     "defaultMessage": "degi",
     "description": ""
@@ -87,12 +99,40 @@
     "defaultMessage": "Eyða",
     "description": ""
   },
+  "web.components.comments:externalComment": {
+    "defaultMessage": "Aðgengilegt auglýsanda",
+    "description": ""
+  },
+  "web.components.comments:externalComments": {
+    "defaultMessage": "Skilaboð til auglýsanda",
+    "description": ""
+  },
+  "web.components.comments:externalCommentsInputPlaceholder": {
+    "defaultMessage": "Bættu við skilaboðum til auglýsanda",
+    "description": ""
+  },
   "web.components.comments:fetchFile": {
     "defaultMessage": "Sækja skjal",
     "description": ""
   },
+  "web.components.comments:internalComment": {
+    "defaultMessage": "Innri athugasemd",
+    "description": ""
+  },
+  "web.components.comments:internalComments": {
+    "defaultMessage": "Innri athugasemdir",
+    "description": ""
+  },
+  "web.components.comments:internalCommentsInputPlaceholder": {
+    "defaultMessage": "Bættu við innri athugasemd",
+    "description": ""
+  },
   "web.components.comments:label": {
     "defaultMessage": "Athugasemd",
+    "description": ""
+  },
+  "web.components.comments:noAttachments": {
+    "defaultMessage": "Engin fylgiskjöl fundust á þessu máli",
     "description": ""
   },
   "web.components.comments:overwrite": {
@@ -139,6 +179,32 @@
     "defaultMessage": "Í gær",
     "description": ""
   },
+  "web.components.corrections:descLabel": {
+    "defaultMessage": "Ný leiðrétting",
+    "description": ""
+  },
+  "web.components.corrections:descPlaceholder": {
+    "defaultMessage": "1. gr. breytist og orðast svo..",
+    "description": ""
+  },
+  "web.components.corrections:save": {
+    "defaultMessage": "Vista",
+    "description": ""
+  },
+  "web.components.corrections:title": {
+    "defaultMessage": "Leiðréttingar",
+    "description": ""
+  },
+  "web.components.corrections:titleLabel": {
+    "defaultMessage": "Titill"
+  },
+  "web.components.corrections:titlePlaceholder": {
+    "defaultMessage": "Leiðrétting á..."
+  },
+  "web.components.editorMessageDisplay:label": {
+    "defaultMessage": "Skilaboð til ritstjóra",
+    "description": "Label for the editor message display"
+  },
   "web.components.filterGroup:clearFilter": {
     "defaultMessage": "Hreinsa val",
     "description": "Search placeholder for case filters"
@@ -179,6 +245,10 @@
     "defaultMessage": "Alls",
     "description": "Total label for the dashboard"
   },
+  "web.components.steps.grunnvinnsla:attachments": {
+    "defaultMessage": "Fylgiskjöl",
+    "description": ""
+  },
   "web.components.steps.grunnvinnsla:categories": {
     "defaultMessage": "Efnisflokkar",
     "description": ""
@@ -207,6 +277,10 @@
     "defaultMessage": "Sendandi",
     "description": ""
   },
+  "web.components.steps.grunnvinnsla:message": {
+    "defaultMessage": "Skilaboð til ritstjóra",
+    "description": ""
+  },
   "web.components.steps.grunnvinnsla:paid": {
     "defaultMessage": "Búið er að greiða",
     "description": ""
@@ -226,6 +300,30 @@
   "web.components.steps.grunnvinnsla:type": {
     "defaultMessage": "Tegund",
     "description": ""
+  },
+  "web.components.steps.leidretting:errorFetching": {
+    "defaultMessage": "Villa við að sækja gögn"
+  },
+  "web.components.steps.leidretting:errorFetchingMessage": {
+    "defaultMessage": "Ekki tókst að sækja gögn um málið, vinsamlegast reyndu aftur síðar"
+  },
+  "web.components.steps.leidretting:noData": {
+    "defaultMessage": "Engin gögn"
+  },
+  "web.components.steps.leidretting:noDataMessage": {
+    "defaultMessage": "Engin gögn fundust um málið"
+  },
+  "web.components.steps.leidretting:warningMessage": {
+    "defaultMessage": "Málum sem er breytt eftir útgáfu eru leiðrétt á ytri vef og þeim fylgir athugasemd sem undirstrikar breytingar"
+  },
+  "web.components.steps.leidretting:warningRejectMessage": {
+    "defaultMessage": "Málum sem er hafnað er ekki breytt og þeim fylgir athugasemd sem undirstrikar hvers vegna málinu var hafnað"
+  },
+  "web.components.steps.leidretting:warningRejectTitle": {
+    "defaultMessage": "ATH! Mál er hafnað"
+  },
+  "web.components.steps.leidretting:warningTitle": {
+    "defaultMessage": "ATH! Mál er útgefið"
   },
   "web.components.steps.tilbuid:group1title": {
     "defaultMessage": "Meginmál",
@@ -303,6 +401,10 @@
     "defaultMessage": "Stofnun",
     "description": "Institution column"
   },
+  "web.components.tables:overview.columns.publicationNumber": {
+    "defaultMessage": "Útgáfunúmer",
+    "description": "Publication number column"
+  },
   "web.components.tables:overview.columns.publishDate": {
     "defaultMessage": "Útgáfudagur",
     "description": "Publish date column"
@@ -339,6 +441,10 @@
     "defaultMessage": "Heiti",
     "description": "Title column"
   },
+  "web.components.tables:selectedCases.columns.type": {
+    "defaultMessage": "Tegund",
+    "description": "Type column"
+  },
   "web.components.tables:selectedCases.empty.message": {
     "defaultMessage": "Engin mál valin.",
     "description": "No cases selected message"
@@ -370,6 +476,22 @@
   "web.components.tooltips:caseLabelTooltip.waiting": {
     "defaultMessage": "Beðið svara",
     "description": "waiting label"
+  },
+  "web.general:clearFilter": {
+    "defaultMessage": "Hreinsa val",
+    "description": "Search placeholder for case filters"
+  },
+  "web.general:searchByCategory": {
+    "defaultMessage": "Finna flokk",
+    "description": "Search placeholder for case filters"
+  },
+  "web.general:searchByDepartment": {
+    "defaultMessage": "Finna deild",
+    "description": "Search placeholder for case filters"
+  },
+  "web.general:searchByType": {
+    "defaultMessage": "Finna tegund",
+    "description": "Search placeholder for case filters"
   },
   "web.page.caseOverview:banner.description": {
     "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
@@ -411,12 +533,24 @@
     "defaultMessage": "Grunnvinnsla ({count})",
     "description": "Tab label for cases in progress"
   },
+  "web.page.caseProcessingOverview:tabs.inProgressNoCount": {
+    "defaultMessage": "Grunnvinnsla",
+    "description": "Tab label for cases in progress"
+  },
   "web.page.caseProcessingOverview:tabs.inReview": {
     "defaultMessage": "Yfirlestur ({count})",
     "description": "Tab label for cases in review"
   },
+  "web.page.caseProcessingOverview:tabs.inReviewNoCount": {
+    "defaultMessage": "Yfirlestur",
+    "description": "Tab label for cases in review"
+  },
   "web.page.caseProcessingOverview:tabs.ready": {
     "defaultMessage": "Tilbúið ({count})",
+    "description": "Tab label for cases ready"
+  },
+  "web.page.caseProcessingOverview:tabs.readyNoCount": {
+    "defaultMessage": "Tilbúið",
     "description": "Tab label for cases ready"
   },
   "web.page.caseProcessingOverview:tabs.statuses": {
@@ -425,6 +559,10 @@
   },
   "web.page.caseProcessingOverview:tabs.submitted": {
     "defaultMessage": "Innsendingar ({count})",
+    "description": "Tab label for submitted cases"
+  },
+  "web.page.caseProcessingOverview:tabs.submittedNoCount": {
+    "defaultMessage": "Innsendingar",
     "description": "Tab label for submitted cases"
   },
   "web.page.casePublishingOverview:banner.description": {
@@ -479,9 +617,24 @@
     "defaultMessage": "Úthluta máli á starfsmann",
     "description": ""
   },
+  "web.page.caseSingle:actions.communicationsStatus": {
+    "defaultMessage": "Samskiptastaða",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.confirmFixStep": {
+    "defaultMessage": "Birta leiðréttingu",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.fixStep": {
+    "defaultMessage": "Leiðrétta",
+    "description": ""
+  },
   "web.page.caseSingle:actions.nextStep": {
     "defaultMessage": "Næsta skref",
     "description": ""
+  },
+  "web.page.caseSingle:actions.rejectCase": {
+    "defaultMessage": "Hafna máli"
   },
   "web.page.caseSingle:actions.status": {
     "defaultMessage": "Staða",
@@ -489,6 +642,21 @@
   },
   "web.page.caseSingle:actions.title": {
     "defaultMessage": "Upplýsingar",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.toPublishing": {
+    "defaultMessage": "Fara í útgáfu",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.unpublish": {
+    "defaultMessage": "Taka mál úr birtingu",
+    "description": ""
+  },
+  "web.page.caseSingle:actions.unpublishCase": {
+    "defaultMessage": "Taka mál úr birtingu"
+  },
+  "web.page.caseSingle:actions.unpublishDisabledExplanation": {
+    "defaultMessage": "Bæta þarf við athugasemd til þess að leiðrétta mál",
     "description": ""
   },
   "web.page.caseSingle:banner.description": {
@@ -580,7 +748,7 @@
     "description": "Open statistics button label for the dashboard"
   },
   "web.page.dashboard:general.publishing": {
-    "defaultMessage": "Útgáfa",
+    "defaultMessage": "Til útgáfu í dag",
     "description": "Publishing heading for the dashboard"
   },
   "web.page.dashboard:general.statistics": {
@@ -638,6 +806,10 @@
   "web.page.dashboard:tabs.statistics.c": {
     "defaultMessage": "C deild",
     "description": "Department c tab for the dashboard statistics"
+  },
+  "web.page.errors.error": {
+    "defaultMessage": "Villa kom upp",
+    "description": "Error"
   },
   "web.page.errors.errorFetchingCategoriesMessage": {
     "defaultMessage": "Ekki tókst að sækja flokka mála",
