@@ -38,8 +38,6 @@ export const getDmrClient = (token: string, basePath?: string) => {
     return new DefaultApi(config(token))
   }
 
-  console.log('basePath', basePath)
-
   // Browser: use singleton pattern to keep the same dmr client
   return (dmrClient ??= new DefaultApi(clientConfig(token, basePath as string)))
 }
