@@ -58,9 +58,9 @@ runs:
     - name: 🚀 Deploy official journal api
       shell: bash
       run: |
-        cd infrastructure
+        cd infrastructure/utgafa
         git pull
-        ./scripts/update_tag.sh \
+        ../scripts/update_tag.sh \
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
@@ -70,9 +70,9 @@ runs:
     - name: 🚀 Deploy official journal admin api
       shell: bash
       run: |
-        cd infrastructure
+        cd infrastructure/utgafa
         git pull
-        ./scripts/update_tag.sh \
+        ../scripts/update_tag.sh \
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
@@ -82,9 +82,9 @@ runs:
     - name: 🚀 Deploy official journal application api
       shell: bash
       run: |
-        cd infrastructure
+        cd infrastructure/utgafa
         git pull
-        ./scripts/update_tag.sh \
+        ../scripts/update_tag.sh \
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
@@ -94,9 +94,9 @@ runs:
     - name: 🚀 Deploy official journal web
       shell: bash
       run: |
-        cd infrastructure
+        cd infrastructure/utgafa
         git pull
-        ./scripts/update_tag.sh \
+        ../scripts/update_tag.sh \
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
