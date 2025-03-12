@@ -12,14 +12,15 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
+import { BaseEntity } from '../../gen/fetch'
 import { useUsers } from '../../hooks/api/get/useUsers'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 
 type UsersTableProps = {
-  involvedPartyOptions: { label: string; value: string }[]
-  roleOptions: { label: string; value: string }[]
+  involvedPartyOptions: { label: string; value: BaseEntity }[]
+  roleOptions: { label: string; value: BaseEntity }[]
 }
 
 export const UsersTable = ({
@@ -100,11 +101,11 @@ export const UsersTable = ({
               placeholder="Sía eftir stofnun"
               options={involvedPartyOptions}
               defaultValue={involvedPartyOptions.find(
-                (opt) => opt.value === institution,
+                (opt) => opt.value.slug === institution,
               )}
               onChange={(opt) => {
                 if (!opt) return setInstitution(null)
-                setInstitution(opt.value)
+                setInstitution(opt.value.slug)
               }}
             />
           </GridColumn>
@@ -114,10 +115,10 @@ export const UsersTable = ({
               label="Hlutverk"
               placeholder="Sía eftir hlutverki"
               options={roleOptions}
-              defaultValue={roleOptions.find((opt) => opt.value === role)}
+              defaultValue={roleOptions.find((opt) => opt.value.slug === role)}
               onChange={(opt) => {
                 if (!opt) return setRole(null)
-                setRole(opt.value)
+                setRole(opt.value.slug)
               }}
             />
           </GridColumn>

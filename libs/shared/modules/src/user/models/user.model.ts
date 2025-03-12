@@ -74,11 +74,12 @@ export class UserModel extends Model {
   })
   roleId!: string
 
-  @BelongsTo(() => UserRoleModel)
+  @BelongsTo(() => UserRoleModel, { as: 'role' })
   role!: UserRoleModel
 
   @BelongsToMany(() => AdvertInvolvedPartyModel, {
     through: { model: () => UserInvolvedPartiesModel },
+    as: 'involvedParties',
   })
   involvedParties!: AdvertInvolvedPartyModel[]
 

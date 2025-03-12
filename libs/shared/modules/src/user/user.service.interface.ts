@@ -1,4 +1,5 @@
 import {
+  CreateUserDto,
   GetInvoledPartiesByUserResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -30,6 +31,13 @@ export interface IUserService {
   getInvolvedPartiesByUser(
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>>
+
+  createUser(
+    body: CreateUserDto,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetUserResponse>>
+  updateUser(): Promise<ResultWrapper<GetUserResponse>>
+  deleteUser(userId: string, currentUser: UserDto): Promise<ResultWrapper>
 }
 
 export const IUserService = Symbol('IUserService')

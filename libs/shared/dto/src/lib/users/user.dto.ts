@@ -1,3 +1,5 @@
+import { UserRoleEnum } from '@dmr.is/constants'
+
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { Institution } from '../institutions'
@@ -93,16 +95,28 @@ export class GetInvoledPartiesByUserResponse {
   involvedParties!: Institution[]
 }
 
-export class CreateUserBody extends PickType(UserDto, [
+export class CreateUserDto extends PickType(UserDto, [
   'nationalId',
   'firstName',
   'lastName',
   'email',
 ] as const) {
   @ApiProperty({
-    type: [String],
+    type: String,
   })
-  roleIds!: string[]
+  roleId!: string
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+  })
+  involvedParties?: string[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  displayName?: string
 }
 
 export class GetUsersQuery extends PagingQuery {

@@ -4,12 +4,15 @@ import { getServerSession } from 'next-auth'
 import { Section } from '@dmr.is/ui'
 
 import {
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
   Stack,
 } from '@island.is/island-ui/core'
 
+import { BaseEntity } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
 import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
@@ -19,8 +22,8 @@ import { authOptions } from '../api/auth/[...nextauth]'
 const UserTable = dynamic(() => import('../../components/tables/UsersTable'))
 
 type Props = {
-  involvedParties: { label: string; value: string }[]
-  roleOptions: { label: string; value: string }[]
+  involvedParties: { label: string; value: BaseEntity }[]
+  roleOptions: { label: string; value: BaseEntity }[]
 }
 
 export default function UsersPage({ involvedParties, roleOptions }: Props) {
@@ -34,6 +37,21 @@ export default function UsersPage({ involvedParties, roleOptions }: Props) {
             paddingBottom={[2, 2, 3]}
           >
             <Stack space={[2, 2, 3]}>
+              <Inline space={2}>
+                <Button icon="person" iconType="outline" variant="utility">
+                  Stofna ritstjóra
+                </Button>
+                <Button
+                  icon="accessibility"
+                  iconType="outline"
+                  variant="utility"
+                >
+                  Stofna fulltrúa
+                </Button>
+                <Button icon="document" iconType="outline" variant="utility">
+                  Stofna innsendanda
+                </Button>
+              </Inline>
               <UserTable
                 involvedPartyOptions={involvedParties}
                 roleOptions={roleOptions}
@@ -89,11 +107,11 @@ export const getServerSideProps: GetServerSideProps = async ({
       layout,
       roleOptions: roles.map((role) => ({
         label: role.title,
-        value: role.slug,
+        value: role,
       })),
       involvedParties: involvedParties.map((party) => ({
         label: party.title,
-        value: party.slug,
+        value: party,
       })),
     }),
   }

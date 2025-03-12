@@ -2,6 +2,7 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  CreateUserDto,
   GetInvoledPartiesByUserResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -9,19 +10,28 @@ import {
   GetUsersResponse,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import {
+  Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Inject,
   InternalServerErrorException,
   Param,
+  Post,
   Query,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
 import { IUserService } from './user.service.interface'
@@ -53,6 +63,19 @@ export class UserController {
     }
 
     return results.result.value
+  }
+
+  @Delete('/:id')
+  @ApiOperation({ operationId: 'deleteUser' })
+  @ApiNoContentResponse()
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserDto,
+  ) {
+    ResultWrapper.unwrap(await this.userService.deleteUser(id, currentUser))
   }
 
   @Get('nationalId/:nationalId')
@@ -102,5 +125,20 @@ export class UserController {
     }
 
     return results.result.value
+  }
+
+  @Post()
+  @ApiOperation({ operationId: 'createUser' })
+  @ApiResponse({ status: 200, type: GetUserResponse })
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
+  async createUser(
+    @Body() body: CreateUserDto,
+    @CurrentUser() currentUser: UserDto,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.userService.createUser(body, currentUser),
+    )
   }
 }

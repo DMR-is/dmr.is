@@ -1,8 +1,11 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { v4 as uuid } from 'uuid'
 import { UserRoleEnum } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  CreateUserDto,
   GetInvoledPartiesByUserResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -24,6 +27,9 @@ import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
 import { IUserService } from './user.service.interface'
 
+const LOGGING_CONTEXT = 'UserService'
+const LOGGING_CATEGORY = 'user-service'
+
 @Injectable()
 export class UserService implements IUserService {
   constructor(
@@ -35,7 +41,174 @@ export class UserService implements IUserService {
     private readonly advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
     @InjectModel(UserInvolvedPartiesModel)
     private readonly userInvolvedPartiesModel: typeof UserInvolvedPartiesModel,
+    private readonly sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  @Transactional()
+  async createUser(
+    body: CreateUserDto,
+    currentUser: UserDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetUserResponse>> {
+    const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+    const involedPartyIds: string[] = isAdmin ? body.involvedParties ?? [] : []
+
+    if (!isAdmin) {
+      const role = await this.userRoleModel.findByPk(body.roleId, {
+        transaction,
+      })
+
+      if (role?.title !== UserRoleEnum.User) {
+        this.logger.warn(`User tried to create a user with incorrect role`, {
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+          userId: currentUser.id,
+        })
+        return ResultWrapper.err({
+          code: 403,
+          message: 'Forbidden',
+        })
+      }
+
+      if (currentUser.involvedParties.length === 0) {
+        this.logger.warn(
+          'User with no involved parties tried to create a user',
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            userId: currentUser.id,
+          },
+        )
+        return ResultWrapper.err({
+          code: 403,
+          message: 'Forbidden',
+        })
+      }
+
+      if (currentUser.involvedParties.length === 1) {
+        involedPartyIds.push(currentUser.involvedParties[0].id)
+      }
+    }
+
+    const newUser = await this.userModel.create(
+      {
+        nationalId: body.nationalId,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        displayName: body.displayName
+          ? body.displayName
+          : `${body.firstName} ${body.lastName}`,
+        email: body.email,
+        roleId: body.roleId,
+      },
+      {
+        returning: ['id'],
+        transaction,
+      },
+    )
+
+    const userInvolvedParties = involedPartyIds.map((involvedPartyId) => ({
+      userId: newUser.id,
+      involvedPartyId,
+    }))
+
+    await this.userInvolvedPartiesModel.bulkCreate(userInvolvedParties, {
+      transaction,
+    })
+
+    const withAssociations = await this.userModel.findByPk(newUser.id, {
+      transaction,
+    })
+
+    if (!withAssociations) {
+      this.logger.warn('User not found after creation', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        newUserId: newUser.id,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not create user',
+      })
+    }
+
+    const migrated = userMigrate(withAssociations)
+
+    return ResultWrapper.ok({ user: migrated })
+  }
+
+  @LogAndHandle()
+  updateUser(): Promise<ResultWrapper<GetUserResponse>> {
+    throw new Error('Method not implemented.')
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteUser(
+    userId: string,
+    currentUser: UserDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+    const userToDelete = await this.userModel.findByPk(userId, {
+      transaction,
+    })
+
+    if (!userToDelete) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'User not found',
+      })
+    }
+
+    if (!isAdmin) {
+      const hasDeletePermission = userToDelete?.role.title !== UserRoleEnum.User
+      const hasInvoledParty = userToDelete?.involvedParties.some(
+        (involvedParty) =>
+          currentUser.involvedParties.find(
+            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
+          ),
+      )
+
+      if (!hasDeletePermission || !hasInvoledParty) {
+        if (!hasDeletePermission) {
+          this.logger.warn(`User tried to delete a user with incorrect role`, {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            userId: currentUser.id,
+          })
+        }
+
+        if (!hasInvoledParty) {
+          this.logger.warn(
+            `User without any involved parties tried to delete a user`,
+            {
+              context: LOGGING_CONTEXT,
+              category: LOGGING_CATEGORY,
+              userId: currentUser.id,
+            },
+          )
+        }
+
+        return ResultWrapper.err({
+          code: 403,
+          message: 'Forbidden',
+        })
+      }
+    }
+
+    await this.userModel.destroy({
+      where: {
+        id: userId,
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
   async getInvolvedPartiesByUser(
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
