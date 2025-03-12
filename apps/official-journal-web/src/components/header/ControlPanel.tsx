@@ -5,7 +5,6 @@ import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
 import {
   Box,
-  DropdownMenu,
   Icon,
   Inline,
   LinkV2,
