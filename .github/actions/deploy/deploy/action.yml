@@ -40,5 +40,5 @@ runs:
       shell: bash
       run: |
         aws ecs wait services-stable \
-          --cluster mms-${{ inputs.ENV }} \
+          --cluster ${{ inputs.ENV }}-dmr-utgafa \
           --services ${{ inputs.SERVICES }}
