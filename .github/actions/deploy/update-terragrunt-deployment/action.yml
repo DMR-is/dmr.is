@@ -55,20 +55,11 @@ runs:
         token: ${{ inputs.PAT }}
         path: infrastructure
 
-    - name: 📁 INFO
-      shell: bash
-      run: |
-        echo "------ LS ------"
-        ls -la
-        echo "------ LS * ------"
-        ls -la *
-
-
     - name: 🚀 Deploy backend
       shell: bash
       id: deploy
       run: |
-        cd utgafa
+        cd infrastructure/utgafa
         git pull
         ./scripts/update_utgafa.sh --environment ${{ inputs.ENV }} --sha ${{ inputs.VERSION_TAG }}
 
