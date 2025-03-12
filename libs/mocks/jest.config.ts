@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'journal-mock',
   preset: '../../jest.preset.js',
