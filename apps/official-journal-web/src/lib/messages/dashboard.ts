@@ -19,7 +19,7 @@ export const messages = {
     },
     publishing: {
       id: 'web.page.dashboard:general.publishing',
-      defaultMessage: 'Útgáfa',
+      defaultMessage: 'Til útgáfu í dag',
       description: 'Publishing heading for the dashboard',
     },
     openAdmin: {
