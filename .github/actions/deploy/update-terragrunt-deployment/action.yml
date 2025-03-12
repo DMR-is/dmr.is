@@ -64,6 +64,7 @@ runs:
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
+        --ignore-dirty true \
         --target official_journal_api \
         --config-var-name official_journal_api_version_tag
     
@@ -76,6 +77,7 @@ runs:
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
+        --ignore-dirty true \
         --target official_journal_admin_api \
         --config-var-name official_journal_admin_api_version_tag
 
@@ -88,6 +90,7 @@ runs:
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
+        --ignore-dirty true \
         --target official_journal_application_api \
         --config-var-name official_journal_application_api_version_tag
 
@@ -100,6 +103,7 @@ runs:
         --environment ${{ inputs.ENV }} \
         --update-value ${{ inputs.VERSION_TAG }} \
         --commit false \
+        --ignore-dirty true \
         --target official_journal_web \
         --config-var-name official_journal_web_version_tag
 
