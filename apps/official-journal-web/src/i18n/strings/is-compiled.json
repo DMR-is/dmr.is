@@ -71,6 +71,12 @@
       "value": "Útskrá"
     }
   ],
+  "web.components.auth:user": [
+    {
+      "type": 0,
+      "value": "Notandi"
+    }
+  ],
   "web.components.cards:moreLink": [
     {
       "type": 0,
@@ -113,6 +119,18 @@
       "value": "Hætta við"
     }
   ],
+  "web.components.comments:comments-hide": [
+    {
+      "type": 0,
+      "value": "Fela athugasemdir"
+    }
+  ],
+  "web.components.comments:comments-show": [
+    {
+      "type": 0,
+      "value": "Sýna athugasemdir"
+    }
+  ],
   "web.components.comments:day": [
     {
       "type": 0,
@@ -131,16 +149,58 @@
       "value": "Eyða"
     }
   ],
+  "web.components.comments:externalComment": [
+    {
+      "type": 0,
+      "value": "Aðgengilegt auglýsanda"
+    }
+  ],
+  "web.components.comments:externalComments": [
+    {
+      "type": 0,
+      "value": "Skilaboð til auglýsanda"
+    }
+  ],
+  "web.components.comments:externalCommentsInputPlaceholder": [
+    {
+      "type": 0,
+      "value": "Bættu við skilaboðum til auglýsanda"
+    }
+  ],
   "web.components.comments:fetchFile": [
     {
       "type": 0,
       "value": "Sækja skjal"
     }
   ],
+  "web.components.comments:internalComment": [
+    {
+      "type": 0,
+      "value": "Innri athugasemd"
+    }
+  ],
+  "web.components.comments:internalComments": [
+    {
+      "type": 0,
+      "value": "Innri athugasemdir"
+    }
+  ],
+  "web.components.comments:internalCommentsInputPlaceholder": [
+    {
+      "type": 0,
+      "value": "Bættu við innri athugasemd"
+    }
+  ],
   "web.components.comments:label": [
     {
       "type": 0,
       "value": "Athugasemd"
+    }
+  ],
+  "web.components.comments:noAttachments": [
+    {
+      "type": 0,
+      "value": "Engin fylgiskjöl fundust á þessu máli"
     }
   ],
   "web.components.comments:overwrite": [
@@ -209,6 +269,48 @@
       "value": "Í gær"
     }
   ],
+  "web.components.corrections:descLabel": [
+    {
+      "type": 0,
+      "value": "Ný leiðrétting"
+    }
+  ],
+  "web.components.corrections:descPlaceholder": [
+    {
+      "type": 0,
+      "value": "1. gr. breytist og orðast svo.."
+    }
+  ],
+  "web.components.corrections:save": [
+    {
+      "type": 0,
+      "value": "Vista"
+    }
+  ],
+  "web.components.corrections:title": [
+    {
+      "type": 0,
+      "value": "Leiðréttingar"
+    }
+  ],
+  "web.components.corrections:titleLabel": [
+    {
+      "type": 0,
+      "value": "Titill"
+    }
+  ],
+  "web.components.corrections:titlePlaceholder": [
+    {
+      "type": 0,
+      "value": "Leiðrétting á..."
+    }
+  ],
+  "web.components.editorMessageDisplay:label": [
+    {
+      "type": 0,
+      "value": "Skilaboð til ritstjóra"
+    }
+  ],
   "web.components.filterGroup:clearFilter": [
     {
       "type": 0,
@@ -269,6 +371,12 @@
       "value": "Alls"
     }
   ],
+  "web.components.steps.grunnvinnsla:attachments": [
+    {
+      "type": 0,
+      "value": "Fylgiskjöl"
+    }
+  ],
   "web.components.steps.grunnvinnsla:categories": [
     {
       "type": 0,
@@ -311,6 +419,12 @@
       "value": "Sendandi"
     }
   ],
+  "web.components.steps.grunnvinnsla:message": [
+    {
+      "type": 0,
+      "value": "Skilaboð til ritstjóra"
+    }
+  ],
   "web.components.steps.grunnvinnsla:paid": [
     {
       "type": 0,
@@ -339,6 +453,54 @@
     {
       "type": 0,
       "value": "Tegund"
+    }
+  ],
+  "web.components.steps.leidretting:errorFetching": [
+    {
+      "type": 0,
+      "value": "Villa við að sækja gögn"
+    }
+  ],
+  "web.components.steps.leidretting:errorFetchingMessage": [
+    {
+      "type": 0,
+      "value": "Ekki tókst að sækja gögn um málið, vinsamlegast reyndu aftur síðar"
+    }
+  ],
+  "web.components.steps.leidretting:noData": [
+    {
+      "type": 0,
+      "value": "Engin gögn"
+    }
+  ],
+  "web.components.steps.leidretting:noDataMessage": [
+    {
+      "type": 0,
+      "value": "Engin gögn fundust um málið"
+    }
+  ],
+  "web.components.steps.leidretting:warningMessage": [
+    {
+      "type": 0,
+      "value": "Málum sem er breytt eftir útgáfu eru leiðrétt á ytri vef og þeim fylgir athugasemd sem undirstrikar breytingar"
+    }
+  ],
+  "web.components.steps.leidretting:warningRejectMessage": [
+    {
+      "type": 0,
+      "value": "Málum sem er hafnað er ekki breytt og þeim fylgir athugasemd sem undirstrikar hvers vegna málinu var hafnað"
+    }
+  ],
+  "web.components.steps.leidretting:warningRejectTitle": [
+    {
+      "type": 0,
+      "value": "ATH! Mál er hafnað"
+    }
+  ],
+  "web.components.steps.leidretting:warningTitle": [
+    {
+      "type": 0,
+      "value": "ATH! Mál er útgefið"
     }
   ],
   "web.components.steps.tilbuid:group1title": [
@@ -455,6 +617,12 @@
       "value": "Stofnun"
     }
   ],
+  "web.components.tables:overview.columns.publicationNumber": [
+    {
+      "type": 0,
+      "value": "Útgáfunúmer"
+    }
+  ],
   "web.components.tables:overview.columns.publishDate": [
     {
       "type": 0,
@@ -509,6 +677,12 @@
       "value": "Heiti"
     }
   ],
+  "web.components.tables:selectedCases.columns.type": [
+    {
+      "type": 0,
+      "value": "Tegund"
+    }
+  ],
   "web.components.tables:selectedCases.empty.message": [
     {
       "type": 0,
@@ -555,6 +729,30 @@
     {
       "type": 0,
       "value": "Beðið svara"
+    }
+  ],
+  "web.general:clearFilter": [
+    {
+      "type": 0,
+      "value": "Hreinsa val"
+    }
+  ],
+  "web.general:searchByCategory": [
+    {
+      "type": 0,
+      "value": "Finna flokk"
+    }
+  ],
+  "web.general:searchByDepartment": [
+    {
+      "type": 0,
+      "value": "Finna deild"
+    }
+  ],
+  "web.general:searchByType": [
+    {
+      "type": 0,
+      "value": "Finna tegund"
     }
   ],
   "web.page.caseOverview:banner.description": [
@@ -625,6 +823,12 @@
       "value": ")"
     }
   ],
+  "web.page.caseProcessingOverview:tabs.inProgressNoCount": [
+    {
+      "type": 0,
+      "value": "Grunnvinnsla"
+    }
+  ],
   "web.page.caseProcessingOverview:tabs.inReview": [
     {
       "type": 0,
@@ -639,6 +843,12 @@
       "value": ")"
     }
   ],
+  "web.page.caseProcessingOverview:tabs.inReviewNoCount": [
+    {
+      "type": 0,
+      "value": "Yfirlestur"
+    }
+  ],
   "web.page.caseProcessingOverview:tabs.ready": [
     {
       "type": 0,
@@ -651,6 +861,12 @@
     {
       "type": 0,
       "value": ")"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.readyNoCount": [
+    {
+      "type": 0,
+      "value": "Tilbúið"
     }
   ],
   "web.page.caseProcessingOverview:tabs.statuses": [
@@ -671,6 +887,12 @@
     {
       "type": 0,
       "value": ")"
+    }
+  ],
+  "web.page.caseProcessingOverview:tabs.submittedNoCount": [
+    {
+      "type": 0,
+      "value": "Innsendingar"
     }
   ],
   "web.page.casePublishingOverview:banner.description": [
@@ -751,10 +973,34 @@
       "value": "Úthluta máli á starfsmann"
     }
   ],
+  "web.page.caseSingle:actions.communicationsStatus": [
+    {
+      "type": 0,
+      "value": "Samskiptastaða"
+    }
+  ],
+  "web.page.caseSingle:actions.confirmFixStep": [
+    {
+      "type": 0,
+      "value": "Birta leiðréttingu"
+    }
+  ],
+  "web.page.caseSingle:actions.fixStep": [
+    {
+      "type": 0,
+      "value": "Leiðrétta"
+    }
+  ],
   "web.page.caseSingle:actions.nextStep": [
     {
       "type": 0,
       "value": "Næsta skref"
+    }
+  ],
+  "web.page.caseSingle:actions.rejectCase": [
+    {
+      "type": 0,
+      "value": "Hafna máli"
     }
   ],
   "web.page.caseSingle:actions.status": [
@@ -767,6 +1013,30 @@
     {
       "type": 0,
       "value": "Upplýsingar"
+    }
+  ],
+  "web.page.caseSingle:actions.toPublishing": [
+    {
+      "type": 0,
+      "value": "Fara í útgáfu"
+    }
+  ],
+  "web.page.caseSingle:actions.unpublish": [
+    {
+      "type": 0,
+      "value": "Taka mál úr birtingu"
+    }
+  ],
+  "web.page.caseSingle:actions.unpublishCase": [
+    {
+      "type": 0,
+      "value": "Taka mál úr birtingu"
+    }
+  ],
+  "web.page.caseSingle:actions.unpublishDisabledExplanation": [
+    {
+      "type": 0,
+      "value": "Bæta þarf við athugasemd til þess að leiðrétta mál"
     }
   ],
   "web.page.caseSingle:banner.description": [
@@ -904,7 +1174,7 @@
   "web.page.dashboard:general.publishing": [
     {
       "type": 0,
-      "value": "Útgáfa"
+      "value": "Til útgáfu í dag"
     }
   ],
   "web.page.dashboard:general.statistics": [
@@ -989,6 +1259,12 @@
     {
       "type": 0,
       "value": "C deild"
+    }
+  ],
+  "web.page.errors.error": [
+    {
+      "type": 0,
+      "value": "Villa kom upp"
     }
   ],
   "web.page.errors.errorFetchingCategoriesMessage": [
