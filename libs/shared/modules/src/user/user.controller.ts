@@ -22,6 +22,7 @@ import {
   InternalServerErrorException,
   Param,
   Post,
+  Put,
   Query,
   UnauthorizedException,
   UseGuards,
@@ -63,6 +64,21 @@ export class UserController {
     }
 
     return results.result.value
+  }
+
+  @Put('/:id')
+  @ApiOperation({ operationId: 'updateUser' })
+  @ApiResponse({ status: 200, type: GetUserResponse })
+  @ApiResponse({ status: 401, type: UnauthorizedException })
+  @ApiResponse({ status: 403, type: ForbiddenException })
+  async updateUser(
+    @Param('id') id: string,
+    @Body() body: CreateUserDto,
+    @CurrentUser() currentUser: UserDto,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.userService.updateUser(id, body, currentUser),
+    )
   }
 
   @Delete('/:id')

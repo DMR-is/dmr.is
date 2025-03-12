@@ -5,6 +5,7 @@ import {
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
+  UpdateUserDto,
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -36,7 +37,11 @@ export interface IUserService {
     body: CreateUserDto,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUserResponse>>
-  updateUser(): Promise<ResultWrapper<GetUserResponse>>
+  updateUser(
+    userId: string,
+    body: UpdateUserDto,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetUserResponse>>
   deleteUser(userId: string, currentUser: UserDto): Promise<ResultWrapper>
 }
 

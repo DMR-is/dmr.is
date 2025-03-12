@@ -1,6 +1,5 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { v4 as uuid } from 'uuid'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -11,6 +10,7 @@ import {
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
+  UpdateUserDto,
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -59,35 +59,50 @@ export class UserService implements IUserService {
         transaction,
       })
 
-      if (role?.title !== UserRoleEnum.User) {
-        this.logger.warn(`User tried to create a user with incorrect role`, {
-          context: LOGGING_CONTEXT,
-          category: LOGGING_CATEGORY,
-          userId: currentUser.id,
-        })
-        return ResultWrapper.err({
-          code: 403,
-          message: 'Forbidden',
-        })
-      }
+      const hasPermission = role?.title !== UserRoleEnum.User
+      const hasAnyInvolvedParties = involedPartyIds.length > 0
+      const hasInvolvedParties = currentUser.involvedParties.every(
+        (involvedParty) => involedPartyIds.includes(involvedParty.id),
+      )
 
-      if (currentUser.involvedParties.length === 0) {
+      if (!hasPermission) {
         this.logger.warn(
-          'User with no involved parties tried to create a user',
+          `User without a sufficent role tried to create a user`,
           {
             context: LOGGING_CONTEXT,
             category: LOGGING_CATEGORY,
             userId: currentUser.id,
           },
         )
+      }
+
+      if (!hasAnyInvolvedParties) {
+        this.logger.warn(
+          'User without any involved parties tried to create a user',
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            userId: currentUser.id,
+          },
+        )
+      }
+
+      if (!hasInvolvedParties) {
+        this.logger.warn(
+          'User tried to create a user with different involved parties',
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            userId: currentUser.id,
+          },
+        )
+      }
+
+      if (!hasPermission || !hasAnyInvolvedParties || !hasInvolvedParties) {
         return ResultWrapper.err({
           code: 403,
           message: 'Forbidden',
         })
-      }
-
-      if (currentUser.involvedParties.length === 1) {
-        involedPartyIds.push(currentUser.involvedParties[0].id)
       }
     }
 
@@ -139,8 +154,112 @@ export class UserService implements IUserService {
   }
 
   @LogAndHandle()
-  updateUser(): Promise<ResultWrapper<GetUserResponse>> {
-    throw new Error('Method not implemented.')
+  @Transactional()
+  async updateUser(
+    userId: string,
+    body: UpdateUserDto,
+    currentUser: UserDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetUserResponse>> {
+    const isAdmin = currentUser.role.title === UserRoleEnum.Admin
+
+    const userToUpdate = await this.userModel.findByPk(userId, { transaction })
+
+    if (!userToUpdate) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'User not found',
+      })
+    }
+
+    if (!isAdmin) {
+      const hasUpdatePermission = userToUpdate.role.title !== UserRoleEnum.User
+      const hasInvoledParty = userToUpdate.involvedParties.every(
+        (involvedParty) =>
+          currentUser.involvedParties.find(
+            (userInvolvedParty) => userInvolvedParty.id === involvedParty.id,
+          ),
+      )
+
+      if (!hasUpdatePermission || !hasInvoledParty) {
+        if (!hasUpdatePermission) {
+          this.logger.warn(
+            `User without sufficent role tried to update a user`,
+            {
+              context: LOGGING_CONTEXT,
+              category: LOGGING_CATEGORY,
+              userId: currentUser.id,
+            },
+          )
+        }
+
+        if (!hasInvoledParty) {
+          this.logger.warn(
+            `User without any involved parties tried to update a user`,
+            {
+              context: LOGGING_CONTEXT,
+              category: LOGGING_CATEGORY,
+              userId: currentUser.id,
+            },
+          )
+        }
+
+        return ResultWrapper.err({
+          code: 403,
+          message: 'Forbidden',
+        })
+      }
+    }
+
+    await userToUpdate.update(
+      {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        displayName: body.displayName,
+        email: body.email,
+      },
+      { transaction },
+    )
+
+    if (body.involvedParties) {
+      await this.userInvolvedPartiesModel.destroy({
+        where: {
+          userId,
+        },
+        transaction,
+      })
+
+      const userInvolvedParties = body.involvedParties.map(
+        (involvedPartyId) => ({
+          userId,
+          involvedPartyId,
+        }),
+      )
+
+      await this.userInvolvedPartiesModel.bulkCreate(userInvolvedParties, {
+        transaction,
+      })
+    }
+
+    const withAssociations = await this.userModel.findByPk(userId, {
+      transaction,
+    })
+
+    if (!withAssociations) {
+      this.logger.warn('User not found after update', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        userId,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not update user',
+      })
+    }
+
+    const migrated = userMigrate(withAssociations)
+
+    return ResultWrapper.ok({ user: migrated })
   }
 
   @LogAndHandle()
@@ -173,16 +292,20 @@ export class UserService implements IUserService {
 
       if (!hasDeletePermission || !hasInvoledParty) {
         if (!hasDeletePermission) {
-          this.logger.warn(`User tried to delete a user with incorrect role`, {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            userId: currentUser.id,
-          })
+          this.logger.warn(
+            `User without sufficent role tried to delete a user`,
+            {
+              context: LOGGING_CONTEXT,
+              category: LOGGING_CATEGORY,
+              userId: currentUser.id,
+              userToBeDeletedId: userId,
+            },
+          )
         }
 
         if (!hasInvoledParty) {
           this.logger.warn(
-            `User without any involved parties tried to delete a user`,
+            `User without sufficent involved parties tried to delete a user`,
             {
               context: LOGGING_CONTEXT,
               category: LOGGING_CATEGORY,

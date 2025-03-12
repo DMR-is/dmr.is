@@ -1,6 +1,6 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { Institution } from '../institutions'
 import { Paging, PagingQuery } from '../paging'
@@ -118,6 +118,10 @@ export class CreateUserDto extends PickType(UserDto, [
   })
   displayName?: string
 }
+
+export class UpdateUserDto extends PartialType(
+  OmitType(CreateUserDto, ['roleId', 'nationalId'] as const),
+) {}
 
 export class GetUsersQuery extends PagingQuery {
   @ApiProperty({
