@@ -9,7 +9,11 @@ const getPath = () => {
   if (typeof window === 'undefined') {
     return process.env.DMR_ADMIN_API_BASE_PATH as string
   }
-  return `https://admin-api.${window.location.host}`
+  // Removing first part of the domain (ritstjorn) and adding admin-api
+  const host = window.location.host.split('.')
+  host.shift()
+  host.unshift('admin-api')
+  return `https://${host.join('.')}`
 }
 
 export const config = (token: string) => {
