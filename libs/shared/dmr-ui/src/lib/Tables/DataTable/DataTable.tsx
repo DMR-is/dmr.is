@@ -1,6 +1,7 @@
 import { Pagination, Stack, Table as T } from '@island.is/island-ui/core'
-import { DataTableHeadCell } from './DataTableHeadCell'
+
 import { DataTableCell } from './DataTableCell'
+import { DataTableHeadCell } from './DataTableHeadCell'
 
 export type DataTableColumn = {
   field: string

@@ -1,6 +1,7 @@
-import promiseAll from '@hugsmidjan/qj/promiseAllObject';
-import { eliminateComments } from '@island.is/regulations-tools/textHelpers';
 import { BindOrReplacements, QueryTypes } from 'sequelize';
+import promiseAll from '@hugsmidjan/qj/promiseAllObject';
+
+import { eliminateComments } from '@island.is/regulations-tools/textHelpers';
 
 import { DB_Regulation, DB_Task } from '../models';
 import {
@@ -13,7 +14,6 @@ import {
   Year,
 } from '../routes/types';
 import { db } from '../utils/sequelize';
-
 import { getRegulationLawChapters } from './LawChapter';
 import { getMinistry } from './Ministry';
 
@@ -76,9 +76,10 @@ const augmentRegulationList = async (
   const today = new Date();
 
   for (let i = 0; i < regulations.length; i += chunkSize) {
+    // eslint-disable-next-line no-console
     console.info(`- Augmenting chunk ${i} - ${i + chunkSize}`);
     const regChunk = regulations.slice(i, i + chunkSize);
-    // eslint-disable-next-line no-await-in-loop
+
     const regProms = regChunk.map(async (reg) => {
       const {
         type,
@@ -125,7 +126,7 @@ const augmentRegulationList = async (
       return itm;
     });
 
-    // eslint-disable-next-line no-await-in-loop
+
     const augmentedChunk = await Promise.all(regProms);
 
     augmentedRegulations.push(...augmentedChunk);

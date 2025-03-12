@@ -1,4 +1,4 @@
-import { Op, Transaction } from 'sequelize'
+import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'

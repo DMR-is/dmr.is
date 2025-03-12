@@ -11,7 +11,6 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateNextStatusBody,
   UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,

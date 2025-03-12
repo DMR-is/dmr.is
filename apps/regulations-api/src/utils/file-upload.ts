@@ -1,4 +1,3 @@
-import { ensureRegName, nameToSlug } from '@island.is/regulations-tools/utils'
 import S3 from 'aws-sdk/clients/s3'
 import { createHash } from 'crypto'
 import type { Request as ExpressRequest } from 'express'
@@ -7,13 +6,14 @@ import multerS3 from 'multer-s3-transform'
 import sharp from 'sharp'
 import { Readable } from 'stream'
 
+import { ensureRegName, nameToSlug } from '@island.is/regulations-tools/utils'
+
 import {
   AWS_BUCKET_NAME,
   AWS_REGION_NAME,
   DRAFTS_FOLDER,
   MEDIA_BUCKET_FOLDER,
 } from '../constants'
-
 import { ensureFileScopeToken, ensureUploadTypeHeader } from './misc'
 
 // `multer-s3-transform` doesn't have TypeScript definitions, so we just make do with this

@@ -10,6 +10,7 @@ const {
 } = process.env
 
 if (!AWS_BUCKET_NAME || !AWS_REGION_NAME || !API_SERVER) {
+  // eslint-disable-next-line no-console
   console.error(
     'AWS_BUCKET_NAME, AWS_REGION_NAME and/or API_SERVER not configured',
   )

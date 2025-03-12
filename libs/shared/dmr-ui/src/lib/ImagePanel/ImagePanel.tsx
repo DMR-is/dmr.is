@@ -1,14 +1,12 @@
 import {
-  ArrowLink,
   Box,
   GridColumn,
   GridContainer,
   GridRow,
-  Stack,
-  Text,
 } from '@island.is/island-ui/core'
-import { Image, ImageProps } from '../Image/Image'
+
 import { CallToAction } from '../CallToAction/CallToAction'
+import { Image, ImageProps } from '../Image/Image'
 
 type ImagePanelProps = {
   title?: string

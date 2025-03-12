@@ -1,4 +1,4 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntity } from '../entity'
 import { Paging, PagingQuery } from '../paging'

@@ -1,15 +1,16 @@
+/* eslint-disable no-console */
+import { performance } from 'perf_hooks'
 import { Client } from '@opensearch-project/opensearch'
+
 import {
   ensureNameSlug,
   ensureRegName,
   slugToName,
 } from '@island.is/regulations-tools/utils'
-import { performance } from 'perf_hooks'
 
 import { getAllRegulations, RegulationListItemFull } from '../db/Regulations'
 import { ISODate, RegName } from '../routes/types'
 import { loadData, storeData } from '../utils/misc'
-
 import { getSettingsTemplate, mappingTemplate } from './template'
 
 const INDEX_NAME = 'regulations'

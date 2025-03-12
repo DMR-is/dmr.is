@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { FastifyRedis } from '@fastify/redis';
 
 export async function get<T = unknown | null>(

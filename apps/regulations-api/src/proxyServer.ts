@@ -1,8 +1,8 @@
-import { DAY, HOUR, SECOND } from '@hugsmidjan/qj/time';
 import { fastify as fast } from 'fastify';
 import proxy, { FastifyHttpProxyOptions } from 'fastify-http-proxy';
-import fastifyRateLimiter from '@fastify/rate-limit';
 import { Writable } from 'stream';
+import fastifyRateLimiter from '@fastify/rate-limit';
+import { DAY, HOUR, SECOND } from '@hugsmidjan/qj/time';
 
 import { cacheControl } from './utils/misc';
 import { serveRobotsTxt } from './utils/server-utils';
@@ -68,7 +68,7 @@ const fastify = fast({
   },
 });
 
-// eslint-disable-next-line require-await
+
 fastify.addHook('onRequest', async (request, reply) => {
   if (
     request.headers['x-forwarded-proto'] !== 'https' &&
@@ -108,8 +108,10 @@ const start = async () => {
 
     fastify.listen({port: Number(serverPort), host: '0.0.0.0', });
 
+    // eslint-disable-next-line no-console
     console.info('PROXY API up and running on port ' + serverPort);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.info(err);
     process.exit(1);
   }

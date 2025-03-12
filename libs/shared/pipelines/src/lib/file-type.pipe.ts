@@ -1,7 +1,8 @@
+import { extensions } from 'mime-types'
 import { ALLOWED_MIME_TYPES } from '@dmr.is/constants'
+
 import { FileValidator } from '@nestjs/common'
 import { IFile } from '@nestjs/common/pipes/file/interfaces'
-import { extensions } from 'mime-types'
 
 interface FileAttributes {
   mimetype: string[]

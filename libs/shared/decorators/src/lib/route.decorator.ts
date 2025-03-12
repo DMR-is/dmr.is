@@ -1,10 +1,10 @@
 import {
+  applyDecorators,
   Delete,
   Get,
   HttpCode,
   Post,
   Put,
-  applyDecorators,
 } from '@nestjs/common'
 import {
   ApiBody,
@@ -20,6 +20,7 @@ import {
   ApiResponse,
   ApiResponseMetadata,
 } from '@nestjs/swagger'
+
 import { LogMethod } from './log-method.decorator'
 
 interface BaseRouteOptions {

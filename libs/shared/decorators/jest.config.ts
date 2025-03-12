@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'shared-decorators',
   preset: '../../../jest.preset.js',

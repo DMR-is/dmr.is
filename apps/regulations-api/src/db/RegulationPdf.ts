@@ -1,6 +1,13 @@
-import arrayToObject from '@hugsmidjan/qj/arrayToObject'
+/* eslint-disable no-console */
+import S3 from 'aws-sdk/clients/s3'
+import { exec } from 'child_process'
+import fs from 'fs'
+import { readFile, unlink, writeFile } from 'fs/promises'
+import fetch from 'node-fetch'
 import path from 'path'
+import arrayToObject from '@hugsmidjan/qj/arrayToObject'
 import { SECOND } from '@hugsmidjan/qj/time'
+
 import { cleanTitle } from '@island.is/regulations-tools/cleanTitle'
 import { cleanupAllEditorOutputs } from '@island.is/regulations-tools/cleanupEditorOutput'
 import {
@@ -13,11 +20,6 @@ import {
   toISODate,
   toISODateTime,
 } from '@island.is/regulations-tools/utils'
-import S3 from 'aws-sdk/clients/s3'
-import { exec } from 'child_process'
-import fs from 'fs'
-import { readFile, unlink, writeFile } from 'fs/promises'
-import fetch from 'node-fetch'
 
 import {
   AWS_BUCKET_NAME,
@@ -38,7 +40,6 @@ import {
   RegulationRedirect,
 } from '../routes/types'
 import { formatDate as fmt } from '../utils/misc'
-
 import { fetchModifiedDate, getRegulation } from './Regulation'
 
 export type InputRegulation = Pick<

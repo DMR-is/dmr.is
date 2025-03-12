@@ -1,5 +1,6 @@
-import { ensureRegName } from '@island.is/regulations-tools/utils';
 import { FastifyPluginCallback } from 'fastify';
+
+import { ensureRegName } from '@island.is/regulations-tools/utils';
 
 import { DRAFTS_FOLDER, FILE_SERVER } from '../constants';
 import { fileUploader, MulterS3StorageFile } from '../utils/file-upload';
@@ -68,6 +69,7 @@ export const fileUploadRoutes: FastifyPluginCallback = (
         return;
       }
 
+      // eslint-disable-next-line no-console
       process.env.MEDIA_BUCKET_FOLDER && console.info(fileObj);
 
       const uploadInfo =
@@ -193,7 +195,7 @@ export const fileUploadRoutes: FastifyPluginCallback = (
         done();
       },
     },
-    // eslint-disable-next-line require-await
+
     async (request, reply) => {
       return reply.send();
     },

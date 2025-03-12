@@ -1,10 +1,11 @@
+import { isDefined, isEnum } from 'class-validator'
+
 import {
   ArgumentMetadata,
   BadRequestException,
   Injectable,
   PipeTransform,
 } from '@nestjs/common'
-import { isDefined, isEnum } from 'class-validator'
 
 @Injectable()
 export class EnumValidationPipe implements PipeTransform {

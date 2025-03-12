@@ -4,16 +4,13 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   AddCaseAdvertCorrection,
-  Case,
   CaseComment,
   CaseCommunicationStatus,
   CaseDetailed,
-  CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
-  DepartmentSlugEnum,
   GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
@@ -51,12 +48,9 @@ import {
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import {
-  BadRequestException,
   Inject,
-  InternalServerErrorException,
 } from '@nestjs/common'
 
-import { ICaseService } from './case.service.interface'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock {

@@ -1,5 +1,6 @@
-import { nameToSlug } from '@island.is/regulations-tools/utils';
 import { QueryTypes } from 'sequelize';
+
+import { nameToSlug } from '@island.is/regulations-tools/utils';
 
 import { RegName, RegQueryName } from '../routes/types';
 import { db } from '../utils/sequelize';
