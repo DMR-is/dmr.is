@@ -1,5 +1,6 @@
 import { Case } from '@dmr.is/shared/dto'
 
+import { advertCategoryMigrate } from '../../journal/migrations'
 import { CaseModel } from '../models'
 
 export const caseMigrate = (model: CaseModel): Case => ({
@@ -32,11 +33,7 @@ export const caseMigrate = (model: CaseModel): Case => ({
   year: model.year,
   advertTitle: model.advertTitle,
   advertCategories:
-    model.categories?.map((c) => ({
-      id: c.id,
-      title: c.title,
-      slug: c.slug,
-    })) ?? [],
+    model.categories?.map((c) => advertCategoryMigrate(c)) || [],
   requestedPublicationDate: model.requestedPublicationDate,
   publicationNumber: model.publicationNumber,
   publishedAt: model.publishedAt,

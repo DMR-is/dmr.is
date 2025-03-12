@@ -15,6 +15,7 @@ declare module 'next-auth' {
     expires?: string
     user: User
     invalid?: boolean
+    apiBasePath: string
   }
 }
 

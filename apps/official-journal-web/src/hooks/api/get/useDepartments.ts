@@ -1,34 +1,32 @@
+import { useSession } from 'next-auth/react'
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetDepartmentsResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { getDmrClient } from '../../../lib/api/createClient'
+import { swrFetcher } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
-import { generateParams } from '../../../lib/utils'
 
 type SWRDepartmentsOptions = SWRConfiguration<GetDepartmentsResponse, Error>
 
-type Params = Record<keyof SearchParams, string | number>
-
 type UseDepartmentsParams = {
   options?: SWRDepartmentsOptions
-  params?: Params
+  params?: SearchParams
 }
 
 export const useDepartments = ({
   options,
   params,
 }: UseDepartmentsParams = {}) => {
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.accessToken as string, session?.apiBasePath)
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetDepartmentsResponse,
     Error
   >(
-    [APIRoutes.GetDepartments, params],
-    ([url, qsp]: [url: string, qsp: Params]) =>
-      fetcher(url, {
-        arg: {
-          method: 'GET',
-          query: generateParams(qsp),
-        },
+    session ? ['getDepartments', params] : null,
+    ([_key, qsp]: [_key: string, qsp: SearchParams]) =>
+      swrFetcher({
+        func: () => dmrClient.getDepartments(qsp || {}),
       }),
     {
       revalidateOnFocus: false,

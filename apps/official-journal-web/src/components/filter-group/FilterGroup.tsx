@@ -25,7 +25,7 @@ type Props = {
   label: string
   queryKey: string
   loading?: boolean
-  options: { label: string; value: string }[]
+  options: { title: string}[]
   search?: string
   searchPlaceholder?: string
   setSearch?: Dispatch<SetStateAction<string>>
@@ -53,6 +53,12 @@ export const FilterGroup = ({
     queryKey,
     parseAsArrayOf(parseAsString, ','),
   )
+
+  const nonDuplicateOptions = options?.flatMap((type, index) => {
+    return options.findIndex(t => t.title === type.title) === index
+      ? [{ label: type.title, value: type.title }]
+      : []
+  }) ?? []
 
   return (
     <Box className={styles.filterExpandButtonWrapper}>
@@ -94,17 +100,22 @@ export const FilterGroup = ({
             />
           </Box>
         )}
-        {options.map((filter, index) => {
+        {nonDuplicateOptions.map((filter, index) => {
           const isChecked = filters?.includes(filter.value)
           return (
             <Checkbox
               checked={isChecked}
               onChange={(e) => {
-                e.target.checked
-                  ? setFilters([...(filters || []), filter.value])
-                  : setFilters([
-                      ...(filters || []).filter((f) => f !== filter.value),
-                    ])
+                if (e.target.checked) {
+                  setFilters([...(filters || []), filter.value])
+                } else if (filters?.length === 1) {
+                  // We reset to null when the last filter is removed
+                  setFilters(null)
+                } else {
+                  setFilters([
+                    ...(filters || []).filter((f) => f !== filter.value),
+                  ])
+                }
                 setPage(1)
               }}
               name={filter.label}
