@@ -55,13 +55,25 @@ runs:
         token: ${{ inputs.PAT }}
         path: infrastructure
 
-    - name: 🚀 Deploy backend
+    - name: 🚀 Deploy api
+      matrix:
+        application:
+          [
+            official_journal_api,
+            official_journal_admin_api,
+            official_journal_application_api,
+            official_journal_web
+          ]
       shell: bash
-      id: deploy
       run: |
-        cd infrastructure/utgafa
+        cd infrastructure
         git pull
-        ./scripts/update_utgafa.sh --environment ${{ inputs.ENV }} --sha ${{ inputs.VERSION_TAG }}
+        ./scripts/update_tag.sh \
+        --environment ${{ inputs.ENV }} \
+        --update-value "${input.VERSION_TAG}" \
+        --commit false \
+        --target ${matrix.application} \
+        --config-var-name ${matrix.application}_version_tag
 
     - name: 💾 Commit
       uses: stefanzweifel/git-auto-commit-action@v5
