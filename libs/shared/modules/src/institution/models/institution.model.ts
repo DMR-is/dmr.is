@@ -18,6 +18,9 @@ export class InstitutionModel extends Model {
   override id!: string
 
   @Column({ allowNull: false })
+  nationalId!: string
+
+  @Column({ allowNull: false })
   title!: string
 
   @Column({ allowNull: false })

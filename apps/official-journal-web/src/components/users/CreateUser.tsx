@@ -4,35 +4,104 @@ import {
   Button,
   Inline,
   Input,
-  Select,
   Stack,
+  Tag,
   Text,
+  toast,
 } from '@island.is/island-ui/core'
 
 import { BaseEntity, CreateUserDto } from '../../gen/fetch'
+import { useUsers } from '../../hooks/users/useUsers'
+import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
-  roles: { label: string; value: BaseEntity }[]
+  isAdmin?: boolean
+  availableInvolvedParties: { label: string; value: BaseEntity }[]
+  availableRoles: { label: string; value: BaseEntity }[]
 }
 
-export const CreateUser = ({ roles }: Props) => {
-  const [createAdminUser, setCreateAdminUser] = useState<CreateUserDto>({
+export const CreateUser = ({
+  isAdmin = false,
+  availableInvolvedParties,
+  availableRoles,
+}: Props) => {
+  const { createUser } = useUsers({
+    createUserOptions: {
+      onSuccess: ({ user }) => {
+        setCreateUserState({
+          nationalId: '',
+          email: '',
+          firstName: '',
+          lastName: '',
+          displayName: '',
+          roleId: isAdmin
+            ? ''
+            : availableRoles.find((r) => r.value.slug !== 'innsendandi')?.value
+                .id ?? '',
+          involvedParties:
+            availableInvolvedParties.length === 1
+              ? [availableInvolvedParties[0].value.id]
+              : [],
+        })
+        toast.success(`Notandi ${user.displayName} hefur verið stofnaður`, {
+          toastId: 'create-user-success',
+        })
+      },
+      onError: () => {
+        toast.error('Ekki tókst að stofna notanda', {
+          toastId: 'create-user-error',
+        })
+      },
+    },
+  })
+
+  const [createUserState, setCreateUserState] = useState<CreateUserDto>({
     nationalId: '',
     email: '',
     firstName: '',
     lastName: '',
     displayName: '',
-    roleId: '',
-    involvedParties: [],
+    roleId: isAdmin
+      ? ''
+      : availableRoles.find((r) => r.value.slug !== 'innsendandi')?.value.id ??
+        '',
+    involvedParties:
+      availableInvolvedParties.length === 1
+        ? [availableInvolvedParties[0].value.id]
+        : [],
   })
 
-  const rolesOptions = roles.map((role) => ({
-    label: role.value.title,
-    value: role,
-  }))
+  const handleInvolvedPartiesChange = (value?: BaseEntity) => {
+    if (!value)
+      return setCreateUserState({
+        ...createUserState,
+        involvedParties: [],
+      })
+    const isAlreadySelected = createUserState.involvedParties?.includes(
+      value.id,
+    )
 
-  const isDisabled = Object.values(createAdminUser).some(
-    (value) => !value || (Array.isArray(value) && value.length === 0),
+    const updateValue = isAlreadySelected
+      ? createUserState.involvedParties?.filter((id) => id !== value.id)
+      : [...(createUserState.involvedParties || []), value.id]
+
+    setCreateUserState({
+      ...createUserState,
+      involvedParties: updateValue,
+    })
+  }
+
+  const isDisabled =
+    !createUserState.nationalId ||
+    !createUserState.email ||
+    !createUserState.firstName ||
+    !createUserState.lastName ||
+    !createUserState.roleId ||
+    createUserState.involvedParties?.length === 0
+
+  const availablePartiesOptions = availableInvolvedParties.filter(
+    (involvedParty) =>
+      !createUserState.involvedParties?.includes(involvedParty.value.id),
   )
 
   return (
@@ -45,10 +114,10 @@ export const CreateUser = ({ roles }: Props) => {
         type="number"
         label="Kennitala"
         backgroundColor="blue"
-        value={createAdminUser.nationalId}
+        value={createUserState.nationalId}
         onChange={(e) =>
-          setCreateAdminUser({
-            ...createAdminUser,
+          setCreateUserState({
+            ...createUserState,
             nationalId: e.target.value,
           })
         }
@@ -60,10 +129,10 @@ export const CreateUser = ({ roles }: Props) => {
         type="email"
         label="Netfang"
         backgroundColor="blue"
-        value={createAdminUser.email}
+        value={createUserState.email}
         onChange={(e) =>
-          setCreateAdminUser({
-            ...createAdminUser,
+          setCreateUserState({
+            ...createUserState,
             email: e.target.value,
           })
         }
@@ -74,10 +143,10 @@ export const CreateUser = ({ roles }: Props) => {
         size="sm"
         label="Fornafn"
         backgroundColor="blue"
-        value={createAdminUser.firstName}
+        value={createUserState.firstName}
         onChange={(e) =>
-          setCreateAdminUser({
-            ...createAdminUser,
+          setCreateUserState({
+            ...createUserState,
             firstName: e.target.value,
           })
         }
@@ -88,10 +157,10 @@ export const CreateUser = ({ roles }: Props) => {
         size="sm"
         label="Eftirnafn"
         backgroundColor="blue"
-        value={createAdminUser.lastName}
+        value={createUserState.lastName}
         onChange={(e) =>
-          setCreateAdminUser({
-            ...createAdminUser,
+          setCreateUserState({
+            ...createUserState,
             lastName: e.target.value,
           })
         }
@@ -101,27 +170,62 @@ export const CreateUser = ({ roles }: Props) => {
         size="sm"
         label="Notendanafn"
         backgroundColor="blue"
-        value={createAdminUser.displayName}
+        value={createUserState.displayName}
         onChange={(e) =>
-          setCreateAdminUser({
-            ...createAdminUser,
+          setCreateUserState({
+            ...createUserState,
             displayName: e.target.value,
           })
         }
       />
-      <Select
-        required
-        size="sm"
-        label="Hlutverk"
-        backgroundColor="blue"
-        options={rolesOptions}
-        onChange={(opt) =>
-          setCreateAdminUser({
-            ...createAdminUser,
-            roleId: opt ? opt?.value.id : '',
-          })
-        }
-      />
+
+      {availableInvolvedParties.length > 1 && (
+        <Stack space={2}>
+          <OJOISelect
+            required
+            size="sm"
+            label="Stofnun"
+            backgroundColor="blue"
+            options={availablePartiesOptions}
+            key={createUserState.involvedParties?.join()}
+            onChange={(opt) => handleInvolvedPartiesChange(opt?.value)}
+          />
+          <Inline space={1} flexWrap="wrap">
+            {createUserState.involvedParties?.map((involvedPartyId) => {
+              const involvedParty = availableInvolvedParties.find(
+                (involvedParty) => involvedParty.value.id === involvedPartyId,
+              )
+              return (
+                <Tag
+                  key={involvedPartyId}
+                  variant="blueberry"
+                  onClick={() =>
+                    handleInvolvedPartiesChange(involvedParty?.value)
+                  }
+                >
+                  {involvedParty?.label}
+                </Tag>
+              )
+            })}
+          </Inline>
+        </Stack>
+      )}
+
+      {isAdmin && (
+        <OJOISelect
+          required
+          size="sm"
+          label="Hlutverk"
+          backgroundColor="blue"
+          options={availableRoles}
+          onChange={(opt) =>
+            setCreateUserState({
+              ...createUserState,
+              roleId: opt ? opt?.value.id : '',
+            })
+          }
+        />
+      )}
 
       <Inline justifyContent="flexEnd" space={2}>
         <Button
@@ -130,6 +234,7 @@ export const CreateUser = ({ roles }: Props) => {
           size="small"
           icon="person"
           iconType="outline"
+          onClick={() => createUser({ createUserDto: createUserState })}
         >
           Stofna notanda
         </Button>

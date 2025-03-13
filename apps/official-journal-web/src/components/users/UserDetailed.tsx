@@ -6,17 +6,25 @@ import {
   GridRow,
   Inline,
   Stack,
+  Tag,
+  Text,
 } from '@island.is/island-ui/core'
 
-import { UserDto } from '../../gen/fetch'
+import { BaseEntity, UserDto } from '../../gen/fetch'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
+import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
   user: UserDto
+  availableInvoledParties: { label: string; value: BaseEntity }[]
 }
 
-export const UserDetailed = ({ user }: Props) => {
+export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
+  const partiesToShow = availableInvoledParties.filter(
+    (party) => !user.involvedParties.includes(party.value.id),
+  )
+
   return (
     <Box paddingX={[1, 2]} paddingY={[2, 3]}>
       <GridContainer>
@@ -98,8 +106,35 @@ export const UserDetailed = ({ user }: Props) => {
             </GridColumn>
           </GridRow>
           <GridRow>
+            <GridColumn span={['12/12', '4/12']}>
+              <OJOISelect
+                name="user-institution"
+                label="Bæta við stofnun"
+                isDisabled={partiesToShow.length === 0}
+                placeholder={
+                  partiesToShow.length === 0
+                    ? 'Engar stofnanir í boði'
+                    : 'Stofnanir notanda'
+                }
+                options={partiesToShow}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '8/12']}>
+              <Stack space={1}>
+                <Text variant="small" fontWeight="semiBold">
+                  Tengdar stofnanir
+                </Text>
+                <Inline space={1} flexWrap="wrap">
+                  {user.involvedParties.map((involvedParty) => (
+                    <Tag>{involvedParty.title}</Tag>
+                  ))}
+                </Inline>
+              </Stack>
+            </GridColumn>
+          </GridRow>
+          <GridRow>
             <GridColumn span="12/12">
-              <Inline justifyContent="flexEnd">
+              <Inline alignY="center" justifyContent="flexEnd">
                 <Button
                   icon="trash"
                   iconType="outline"

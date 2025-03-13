@@ -15,11 +15,16 @@ import { authOptions } from '../api/auth/[...nextauth]'
 const UserTable = dynamic(() => import('../../components/tables/UsersTable'))
 
 type Props = {
+  isAdmin: boolean
   involvedParties: { label: string; value: BaseEntity }[]
   roleOptions: { label: string; value: BaseEntity }[]
 }
 
-export default function UsersPage({ involvedParties, roleOptions }: Props) {
+export default function UsersPage({
+  isAdmin,
+  involvedParties,
+  roleOptions,
+}: Props) {
   return (
     <Section>
       <GridContainer>
@@ -30,6 +35,7 @@ export default function UsersPage({ involvedParties, roleOptions }: Props) {
             paddingBottom={[2, 2, 3]}
           >
             <UserTable
+              isAdmin={isAdmin}
               involvedPartyOptions={involvedParties}
               roleOptions={roleOptions}
             />
@@ -50,6 +56,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
+
+  const isAdmin = session.user.role.slug === 'ritstjori'
 
   const client = getDmrClient(session.accessToken)
 
@@ -80,6 +88,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     props: deleteUndefined({
       session,
       layout,
+      isAdmin: isAdmin,
       roleOptions: roles.map((role) => ({
         label: role.title,
         value: role,

@@ -62,6 +62,12 @@ export class InstitutionQuery extends PagingQuery {
   search?: string
 }
 
-export class CreateInstitution extends PickType(InstitutionDto, ['title']) {}
+export class CreateInstitution extends PickType(InstitutionDto, ['title']) {
+  @ApiProperty({
+    required: true,
+    type: String,
+  })
+  nationalId!: string
+}
 
 export class UpdateInstitution extends PartialType(CreateInstitution) {}

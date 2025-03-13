@@ -16,7 +16,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { BaseEntity } from '../../gen/fetch'
-import { useUsers } from '../../hooks/api/get/useUsers'
+import { useUsers } from '../../hooks/users/useUsers'
 import { useToggle } from '../../hooks/useToggle'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
@@ -26,11 +26,13 @@ import { CreateUser } from '../users/CreateUser'
 import { UserDetailed } from '../users/UserDetailed'
 
 type UsersTableProps = {
+  isAdmin?: boolean
   involvedPartyOptions: { label: string; value: BaseEntity }[]
   roleOptions: { label: string; value: BaseEntity }[]
 }
 
 export const UsersTable = ({
+  isAdmin = false,
   involvedPartyOptions,
   roleOptions,
 }: UsersTableProps) => {
@@ -42,7 +44,8 @@ export const UsersTable = ({
   const [institution, setInstitution] = useQueryState('stofnun')
   const [role, setRole] = useQueryState('hlutverk')
   const [search, setSearch] = useQueryState('leit')
-  const { setToggle, toggle } = useToggle()
+  const newUserToggle = useToggle()
+  const newInstitutionToggle = useToggle()
 
   const [localSearch, setLocalSearch] = useState(search ?? '')
 
@@ -100,31 +103,37 @@ export const UsersTable = ({
                     icon="person"
                     iconType="outline"
                     size="small"
-                    onClick={() => setToggle(true)}
+                    onClick={() => newUserToggle.setToggle(true)}
                   >
                     Stofna notanda
                   </Button>
                 }
               >
-                <CreateUser roles={roleOptions} />
+                <CreateUser
+                  isAdmin={isAdmin}
+                  availableInvolvedParties={involvedPartyOptions}
+                  availableRoles={roleOptions}
+                />
               </Drawer>
-              <Drawer
-                ariaLabel="Stofna stofnun"
-                baseId="institution-drawer"
-                disclosure={
-                  <Button
-                    variant="utility"
-                    icon="business"
-                    iconType="outline"
-                    size="small"
-                    onClick={() => setToggle(true)}
-                  >
-                    Stofna stofnun
-                  </Button>
-                }
-              >
-                <CreateInstitution />
-              </Drawer>
+              {isAdmin && (
+                <Drawer
+                  ariaLabel="Stofna stofnun"
+                  baseId="institution-drawer"
+                  disclosure={
+                    <Button
+                      variant="utility"
+                      icon="business"
+                      iconType="outline"
+                      size="small"
+                      onClick={() => newInstitutionToggle.setToggle(true)}
+                    >
+                      Stofna stofnun
+                    </Button>
+                  }
+                >
+                  <CreateInstitution />
+                </Drawer>
+              )}
             </Inline>
           </GridColumn>
         </GridRow>
@@ -145,12 +154,17 @@ export const UsersTable = ({
           <GridColumn span={['12/12', '6/12', '3/12']}>
             <OJOISelect
               isClearable
+              isDisabled={involvedPartyOptions.length <= 1}
               label="Stofnun"
               placeholder="Sía eftir stofnun"
               options={involvedPartyOptions}
-              defaultValue={involvedPartyOptions.find(
-                (opt) => opt.value.slug === institution,
-              )}
+              defaultValue={
+                involvedPartyOptions.length === 1
+                  ? involvedPartyOptions[0]
+                  : involvedPartyOptions.find(
+                      (opt) => opt.value.slug === institution,
+                    )
+              }
               onChange={(opt) => {
                 if (!opt) return setInstitution(null)
                 setInstitution(opt.value.slug)
@@ -239,7 +253,9 @@ export const UsersTable = ({
               ]}
               rows={users?.map((user) => ({
                 isExpandable: true,
-                children: <UserDetailed user={user} />,
+                children: (
+                  <UserDetailed availableInvoledParties={[]} user={user} />
+                ),
                 name: user.displayName,
                 email: user.email,
                 institution:

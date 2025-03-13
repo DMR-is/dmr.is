@@ -16,6 +16,7 @@ import { useInstitutions } from '../../hooks/api'
 export const CreateInstitution = () => {
   const [createState, setCreateState] = useState<CreateInstitutionDto>({
     title: '',
+    nationalId: '',
   })
 
   const { createInstitution, isCreatingInstitution } = useInstitutions({
@@ -23,6 +24,7 @@ export const CreateInstitution = () => {
       toast.success(`Stofnun ${createState.title} hefur verið stofnuð`)
       setCreateState({
         title: '',
+        nationalId: '',
       })
     },
   })
@@ -39,7 +41,23 @@ export const CreateInstitution = () => {
         value={createState.title}
         onChange={(e) =>
           setCreateState({
+            ...createState,
             title: e.target.value,
+          })
+        }
+      />
+      <Input
+        name="create-institution-national-id"
+        size="sm"
+        type="text"
+        label="Kennitala stofnunar"
+        placeholder="Sláðu inn kennitölu stofnunar"
+        backgroundColor="blue"
+        value={createState.nationalId}
+        onChange={(e) =>
+          setCreateState({
+            ...createState,
+            nationalId: e.target.value,
           })
         }
       />
@@ -60,11 +78,7 @@ export const CreateInstitution = () => {
           disabled={!createState.title}
           size="small"
           variant="primary"
-          onClick={() =>
-            createInstitution({
-              title: createState.title,
-            })
-          }
+          onClick={() => createInstitution(createState)}
         >
           Stofna stofnun
         </Button>

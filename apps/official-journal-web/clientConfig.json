@@ -4815,14 +4815,16 @@
       "CreateInstitution": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "description": "Title of the entity" }
+          "title": { "type": "string", "description": "Title of the entity" },
+          "nationalId": { "type": "string" }
         },
-        "required": ["title"]
+        "required": ["title", "nationalId"]
       },
       "UpdateInstitution": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "description": "Title of the entity" }
+          "title": { "type": "string", "description": "Title of the entity" },
+          "nationalId": { "type": "string" }
         }
       },
       "GetUsersResponse": {
