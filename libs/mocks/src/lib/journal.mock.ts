@@ -1,14 +1,14 @@
-import { ALL_MOCK_SIGNATURES } from './signatures.mock'
-
 import {
   Advert,
-  Department,
-  AdvertType,
-  MainCategory,
-  Category,
-  Institution,
   AdvertStatus,
+  AdvertType,
+  Category,
+  Department,
+  Institution,
+  MainCategory,
 } from '@dmr.is/shared/dto'
+
+import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 
 const JOURNAL_DEPARTMENT_A: Department = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',

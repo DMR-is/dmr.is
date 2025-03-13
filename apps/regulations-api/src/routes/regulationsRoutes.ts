@@ -1,4 +1,7 @@
+/* eslint-disable no-console */
+import { FastifyPluginCallback } from 'fastify';
 import { DAY, SECOND } from '@hugsmidjan/qj/time';
+
 import {
   IntPositive,
   RegulationOptionList,
@@ -8,7 +11,6 @@ import {
   ensureRegName,
   isNonNull,
 } from '@island.is/regulations-tools/utils';
-import { FastifyPluginCallback } from 'fastify';
 
 import {
   getAllRegulations,

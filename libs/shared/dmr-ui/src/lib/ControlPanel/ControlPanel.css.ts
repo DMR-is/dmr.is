@@ -1,12 +1,14 @@
 import { style } from '@vanilla-extract/css'
+import { recipe } from '@vanilla-extract/recipes'
+
+import { theme } from '@island.is/island-ui/theme'
+
 import {
   CONTROL_PANEL_MOBILE_WIDTH,
   CONTROL_PANEL_WIDTH,
   DMR_HEADER_HEIGHT,
   DMR_HEADER_MOBILE_HEIGHT,
 } from '../../contants'
-import { theme } from '@island.is/island-ui/theme'
-import { recipe } from '@vanilla-extract/recipes'
 
 export const controlPanel = style({
   position: 'relative',

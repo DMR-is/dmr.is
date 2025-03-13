@@ -1,7 +1,7 @@
-import { DAY, SECOND } from '@hugsmidjan/qj/time'
 import { FastifyInstance } from 'fastify'
 import { readFileSync } from 'fs'
 import path from 'path'
+import { DAY, SECOND } from '@hugsmidjan/qj/time'
 
 export const serveRobotsTxt = (server: FastifyInstance, robotsFile: string) => {
   const robotsPath = path.join(__dirname, robotsFile)

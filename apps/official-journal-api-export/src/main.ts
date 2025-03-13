@@ -1,30 +1,19 @@
-import { hrtime } from 'node:process'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { hrtime } from 'node:process'
 
 import {
   connect,
   getAdvertDocuments,
-  getAdvertStatuses,
   getAdverts,
   getAdvertsCategories,
+  getAdvertStatuses,
   getCategories,
   getDepartments,
   getInvolvedParties,
   getTypes,
 } from './lib/db.js'
 import { getEnv } from './lib/environment.js'
-import {
-  generateAdvertStatusesInserts,
-  generateAdvertsCategoriesInserts,
-  generateAdvertsInserts,
-  generateCategoryDepartmentInserts,
-  generateCategoryInserts,
-  generateDepartmentInserts,
-  generateInvolvedPartiesInserts,
-  generateSuperCategoryInserts,
-  generateTypeInserts,
-} from './lib/inserts.js'
 import {
   fixAdverts,
   fixCats,
@@ -33,7 +22,15 @@ import {
   fixTypes,
   mapAdvertsCategories,
 } from './lib/fixers.js'
-import { getSuperCategories } from './lib/static.js'
+import {
+  generateAdvertsCategoriesInserts,
+  generateAdvertsInserts,
+  generateAdvertStatusesInserts,
+  generateCategoryInserts,
+  generateDepartmentInserts,
+  generateInvolvedPartiesInserts,
+  generateTypeInserts,
+} from './lib/inserts.js'
 
 const ROOT_SQL_DIR = './apps/official-journal-api-export/sql'
 

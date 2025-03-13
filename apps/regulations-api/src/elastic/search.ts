@@ -1,9 +1,10 @@
-import { Client, errors } from '@opensearch-project/opensearch'
-import range from '@hugsmidjan/qj/range'
-import zeroPad from '@hugsmidjan/qj/zeroPad'
-import { ensureReasonableYear } from '@island.is/regulations-tools/utils'
 import esb from 'elastic-builder'
 import xss from 'xss'
+import range from '@hugsmidjan/qj/range'
+import zeroPad from '@hugsmidjan/qj/zeroPad'
+import { Client, errors } from '@opensearch-project/opensearch'
+
+import { ensureReasonableYear } from '@island.is/regulations-tools/utils'
 
 import { PER_PAGE } from '../db/Regulations'
 import {
@@ -30,7 +31,7 @@ export type SearchQueryParams = {
 const cleanQuery = (q: string | undefined) =>
   q && xss(q).replace(/\s+/g, ' ').trim().toLowerCase()
 
-// eslint-disable-next-line complexity
+
 export async function searchElastic(client: Client, query: SearchQueryParams) {
   let searchQuery = cleanQuery(query.q)
 
@@ -152,6 +153,7 @@ export async function searchElastic(client: Client, query: SearchQueryParams) {
       })
     } catch (err) {
       const value = err instanceof errors.ResponseError ? err.meta : err
+      // eslint-disable-next-line no-console
       console.error(value)
       // console.error((err as any).body.error.failed_shards);
     }

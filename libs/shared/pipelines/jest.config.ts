@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'shared-pipelines',
   preset: '../../../jest.preset.js',

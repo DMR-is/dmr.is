@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
+
 import { Image, ImageProps } from '../Image/Image'
 export type LinkCardProps = {
   href: string

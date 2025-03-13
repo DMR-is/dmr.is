@@ -8,7 +8,6 @@ import {
   AWS_REGION_NAME,
   MEDIA_BUCKET_FOLDER,
 } from '../constants';
-
 import { ensureFileScopeToken } from './misc';
 
 export type S3PresignedPost = {
@@ -63,6 +62,7 @@ export const createPresigned = async (
   const key = _generateFileKey(fileName, rootFolder, folderToken, hash);
 
   if (!key) {
+    // eslint-disable-next-line no-console
     console.error('failed to create key');
     return null;
   }
@@ -94,6 +94,7 @@ export const createPresigned = async (
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : error;
+    // eslint-disable-next-line no-console
     console.error('⚠️ ', message);
     return null;
   }

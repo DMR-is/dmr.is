@@ -11,5 +11,7 @@
     "tmp": true,
     "yarn.lock": true,
     "eslint-local-rules.js": true
-  }
+  },
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+
 }

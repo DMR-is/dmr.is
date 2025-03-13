@@ -1,15 +1,16 @@
-import {
-  Box,
-  Table as T,
-  SkeletonLoader,
-  Stack,
-  Inline,
-  Text,
-  ResponsiveSpace,
-} from '@island.is/island-ui/core'
-import { theme } from '@island.is/island-ui/theme'
 import dynamic from 'next/dynamic'
 import { Pie } from 'recharts'
+
+import {
+  Box,
+  Inline,
+  ResponsiveSpace,
+  SkeletonLoader,
+  Stack,
+  Table as T,
+  Text,
+} from '@island.is/island-ui/core'
+import { theme } from '@island.is/island-ui/theme'
 
 export type PieChartItem = {
   color: keyof typeof theme.color

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { Application, PostApplicationBody } from '@dmr.is/shared/dto'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
 
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'

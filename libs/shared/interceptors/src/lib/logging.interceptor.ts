@@ -1,14 +1,14 @@
-import { logger } from '@dmr.is/logging'
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common'
-
-import { Reflector } from '@nestjs/core'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
+import { logger } from '@dmr.is/logging'
+
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 
 const LOGGING_CONTEXT = 'LoggingInterceptor'
 

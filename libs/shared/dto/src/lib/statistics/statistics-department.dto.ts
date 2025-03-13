@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CaseStatusEnum } from '../cases'
 
 class StatisticsStatusCount {
   @ApiProperty({

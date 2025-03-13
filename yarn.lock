@@ -13741,6 +13741,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^4.6.0"
     eslint-plugin-simple-import-sort: "npm:^12.0.0"
     eslint-plugin-storybook: "npm:^0.6.15"
+    eslint-plugin-unused-imports: "npm:4.1.4"
     fastify: "npm:4.29.0"
     fastify-elasticsearch: "npm:^2.0.0"
     fastify-http-proxy: "npm:^6.2.1"
@@ -13773,7 +13774,7 @@ __metadata:
     open-next: "npm:^2.3.7"
     pagedjs-cli: "npm:^0.4.3"
     pg: "npm:^8.13.3"
-    prettier: "npm:^2.6.2"
+    prettier: "npm:^3.5.3"
     puppeteer: "npm:^22.8.1"
     puppeteer-core: "npm:^22.8.0"
     react: "npm:^18.3.1"
@@ -15003,6 +15004,19 @@ __metadata:
   peerDependencies:
     eslint: ">=6"
   checksum: c61f5f2af72b614c30e8b36644672cfa25ca28e963e5e6cfab438f0cb287a6270f875a2dd8cd600a04c9864b9c549e269d95ea8da88c412e2b868fcd6a3605a4
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-unused-imports@npm:4.1.4":
+  version: 4.1.4
+  resolution: "eslint-plugin-unused-imports@npm:4.1.4"
+  peerDependencies:
+    "@typescript-eslint/eslint-plugin": ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
+    eslint: ^9.0.0 || ^8.0.0
+  peerDependenciesMeta:
+    "@typescript-eslint/eslint-plugin":
+      optional: true
+  checksum: 3899f64b0e8b23fa6b81e2754fc10f93d8741e051d70390a8100ca39af7878bde8625f234b76111af69562ef2512104b52c3703e986ccb3ac9adc07911896acf
   languageName: node
   linkType: hard
 
@@ -22197,12 +22211,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.6.2":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
+"prettier@npm:^3.5.3":
+  version: 3.5.3
+  resolution: "prettier@npm:3.5.3"
   bin:
-    prettier: bin-prettier.js
-  checksum: 463ea8f9a0946cd5b828d8cf27bd8b567345cf02f56562d5ecde198b91f47a76b7ac9eae0facd247ace70e927143af6135e8cf411986b8cb8478784a4d6d724a
+    prettier: bin/prettier.cjs
+  checksum: 3880cb90b9dc0635819ab52ff571518c35bd7f15a6e80a2054c05dbc8a3aa6e74f135519e91197de63705bcb38388ded7e7230e2178432a1468005406238b877
   languageName: node
   linkType: hard
 

@@ -1,17 +1,16 @@
+import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyRedis } from '@fastify/redis';
+
 import {
   ensureISODate,
   ensureNameSlug,
   slugToName,
 } from '@island.is/regulations-tools/utils';
-import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
-import { FastifyRedis } from '@fastify/redis';
 
 import { getRegulation } from '../db/Regulation';
 import { makeDraftPdf, makePublishedPdf } from '../db/RegulationPdf';
 import { get, set } from '../utils/cache';
 import { cacheControl, Pms, QStr } from '../utils/misc';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   ISODate,
   RegQueryName,
@@ -59,7 +58,7 @@ const ensureEarlierDate = (maybeEDate?: string): EarlierDate | undefined =>
 
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line complexity
+ 
 const handleRequest = async <N extends string = RegQueryName>(
   req: FastifyRequest,
   res: FastifyReply,

@@ -8,8 +8,8 @@ import {
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import * as styles from './Header.css'
 import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
+import * as styles from './Header.css'
 
 export type HeaderProps = {
   controlPanel?: ControlPanelProps

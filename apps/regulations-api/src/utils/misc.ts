@@ -1,9 +1,9 @@
-import { HOUR } from '@hugsmidjan/qj/time'
 import _formatDate from 'date-fns/format'
 import locale from 'date-fns/locale/is'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import fs from 'fs'
 import { parse } from 'path'
+import { HOUR } from '@hugsmidjan/qj/time'
 
 import { ISODate } from '../routes/types'
 
@@ -117,6 +117,7 @@ export const storeData = (data: unknown, path: string) => {
     }
     fs.writeFileSync(path, JSON.stringify(data))
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(err)
   }
 }
@@ -134,6 +135,7 @@ export const loadData = <T>(path: string): T | false => {
       return JSON.parse(data)
     }
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(err)
   }
   return false

@@ -11,7 +11,6 @@ import {
 import {
   AdminUser,
   Case,
-  CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,

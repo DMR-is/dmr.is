@@ -7,7 +7,6 @@ import {
   Transaction,
   ValidationError,
 } from 'sequelize'
-import { v4 as uuid } from 'uuid'
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,

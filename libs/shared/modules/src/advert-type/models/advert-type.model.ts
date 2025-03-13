@@ -5,7 +5,6 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
-  HasOne,
   Model,
   Table,
   UpdatedAt,

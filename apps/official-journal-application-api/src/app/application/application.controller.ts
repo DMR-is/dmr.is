@@ -1,4 +1,10 @@
+import {
+  ALLOWED_MIME_TYPES,
+  AttachmentTypeParam,
+  ONE_MEGA_BYTE,
+} from '@dmr.is/constants'
 import { CurrentUser, WithCase } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationAuthGaurd,
   IApplicationService,
@@ -6,27 +12,32 @@ import {
   ISignatureService,
 } from '@dmr.is/modules'
 import {
+  EnumValidationPipe,
+  FileTypeValidationPipe,
+  IsStringValidationPipe,
+  UUIDValidationPipe,
+} from '@dmr.is/pipelines'
+import {
+  AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
   ApplicationUser,
   ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetAdvertTemplateResponse,
-  AdvertTemplateDetails,
+  GetApplicationAdvertsQuery,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   GetApplicationResponse,
+  GetComments,
   GetPresignedUrlBody,
+  GetSignature,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
-  GetComments,
-  GetSignature,
-  GetApplicationAdvertsQuery,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { FilesInterceptor } from '@nestjs/platform-express'
-import 'multer'
+
 import {
   Body,
   Controller,
@@ -42,17 +53,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
-import {
-  UUIDValidationPipe,
-  FileTypeValidationPipe,
-  EnumValidationPipe,
-  IsStringValidationPipe,
-} from '@dmr.is/pipelines'
-import {
-  ALLOWED_MIME_TYPES,
-  AttachmentTypeParam,
-  ONE_MEGA_BYTE,
-} from '@dmr.is/constants'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import {
   ApiBody,
   ApiConsumes,
@@ -61,7 +62,8 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import 'multer'
 
 @Controller({
   path: 'applications',
