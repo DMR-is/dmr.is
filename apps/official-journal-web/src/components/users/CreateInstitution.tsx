@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import slugify from 'slugify'
 
-import { Button, Inline, Input, Stack, toast } from '@island.is/island-ui/core'
+import {
+  Button,
+  Inline,
+  Input,
+  Stack,
+  Text,
+  toast,
+} from '@island.is/island-ui/core'
 
 import { CreateInstitution as CreateInstitutionDto } from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'
 
-type Props = {
-  onCreateSuccess: () => void
-}
-
-export const CreateInstitution = ({ onCreateSuccess }: Props) => {
+export const CreateInstitution = () => {
   const [createState, setCreateState] = useState<CreateInstitutionDto>({
     title: '',
   })
@@ -21,11 +24,11 @@ export const CreateInstitution = ({ onCreateSuccess }: Props) => {
       setCreateState({
         title: '',
       })
-      onCreateSuccess && onCreateSuccess()
     },
   })
   return (
     <Stack space={[2, 2, 3]}>
+      <Text variant="h3">Ný stofnun</Text>
       <Input
         name="create-institution-title"
         size="sm"

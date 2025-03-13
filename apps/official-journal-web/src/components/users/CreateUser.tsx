@@ -1,57 +1,33 @@
 import { useState } from 'react'
-import { toast } from 'react-toastify'
 
 import {
-  Box,
   Button,
-  Icon,
   Inline,
   Input,
   Select,
   Stack,
-  Tag,
+  Text,
 } from '@island.is/island-ui/core'
 
-import {
-  AdminUserRole,
-  CreateAdminUser as CreateAdminUserDto,
-} from '../../gen/fetch'
-import { useAdminUsers } from '../../hooks/api'
+import { BaseEntity, CreateUserDto } from '../../gen/fetch'
 
 type Props = {
-  roles: AdminUserRole[]
-  onCreateSuccess: () => void
+  roles: { label: string; value: BaseEntity }[]
 }
 
-export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
-  const [createAdminUser, setCreateAdminUser] = useState<CreateAdminUserDto>({
+export const CreateUser = ({ roles }: Props) => {
+  const [createAdminUser, setCreateAdminUser] = useState<CreateUserDto>({
     nationalId: '',
     email: '',
     firstName: '',
     lastName: '',
     displayName: '',
-    roleIds: [],
-  })
-
-  const { createUser, isCreatingUser } = useAdminUsers({
-    onCreateSuccess: () => {
-      toast.success(
-        `Notandi hefur ${createAdminUser.displayName} verið stofnaður`,
-      )
-      setCreateAdminUser({
-        nationalId: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        displayName: '',
-        roleIds: [],
-      })
-      onCreateSuccess && onCreateSuccess()
-    },
+    roleId: '',
+    involvedParties: [],
   })
 
   const rolesOptions = roles.map((role) => ({
-    label: role.title,
+    label: role.value.title,
     value: role,
   }))
 
@@ -61,7 +37,9 @@ export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
 
   return (
     <Stack space={[2, 2, 3]}>
+      <Text variant="h3">Nýr notandi</Text>
       <Input
+        required
         name="create-user-national-id"
         size="sm"
         type="number"
@@ -76,6 +54,7 @@ export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
         }
       />
       <Input
+        required
         name="create-user-email"
         size="sm"
         type="email"
@@ -90,6 +69,7 @@ export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
         }
       />
       <Input
+        required
         name="create-user-first-name"
         size="sm"
         label="Fornafn"
@@ -103,6 +83,7 @@ export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
         }
       />
       <Input
+        required
         name="create-user-last-name"
         size="sm"
         label="Eftirnafn"
@@ -129,63 +110,22 @@ export const CreateAdminUser = ({ roles, onCreateSuccess }: Props) => {
         }
       />
       <Select
+        required
         size="sm"
         label="Hlutverk"
         backgroundColor="blue"
         options={rolesOptions}
-        onChange={(opt) => {
-          if (!opt?.value) return
-
-          if (createAdminUser.roleIds.includes(opt.value.id)) {
-            setCreateAdminUser({
-              ...createAdminUser,
-              roleIds: createAdminUser.roleIds.filter(
-                (id) => id !== opt.value.id,
-              ),
-            })
-          } else {
-            setCreateAdminUser({
-              ...createAdminUser,
-              roleIds: createAdminUser.roleIds.concat(opt.value.id),
-            })
-          }
-        }}
+        onChange={(opt) =>
+          setCreateAdminUser({
+            ...createAdminUser,
+            roleId: opt ? opt?.value.id : '',
+          })
+        }
       />
-      <Inline space={2} flexWrap="wrap">
-        {createAdminUser.roleIds.map((roleId) => {
-          const role = roles.find((r) => r.id === roleId)
 
-          return (
-            <Tag
-              outlined
-              key={role?.id}
-              onClick={() =>
-                setCreateAdminUser({
-                  ...createAdminUser,
-                  roleIds: createAdminUser.roleIds.filter(
-                    (id) => id !== roleId,
-                  ),
-                })
-              }
-            >
-              <Box
-                display="flex"
-                justifyContent="flexStart"
-                alignItems="center"
-                columnGap="smallGutter"
-              >
-                <span>{role?.title}</span>
-                <Icon size="small" icon="close" />
-              </Box>
-            </Tag>
-          )
-        })}
-      </Inline>
       <Inline justifyContent="flexEnd" space={2}>
         <Button
           disabled={isDisabled}
-          loading={isCreatingUser}
-          onClick={() => createUser(createAdminUser)}
           variant="ghost"
           size="small"
           icon="person"

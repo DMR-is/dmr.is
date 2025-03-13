@@ -3,14 +3,7 @@ import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
 import { Section } from '@dmr.is/ui'
 
-import {
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { BaseEntity } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
@@ -36,27 +29,10 @@ export default function UsersPage({ involvedParties, roleOptions }: Props) {
             span={['12/12', '10/12']}
             paddingBottom={[2, 2, 3]}
           >
-            <Stack space={[2, 2, 3]}>
-              <Inline space={2}>
-                <Button icon="person" iconType="outline" variant="utility">
-                  Stofna ritstjóra
-                </Button>
-                <Button
-                  icon="accessibility"
-                  iconType="outline"
-                  variant="utility"
-                >
-                  Stofna fulltrúa
-                </Button>
-                <Button icon="document" iconType="outline" variant="utility">
-                  Stofna innsendanda
-                </Button>
-              </Inline>
-              <UserTable
-                involvedPartyOptions={involvedParties}
-                roleOptions={roleOptions}
-              />
-            </Stack>
+            <UserTable
+              involvedPartyOptions={involvedParties}
+              roleOptions={roleOptions}
+            />
           </GridColumn>
         </GridRow>
       </GridContainer>
@@ -82,7 +58,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const layout: LayoutProps = {
     showFooter: false,
-    headerWhite: true,
     bannerProps: {
       showBanner: true,
       variant: 'small',

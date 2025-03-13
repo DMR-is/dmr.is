@@ -1,6 +1,7 @@
 import { Box, Icon, Inline, Table as T, Text } from '@island.is/island-ui/core'
 import * as styles from './DataTable.css'
 import { DataTableColumnProps } from './types'
+
 export const DataTableColumn = ({
   field,
   fluid = false,
@@ -11,15 +12,10 @@ export const DataTableColumn = ({
   direction = 'asc',
   sortBy,
 }: DataTableColumnProps) => {
-  const inlineStyles = fluid
-    ? {
-        width: 'auto',
-      }
-    : {
-        minWidth: width ? width : '0px',
-        maxWidth: width ? width : '0px',
-        width: width ? width : '0px',
-      }
+  const inlineStyles = {
+    minWidth: width ? width : '100px',
+    width: width ? width : 'auto',
+  }
 
   const Wrapper = onSort ? 'button' : 'div'
 

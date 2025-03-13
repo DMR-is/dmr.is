@@ -12,7 +12,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   ...row
 }: DataTableRowProps<T>) => {
   const [expanded, setExpanded] = useState(startExpanded)
-  const colSpan = columns.length
+  const colSpan = columns.length + (isExpandable ? 1 : 0)
   return (
     <>
       <tr
@@ -41,9 +41,11 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
           </DataTableCell>
         )}
       </tr>
-      <AnimateHeight duration={300} height={expanded ? 'auto' : 0}>
-        <td colSpan={colSpan}>{row.children}</td>
-      </AnimateHeight>
+      <td colSpan={colSpan}>
+        <AnimateHeight duration={300} height={expanded ? 'auto' : 0}>
+          {row.children}
+        </AnimateHeight>
+      </td>
     </>
   )
 }

@@ -2650,6 +2650,153 @@
           }
         },
         "security": [{ "bearer": [] }]
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "put": {
+        "operationId": "updateUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetUserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedException"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForbiddenException" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerErrorException"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
       }
     },
     "/api/v1/users/nationalId/{nationalId}": {
@@ -4692,6 +4839,19 @@
       "UnauthorizedException": { "type": "object", "properties": {} },
       "ForbiddenException": { "type": "object", "properties": {} },
       "InternalServerErrorException": { "type": "object", "properties": {} },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleId": { "type": "string" },
+          "involvedParties": { "type": "array", "items": { "type": "string" } },
+          "displayName": { "type": "string" }
+        },
+        "required": ["nationalId", "firstName", "lastName", "email", "roleId"]
+      },
       "GetUserResponse": {
         "type": "object",
         "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
