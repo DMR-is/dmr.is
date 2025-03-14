@@ -1,4 +1,5 @@
 import { Case } from '@dmr.is/shared/dto'
+
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations'
 import { CaseModel } from '../models'

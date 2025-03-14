@@ -4,14 +4,14 @@ import {
   Stack,
   Table as T,
 } from '@island.is/island-ui/core'
-import { DataTableColumn } from './DataTableColumn'
 
+import { DataTableBody } from './DataTableBody'
+import { DataTableColumn } from './DataTableColumn'
 import {
   DataTableColumnProps,
   DataTableProps,
   DataTableRowProps,
 } from './types'
-import { DataTableBody } from './DataTableBody'
 
 export const DataTable = <T extends readonly DataTableColumnProps[]>({
   columns,

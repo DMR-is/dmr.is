@@ -1,4 +1,3 @@
-import { UserRoleEnum } from '@dmr.is/constants'
 
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 

@@ -1,4 +1,3 @@
-import { UserRoleTitle } from '@dmr.is/types'
 
 export const DEFAULT_PAGE_SIZE = 10
 

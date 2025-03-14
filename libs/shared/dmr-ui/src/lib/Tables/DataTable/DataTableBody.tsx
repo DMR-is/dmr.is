@@ -1,7 +1,8 @@
+import { Table as T, Text } from '@island.is/island-ui/core'
+
+import * as styles from './DataTable.css'
 import { DataTableRow } from './DataTableRow'
 import { DataTableBodyProps, DataTableColumnProps } from './types'
-import { Table as T, Text } from '@island.is/island-ui/core'
-import * as styles from './DataTable.css'
 export const DataTableBody = <T extends readonly DataTableColumnProps[]>({
   rows,
   columns,

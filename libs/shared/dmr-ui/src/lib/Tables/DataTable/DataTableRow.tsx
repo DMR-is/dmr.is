@@ -1,9 +1,11 @@
-import { DataTableCell } from './DataTableCell'
-import { DataTableColumnProps, DataTableRowProps } from './types'
-import * as styles from './DataTable.css'
 import { useState } from 'react'
 import AnimateHeight from 'react-animate-height'
+
 import { Icon } from '@island.is/island-ui/core'
+
+import * as styles from './DataTable.css'
+import { DataTableCell } from './DataTableCell'
+import { DataTableColumnProps, DataTableRowProps } from './types'
 
 export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   columns,

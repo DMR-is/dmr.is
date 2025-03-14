@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   AddCaseAdvertCorrection,
   CaseComment,
@@ -23,8 +22,6 @@ import {
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
-  GetUsersQuery,
-  GetUsersResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
