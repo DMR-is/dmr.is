@@ -30,9 +30,23 @@ export class Institution {
     type: String,
   })
   readonly slug!: string
+
+  @ApiProperty({
+    description: 'National ID of the institution',
+    example: '650376-2949',
+    required: true,
+    type: String,
+  })
+  readonly nationalId!: string
 }
 
-export class InstitutionDto extends BaseEntity {}
+export class InstitutionDto extends BaseEntity {
+  @ApiProperty({
+    description: 'National ID of the institution',
+    type: String,
+  })
+  nationalId!: string
+}
 
 export class GetInstitution {
   @ApiProperty({

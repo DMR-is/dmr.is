@@ -22,7 +22,7 @@ type Props = {
 
 export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
   const partiesToShow = availableInvoledParties.filter(
-    (party) => !user.involvedParties.includes(party.value.id),
+    (party) => !user.involvedParties.some((p) => p.id === party.value.id),
   )
 
   return (

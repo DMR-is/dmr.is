@@ -1,6 +1,7 @@
 import debounce from 'lodash/debounce'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
+import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
 import { DataTable } from '@dmr.is/ui'
 
 import {
@@ -49,25 +50,6 @@ export const UsersTable = ({
 
   const [localSearch, setLocalSearch] = useState(search ?? '')
 
-  const pageSizeOptions = [
-    {
-      label: '10',
-      value: 10,
-    },
-    {
-      label: '20',
-      value: 20,
-    },
-    {
-      label: '50',
-      value: 50,
-    },
-    {
-      label: '100',
-      value: 100,
-    },
-  ]
-
   const { users, paging, isValidating } = useUsers({
     params: {
       page,
@@ -115,25 +97,6 @@ export const UsersTable = ({
                   availableRoles={roleOptions}
                 />
               </Drawer>
-              {isAdmin && (
-                <Drawer
-                  ariaLabel="Stofna stofnun"
-                  baseId="institution-drawer"
-                  disclosure={
-                    <Button
-                      variant="utility"
-                      icon="business"
-                      iconType="outline"
-                      size="small"
-                      onClick={() => newInstitutionToggle.setToggle(true)}
-                    >
-                      Stofna stofnun
-                    </Button>
-                  }
-                >
-                  <CreateInstitution />
-                </Drawer>
-              )}
             </Inline>
           </GridColumn>
         </GridRow>
@@ -192,7 +155,7 @@ export const UsersTable = ({
                 if (!opt) return
                 setPageSize(opt.value)
               }}
-              defaultValue={pageSizeOptions.find(
+              defaultValue={PAGE_SIZE_OPTIONS.find(
                 (opt) => opt.value === pageSize,
               )}
               options={[

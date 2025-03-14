@@ -1,9 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
-import { Section } from '@dmr.is/ui'
-
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
 import { BaseEntity } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
@@ -12,7 +9,7 @@ import { Routes } from '../../lib/constants'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
 
-const UserTable = dynamic(() => import('../../components/tables/UsersTable'))
+const DynamicUsersPage = dynamic(() => import('../../components/pages/Users'))
 
 type Props = {
   isAdmin: boolean
@@ -26,23 +23,11 @@ export default function UsersPage({
   roleOptions,
 }: Props) {
   return (
-    <Section>
-      <GridContainer>
-        <GridRow>
-          <GridColumn
-            offset={['0', '1/12']}
-            span={['12/12', '10/12']}
-            paddingBottom={[2, 2, 3]}
-          >
-            <UserTable
-              isAdmin={isAdmin}
-              involvedPartyOptions={involvedParties}
-              roleOptions={roleOptions}
-            />
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+    <DynamicUsersPage
+      isAdmin={isAdmin}
+      involvedParties={involvedParties}
+      roleOptions={roleOptions}
+    />
   )
 }
 
@@ -52,7 +37,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   resolvedUrl,
 }) => {
   const session = await getServerSession(req, res, authOptions)
-
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
@@ -69,8 +53,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     bannerProps: {
       showBanner: true,
       variant: 'small',
-      title: 'Notendur',
-      description: 'Umsýsla og umsjón notenda',
+      title: isAdmin ? 'Umsjón notenda og stofnana' : 'Umsjón notenda',
+      description: isAdmin
+        ? 'Hér er hægt að sjá og breyta notendum og stofnunum.'
+        : 'Hér er hægt að sjá og breyta notendum.',
       breadcrumbs: [
         {
           title: 'Stjórnartíðindi',
