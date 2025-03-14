@@ -16,7 +16,6 @@ import {
 
 import { UserProvider } from '../../context/userContext'
 import { BaseEntity } from '../../gen/fetch'
-import { useUserContext } from '../../hooks/useUserContext'
 
 const UserTable = dynamic(() => import('../tables/UsersTable'))
 const InstitutionTable = dynamic(() => import('../tables/InstitutionTable'))
@@ -78,7 +77,6 @@ export default function UsersPage({ isAdmin, roleOptions }: Props) {
                     setSelectedTab(id)
                     setPage(1)
                   }}
-                  onlyRenderSelectedTab
                   label=""
                 />
               ) : (

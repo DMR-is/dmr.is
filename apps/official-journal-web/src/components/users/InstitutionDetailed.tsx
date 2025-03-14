@@ -1,3 +1,6 @@
+import debounce from 'lodash/debounce'
+import { useCallback } from 'react'
+
 import {
   Box,
   Button,
@@ -9,7 +12,7 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { Institution } from '../../gen/fetch'
+import { Institution, UpdateInstitution } from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'
 import { useUserContext } from '../../hooks/useUserContext'
 import { OJOIInput } from '../select/OJOIInput'
@@ -21,15 +24,34 @@ type Props = {
 
 export const InstitutionDetailed = ({ institution, onSuccess }: Props) => {
   const { getUserInvoledParties } = useUserContext()
-  const { deleteInstitution, isDeletingInstitution } = useInstitutions({
-    onDeleteSuccess: () => {
-      toast.success(`Stofnun ${institution.title} hefur verið eytt`, {
-        toastId: 'delete-institution',
+  const { updateInstitution, deleteInstitution, isDeletingInstitution } =
+    useInstitutions({
+      onDeleteSuccess: () => {
+        toast.success(`Stofnun ${institution.title} hefur verið eytt`, {
+          toastId: 'delete-institution',
+        })
+        getUserInvoledParties()
+        onSuccess?.(institution)
+      },
+      onUpdateSuccess: () => {
+        toast.success(`Stofnun hefur verið uppfærð`, {
+          toastId: 'update-institution',
+        })
+        getUserInvoledParties()
+        onSuccess?.(institution)
+      },
+    })
+
+  const onChangeHandler = useCallback(
+    debounce((key: keyof UpdateInstitution, value: string) => {
+      updateInstitution({
+        id: institution.id,
+        [key]: value,
       })
-      getUserInvoledParties()
-      onSuccess?.(institution)
-    },
-  })
+    }, 500),
+    [],
+  )
+
   return (
     <Box paddingX={[1, 2]} paddingY={[2, 3]}>
       <GridContainer>
@@ -40,6 +62,7 @@ export const InstitutionDetailed = ({ institution, onSuccess }: Props) => {
                 name="institution-name"
                 label="Nafn"
                 defaultValue={institution.title}
+                onChange={(e) => onChangeHandler('title', e.target.value)}
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
@@ -47,6 +70,7 @@ export const InstitutionDetailed = ({ institution, onSuccess }: Props) => {
                 name="institution-national-id"
                 label="Kennitala"
                 defaultValue={institution.nationalId}
+                onChange={(e) => onChangeHandler('nationalId', e.target.value)}
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
