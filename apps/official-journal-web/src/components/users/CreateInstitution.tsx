@@ -10,10 +10,17 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { CreateInstitution as CreateInstitutionDto } from '../../gen/fetch'
+import {
+  CreateInstitution as CreateInstitutionDto,
+  Institution,
+} from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'
 
-export const CreateInstitution = () => {
+type Props = {
+  onSuccess?: (institution?: Institution) => void
+}
+
+export const CreateInstitution = ({ onSuccess }: Props) => {
   const [createState, setCreateState] = useState<CreateInstitutionDto>({
     title: '',
     nationalId: '',
@@ -22,12 +29,19 @@ export const CreateInstitution = () => {
   const { createInstitution, isCreatingInstitution } = useInstitutions({
     onCreateSuccess: () => {
       toast.success(`Stofnun ${createState.title} hefur verið stofnuð`)
+      onSuccess?.({
+        id: 'new-institution',
+        title: createState.title,
+        slug: slugify(createState.title, { lower: true }),
+        nationalId: createState.nationalId,
+      })
       setCreateState({
         title: '',
         nationalId: '',
       })
     },
   })
+
   return (
     <Stack space={[2, 2, 3]}>
       <Text variant="h3">Ný stofnun</Text>

@@ -63,6 +63,18 @@ export const useUsers = ({
     },
   )
 
+  const { data: involedParties, mutate: getUserInvoledParties } = useSWR(
+    session ? ['getUserInvoledParties', session.user] : null,
+    ([_key, _user]) =>
+      swrFetcher({
+        func: () => dmrClient.getInvolvedPartiesByUser(),
+      }),
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: true,
+    },
+  )
+
   const { trigger: createUser } = useSWRMutation<
     GetUserResponse,
     Error,
@@ -120,6 +132,8 @@ export const useUsers = ({
   return {
     users: data?.users,
     paging: data?.paging,
+    involedParties,
+    getUserInvoledParties,
     error,
     isLoading,
     isValidating,

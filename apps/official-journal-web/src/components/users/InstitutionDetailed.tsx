@@ -6,16 +6,30 @@ import {
   GridRow,
   Inline,
   Stack,
+  toast,
 } from '@island.is/island-ui/core'
 
 import { Institution } from '../../gen/fetch'
+import { useInstitutions } from '../../hooks/api'
+import { useUserContext } from '../../hooks/useUserContext'
 import { OJOIInput } from '../select/OJOIInput'
 
 type Props = {
   institution: Institution
+  onSuccess?: (institution?: Institution) => void
 }
 
-export const InstitutionDetailed = ({ institution }: Props) => {
+export const InstitutionDetailed = ({ institution, onSuccess }: Props) => {
+  const { getUserInvoledParties } = useUserContext()
+  const { deleteInstitution, isDeletingInstitution } = useInstitutions({
+    onDeleteSuccess: () => {
+      toast.success(`Stofnun ${institution.title} hefur verið eytt`, {
+        toastId: 'delete-institution',
+      })
+      getUserInvoledParties()
+      onSuccess?.(institution)
+    },
+  })
   return (
     <Box paddingX={[1, 2]} paddingY={[2, 3]}>
       <GridContainer>
@@ -48,10 +62,12 @@ export const InstitutionDetailed = ({ institution }: Props) => {
             <GridColumn span={['12/12']}>
               <Inline justifyContent="flexEnd">
                 <Button
+                  loading={isDeletingInstitution}
                   size="small"
                   icon="trash"
                   iconType="outline"
                   colorScheme="destructive"
+                  onClick={() => deleteInstitution({ id: institution.id })}
                 >
                   Eyða
                 </Button>

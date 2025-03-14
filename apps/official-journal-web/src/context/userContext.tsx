@@ -7,6 +7,8 @@ import {
   CreateUserRequest,
   DeleteUserRequest,
   GetUserResponse,
+  Institution,
+  Paging,
   UpdateUserRequest,
   UserDto,
 } from '../gen/fetch'
@@ -14,6 +16,9 @@ import { useUsers } from '../hooks/users/useUsers'
 
 type UserState = {
   users: UserDto[]
+  paging: Paging
+  userInvolvedPartiesOptions: { label: string; value: Institution }[]
+  getUserInvoledParties: () => void
   refetchUsers: () => void
   search?: string
   role?: string
@@ -31,6 +36,9 @@ type UserState = {
 
 export const UserContext = createContext<UserState>({
   users: [],
+  paging: {} as Paging,
+  userInvolvedPartiesOptions: [],
+  getUserInvoledParties: () => undefined,
   search: '',
   role: '',
   institution: '',
@@ -49,12 +57,29 @@ type UserProviderProps = {
 
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [users, setUsers] = useState<UserDto[]>([])
+  const [paging, setPaging] = useState<Paging>({
+    page: 1,
+    pageSize: 10,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    nextPage: 1,
+    previousPage: 1,
+    totalItems: 0,
+    totalPages: 0,
+  })
 
   const [institution, setInstitution] = useQueryState('stofnun')
   const [role, setRole] = useQueryState('hlutverk')
   const [search, setSearch] = useQueryState('leit')
 
-  const { mutate, updateUser, deleteUser, createUser } = useUsers({
+  const {
+    involedParties,
+    getUserInvoledParties,
+    mutate,
+    updateUser,
+    deleteUser,
+    createUser,
+  } = useUsers({
     params: {
       page: 1,
       pageSize: 10,
@@ -63,7 +88,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       search: search ?? undefined,
     },
     options: {
-      onSuccess: ({ users }) => setUsers(users),
+      revalidateOnFocus: true,
+      onSuccess: ({ users, paging }) => {
+        setUsers(users)
+        setPaging(paging)
+      },
     },
     createUserOptions: {
       onSuccess: ({ user }) => {
@@ -133,10 +162,20 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     })
   }
 
+  const userInvolvedPartiesOptions = involedParties?.involvedParties.map(
+    (party) => ({
+      label: party.title,
+      value: party,
+    }),
+  )
+
   return (
     <UserContext.Provider
       value={{
         users,
+        paging,
+        userInvolvedPartiesOptions: userInvolvedPartiesOptions ?? [],
+        getUserInvoledParties,
         refetchUsers: mutate,
         search: search ?? undefined,
         role: role ?? undefined,

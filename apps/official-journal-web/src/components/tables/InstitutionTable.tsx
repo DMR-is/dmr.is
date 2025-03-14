@@ -6,6 +6,7 @@ import { DataTable } from '@dmr.is/ui'
 
 import {
   Button,
+  Drawer,
   GridColumn,
   GridContainer,
   GridRow,
@@ -13,8 +14,11 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useInstitutions } from '../../hooks/api'
+import { useToggle } from '../../hooks/useToggle'
+import { useUserContext } from '../../hooks/useUserContext'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
+import { CreateInstitution } from '../users/CreateInstitution'
 import { InstitutionDetailed } from '../users/InstitutionDetailed'
 
 export const InstitutionTable = () => {
@@ -25,7 +29,8 @@ export const InstitutionTable = () => {
     'pageSize',
     parseAsInteger.withDefault(10),
   )
-  const { institutions } = useInstitutions({
+
+  const { institutions, getInstitutions } = useInstitutions({
     searchParams: {
       search: search ?? undefined,
       page: page,
@@ -35,6 +40,10 @@ export const InstitutionTable = () => {
       keepPreviousData: true,
     },
   })
+
+  const { getUserInvoledParties } = useUserContext()
+
+  const newInstitutionToggle = useToggle()
 
   const handleSearch = useCallback(
     debounce((value: string) => {
@@ -48,14 +57,41 @@ export const InstitutionTable = () => {
       <Stack space={[2, 3]}>
         <GridRow>
           <GridColumn span={['12/12']}>
-            <Button
-              variant="utility"
-              icon="business"
-              iconType="outline"
-              size="small"
-            >
-              Bæta við stofnun
-            </Button>
+            {newInstitutionToggle.toggle ? (
+              <Drawer
+                ariaLabel="Bæta við stofnun"
+                initialVisibility={newInstitutionToggle.toggle}
+                baseId="new-institution-drawer"
+                disclosure={
+                  <Button
+                    variant="utility"
+                    icon="business"
+                    iconType="outline"
+                    size="small"
+                  >
+                    Bæta við stofnun
+                  </Button>
+                }
+              >
+                <CreateInstitution
+                  onSuccess={() => {
+                    getInstitutions()
+                    getUserInvoledParties()
+                    newInstitutionToggle.setToggle(false)
+                  }}
+                />
+              </Drawer>
+            ) : (
+              <Button
+                variant="utility"
+                icon="business"
+                iconType="outline"
+                size="small"
+                onClick={() => newInstitutionToggle.setToggle(true)}
+              >
+                Bæta við stofnun
+              </Button>
+            )}
           </GridColumn>
         </GridRow>
         <GridRow>
@@ -109,9 +145,15 @@ export const InstitutionTable = () => {
               rows={institutions.institutions?.map((institution) => ({
                 name: institution.title,
                 slug: institution.slug,
+                uniqueKey: institution.id,
                 nationalId: institution.nationalId,
                 isExpandable: true,
-                children: <InstitutionDetailed institution={institution} />,
+                children: (
+                  <InstitutionDetailed
+                    institution={institution}
+                    onSuccess={() => getInstitutions()}
+                  />
+                ),
               }))}
               paging={
                 institutions.paging

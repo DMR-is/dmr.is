@@ -16,21 +16,17 @@ import {
 
 import { UserProvider } from '../../context/userContext'
 import { BaseEntity } from '../../gen/fetch'
+import { useUserContext } from '../../hooks/useUserContext'
 
 const UserTable = dynamic(() => import('../tables/UsersTable'))
 const InstitutionTable = dynamic(() => import('../tables/InstitutionTable'))
 
 type Props = {
   isAdmin: boolean
-  involvedParties: { label: string; value: BaseEntity }[]
   roleOptions: { label: string; value: BaseEntity }[]
 }
 
-export default function UsersPage({
-  isAdmin,
-  involvedParties,
-  roleOptions,
-}: Props) {
+export default function UsersPage({ isAdmin, roleOptions }: Props) {
   const [selectedTab, setSelectedTab] = useQueryState(
     'tab',
     parseAsString.withDefault('notendur'),
@@ -44,11 +40,7 @@ export default function UsersPage({
       label: 'Notendur',
       content: (
         <Box background="white" padding={[2, 3]}>
-          <UserTable
-            isAdmin={isAdmin}
-            involvedPartyOptions={involvedParties}
-            roleOptions={roleOptions}
-          />
+          <UserTable isAdmin={isAdmin} roleOptions={roleOptions} />
         </Box>
       ),
     },
@@ -86,14 +78,11 @@ export default function UsersPage({
                     setSelectedTab(id)
                     setPage(1)
                   }}
+                  onlyRenderSelectedTab
                   label=""
                 />
               ) : (
-                <UserTable
-                  isAdmin={isAdmin}
-                  involvedPartyOptions={involvedParties}
-                  roleOptions={roleOptions}
-                />
+                <UserTable isAdmin={isAdmin} roleOptions={roleOptions} />
               )}
             </GridColumn>
           </GridRow>

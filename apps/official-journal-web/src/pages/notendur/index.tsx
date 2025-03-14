@@ -13,22 +13,11 @@ const DynamicUsersPage = dynamic(() => import('../../components/pages/Users'))
 
 type Props = {
   isAdmin: boolean
-  involvedParties: { label: string; value: BaseEntity }[]
   roleOptions: { label: string; value: BaseEntity }[]
 }
 
-export default function UsersPage({
-  isAdmin,
-  involvedParties,
-  roleOptions,
-}: Props) {
-  return (
-    <DynamicUsersPage
-      isAdmin={isAdmin}
-      involvedParties={involvedParties}
-      roleOptions={roleOptions}
-    />
-  )
+export default function UsersPage({ isAdmin, roleOptions }: Props) {
+  return <DynamicUsersPage isAdmin={isAdmin} roleOptions={roleOptions} />
 }
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -45,7 +34,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const client = getDmrClient(session.accessToken)
 
-  const { involvedParties } = await client.getInvolvedPartiesByUser()
   const { roles } = await client.getRolesByUser()
 
   const layout: LayoutProps = {
@@ -78,10 +66,6 @@ export const getServerSideProps: GetServerSideProps = async ({
       roleOptions: roles.map((role) => ({
         label: role.title,
         value: role,
-      })),
-      involvedParties: involvedParties.map((party) => ({
-        label: party.title,
-        value: party,
       })),
     }),
   }

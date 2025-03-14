@@ -26,15 +26,14 @@ import { UserDetailed } from '../users/UserDetailed'
 
 type UsersTableProps = {
   isAdmin?: boolean
-  involvedPartyOptions: { label: string; value: BaseEntity }[]
   roleOptions: { label: string; value: BaseEntity }[]
 }
 
 export const UsersTable = ({
   isAdmin = false,
-  involvedPartyOptions,
   roleOptions,
 }: UsersTableProps) => {
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const [pageSize, setPageSize] = useQueryState(
     'pageSize',
     parseAsInteger.withDefault(10),
@@ -44,7 +43,9 @@ export const UsersTable = ({
 
   const {
     users,
+    paging,
     institution,
+    userInvolvedPartiesOptions,
     role,
     search,
     setSearch,
@@ -80,7 +81,7 @@ export const UsersTable = ({
                 >
                   <CreateUser
                     isAdmin={isAdmin}
-                    availableInvolvedParties={involvedPartyOptions}
+                    availableInvolvedParties={userInvolvedPartiesOptions}
                     availableRoles={roleOptions}
                     onSuccess={() => newUserToggle.setToggle(false)}
                   />
@@ -115,14 +116,14 @@ export const UsersTable = ({
           <GridColumn span={['12/12', '6/12', '3/12']}>
             <OJOISelect
               isClearable
-              isDisabled={involvedPartyOptions.length <= 1}
+              isDisabled={userInvolvedPartiesOptions.length <= 1}
               label="Stofnun"
               placeholder="Sía eftir stofnun"
-              options={involvedPartyOptions}
+              options={userInvolvedPartiesOptions}
               defaultValue={
-                involvedPartyOptions.length === 1
-                  ? involvedPartyOptions[0]
-                  : involvedPartyOptions.find(
+                userInvolvedPartiesOptions.length === 1
+                  ? userInvolvedPartiesOptions[0]
+                  : userInvolvedPartiesOptions.find(
                       (opt) => opt.value.slug === institution,
                     )
               }
@@ -218,7 +219,7 @@ export const UsersTable = ({
                   isExpandable: true,
                   children: (
                     <UserDetailed
-                      availableInvoledParties={involvedPartyOptions}
+                      availableInvoledParties={userInvolvedPartiesOptions}
                       user={user}
                       isAdmin={isAdmin}
                     />
@@ -252,15 +253,15 @@ export const UsersTable = ({
                   updatedAt: formatDate(user.updatedAt),
                 }
               })}
-              // paging={{
-              //   page,
-              //   pageSize,
-              //   totalItems: paging?.totalItems || 0,
-              //   totalPages: paging?.totalPages || 0,
-              //   onPaginate: (page) => {
-              //     setPage(page)
-              //   },
-              // }}
+              paging={{
+                page,
+                pageSize,
+                totalItems: paging?.totalItems || 0,
+                totalPages: paging?.totalPages || 0,
+                onPaginate: (page) => {
+                  setPage(page)
+                },
+              }}
             />
           </GridColumn>
         </GridRow>
