@@ -8,12 +8,12 @@ import { FormShell } from '../../components/form/FormShell'
 import { Meta } from '../../components/meta/Meta'
 import { CaseProvider } from '../../context/caseContext'
 import {
-  AdminUser,
   AdvertType,
   CaseDetailed,
   CaseTag,
   Category,
   Department,
+  UserDto,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
@@ -26,7 +26,7 @@ import { authOptions } from '../api/auth/[...nextauth]'
 type Props = {
   caseData: CaseDetailed
   departments: Department[]
-  admins: AdminUser[]
+  admins: UserDto[]
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
@@ -97,7 +97,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const departmentsPromise = dmrClient.getDepartments({})
 
-  const employeesPromise = dmrClient.getUsers()
+  const employeesPromise = dmrClient.getUsers({
+    role: 'ritstjori',
+  })
 
   const categoriesPromise = dmrClient.getCategories({
     page: 1,

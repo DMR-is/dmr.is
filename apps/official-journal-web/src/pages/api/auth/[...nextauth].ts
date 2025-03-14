@@ -81,7 +81,7 @@ export const authOptions: AuthOptions = {
             ? account.expires_at * 1000
             : 0,
           refreshToken: account.refresh_token,
-          adminUserId: user.id,
+          userId: user.id,
           idToken: account.id_token,
         } as JWT
       }
@@ -104,7 +104,7 @@ export const authOptions: AuthOptions = {
         role: token.role as UserRoleDto,
         displayName: token.displayName as string,
         nationalId: token.nationalId,
-        id: token.adminUserId as string,
+        id: token.userId as string,
       }
 
       // Add tokens to session
