@@ -11,6 +11,8 @@ import { UserController } from './user.controller'
 import { UserService } from './user.service'
 import { IUserService } from './user.service.interface'
 
+export { IUserService } from './user.service.interface'
+
 @Module({
   imports: [
     SequelizeModule.forFeature([
