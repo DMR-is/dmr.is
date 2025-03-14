@@ -7,6 +7,7 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
+
 import { ImageProps } from '../Image/Image'
 
 export type HeroProps = {

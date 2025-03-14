@@ -1,5 +1,6 @@
 import {
   DepartmentSlugEnum,
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
@@ -15,6 +16,10 @@ export interface IStatisticsService {
     type: StatisticsOverviewQueryType,
     userId?: string,
   ): Promise<ResultWrapper<GetStatisticsOverviewResponse>>
+
+  getOverviewForDashboard(
+    userId?: string,
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>>
 }
 
 export const IStatisticsService = Symbol('IStatisticsService')

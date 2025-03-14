@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { v4 as uuid } from 'uuid'
+
 import {
   Advert,
   AdvertCategory,
   Category,
-  CategoryDepartment,
   DbAdverts,
   DbCategory,
   DbDepartment,
@@ -11,11 +12,9 @@ import {
   DbType,
   Department,
   InvolvedParty,
-  SuperCategory,
   Type,
 } from '../types'
 import { slugit } from './slug'
-import { v4 as uuid } from 'uuid'
 
 export function fixDeps(deps: Array<DbDepartment>): Promise<Array<Department>> {
   const withSlugs = deps.map((dep) => {

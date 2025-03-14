@@ -1,0 +1,50 @@
+name: On Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: write
+env:
+  AWS_PROD_ACCOUNT_ID: 704383808130
+  ENV: prod
+
+jobs:
+  version-tag:
+    name: 🔖 Version tag images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ECR_REPOSITORY:
+          [
+            official-journal-api,
+            official-journal-admin-api,
+            official-journal-application-api,
+            official-journal-web,
+          ]
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🔖 Re-tag images
+        uses: ./.github/actions/deploy/version-tag
+        with:
+          VERSION_TAG: ${{ github.ref_name }}
+          ECR_REPOSITORY: ${{ matrix.ECR_REPOSITORY }}
+  deploy:
+    name: 🚀 Deploy to Prod
+    runs-on: ubuntu-latest
+    environment: production
+    needs: version-tag
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🚀 Deploy to Prod
+        uses: ./.github/actions/deploy/deploy
+        with:
+          ENV: ${{ env.ENV }}
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          VERSION_TAG: ${{ github.ref_name }}
+          PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web
+

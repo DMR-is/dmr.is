@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 
-import { globalStyle, keyframes, style, StyleRule } from '@vanilla-extract/css'
+import { style, StyleRule } from '@vanilla-extract/css'
 
-import { spacing, theme, themeUtils } from '@island.is/island-ui/theme'
+import { spacing, theme } from '@island.is/island-ui/theme'
 import {
   diffStyling,
   regulationContentStyling,

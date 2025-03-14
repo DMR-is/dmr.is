@@ -11,15 +11,14 @@ import {
 } from '@aws-sdk/client-s3'
 
 import {
-  DbDepartment,
-  DbType,
-  DbCategory,
-  DbAdverts,
-  DbAdvert,
-  DbStatus,
-  DbInvolvedParty,
   AdvertCategory,
-  DbDocuments,
+  DbAdvert,
+  DbAdverts,
+  DbCategory,
+  DbDepartment,
+  DbInvolvedParty,
+  DbStatus,
+  DbType,
   Document,
 } from '../types'
 

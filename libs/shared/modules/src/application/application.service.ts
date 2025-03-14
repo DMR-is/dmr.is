@@ -54,7 +54,6 @@ import { IAuthService } from '../auth/auth.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
 import {
-  AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertModel,

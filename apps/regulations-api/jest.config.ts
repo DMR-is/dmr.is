@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'regulations-api',
   preset: '../../jest.preset.js',

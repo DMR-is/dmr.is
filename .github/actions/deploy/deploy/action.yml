@@ -1,0 +1,44 @@
+name: '🚀 Deploy'
+description: 'Deploys the application to the specified environment'
+
+inputs:
+  AWS_REGION:
+    description: 'The AWS region to use'
+    required: true
+    default: 'eu-west-1'
+  AWS_ENV_ROLE_ARN:
+    description: 'The ARN of the AWS github-ci role the role to use for deployment environment'
+    required: true
+  VERSION_TAG:
+    description: 'The version tag to deploy'
+    required: true
+    default: ${{ github.sha }}
+  PAT:
+    description: 'The personal access token to use'
+    required: true
+  SERVICES:
+    description: 'The services to deploy sperated by a space'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔐 Configure AWS ${{ inputs.ENV }} credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-session-name: GitHub-Action-Role
+        aws-region: ${{ inputs.AWS_REGION }}
+        role-to-assume: ${{ inputs.AWS_ENV_ROLE_ARN }}
+
+    - uses: ./.github/actions/deploy/update-terragrunt-deployment
+      with:
+        ENV: ${{ inputs.ENV }}
+        PAT: ${{ inputs.PAT }}
+        VERSION_TAG: ${{ inputs.VERSION_TAG }}
+
+    - name: ⏳ Wait for service to stabilize
+      shell: bash
+      run: |
+        aws ecs wait services-stable \
+          --cluster ${{ inputs.ENV }}-dmr-utgafa \
+          --services ${{ inputs.SERVICES }}

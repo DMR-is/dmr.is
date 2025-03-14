@@ -13,10 +13,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import {
-  ApplicationAttachmentModel,
-  ApplicationAttachmentTypeModel,
-} from '../attachments/models'
-import {
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -26,15 +22,12 @@ import { CaseCategoriesModel } from '../case/models/case-categories.model'
 import { casesDetailedIncludes } from '../case/relations'
 import {
   AdvertCategoryModel,
-  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusModel,
 } from '../journal/models'
 import { SignatureModel } from '../signature/models/signature.model'
-import { SignatureMemberModel } from '../signature/models/signature-member.model'
-import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from './utility.service.interface'
 
 export class UtilityService implements IUtilityService {

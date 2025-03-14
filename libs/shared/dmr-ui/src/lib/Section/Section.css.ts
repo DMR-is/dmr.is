@@ -1,4 +1,5 @@
 import { recipe } from '@vanilla-extract/recipes'
+
 import { theme } from '@island.is/island-ui/theme'
 
 const BLEED_HEIGHT = theme.spacing[6]

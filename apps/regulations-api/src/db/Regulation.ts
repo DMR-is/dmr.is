@@ -1,9 +1,12 @@
+/* eslint-disable no-console */
+import { readFileSync } from 'fs'
+import path from 'path'
+import { FindAttributeOptions, QueryTypes } from 'sequelize'
 import promiseAll from '@hugsmidjan/qj/promiseAllObject'
+
 import { execute as htmldiff } from '@island.is/regulations-tools/htmldiff-js'
 import { extractAppendixesAndComments } from '@island.is/regulations-tools/textHelpers'
 import { nameToSlug, toISODate } from '@island.is/regulations-tools/utils'
-import { readFileSync } from 'fs'
-import { FindAttributeOptions, QueryTypes } from 'sequelize'
 
 import { FILE_SERVER } from '../constants'
 import {
@@ -26,10 +29,8 @@ import {
   RegulationRedirect,
 } from '../routes/types'
 import { db } from '../utils/sequelize'
-
 import { getRegulationLawChapters } from './LawChapter'
 import { getMinistry } from './Ministry'
-import path from 'path'
 
 // ---------------------------------------------------------------------------
 
@@ -141,7 +142,7 @@ async function getRegulationEffects(regulationId: number) {
     on Regulation.id = effects.regulationId
     order by Regulation.publishedDate, Regulation.id
   ;`
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+
   const effectsData = <EffectsData>await db.query(effectsQuery, {
     replacements: { changingId: regulationId },
     type: QueryTypes.SELECT,
@@ -372,7 +373,7 @@ const removeEmptyAppendixes = <T extends RegulationMaybeDiff>(
 
 // ===========================================================================
 
-// eslint-disable-next-line complexity
+
 export async function getRegulation(
   regulationName: RegName,
   opts: RegOpts,

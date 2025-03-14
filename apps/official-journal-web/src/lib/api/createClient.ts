@@ -1,30 +1,38 @@
 import { Configuration, DefaultApi } from '../../gen/fetch'
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-const config = (token: string) => {
-  return new Configuration({
-    fetchApi: createEnhancedFetch(),
-    accessToken: token,
-    basePath: 'http://localhost:4000',
-  })
+const getPath = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:4000'
+  }
+
+  if (typeof window === 'undefined') {
+    return process.env.DMR_ADMIN_API_BASE_PATH as string
+  }
+  // Removing first part of the domain (ritstjorn) and adding admin-api
+  const host = window.location.host.split('.')
+  host.shift()
+  host.unshift('admin-api')
+  return `https://${host.join('.')}`
 }
 
-const clientConfig = (token: string) => {
+export const config = (token: string) => {
   return new Configuration({
     fetchApi: createEnhancedFetch(),
     accessToken: token,
-    basePath: 'http://localhost:4000',
+    basePath: getPath(),
   })
 }
 
 let dmrClient: DefaultApi | undefined
 
-export const getDmrClient = (token: string) => {
+export const getDmrClient = (accessToken: string) => {
   if (typeof window === 'undefined') {
     // Server: always make a new dmr client
-    return new DefaultApi(config(token))
+
+    return new DefaultApi(config(accessToken))
   }
 
   // Browser: use singleton pattern to keep the same dmr client
-  return (dmrClient ??= new DefaultApi(clientConfig(token)))
+  return (dmrClient ??= new DefaultApi(config(accessToken)))
 }

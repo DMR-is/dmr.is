@@ -2975,6 +2975,26 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/statistics/overview/dashboard": {
+      "get": {
+        "operationId": "getStatisticsOverviewDashboard",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStatisticOverviewDashboardResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/statistics/overview/{type}": {
       "get": {
         "operationId": "getStatisticsOverview",
@@ -4926,10 +4946,6 @@
         },
         "required": ["statuses", "total"]
       },
-      "StatisticsOverviewQueryType": {
-        "type": "string",
-        "enum": ["general", "personal", "inactive", "publishing"]
-      },
       "StatisticsOverviewCategory": {
         "type": "object",
         "properties": {
@@ -4950,6 +4966,32 @@
           "total": { "type": "number" }
         },
         "required": ["categories", "total"]
+      },
+      "GetStatisticOverviewDashboardItem": {
+        "type": "object",
+        "properties": {
+          "overviewType": { "type": "string" },
+          "overview": {
+            "$ref": "#/components/schemas/GetStatisticsOverviewResponse"
+          }
+        },
+        "required": ["overviewType", "overview"]
+      },
+      "GetStatisticOverviewDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetStatisticOverviewDashboardItem"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "StatisticsOverviewQueryType": {
+        "type": "string",
+        "enum": ["general", "personal", "inactive", "publishing"]
       }
     }
   }

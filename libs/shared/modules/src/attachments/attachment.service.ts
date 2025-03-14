@@ -6,7 +6,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
-  PostApplicationAttachmentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 

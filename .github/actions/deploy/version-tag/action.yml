@@ -1,0 +1,40 @@
+name: '🚀 Deploy'
+description: 'Deploys the application to the specified environment'
+
+inputs:
+  AWS_REGION:
+    description: 'The AWS region to use'
+    required: true
+    default: 'eu-west-1'
+  AWS_SHARED_ROLE_ARN:
+    description: 'The ARN of the AWS github-ci role the role to use for shared resources'
+    required: true
+    default: 'arn:aws:iam::592944621100:role/shared-github-ci-role'
+  ECR_REPOSITORY:
+    description: 'The name of the ECR repository to pull from'
+    required: true
+  VERSION_TAG:
+    description: 'The version tag to deploy'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔐 Configure AWS Shared credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-session-name: GitHub-Action-Role
+        aws-region: ${{ inputs.AWS_REGION }}
+        role-to-assume: ${{ inputs.AWS_SHARED_ROLE_ARN }}
+
+    - name: 🔓 Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: 🔖 Re-tag Backend Image
+      shell: bash
+      run: |
+        MANIFEST=$(aws ecr batch-get-image --repository-name ${{ inputs.ECR_REPOSITORY }} --image-ids imageTag=sha-${{ github.sha }} --query 'images[].imageManifest' --output text)
+        aws ecr put-image --repository-name ${{ inputs.ECR_REPOSITORY }} --image-tag ${{ inputs.VERSION_TAG }} --image-manifest "$MANIFEST"
+
+

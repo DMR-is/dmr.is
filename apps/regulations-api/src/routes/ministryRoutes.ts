@@ -1,11 +1,10 @@
-import { DAY, SECOND } from '@hugsmidjan/qj/time';
 import { FastifyPluginCallback } from 'fastify';
+import { DAY, SECOND } from '@hugsmidjan/qj/time';
 
 import { getAllMinistries } from '../db/Ministry';
 import { MinistryAttributes } from '../models';
 import { get, set } from '../utils/cache';
 import { cacheControl, QStr } from '../utils/misc';
-
 import { MinistryListItem, MinistrySlug } from './types';
 
 const MINISTRY_TTL = 1;
@@ -37,6 +36,7 @@ export const ministryRoutes: FastifyPluginCallback = (fastify, opts, done) => {
         data = await getAllMinistries(slugs);
         set(redis, cacheKey, data, MINISTRY_REDIS_TTL);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('unable to get all ministries', e);
         return res.status(500).send();
       }

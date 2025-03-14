@@ -1,3 +1,7 @@
+import { useRouter } from 'next/router'
+import { useEffect, useMemo, useState } from 'react'
+import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
+
 import {
   Box,
   Icon,
@@ -6,11 +10,9 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
-import { useRouter } from 'next/router'
-import { useEffect, useMemo, useState } from 'react'
-import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
-import * as styles from './ControlPanel.css'
+
 import { findPath, flattenPaths } from '../../utils'
+import * as styles from './ControlPanel.css'
 export type ControlPanelRoute = {
   path: string
   pathName: string
