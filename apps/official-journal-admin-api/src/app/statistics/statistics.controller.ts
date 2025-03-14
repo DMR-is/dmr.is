@@ -56,7 +56,7 @@ export class StatisticsController {
   @Get('/overview/dashboard')
   @ApiOperation({ operationId: 'getStatisticsOverviewDashboard' })
   @ApiResponse({ status: 200, type: GetStatisticOverviewDashboardResponse })
-  async dashboardOverview(@CurrentUser() user: AdminUser) {
+  async dashboardOverview(@CurrentUser() user: UserDto) {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverviewForDashboard(user.id),
     )
