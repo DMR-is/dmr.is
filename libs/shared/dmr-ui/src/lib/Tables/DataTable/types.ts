@@ -23,6 +23,7 @@ export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {
   [K in T[number]['field']]: React.ReactNode
 } & {
   columns: T
+  uniqueKey?: string
 } & DataTableRowExpandableProps
 export type DataTablePagingProps = {
   page: number

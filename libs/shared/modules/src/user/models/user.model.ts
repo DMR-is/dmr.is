@@ -19,7 +19,7 @@ import { UserRoleModel } from './user-role.model'
 
 @DefaultScope(() => ({
   include: [UserRoleModel, AdvertInvolvedPartyModel],
-  order: [['first_name', 'ASC']],
+  order: [['created_at', 'DESC']],
 }))
 @Table({ tableName: 'ojoi_user', timestamps: true, paranoid: true })
 export class UserModel extends Model {

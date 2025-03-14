@@ -14,6 +14,7 @@ import {
   Tabs,
 } from '@island.is/island-ui/core'
 
+import { UserProvider } from '../../context/userContext'
 import { BaseEntity } from '../../gen/fetch'
 
 const UserTable = dynamic(() => import('../tables/UsersTable'))
@@ -68,34 +69,36 @@ export default function UsersPage({
   }
 
   return (
-    <Section>
-      <GridContainer>
-        <GridRow>
-          <GridColumn
-            offset={['0', '1/12']}
-            span={['12/12', '10/12']}
-            paddingBottom={[2, 2, 3]}
-          >
-            {isAdmin ? (
-              <Tabs
-                tabs={tabs}
-                selected={selectedTab}
-                onChange={(id) => {
-                  setSelectedTab(id)
-                  setPage(1)
-                }}
-                label=""
-              />
-            ) : (
-              <UserTable
-                isAdmin={isAdmin}
-                involvedPartyOptions={involvedParties}
-                roleOptions={roleOptions}
-              />
-            )}
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Section>
+    <UserProvider>
+      <Section>
+        <GridContainer>
+          <GridRow>
+            <GridColumn
+              offset={['0', '1/12']}
+              span={['12/12', '10/12']}
+              paddingBottom={[2, 2, 3]}
+            >
+              {isAdmin ? (
+                <Tabs
+                  tabs={tabs}
+                  selected={selectedTab}
+                  onChange={(id) => {
+                    setSelectedTab(id)
+                    setPage(1)
+                  }}
+                  label=""
+                />
+              ) : (
+                <UserTable
+                  isAdmin={isAdmin}
+                  involvedPartyOptions={involvedParties}
+                  roleOptions={roleOptions}
+                />
+              )}
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Section>
+    </UserProvider>
   )
 }

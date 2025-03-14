@@ -7,53 +7,26 @@ import {
   Stack,
   Tag,
   Text,
-  toast,
 } from '@island.is/island-ui/core'
 
 import { BaseEntity, CreateUserDto } from '../../gen/fetch'
-import { useUsers } from '../../hooks/users/useUsers'
+import { useUserContext } from '../../hooks/useUserContext'
 import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
   isAdmin?: boolean
   availableInvolvedParties: { label: string; value: BaseEntity }[]
   availableRoles: { label: string; value: BaseEntity }[]
+  onSuccess: () => void
 }
 
 export const CreateUser = ({
   isAdmin = false,
   availableInvolvedParties,
   availableRoles,
+  onSuccess,
 }: Props) => {
-  const { createUser } = useUsers({
-    createUserOptions: {
-      onSuccess: ({ user }) => {
-        setCreateUserState({
-          nationalId: '',
-          email: '',
-          firstName: '',
-          lastName: '',
-          displayName: '',
-          roleId: isAdmin
-            ? ''
-            : availableRoles.find((r) => r.value.slug !== 'innsendandi')?.value
-                .id ?? '',
-          involvedParties:
-            availableInvolvedParties.length === 1
-              ? [availableInvolvedParties[0].value.id]
-              : [],
-        })
-        toast.success(`Notandi ${user.displayName} hefur verið stofnaður`, {
-          toastId: 'create-user-success',
-        })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að stofna notanda', {
-          toastId: 'create-user-error',
-        })
-      },
-    },
-  })
+  const { createUser } = useUserContext()
 
   const [createUserState, setCreateUserState] = useState<CreateUserDto>({
     nationalId: '',
@@ -234,7 +207,9 @@ export const CreateUser = ({
           size="small"
           icon="person"
           iconType="outline"
-          onClick={() => createUser({ createUserDto: createUserState })}
+          onClick={() =>
+            createUser({ createUserDto: createUserState }, onSuccess)
+          }
         >
           Stofna notanda
         </Button>

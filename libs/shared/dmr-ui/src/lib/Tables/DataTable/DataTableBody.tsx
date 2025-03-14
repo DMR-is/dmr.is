@@ -25,9 +25,15 @@ export const DataTableBody = <T extends readonly DataTableColumnProps[]>({
           <tr className={styles.emptyRow}></tr>
         </>
       ) : (
-        rows.map((row, rowIndex) => (
-          <DataTableRow key={rowIndex} {...row} columns={columns} />
-        ))
+        rows.map((row, rowIndex) => {
+          return (
+            <DataTableRow
+              key={row.uniqueKey ? row.uniqueKey : rowIndex}
+              {...row}
+              columns={columns}
+            />
+          )
+        })
       )}
     </T.Body>
   )

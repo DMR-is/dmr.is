@@ -28,7 +28,7 @@ type UpdateUserConfiguration = SWRMutationConfiguration<
 >
 
 type DeleteUserConfiguration = SWRMutationConfiguration<
-  void,
+  { id: string },
   Error,
   Key,
   DeleteUserRequest
@@ -53,7 +53,7 @@ export const useUsers = ({
   const dmrClient = getDmrClient(session?.accessToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
-    session ? ['getUsers', session?.user, params] : null,
+    session ? ['getUsers', session.user, params] : null,
     ([_key, _user, params]) =>
       swrFetcher({
         func: () => dmrClient.getUsers(params),
@@ -69,7 +69,7 @@ export const useUsers = ({
     Key,
     CreateUserRequest
   >(
-    session ? ['createUser', session?.user] : null,
+    session ? ['createUser', session.user] : null,
     (_key: string, { arg }: { arg: CreateUserRequest }) =>
       swrFetcher({
         func: () => dmrClient.createUser(arg),
@@ -86,7 +86,7 @@ export const useUsers = ({
     Key,
     UpdateUserRequest
   >(
-    session ? ['updateUser', session?.user] : null,
+    session ? ['updateUser', session.user] : null,
     (_key: string, { arg }: { arg: UpdateUserRequest }) =>
       swrFetcher({
         func: () => dmrClient.updateUser(arg),
@@ -98,16 +98,19 @@ export const useUsers = ({
   )
 
   const { trigger: deleteUser } = useSWRMutation<
-    void,
+    { id: string },
     Error,
     Key,
     DeleteUserRequest
   >(
-    session ? ['DeleteUser', session?.user] : null,
-    (_key: string, { arg }: { arg: DeleteUserRequest }) =>
+    session ? ['deleteUser', session.user] : null,
+    (_key: string, { arg }: { arg: DeleteUserRequest }) => {
       swrFetcher({
         func: () => dmrClient.deleteUser(arg),
-      }),
+      })
+
+      return { id: arg.id }
+    },
     {
       ...deleteUserOptions,
       throwOnError: false,

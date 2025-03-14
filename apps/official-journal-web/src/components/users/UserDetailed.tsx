@@ -12,11 +12,10 @@ import {
   Stack,
   Tag,
   Text,
-  toast,
 } from '@island.is/island-ui/core'
 
 import { BaseEntity, UserDto } from '../../gen/fetch'
-import { useUsers } from '../../hooks/users/useUsers'
+import { useUserContext } from '../../hooks/useUserContext'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
@@ -27,20 +26,7 @@ type Props = {
 }
 
 export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
-  const { updateUser } = useUsers({
-    updateUserOptions: {
-      onSuccess: ({ user }) => {
-        toast.success(`Notandi ${user.displayName} uppfærður`, {
-          toastId: 'update-user',
-        })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra notanda', {
-          toastId: 'update-user',
-        })
-      },
-    },
-  })
+  const { updateUser, deleteUser } = useUserContext()
   const partiesToShow = availableInvoledParties.filter(
     (party) => !user.involvedParties.some((p) => p.id === party.value.id),
   )
@@ -93,6 +79,7 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                 name="user-email"
                 label="Netfang"
                 defaultValue={user.email}
+                onChange={(e) => onChangeHandler('email', e.target.value)}
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
@@ -152,6 +139,18 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                     : 'Stofnanir notanda'
                 }
                 options={partiesToShow}
+                onChange={(opt) => {
+                  if (!opt) return
+                  updateUser({
+                    id: user.id,
+                    updateUserDto: {
+                      involvedParties: [
+                        ...user.involvedParties.map((party) => party.id),
+                        opt.value.id,
+                      ],
+                    },
+                  })
+                }}
               />
             </GridColumn>
             <GridColumn span={['12/12', '8/12']}>
@@ -175,6 +174,7 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                   iconType="outline"
                   size="small"
                   colorScheme="destructive"
+                  onClick={() => deleteUser({ id: user.id })}
                 >
                   Eyða notanda
                 </Button>

@@ -3,7 +3,6 @@ import { createContext, useState } from 'react'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
-  AdminUser,
   AdvertCorrection,
   AdvertType,
   CaseDetailed,
@@ -11,6 +10,7 @@ import {
   CaseTag,
   Category,
   Department,
+  UserDto,
 } from '../gen/fetch'
 import { useAdvertTypes, useCase, useSignature } from '../hooks/api'
 import { createOptions } from '../lib/utils'
@@ -72,7 +72,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
-  employees: AdminUser[]
+  employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string
 }

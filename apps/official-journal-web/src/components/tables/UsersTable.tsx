@@ -13,12 +13,11 @@ import {
   Inline,
   Stack,
   Tag,
-  toast,
 } from '@island.is/island-ui/core'
 
 import { BaseEntity } from '../../gen/fetch'
-import { useUsers } from '../../hooks/users/useUsers'
 import { useToggle } from '../../hooks/useToggle'
+import { useUserContext } from '../../hooks/useUserContext'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
@@ -36,35 +35,23 @@ export const UsersTable = ({
   involvedPartyOptions,
   roleOptions,
 }: UsersTableProps) => {
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const [pageSize, setPageSize] = useQueryState(
     'pageSize',
     parseAsInteger.withDefault(10),
   )
-  const [institution, setInstitution] = useQueryState('stofnun')
-  const [role, setRole] = useQueryState('hlutverk')
-  const [search, setSearch] = useQueryState('leit')
+
   const newUserToggle = useToggle()
 
+  const {
+    users,
+    institution,
+    role,
+    search,
+    setSearch,
+    setRole,
+    setInstitution,
+  } = useUserContext()
   const [localSearch, setLocalSearch] = useState(search ?? '')
-
-  const { users, paging, isValidating } = useUsers({
-    params: {
-      page,
-      pageSize,
-      role: role ?? undefined,
-      involvedParty: institution ?? undefined,
-      search: search ?? undefined,
-    },
-    options: {
-      keepPreviousData: true,
-      onError: () => {
-        toast.error('Villa kom upp við að sækja notendur', {
-          toastId: 'toast-user-error',
-        })
-      },
-    },
-  })
 
   const handleSearch = useCallback(debounce(setSearch, 500), [])
 
@@ -74,34 +61,47 @@ export const UsersTable = ({
         <GridRow>
           <GridColumn span={['12/12', '12/12', '12/12']}>
             <Inline space={3}>
-              <Drawer
-                ariaLabel="Stofna notanda"
-                baseId="user-drawer"
-                disclosure={
-                  <Button
-                    variant="utility"
-                    icon="person"
-                    iconType="outline"
-                    size="small"
-                    onClick={() => newUserToggle.setToggle(true)}
-                  >
-                    Stofna notanda
-                  </Button>
-                }
-              >
-                <CreateUser
-                  isAdmin={isAdmin}
-                  availableInvolvedParties={involvedPartyOptions}
-                  availableRoles={roleOptions}
-                />
-              </Drawer>
+              {newUserToggle.toggle ? (
+                <Drawer
+                  ariaLabel="Stofna notanda"
+                  initialVisibility={newUserToggle.toggle}
+                  baseId="user-drawer"
+                  disclosure={
+                    <Button
+                      variant="utility"
+                      icon="person"
+                      iconType="outline"
+                      size="small"
+                      onClick={() => newUserToggle.setToggle(true)}
+                    >
+                      Stofna notanda
+                    </Button>
+                  }
+                >
+                  <CreateUser
+                    isAdmin={isAdmin}
+                    availableInvolvedParties={involvedPartyOptions}
+                    availableRoles={roleOptions}
+                    onSuccess={() => newUserToggle.setToggle(false)}
+                  />
+                </Drawer>
+              ) : (
+                <Button
+                  variant="utility"
+                  icon="person"
+                  iconType="outline"
+                  size="small"
+                  onClick={() => newUserToggle.setToggle(true)}
+                >
+                  Stofna notanda
+                </Button>
+              )}
             </Inline>
           </GridColumn>
         </GridRow>
         <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '12/12', '3/12']}>
             <OJOIInput
-              isValidating={isValidating}
               name="user-search"
               label="Leit"
               placeholder="Sláðu inn leitarorð"
@@ -212,48 +212,54 @@ export const UsersTable = ({
                   width: '100px',
                 },
               ]}
-              rows={users?.map((user) => ({
-                isExpandable: true,
-                children: (
-                  <UserDetailed availableInvoledParties={[]} user={user} />
-                ),
-                name: user.displayName,
-                email: user.email,
-                institution:
-                  user.involvedParties.length > 0 ? (
-                    <Stack space={1}>
-                      {user.involvedParties
-                        .map((party) => party.title)
-                        .join(', ')}
-                    </Stack>
-                  ) : (
-                    <Tag variant="rose">Engin stofnun</Tag>
+              rows={users?.map((user) => {
+                return {
+                  uniqueKey: user.id,
+                  isExpandable: true,
+                  children: (
+                    <UserDetailed
+                      availableInvoledParties={involvedPartyOptions}
+                      user={user}
+                    />
                   ),
-                role: (
-                  <Tag
-                    variant={
-                      user.role.title === 'Ritstjóri'
-                        ? 'mint'
-                        : user.role.title === 'Fulltrúi'
-                        ? 'blueberry'
-                        : 'blue'
-                    }
-                  >
-                    {user.role.title}
-                  </Tag>
-                ),
-                createdAt: formatDate(user.createdAt),
-                updatedAt: formatDate(user.updatedAt),
-              }))}
-              paging={{
-                page,
-                pageSize,
-                totalItems: paging?.totalItems || 0,
-                totalPages: paging?.totalPages || 0,
-                onPaginate: (page) => {
-                  setPage(page)
-                },
-              }}
+                  name: user.displayName,
+                  email: user.email,
+                  institution:
+                    user.involvedParties.length > 0 ? (
+                      <Stack space={1}>
+                        {user.involvedParties
+                          .map((party) => party.title)
+                          .join(', ')}
+                      </Stack>
+                    ) : (
+                      <Tag variant="rose">Engin stofnun</Tag>
+                    ),
+                  role: (
+                    <Tag
+                      variant={
+                        user.role.title === 'Ritstjóri'
+                          ? 'mint'
+                          : user.role.title === 'Fulltrúi'
+                          ? 'blueberry'
+                          : 'blue'
+                      }
+                    >
+                      {user.role.title}
+                    </Tag>
+                  ),
+                  createdAt: formatDate(user.createdAt),
+                  updatedAt: formatDate(user.updatedAt),
+                }
+              })}
+              // paging={{
+              //   page,
+              //   pageSize,
+              //   totalItems: paging?.totalItems || 0,
+              //   totalPages: paging?.totalPages || 0,
+              //   onPaginate: (page) => {
+              //     setPage(page)
+              //   },
+              // }}
             />
           </GridColumn>
         </GridRow>
