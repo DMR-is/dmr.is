@@ -8,6 +8,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Icon,
   Inline,
   Stack,
   Tag,
@@ -23,9 +24,14 @@ import { OJOISelect } from '../select/OJOISelect'
 type Props = {
   user: UserDto
   availableInvoledParties: { label: string; value: BaseEntity }[]
+  isAdmin?: boolean
 }
 
-export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
+export const UserDetailed = ({
+  user,
+  availableInvoledParties,
+  isAdmin = false,
+}: Props) => {
   const { updateUser, deleteUser } = useUserContext()
   const partiesToShow = availableInvoledParties.filter(
     (party) => !user.involvedParties.some((p) => p.id === party.value.id),
@@ -160,7 +166,31 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                 </Text>
                 <Inline space={1} flexWrap="wrap">
                   {user.involvedParties.map((involvedParty) => (
-                    <Tag>{involvedParty.title}</Tag>
+                    <Tag
+                      onClick={
+                        isAdmin
+                          ? () =>
+                              updateUser({
+                                id: user.id,
+                                updateUserDto: {
+                                  involvedParties: user.involvedParties
+                                    .filter(
+                                      (party) => party.id !== involvedParty.id,
+                                    )
+                                    .map((ip) => ip.id),
+                                },
+                              })
+                          : undefined
+                      }
+                      key={involvedParty.id}
+                    >
+                      <Box display="flex" alignItems="center">
+                        {involvedParty.title}
+                        {isAdmin && (
+                          <Icon icon="close" type="outline" size="small" />
+                        )}
+                      </Box>
+                    </Tag>
                   ))}
                 </Inline>
               </Stack>

@@ -220,6 +220,7 @@ export const UsersTable = ({
                     <UserDetailed
                       availableInvoledParties={involvedPartyOptions}
                       user={user}
+                      isAdmin={isAdmin}
                     />
                   ),
                   name: user.displayName,
