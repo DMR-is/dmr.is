@@ -20,14 +20,7 @@ import { InstitutionDetailed } from '../users/InstitutionDetailed'
 export const InstitutionTable = () => {
   const [search, setSearch] = useQueryState('leit-stofnun')
   const [localSearch, setLocalSearch] = useState(search ?? '')
-  const [page, setPage] = useQueryState(
-    'page',
-    parseAsInteger.withDefault(1).withOptions({
-      history: 'replace',
-      shallow: true,
-      scroll: true,
-    }),
-  )
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const [pageSize, setPageSize] = useQueryState(
     'pageSize',
     parseAsInteger.withDefault(10),
@@ -37,6 +30,9 @@ export const InstitutionTable = () => {
       search: search ?? undefined,
       page: page,
       pageSize: pageSize,
+    },
+    config: {
+      keepPreviousData: true,
     },
   })
 

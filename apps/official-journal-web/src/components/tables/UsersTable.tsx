@@ -22,7 +22,6 @@ import { useToggle } from '../../hooks/useToggle'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
-import { CreateInstitution } from '../users/CreateInstitution'
 import { CreateUser } from '../users/CreateUser'
 import { UserDetailed } from '../users/UserDetailed'
 
@@ -46,7 +45,6 @@ export const UsersTable = ({
   const [role, setRole] = useQueryState('hlutverk')
   const [search, setSearch] = useQueryState('leit')
   const newUserToggle = useToggle()
-  const newInstitutionToggle = useToggle()
 
   const [localSearch, setLocalSearch] = useState(search ?? '')
 

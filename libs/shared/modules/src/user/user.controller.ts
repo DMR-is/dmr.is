@@ -8,6 +8,7 @@ import {
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
+  UpdateUserDto,
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -73,7 +74,7 @@ export class UserController {
   @ApiResponse({ status: 403, type: ForbiddenException })
   async updateUser(
     @Param('id') id: string,
-    @Body() body: CreateUserDto,
+    @Body() body: UpdateUserDto,
     @CurrentUser() currentUser: UserDto,
   ) {
     return ResultWrapper.unwrap(

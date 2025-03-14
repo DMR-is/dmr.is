@@ -1,3 +1,7 @@
+import debounce from 'lodash/debounce'
+import { useCallback } from 'react'
+import { UpdateUserDto } from '@dmr.is/shared/dto'
+
 import {
   Box,
   Button,
@@ -8,9 +12,11 @@ import {
   Stack,
   Tag,
   Text,
+  toast,
 } from '@island.is/island-ui/core'
 
 import { BaseEntity, UserDto } from '../../gen/fetch'
+import { useUsers } from '../../hooks/users/useUsers'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
@@ -21,8 +27,34 @@ type Props = {
 }
 
 export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
+  const { updateUser } = useUsers({
+    updateUserOptions: {
+      onSuccess: ({ user }) => {
+        toast.success(`Notandi ${user.displayName} uppfærður`, {
+          toastId: 'update-user',
+        })
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra notanda', {
+          toastId: 'update-user',
+        })
+      },
+    },
+  })
   const partiesToShow = availableInvoledParties.filter(
     (party) => !user.involvedParties.some((p) => p.id === party.value.id),
+  )
+
+  const onChangeHandler = useCallback(
+    debounce((key: keyof UpdateUserDto, value: string) => {
+      updateUser({
+        id: user.id,
+        updateUserDto: {
+          [key]: value,
+        },
+      })
+    }, 500),
+    [],
   )
 
   return (
@@ -35,6 +67,7 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                 name="user-first-name"
                 label="Fornafn"
                 defaultValue={user.firstName}
+                onChange={(e) => onChangeHandler('firstName', e.target.value)}
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
@@ -42,6 +75,7 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                 name="user-last-name"
                 label="Eftirnafn"
                 defaultValue={user.lastName}
+                onChange={(e) => onChangeHandler('lastName', e.target.value)}
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
@@ -49,6 +83,7 @@ export const UserDetailed = ({ user, availableInvoledParties }: Props) => {
                 name="user-last-name"
                 label="Notendanafn"
                 defaultValue={user.displayName}
+                onChange={(e) => onChangeHandler('displayName', e.target.value)}
               />
             </GridColumn>
           </GridRow>

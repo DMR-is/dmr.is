@@ -2720,7 +2720,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateUserDto" }
+              "schema": { "$ref": "#/components/schemas/UpdateUserDto" }
             }
           }
         },
@@ -4846,18 +4846,15 @@
       "UnauthorizedException": { "type": "object", "properties": {} },
       "ForbiddenException": { "type": "object", "properties": {} },
       "InternalServerErrorException": { "type": "object", "properties": {} },
-      "CreateUserDto": {
+      "UpdateUserDto": {
         "type": "object",
         "properties": {
-          "nationalId": { "type": "string" },
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "email": { "type": "string" },
-          "roleId": { "type": "string" },
           "involvedParties": { "type": "array", "items": { "type": "string" } },
           "displayName": { "type": "string" }
-        },
-        "required": ["nationalId", "firstName", "lastName", "email", "roleId"]
+        }
       },
       "GetUserResponse": {
         "type": "object",
@@ -4884,6 +4881,19 @@
           }
         },
         "required": ["involvedParties"]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleId": { "type": "string" },
+          "involvedParties": { "type": "array", "items": { "type": "string" } },
+          "displayName": { "type": "string" }
+        },
+        "required": ["nationalId", "firstName", "lastName", "email", "roleId"]
       },
       "DepartmentSlugEnum": {
         "type": "string",
