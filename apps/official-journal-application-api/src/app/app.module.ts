@@ -4,10 +4,10 @@ import {
   AdvertTypeController,
   AdvertTypeModule,
   ApplicationModule,
-  ApplicationUserModule,
   HealthModule,
   PdfModule,
   SignatureModule,
+  UserModule,
   UtilityModule,
 } from '@dmr.is/modules'
 
@@ -30,9 +30,9 @@ import { ApplicationController } from './application/application.controller'
     SignatureModule,
     HealthModule,
     PdfModule,
-    ApplicationUserModule,
     UtilityModule,
     AdvertTypeModule,
+    UserModule,
   ],
   controllers: [ApplicationController, AdvertTypeController],
   providers: [],
@@ -42,12 +42,5 @@ export class AppModule implements NestModule {
     consumer
       .apply(LogRequestMiddleware)
       .forRoutes({ path: '/**', method: RequestMethod.ALL })
-    // .apply(WithAuthMiddleware)
-    // .exclude({
-    //   method: RequestMethod.ALL,
-    //   path: '/health',
-    //   version: '1',
-    // })
-    // .forRoutes({ path: '/**', method: RequestMethod.ALL })
   }
 }

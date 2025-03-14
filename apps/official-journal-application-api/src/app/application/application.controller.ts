@@ -2,14 +2,16 @@ import {
   ALLOWED_MIME_TYPES,
   AttachmentTypeParam,
   ONE_MEGA_BYTE,
+  UserRoleEnum,
 } from '@dmr.is/constants'
-import { CurrentUser, WithCase } from '@dmr.is/decorators'
+import { CurrentUser, Roles, WithCase } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  ApplicationAuthGaurd,
   IApplicationService,
-  IApplicationUserService,
   ISignatureService,
+  IUserService,
+  RoleGuard,
+  TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import {
   EnumValidationPipe,
@@ -20,8 +22,6 @@ import {
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
-  ApplicationUser,
-  ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAdvertsQuery,
@@ -29,12 +29,14 @@ import {
   GetApplicationCaseResponse,
   GetApplicationResponse,
   GetComments,
+  GetInvoledPartiesByUserResponse,
   GetPresignedUrlBody,
   GetSignature,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -69,8 +71,9 @@ import 'multer'
   path: 'applications',
   version: '1',
 })
-@UseGuards(ApplicationAuthGaurd)
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
 @WithCase(false)
+@Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
@@ -79,8 +82,8 @@ export class ApplicationController {
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
 
-    @Inject(IApplicationUserService)
-    private readonly applicationUserService: IApplicationUserService,
+    @Inject(IUserService)
+    private readonly userService: IUserService,
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -146,7 +149,7 @@ export class ApplicationController {
   async postComment(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Body() commentBody: PostApplicationComment,
-    @CurrentUser() user: ApplicationUser,
+    @CurrentUser() user: UserDto,
   ): Promise<void> {
     ResultWrapper.unwrap(
       await this.applicationService.postComment(
@@ -280,10 +283,10 @@ export class ApplicationController {
 
   @Get(':id/involved-parties')
   @ApiOperation({ operationId: 'getInvolvedParties' })
-  @ApiResponse({ type: ApplicationUserInvolvedPartiesResponse })
-  async getInvolvedParties(@CurrentUser() user: ApplicationUser) {
+  @ApiResponse({ type: GetInvoledPartiesByUserResponse })
+  async getInvolvedParties(@CurrentUser() user: UserDto) {
     return ResultWrapper.unwrap(
-      await this.applicationUserService.getUserInvolvedParties(user.id),
+      await this.userService.getInvolvedPartiesByUser(user),
     )
   }
 

@@ -5,7 +5,6 @@ import useSWR from 'swr'
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
-  AdminUser,
   AdvertCorrection,
   AdvertType,
   CaseDetailed,
@@ -14,6 +13,7 @@ import {
   Category,
   Department,
   GetAdvertTypes,
+  UserDto,
 } from '../gen/fetch'
 import { useCase, useSignature } from '../hooks/api'
 import { getDmrClient } from '../lib/api/createClient'
@@ -78,7 +78,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
-  employees: AdminUser[]
+  employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string
 }

@@ -1,10 +1,9 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { IAdminUserService } from '@dmr.is/modules'
 import {
-  AdminUser,
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
+  UserDto,
 } from '@dmr.is/shared/dto'
 
 import { NotImplementedException } from '@nestjs/common'
@@ -35,10 +34,6 @@ describe('StatisticsController', () => {
           provide: IStatisticsService,
           useClass: MockStatisticsService,
         },
-        {
-          provide: IAdminUserService,
-          useValue: jest.fn(),
-        },
       ],
     }).compile()
     controller = statistics.get<StatisticsController>(StatisticsController)
@@ -59,7 +54,7 @@ describe('StatisticsController', () => {
     it('Should return total count larger than 0', async () => {
       const results = await controller.overview(
         StatisticsOverviewQueryType.General,
-        {} as AdminUser,
+        {} as UserDto,
       )
       expect(results.total).toEqual(0)
     })
@@ -68,7 +63,7 @@ describe('StatisticsController', () => {
       try {
         await controller.overview(
           StatisticsOverviewQueryType.General,
-          {} as AdminUser,
+          {} as UserDto,
         )
       } catch (error) {
         if (error instanceof NotImplementedException) {

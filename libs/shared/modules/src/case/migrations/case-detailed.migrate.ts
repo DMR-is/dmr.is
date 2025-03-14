@@ -1,6 +1,5 @@
 import { CaseDetailed } from '@dmr.is/shared/dto'
 
-import { adminUserMigrate } from '../../admin-user/migrations/admin-user.migrate'
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
 import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
@@ -8,6 +7,7 @@ import { advertCategoryMigrate } from '../../journal/migrations/advert-category.
 import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
+import { userMigrate } from '../../user/migration/user.migrate'
 import { CaseModel } from '../models'
 import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
@@ -27,9 +27,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     tag: model.tag ? caseTagMigrate(model.tag) : null,
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     createdAt: model.createdAt,
-    assignedTo: model.assignedUser
-      ? adminUserMigrate(model.assignedUser)
-      : null,
+    assignedTo: model.assignedUser ? userMigrate(model.assignedUser) : null,
     communicationStatus: caseCommunicationStatusMigrate(
       model.communicationStatus,
     ),

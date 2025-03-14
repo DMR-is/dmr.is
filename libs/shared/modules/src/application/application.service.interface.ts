@@ -3,7 +3,6 @@ import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AdvertTemplateDetails,
   AdvertTemplateType,
-  ApplicationUser,
   CasePriceResponse,
   GetAdvertTemplateResponse,
   GetApplicationAdverts,
@@ -17,6 +16,7 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -39,7 +39,7 @@ export interface IApplicationService {
   postComment(
     applicationId: string,
     commentBody: PostApplicationComment,
-    applicationUser: ApplicationUser,
+    applicationUser: UserDto,
   ): Promise<ResultWrapper>
 
   getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>

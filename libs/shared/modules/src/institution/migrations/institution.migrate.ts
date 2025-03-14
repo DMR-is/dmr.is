@@ -7,6 +7,7 @@ export function institutionMigrate(model: InstitutionModel): InstitutionDto {
     id: model.id,
     slug: model.slug,
     title: model.title,
+    nationalId: model.nationalId,
   }
   return result
 }

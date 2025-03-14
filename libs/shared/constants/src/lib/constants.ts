@@ -1,4 +1,3 @@
-import { AdminUserRoleTitle } from '@dmr.is/types'
 
 export const DEFAULT_PAGE_SIZE = 10
 
@@ -82,7 +81,27 @@ export const ROLES_KEY = 'roles'
 
 export const WITH_CASE_KEY = 'withCase'
 
-export const USER_ROLES: Record<AdminUserRoleTitle, AdminUserRoleTitle> = {
-  Admin: 'Admin',
-  Editor: 'Editor',
-} as const
+export enum UserRoleEnum {
+  Admin = 'Ritstjóri',
+  Editor = 'Fulltrúi',
+  User = 'Innsendandi',
+}
+
+export const PAGE_SIZE_OPTIONS = [
+  {
+    label: '10',
+    value: 10,
+  },
+  {
+    label: '20',
+    value: 20,
+  },
+  {
+    label: '50',
+    value: 50,
+  },
+  {
+    label: '100',
+    value: 100,
+  },
+]

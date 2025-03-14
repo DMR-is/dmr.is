@@ -247,12 +247,14 @@ export const MOCK_INVOLVEDPARTY_USR: Institution = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',
+  nationalId: '1231231234',
 }
 
 const MOCK_INVOLVEDPARTY_SBR: Institution = {
   id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
   title: 'Skipulags- og byggingarsvið Reykjavíkur',
   slug: 'skipulags-og-byggingarsvid-reykjavikur',
+  nationalId: '3213213214',
 }
 
 export const ALL_MOCK_JOURNAL_INVOLVED_PARTIES = [
@@ -286,6 +288,7 @@ export const emptyAdvert: Advert = {
     id: '',
     title: '',
     slug: '',
+    nationalId: '',
   },
   document: {
     isLegacy: false,

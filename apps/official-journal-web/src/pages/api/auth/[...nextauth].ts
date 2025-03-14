@@ -3,8 +3,8 @@ import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
-import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
 
+import { UserDto, UserRoleDto } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
 import { refreshAccessToken } from '../../../lib/token-service'
@@ -37,7 +37,7 @@ async function authorize(nationalId?: string, accessToken?: string) {
       throw new Error('Member not found')
     }
 
-    return member as AdminUser
+    return member as UserDto
   } catch (e) {
     const error = e as ErrorWithPotentialReqRes
 
@@ -75,13 +75,13 @@ export const authOptions: AuthOptions = {
           ...token,
           nationalId: user.nationalId,
           displayName: user.displayName ?? 'unknown',
-          roles: user.roles,
+          role: user.role,
           accessToken: account.access_token,
           accessTokenExpires: account.expires_at
             ? account.expires_at * 1000
             : 0,
           refreshToken: account.refresh_token,
-          adminUserId: user.id,
+          userId: user.id,
           idToken: account.id_token,
         } as JWT
       }
@@ -101,10 +101,10 @@ export const authOptions: AuthOptions = {
     session: async ({ session, token }) => {
       session.user = {
         ...session.user,
-        roles: token.roles as AdminUserRole[],
+        role: token.role as UserRoleDto,
         displayName: token.displayName as string,
         nationalId: token.nationalId,
-        id: token.adminUserId as string,
+        id: token.userId as string,
       }
 
       // Add tokens to session
@@ -131,7 +131,7 @@ export const authOptions: AuthOptions = {
           return false
         }
         // Mutate user object to include roles, nationalId and displayName
-        user.roles = authMember.roles
+        user.role = authMember.role
         user.nationalId = nationalId
         user.displayName = authMember.displayName
         user.id = authMember.id

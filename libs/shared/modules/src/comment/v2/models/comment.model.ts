@@ -9,10 +9,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserModel } from '../../../admin-user/models/admin-user.model'
-import { ApplicationUserModel } from '../../../application-user/models'
 import { CaseModel, CaseStatusModel } from '../../../case/models'
 import { AdvertInvolvedPartyModel } from '../../../journal/models'
+import { UserModel } from '../../../user/models/user.model'
 import { CaseActionModel } from './case-action.model'
 
 @DefaultScope(() => ({
@@ -62,21 +61,13 @@ export class CommentModel extends Model {
   })
   caseActionId!: string
 
-  @ForeignKey(() => ApplicationUserModel)
+  @ForeignKey(() => UserModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: true,
-    field: 'application_user_creator_id',
+    field: 'user_creator_id',
   })
-  applicationUserCreatorId!: string | null
-
-  @ForeignKey(() => AdminUserModel)
-  @Column({
-    type: DataType.UUIDV4,
-    allowNull: true,
-    field: 'admin_user_creator_id',
-  })
-  adminUserCreatorId!: string | null
+  userCreatorId!: string | null
 
   @ForeignKey(() => AdvertInvolvedPartyModel)
   @Column({
@@ -93,13 +84,13 @@ export class CommentModel extends Model {
   })
   caseStatusReceiverId!: string | null
 
-  @ForeignKey(() => AdminUserModel)
+  @ForeignKey(() => UserModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: true,
-    field: 'admin_user_receiver_id',
+    field: 'user_receiver_id',
   })
-  adminUserReceiverId!: string | null
+  userReceiverId!: string | null
 
   @Column({
     type: DataType.TEXT,
@@ -120,14 +111,8 @@ export class CommentModel extends Model {
   @BelongsTo(() => CaseActionModel)
   caseAction!: CaseActionModel
 
-  @BelongsTo(() => ApplicationUserModel)
-  applicationUserCreator?: ApplicationUserModel
-
-  @BelongsTo(() => AdminUserModel, {
-    foreignKey: 'admin_user_creator_id',
-    as: 'adminUserCreator',
-  })
-  adminUserCreator?: AdminUserModel
+  @BelongsTo(() => UserModel)
+  userCreator?: UserModel
 
   @BelongsTo(() => AdvertInvolvedPartyModel)
   institutionCreator?: AdvertInvolvedPartyModel
@@ -138,9 +123,9 @@ export class CommentModel extends Model {
   })
   caseStatusReceiver?: CaseStatusModel
 
-  @BelongsTo(() => AdminUserModel, {
-    foreignKey: 'admin_user_receiver_id',
-    as: 'adminUserReceiver',
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'user_receiver_id',
+    as: 'userReceiver',
   })
-  adminUserReceiver?: AdminUserModel
+  userReceiver?: UserModel
 }

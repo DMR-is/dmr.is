@@ -24,9 +24,10 @@ export const toFixed = (num: number, fixed: number) => {
   return num % 1 === 0 ? num : num.toFixed(fixed)
 }
 
-export const formatDate = (date: string, df = 'dd.MM.yyyy') => {
+export const formatDate = (date: Date | string, df = 'dd.MM.yyyy') => {
   try {
-    return format(new Date(date), df, { locale: is })
+    const dateToUse = typeof date === 'string' ? new Date(date) : date
+    return format(dateToUse, df, { locale: is })
   } catch (e) {
     throw new Error(`Could not format date: ${date}`)
   }

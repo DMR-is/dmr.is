@@ -27,14 +27,14 @@ export const commentMigrate = (
     }
     case CaseActionEnum.COMMENT_APPLICATION: {
       // application user
-      const involvedParty = model.applicationUserCreator?.involvedParties.find(
+      const involvedParty = model.userCreator?.involvedParties.find(
         (party) => party.id === involvedPartyId,
       )
       creator = {
-        id: `${model.applicationUserCreatorId}`,
-        title: `${model.applicationUserCreator?.firstName} ${
-          model.applicationUserCreator?.lastName
-        }${involvedParty ? ` (${involvedParty.title})` : ''}`,
+        id: `${model.userCreatorId}`,
+        title: `${model.userCreator?.firstName} ${model.userCreator?.lastName}${
+          involvedParty ? ` (${involvedParty.title})` : ''
+        }`,
       }
       break
     }
@@ -44,8 +44,8 @@ export const commentMigrate = (
     case CaseActionEnum.COMMENT_EXTERNAL:
     case CaseActionEnum.COMMENT_INTERNAL: {
       creator = {
-        id: `${model.adminUserCreatorId}`,
-        title: `${model.adminUserCreator?.displayName}`,
+        id: `${model.userCreatorId}`,
+        title: `${model.userCreator?.displayName}`,
       }
       break
     }
@@ -62,8 +62,8 @@ export const commentMigrate = (
     }
     case CaseActionEnum.ASSIGN_USER: {
       receiver = {
-        id: `${model.adminUserReceiverId}`,
-        title: `${model.adminUserReceiver?.displayName}`,
+        id: `${model.userReceiverId}`,
+        title: `${model.userReceiver?.displayName}`,
       }
       break
     }

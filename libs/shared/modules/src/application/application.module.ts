@@ -14,7 +14,6 @@ import { IApplicationService } from './application.service.interface'
 export { IApplicationService } from './application.service.interface'
 export { ApplicationService } from './application.service'
 
-import { ApplicationUserModule } from '../application-user/application-user.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import caseModels from '../case/models'
 import commentModels from '../comment/v1/models'
@@ -33,7 +32,6 @@ import { SignatureModule } from '../signature/signature.module'
     LoggingModule,
     AuthModule,
     AttachmentsModule,
-    ApplicationUserModule,
     SignatureModule,
     CommentModuleV2,
     forwardRef(() => SharedCaseModule),

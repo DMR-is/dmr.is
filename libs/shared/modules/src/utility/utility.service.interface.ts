@@ -1,5 +1,5 @@
 import { Transaction } from 'sequelize'
-import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
+import { GetApplicationResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../advert-type/models'
@@ -69,7 +69,7 @@ export interface IUtilityService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseModel>>
 
-  userLookup(userId: string): Promise<ResultWrapper<User>>
+  userLookup(userId: string): Promise<ResultWrapper>
 
   getNextCaseNumber(
     departmentId: string,

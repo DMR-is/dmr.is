@@ -1,36 +1,145 @@
-import { ApiProperty } from '@nestjs/swagger'
 
-export class User {
+import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
+
+import { Institution } from '../institutions'
+import { Paging, PagingQuery } from '../paging'
+import { UserRoleDto } from './user-role.dto'
+
+export class UserDto {
   @ApiProperty({
-    description: 'Unique ID for the user, GUID format.',
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
     type: String,
   })
-  readonly id!: string
+  id!: string
 
   @ApiProperty({
-    description: 'First name of the user.',
-    example: 'Jón Gunnar',
-    required: true,
     type: String,
   })
-  name!: string
+  nationalId!: string
 
   @ApiProperty({
-    description: 'Last name of the user.',
-    example: 'Jónsson',
-    required: true,
+    type: String,
+  })
+  firstName!: string
+
+  @ApiProperty({
     type: String,
   })
   lastName!: string
 
   @ApiProperty({
-    description: 'Status of the user',
-    example: true,
-    required: true,
-    type: Boolean,
+    type: String,
   })
-  active!: boolean
+  fullName!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  email!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  displayName!: string
+
+  @ApiProperty({
+    type: [Institution],
+  })
+  involvedParties!: Institution[]
+
+  @ApiProperty({
+    type: Date,
+  })
+  createdAt!: Date
+
+  @ApiProperty({
+    type: Date,
+  })
+  updatedAt!: Date
+
+  @ApiProperty({
+    type: Date,
+    nullable: true,
+  })
+  deletedAt!: Date | null
+
+  @ApiProperty({
+    type: UserRoleDto,
+  })
+  role!: UserRoleDto
+}
+
+export class GetUserResponse {
+  @ApiProperty({
+    type: UserDto,
+  })
+  user!: UserDto
+}
+
+export class GetUsersResponse {
+  @ApiProperty({
+    type: [UserDto],
+  })
+  users!: UserDto[]
+
+  @ApiProperty({
+    type: Paging,
+  })
+  paging!: Paging
+}
+
+export class GetInvoledPartiesByUserResponse {
+  @ApiProperty({
+    type: [Institution],
+  })
+  involvedParties!: Institution[]
+}
+
+export class CreateUserDto extends PickType(UserDto, [
+  'nationalId',
+  'firstName',
+  'lastName',
+  'email',
+] as const) {
+  @ApiProperty({
+    type: String,
+  })
+  roleId!: string
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+  })
+  involvedParties?: string[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  displayName?: string
+}
+
+export class UpdateUserDto extends PartialType(
+  OmitType(CreateUserDto, ['roleId', 'nationalId'] as const),
+) {}
+
+export class GetUsersQuery extends PagingQuery {
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  search?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Slug of the institution',
+    required: false,
+  })
+  involvedParty?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Slug of the role',
+    required: false,
+  })
+  role?: string
 }

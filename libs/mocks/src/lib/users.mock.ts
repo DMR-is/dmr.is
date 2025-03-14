@@ -1,4 +1,9 @@
-import { User } from '@dmr.is/shared/dto'
+type User = {
+  id: string
+  name: string
+  lastName: string
+  active: boolean
+}
 
 export const ARMANN: User = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',

@@ -1,7 +1,7 @@
-import { AdminUser } from '@dmr.is/shared/dto'
+import { UserDto } from './src/gen/fetch'
 
 declare module 'next-auth' {
-  interface User extends DefaultUser, AdminUser {
+  interface User extends DefaultUser, UserDto {
     accessToken?: string
     refreshToken?: string
     idToken?: string

@@ -30,9 +30,23 @@ export class Institution {
     type: String,
   })
   readonly slug!: string
+
+  @ApiProperty({
+    description: 'National ID of the institution',
+    example: '650376-2949',
+    required: true,
+    type: String,
+  })
+  readonly nationalId!: string
 }
 
-export class InstitutionDto extends BaseEntity {}
+export class InstitutionDto extends BaseEntity {
+  @ApiProperty({
+    description: 'National ID of the institution',
+    type: String,
+  })
+  nationalId!: string
+}
 
 export class GetInstitution {
   @ApiProperty({
@@ -62,6 +76,12 @@ export class InstitutionQuery extends PagingQuery {
   search?: string
 }
 
-export class CreateInstitution extends PickType(InstitutionDto, ['title']) {}
+export class CreateInstitution extends PickType(InstitutionDto, ['title']) {
+  @ApiProperty({
+    required: true,
+    type: String,
+  })
+  nationalId!: string
+}
 
 export class UpdateInstitution extends PartialType(CreateInstitution) {}
