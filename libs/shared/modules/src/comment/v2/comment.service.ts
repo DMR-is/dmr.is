@@ -1,6 +1,9 @@
+import nodemailer from 'nodemailer'
+import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -28,14 +31,13 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { ApplicationUserModel } from '../../application-user/models'
-import { CaseModel, CaseStatusModel } from '../../case/models'
+import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { commentMigrate } from './migrations/comment.migrate'
 import { CaseActionModel } from './models/case-action.model'
 import { CommentModel } from './models/comment.model'
 import { CommentsModel } from './models/comments.model'
 import { ICommentServiceV2 } from './comment.service.interface'
-
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 
@@ -660,6 +662,46 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     ResultWrapper.unwrap(
       await this.addCommentToCase(caseId, commentId, transaction),
     )
+
+    // send email via SES
+    const caseComment = await this.caseModel.findByPk(caseId, {
+      attributes: ['caseNumber', 'id'],
+      include: [{ model: CaseChannelModel }],
+      transaction,
+    })
+
+    const emails = caseComment?.channels?.flatMap((item) => {
+      if (!item.email) {
+        return []
+      }
+      return [item.email]
+    })
+
+    if (emails?.length) {
+      try {
+        const message: Mail.Options = {
+          from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
+          to: emails.join(','),
+          replyTo: 'noreply@stjornartidindi.is',
+          subject: `Ný athugasemd skráð á mál ${caseComment?.caseNumber}`,
+          text: `Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}`,
+          html: `<h2>Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}</h2><p><a href="https://ritstjorn.stjornartidindi.is/ritstjorn/${caseComment?.id}" target="_blank">Skoða mál</a></p>`,
+        }
+
+        const ses = new SESClient()
+        const transporter = nodemailer.createTransport({
+          SES: { ses: ses, aws: { SendRawEmailCommand } },
+        })
+        await transporter.sendMail(message)
+      } catch (error) {
+        this.logger.warn(`Email not sent`, {
+          caseId,
+          commentId,
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
     return ResultWrapper.ok({ comment: migrated })
   }
 

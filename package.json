@@ -71,6 +71,7 @@
     "@types/multer-s3-transform": "npm:@types/multer-s3@^2.7.10",
     "@types/node": "^20.14.0",
     "@types/node-fetch": "^2.6.11",
+    "@types/nodemailer": "^6",
     "@types/pg": "^8.11.6",
     "@types/react": "^18.3.3",
     "@types/react-datepicker": "^4.10.0",
@@ -114,6 +115,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
+    "@aws-sdk/client-ses": "^3.758.0",
     "@aws-sdk/credential-providers": "^3.750.0",
     "@aws-sdk/s3-presigned-post": "^3.744.0",
     "@aws-sdk/s3-request-presigner": "^3.744.0",
@@ -178,6 +180,7 @@
     "next-auth": "^4.24.8",
     "next-usequerystate": "1.20.0",
     "node-fetch": "2.6.7",
+    "nodemailer": "^6.10.0",
     "oidc-client-ts": "2.0.3",
     "pg": "^8.13.3",
     "puppeteer": "^22.8.1",
