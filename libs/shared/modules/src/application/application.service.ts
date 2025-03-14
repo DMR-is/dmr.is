@@ -1,10 +1,6 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import {
-  ApplicationEvent,
-  AttachmentTypeParam,
-  DEFAULT_PRICE,
-} from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -30,12 +26,10 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
-  feeCodeCalculations,
   generatePaging,
   getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
-  mapDepartmentSlugToFeeBaseAndFastTrack,
 } from '@dmr.is/utils'
 
 import {
@@ -62,6 +56,7 @@ import {
   AdvertFeeCodesModel,
   AdvertModel,
 } from '../journal/models'
+import { IPriceService } from '../price/price.service.interface'
 import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -87,11 +82,11 @@ export class ApplicationService implements IApplicationService {
     private readonly authService: IAuthService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
     @Inject(IS3Service)
     private readonly s3Service: IS3Service,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @InjectModel(AdvertFeeCodesModel)
-    private readonly feeCodeModel: typeof AdvertFeeCodesModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using ApplicationService')
@@ -175,12 +170,11 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
     try {
-      return await this.getFeeCalculation(applicationId)
+      return await this.priceService.getFeeByApplication(applicationId)
     } catch (error) {
-      const price = DEFAULT_PRICE
-
-      return ResultWrapper.ok({
-        price: price,
+      return ResultWrapper.err({
+        code: 500,
+        message: `Fee calculation failed on application<${applicationId}>. ${error}`,
       })
     }
   }
@@ -698,55 +692,5 @@ export class ApplicationService implements IApplicationService {
       adverts: migrated,
       paging,
     })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getFeeCalculation(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<{ price: number }>> {
-    const res = (await this.getApplication(applicationId)).unwrap()
-
-    const { baseCode, fastTrackCode } = mapDepartmentSlugToFeeBaseAndFastTrack(
-      res.application.answers.advert.department.slug,
-    )
-
-    const characterCode = 'B102' // Only code where we add character length to fee calculation
-    const feeCodesArray = [baseCode, fastTrackCode, characterCode]
-    const feeCodes = await this.feeCodeModel.findAndCountAll({
-      distinct: true,
-      attributes: ['id', 'feeCode', 'feeType', 'value'],
-      where: {
-        feeCode: {
-          [Op.in]: feeCodesArray,
-        },
-      },
-      transaction,
-    })
-
-    const migrated = feeCodes.rows.map((feeCode) =>
-      applicationFeeCodeMigrate(feeCode),
-    )
-
-    const base = migrated.find((f) => f.feeCode === baseCode)?.value
-    const fastTrack = migrated.find((f) => f.feeCode === fastTrackCode)?.value
-    const charModifier = migrated.find(
-      (f) => f.feeCode === characterCode,
-    )?.value
-
-    if (!base || !fastTrack || !charModifier) {
-      return ResultWrapper.ok({ price: DEFAULT_PRICE })
-    }
-
-    const price = feeCodeCalculations({
-      base,
-      fastTrack,
-      charModifier,
-      textBody: res.application.answers?.advert.html,
-      publishDate: res.application.answers?.advert.requestedDate,
-    })
-
-    return ResultWrapper.ok({ price })
   }
 }

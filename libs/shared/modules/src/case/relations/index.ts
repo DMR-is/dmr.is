@@ -18,6 +18,7 @@ import {
   CaseCommunicationStatusModel,
   CaseStatusModel,
   CaseTagModel,
+  CaseTransactionModel,
 } from '../models'
 import { CaseHistoryModel } from '../models/case-history.model'
 
@@ -34,6 +35,9 @@ export const casesDetailedIncludes = [
   {
     model: AdminUserModel,
     include: [{ model: AdminUserRoleModel }],
+  },
+  {
+    model: CaseTransactionModel,
   },
   {
     model: CommentModel,

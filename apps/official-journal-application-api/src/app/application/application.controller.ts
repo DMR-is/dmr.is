@@ -23,6 +23,7 @@ import {
   GetComments,
   GetSignature,
   GetApplicationAdvertsQuery,
+  GetApplicationPriceQuery,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { FilesInterceptor } from '@nestjs/platform-express'
@@ -97,9 +98,10 @@ export class ApplicationController {
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @Query() query: GetApplicationPriceQuery,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getPrice(applicationId),
+      await this.applicationService.getPrice(applicationId, query.feeCodes),
     )
   }
 

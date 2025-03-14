@@ -1,0 +1,49 @@
+import {
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript'
+
+import { CaseModel } from './case.model'
+
+@Table({ tableName: 'case_transaction', timestamps: false })
+export class CaseTransactionModel extends Model {
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    allowNull: false,
+    defaultValue: DataType.UUIDV4,
+  })
+  override id!: string
+
+  @ForeignKey(() => CaseModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'case_id',
+  })
+  caseId!: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'external_reference',
+  })
+  externalReference!: string
+
+  @Column({
+    type: DataType.INTEGER,
+    field: 'total_price',
+    allowNull: true,
+  })
+  price!: number | null
+
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+    field: 'fee_codes',
+  })
+  feeCodes!: string[] | null
+}

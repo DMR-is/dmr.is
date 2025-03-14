@@ -4,7 +4,7 @@ import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdatePriceTriggerArgs = {
-  price: number
+  feeCodes: string[]
 }
 
 type SWRUpdatePriceOptions = SWRMutationConfiguration<

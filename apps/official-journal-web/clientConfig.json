@@ -221,6 +221,34 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/feeCodes": {
+      "get": {
+        "operationId": "getFeeCodes",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "excludeBaseCodes",
+            "required": false,
+            "in": "query",
+            "description": "Include base codes in response.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationFeeCodesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/categories": {
       "get": {
         "operationId": "getCategories",
@@ -3019,6 +3047,49 @@
         },
         "required": ["tags"]
       },
+      "ApplicationFeeCode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the fee code, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "feeCode": {
+            "type": "string",
+            "description": "Unique fee code identifier.",
+            "example": "A101"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the fee."
+          },
+          "feeType": {
+            "type": "string",
+            "description": "Type of fee: 'FIXED' for a set amount or 'PERCENTAGE' for a percentage-based fee.",
+            "example": "FIXED",
+            "enum": ["FIXED", "PERCENTAGE"]
+          },
+          "value": {
+            "type": "number",
+            "description": "Fee amount if fixed, or percentage multiplier if percentage-based.",
+            "example": 7000
+          }
+        },
+        "required": ["id", "feeCode", "description", "feeType", "value"]
+      },
+      "ApplicationFeeCodesResponse": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "description": "List of fee codes",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationFeeCode" }
+          }
+        },
+        "required": ["codes"]
+      },
       "Category": {
         "type": "object",
         "properties": {
@@ -3431,13 +3502,12 @@
       "UpdateCasePriceBody": {
         "type": "object",
         "properties": {
-          "price": {
-            "type": "number",
-            "description": "Price",
-            "example": 12000
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
           }
-        },
-        "required": ["price"]
+        }
       },
       "UpdatePaidBody": {
         "type": "object",
@@ -3541,6 +3611,26 @@
           "documentPdfUrl": { "type": "string", "nullable": true }
         },
         "required": ["advertHtml"]
+      },
+      "CaseTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "Reference to external source"
+          },
+          "price": { "type": "number", "description": "Advert price" },
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["id", "externalReference"]
       },
       "CaseChannel": {
         "type": "object",
@@ -4092,6 +4182,11 @@
             "example": 23000,
             "description": "The cost of the case."
           },
+          "transaction": {
+            "description": "List of advert categories.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
+          },
           "paid": {
             "type": "boolean",
             "example": false,
@@ -4174,6 +4269,7 @@
           "advertType",
           "advertCategories",
           "price",
+          "transaction",
           "paid",
           "message",
           "html",

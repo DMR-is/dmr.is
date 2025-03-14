@@ -153,18 +153,32 @@ export const getFastTrack = (date: Date) => {
   }
 }
 
-export const mapDepartmentSlugToFeeBaseAndFastTrack = (
+export const BASE_FEE_CODES = [
+  'A101',
+  'A102',
+  'A107',
+  'B101',
+  'B102',
+  'B107',
+  'C101',
+  'C102',
+  'C107',
+]
+
+export const mapDepartmentSlugToCodes = (
   slug: string,
-): { baseCode: string; fastTrackCode: string } => {
+): { baseCode: string; fastTrackCode: string; characterCode: string } => {
+  const characterCode = 'B102' // Only code where we add character length to fee calculation
+
   switch (slug) {
     case 'a-deild':
-      return { baseCode: 'A101', fastTrackCode: 'A107' }
+      return { baseCode: 'A101', fastTrackCode: 'A107', characterCode }
     case 'b-deild':
-      return { baseCode: 'B101', fastTrackCode: 'B107' }
+      return { baseCode: 'B101', fastTrackCode: 'B107', characterCode }
     case 'c-deild':
-      return { baseCode: 'C101', fastTrackCode: 'C107' }
+      return { baseCode: 'C101', fastTrackCode: 'C107', characterCode }
     default:
-      return { baseCode: 'A101', fastTrackCode: 'A107' }
+      return { baseCode: 'A101', fastTrackCode: 'A107', characterCode }
   }
 }
 
@@ -174,12 +188,14 @@ export const feeCodeCalculations = ({
   charModifier,
   textBody,
   publishDate,
+  fixedValues,
 }: {
   base: number
   fastTrack: number
   charModifier: number
   textBody: string
   publishDate: string
+  fixedValues?: number[]
 }): number => {
   const characterLength = getHtmlTextLength(textBody)
 
@@ -194,7 +210,11 @@ export const feeCodeCalculations = ({
       : 0
 
   const total = (base + characterFee) * fastTrackModifier
-  return total
+
+  // Additional cost is the cost added by the editor.
+  const additionalCost =
+    fixedValues?.reduce((sum, val) => sum + (val || 0), 0) ?? 0
+  return total + additionalCost
 }
 
 export const getHtmlTextLength = (str: string): number => {

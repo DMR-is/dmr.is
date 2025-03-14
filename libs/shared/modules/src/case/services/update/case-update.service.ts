@@ -31,6 +31,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
+import { IPriceService } from '../../../price/price.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
 import { CaseCategoriesModel, CaseModel, CaseStatusModel } from '../../models'
@@ -53,6 +54,9 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     @InjectModel(CaseCategoriesModel)
     private readonly caseCategoriesModel: typeof CaseCategoriesModel,
+
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
 
     private readonly sequelize: Sequelize,
   ) {}
@@ -425,17 +429,15 @@ export class CaseUpdateService implements ICaseUpdateService {
     body: UpdateCasePriceBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    await this.caseModel.update(
-      {
-        price: body.price,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-      },
-    )
+    try {
+      await this.priceService.updateCasePriceByCaseId(caseId, body, transaction)
+    } catch (error) {
+      return ResultWrapper.err({
+        code: 500,
+        message: `Could not create fee transaction for case<${caseId}>. ${error}`,
+        category: LOGGING_CATEGORY,
+      })
+    }
 
     return ResultWrapper.ok()
   }

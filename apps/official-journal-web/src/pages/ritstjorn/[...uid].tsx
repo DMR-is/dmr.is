@@ -10,6 +10,7 @@ import { CaseProvider } from '../../context/caseContext'
 import {
   AdminUser,
   AdvertType,
+  ApplicationFeeCode,
   CaseDetailed,
   CaseTag,
   Category,
@@ -29,6 +30,7 @@ type Props = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
+  feeCodes: ApplicationFeeCode[]
 }
 
 export default function CaseSingle({
@@ -38,6 +40,7 @@ export default function CaseSingle({
   admins,
   tags,
   types,
+  feeCodes,
 }: Props) {
   const { formatMessage } = useFormatMessage()
 
@@ -51,6 +54,7 @@ export default function CaseSingle({
       departments={departments}
       employees={admins}
       types={types}
+      feeCodes={feeCodes}
       currentUserId={currentUser?.data?.user?.id}
     >
       <Meta
@@ -114,14 +118,21 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     .withMiddleware(new AuthMiddleware(session.accessToken))
     .getTags()
 
+  const feeCodePromise = dmrClient
+    .withMiddleware(new AuthMiddleware(session.accessToken))
+    .getFeeCodes({
+      excludeBaseCodes: true,
+    })
+
   try {
-    const [caseResponse, departments, users, categories, tags] =
+    const [caseResponse, departments, users, categories, tags, feeCodes] =
       await Promise.all([
         casePromise,
         departmentsPromise,
         employeesPromise,
         categoriesPromise,
         tagPromises,
+        feeCodePromise,
       ])
 
     const types = await dmrClient.getTypes({
@@ -140,6 +151,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         admins: users.users,
         tags: tags.tags,
         types: types.types,
+        feeCodes: feeCodes.codes,
       }),
     }
   } catch (error) {

@@ -3,7 +3,7 @@ import { IsArray, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-export class UpdateCasePriceBody {
+export class GetApplicationPriceQuery {
   @ApiProperty({
     type: [String],
     required: false,

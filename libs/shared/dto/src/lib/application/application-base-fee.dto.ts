@@ -46,3 +46,12 @@ export class ApplicationFeeCode {
   })
   readonly value!: number
 }
+
+export class ApplicationFeeCodesResponse {
+  @ApiProperty({
+    description: 'List of fee codes',
+    required: true,
+    type: [ApplicationFeeCode],
+  })
+  readonly codes!: Array<ApplicationFeeCode>
+}

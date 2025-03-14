@@ -34,6 +34,7 @@ import { CaseCommunicationStatusModel } from './case-communication-status.model'
 import { CaseHistoryModel } from './case-history.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
+import { CaseTransactionModel } from './case-transaction.model'
 
 @Table({ tableName: 'case_case', timestamps: false })
 export class CaseModel extends Model {
@@ -130,9 +131,12 @@ export class CaseModel extends Model {
   })
   publishedAt!: string | null
 
+  // TODO: REMOVE PRICE FROM HERE!
   @Column({
     type: DataType.INTEGER,
     allowNull: true,
+    comment:
+      'Deprecate. This still returns the correct price, but price should be removed from here. Use transaction object instead.',
   })
   price!: number | null
 
@@ -234,6 +238,17 @@ export class CaseModel extends Model {
     through: { model: () => CaseAdditionsModel },
   })
   additions?: CaseAdditionModel[]
+
+  @ForeignKey(() => CaseTransactionModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'transaction_id',
+  })
+  transactionId!: string | null
+
+  @BelongsTo(() => CaseTransactionModel)
+  transaction?: CaseTransactionModel
 
   @HasMany(() => CaseHistoryModel)
   history!: CaseHistoryModel[]

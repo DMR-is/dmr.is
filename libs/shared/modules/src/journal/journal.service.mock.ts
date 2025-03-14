@@ -13,6 +13,7 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
+  ApplicationFeeCodesResponse,
   Category,
   CreateAdvert,
   CreateMainCategory,
@@ -97,6 +98,9 @@ export class MockJournalService implements IJournalService {
   insertMainCategory(
     model: CreateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getAllFeeCodes(): Promise<ResultWrapper<ApplicationFeeCodesResponse>> {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(

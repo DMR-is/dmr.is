@@ -14,3 +14,4 @@ INSERT INTO APPLICATION_FEE_CODES (FEE_CODE, DESCRIPTION, FEE_TYPE, VALUE) VALUE
   ('C101', 'Department C - Base fee', 'FIXED', 5000),
   ('C104', 'Lækkun vegna birtingar eldri mál', 'FIXED', 1500),
   ('C107', '80% á upphæð vegna flýtibirtingar (innan 10 daga)', 'PERCENTAGE', 1.8);
+  

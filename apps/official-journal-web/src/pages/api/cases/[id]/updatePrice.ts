@@ -6,7 +6,7 @@ import { AuthMiddleware } from '@dmr.is/middleware'
 import { createDmrClient } from '../../../../lib/api/createClient'
 
 const updatePriceBody = z.object({
-  price: z.number(),
+  feeCodes: z.array(z.string()).optional(),
 })
 
 class UpdatePriceHandler {
@@ -19,7 +19,7 @@ class UpdatePriceHandler {
       return res.status(400).end()
     }
 
-    const price = updatePriceBody.parse(req.body).price
+    const codes = updatePriceBody.parse(req.body).feeCodes ?? []
 
     const dmrClient = createDmrClient()
 
@@ -28,7 +28,7 @@ class UpdatePriceHandler {
       .updatePrice({
         id: id,
         updateCasePriceBody: {
-          price: price,
+          feeCodes: codes,
         },
       })
 

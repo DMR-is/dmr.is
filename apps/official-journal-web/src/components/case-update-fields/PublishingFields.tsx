@@ -1,4 +1,3 @@
-import debounce from 'lodash/debounce'
 import { useEffect, useState } from 'react'
 
 import {
@@ -20,22 +19,35 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
+import { OJOISelect } from '../select/OJOISelect'
 import { Spinner } from '../spinner/Spinner'
+import { OJOITag } from '../tags/OJOITag'
 
 type Props = {
   toggle: boolean
   onToggle: () => void
 }
 
+type OptionType = {
+  value: string
+  label: string
+}
+
 export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch, canEdit } = useCaseContext()
+  const { currentCase, refetch, canEdit, feeCodeOptions } = useCaseContext()
 
   const { md } = useBreakpoint()
 
   const [paid, setPaid] = useState(currentCase.paid)
   const [paidDelay, setPaidDelay] = useState(false)
+  const [selectedItems, setSelectedItems] = useState<OptionType[]>(
+    currentCase.transaction?.feeCodes?.map((code) => ({
+      value: code,
+      label: code,
+    })) || [],
+  )
 
   const [fastTrack, setFastTrack] = useState(currentCase.fastTrack)
   const [fastTrackDelay, setFastTrackDelay] = useState(false)
@@ -117,11 +129,10 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     },
   })
 
-  const debouncedUpdatePrice = debounce(updatePrice, 500)
-
-  const updatePriceHandler = (value: string) => {
-    debouncedUpdatePrice.cancel()
-    debouncedUpdatePrice({ price: parseInt(value, 10) })
+  const handleCodeSelection = (items: OptionType[]) => {
+    const feeCodes = items.map((item) => item.value)
+    setSelectedItems(items)
+    updatePrice({ feeCodes })
   }
 
   return (
@@ -180,12 +191,12 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
           <Box style={{ minWidth: md ? '308px' : '254px' }}>
             <OJOIInput
               disabled={!canEdit}
+              readOnly
               name="price"
-              defaultValue={currentCase.price}
+              value={currentCase.price}
               label={formatMessage(messages.grunnvinnsla.price)}
               type="number"
               inputMode="numeric"
-              onChange={(e) => updatePriceHandler(e.target.value)}
             />
           </Box>
           <Inline alignY="center" space={1}>
@@ -201,6 +212,53 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             />
           </Inline>
         </Inline>
+        <Box style={{ maxWidth: md ? '308px' : '254px' }}>
+          <Stack space={1}>
+            <OJOISelect
+              isDisabled={!canEdit}
+              key={selectedItems.map((item) => item.value).join('')}
+              label="Bæta við gjaldflokki"
+              placeholder="Veldu gjaldflokk"
+              options={feeCodeOptions?.filter(
+                (item) =>
+                  !selectedItems.find(
+                    (selected) => selected.value === item.value,
+                  ),
+              )}
+              value={undefined}
+              onChange={(opt) => {
+                if (opt) {
+                  if (selectedItems.find((item) => item.value === opt.value)) {
+                    handleCodeSelection(
+                      selectedItems.filter((item) => item.value !== opt.value),
+                    )
+                  } else {
+                    handleCodeSelection([...selectedItems, opt])
+                  }
+                }
+              }}
+            />
+            <Inline space={1} flexWrap="wrap">
+              {selectedItems?.map((fee, i) => (
+                <OJOITag
+                  disabled={!canEdit}
+                  key={i}
+                  variant="blue"
+                  outlined
+                  closeable
+                  onClick={() => {
+                    const updatedSelected = selectedItems.filter(
+                      (item) => item.value !== fee.value,
+                    )
+                    handleCodeSelection(updatedSelected)
+                  }}
+                >
+                  {fee.label}
+                </OJOITag>
+              ))}
+            </Inline>
+          </Stack>
+        </Box>
       </Stack>
     </AccordionItem>
   )

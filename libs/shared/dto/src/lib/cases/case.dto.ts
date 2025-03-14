@@ -31,6 +31,7 @@ import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
+import { CaseTransaction } from './case-transaction.dto'
 
 export class CaseDetailed {
   @ApiProperty({
@@ -207,6 +208,14 @@ export class CaseDetailed {
   @ValidateIf((o) => o.price !== null)
   @IsNumber()
   price!: number | null
+
+  @ApiProperty({
+    description: 'Case fee transaction.',
+    required: true,
+    type: CaseTransaction,
+    nullable: true,
+  })
+  readonly transaction?: CaseTransaction
 
   @ApiProperty({
     type: Boolean,

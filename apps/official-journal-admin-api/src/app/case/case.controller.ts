@@ -12,6 +12,7 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
   AdminUser,
+  ApplicationFeeCodesResponse,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCategory,
@@ -20,6 +21,7 @@ import {
   DefaultSearchParams,
   DepartmentEnum,
   ExternalCommentBodyDto,
+  GetAllFeeCodesParams,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -142,6 +144,17 @@ export class CaseController {
   @ApiResponse({ status: 200, type: GetTagsResponse })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
+  }
+
+  @Get('feeCodes')
+  @ApiOperation({ operationId: 'getFeeCodes' })
+  @ApiResponse({ status: 200, type: ApplicationFeeCodesResponse })
+  async feeCodes(
+    @Query() params?: GetAllFeeCodesParams,
+  ): Promise<ApplicationFeeCodesResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getAllFeeCodes(params),
+    )
   }
 
   @Get('categories')

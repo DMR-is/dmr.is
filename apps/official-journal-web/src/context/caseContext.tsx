@@ -6,6 +6,7 @@ import {
   AdminUser,
   AdvertCorrection,
   AdvertType,
+  ApplicationFeeCode,
   CaseDetailed,
   CaseStatusEnum,
   CaseTag,
@@ -36,6 +37,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
+  feeCodeOptions: StringOption[]
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -59,6 +61,7 @@ export const CaseContext = createContext<CaseState>({
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
+  feeCodeOptions: [],
 })
 
 type CaseProviderProps = {
@@ -67,6 +70,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
+  feeCodes: ApplicationFeeCode[]
   employees: AdminUser[]
   children: React.ReactNode
   currentUserId?: string
@@ -78,6 +82,7 @@ export const CaseProvider = ({
   categories,
   tags,
   types,
+  feeCodes,
   employees,
   currentUserId,
   children,
@@ -137,6 +142,16 @@ export const CaseProvider = ({
 
   const tagOptions = createOptions(tags)
 
+  const feeCodeOptions = feeCodes
+    ?.filter(
+      (item) =>
+        item.feeCode.charAt(0).toLowerCase() ===
+        currentCase.advertDepartment.slug.charAt(0).toLowerCase(),
+    )
+    ?.map((item) => {
+      return { value: item.feeCode, label: item.feeCode }
+    })
+
   const employeeOptions = createOptions(
     employees.map((e) => ({
       id: e.id,
@@ -184,6 +199,7 @@ export const CaseProvider = ({
         canUpdateAdvert,
         refetchSignature,
         isRefetchingSignature,
+        feeCodeOptions,
       }}
     >
       {children}
