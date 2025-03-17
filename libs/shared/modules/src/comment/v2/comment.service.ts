@@ -671,9 +671,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
           to: emails.join(','),
           replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
-          subject: `Ný athugasemd skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}`,
-          text: `Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber}`,
-          html: `<h2>Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða mál</a></p>`,
+          subject: `Ný athugasemd skráð á umsókn ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}`,
+          text: `Ný athugasemd hefur verið skráð á umsókn ${_case?.caseNumber}`,
+          html: `<h2>Ný athugasemd hefur verið skráð á umsókn ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða umsókn</a></p>`,
         }
 
         await this.awsService.sendMail(message)
