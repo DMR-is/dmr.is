@@ -78,6 +78,27 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
+  async getCaseInvolvedPartyByApplicationId(
+    applicationId: string,
+  ): Promise<ResultWrapper<{ involvedPartyId: string }>> {
+    const found = await this.caseModel.findOne({
+      attributes: ['involvedPartyId'],
+      where: {
+        applicationId: applicationId,
+      },
+    })
+
+    if (!found) {
+      return ResultWrapper.err({
+        code: 404,
+        message: `Case with applicationId<${applicationId}> not found`,
+      })
+    }
+
+    return ResultWrapper.ok({ involvedPartyId: found.involvedPartyId })
+  }
+
+  @LogAndHandle()
   async approveApplication(applicationId: string): Promise<ResultWrapper> {
     ResultWrapper.unwrap(
       await this.applicationService.submitApplication(

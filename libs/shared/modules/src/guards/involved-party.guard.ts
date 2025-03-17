@@ -1,14 +1,13 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
-import { CaseModel } from '../case/models'
+import { IUtilityService } from '../utility/utility.service.interface'
 
 export class InvolvedPartyGuard implements CanActivate {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
   ) {}
   async canActivate(context: ExecutionContext) {
     try {
@@ -18,29 +17,35 @@ export class InvolvedPartyGuard implements CanActivate {
 
       const applicationId = request.params.id
 
-      const theCase = await this.caseModel.findOne({
-        attributes: ['involvedPartyId'],
-        where: {
-          applicationId: applicationId,
-        },
-      })
+      const caseInvolvedPartyResult =
+        await this.utilityService.getCaseInvolvedPartyByApplicationId(
+          applicationId,
+        )
 
-      if (involvedPartyIds?.includes(theCase?.involvedPartyId)) {
-        return true
-      }
-
-      this.logger.warn(
-        theCase
-          ? `No matching involed parties found`
-          : `Case not found for user `,
-        {
+      if (!caseInvolvedPartyResult.result.ok) {
+        this.logger.warn('Case not found for user', {
           context: 'InvolvedPartyGuard',
           category: 'involved-party-guard',
           applicationId: applicationId,
           userInvolvedParties: involvedPartyIds,
-          caseInvolvedParty: theCase?.involvedPartyId,
-        },
-      )
+        })
+        return false
+      }
+
+      const caseInvoledPartyId =
+        caseInvolvedPartyResult.result.value.involvedPartyId
+
+      if (involvedPartyIds?.includes(caseInvoledPartyId)) {
+        return true
+      }
+
+      this.logger.warn(`No matching involed parties found`, {
+        context: 'InvolvedPartyGuard',
+        category: 'involved-party-guard',
+        applicationId: applicationId,
+        userInvolvedParties: involvedPartyIds,
+        caseInvolvedParty: caseInvoledPartyId,
+      })
       return false
     } catch (error) {
       this.logger.error('Error in InvolvedPartyGuard', {
