@@ -1,4 +1,3 @@
- 
 export default {
   displayName: 'constants',
   preset: '../../../jest.preset.js',

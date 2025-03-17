@@ -4,10 +4,10 @@ import { UserContext } from '../context/userContext'
 
 export const useUserContext = () => {
   if (!UserContext) {
-    throw new Error('useMainUserContext must be used within a CaseProvider')
+    throw new Error('useUserContext must be used within a UserProvider')
   }
 
-  const { ...props } = useContext(UserContext)
+  const userContext = useContext(UserContext)
 
-  return { ...props }
+  return { ...userContext }
 }
