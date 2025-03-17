@@ -10,6 +10,7 @@ import {
   UserModule,
   UtilityModule,
 } from '@dmr.is/modules'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import {
   MiddlewareConsumer,
@@ -17,6 +18,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationController } from './application/application.controller'
@@ -35,7 +37,12 @@ import { ApplicationController } from './application/application.controller'
     UserModule,
   ],
   controllers: [ApplicationController, AdvertTypeController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
