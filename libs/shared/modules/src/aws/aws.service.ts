@@ -1,3 +1,5 @@
+import nodemailer, { SentMessageInfo } from 'nodemailer'
+import Mail from 'nodemailer/lib/mailer'
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
@@ -8,6 +10,7 @@ import {
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
+import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ONE_HOUR } from '@dmr.is/constants'
@@ -23,7 +26,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { IS3Service } from './s3.service.interface'
+import { IS3Service } from './aw'
 
 const LOGGING_CATEGORY = 's3-service'
 
@@ -41,6 +44,14 @@ export class S3Service implements IS3Service {
       ? fromIni({ profile: process.env.AWS_CREDENTIALS_SOURCE })
       : undefined,
   })
+
+  private readonly ses = new SESClient({
+    region: process.env.AWS_REGION ?? 'eu-west-1',
+    credentials: process.env.AWS_CREDENTIALS_SOURCE
+      ? fromIni({ profile: process.env.AWS_CREDENTIALS_SOURCE })
+      : undefined,
+  })
+
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     if (!this.client) {
       throw new Error(
@@ -284,5 +295,13 @@ export class S3Service implements IS3Service {
     })
 
     return ResultWrapper.ok(url)
+  }
+
+  @LogAndHandle()
+  async sendMail(message: Mail.Options): Promise<SentMessageInfo> {
+    const transporter = nodemailer.createTransport({
+      SES: { ses: this.ses, aws: { SendRawEmailCommand } },
+    })
+    return ResultWrapper.ok(await transporter.sendMail(message))
   }
 }

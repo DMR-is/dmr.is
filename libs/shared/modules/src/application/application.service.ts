@@ -58,7 +58,7 @@ import {
   AdvertDepartmentModel,
   AdvertModel,
 } from '../journal/models'
-import { IS3Service } from '../s3/s3.service.interface'
+import { IS3Service } from '../aws/aw'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
@@ -93,9 +93,8 @@ export class ApplicationService implements IApplicationService {
   async getApplicationCase(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+    const caseLookup =
+      await this.utilityService.caseLookupByApplicationId(applicationId)
 
     if (!caseLookup.result.ok) {
       return ResultWrapper.err({
@@ -562,9 +561,8 @@ export class ApplicationService implements IApplicationService {
   ): Promise<ResultWrapper> {
     let caseId: string | null = null
     try {
-      const caseLookup = await this.utilityService.caseLookupByApplicationId(
-        applicationId,
-      )
+      const caseLookup =
+        await this.utilityService.caseLookupByApplicationId(applicationId)
 
       if (caseLookup.result.ok) {
         caseId = caseLookup.result.value.id

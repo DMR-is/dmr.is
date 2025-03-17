@@ -19,7 +19,7 @@ import { AttachmentsModule } from '../attachments/attachments.module'
 import caseModels from '../case/models'
 import commentModels from '../comment/v1/models'
 import advertModels from '../journal/models'
-import { S3Module } from '../s3/s3.module'
+import { S3Module } from '../aws/aws'
 import { SignatureModule } from '../signature/signature.module'
 
 @Module({

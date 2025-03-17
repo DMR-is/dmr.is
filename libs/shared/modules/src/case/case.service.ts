@@ -69,6 +69,7 @@ import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
+import { IAWSService } from '../aws/aws.service.interface'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -78,7 +79,6 @@ import {
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
-import { IS3Service } from '../s3/s3.service.interface'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
@@ -112,7 +112,7 @@ export class CaseService implements ICaseService {
     private readonly journalService: IJournalService,
     @Inject(ICaseCreateService)
     private readonly createService: ICaseCreateService,
-    @Inject(forwardRef(() => IS3Service)) private readonly s3: IS3Service,
+    @Inject(forwardRef(() => IAWSService)) private readonly s3: IAWSService,
 
     @Inject(forwardRef(() => IAttachmentService))
     private readonly attachmentService: IAttachmentService,

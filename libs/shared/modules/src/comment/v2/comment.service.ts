@@ -1,9 +1,7 @@
-import nodemailer from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -680,21 +678,16 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     if (emails?.length) {
       try {
         const message: Mail.Options = {
-          from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
+          from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
           to: emails.join(','),
-          replyTo: 'noreply@stjornartidindi.is',
+          replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
           subject: `Ný athugasemd skráð á mál ${caseComment?.caseNumber}`,
           text: `Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}`,
           html: `<h2>Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}</h2><p><a href="https://ritstjorn.stjornartidindi.is/ritstjorn/${caseComment?.id}" target="_blank">Skoða mál</a></p>`,
         }
-
-        const ses = new SESClient()
-        const transporter = nodemailer.createTransport({
-          SES: { ses: ses, aws: { SendRawEmailCommand } },
-        })
-        await transporter.sendMail(message)
       } catch (error) {
         this.logger.warn(`Email not sent`, {
+          error,
           caseId,
           commentId,
           context: LOGGING_CONTEXT,
