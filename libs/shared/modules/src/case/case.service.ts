@@ -189,7 +189,7 @@ export class CaseService implements ICaseService {
         typeId: caseLookup.advertTypeId,
         statusId: caseLookup.statusId,
         involvedPartyId: caseLookup.involvedPartyId,
-        adminUserId: caseLookup.assignedUserId,
+        userId: caseLookup.assignedUserId,
         title: caseLookup.advertTitle,
         html: caseLookup.html,
         requestedPublicationDate: new Date(
