@@ -51,6 +51,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
+import { IAWSService } from '../aws/aws.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
 import {
@@ -58,7 +59,6 @@ import {
   AdvertDepartmentModel,
   AdvertModel,
 } from '../journal/models'
-import { IS3Service } from '../aws/aw'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
@@ -83,8 +83,8 @@ export class ApplicationService implements IApplicationService {
     private readonly authService: IAuthService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
-    @Inject(IS3Service)
-    private readonly s3Service: IS3Service,
+    @Inject(IAWSService)
+    private readonly s3Service: IAWSService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {
