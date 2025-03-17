@@ -1,5 +1,6 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
+import { IUserService } from '@dmr.is/modules'
 import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
@@ -31,6 +32,10 @@ describe('StatisticsController', () => {
           },
         },
         {
+          provide: IUserService,
+          useValue: jest.fn(),
+        },
+        {
           provide: IStatisticsService,
           useClass: MockStatisticsService,
         },
@@ -45,6 +50,7 @@ describe('StatisticsController', () => {
         const results = await controller.department(
           department.slug as DepartmentSlugEnum,
         )
+
         expect(results.total).toBeGreaterThanOrEqual(0)
       })
     })
