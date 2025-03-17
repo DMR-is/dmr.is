@@ -145,7 +145,7 @@ export const authOptions: AuthOptions = {
     IdentityServer4({
       id: identityServerConfig.id,
       name: identityServerConfig.name,
-      clientId: identityServerConfig.clientId,
+      clientId: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID ?? '',
       clientSecret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
       issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {
