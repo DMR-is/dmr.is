@@ -33,14 +33,14 @@ export const RitstjornTable = () => {
             field: 'birting',
             children: 'Birting',
             onSort: handleSort,
-            sortBy: params.sortBy,
+            sortBy: params.sortBy ?? undefined,
             direction: params.direction,
           },
           {
             field: 'skraning',
             children: 'Skráning',
             onSort: handleSort,
-            sortBy: params.sortBy,
+            sortBy: params.sortBy ?? undefined,
             direction: params.direction,
           },
           {
@@ -67,8 +67,8 @@ export const RitstjornTable = () => {
         pageSize: 10,
         totalItems: 73,
         totalPages: 8,
+        onPaginate: (page) => setParams({ page }),
       }}
-      onPaginate={(page) => setParams({ page })}
     />
   )
 }
