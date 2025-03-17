@@ -11,6 +11,7 @@ import {
   SharedJournalModule,
   SignatureController,
   SignatureModule,
+  UserController,
   UserModule,
 } from '@dmr.is/modules'
 
@@ -36,6 +37,7 @@ import { CaseController } from './case.controller'
     AdvertTypeController,
     InstitutionController,
     InstitutionAdminController,
+    UserController,
   ],
 })
 export class CaseModule {}

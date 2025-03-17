@@ -7,11 +7,11 @@ import { AdvertInvolvedPartyModel } from '../journal/models'
 import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
-import { UserController } from './user.controller'
 import { UserService } from './user.service'
 import { IUserService } from './user.service.interface'
 
 export { IUserService } from './user.service.interface'
+export { UserController } from './user.controller'
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ export { IUserService } from './user.service.interface'
     ]),
     LoggingModule,
   ],
-  controllers: [UserController],
+  controllers: [],
   providers: [
     {
       provide: IUserService,

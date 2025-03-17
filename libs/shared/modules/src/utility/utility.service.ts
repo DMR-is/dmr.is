@@ -13,6 +13,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import {
+  CaseAdditionModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -66,9 +67,8 @@ export class UtilityService implements IUtilityService {
   async institutionLookup(
     institutionId: string,
   ): Promise<ResultWrapper<AdvertInvolvedPartyModel>> {
-    const institution = await this.advertInvolvedPartyModel.findByPk(
-      institutionId,
-    )
+    const institution =
+      await this.advertInvolvedPartyModel.findByPk(institutionId)
 
     if (!institution) {
       throw new NotFoundException(`Institution<${institutionId}> not found`)
@@ -389,6 +389,9 @@ export class UtilityService implements IUtilityService {
         ...casesDetailedIncludes,
         {
           model: SignatureModel,
+        },
+        {
+          model: CaseAdditionModel,
         },
       ],
 

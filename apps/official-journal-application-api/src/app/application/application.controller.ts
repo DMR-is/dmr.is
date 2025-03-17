@@ -4,10 +4,11 @@ import {
   ONE_MEGA_BYTE,
   UserRoleEnum,
 } from '@dmr.is/constants'
-import { CurrentUser, Roles, WithCase } from '@dmr.is/decorators'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   IApplicationService,
+  InvolvedPartyGuard,
   ISignatureService,
   IUserService,
   RoleGuard,
@@ -57,6 +58,7 @@ import {
 } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiNoContentResponse,
@@ -72,7 +74,7 @@ import 'multer'
   version: '1',
 })
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@WithCase(false)
+@ApiBearerAuth()
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
   constructor(
@@ -133,7 +135,7 @@ export class ApplicationController {
   @Get(':id/comments')
   @ApiOperation({ operationId: 'getComments' })
   @ApiResponse({ status: 200, type: GetComments })
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async getComments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ): Promise<GetComments> {
@@ -145,7 +147,7 @@ export class ApplicationController {
   @Post(':id/comments')
   @ApiOperation({ operationId: 'postComment' })
   @ApiNoContentResponse()
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async postComment(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Body() commentBody: PostApplicationComment,
@@ -293,7 +295,7 @@ export class ApplicationController {
   @Get(':id/case')
   @ApiOperation({ operationId: 'getApplicationCase' })
   @ApiResponse({ type: GetApplicationCaseResponse })
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async getApplicationCase(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ) {
