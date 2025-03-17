@@ -4,12 +4,13 @@ import {
   AdvertTypeController,
   AdvertTypeModule,
   ApplicationModule,
-  ApplicationUserModule,
   HealthModule,
   PdfModule,
   SignatureModule,
+  UserModule,
   UtilityModule,
 } from '@dmr.is/modules'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import {
   MiddlewareConsumer,
@@ -17,6 +18,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationController } from './application/application.controller'
@@ -30,24 +32,22 @@ import { ApplicationController } from './application/application.controller'
     SignatureModule,
     HealthModule,
     PdfModule,
-    ApplicationUserModule,
     UtilityModule,
     AdvertTypeModule,
+    UserModule,
   ],
   controllers: [ApplicationController, AdvertTypeController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LogRequestMiddleware)
       .forRoutes({ path: '/**', method: RequestMethod.ALL })
-    // .apply(WithAuthMiddleware)
-    // .exclude({
-    //   method: RequestMethod.ALL,
-    //   path: '/health',
-    //   version: '1',
-    // })
-    // .forRoutes({ path: '/**', method: RequestMethod.ALL })
   }
 }

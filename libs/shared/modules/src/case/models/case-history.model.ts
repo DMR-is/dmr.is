@@ -8,12 +8,12 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
 } from '../../journal/models'
+import { UserModel } from '../../user/models/user.model'
 import { CaseModel } from './case.model'
 import { CaseStatusModel } from './case-status.model'
 
@@ -67,7 +67,7 @@ export class CaseHistoryModel extends Model {
   })
   involvedPartyId!: string
 
-  @ForeignKey(() => AdminUserModel)
+  @ForeignKey(() => UserModel)
   @Column({
     type: DataType.UUID,
     field: 'admin_user_id',
@@ -118,6 +118,6 @@ export class CaseHistoryModel extends Model {
   @BelongsTo(() => AdvertInvolvedPartyModel)
   involvedParty!: AdvertInvolvedPartyModel
 
-  @BelongsTo(() => AdminUserModel)
-  adminUser!: AdminUserModel | null
+  @BelongsTo(() => UserModel)
+  adminUser!: UserModel | null
 }

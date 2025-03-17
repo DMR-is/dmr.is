@@ -1,7 +1,7 @@
 import { ROLES_KEY } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AdminUserRoleTitle } from '@dmr.is/types'
+import { UserRoleTitle } from '@dmr.is/types'
 
 import {
   CanActivate,
@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { IAdminUserService } from '../admin-user/admin-user.service.interface'
+import { IUserService } from '../user/user.service.interface'
 
 const LOGGING_CATEGORY = 'role-guard'
 const LOGGING_CONTEXT = 'RoleGuard'
@@ -23,22 +23,22 @@ export class RoleGuard implements CanActivate {
     private readonly reflector: Reflector,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
-    @Inject(IAdminUserService)
-    private readonly adminUserService: IAdminUserService,
+    @Inject(IUserService)
+    private readonly userService: IUserService,
   ) {}
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
 
-    let requiredRoles = this.reflector.get<AdminUserRoleTitle[] | undefined>(
+    let requiredRoles = this.reflector.get<UserRoleTitle[] | undefined>(
       ROLES_KEY,
       context.getHandler(),
     )
 
     if (!requiredRoles) {
       // check if the controller has role metadata
-      requiredRoles = this.reflector.get<AdminUserRoleTitle[] | undefined>(
+      requiredRoles = this.reflector.get<UserRoleTitle[] | undefined>(
         ROLES_KEY,
         context.getClass(),
       )
@@ -46,7 +46,7 @@ export class RoleGuard implements CanActivate {
 
     try {
       // Check if user has required roles
-      const userLookup = await this.adminUserService.getUserByNationalId(
+      const userLookup = await this.userService.getUserByNationalId(
         request.user.nationalId,
       )
 
@@ -61,9 +61,8 @@ export class RoleGuard implements CanActivate {
 
       const user = userLookup.result.value.user
 
-      // if user has any role that is required, return true
       const hasRole = requiredRoles?.some((role) =>
-        user.roles.some((userRole) => userRole.title === role),
+        user.role.title === role ? true : false,
       )
 
       if (!hasRole) {
@@ -77,6 +76,7 @@ export class RoleGuard implements CanActivate {
       }
 
       request.user = user
+      request.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
     } catch (error) {

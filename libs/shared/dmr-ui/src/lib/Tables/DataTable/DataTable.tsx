@@ -1,67 +1,65 @@
-import { Pagination, Stack, Table as T } from '@island.is/island-ui/core'
+import {
+  Pagination,
+  SkeletonLoader,
+  Stack,
+  Table as T,
+} from '@island.is/island-ui/core'
 
-import { DataTableCell } from './DataTableCell'
-import { DataTableHeadCell } from './DataTableHeadCell'
+import { DataTableBody } from './DataTableBody'
+import { DataTableColumn } from './DataTableColumn'
+import {
+  DataTableColumnProps,
+  DataTableProps,
+  DataTableRowProps,
+} from './types'
 
-export type DataTableColumn = {
-  field: string
-  fluid?: boolean
-  children: React.ReactNode
-  direction?: 'asc' | 'desc'
-  onSort?: (field: string) => void
-}
-
-export type DataTableProps<T extends readonly DataTableColumn[]> = {
-  columns: T
-  rows: Array<{
-    [K in T[number]['field']]: React.ReactNode
-  }>
-  paging?: {
-    page: number
-    pageSize: number
-    totalItems: number
-    totalPages: number
-  }
-  onPaginate?: (page: number) => void
-}
-
-export const DataTable = <T extends readonly DataTableColumn[]>({
+export const DataTable = <T extends readonly DataTableColumnProps[]>({
   columns,
   rows,
   paging,
-  onPaginate,
+  loading = false,
+  layout = 'auto',
 }: DataTableProps<T>) => {
+  if (loading) {
+    return (
+      <SkeletonLoader
+        repeat={5}
+        height={44}
+        space={1}
+        borderRadius="standard"
+      />
+    )
+  }
+
+  const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
+
   return (
     <Stack space={4}>
-      <T.Table>
+      <T.Table style={{ tableLayout: layout }}>
         <T.Head>
           <T.Row>
-            {columns.map((column) => (
-              <DataTableHeadCell {...column} />
+            {columns.map((column, i) => (
+              <DataTableColumn key={i} {...column} />
             ))}
+            {hasExpandableRows && <DataTableColumn width="65px" field="" />}
           </T.Row>
         </T.Head>
-        <T.Body>
-          {rows.map((row, rowIndex) => (
-            <T.Row key={rowIndex}>
-              {columns.map((column) => {
-                const children = row[column.field as keyof typeof row]
-                return (
-                  <DataTableCell key={column.field}>{children}</DataTableCell>
-                )
-              })}
-            </T.Row>
-          ))}
-        </T.Body>
+        <DataTableBody
+          rows={rows as DataTableRowProps<T>[]}
+          columns={columns}
+        />
       </T.Table>
-      {paging && onPaginate && (
+      {paging && (
         <Pagination
           page={paging.page}
           itemsPerPage={paging.pageSize}
           totalItems={paging.totalItems}
           totalPages={paging.totalPages}
           renderLink={(page, className, children) => (
-            <button className={className} onClick={() => onPaginate(page)}>
+            <button
+              className={className}
+              onClick={() => paging.onPaginate && paging.onPaginate(page)}
+            >
               {children}
             </button>
           )}

@@ -10,7 +10,6 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
@@ -24,6 +23,7 @@ import {
   AdvertModel,
 } from '../../journal/models'
 import { SignatureModel } from '../../signature/models/signature.model'
+import { UserModel } from '../../user/models/user.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
@@ -113,8 +113,8 @@ export class CaseModel extends Model {
   })
   assignedUserId!: string | null
 
-  @BelongsTo(() => AdminUserModel, 'assigned_user_id')
-  assignedUser?: AdminUserModel
+  @BelongsTo(() => UserModel, 'assigned_user_id')
+  assignedUser?: UserModel
 
   @Column({ type: DataType.UUID, field: 'case_communication_status_id' })
   communicationStatusId!: string

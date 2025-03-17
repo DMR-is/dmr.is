@@ -2,7 +2,7 @@ import { logger } from '@dmr.is/logging'
 
 import { HttpException } from '@nestjs/common'
 
-export type AdminUserRoleTitle = 'Admin' | 'Editor'
+export type UserRoleTitle = 'Ritstjóri' | 'Fulltrúi' | 'Innsendandi'
 
 export type GenericError = { code: number; message: string }
 

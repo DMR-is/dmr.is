@@ -7,7 +7,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-@Table({ tableName: 'advert_involved_party', timestamps: false })
+@Table({ tableName: 'advert_involved_party' })
 export class InstitutionModel extends Model {
   @Column({
     type: DataType.UUIDV4,
@@ -16,6 +16,9 @@ export class InstitutionModel extends Model {
     defaultValue: DataType.UUIDV4,
   })
   override id!: string
+
+  @Column({ allowNull: false })
+  nationalId!: string
 
   @Column({ allowNull: false })
   title!: string

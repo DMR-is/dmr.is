@@ -20,6 +20,9 @@ export class AdvertInvolvedPartyModel extends Model {
   @Column({ allowNull: false })
   title!: string
 
+  @Column({ allowNull: false, field: 'national_id' })
+  nationalId!: string
+
   @Column({ allowNull: false })
   slug!: string
 
