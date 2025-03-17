@@ -1,3 +1,4 @@
+import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -27,15 +28,16 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AdminUserModel } from '../../admin-user/models/admin-user.model'
+import { AdvertTypeModel } from '../../advert-type/models'
 import { ApplicationUserModel } from '../../application-user/models'
-import { CaseModel, CaseStatusModel } from '../../case/models'
+import { IAWSService } from '../../aws/aws.service.interface'
+import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { commentMigrate } from './migrations/comment.migrate'
 import { CaseActionModel } from './models/case-action.model'
 import { CommentModel } from './models/comment.model'
 import { CommentsModel } from './models/comments.model'
 import { ICommentServiceV2 } from './comment.service.interface'
-
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 
@@ -53,6 +55,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     private readonly commentsModel: typeof CommentsModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
+    @Inject(IAWSService)
+    private readonly awsService: IAWSService,
   ) {}
 
   @LogAndHandle()
@@ -660,6 +664,46 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     ResultWrapper.unwrap(
       await this.addCommentToCase(caseId, commentId, transaction),
     )
+
+    // send email via SES
+    const _case = await this.caseModel.findByPk(caseId, {
+      attributes: ['caseNumber', 'id', 'advertTitle'],
+      include: [
+        { model: CaseChannelModel },
+        { model: AdvertTypeModel, attributes: ['title'] },
+      ],
+      transaction,
+    })
+
+    const emails = _case?.channels?.flatMap((item) => {
+      if (!item.email) {
+        return []
+      }
+      return [item.email]
+    })
+
+    if (emails?.length) {
+      try {
+        const message: Mail.Options = {
+          from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
+          to: emails.join(','),
+          replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
+          subject: `Ný athugasemd skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}`,
+          text: `Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber}`,
+          html: `<h2>Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða mál</a></p>`,
+        }
+
+        await this.awsService.sendMail(message)
+      } catch (error) {
+        this.logger.warn(`Email not sent`, {
+          error,
+          caseId,
+          commentId,
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
     return ResultWrapper.ok({ comment: migrated })
   }
 

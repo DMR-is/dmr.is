@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
+import { IAWSService } from '../aws/aws.service.interface'
 import { ICommentServiceV2 } from '../comment/v2'
 import { IJournalService } from '../journal'
 import {
@@ -17,7 +18,6 @@ import {
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
-import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
@@ -43,7 +43,7 @@ describe('CaseService', () => {
   let journalService: IJournalService
   let signatureService: ISignatureService
   let attachmentService: IAttachmentService
-  let s3Service: IS3Service
+  let s3Service: IAWSService
   let caseModel: CaseModel
   let caseHistoryModel: CaseHistoryModel
   let advertModel: AdvertModel
@@ -94,7 +94,7 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: IS3Service,
+          provide: IAWSService,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -211,7 +211,7 @@ describe('CaseService', () => {
     journalService = app.get<IJournalService>(IJournalService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
     signatureService = app.get<ISignatureService>(ISignatureService)
-    s3Service = app.get<IS3Service>(IS3Service)
+    s3Service = app.get<IAWSService>(IAWSService)
     caseCreateService = app.get<ICaseCreateService>(ICaseCreateService)
     caseUpdateService = app.get<ICaseUpdateService>(ICaseUpdateService)
     advertModel = app.get<AdvertModel>(getModelToken(AdvertModel))

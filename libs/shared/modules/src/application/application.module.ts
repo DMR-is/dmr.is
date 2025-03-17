@@ -16,10 +16,10 @@ export { ApplicationService } from './application.service'
 
 import { ApplicationUserModule } from '../application-user/application-user.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
+import { AwsModule } from '../aws/aws'
 import caseModels from '../case/models'
 import commentModels from '../comment/v1/models'
 import advertModels from '../journal/models'
-import { S3Module } from '../s3/s3.module'
 import { SignatureModule } from '../signature/signature.module'
 
 @Module({
@@ -29,7 +29,7 @@ import { SignatureModule } from '../signature/signature.module'
       ...advertModels,
       ...commentModels,
     ]),
-    S3Module,
+    AwsModule,
     LoggingModule,
     AuthModule,
     AttachmentsModule,
