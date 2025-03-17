@@ -699,15 +699,9 @@ export class JournalService implements IJournalService {
       ],
     })
 
-
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
 
-    const paging = generatePaging(
-      mapped,
-      page,
-      pageSize,
-      categories.count,
-    )
+    const paging = generatePaging(mapped, page, pageSize, categories.count)
 
     return ResultWrapper.ok({
       categories: mapped,
@@ -736,14 +730,26 @@ export class JournalService implements IJournalService {
     }
 
     const ad = advertMigrate(advert)
+
+    let html = advert.documentHtml
+    if (advert.isLegacy) {
+      try {
+        html = dirtyClean(advert.documentHtml as HTMLText)
+      } catch {
+        this.logger.warn("Dirty clean failed for advert's HTML", {
+          category: LOGGING_CATEGORY,
+          metadata: { advertId: id },
+        })
+        html = advert.documentHtml
+      }
+    }
+
     return ResultWrapper.ok({
       advert: {
         ...ad,
         document: {
           isLegacy: advert.isLegacy,
-          html: advert.isLegacy
-            ? dirtyClean(advert.documentHtml as HTMLText)
-            : advert.documentHtml,
+          html,
           pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
         },
       },

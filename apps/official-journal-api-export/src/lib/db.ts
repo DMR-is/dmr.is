@@ -300,8 +300,8 @@ export async function savePDF(document: Document) {
     throw new Error('S3 client not initialized')
   }
 
-  const bucket = 'official-journal-application-files-bucket-dev'
-  const key = `adverts/${document.FileName}`
+  const bucket = process.env.ADVERTS_CDN_URL
+  const key = `${document.FileName}`
   if (!bucket) {
     throw new Error('AWS_BUCKET_NAME not set')
   }
@@ -315,7 +315,7 @@ export async function savePDF(document: Document) {
     const fileCheck = await client.send(command)
     //console.log(`File exists: ${key}`)
     //console.log(`https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`)
-    return `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
+    return `${bucket}/adverts/${key}`
     //https://official-journal-application-files-bucket-dev.s3.eu-west-1.amazonaws.com/adverts/A_nr_1_2006.pdf
   } catch (error: any) {
     console.log(`File does not exist: ${key}, let upload`)
