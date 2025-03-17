@@ -1,8 +1,6 @@
 import { JWT } from 'next-auth/jwt'
 import { logger } from '@dmr.is/logging'
 
-import { identityServerConfig } from '../identityProvider'
-
 const LOGGING_CATEGORY = 'refreshAccessToken'
 
 export const refreshAccessToken = async (token: JWT) => {
@@ -22,7 +20,7 @@ export const refreshAccessToken = async (token: JWT) => {
         },
         method: 'POST',
         body: new URLSearchParams({
-          client_id: identityServerConfig.clientId,
+          client_id: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID!,
           client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
           grant_type: 'refresh_token',
           redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL ?? '',
