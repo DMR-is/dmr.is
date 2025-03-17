@@ -1,3 +1,4 @@
+import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -935,6 +936,23 @@ export class CaseService implements ICaseService {
       },
     )
 
+    const emails = caseToPublish?.channels?.flatMap((item) => {
+      if (!item.email) {
+        return []
+      }
+      return [item.email]
+    })
+
+    const message: Mail.Options = {
+      from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
+      to: emails?.join(','),
+      replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
+      subject: `Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
+      text: `Mál ${caseToPublish?.caseNumber} hefur verið útgefið`,
+      html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
+    }
+
+    await this.s3.sendMail(message)
     return ResultWrapper.ok()
   }
 

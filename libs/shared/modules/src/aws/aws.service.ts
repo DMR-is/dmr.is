@@ -26,7 +26,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { IS3Service } from './aw'
+import { IAWSService } from './aws.service.interface'
 
 const LOGGING_CATEGORY = 's3-service'
 
@@ -34,10 +34,10 @@ const LOGGING_CATEGORY = 's3-service'
  * Service class for interacting with the S3 bucket. Handles all S3-related operations.
  * For now it only handles uploads for the attachment bucket.
  * Maybe in the future add bucket as a parameter to the methods
- * @implements IS3Service
+ * @implements IAWSService
  */
 @Injectable()
-export class S3Service implements IS3Service {
+export class AWSService implements IAWSService {
   private readonly client = new S3Client({
     region: process.env.AWS_REGION ?? 'eu-west-1',
     credentials: process.env.AWS_CREDENTIALS_SOURCE

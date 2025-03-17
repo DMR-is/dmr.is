@@ -28,7 +28,9 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AdminUserModel } from '../../admin-user/models/admin-user.model'
+import { AdvertTypeModel } from '../../advert-type/models'
 import { ApplicationUserModel } from '../../application-user/models'
+import { IAWSService } from '../../aws/aws.service.interface'
 import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { commentMigrate } from './migrations/comment.migrate'
@@ -53,6 +55,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     private readonly commentsModel: typeof CommentsModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
+    @Inject(IAWSService)
+    private readonly awsService: IAWSService,
   ) {}
 
   @LogAndHandle()
@@ -662,13 +666,16 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     )
 
     // send email via SES
-    const caseComment = await this.caseModel.findByPk(caseId, {
-      attributes: ['caseNumber', 'id'],
-      include: [{ model: CaseChannelModel }],
+    const _case = await this.caseModel.findByPk(caseId, {
+      attributes: ['caseNumber', 'id', 'advertTitle'],
+      include: [
+        { model: CaseChannelModel },
+        { model: AdvertTypeModel, attributes: ['title'] },
+      ],
       transaction,
     })
 
-    const emails = caseComment?.channels?.flatMap((item) => {
+    const emails = _case?.channels?.flatMap((item) => {
       if (!item.email) {
         return []
       }
@@ -681,10 +688,12 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
           to: emails.join(','),
           replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
-          subject: `Ný athugasemd skráð á mál ${caseComment?.caseNumber}`,
-          text: `Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}`,
-          html: `<h2>Ný athugasemd hefur verið skráð á mál ${caseComment?.caseNumber}</h2><p><a href="https://ritstjorn.stjornartidindi.is/ritstjorn/${caseComment?.id}" target="_blank">Skoða mál</a></p>`,
+          subject: `Ný athugasemd skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}`,
+          text: `Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber}`,
+          html: `<h2>Ný athugasemd hefur verið skráð á mál ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða mál</a></p>`,
         }
+
+        await this.awsService.sendMail(message)
       } catch (error) {
         this.logger.warn(`Email not sent`, {
           error,
