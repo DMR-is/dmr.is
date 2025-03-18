@@ -11,6 +11,7 @@ export function applicationFeeCodeMigrate(
     description: model.description,
     feeType: model.feeType,
     value: model.value,
+    department: model.department,
   }
   return result
 }

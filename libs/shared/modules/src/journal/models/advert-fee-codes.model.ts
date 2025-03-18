@@ -15,6 +15,9 @@ export class AdvertFeeCodesModel extends Model {
   feeCode!: string
 
   @Column({ type: DataType.STRING, allowNull: false })
+  department!: string
+
+  @Column({ type: DataType.STRING, allowNull: false })
   description!: string
 
   @Column({

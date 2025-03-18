@@ -46,4 +46,31 @@ export class CaseTransactionModel extends Model {
     field: 'fee_codes',
   })
   feeCodes!: string[] | null
+
+  @Column({
+    type: DataType.INTEGER,
+    field: 'custom_unit_base_count',
+    allowNull: true,
+  })
+  customBaseCount!: number | null
+
+  @Column({
+    type: DataType.INTEGER,
+    field: 'custom_unit_additional_doc_count',
+    allowNull: true,
+  })
+  customDocCount!: number | null
+
+  @Column({
+    type: DataType.STRING,
+    field: 'image_tier_code',
+    allowNull: true,
+  })
+  imageTier!: string | null
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: true,
+  })
+  paid!: boolean | null
 }

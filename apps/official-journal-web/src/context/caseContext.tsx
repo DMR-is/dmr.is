@@ -37,7 +37,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
-  feeCodeOptions: StringOption[]
+  feeCodeOptions: ApplicationFeeCode[]
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -142,15 +142,11 @@ export const CaseProvider = ({
 
   const tagOptions = createOptions(tags)
 
-  const feeCodeOptions = feeCodes
-    ?.filter(
-      (item) =>
-        item.feeCode.charAt(0).toLowerCase() ===
-        currentCase.advertDepartment.slug.charAt(0).toLowerCase(),
-    )
-    ?.map((item) => {
-      return { value: item.feeCode, label: item.feeCode }
-    })
+  const feeCodeOptions = feeCodes?.filter(
+    (item) =>
+      item.feeCode.charAt(0).toLowerCase() ===
+      currentCase.advertDepartment.slug.charAt(0).toLowerCase(),
+  )
 
   const employeeOptions = createOptions(
     employees.map((e) => ({

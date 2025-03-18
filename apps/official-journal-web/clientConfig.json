@@ -3069,15 +3069,35 @@
             "type": "string",
             "description": "Type of fee: 'FIXED' for a set amount or 'PERCENTAGE' for a percentage-based fee.",
             "example": "FIXED",
-            "enum": ["FIXED", "PERCENTAGE"]
+            "enum": [
+              "BASE",
+              "FIXED",
+              "ADDITIONAL_DOC",
+              "FAST_TRACK",
+              "BASE_MODIFIER",
+              "IMAGE_TIER",
+              "LOWERED",
+              "PERCENTAGE"
+            ]
           },
           "value": {
             "type": "number",
             "description": "Fee amount if fixed, or percentage multiplier if percentage-based.",
             "example": 7000
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the fee code is associated with."
           }
         },
-        "required": ["id", "feeCode", "description", "feeType", "value"]
+        "required": [
+          "id",
+          "feeCode",
+          "description",
+          "feeType",
+          "value",
+          "department"
+        ]
       },
       "ApplicationFeeCodesResponse": {
         "type": "object",
@@ -3506,6 +3526,19 @@
             "description": "Fee codes to get the price for",
             "type": "array",
             "items": { "type": "string" }
+          },
+          "imageTier": { "type": "string", "description": "Tier of the image" },
+          "customBaseDocumentCount": {
+            "type": "number",
+            "description": "Base document count"
+          },
+          "customAdditionalDocCount": {
+            "type": "number",
+            "description": "Additional document count"
+          },
+          "customBodyLengthCount": {
+            "type": "number",
+            "description": "Length of the body"
           }
         }
       },
@@ -3623,14 +3656,28 @@
             "type": "string",
             "description": "Reference to external source"
           },
+          "imageTier": { "type": "string", "description": "Image tier code" },
           "price": { "type": "number", "description": "Advert price" },
           "feeCodes": {
             "description": "Fee codes to get the price for",
             "type": "array",
             "items": { "type": "string" }
+          },
+          "customBaseCount": {
+            "type": "number",
+            "description": "How many base units are there"
+          },
+          "customDocCount": {
+            "type": "number",
+            "description": "How many additional documents are there"
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "Has advert been paid for",
+            "default": false
           }
         },
-        "required": ["id", "externalReference"]
+        "required": ["id", "externalReference", "imageTier"]
       },
       "CaseChannel": {
         "type": "object",
@@ -4183,7 +4230,7 @@
             "description": "The cost of the case."
           },
           "transaction": {
-            "description": "List of advert categories.",
+            "description": "Case fee transaction.",
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
           },

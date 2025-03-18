@@ -11,10 +11,14 @@ export const caseTransactionMigrate = (
       externalReference: model.externalReference,
       price: model.price,
       feeCodes: model.feeCodes,
+      customBaseCount: model.customBaseCount,
+      customDocCount: model.customDocCount,
+      paid: model.paid,
+      imageTier: model.imageTier,
     }
 
     return mapped
   } catch (e) {
-    throw new Error(`Error migrating case channel: ${e}`)
+    throw new Error(`Error migrating case transaction: ${e}`)
   }
 }

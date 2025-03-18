@@ -12,6 +12,12 @@ export enum AdvertStatus {
 }
 
 export enum AdvertFeeType {
-  Fixed = 'FIXED',
+  Base = 'BASE',
+  Fixed = 'FIXED', // TODO: Remove this
+  AdditionalDoc = 'ADDITIONAL_DOC',
+  FastTrack = 'FAST_TRACK',
+  BaseModifier = 'BASE_MODIFIER',
+  ImageTier = 'IMAGE_TIER',
+  Lowererd = 'LOWERED',
   Percentage = 'PERCENTAGE',
 }

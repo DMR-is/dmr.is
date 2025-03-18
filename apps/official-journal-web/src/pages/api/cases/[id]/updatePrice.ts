@@ -4,9 +4,13 @@ import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+import { OJOIWebException } from '../../../../lib/constants'
 
 const updatePriceBody = z.object({
-  feeCodes: z.array(z.string()).optional(),
+  imageTier: z.string().optional(),
+  customBaseDocumentCount: z.number().optional(),
+  customAdditionalDocCount: z.number().optional(),
+  customBodyLengthCount: z.number().optional(),
 })
 
 class UpdatePriceHandler {
@@ -15,11 +19,13 @@ class UpdatePriceHandler {
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id?: string }
 
-    if (!id) {
-      return res.status(400).end()
+    const parsed = updatePriceBody.safeParse(req.body)
+    if (!parsed.success || !id) {
+      return void res
+        .status(400)
+        .json(OJOIWebException.badRequest('Invalid request body'))
     }
-
-    const codes = updatePriceBody.parse(req.body).feeCodes ?? []
+    const body: z.infer<typeof updatePriceBody> = req.body
 
     const dmrClient = createDmrClient()
 
@@ -27,9 +33,7 @@ class UpdatePriceHandler {
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .updatePrice({
         id: id,
-        updateCasePriceBody: {
-          feeCodes: codes,
-        },
+        updateCasePriceBody: body,
       })
 
     return res.status(204).end()

@@ -45,6 +45,13 @@ export class ApplicationFeeCode {
     type: Number,
   })
   readonly value!: number
+
+  @ApiProperty({
+    required: true,
+    description: 'Department the fee code is associated with.',
+    type: String,
+  })
+  readonly department!: string
 }
 
 export class ApplicationFeeCodesResponse {

@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -15,6 +15,12 @@ export class CaseTransaction {
     description: 'Reference to external source',
   })
   readonly externalReference!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Image tier code',
+  })
+  readonly imageTier!: string | null
 
   @ApiProperty({
     type: Number,
@@ -33,4 +39,30 @@ export class CaseTransaction {
   @IsString({ each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
   readonly feeCodes!: string[] | null
+
+  @ApiProperty({
+    type: Number,
+    description: 'How many base units are there',
+    required: false,
+  })
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  readonly customBaseCount!: number | null
+
+  @ApiProperty({
+    type: Number,
+    description: 'How many additional documents are there',
+    required: false,
+  })
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  readonly customDocCount!: number | null
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Has advert been paid for',
+    required: false,
+    default: false,
+  })
+  readonly paid?: boolean | null
 }

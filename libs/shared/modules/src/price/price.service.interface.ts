@@ -14,10 +14,10 @@ export interface IPriceService {
     applicationId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CasePriceResponse>>
-  getFeeByCase(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceResponse>>
+  // getFeeByCase(
+  //   caseId: string,
+  //   transaction?: Transaction,
+  // ): Promise<ResultWrapper<CasePriceResponse>>
   updateCasePriceByCaseId(
     caseId: string,
     body: UpdateCasePriceBody,

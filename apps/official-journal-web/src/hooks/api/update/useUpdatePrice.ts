@@ -4,7 +4,10 @@ import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UpdatePriceTriggerArgs = {
-  feeCodes: string[]
+  imageTier?: string
+  customBaseDocumentCount?: number
+  customAdditionalDocCount?: number
+  customBodyLengthCount?: number
 }
 
 type SWRUpdatePriceOptions = SWRMutationConfiguration<
