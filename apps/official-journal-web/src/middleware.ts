@@ -6,12 +6,6 @@ import { Routes } from './lib/constants'
 
 export default async function middleware(req: NextRequest) {
   const token = await getToken({ req })
-  const publicRoutes: string[] = [
-    Routes.Login,
-    Routes.UserManagement,
-    '/api/auth/signin',
-    '/api/auth/signout',
-  ]
 
   const {
     Login: _login,
