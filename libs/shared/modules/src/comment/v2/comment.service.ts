@@ -564,7 +564,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        { model: UserModel, as: 'adminUserCreator' },
+        { model: UserModel, as: 'userCreator' },
       ],
       transaction,
     })
@@ -729,6 +729,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
         {
           model: UserModel,
+          as: 'userCreator',
           include: [
             {
               model: AdvertInvolvedPartyModel,
