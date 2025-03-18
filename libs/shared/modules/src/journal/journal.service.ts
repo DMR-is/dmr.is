@@ -750,7 +750,7 @@ export class JournalService implements IJournalService {
         document: {
           isLegacy: advert.isLegacy,
           html,
-          pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
+          pdfUrl: `${advert.documentPdfUrl}`,
         },
       },
     })
