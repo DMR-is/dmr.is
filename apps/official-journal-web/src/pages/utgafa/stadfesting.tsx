@@ -159,7 +159,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   try {
-    const client = getDmrClient(session.accessToken)
+    const client = getDmrClient(session.idToken)
 
     const department = isDepartmentEnum.safeParse(query.department)
 

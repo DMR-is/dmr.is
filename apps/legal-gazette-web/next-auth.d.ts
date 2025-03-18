@@ -10,7 +10,7 @@ declare module 'next-auth' {
 
   interface Session {
     accessToken: string
-    idToken?: string
+    idToken: string
     scope?: string | string[]
     expires?: string
     user: User
