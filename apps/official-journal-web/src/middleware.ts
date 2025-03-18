@@ -22,7 +22,7 @@ const protectedRoutes = [
 export default async function middleware(req: NextRequest) {
   const token = await getToken({ req })
 
-  if (!protectedRoutes.includes(req.nextUrl.pathname)) {
+  if (req.nextUrl.pathname === '/innskraning' && !token) {
     return NextResponse.next()
   }
 
@@ -30,10 +30,15 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/innskraning', req.url))
   }
 
-  const isAdmin = token.user?.role.slug === 'ritstjori'
+  const isProtectedRoute = protectedRoutes.includes(req.nextUrl.pathname)
+  if (!isProtectedRoute) {
+    return NextResponse.next()
+  }
+
+  const isAdmin = token?.role?.slug === 'ritstjori'
 
   if (!isAdmin && req.nextUrl.pathname === '/notendur') {
-    return NextResponse.next() // Allow access to this page
+    return NextResponse.next()
   }
 
   if (!isAdmin) {
@@ -44,5 +49,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: '/((?!.*\\.).*)',
+  matcher: '/((?!api/.*|.*\\.).*)',
 }

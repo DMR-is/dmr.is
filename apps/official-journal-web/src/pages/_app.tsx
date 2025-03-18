@@ -27,6 +27,10 @@ export default function App({
     if (args[0].includes('useLayoutEffect does nothing on the server')) {
       return
     }
+
+    if (args[0].includes('Support for defaultProps')) {
+      return
+    }
     originalError(...args)
   }
 
