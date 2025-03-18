@@ -944,9 +944,9 @@ export class CaseService implements ICaseService {
     })
 
     const message: Mail.Options = {
-      from: `Stjórnartíðindi <noreply@official-journal.dev.dmr-dev.cloud>`,
+      from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
       to: emails?.join(','),
-      replyTo: 'noreply@official-journal.dev.dmr-dev.cloud',
+      replyTo: 'noreply@stjornartidindi.is',
       subject: `Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
       text: `Mál ${caseToPublish?.caseNumber} hefur verið útgefið`,
       html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
