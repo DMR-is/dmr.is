@@ -123,7 +123,11 @@ export const authOptions: AuthOptions = {
         account?.provider === identityServerConfig.id &&
         account.access_token
       ) {
-        const decodedAccessToken = decode(account.access_token) as JWT
+        // Return false if no id_token is found
+        if (!account?.id_token) {
+          return false
+        }
+        const decodedAccessToken = decode(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
         const authMember = await authorize(nationalId, account.access_token)
         // Return false if no user is found
