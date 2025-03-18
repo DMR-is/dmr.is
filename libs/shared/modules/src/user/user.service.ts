@@ -52,7 +52,9 @@ export class UserService implements IUserService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetUserResponse>> {
     const isAdmin = currentUser.role.title === UserRoleEnum.Admin
-    const involedPartyIds: string[] = isAdmin ? body.involvedParties ?? [] : []
+    const involedPartyIds: string[] = isAdmin
+      ? (body.involvedParties ?? [])
+      : currentUser.involvedParties.map((involvedParty) => involvedParty.id)
 
     if (!isAdmin) {
       const role = await this.userRoleModel.findByPk(body.roleId, {
@@ -106,6 +108,25 @@ export class UserService implements IUserService {
       }
     }
 
+    const userRole = await this.userRoleModel.findOne({
+      where: {
+        title: UserRoleEnum.User,
+      },
+    })
+
+    if (!userRole) {
+      this.logger.warn('User role not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not create user',
+      })
+    }
+
+    const roleId = isAdmin ? body.roleId : userRole.id
+
     const newUser = await this.userModel.create(
       {
         nationalId: body.nationalId,
@@ -115,7 +136,7 @@ export class UserService implements IUserService {
           ? body.displayName
           : `${body.firstName} ${body.lastName}`,
         email: body.email,
-        roleId: body.roleId,
+        roleId: roleId,
       },
       {
         returning: ['id'],

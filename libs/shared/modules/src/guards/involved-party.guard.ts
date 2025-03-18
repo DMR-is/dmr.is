@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
@@ -12,6 +13,11 @@ export class InvolvedPartyGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     try {
       const request = context.switchToHttp().getRequest()
+      const isAdmin = request.user.role.title === UserRoleEnum.Admin
+
+      if (isAdmin) {
+        return true
+      }
 
       const involvedPartyIds = request.involvedParties
 
