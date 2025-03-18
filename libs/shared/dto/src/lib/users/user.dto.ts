@@ -1,4 +1,3 @@
-
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { Institution } from '../institutions'
@@ -47,20 +46,20 @@ export class UserDto {
   involvedParties!: Institution[]
 
   @ApiProperty({
-    type: Date,
+    type: String,
   })
-  createdAt!: Date
+  createdAt!: string
 
   @ApiProperty({
-    type: Date,
+    type: String,
   })
-  updatedAt!: Date
+  updatedAt!: string
 
   @ApiProperty({
-    type: Date,
+    type: String,
     nullable: true,
   })
-  deletedAt!: Date | null
+  deletedAt!: string | null
 
   @ApiProperty({
     type: UserRoleDto,

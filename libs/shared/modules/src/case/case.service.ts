@@ -189,7 +189,7 @@ export class CaseService implements ICaseService {
         typeId: caseLookup.advertTypeId,
         statusId: caseLookup.statusId,
         involvedPartyId: caseLookup.involvedPartyId,
-        adminUserId: caseLookup.assignedUserId,
+        userId: caseLookup.assignedUserId,
         title: caseLookup.advertTitle,
         html: caseLookup.html,
         requestedPublicationDate: new Date(
@@ -952,6 +952,9 @@ export class CaseService implements ICaseService {
       html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
+    if (caseToPublish.applicationId) {
+      await this.utilityService.approveApplication(caseToPublish.applicationId)
+    }
     await this.s3.sendMail(message)
     return ResultWrapper.ok()
   }

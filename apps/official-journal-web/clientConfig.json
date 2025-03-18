@@ -3255,7 +3255,7 @@
             "items": { "$ref": "#/components/schemas/CategoryMainCategory" }
           }
         },
-        "required": ["id", "title", "slug", "mainCategories"]
+        "required": ["id", "title", "slug"]
       },
       "GetCategoriesResponse": {
         "type": "object",
@@ -3485,13 +3485,9 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/Institution" }
           },
-          "createdAt": { "format": "date-time", "type": "string" },
-          "updatedAt": { "format": "date-time", "type": "string" },
-          "deletedAt": {
-            "format": "date-time",
-            "type": "string",
-            "nullable": true
-          },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "deletedAt": { "type": "string", "nullable": true },
           "role": { "$ref": "#/components/schemas/UserRoleDto" }
         },
         "required": [

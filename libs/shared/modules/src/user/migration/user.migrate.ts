@@ -25,8 +25,8 @@ export const userMigrate = (model: UserModel): UserDto => {
     involvedParties: model.involvedParties.map((involvedParty) =>
       advertInvolvedPartyMigrate(involvedParty),
     ),
-    createdAt: model.createdAt,
-    updatedAt: model.updatedAt,
-    deletedAt: model.deletedAt,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+    deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
   }
 }

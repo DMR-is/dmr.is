@@ -70,10 +70,10 @@ export class CaseHistoryModel extends Model {
   @ForeignKey(() => UserModel)
   @Column({
     type: DataType.UUID,
-    field: 'admin_user_id',
+    field: 'user_id',
     allowNull: true,
   })
-  adminUserId!: string | null
+  userId!: string | null
 
   @Column({
     type: DataType.STRING,
