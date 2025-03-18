@@ -1,4 +1,4 @@
-import { UserDto } from './src/gen/fetch'
+import { UserDto, UserRoleDto } from './src/gen/fetch'
 
 declare module 'next-auth' {
   interface User extends DefaultUser, UserDto {
@@ -30,5 +30,6 @@ declare module 'next-auth/jwt' {
     email?: string
     invalid?: boolean
     error?: string
+    role?: UserRoleDto
   }
 }

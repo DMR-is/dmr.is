@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { AppProps as NextAppProps } from 'next/app'
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
@@ -21,6 +22,22 @@ export default function App({
   Component,
   pageProps: { session, layout, ...pageProps },
 }: AppProps<InheritedPageProps>) {
+  const originalError = console.error
+  console.error = (...args: any[]) => {
+    try {
+      if (args[0].includes('useLayoutEffect does nothing on the server')) {
+        return
+      }
+
+      if (args[0].includes('Support for defaultProps')) {
+        return
+      }
+      originalError(...args)
+    } catch (e) {
+      return
+    }
+  }
+
   return (
     <SessionProvider
       session={session}
