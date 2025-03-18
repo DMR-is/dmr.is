@@ -30,5 +30,6 @@ declare module 'next-auth/jwt' {
     email?: string
     invalid?: boolean
     error?: string
+    user?: UserDto
   }
 }
