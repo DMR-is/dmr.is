@@ -19,7 +19,7 @@ import { OJOISelect } from '../../components/select/OJOISelect'
 import { AdvertMainType, AdvertType, Department } from '../../gen/fetch'
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
-import { loginRedirect } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 import { authOptions } from '../api/auth/[...nextauth]'
 
@@ -199,10 +199,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     }
 
     return {
-      props: {
+      props: deleteUndefined({
         layout,
         session,
-      },
+      }),
     }
   } catch (error) {
     throw new CustomNextError(500, 'Failed to fetch departments')

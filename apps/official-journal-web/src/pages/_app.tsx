@@ -24,14 +24,18 @@ export default function App({
 }: AppProps<InheritedPageProps>) {
   const originalError = console.error
   console.error = (...args: any[]) => {
-    if (args[0].includes('useLayoutEffect does nothing on the server')) {
-      return
-    }
+    try {
+      if (args[0].includes('useLayoutEffect does nothing on the server')) {
+        return
+      }
 
-    if (args[0].includes('Support for defaultProps')) {
+      if (args[0].includes('Support for defaultProps')) {
+        return
+      }
+      originalError(...args)
+    } catch (e) {
       return
     }
-    originalError(...args)
   }
 
   return (

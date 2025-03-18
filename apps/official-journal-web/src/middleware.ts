@@ -7,16 +7,8 @@ const protectedRoutes = [
   '/yfirflokkar',
   '/tegundir',
   '/ritstjorn',
-  '/ritstjorn/:caseId',
-  '/ritstjorn/:caseId/innsent',
-  '/ritstjorn/:caseId/grunnvinnsla',
-  '/ritstjorn/:caseId/yfirlestur',
-  '/ritstjorn/:caseId/tilbuid',
-  '/ritstjorn/:caseId/leidretting',
   '/utgafa',
-  '/utgafa/stadfesting',
   '/heildaryfirlit',
-  '/heildaryfirlit/:caseId',
 ]
 
 export default async function middleware(req: NextRequest) {
