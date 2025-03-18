@@ -111,7 +111,9 @@ export class CommentModel extends Model {
   @BelongsTo(() => CaseActionModel)
   caseAction!: CaseActionModel
 
-  @BelongsTo(() => UserModel)
+  @BelongsTo(() => UserModel, {
+    as: 'userCreator',
+  })
   userCreator?: UserModel
 
   @BelongsTo(() => AdvertInvolvedPartyModel)
