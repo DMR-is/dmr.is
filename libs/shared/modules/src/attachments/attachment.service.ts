@@ -253,8 +253,6 @@ export class AttachmentService implements IAttachmentService {
 
     const attachment = attachmentMigrate(found.attachment)
 
-    console.log(attachment)
-
     return ResultWrapper.ok({
       attachment: attachment,
     })
