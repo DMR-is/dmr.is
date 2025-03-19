@@ -46,6 +46,38 @@
       "options": {
         "jestConfig": "apps/legal-gazette-api/jest.config.ts"
       }
+    },
+    "dev-services": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose up -d",
+        "cwd": "apps/legal-gazette-api"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:migrate",
+        "cwd": "apps/legal-gazette-api"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:seed:all",
+        "cwd": "apps/legal-gazette-api"
+      }
+    },
+    "dev-init": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run legal-gazette-api:dev-services",
+          "yarn nx run legal-gazette-api:migrate",
+          "yarn nx run legal-gazette-api:seed"
+        ],
+        "parallel": false
+      }
     }
   },
   "tags": []

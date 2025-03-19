@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  db_legal_gazette_api:
+    image: public.ecr.aws/docker/library/postgres:16
+    container_name: db_legal_gazette
+    environment:
+      - POSTGRES_DB=dev_db_legal_gazette
+      - POSTGRES_USER=dev_db
+      - POSTGRES_PASSWORD=dev_db
+      - PGPORT=5434
+    ports:
+      - '5434:5434'
