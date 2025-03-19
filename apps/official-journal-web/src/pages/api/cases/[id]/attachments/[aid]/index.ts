@@ -22,7 +22,7 @@ class GetCaseAttachmentHandler extends RouteHandler {
 
     if (req.method === 'GET') {
       try {
-        return await this.fetchAttachment(id, aid, req, res)
+        return void (await this.fetchAttachment(id, aid, req, res))
       } catch (e) {
         logger.warn(`Failed to fetch attachment`, {
           error: e,
