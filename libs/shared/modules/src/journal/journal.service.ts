@@ -861,6 +861,14 @@ export class JournalService implements IJournalService {
       })
     }
 
+    if (params?.dateTo && params?.dateFrom) {
+      Object.assign(whereParams, {
+        publicationDate: {
+          [Op.between]: [params.dateFrom, params.dateTo],
+        },
+      })
+    }
+
     if (params?.search) {
       Object.assign(whereParams, {
         [Op.or]: [
