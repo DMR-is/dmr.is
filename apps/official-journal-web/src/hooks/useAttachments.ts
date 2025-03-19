@@ -35,10 +35,7 @@ export const useAttachments = () => {
     setError(null)
     const response = await fetchAttachment({ caseId, attachmentId })
 
-    // hér kemur presigned urlið
     const { url } = response
-
-    console.log('url', url)
 
     fetch(url)
       .then((response) => {
