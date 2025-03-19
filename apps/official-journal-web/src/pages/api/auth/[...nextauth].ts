@@ -129,7 +129,7 @@ export const authOptions: AuthOptions = {
         }
         const decodedAccessToken = decode(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
-        const authMember = await authorize(nationalId, account.access_token)
+        const authMember = await authorize(nationalId, account?.id_token)
         // Return false if no user is found
         if (!authMember) {
           return false

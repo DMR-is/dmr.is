@@ -50,7 +50,7 @@ export const useUsers = ({
   deleteUserOptions,
 }: UseCaseParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.idToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session ? ['getUsers', session.user, params] : null,
