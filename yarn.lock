@@ -6649,7 +6649,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nx/nest@npm:17.3.2, @nx/nest@npm:^17.2.5":
+"@nx/nest@npm:17.3.2":
   version: 17.3.2
   resolution: "@nx/nest@npm:17.3.2"
   dependencies:
@@ -6810,7 +6810,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nx/webpack@npm:17.3.2, @nx/webpack@npm:^17.2.5":
+"@nx/webpack@npm:17.3.2":
   version: 17.3.2
   resolution: "@nx/webpack@npm:17.3.2"
   dependencies:
@@ -14124,11 +14124,12 @@ __metadata:
     "@nx/eslint-plugin": "npm:^17.2.5"
     "@nx/jest": "npm:17.3.2"
     "@nx/js": "npm:17.3.2"
-    "@nx/nest": "npm:^17.2.5"
+    "@nx/nest": "npm:17.3.2"
     "@nx/next": "npm:17.3.2"
     "@nx/node": "npm:17.3.2"
     "@nx/react": "npm:17.3.2"
-    "@nx/webpack": "npm:^17.2.5"
+    "@nx/web": "npm:17.3.2"
+    "@nx/webpack": "npm:17.3.2"
     "@openapitools/openapi-generator-cli": "npm:1.0.15-4.3.1"
     "@opensearch-project/opensearch": "npm:2.13.0"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:^0.5.15"
