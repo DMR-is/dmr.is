@@ -50,7 +50,7 @@ export const PriceCalculator = () => {
     useCaseContext()
 
   const { md } = useBreakpoint()
-  const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id,  })
+  const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id })
 
   useEffect(() => {
     if (currentCase?.transaction?.imageTier) {

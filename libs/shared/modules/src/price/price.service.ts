@@ -177,13 +177,14 @@ export class PriceService implements IPriceService {
         { transaction, conflictFields: ['case_id'] },
       )
 
-      this.postExternalPayment(caseId, {
-        id: caseTransaction.id,
-        chargeBase: caseLookup.caseNumber,
-        Expenses: feeCalculation.expenses,
-        // debtorNationalId: caseTransaction.involvedParty.nationalId,
-        debtorNationalId: '0101307789',
-      }, transaction)
+      // Add to case update service instead:
+      // this.postExternalPayment(caseId, {
+      //   id: caseTransaction.id,
+      //   chargeBase: caseLookup.caseNumber,
+      //   Expenses: feeCalculation.expenses,
+      //   // debtorNationalId: caseTransaction.involvedParty.nationalId,
+      //   debtorNationalId: '0101307789',
+      // }, transaction)
 
       await this.caseModel.update(
         { transactionId: caseTransaction.id },
