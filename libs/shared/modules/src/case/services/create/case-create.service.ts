@@ -6,6 +6,7 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   BaseEntity,
+  CaseChannel,
   CreateCaseDto,
   CreateCaseResponseDto,
 } from '@dmr.is/shared/dto'
@@ -30,6 +31,7 @@ import { IAttachmentService } from '../../../attachments/attachment.service.inte
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
+import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import {
   CaseAdditionModel,
   CaseAdditionsModel,
@@ -426,7 +428,7 @@ export class CaseCreateService implements ICaseCreateService {
     caseId: string,
     body: CreateCaseChannelBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<CaseChannel>> {
     const channel = await this.caseChannelModel.create(
       {
         name: body.name,
@@ -449,7 +451,25 @@ export class CaseCreateService implements ICaseCreateService {
       },
     )
 
-    return ResultWrapper.ok()
+    const newChannel = await this.caseChannelModel.findByPk(channel.id, {
+      transaction,
+    })
+
+    if (!newChannel) {
+      this.logger.warn('Failed to find newly created channel', {
+        category: LOGGING_CATEGORY,
+        caseId,
+        channelId: channel.id,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to create channel',
+      })
+    }
+
+    const migrated = caseChannelMigrate(newChannel)
+
+    return ResultWrapper.ok(migrated)
   }
 
   @LogAndHandle()

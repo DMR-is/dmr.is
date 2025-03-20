@@ -11,8 +11,10 @@ import {
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
+  CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
   CreateCategory,
@@ -106,6 +108,28 @@ export class CaseController {
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  @Post(':caseId/communication-channels')
+  @ApiOperation({ operationId: 'createCommunicationChannel' })
+  @ApiResponse({ status: 200, type: CaseChannel })
+  async createCommunicationChannel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateCaseChannelBody,
+  ) {
+    return this.caseService.createCaseChannel(caseId, body)
+  }
+
+  @Delete(':caseId/communication-channels/:channelId')
+  @ApiOperation({ operationId: 'deleteCommunicationChannel' })
+  @ApiNoContentResponse()
+  async deleteCommunicationChannel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('channelId', new UUIDValidationPipe()) channelId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteCaseChannel(caseId, channelId),
+    )
+  }
 
   @Get('nextPublicationNumber/:departmentId')
   @ApiOperation({ operationId: 'getNextPublicationNumber' })

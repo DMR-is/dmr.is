@@ -9,6 +9,7 @@ import {
   AddCaseAdvertCorrection,
   AdvertStatus,
   Case,
+  CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
@@ -95,6 +96,8 @@ import { ICaseCreateService } from './services/create/case-create.service.interf
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseChannelModel,
+  CaseChannelsModel,
   CaseCommunicationStatusModel,
   CaseHistoryModel,
   CaseModel,
@@ -143,9 +146,36 @@ export class CaseService implements ICaseService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
+    @InjectModel(CaseChannelModel)
+    private readonly caseChannelModel: typeof CaseChannelModel,
+    @InjectModel(CaseChannelsModel)
+    private readonly caseChannelsModel: typeof CaseChannelsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+  @LogAndHandle()
+  @Transactional()
+  async deleteCaseChannel(
+    caseId: string,
+    channelId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseChannelsModel.destroy({
+      where: {
+        caseId: caseId,
+        channelId: channelId,
+      },
+      transaction,
+    })
+    await this.caseChannelModel.destroy({
+      where: {
+        id: channelId,
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -859,7 +889,7 @@ export class CaseService implements ICaseService {
     caseId: string,
     body: CreateCaseChannelBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<CaseChannel>> {
     return this.createService.createCaseChannel(caseId, body, transaction)
   }
 

@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import {
+  CaseChannel,
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
@@ -22,7 +23,7 @@ export interface ICaseCreateService {
     caseId: string,
     body: CreateCaseChannelBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<CaseChannel>>
 
   createCaseCategory(
     caseId: string,

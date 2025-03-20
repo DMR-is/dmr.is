@@ -77,6 +77,8 @@ export interface ICaseService {
     body: CreateCaseChannelBody,
   ): Promise<ResultWrapper>
 
+  deleteCaseChannel(caseId: string, channelId: string): Promise<ResultWrapper>
+
   updateCase(
     body: UpdateCaseBody,
     transaction?: Transaction,

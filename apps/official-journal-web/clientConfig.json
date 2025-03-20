@@ -104,6 +104,61 @@
         }
       }
     },
+    "/api/v1/cases/{caseId}/communication-channels": {
+      "post": {
+        "operationId": "createCommunicationChannel",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCaseChannelBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseChannel" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/cases/{caseId}/communication-channels/{channelId}": {
+      "delete": {
+        "operationId": "deleteCommunicationChannel",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
       "get": {
         "operationId": "getNextPublicationNumber",
@@ -3068,6 +3123,41 @@
         "properties": { "url": { "type": "string" } },
         "required": ["url"]
       },
+      "CreateCaseChannelBody": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Nafn einstaklings" },
+          "email": { "type": "string", "example": "test@test.is" },
+          "phone": { "type": "string", "example": "555 5555" }
+        },
+        "required": ["name", "email"]
+      },
+      "CaseChannel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the case channel."
+          },
+          "name": {
+            "type": "string",
+            "example": "Case channel name",
+            "description": "Name of the case channel."
+          },
+          "email": {
+            "type": "string",
+            "example": "hjalp@dmr.is",
+            "description": "Email of the case channel."
+          },
+          "phone": {
+            "type": "string",
+            "example": "+354 123 4567",
+            "description": "Phone of the case channel."
+          }
+        },
+        "required": ["id", "name", "email"]
+      },
       "GetNextPublicationNumberResponse": {
         "type": "object",
         "properties": {
@@ -3781,32 +3871,6 @@
           "documentPdfUrl": { "type": "string", "nullable": true }
         },
         "required": ["advertHtml"]
-      },
-      "CaseChannel": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "description": "Id of the case channel."
-          },
-          "name": {
-            "type": "string",
-            "example": "Case channel name",
-            "description": "Name of the case channel."
-          },
-          "email": {
-            "type": "string",
-            "example": "hjalp@dmr.is",
-            "description": "Email of the case channel."
-          },
-          "phone": {
-            "type": "string",
-            "example": "+354 123 4567",
-            "description": "Phone of the case channel."
-          }
-        },
-        "required": ["id", "name", "email", "phone"]
       },
       "CaseActionEnum": {
         "type": "string",
