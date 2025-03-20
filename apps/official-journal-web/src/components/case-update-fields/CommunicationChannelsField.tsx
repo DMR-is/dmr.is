@@ -158,6 +158,7 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
                 disabled={!canCreate}
                 variant="utility"
                 size="small"
+                iconType="outline"
                 icon="call"
                 onClick={() =>
                   createChannel({

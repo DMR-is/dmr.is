@@ -591,8 +591,13 @@ export class CaseController {
   @Post()
   @ApiOperation({ operationId: 'createCase' })
   @ApiResponse({ status: 200, type: CreateCaseResponseDto })
-  async createCase(@Body() body: CreateCaseDto) {
-    return ResultWrapper.unwrap(await this.caseService.createCase(body))
+  async createCase(
+    @CurrentUser() currentUser: UserDto,
+    @Body() body: CreateCaseDto,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.caseService.createCase(currentUser, body),
+    )
   }
 
   @Get()

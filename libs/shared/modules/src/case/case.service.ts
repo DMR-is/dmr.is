@@ -181,10 +181,15 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   @Transactional()
   async createCase(
+    currentUser: UserDto,
     body: CreateCaseDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponseDto>> {
-    const results = this.createService.createCase(body, transaction)
+    const results = this.createService.createCase(
+      currentUser,
+      body,
+      transaction,
+    )
 
     return results
   }

@@ -5,6 +5,7 @@ import {
   CreateCaseDto,
   CreateCaseResponseDto,
   PostApplicationBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -15,6 +16,7 @@ export interface ICaseCreateService {
   ): Promise<ResultWrapper<{ id: string }>>
 
   createCase(
+    currentUser: UserDto,
     body: CreateCaseDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponseDto>>

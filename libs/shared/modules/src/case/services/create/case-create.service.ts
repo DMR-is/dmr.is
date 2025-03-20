@@ -9,6 +9,7 @@ import {
   CaseChannel,
   CreateCaseDto,
   CreateCaseResponseDto,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import {
   AdditionType,
@@ -115,6 +116,7 @@ export class CaseCreateService implements ICaseCreateService {
   @LogAndHandle()
   @Transactional()
   async createCase(
+    currentUser: UserDto,
     body: CreateCaseDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponseDto>> {
@@ -177,11 +179,12 @@ export class CaseCreateService implements ICaseCreateService {
         year: now.getFullYear(),
         statusId: status.id,
         tagId: caseTag.id,
+        assignedUserId: currentUser.id,
         communicationStatusId: communicationStatus.id,
         caseNumber: caseNumber,
         advertTypeId: body.typeId,
         advertTitle: body.subject,
-        html: '<h3 class="article__title">Ný auglýsing</h3>',
+        html: '<h3 class="article__title">1. gr.</h3>',
         requestedPublicationDate: nextWeekdayAfterTenDays(now).toISOString(),
         createdAt: nowIso,
         updatedAt: nowIso,

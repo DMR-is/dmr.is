@@ -61,6 +61,7 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   createCase(
+    currentUser: UserDto,
     body: CreateCaseDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseResponseDto>>
