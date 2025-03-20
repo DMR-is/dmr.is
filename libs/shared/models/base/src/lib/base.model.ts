@@ -15,7 +15,7 @@ interface BaseAttributes {
   deleted: Date | null
 }
 
-type BaseModelAttributes<T> = T & BaseAttributes
+export type BaseModelAttributes<T> = T & BaseAttributes
 
 export class BaseModel<T> extends Model<BaseModelAttributes<T>> {
   @PrimaryKey
