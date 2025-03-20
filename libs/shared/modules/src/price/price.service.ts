@@ -6,9 +6,11 @@ import {
   AdvertFeeType,
   ApplicationFeeCodesResponse,
   CaseFeeCalculationBody,
-  CasePriceDetailResponse,
   CasePriceResponse,
+  CaseTransaction,
   GetAllFeeCodesParams,
+  GetPaymentQuery, GetPaymentResponse,
+  PaymentExpenses, UpdateCasePaymentBody,
   UpdateCasePriceBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -22,12 +24,14 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
+import { IAuthService } from '../auth/auth.service.interface'
 import { CaseModel, CaseTransactionModel } from '../case/models'
 import { applicationFeeCodeMigrate } from '../journal/migrations/advert-fee-codes.migrate'
 import { AdvertDepartmentModel, AdvertFeeCodesModel } from '../journal/models'
 import { IPriceService } from './price.service.interface'
 
 const LOGGING_CATEGORY = 'price-service'
+type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & { expenses: PaymentExpenses[] }
 
 /**
  * Service class for getting and calculating prices for applications and cases.
@@ -48,6 +52,9 @@ export class PriceService implements IPriceService {
 
     @InjectModel(CaseTransactionModel)
     private readonly caseTransactionModel: typeof CaseTransactionModel,
+
+    @Inject(IAuthService)
+    private readonly authService: IAuthService,
 
     @InjectModel(AdvertFeeCodesModel)
     private readonly feeCodeModel: typeof AdvertFeeCodesModel,
@@ -86,7 +93,16 @@ export class PriceService implements IPriceService {
         },
         transaction,
       )
-      return ResultWrapper.ok({ price: transactionPrice.unwrap().price })
+      const price = transactionPrice.unwrap().price
+
+      if (!price) {
+        return ResultWrapper.err({
+          code: 404,
+          message: `No price found for <${applicationId}>`,
+          category: LOGGING_CATEGORY,
+        })
+      }
+      return ResultWrapper.ok({ price })
     } catch (error) {
       return ResultWrapper.err({
         code: 500,
@@ -111,6 +127,7 @@ export class PriceService implements IPriceService {
           'requestedPublicationDate',
           'departmentId',
           'fastTrack',
+          'caseNumber',
         ],
         include: [
           {
@@ -144,29 +161,33 @@ export class PriceService implements IPriceService {
         transaction,
       )
 
-      const price = caseFeeCalculation.unwrap().price
-
-      const baseCount =
-        caseLookup.department.slug === 'b-deild'
-          ? characterLength
-          : body.customBaseDocumentCount
+      const feeCalculation = caseFeeCalculation.unwrap()
 
       const [caseTransaction] = await this.caseTransactionModel.upsert(
         {
           caseId,
-          externalReference: new Date().toISOString(), // TODO: use correct ref.
-          price,
-          customBaseCount: baseCount,
+          externalReference: caseLookup.caseNumber,
+          price: feeCalculation.price,
+          customBaseCount: feeCalculation.customBaseCount ?? null,
           customDocCount: body.customAdditionalDocCount ?? null,
-          feeCodes: body.feeCodes ?? null,
+          feeCodes: feeCalculation.feeCodes,
           imageTier: body.imageTier ?? null,
           paid: false,
         },
         { transaction, conflictFields: ['case_id'] },
       )
 
+      // TODO: Create expense array from feeCodes
+      this.postExternalPayment(caseId, {
+        id: caseTransaction.id,
+        chargeBase: caseLookup.caseNumber,
+        Expenses: feeCalculation.expenses,
+        // debtorNationalId: caseTransaction.involvedParty.nationalId,
+        debtorNationalId: '0101307789',
+      }, transaction)
+
       await this.caseModel.update(
-        { transactionId: caseTransaction.id, price }, // Todo: Remove price from case model. Use transaction object instead
+        { transactionId: caseTransaction.id, price: feeCalculation.price }, // Todo: Remove price from case model. Use transaction object instead
         { where: { id: caseId }, transaction },
       )
     } catch (error) {
@@ -178,10 +199,10 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async getPriceByDepartmentSlug(
+  private async getPriceByDepartmentSlug(
     body: CaseFeeCalculationBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceDetailResponse>> {
+  ): Promise<ResultWrapper<PriceByDepartmentResponse>> {
     const feeCodes = await this.feeCodeModel.findAndCountAll({
       distinct: true,
       attributes: ['id', 'feeCode', 'feeType', 'value'],
@@ -198,19 +219,19 @@ export class PriceService implements IPriceService {
     )
     const baseFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.Base,
-    )?.value
+    )
     const additionalDocFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.AdditionalDoc,
-    )?.value
+    )
     const baseModifierFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.BaseModifier,
-    )?.value
+    )
     const imageTierFee = fees.find(
       (fee) => fee.feeCode === body.imageTier,
-    )?.value
+    )
     const fastTrackModifier = fees.find(
       (fee) => fee.feeType === AdvertFeeType.FastTrack,
-    )?.value
+    )
 
     if (!baseFee) {
       return ResultWrapper.err({
@@ -224,32 +245,104 @@ export class PriceService implements IPriceService {
     let additionalDocPrice = 0
     let imageTierPrice = 0
     let fastTrackMultiplier = 1
-    let baseTransactionFee = baseFee
+    let baseTransactionFee = baseFee.value
+    let charactersOverBaseMax = 0
+    let baseCount = 0
+    const usedFeeCodes = []
+    const expenses: PaymentExpenses[] = []
 
     const characterLength = body.bodyLengthCount
 
     if (
-      baseModifierFee &&
+      baseModifierFee?.value &&
       characterLength &&
       characterLength > MAX_CHARACTERS_BASE_APPLICATION
     ) {
+      // B-department
+      charactersOverBaseMax = characterLength - MAX_CHARACTERS_BASE_APPLICATION
       characterFee =
-        baseModifierFee * (characterLength - MAX_CHARACTERS_BASE_APPLICATION)
-      baseTransactionFee = baseFee + characterFee
+        baseModifierFee.value * charactersOverBaseMax
+      baseTransactionFee = baseFee.value + characterFee
+      usedFeeCodes.push(baseModifierFee.feeCode)
+      usedFeeCodes.push(baseFee.feeCode)
+      baseCount = charactersOverBaseMax
+
+      expenses.push({
+        FeeCode: baseFee.feeCode,
+        Reference: 'Grunngjald',
+        Quantity: 1,
+        UnitPrice: baseFee.value,
+        Sum: baseFee.value,
+      })
+
+      expenses.push({
+        FeeCode: baseModifierFee.feeCode,
+        Reference: '% yfir grunngjald',
+        Quantity: charactersOverBaseMax,
+        UnitPrice: baseModifierFee?.value,
+        Sum: characterFee,
+      })
     } else if (body.baseDocumentCount && body.baseDocumentCount > 1) {
-      baseTransactionFee = baseFee * body.baseDocumentCount
+      // A and C department
+      baseTransactionFee = baseFee.value * body.baseDocumentCount
+      baseCount = body.baseDocumentCount
+
+      usedFeeCodes.push(baseFee.feeCode)
+      expenses.push({
+        FeeCode: baseFee.feeCode,
+        Reference: 'Grunngjald',
+        Quantity: body.baseDocumentCount,
+        UnitPrice: baseFee.value,
+        Sum: baseTransactionFee,
+      })
+    } else {
+      // No extra document & no extra charachers over base max. (Could be A, B or C department).
+      usedFeeCodes.push(baseFee.feeCode)
+      expenses.push({
+        FeeCode: baseFee.feeCode,
+        Reference: 'Grunngjald',
+        Quantity: 1,
+        UnitPrice: baseFee.value,
+        Sum: baseFee.value,
+      })
     }
 
-    if (body.additionalDocCount && additionalDocFee) {
-      additionalDocPrice = body.additionalDocCount * additionalDocFee
+    if (body.additionalDocCount && additionalDocFee?.value) {
+      additionalDocPrice = body.additionalDocCount * additionalDocFee.value
+      usedFeeCodes.push(additionalDocFee.feeCode)
+      expenses.push({
+        FeeCode: additionalDocFee.feeCode,
+        Reference: 'Viðbótarskjöl',
+        Quantity: body.additionalDocCount,
+        UnitPrice: additionalDocFee.value,
+        Sum: additionalDocPrice
+      })
     }
 
-    if (imageTierFee) {
-      imageTierPrice = imageTierFee
+    if (imageTierFee?.value) {
+      imageTierPrice = imageTierFee.value
+      usedFeeCodes.push(imageTierFee.feeCode)
+      expenses.push({
+        FeeCode: imageTierFee.feeCode,
+        Reference: 'Myndir í máli',
+        Quantity: 1,
+        UnitPrice: imageTierFee.value,
+        Sum: imageTierFee.value
+      })
     }
 
-    if (fastTrackModifier && body.isFastTrack) {
-      fastTrackMultiplier = fastTrackModifier
+    if (fastTrackModifier?.value && body.isFastTrack) {
+      usedFeeCodes.push(fastTrackModifier.feeCode)
+      fastTrackMultiplier = fastTrackModifier.value
+
+      const fastTrackPrice = (baseTransactionFee * fastTrackMultiplier) - baseTransactionFee
+      expenses.push({
+        FeeCode: fastTrackModifier.feeCode,
+        Reference: 'Upphæð vegna flýtibirtingar',
+        Quantity: 1,
+        UnitPrice: fastTrackPrice,
+        Sum: fastTrackPrice
+      })
     }
 
     const price =
@@ -257,32 +350,134 @@ export class PriceService implements IPriceService {
       additionalDocPrice +
       imageTierPrice
 
-    // Return fee codes as well?
+    // Return fee codes as well!
     return ResultWrapper.ok({
       price,
-      baseFee,
-      characterFee,
-      additionalDocPrice,
-      imageTierPrice,
+      customBaseCount: baseCount ?? null,
+      customDocCount: body.additionalDocCount ?? null,
+      feeCodes: usedFeeCodes,
+      imageTier: body.imageTier ?? null,
+      paid: false,
+      expenses,
     })
   }
 
+  // Payment section:
+
   @LogAndHandle()
   @Transactional()
-  async postExternalPayment(transaction?: Transaction): Promise<ResultWrapper> {
-    // Handle external payment.
-
+  async postExternalPayment(caseId: string, body: UpdateCasePaymentBody, transaction?: Transaction): Promise<ResultWrapper> {
+    if (!process.env.FEE_SERVICE_CRED) {
+      return ResultWrapper.err({
+        category: LOGGING_CATEGORY,
+        code: 500,
+        message: 'Fee service credentials not found',
+      })
+    }
+    
+    const credentials = btoa(process.env.FEE_SERVICE_CRED)
+    const res = await this.authService.xroadFetch(
+      `${process.env.XROAD_FJS_PATH}/claim`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Basic ${credentials}`,
+        },
+        body: JSON.stringify({
+          UUID: body.id,
+          office: process.env.FEE_SERVICE_OFFICE_ID,
+          chargeCategory: process.env.FEE_SERVICE_CHARGE_CATEGORY,
+          chargeBase: body.chargeBase,
+          Expenses: body.Expenses,
+          debtorNationalId: body.debtorNationalId,
+          employeeNationalId: body.debtorNationalId,
+          extraData: body.extra,
+        }),
+      },
+    )
     return ResultWrapper.ok()
   }
 
   @LogAndHandle()
   @Transactional()
-  async getExternalPayment(transaction?: Transaction): Promise<ResultWrapper> {
-    // Get external payment.
+  async getExternalPaymentStatus(parameters: GetPaymentQuery, transaction?: Transaction): Promise<ResultWrapper<GetPaymentResponse>> {
+    if (!process.env.FEE_SERVICE_CRED) {
+      return ResultWrapper.err({
+        category: LOGGING_CATEGORY,
+        code: 500,
+        message: 'Fee service credentials not found',
+      })
+    }
 
-    return ResultWrapper.ok()
+    const caseLookup = await this.caseModel.findByPk(parameters.caseId, {
+      attributes: [
+        'id',
+        'caseNumber',
+      ],
+      transaction,
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found for payment status',
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    const debtorNationalId = '0101307789'
+
+    const credentials = btoa(process.env.FEE_SERVICE_CRED)
+    const res = await this.authService.xroadFetch(
+      `${process.env.XROAD_FJS_PATH}/claim/${debtorNationalId}?office=${process.env.FEE_SERVICE_OFFICE_ID}&chargeCategory=${process.env.FEE_SERVICE_CHARGE_CATEGORY}&chargeBase=${caseLookup.caseNumber}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Basic ${credentials}`,
+        }
+      },
+    )
+
+    if (res.status === 404) {
+      this.logger.debug(
+        'price.service.getExternalPaymentStatus, payment not found',
+      )
+      return ResultWrapper.ok({
+        paid: false,
+        created: false,
+        capital: 0,
+        canceled: false,
+      })
+    }
+
+    if (!res.ok) {
+      this.logger.error(
+        `price.service.getExternalPaymentStatus, could not get payment<${parameters.caseId}>`,
+        {
+          status: res.status,
+          category: LOGGING_CATEGORY,
+        },
+      )
+      return ResultWrapper.err({
+        code: res.status,
+        message: `Payment status <${parameters.caseId}> error`,
+      })
+    }
+
+    const jsonResponse = await res.json();
+    const paymentStatus = jsonResponse.result;
+    
+    return ResultWrapper.ok({
+      created: true,
+      capital: paymentStatus.capital,
+      canceled: paymentStatus.canceled,
+      paid: paymentStatus.capital === 0 && paymentStatus.canceled === false,
+    })
   }
 
+  // TODO: Probably don't need this anymore?
   @LogAndHandle()
   @Transactional()
   async getAllFeeCodes(

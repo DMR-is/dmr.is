@@ -727,6 +727,31 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/price/payment-status": {
+      "get": {
+        "operationId": "getCasePaymentStatus",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPaymentResponse" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}/paid": {
       "put": {
         "operationId": "updatePaid",
@@ -3541,6 +3566,21 @@
             "description": "Length of the body"
           }
         }
+      },
+      "GetPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "paid": {
+            "type": "boolean",
+            "description": "Transaction has been paid"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Has the payment been created"
+          },
+          "capital": { "type": "number", "description": "How much is owed" }
+        },
+        "required": ["paid", "created", "capital"]
       },
       "UpdatePaidBody": {
         "type": "object",

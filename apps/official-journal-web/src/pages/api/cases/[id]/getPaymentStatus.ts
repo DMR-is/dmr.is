@@ -1,46 +1,34 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { z } from 'zod'
-import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { createDmrClient } from '../../../../lib/api/createClient'
+import { OJOIWebException } from '../../../../lib/constants'
 
-const bodySchema = z.object({
-  paid: z.boolean(),
-})
-// Todo: remove this route.
-
-class UpdatePaidHandler {
+class GetPaymentHandler {
   @LogMethod(false)
   @HandleApiException()
-  @Post()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query as { id?: string }
 
     if (!id) {
-      return res.status(400).end()
-    }
-
-    const parsed = bodySchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      return res.status(400).end()
+      return void res
+        .status(400)
+        .json(OJOIWebException.badRequest('Invalid request body'))
     }
 
     const dmrClient = createDmrClient()
 
-    await dmrClient
+    const paymentStatus = await dmrClient
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePaid({
-        id: id,
-        updatePaidBody: {
-          paid: parsed.data.paid,
-        },
+      .getCasePaymentStatus({
+        id,
       })
-    return res.status(204).end()
+
+      return res.status(200).json(paymentStatus)
   }
 }
 
-const instance = new UpdatePaidHandler()
+const instance = new GetPaymentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
   instance.handler(req, res)

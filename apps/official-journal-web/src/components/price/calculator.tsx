@@ -10,7 +10,7 @@ import {
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import { useUpdatePrice } from '../../hooks/api'
+import { useGetPaymentStatus, useUpdatePrice } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { amountFormat } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
@@ -46,10 +46,11 @@ export const PriceCalculator = () => {
   const [customBodyLengthCount, setCustomBodyLengthCount] = useState(0)
   const [additionalDocuments, setAdditionalDocuments] = useState(0)
 
-  const { currentCase, refetch, canEdit, feeCodeOptions, isLoading } =
+  const { currentCase, refetch, canEdit, feeCodeOptions } =
     useCaseContext()
 
   const { md } = useBreakpoint()
+  const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id,  })
 
   useEffect(() => {
     if (currentCase?.transaction?.imageTier) {
@@ -201,7 +202,7 @@ export const PriceCalculator = () => {
         </Box>
         <Inline alignY="center" space={1}>
           <Checkbox
-            checked={currentCase.paid}
+            checked={paymentData?.paid}
             disabled
             label="Búið er að greiða"
           />
@@ -221,7 +222,13 @@ export const PriceCalculator = () => {
         >
           Uppfæra verð
         </button>
-        <Text>Auglýsing verður send til TBR við staðfestingu.</Text>
+        {
+          paymentData?.created ? (
+            <Text>Auglýsing hefur verið send til TBR</Text>
+          ) : (
+            <Text>Auglýsing verður send til TBR við staðfestingu á útgáfu.</Text>
+          )
+        }
       </Box>
     </>
   )

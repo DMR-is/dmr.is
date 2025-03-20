@@ -4,6 +4,7 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
+import { AuthModule } from '../auth/auth.module'
 import { CaseModel, CaseTransactionModel } from '../case/models'
 import { AdvertDepartmentModel, AdvertFeeCodesModel } from '../journal/models'
 import { PriceService } from './price.service'
@@ -17,6 +18,7 @@ import { IPriceService } from './price.service.interface'
       CaseTransactionModel,
       AdvertFeeCodesModel,
     ]),
+    AuthModule,
     forwardRef(() => ApplicationModule),
     LoggingModule,
   ],

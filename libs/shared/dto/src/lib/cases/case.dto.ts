@@ -33,6 +33,44 @@ import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
 import { CaseTransaction } from './case-transaction.dto'
 
+// export class CasePaymentStatus {
+//   @ApiProperty({
+//     type: Boolean,
+//     example: false,
+//     description: 'Has been created for external service.',
+//   })
+//   @IsBoolean()
+//   @IsOptional()
+//   created?: boolean
+
+//   @ApiProperty({
+//     type: Boolean,
+//     example: false,
+//     description: 'Has been paid in full.',
+//   })
+//   @IsBoolean()
+//   @IsOptional()
+//   paid?: boolean
+// }
+
+// export class CasePayment {
+//   @ApiProperty({
+//     description: 'Case fee transaction.',
+//     required: true,
+//     type: CaseTransaction,
+//     nullable: true,
+//   })
+//   readonly transaction?: CaseTransaction
+
+//   @ApiProperty({
+//     description: 'Case fee transaction.',
+//     required: true,
+//     type: CasePaymentStatus,
+//     nullable: true,
+//   })
+//   readonly paymentStatus?: CasePaymentStatus
+// }
+
 export class CaseDetailed {
   @ApiProperty({
     type: String,
@@ -209,7 +247,15 @@ export class CaseDetailed {
   @IsNumber()
   price!: number | null
 
-  @ApiProperty({
+  // @ApiProperty({
+  //   description: 'Case fee transaction.',
+  //   required: true,
+  //   type: CasePayment,
+  //   nullable: true,
+  // })
+  // readonly payment?: CasePayment
+
+    @ApiProperty({
     description: 'Case fee transaction.',
     required: true,
     type: CaseTransaction,
@@ -372,7 +418,6 @@ export class StatusCounter {
   })
   count!: number
 }
-
 export class GetCasesWithDepartmentCount {
   @ApiProperty({
     type: [DepartmentCounter],

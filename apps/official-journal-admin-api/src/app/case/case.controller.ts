@@ -39,6 +39,7 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
   PostApplicationAssetBody,
@@ -311,6 +312,19 @@ export class CaseController {
     @Body() body: UpdateCasePriceBody,
   ) {
     ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
+  }
+
+  @Get(':id/price/payment-status')
+  @ApiOperation({ operationId: 'getCasePaymentStatus' })
+  @ApiResponse({ status: 200, type: GetPaymentResponse })
+  async getCasePaymentStatus(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+  ): Promise<GetPaymentResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasePaymentStatus({
+        caseId: caseId,
+      }),
+    )
   }
 
   @Put(':id/paid')

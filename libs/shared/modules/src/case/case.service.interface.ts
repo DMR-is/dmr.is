@@ -18,6 +18,8 @@ import {
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentQuery,
+  GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -195,6 +197,11 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
+  
+  getCasePaymentStatus(
+    params: GetPaymentQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetPaymentResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

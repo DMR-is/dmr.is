@@ -16,6 +16,12 @@ export interface IAuthService {
       codeVerifier: string
     }>
   >
+
+  xroadFetch(
+    url: string,
+    options: RequestInit,
+    xroadClient?: string,
+  ): Promise<Response>
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972

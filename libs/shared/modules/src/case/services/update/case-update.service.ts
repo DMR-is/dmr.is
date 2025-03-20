@@ -355,6 +355,10 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     const nextStatus = getNextStatus(caseLookup.status.title)
 
+    // if (nextStatus === CaseStatusEnum.ReadyForPublishing) {
+    //   this.priceService.postExternalPayment(id)
+    // }
+
     ResultWrapper.unwrap(
       await this.utilityService.caseStatusLookup(nextStatus, transaction),
     )

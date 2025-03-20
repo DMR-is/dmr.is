@@ -162,6 +162,7 @@ export enum APIRoutes {
   UpdateNextCaseStatus = '/api/cases/:id/updateNextStatus',
   UpdatePreviousCaseStatus = '/api/cases/:id/updatePreviousStatus',
   UpdatePrice = '/api/cases/:id/updatePrice',
+  GetPaymentStatus = '/api/cases/:id/getPaymentStatus',
   UpdateDepartment = '/api/cases/:id/updateDepartment',
   Signature = '/api/signatures/:id',
   SignatureRecord = '/api/signatures/:id/records/:recordId',

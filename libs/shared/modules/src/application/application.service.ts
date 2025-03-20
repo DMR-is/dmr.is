@@ -112,59 +112,6 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  private async xroadFetch(url: string, options: RequestInit) {
-    const idsToken = await this.authService.getAccessToken()
-
-    if (!idsToken) {
-      this.logger.error(
-        'xroadFetch, could not get access token from auth service',
-        {
-          category: LOGGING_CATEGORY,
-        },
-      )
-      throw new Error('Could not get access token from auth service')
-    }
-
-    const xroadClient = process.env.XROAD_DMR_CLIENT
-    if (!xroadClient) {
-      this.logger.error('Missing required environment', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new Error('Missing required environment')
-    }
-
-    this.logger.info(`${options.method}: ${url}`, {
-      category: LOGGING_CATEGORY,
-      url: url,
-    })
-
-    const requestOption = {
-      ...options,
-      headers: {
-        ...options.headers,
-        'X-Road-Client': xroadClient,
-      },
-    }
-
-    try {
-      return await fetch(url, {
-        ...requestOption,
-        headers: {
-          ...requestOption.headers,
-          Authorization: `Bearer ${idsToken.access_token}`,
-        },
-      })
-    } catch (error) {
-      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
-        category: LOGGING_CATEGORY,
-        error,
-      })
-
-      throw new InternalServerErrorException('Failed to fetch')
-    }
-  }
-
   @LogAndHandle()
   async getPrice(
     applicationId: string,
@@ -183,7 +130,7 @@ export class ApplicationService implements IApplicationService {
   async getApplication(
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
         method: 'GET',
@@ -217,7 +164,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
     event: ApplicationEvent,
   ): Promise<ResultWrapper> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
         method: 'PUT',
@@ -241,7 +188,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
     answers: UpdateApplicationBody,
   ): Promise<ResultWrapper> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
         method: 'PUT',

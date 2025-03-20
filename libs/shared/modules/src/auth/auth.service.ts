@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -117,6 +118,61 @@ export class AuthService implements IAuthService {
       this.logger.error('Internal server error', {
         category: LOGGING_CATEGORY,
       })
+    }
+  }
+
+  @LogMethod()
+  async xroadFetch(
+    url: string,
+    options: RequestInit,
+  ): Promise<Response> {
+    const idsToken = await this.getAccessToken()
+
+    if (!idsToken) {
+      this.logger.error(
+        'xroadFetch, could not get access token from auth service',
+        {
+          category: LOGGING_CATEGORY,
+        },
+      )
+      throw new Error('Could not get access token from auth service')
+    }
+
+    if (!process.env.XROAD_DMR_CLIENT) {
+      this.logger.error('Missing required environment', {
+        category: LOGGING_CATEGORY,
+      })
+      throw new Error('Missing required environment')
+    }
+
+    this.logger.info(`${options.method}: ${url}`, {
+      category: LOGGING_CATEGORY,
+      url: url,
+    })
+
+    const requestOption = {
+      ...options,
+      headers: {
+        ...options.headers,
+        'X-Road-Client': process.env.XROAD_DMR_CLIENT,
+      },
+    }
+
+    try {
+      return await fetch(url, {
+        ...requestOption,
+        headers: {
+          Authorization: `Bearer ${idsToken.access_token}`,
+          ...requestOption.headers,
+        },
+      })
+    } catch (error) {
+      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+
+      throw new InternalServerErrorException('Failed to fetch')
     }
   }
 }
