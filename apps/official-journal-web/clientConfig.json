@@ -752,30 +752,6 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/{id}/paid": {
-      "put": {
-        "operationId": "updatePaid",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdatePaidBody" }
-            }
-          }
-        },
-        "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
-      }
-    },
     "/api/v1/cases/{id}/fasttrack": {
       "put": {
         "operationId": "updateFasttrack",
@@ -3092,11 +3068,10 @@
           },
           "feeType": {
             "type": "string",
-            "description": "Type of fee: 'FIXED' for a set amount or 'PERCENTAGE' for a percentage-based fee.",
-            "example": "FIXED",
+            "description": "Type of fee",
+            "example": "BASE",
             "enum": [
               "BASE",
-              "FIXED",
               "ADDITIONAL_DOC",
               "FAST_TRACK",
               "BASE_MODIFIER",
@@ -3578,14 +3553,13 @@
             "type": "boolean",
             "description": "Has the payment been created"
           },
+          "canceled": {
+            "type": "boolean",
+            "description": "Has the payment been canceled"
+          },
           "capital": { "type": "number", "description": "How much is owed" }
         },
-        "required": ["paid", "created", "capital"]
-      },
-      "UpdatePaidBody": {
-        "type": "object",
-        "properties": { "paid": { "type": "boolean" } },
-        "required": ["paid"]
+        "required": ["paid", "created", "canceled", "capital"]
       },
       "UpdateFasttrackBody": {
         "type": "object",
@@ -4264,20 +4238,10 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/Category" }
           },
-          "price": {
-            "type": "number",
-            "example": 23000,
-            "description": "The cost of the case."
-          },
           "transaction": {
             "description": "Case fee transaction.",
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
-          },
-          "paid": {
-            "type": "boolean",
-            "example": false,
-            "description": "Is the case paid for."
           },
           "message": {
             "type": "string",
@@ -4355,9 +4319,7 @@
           "advertDepartment",
           "advertType",
           "advertCategories",
-          "price",
           "transaction",
-          "paid",
           "message",
           "html",
           "publicationNumber",

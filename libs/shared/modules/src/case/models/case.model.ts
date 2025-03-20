@@ -131,21 +131,6 @@ export class CaseModel extends Model {
   })
   publishedAt!: string | null
 
-  // TODO: REMOVE PRICE FROM HERE!
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: true,
-    comment:
-      'Deprecate. This still returns the correct price, but price should be removed from here. Use transaction object instead.',
-  })
-  price!: number | null
-
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: true,
-  })
-  paid!: boolean | null
-
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,

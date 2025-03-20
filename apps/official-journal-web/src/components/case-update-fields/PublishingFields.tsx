@@ -11,7 +11,7 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { useUpdatePrice, useUpdatePublishDate } from '../../hooks/api'
+import { useUpdatePublishDate } from '../../hooks/api'
 import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

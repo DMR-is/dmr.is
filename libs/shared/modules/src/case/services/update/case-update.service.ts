@@ -18,7 +18,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateNextStatusBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -744,28 +743,6 @@ export class CaseUpdateService implements ICaseUpdateService {
         )
       }
     }
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    await this.caseModel.update(
-      {
-        paid: body.paid,
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-      },
-    )
 
     return ResultWrapper.ok()
   }

@@ -177,7 +177,6 @@ export class PriceService implements IPriceService {
         { transaction, conflictFields: ['case_id'] },
       )
 
-      // TODO: Create expense array from feeCodes
       this.postExternalPayment(caseId, {
         id: caseTransaction.id,
         chargeBase: caseLookup.caseNumber,
@@ -187,7 +186,7 @@ export class PriceService implements IPriceService {
       }, transaction)
 
       await this.caseModel.update(
-        { transactionId: caseTransaction.id, price: feeCalculation.price }, // Todo: Remove price from case model. Use transaction object instead
+        { transactionId: caseTransaction.id },
         { where: { id: caseId }, transaction },
       )
     } catch (error) {
@@ -477,7 +476,6 @@ export class PriceService implements IPriceService {
     })
   }
 
-  // TODO: Probably don't need this anymore?
   @LogAndHandle()
   @Transactional()
   async getAllFeeCodes(

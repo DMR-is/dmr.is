@@ -12,7 +12,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateNextStatusBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -85,11 +84,6 @@ export interface ICaseUpdateService {
   updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-  updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

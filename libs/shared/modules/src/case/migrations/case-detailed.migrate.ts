@@ -38,8 +38,6 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     fastTrack: model.fastTrack,
     isLegacy: model.isLegacy,
     modifiedAt: model.updatedAt,
-    paid: model.paid ?? false,
-    price: model.price,
     publishedAt: model.publishedAt,
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,

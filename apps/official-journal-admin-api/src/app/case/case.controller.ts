@@ -58,7 +58,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -325,16 +324,6 @@ export class CaseController {
         caseId: caseId,
       }),
     )
-  }
-
-  @Put(':id/paid')
-  @ApiOperation({ operationId: 'updatePaid' })
-  @ApiNoContentResponse()
-  async updatePaid(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdatePaidBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
   }
 
   @Put(':id/fasttrack')

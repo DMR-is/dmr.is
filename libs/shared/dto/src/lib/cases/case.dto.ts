@@ -33,44 +33,6 @@ import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
 import { CaseTransaction } from './case-transaction.dto'
 
-// export class CasePaymentStatus {
-//   @ApiProperty({
-//     type: Boolean,
-//     example: false,
-//     description: 'Has been created for external service.',
-//   })
-//   @IsBoolean()
-//   @IsOptional()
-//   created?: boolean
-
-//   @ApiProperty({
-//     type: Boolean,
-//     example: false,
-//     description: 'Has been paid in full.',
-//   })
-//   @IsBoolean()
-//   @IsOptional()
-//   paid?: boolean
-// }
-
-// export class CasePayment {
-//   @ApiProperty({
-//     description: 'Case fee transaction.',
-//     required: true,
-//     type: CaseTransaction,
-//     nullable: true,
-//   })
-//   readonly transaction?: CaseTransaction
-
-//   @ApiProperty({
-//     description: 'Case fee transaction.',
-//     required: true,
-//     type: CasePaymentStatus,
-//     nullable: true,
-//   })
-//   readonly paymentStatus?: CasePaymentStatus
-// }
-
 export class CaseDetailed {
   @ApiProperty({
     type: String,
@@ -238,23 +200,6 @@ export class CaseDetailed {
   })
   readonly advertCategories!: Category[]
 
-  @ApiProperty({
-    type: Number,
-    example: 23000,
-    description: 'The cost of the case.',
-  })
-  @ValidateIf((o) => o.price !== null)
-  @IsNumber()
-  price!: number | null
-
-  // @ApiProperty({
-  //   description: 'Case fee transaction.',
-  //   required: true,
-  //   type: CasePayment,
-  //   nullable: true,
-  // })
-  // readonly payment?: CasePayment
-
     @ApiProperty({
     description: 'Case fee transaction.',
     required: true,
@@ -262,14 +207,6 @@ export class CaseDetailed {
     nullable: true,
   })
   readonly transaction?: CaseTransaction
-
-  @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Is the case paid for.',
-  })
-  @IsBoolean()
-  paid!: boolean
 
   @ApiProperty({
     type: String,

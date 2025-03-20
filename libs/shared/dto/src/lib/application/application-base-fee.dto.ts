@@ -29,8 +29,8 @@ export class ApplicationFeeCode {
 
   @ApiProperty({
     description:
-      "Type of fee: 'FIXED' for a set amount or 'PERCENTAGE' for a percentage-based fee.",
-    example: 'FIXED',
+      "Type of fee",
+    example: 'BASE',
     required: true,
     enum: AdvertFeeType,
     type: AdvertFeeType,

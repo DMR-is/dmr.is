@@ -43,7 +43,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateNextStatusBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -628,15 +627,6 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseTitle(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCasePaid(caseId, body, transaction)
   }
   @LogAndHandle()
   @Transactional()
