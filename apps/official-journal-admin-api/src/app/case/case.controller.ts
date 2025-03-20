@@ -13,6 +13,8 @@ import {
   AddCaseAdvertCorrection,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  CreateCaseDto,
+  CreateCaseResponseDto,
   CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
@@ -40,7 +42,6 @@ import {
   InternalCommentBodyDto,
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
-  PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
@@ -565,9 +566,9 @@ export class CaseController {
 
   @Post()
   @ApiOperation({ operationId: 'createCase' })
-  @ApiNoContentResponse()
-  async createCase(@Body() body: PostApplicationBody) {
-    ResultWrapper.unwrap(await this.caseService.createCase(body))
+  @ApiResponse({ status: 200, type: CreateCaseResponseDto })
+  async createCase(@Body() body: CreateCaseDto) {
+    return ResultWrapper.unwrap(await this.caseService.createCase(body))
   }
 
   @Get()

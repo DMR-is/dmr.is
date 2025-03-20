@@ -12,6 +12,8 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  CreateCaseDto,
+  CreateCaseResponseDto,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
@@ -144,6 +146,17 @@ export class CaseService implements ICaseService {
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCase(
+    body: CreateCaseDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>> {
+    const results = this.createService.createCase(body, transaction)
+
+    return results
   }
 
   @LogAndHandle()
@@ -1045,9 +1058,11 @@ export class CaseService implements ICaseService {
    * because we want to use multiple transactions
    */
   @LogAndHandle()
-  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+  async createCaseByApplication(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper> {
     const { id } = ResultWrapper.unwrap(
-      await this.createService.createCase(body),
+      await this.createService.createCaseByApplication(body),
     )
 
     await this.createCaseHistory(id)

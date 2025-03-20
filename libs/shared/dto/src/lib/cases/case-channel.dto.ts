@@ -10,6 +10,13 @@ export class CaseChannel {
 
   @ApiProperty({
     type: String,
+    example: 'Case channel name',
+    description: 'Name of the case channel.',
+  })
+  name!: string
+
+  @ApiProperty({
+    type: String,
     example: 'hjalp@dmr.is',
     description: 'Email of the case channel.',
   })

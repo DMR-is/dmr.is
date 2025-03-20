@@ -1121,11 +1121,22 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PostApplicationBody" }
+              "schema": { "$ref": "#/components/schemas/CreateCaseDto" }
             }
           }
         },
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCaseResponseDto"
+                }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }]
       },
       "get": {
@@ -3779,6 +3790,11 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
             "description": "Id of the case channel."
           },
+          "name": {
+            "type": "string",
+            "example": "Case channel name",
+            "description": "Name of the case channel."
+          },
           "email": {
             "type": "string",
             "example": "hjalp@dmr.is",
@@ -3790,7 +3806,7 @@
             "description": "Phone of the case channel."
           }
         },
-        "required": ["id", "email", "phone"]
+        "required": ["id", "name", "email", "phone"]
       },
       "CaseActionEnum": {
         "type": "string",
@@ -4422,17 +4438,21 @@
         },
         "required": ["case"]
       },
-      "PostApplicationBody": {
+      "CreateCaseDto": {
         "type": "object",
         "properties": {
-          "applicationId": {
-            "type": "string",
-            "description": "Application id",
-            "example": "00000000-0000-0000-0000-000000000000",
-            "nullable": false
-          }
+          "involvedPartyId": { "type": "string" },
+          "applicationId": { "type": "string" },
+          "departmentId": { "type": "string" },
+          "typeId": { "type": "string" },
+          "subject": { "type": "string" }
         },
-        "required": ["applicationId"]
+        "required": ["involvedPartyId", "departmentId", "typeId", "subject"]
+      },
+      "CreateCaseResponseDto": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
       },
       "GetCasesReponse": {
         "type": "object",

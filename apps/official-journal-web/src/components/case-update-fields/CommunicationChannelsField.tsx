@@ -21,7 +21,12 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
       iconVariant="small"
     >
       <DataTable
+        noDataMessage="Engar samskiptaleiðir skráðar"
         columns={[
+          {
+            field: 'name',
+            children: 'Nafn',
+          },
           {
             field: 'email',
             children: 'Netfang',
@@ -32,8 +37,9 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
           },
         ]}
         rows={currentCase.channels.map((ch) => ({
+          name: ch.name,
           email: ch.email,
-          phone: ch.phone,
+          phone: ch.phone ? ch.phone : '-',
         }))}
       ></DataTable>
     </AccordionItem>

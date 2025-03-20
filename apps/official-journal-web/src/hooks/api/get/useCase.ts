@@ -1,21 +1,36 @@
 import { useSession } from 'next-auth/react'
-import useSWR, { SWRConfiguration } from 'swr'
+import useSWR, { Key, SWRConfiguration } from 'swr'
+import useSWRMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { GetCaseResponse } from '../../../gen/fetch'
+import {
+  CreateCaseRequest,
+  CreateCaseResponseDto,
+  GetCaseResponse,
+} from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
 import { swrFetcher } from '../../../lib/constants'
 
 type UseCaseParams = {
-  caseId: string
+  caseId?: string
   options?: SWRConfiguration<GetCaseResponse, Error>
+  createCaseOptions?: SWRMutationConfiguration<
+    CreateCaseResponseDto,
+    Error,
+    Key,
+    CreateCaseRequest
+  >
 }
 
-export const useCase = ({ caseId, options }: UseCaseParams) => {
+export const useCase = ({
+  caseId,
+  options,
+  createCaseOptions,
+}: UseCaseParams = {}) => {
   const { data: session } = useSession()
   const dmrClient = getDmrClient(session?.idToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
-    session ? ['getCase', session?.user, caseId] : null,
+    session && caseId ? ['getCase', session?.user, caseId] : null,
     ([_key, _user, id]) =>
       swrFetcher({
         func: () => dmrClient.getCase({ id }),
@@ -25,11 +40,30 @@ export const useCase = ({ caseId, options }: UseCaseParams) => {
     },
   )
 
+  const { trigger: createCase, isMutating } = useSWRMutation<
+    CreateCaseResponseDto,
+    Error,
+    Key,
+    CreateCaseRequest
+  >(
+    session ? ['createCase', session.user] : null,
+    (_key: string, { arg }: { arg: CreateCaseRequest }) =>
+      swrFetcher({
+        func: () => dmrClient.createCase(arg),
+      }),
+    {
+      ...createCaseOptions,
+      throwOnError: false,
+    },
+  )
+
   return {
     case: data?._case,
     error,
     isLoading,
     isValidating,
     mutate,
+    createCase,
+    isCreatingCase: isMutating,
   }
 }

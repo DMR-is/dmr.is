@@ -1,12 +1,22 @@
 import { Transaction } from 'sequelize'
-import { CreateCaseChannelBody, PostApplicationBody } from '@dmr.is/shared/dto'
+import {
+  CreateCaseChannelBody,
+  CreateCaseDto,
+  CreateCaseResponseDto,
+  PostApplicationBody,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICaseCreateService {
-  createCase(
+  createCaseByApplication(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ id: string }>>
+
+  createCase(
+    body: CreateCaseDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>>
 
   createCaseChannel(
     caseId: string,

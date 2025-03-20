@@ -6,6 +6,7 @@ export const caseChannelMigrate = (model: CaseChannelModel): CaseChannel => {
   try {
     const mapped = {
       id: model.id,
+      name: model.name,
       email: model.email,
       phone: model.phone,
     }
