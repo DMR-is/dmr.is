@@ -52,8 +52,6 @@ export const PriceCalculator = () => {
   const { md } = useBreakpoint()
   const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id,  })
 
-  console.log('paymentData', paymentData)
-
   useEffect(() => {
     if (currentCase?.transaction?.imageTier) {
       const tier = imageTiers.find(
