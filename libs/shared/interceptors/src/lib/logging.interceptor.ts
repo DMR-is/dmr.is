@@ -1,14 +1,14 @@
-import { logger } from '@dmr.is/logging'
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common'
-
-import { Reflector } from '@nestjs/core'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
+import { logger } from '@dmr.is/logging'
+
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 
 const LOGGING_CONTEXT = 'LoggingInterceptor'
 
@@ -41,15 +41,15 @@ export class LoggingInterceptor implements NestInterceptor {
           duration: `${duration}ms`,
         }
 
-        if (duration < 1000) {
+        if (duration < 30) {
           logger.info(message, info)
         }
 
-        if (duration >= 1000 && duration < 2000) {
+        if (duration >= 30 && duration < 100) {
           logger.warn(message, info)
         }
 
-        if (duration >= 2000) {
+        if (duration >= 100) {
           logger.error(message, info)
         }
 

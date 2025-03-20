@@ -8,10 +8,16 @@ import {
 } from '../../journal/migrations'
 
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
-  const fullHtml = `
+  let fullHtml = `
     ${model.html}
     ${model.signature.html}
   `
+
+  const additonHtml = model.additions?.map((a) => a.content).join('')
+
+  if (additonHtml) {
+    fullHtml += additonHtml
+  }
 
   return {
     department: advertDepartmentMigrate(model.department),

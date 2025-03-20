@@ -1,19 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   AddCaseAdvertCorrection,
-  Case,
   CaseComment,
   CaseCommunicationStatus,
   CaseDetailed,
-  CaseStatusEnum,
   CreateCaseChannelBody,
   CreateCaseResponse,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
-  DepartmentSlugEnum,
   GetCaseCommentsQuery,
   GetCaseResponse,
   GetCasesQuery,
@@ -26,8 +22,6 @@ import {
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
   GetTagsResponse,
-  GetUsersQueryParams,
-  GetUsersResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
   PostCaseCommentBody,
@@ -50,12 +44,9 @@ import {
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import {
-  BadRequestException,
   Inject,
-  InternalServerErrorException,
 } from '@nestjs/common'
 
-import { ICaseService } from './case.service.interface'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock {
@@ -284,23 +275,5 @@ export class CaseServiceMock {
     body: DeleteCaseAdvertCorrection,
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
-  }
-
-  getUsers(params?: GetUsersQueryParams): Promise<GetUsersResponse> {
-    const filtered = ALL_MOCK_USERS.filter((user) => {
-      if (params?.search && user.id !== params.search) {
-        return false
-      }
-
-      if (!user.active) {
-        return false
-      }
-
-      return true
-    })
-
-    return Promise.resolve({
-      users: filtered,
-    })
   }
 }

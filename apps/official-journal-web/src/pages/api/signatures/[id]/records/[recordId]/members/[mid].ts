@@ -1,9 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../../../lib/api/routeHandler'
 
 const signatureMemberSchema = z.object({
   name: z.string().optional(),
@@ -13,7 +15,7 @@ const signatureMemberSchema = z.object({
   textAfter: z.string().optional(),
 })
 
-class SignatureMemberHandler {
+class SignatureMemberHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -40,16 +42,12 @@ class SignatureMemberHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateSignatureMember({
-        signatureId: id,
-        recordId: recordId,
-        memberId: mid,
-        updateSignatureMember: parsed.data,
-      })
+    await this.client.updateSignatureMember({
+      signatureId: id,
+      recordId: recordId,
+      memberId: mid,
+      updateSignatureMember: parsed.data,
+    })
 
     return res.status(204).end()
   }
@@ -61,20 +59,15 @@ class SignatureMemberHandler {
       recordId: string
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteSignatureMember({
-        signatureId: id,
-        recordId: recordId,
-        memberId: mid,
-      })
+    this.client.deleteSignatureMember({
+      signatureId: id,
+      recordId: recordId,
+      memberId: mid,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new SignatureMemberHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, SignatureMemberHandler)

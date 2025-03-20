@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'shared-interceptors',
   preset: '../../../jest.preset.js',

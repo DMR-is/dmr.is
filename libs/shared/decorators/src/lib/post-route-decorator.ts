@@ -1,4 +1,4 @@
-import { Post, applyDecorators } from '@nestjs/common'
+import { applyDecorators,Post } from '@nestjs/common'
 import {
   ApiBody,
   ApiNoContentResponse,
@@ -9,6 +9,7 @@ import {
   ApiResponseMetadata,
   ApiTags,
 } from '@nestjs/swagger'
+
 import { LogMethod } from './log-method.decorator'
 
 type PostRouteOptions = {

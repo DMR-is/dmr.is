@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
-class UpdatePreviousStatusHandler {
+class UpdatePreviousStatusHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -17,18 +16,13 @@ class UpdatePreviousStatusHandler {
       return res.status(400).end()
     }
 
-    const client = createDmrClient()
-
-    await client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePreviousStatus({
-        id: id,
-      })
+    await this.client.updatePreviousStatus({
+      id: id,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePreviousStatusHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdatePreviousStatusHandler)

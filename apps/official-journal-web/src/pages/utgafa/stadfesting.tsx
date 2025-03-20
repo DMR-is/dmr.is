@@ -1,7 +1,6 @@
 import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
-import { getSession } from 'next-auth/react'
-import { AuthMiddleware } from '@dmr.is/middleware'
+import { getServerSession } from 'next-auth'
 
 import {
   AlertMessage,
@@ -19,7 +18,7 @@ import { Section } from '../../components/section/Section'
 import { Case } from '../../gen/fetch'
 import { usePublishCases } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import {
   deleteUndefined,
@@ -27,6 +26,7 @@ import {
   loginRedirect,
 } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 type Props = {
   cases: Case[]
@@ -117,10 +117,11 @@ export default function ConfirmPublishing({ cases }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   query,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)
@@ -158,7 +159,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   try {
-    const client = createDmrClient()
+    const client = getDmrClient(session.idToken)
 
     const department = isDepartmentEnum.safeParse(query.department)
 
@@ -170,15 +171,14 @@ export const getServerSideProps: GetServerSideProps = async ({
       )
     }
 
-    const cases = await client
-      .withMiddleware(new AuthMiddleware(session.accessToken))
-      .getCasesWithPublicationNumber({
-        department: department.data,
-        id: caseIds,
-      })
+    const cases = await client.getCasesWithPublicationNumber({
+      department: department.data,
+      id: caseIds,
+    })
 
     return {
       props: deleteUndefined({
+        session,
         layout,
         cases: cases.cases,
       }),

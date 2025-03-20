@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth'
 import { useState } from 'react'
 
 import {
@@ -25,6 +25,7 @@ import { LayoutProps } from '../layout/Layout'
 import { Routes } from '../lib/constants'
 import { messages } from '../lib/messages/dashboard'
 import { deleteUndefined, loginRedirect } from '../lib/utils'
+import { authOptions } from './api/auth/[...nextauth]'
 
 export default function Dashboard() {
   const { formatMessage } = useFormatMessage()
@@ -38,21 +39,10 @@ export default function Dashboard() {
   const {
     departmentStatistics,
     isLoadingDepartmentStatistics,
-    overviewData,
-    errorOverview,
-    isLoadingOverview,
+    overViewDashboardData,
   } = useStatistics({
     departmentParams: {
       slug: departmentTab,
-    },
-    overviewParams: {
-      type: overviewTab,
-    },
-  })
-
-  const { overviewData: publishingOverviewData } = useStatistics({
-    overviewParams: {
-      type: StatisticsOverviewQueryType.Publishing,
     },
   })
 
@@ -101,7 +91,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.general),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="default" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.General]}
+            variant="default"
+          />
         </Box>
       ),
     },
@@ -110,7 +103,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.personal),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="assigned" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.Personal]}
+            variant="assigned"
+          />
         </Box>
       ),
     },
@@ -119,7 +115,10 @@ export default function Dashboard() {
       label: formatMessage(messages.tabs.admin.inactive),
       content: (
         <Box background="white" paddingTop={3}>
-          <CasesOverviewList data={overviewData} variant="inactive" />
+          <CasesOverviewList
+            data={overViewDashboardData[StatisticsOverviewQueryType.Inactive]}
+            variant="inactive"
+          />
         </Box>
       ),
     },
@@ -166,7 +165,11 @@ export default function Dashboard() {
                   linkText={messages.general.openPublishing}
                 >
                   <CasesOverviewList
-                    data={publishingOverviewData}
+                    data={
+                      overViewDashboardData[
+                        StatisticsOverviewQueryType.Publishing
+                      ]
+                    }
                     variant="readyForPublishing"
                   />
                 </ContentWrapper>
@@ -217,9 +220,10 @@ export default function Dashboard() {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)

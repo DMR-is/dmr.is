@@ -1,10 +1,8 @@
 import {
-  BelongsTo,
   BelongsToMany,
   Column,
   CreatedAt,
   DataType,
-  ForeignKey,
   Model,
   Table,
   UpdatedAt,

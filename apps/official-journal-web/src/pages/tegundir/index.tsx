@@ -1,4 +1,5 @@
 import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth/next'
 import { useState } from 'react'
 
 import {
@@ -18,7 +19,9 @@ import { OJOISelect } from '../../components/select/OJOISelect'
 import { AdvertMainType, AdvertType, Department } from '../../gen/fetch'
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
 import { LayoutProps } from '../../layout/Layout'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 export default function AdvertTypesPage() {
   const [selectedDepartment, setSelectedDepartment] =
@@ -179,7 +182,15 @@ export default function AdvertTypesPage() {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  resolvedUrl,
+}) => {
+  const session = await getServerSession(req, res, authOptions)
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
   try {
     const layout: LayoutProps = {
       bannerProps: {
@@ -188,9 +199,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
     }
 
     return {
-      props: {
+      props: deleteUndefined({
         layout,
-      },
+        session,
+      }),
     }
   } catch (error) {
     throw new CustomNextError(500, 'Failed to fetch departments')

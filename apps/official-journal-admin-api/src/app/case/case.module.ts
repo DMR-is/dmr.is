@@ -1,12 +1,8 @@
 import { LoggingModule } from '@dmr.is/logging'
 import {
-  AdminUserController,
-  AdminUserModule,
   AdvertTypeAdminController,
   AdvertTypeController,
   AdvertTypeModule,
-  ApplicationUserController,
-  ApplicationUserModule,
   CommentModuleV2,
   InstitutionAdminController,
   InstitutionController,
@@ -15,6 +11,8 @@ import {
   SharedJournalModule,
   SignatureController,
   SignatureModule,
+  UserController,
+  UserModule,
 } from '@dmr.is/modules'
 
 import { Module } from '@nestjs/common'
@@ -28,20 +26,18 @@ import { CaseController } from './case.controller'
     SharedJournalModule,
     CommentModuleV2,
     SignatureModule,
-    AdminUserModule,
-    ApplicationUserModule,
     InstitutionModule,
     AdvertTypeModule,
+    UserModule,
   ],
   controllers: [
     CaseController,
+    AdvertTypeAdminController,
     SignatureController,
     AdvertTypeController,
-    AdvertTypeAdminController,
-    AdminUserController,
-    ApplicationUserController,
     InstitutionController,
     InstitutionAdminController,
+    UserController,
   ],
 })
 export class CaseModule {}

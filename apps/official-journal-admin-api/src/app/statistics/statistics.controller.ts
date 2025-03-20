@@ -1,14 +1,15 @@
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
-  AdminUser,
   DepartmentSlugEnum,
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -27,7 +28,7 @@ import { IStatisticsService } from './statistics.service.interface'
   version: '1',
 })
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(USER_ROLES.Admin)
+@Roles(UserRoleEnum.Admin)
 export class StatisticsController {
   constructor(
     @Inject(IStatisticsService)
@@ -52,6 +53,15 @@ export class StatisticsController {
     )
   }
 
+  @Get('/overview/dashboard')
+  @ApiOperation({ operationId: 'getStatisticsOverviewDashboard' })
+  @ApiResponse({ status: 200, type: GetStatisticOverviewDashboardResponse })
+  async dashboardOverview(@CurrentUser() user: UserDto) {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getOverviewForDashboard(user.id),
+    )
+  }
+
   @Get('/overview/:type')
   @ApiOperation({ operationId: 'getStatisticsOverview' })
   @ApiParam({
@@ -63,7 +73,7 @@ export class StatisticsController {
   async overview(
     @Param('type', new EnumValidationPipe(StatisticsOverviewQueryType))
     type: StatisticsOverviewQueryType,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ): Promise<GetStatisticsOverviewResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverview(type, user?.id),

@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
-class UnpublishHandler {
+class UnpublishHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -15,18 +14,13 @@ class UnpublishHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .unpublish({
-        id: id,
-      })
+    await this.client.unpublish({
+      id: id,
+    })
 
     return res.status(200).end()
   }
 }
 
-const instance = new UnpublishHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UnpublishHandler)

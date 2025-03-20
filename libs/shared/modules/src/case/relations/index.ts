@@ -1,9 +1,6 @@
 import { Includeable } from 'sequelize'
 
-import { AdminUserModel } from '../../admin-user/models/admin-user.model'
-import { AdminUserRoleModel } from '../../admin-user/models/user-role.model'
 import { AdvertTypeModel } from '../../advert-type/models'
-import { ApplicationUserModel } from '../../application-user/models'
 import { CaseActionModel } from '../../comment/v2/models/case-action.model'
 import { CommentModel } from '../../comment/v2/models/comment.model'
 import {
@@ -11,6 +8,8 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
 } from '../../journal/models'
+import { UserModel } from '../../user/models/user.model'
+import { UserRoleModel } from '../../user/models/user-role.model'
 import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 import {
   CaseAdditionModel,
@@ -33,14 +32,15 @@ export const casesDetailedIncludes = [
   AdvertInvolvedPartyModel,
   CaseAdditionModel,
   {
-    model: AdminUserModel,
-    include: [{ model: AdminUserRoleModel }],
+    model: UserModel,
+    include: [{ model: UserRoleModel }, { model: AdvertInvolvedPartyModel }],
   },
   {
     model: CaseTransactionModel,
   },
   {
     model: CommentModel,
+    separate: true,
     include: [
       {
         model: CaseStatusModel,
@@ -52,20 +52,12 @@ export const casesDetailedIncludes = [
         attributes: ['id', 'title', 'slug'],
       },
       {
-        model: AdminUserModel,
-        as: 'adminUserCreator',
+        model: UserModel,
+        as: 'userCreator',
       },
       {
-        model: AdminUserModel,
-        as: 'adminUserReceiver',
-      },
-      {
-        model: ApplicationUserModel,
-        include: [
-          {
-            model: AdvertInvolvedPartyModel,
-          },
-        ],
+        model: UserModel,
+        as: 'userReceiver',
       },
       {
         model: AdvertInvolvedPartyModel,
@@ -85,7 +77,7 @@ export const casesDetailedIncludes = [
       { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },
       { model: AdvertTypeModel, attributes: ['id', 'title', 'slug'] },
       { model: AdvertInvolvedPartyModel, attributes: ['id', 'title', 'slug'] },
-      { model: AdminUserModel },
+      { model: UserModel },
     ],
   },
 ]

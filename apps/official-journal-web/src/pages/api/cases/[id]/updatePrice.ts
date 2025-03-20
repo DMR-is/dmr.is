@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
 import { OJOIWebException } from '../../../../lib/constants'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 
 const updatePriceBody = z.object({
   imageTier: z.string().optional(),
@@ -13,7 +12,7 @@ const updatePriceBody = z.object({
   customBodyLengthCount: z.number().optional(),
 })
 
-class UpdatePriceHandler {
+class UpdatePriceHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,19 +26,14 @@ class UpdatePriceHandler {
     }
     const body: z.infer<typeof updatePriceBody> = req.body
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updatePrice({
-        id: id,
-        updateCasePriceBody: body,
-      })
+    await this.client.updatePrice({
+      id: id,
+      updateCasePriceBody: body,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new UpdatePriceHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, UpdatePriceHandler)

@@ -1,3 +1,4 @@
+import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -26,16 +27,16 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdminUserModel } from '../../admin-user/models/admin-user.model'
-import { ApplicationUserModel } from '../../application-user/models'
-import { CaseModel, CaseStatusModel } from '../../case/models'
+import { AdvertTypeModel } from '../../advert-type/models'
+import { IAWSService } from '../../aws/aws.service.interface'
+import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
+import { UserModel } from '../../user/models/user.model'
 import { commentMigrate } from './migrations/comment.migrate'
 import { CaseActionModel } from './models/case-action.model'
 import { CommentModel } from './models/comment.model'
 import { CommentsModel } from './models/comments.model'
 import { ICommentServiceV2 } from './comment.service.interface'
-
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 
@@ -53,6 +54,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     private readonly commentsModel: typeof CommentsModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private sequelize: Sequelize,
+    @Inject(IAWSService)
+    private readonly awsService: IAWSService,
   ) {}
 
   @LogAndHandle()
@@ -124,20 +127,12 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
         {
-          model: AdminUserModel,
-          as: 'adminUserCreator',
+          model: UserModel,
+          as: 'userCreator',
         },
         {
-          model: AdminUserModel,
-          as: 'adminUserReceiver',
-        },
-        {
-          model: ApplicationUserModel,
-          include: [
-            {
-              model: AdvertInvolvedPartyModel,
-            },
-          ],
+          model: UserModel,
+          as: 'userReceiver',
         },
         {
           model: AdvertInvolvedPartyModel,
@@ -194,20 +189,12 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           where: whereParams,
         },
         {
-          model: AdminUserModel,
-          as: 'adminUserCreator',
+          model: UserModel,
+          as: 'userCreator',
         },
         {
-          model: AdminUserModel,
-          as: 'adminUserReceiver',
-        },
-        {
-          model: ApplicationUserModel,
-          include: [
-            {
-              model: AdvertInvolvedPartyModel,
-            },
-          ],
+          model: UserModel,
+          as: 'userReceiver',
         },
         {
           model: AdvertInvolvedPartyModel,
@@ -370,8 +357,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        adminUserCreatorId: body.adminUserCreatorId,
-        adminUserReceiverId: body.adminUserReceiverId,
+        userCreatorId: body.adminUserCreatorId,
+        userReceiverId: body.adminUserReceiverId,
         created: now,
       },
       {
@@ -388,12 +375,12 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
         {
-          model: AdminUserModel,
-          as: 'adminUserCreator',
+          model: UserModel,
+          as: 'userCreator',
         },
         {
-          model: AdminUserModel,
-          as: 'adminUserReceiver',
+          model: UserModel,
+          as: 'userReceiver',
         },
       ],
       transaction,
@@ -435,7 +422,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        adminUserCreatorId: body.adminUserCreatorId,
+        userCreatorId: body.adminUserCreatorId,
         created: now,
       },
       {
@@ -452,8 +439,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
         {
-          model: AdminUserModel,
-          as: 'adminUserCreator',
+          model: UserModel,
+          as: 'userCreator',
         },
       ],
       transaction,
@@ -496,7 +483,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        adminUserCreatorId: body.adminUserCreatorId,
+        userCreatorId: body.adminUserCreatorId,
         caseStatusReceiverId: body.caseStatusReceiverId,
         created: now,
       },
@@ -513,7 +500,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        { model: AdminUserModel, as: 'adminUserCreator' },
+        { model: UserModel, as: 'adminUserCreator' },
         {
           model: CaseStatusModel,
           attributes: ['id', 'title', 'slug'],
@@ -560,7 +547,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        adminUserCreatorId: body.adminUserCreatorId,
+        userCreatorId: body.adminUserCreatorId,
         comment: body.comment,
         created: now,
       },
@@ -577,7 +564,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        { model: AdminUserModel, as: 'adminUserCreator' },
+        { model: UserModel, as: 'userCreator' },
       ],
       transaction,
     })
@@ -619,7 +606,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        adminUserCreatorId: body.adminUserCreatorId,
+        userCreatorId: body.adminUserCreatorId,
         comment: body.comment,
         created: now,
       },
@@ -636,7 +623,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        { model: AdminUserModel, as: 'adminUserCreator' },
+        { model: UserModel, as: 'userCreator' },
         {
           model: AdvertInvolvedPartyModel,
           attributes: ['id', 'title', 'slug'],
@@ -660,6 +647,46 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     ResultWrapper.unwrap(
       await this.addCommentToCase(caseId, commentId, transaction),
     )
+
+    // send email via SES
+    const _case = await this.caseModel.findByPk(caseId, {
+      attributes: ['caseNumber', 'id', 'advertTitle'],
+      include: [
+        { model: CaseChannelModel },
+        { model: AdvertTypeModel, attributes: ['title'] },
+      ],
+      transaction,
+    })
+
+    const emails = _case?.channels?.flatMap((item) => {
+      if (!item.email) {
+        return []
+      }
+      return [item.email]
+    })
+
+    if (emails?.length) {
+      try {
+        const message: Mail.Options = {
+          from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
+          to: emails.join(','),
+          replyTo: 'noreply@stjornartidindi.is',
+          subject: `Ný athugasemd skráð á umsókn ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}`,
+          text: `Ný athugasemd hefur verið skráð á umsókn ${_case?.caseNumber}`,
+          html: `<h2>Ný athugasemd hefur verið skráð á umsókn ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða umsókn</a></p>`,
+        }
+
+        await this.awsService.sendMail(message)
+      } catch (error) {
+        this.logger.warn(`Email not sent`, {
+          error,
+          caseId,
+          commentId,
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
     return ResultWrapper.ok({ comment: migrated })
   }
 
@@ -683,7 +710,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         caseId: caseId,
         createdStatusId: statusId,
         caseActionId: actionId,
-        applicationUserCreatorId: body.applicationUserCreatorId,
+        userCreatorId: body.applicationUserCreatorId,
         comment: body.comment,
         created: now,
       },
@@ -701,7 +728,8 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
         {
-          model: ApplicationUserModel,
+          model: UserModel,
+          as: 'userCreator',
           include: [
             {
               model: AdvertInvolvedPartyModel,

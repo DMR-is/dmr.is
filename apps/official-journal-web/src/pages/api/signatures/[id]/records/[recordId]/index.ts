@@ -1,9 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../../lib/api/routeHandler'
 
 const bodySchema = z.object({
   institution: z.string().optional(),
@@ -11,7 +13,7 @@ const bodySchema = z.object({
   additional: z.string().optional(),
 })
 
-class SignatureRecordHandler {
+class SignatureRecordHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -34,15 +36,11 @@ class SignatureRecordHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .updateSignatureRecord({
-        signatureId: id,
-        recordId: recordId,
-        updateSignatureRecord: parsed.data,
-      })
+    await this.client.updateSignatureRecord({
+      signatureId: id,
+      recordId: recordId,
+      updateSignatureRecord: parsed.data,
+    })
 
     return res.status(204).end()
   }
@@ -50,19 +48,14 @@ class SignatureRecordHandler {
   private async delete(req: NextApiRequest, res: NextApiResponse) {
     const { id, recordId } = req.query as { id: string; recordId: string }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .deleteSignatureRecord({
-        signatureId: id,
-        recordId: recordId,
-      })
+    await this.client.deleteSignatureRecord({
+      signatureId: id,
+      recordId: recordId,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new SignatureRecordHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, SignatureRecordHandler)

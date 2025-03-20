@@ -1,3 +1,4 @@
+import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
@@ -6,7 +7,6 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
-  AdminUser,
   AdvertStatus,
   Case,
   CaseCommunicationStatus,
@@ -42,10 +42,10 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateNextStatusBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -65,13 +65,13 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdminUserModel } from '../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
+import { IAWSService } from '../aws/aws.service.interface'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -82,7 +82,6 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
-import { IS3Service } from '../s3/s3.service.interface'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
@@ -116,7 +115,7 @@ export class CaseService implements ICaseService {
     private readonly journalService: IJournalService,
     @Inject(ICaseCreateService)
     private readonly createService: ICaseCreateService,
-    @Inject(forwardRef(() => IS3Service)) private readonly s3: IS3Service,
+    @Inject(forwardRef(() => IAWSService)) private readonly s3: IAWSService,
 
     @Inject(forwardRef(() => IAttachmentService))
     private readonly attachmentService: IAttachmentService,
@@ -195,7 +194,7 @@ export class CaseService implements ICaseService {
         typeId: caseLookup.advertTypeId,
         statusId: caseLookup.statusId,
         involvedPartyId: caseLookup.involvedPartyId,
-        adminUserId: caseLookup.assignedUserId,
+        userId: caseLookup.assignedUserId,
         title: caseLookup.advertTitle,
         html: caseLookup.html,
         requestedPublicationDate: new Date(
@@ -219,7 +218,11 @@ export class CaseService implements ICaseService {
 
   async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
-
+    const sortKeys: { [key: string]: string } = {
+      casePublishDate: 'requestedPublicationDate',
+      caseRegistrationDate: 'createdAt',
+    }
+    const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
     const { limit, offset } = getLimitAndOffset(params)
 
     return this.caseModel.findAndCountAll({
@@ -245,7 +248,7 @@ export class CaseService implements ICaseService {
         institution: params?.institution,
         category: params?.category,
       }),
-      order: [['requestedPublicationDate', 'ASC']],
+      order: [[sortBy, params.direction]],
       logging: (_, timing) => {
         this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
           context: LOGGING_QUERY,
@@ -445,7 +448,7 @@ export class CaseService implements ICaseService {
   updateEmployee(
     caseId: string,
     userId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateEmployee(
@@ -468,7 +471,7 @@ export class CaseService implements ICaseService {
   async updateCaseStatus(
     caseId: string,
     body: UpdateCaseStatusBody,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     await this.updateService.updateCaseStatus(
@@ -546,7 +549,7 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCaseNextStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseNextStatus(
@@ -560,7 +563,7 @@ export class CaseService implements ICaseService {
   @Transactional()
   updateCasePreviousStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCasePreviousStatus(
@@ -929,6 +932,26 @@ export class CaseService implements ICaseService {
       },
     )
 
+    const emails = caseToPublish?.channels?.flatMap((item) => {
+      if (!item.email) {
+        return []
+      }
+      return [item.email]
+    })
+
+    const message: Mail.Options = {
+      from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
+      to: emails?.join(','),
+      replyTo: 'noreply@stjornartidindi.is',
+      subject: `Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
+      text: `Mál ${caseToPublish?.caseNumber} hefur verið útgefið`,
+      html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
+    }
+
+    if (caseToPublish.applicationId) {
+      await this.utilityService.approveApplication(caseToPublish.applicationId)
+    }
+    await this.s3.sendMail(message)
     return ResultWrapper.ok()
   }
 
@@ -1061,6 +1084,7 @@ export class CaseService implements ICaseService {
             {
               model: SignatureRecordModel,
               as: 'records',
+              separate: true,
               include: [
                 {
                   model: SignatureMemberModel,
@@ -1069,18 +1093,25 @@ export class CaseService implements ICaseService {
                 {
                   model: SignatureMemberModel,
                   as: 'members',
+                  separate: true,
                   required: false,
+                  include: [
+                    {
+                      model: SignatureRecordModel,
+                      required: false,
+                    },
+                  ],
                   where: {
                     [Op.or]: [
                       // Exclude chairman using Sequelize.where
                       Sequelize.where(
-                        Sequelize.col('signature.records.members.id'),
+                        Sequelize.col('SignatureMemberModel.id'),
                         Op.ne,
-                        Sequelize.col('signature.records.chairman_id'),
+                        Sequelize.col('record.chairman_id'),
                       ),
                       // Include all members if chairman_id is NULL
                       Sequelize.where(
-                        Sequelize.col('signature.records.chairman_id'),
+                        Sequelize.col('record.chairman_id'),
                         Op.is,
                         null,
                       ),
@@ -1091,11 +1122,6 @@ export class CaseService implements ICaseService {
             },
           ],
         },
-      ],
-      order: [
-        [Sequelize.literal('"comments.created"'), 'ASC'],
-        [Sequelize.literal('"signature.records.signatureDate"'), 'ASC'],
-        [Sequelize.literal('"signature.records.members.created"'), 'ASC'],
       ],
     })
 

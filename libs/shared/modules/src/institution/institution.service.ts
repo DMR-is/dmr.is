@@ -90,6 +90,7 @@ export class InstitutionService implements IInstitutionService {
         {
           id,
           title: body.title,
+          nationalId: body.nationalId,
           slug,
         },
         { transaction: transcation },

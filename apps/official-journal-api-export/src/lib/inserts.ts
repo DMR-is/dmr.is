@@ -1,14 +1,14 @@
 
 import {
-  Department,
-  Type,
-  Category,
-  SuperCategory,
-  Status,
-  InvolvedParty,
   Advert,
   AdvertCategory,
+  Category,
   CategoryDepartment,
+  Department,
+  InvolvedParty,
+  Status,
+  SuperCategory,
+  Type,
 } from '../types'
 
 export function generateDepartmentInserts(departments: Array<Department>) {

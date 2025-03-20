@@ -1,0 +1,9 @@
+plugins:
+  - '@semantic-release/commit-analyzer'
+  - '@semantic-release/release-notes-generator'
+  - '@semantic-release/github'
+branches:
+  - name: 'main'
+  - name: hotfix/*
+    prerelease: '${name.replace(/^hotfix\//g, "hotfix-").replaceAll("_", "-")}'
+  - '+([0-9])?(.{+([0-9]),x}).x'

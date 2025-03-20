@@ -42,9 +42,9 @@ const imageTiers = [
 
 export const PriceCalculator = () => {
   const [selectedItem, setSelectedItem] = useState<OptionType | undefined>()
-  const [customBaseDocumentCount, setCustomBaseDocumentCount] = useState(0)
-  const [customBodyLengthCount, setCustomBodyLengthCount] = useState(0)
-  const [additionalDocuments, setAdditionalDocuments] = useState(0)
+  const [customBaseDocumentCount, setCustomBaseDocumentCount] = useState<number>()
+  const [customBodyLengthCount, setCustomBodyLengthCount] = useState<number>()
+  const [additionalDocuments, setAdditionalDocuments] = useState<number>()
 
   const { currentCase, refetch, canEdit, feeCodeOptions } =
     useCaseContext()
@@ -110,6 +110,8 @@ export const PriceCalculator = () => {
     },
   })
 
+  console.log('paymentData', paymentData)
+
   return (
     <>
       <Box marginBottom={1}>
@@ -125,7 +127,8 @@ export const PriceCalculator = () => {
               label="Einingafjöldi"
               type="number"
               inputMode="numeric"
-              value={customBodyLengthCount}
+              placeholder={"0"}
+              value={customBodyLengthCount ?? undefined}
               onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
             />
             <Text variant="small" color="blue600">
@@ -144,9 +147,10 @@ export const PriceCalculator = () => {
             <OJOIInput
               name="price"
               label="Fylgiskjöl"
+              placeholder={"0"}
               type="number"
               inputMode="numeric"
-              value={additionalDocuments ?? 0}
+              value={additionalDocuments}
               onChange={(e) => setAdditionalDocuments(Number(e.target.value))}
             />
             {additionalDocuments ? (

@@ -1,6 +1,6 @@
-import { signOut, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 
-import { signOutUrl } from '../lib/identityProvider'
+import { identityServerId, signOutUrl } from '../lib/identityProvider'
 
 export const useLogOut = () => {
   const { data: session } = useSession()
@@ -13,4 +13,9 @@ export const useLogOut = () => {
     })
   }
   return logOut
+}
+
+export const forceLogin = (callbackUrl: string) => {
+  sessionStorage.clear()
+  signIn(identityServerId, { callbackUrl })
 }

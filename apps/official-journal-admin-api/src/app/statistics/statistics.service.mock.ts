@@ -1,7 +1,9 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
-import { AdvertStatus, CaseStatusEnum } from '@dmr.is/shared/dto'
 import {
+  AdvertStatus,
+  CaseStatusEnum,
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
@@ -92,6 +94,12 @@ export class MockStatisticsService implements IStatisticsService {
       },
       total: total,
     })
+  }
+
+  async getOverviewForDashboard(
+    _userId: string,
+  ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {
+    throw new NotImplementedException()
   }
 
   getOverview(

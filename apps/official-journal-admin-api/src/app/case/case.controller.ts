@@ -1,4 +1,4 @@
-import { USER_ROLES } from '@dmr.is/constants'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -11,7 +11,6 @@ import {
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
-  AdminUser,
   ApplicationFeeCodesResponse,
   CaseCommunicationStatus,
   CaseStatusEnum,
@@ -61,6 +60,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -89,7 +89,7 @@ const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
-@Roles(USER_ROLES.Admin)
+@Roles(UserRoleEnum.Admin)
 @Controller({
   version: '1',
   path: 'cases',
@@ -425,7 +425,7 @@ export class CaseController {
   @ApiNoContentResponse()
   async updateNextStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ) {
     const updateResults = await this.caseService.updateCaseNextStatus(id, user)
 
@@ -453,7 +453,7 @@ export class CaseController {
   @ApiNoContentResponse()
   async updatePreviousStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ) {
     const updateResults = await this.caseService.updateCasePreviousStatus(
       id,
@@ -485,7 +485,7 @@ export class CaseController {
   async assign(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ) {
     ResultWrapper.unwrap(
       await this.caseService.updateEmployee(id, userId, user),
@@ -498,7 +498,7 @@ export class CaseController {
   async updateStatus(
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCaseStatusBody,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
   ) {
     const updateResults = await this.caseService.updateCaseStatus(
       id,
@@ -646,7 +646,7 @@ export class CaseController {
   @ApiResponse({ status: 200, type: GetComment })
   async createCommentInternal(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
     @Body() body: InternalCommentBodyDto,
   ): Promise<GetComment> {
     return ResultWrapper.unwrap(
@@ -662,7 +662,7 @@ export class CaseController {
   @ApiResponse({ status: 200, type: GetComment })
   async createCommentExternal(
     @Param('id', new UUIDValidationPipe()) id: string,
-    @CurrentUser() user: AdminUser,
+    @CurrentUser() user: UserDto,
     @Body() body: ExternalCommentBodyDto,
   ): Promise<GetComment> {
     const communicationStatusUpdateResult =

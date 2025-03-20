@@ -1,9 +1,10 @@
+import { useSession } from 'next-auth/react'
 import { createContext, useState } from 'react'
+import useSWR from 'swr'
 
 import { StringOption } from '@island.is/island-ui/core'
 
 import {
-  AdminUser,
   AdvertCorrection,
   AdvertType,
   ApplicationFeeCode,
@@ -12,8 +13,13 @@ import {
   CaseTag,
   Category,
   Department,
+  GetAdvertTypes,
+  UserDto,
 } from '../gen/fetch'
-import { useAdvertTypes, useCase, useSignature } from '../hooks/api'
+import { useCase, useSignature } from '../hooks/api'
+import { getDmrClient } from '../lib/api/createClient'
+import { OJOIWebException, swrFetcher } from '../lib/constants'
+import { SearchParams } from '../lib/types'
 import { createOptions } from '../lib/utils'
 
 type CaseState = {
@@ -38,6 +44,10 @@ type CaseState = {
   refetchSignature: () => void
   isRefetchingSignature: boolean
   feeCodeOptions: ApplicationFeeCode[]
+  handleOptimisticUpdate: (
+    newCase: CaseDetailed,
+    cb: () => Promise<Response | void>,
+  ) => void
 }
 
 export const CaseContext = createContext<CaseState>({
@@ -62,6 +72,7 @@ export const CaseContext = createContext<CaseState>({
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
   feeCodeOptions: [],
+  handleOptimisticUpdate: () => undefined,
 })
 
 type CaseProviderProps = {
@@ -71,7 +82,7 @@ type CaseProviderProps = {
   tags: CaseTag[]
   types: AdvertType[]
   feeCodes: ApplicationFeeCode[]
-  employees: AdminUser[]
+  employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string
 }
@@ -124,13 +135,31 @@ export const CaseProvider = ({
       },
     })
 
-  const { types: fetchedTypes, isValidatingTypes } = useAdvertTypes({
-    typesParams: {
-      department: currentCase.advertDepartment.id,
-      page: 1,
-      pageSize: 100,
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
+  const typesParams = {
+    department: currentCase.advertDepartment.id,
+    page: 1,
+    pageSize: 100,
+  }
+
+  const { data: advertTypes, isValidating: isValidatingTypes } = useSWR<
+    GetAdvertTypes,
+    OJOIWebException
+  >(
+    session ? ['getAdvertTypes', typesParams] : null,
+    ([_key, params]: [string, SearchParams]) =>
+      swrFetcher({
+        func: () => dmrClient.getTypes(params),
+      }),
+
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
     },
-  })
+  )
 
   const refetchSignature = async () => await mutateSignature()
 
@@ -156,7 +185,15 @@ export const CaseProvider = ({
     })),
   )
 
-  const typeOptions = createOptions(fetchedTypes ? fetchedTypes : types)
+  const handleOptimisticUpdate = (
+    newCase: CaseDetailed,
+    cb: () => Promise<Response | void>,
+  ) => {
+    setCurrentCase(newCase)
+    cb()
+  }
+
+  const typeOptions = createOptions(advertTypes ? advertTypes.types : types)
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
 
@@ -196,6 +233,7 @@ export const CaseProvider = ({
         refetchSignature,
         isRefetchingSignature,
         feeCodeOptions,
+        handleOptimisticUpdate,
       }}
     >
       {children}

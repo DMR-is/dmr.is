@@ -2,19 +2,18 @@ import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
 import {
-  IAdminUserService,
   IApplicationService,
   ICaseService,
   ICommentServiceV2,
   IJournalService,
+  IUserService,
 } from '@dmr.is/modules'
 import {
-  AdminUser,
   Case,
-  CaseCommentSourceEnum,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -96,7 +95,7 @@ describe('CaseController', () => {
           useValue: jest.fn(),
         },
         {
-          provide: IAdminUserService,
+          provide: IUserService,
           useValue: jest.fn(),
         },
         {
@@ -144,7 +143,7 @@ describe('CaseController', () => {
 
       await caseController.createCommentInternal(
         activeCase.id,
-        { id: 'f450279c-b07e-4f92-a5ae-d8f93360cafe' } as unknown as AdminUser,
+        { id: 'f450279c-b07e-4f92-a5ae-d8f93360cafe' } as unknown as UserDto,
         { comment: 'Hello world' },
       )
 

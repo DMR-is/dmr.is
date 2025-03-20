@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
-import { getSession, useSession } from 'next-auth/react'
-import { AuthMiddleware } from '@dmr.is/middleware'
+import { getServerSession } from 'next-auth/next'
+import { useSession } from 'next-auth/react'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { CaseFields } from '../../components/case-update-fields/CaseFields'
@@ -8,25 +8,26 @@ import { FormShell } from '../../components/form/FormShell'
 import { Meta } from '../../components/meta/Meta'
 import { CaseProvider } from '../../context/caseContext'
 import {
-  AdminUser,
   AdvertType,
   ApplicationFeeCode,
   CaseDetailed,
   CaseTag,
   Category,
   Department,
+  UserDto,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { messages } from '../../lib/messages/caseSingle'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 type Props = {
   caseData: CaseDetailed
   departments: Department[]
-  admins: AdminUser[]
+  admins: UserDto[]
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
@@ -44,7 +45,7 @@ export default function CaseSingle({
 }: Props) {
   const { formatMessage } = useFormatMessage()
 
-  const currentUser = useSession()
+  const { data: session } = useSession()
 
   return (
     <CaseProvider
@@ -55,7 +56,7 @@ export default function CaseSingle({
       employees={admins}
       types={types}
       feeCodes={feeCodes}
-      currentUserId={currentUser?.data?.user?.id}
+      currentUserId={session?.user?.id}
     >
       <Meta
         title={`${formatMessage(messages.breadcrumbs.case)} - ${formatMessage(
@@ -70,16 +71,17 @@ export default function CaseSingle({
 }
 export const getServerSideProps: GetServerSideProps<Props> = async ({
   req,
+  res,
   query,
   resolvedUrl,
 }) => {
-  const session = await getSession({ req })
+  const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
 
-  const dmrClient = createDmrClient()
+  const dmrClient = getDmrClient(session.idToken)
   const caseId = query.uid?.[0]
 
   if (!caseId) {
@@ -95,31 +97,22 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     },
   }
 
-  const casePromise = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getCase({ id: caseId })
+  const casePromise = dmrClient.getCase({ id: caseId })
 
-  const departmentsPromise = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getDepartments({})
+  const departmentsPromise = dmrClient.getDepartments({})
 
-  const employeesPromise = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getUsers()
+  const employeesPromise = dmrClient.getUsers({
+    role: 'ritstjori',
+  })
 
-  const categoriesPromise = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getCategories({
-      page: 1,
-      pageSize: 1000,
-    })
+  const categoriesPromise = dmrClient.getCategories({
+    page: 1,
+    pageSize: 1000,
+  })
 
-  const tagPromises = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getTags()
+  const tagPromises = dmrClient.getTags()
 
   const feeCodePromise = dmrClient
-    .withMiddleware(new AuthMiddleware(session.accessToken))
     .getFeeCodes({
       excludeBaseCodes: true,
     })

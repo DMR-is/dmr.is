@@ -10,14 +10,12 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdminUserModel } from '../../admin-user/models/admin-user.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
 } from '../../attachments/models'
 import { CommentModel } from '../../comment/v2/models/comment.model'
-import { CommentsModel } from '../../comment/v2/models/comments.model'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -25,6 +23,7 @@ import {
   AdvertModel,
 } from '../../journal/models'
 import { SignatureModel } from '../../signature/models/signature.model'
+import { UserModel } from '../../user/models/user.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
@@ -115,8 +114,8 @@ export class CaseModel extends Model {
   })
   assignedUserId!: string | null
 
-  @BelongsTo(() => AdminUserModel, 'assigned_user_id')
-  assignedUser?: AdminUserModel
+  @BelongsTo(() => UserModel, 'assigned_user_id')
+  assignedUser?: UserModel
 
   @Column({ type: DataType.UUID, field: 'case_communication_status_id' })
   communicationStatusId!: string
@@ -206,9 +205,7 @@ export class CaseModel extends Model {
   })
   channels?: CaseChannelModel[]
 
-  @BelongsToMany(() => CommentModel, {
-    through: { model: () => CommentsModel },
-  })
+  @HasMany(() => CommentModel)
   comments?: CommentModel[]
 
   @HasOne(() => SignatureModel)

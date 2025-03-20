@@ -1,7 +1,7 @@
-import { AdminUser } from '@dmr.is/shared/dto'
+import { UserDto, UserRoleDto } from './src/gen/fetch'
 
 declare module 'next-auth' {
-  interface User extends DefaultUser, AdminUser {
+  interface User extends DefaultUser, UserDto {
     accessToken?: string
     refreshToken?: string
     idToken?: string
@@ -9,12 +9,13 @@ declare module 'next-auth' {
   }
 
   interface Session {
-    accessToken?: string
-    idToken?: string
+    accessToken: string
+    idToken: string
     scope?: string | string[]
     expires?: string
     user: User
     invalid?: boolean
+    apiBasePath: string
   }
 }
 
@@ -28,5 +29,7 @@ declare module 'next-auth/jwt' {
     name?: string
     email?: string
     invalid?: boolean
+    error?: string
+    role?: UserRoleDto
   }
 }

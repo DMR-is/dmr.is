@@ -1,6 +1,5 @@
 import { Transaction } from 'sequelize'
 import {
-  AdminUser,
   CaseCommunicationStatus,
   UpdateAdvertHtmlBody,
   UpdateCaseBody,
@@ -11,10 +10,10 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateNextStatusBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -32,24 +31,24 @@ export interface ICaseUpdateService {
   updateEmployee(
     caseId: string,
     userId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
   updateCaseStatus(
     caseUd: string,
     body: UpdateCaseStatusBody,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
   updateCaseNextStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
   updateCasePreviousStatus(
     caseId: string,
-    currentUser: AdminUser,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

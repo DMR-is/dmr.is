@@ -7,7 +7,6 @@ import {
   AdvertTemplateDetails,
   AdvertTemplateType,
   Application,
-  ApplicationUser,
   CaseActionEnum,
   CaseCommunicationStatus,
   CasePriceResponse,
@@ -23,6 +22,7 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -46,18 +46,17 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
+import { IAWSService } from '../aws/aws.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
 import { applicationFeeCodeMigrate } from '../journal/migrations/advert-fee-codes.migrate'
 import {
-  AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertFeeCodesModel,
   AdvertModel,
 } from '../journal/models'
 import { IPriceService } from '../price/price.service.interface'
-import { IS3Service } from '../s3/s3.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
@@ -84,8 +83,8 @@ export class ApplicationService implements IApplicationService {
     private readonly signatureService: ISignatureService,
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
-    @Inject(IS3Service)
-    private readonly s3Service: IS3Service,
+    @Inject(IAWSService)
+    private readonly s3Service: IAWSService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {
@@ -94,9 +93,8 @@ export class ApplicationService implements IApplicationService {
   async getApplicationCase(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
-    const caseLookup = await this.utilityService.caseLookupByApplicationId(
-      applicationId,
-    )
+    const caseLookup =
+      await this.utilityService.caseLookupByApplicationId(applicationId)
 
     if (!caseLookup.result.ok) {
       return ResultWrapper.err({
@@ -414,7 +412,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     body: PostApplicationComment,
-    applicationUser: ApplicationUser,
+    UserDto: UserDto,
   ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
@@ -422,7 +420,7 @@ export class ApplicationService implements IApplicationService {
 
     ResultWrapper.unwrap(
       await this.commentService.createApplicationComment(caseLookup.id, {
-        applicationUserCreatorId: applicationUser.id,
+        applicationUserCreatorId: UserDto.id,
         comment: body.comment,
       }),
     )
@@ -489,9 +487,8 @@ export class ApplicationService implements IApplicationService {
   ): Promise<ResultWrapper> {
     let caseId: string | null = null
     try {
-      const caseLookup = await this.utilityService.caseLookupByApplicationId(
-        applicationId,
-      )
+      const caseLookup =
+        await this.utilityService.caseLookupByApplicationId(applicationId)
 
       if (caseLookup.result.ok) {
         caseId = caseLookup.result.value.id

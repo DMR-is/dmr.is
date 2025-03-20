@@ -3,12 +3,11 @@ import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
-import { AdminUser, AdminUserRole } from '@dmr.is/shared/dto'
 
-import { createDmrClient } from '../../../lib/api/createClient'
+import { UserDto, UserRoleDto } from '../../../gen/fetch'
+import { getDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
-import { checkTokenExpiry, TokenService } from '../../../lib/token-service'
+import { refreshAccessToken } from '../../../lib/token-service'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -22,23 +21,23 @@ const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
-async function authorize(nationalId: string, accessToken: string) {
-  const dmrClient = createDmrClient()
+async function authorize(nationalId?: string, accessToken?: string) {
+  if (!accessToken || !nationalId) {
+    return null
+  }
+
+  const dmrClient = getDmrClient(accessToken)
 
   try {
-    if (nationalId) {
-      const { user: member } = await dmrClient
-        .withMiddleware(new AuthMiddleware(accessToken))
-        .getUserByNationalId({ nationalId })
+    const { user: member } = await dmrClient.getUserByNationalId({
+      nationalId,
+    })
 
-      if (!member) {
-        throw new Error('Member not found')
-      }
-
-      return member as AdminUser
+    if (!member) {
+      throw new Error('Member not found')
     }
 
-    return null
+    return member as UserDto
   } catch (e) {
     const error = e as ErrorWithPotentialReqRes
 
@@ -69,79 +68,52 @@ export const authOptions: AuthOptions = {
     maxAge: SESION_TIMEOUT,
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
+    jwt: async ({ token, user, account }) => {
+      if (user && account) {
         // On first sign-in, user will be available
-        token.nationalId = user.nationalId
-        token.displayName = user.displayName ?? 'unknown'
-        token.roles = user.roles
-        if (user.accessToken) {
-          token.accessToken = user.accessToken
-        }
-        token.adminUserId = user.id
-        token.refreshToken = user.refreshToken
-        token.idToken = user.idToken
-        token.isRefreshTokenExpired = false
-      }
-      if (token.isRefreshTokenExpired) {
         return {
           ...token,
-          invalid: true,
-        }
+          nationalId: user.nationalId,
+          displayName: user.displayName ?? 'unknown',
+          role: user.role,
+          accessToken: account.access_token,
+          accessTokenExpires: account.expires_at
+            ? account.expires_at * 1000
+            : 0,
+          refreshToken: account.refresh_token,
+          userId: user.id,
+          idToken: account.id_token,
+        } as JWT
       }
 
-      // Handle token expiry and refresh logic
-      if (
-        checkTokenExpiry(
-          token.accessToken as string,
-          token.isRefreshTokenExpired as boolean,
-        )
-      ) {
-        try {
-          const [accessToken, refreshToken] =
-            await TokenService.refreshAccessToken(token.refreshToken as string)
-
-          token.accessToken = accessToken
-          token.refreshToken = refreshToken
-        } catch (error: any) {
-          logger.warn('Error refreshing access token.', error)
-
-          const errorMessage = error?.error
-          if (errorMessage === 'invalid_grant') {
-            token.isRefreshTokenExpired = true
-          }
-        }
+      // Check if token expires in more than 10 seconds
+      const date10SecondsAgo = Date.now() - 10000
+      if (date10SecondsAgo < (token.accessTokenExpires as number)) {
+        return token
       }
 
-      return token // Return the updated token object
+      // If token is expired, try to refresh it
+      // Returning new access, refresh and id tokens
+      // On failure, return token.invalid = true
+      return refreshAccessToken(token)
     },
+
     session: async ({ session, token }) => {
       session.user = {
         ...session.user,
-        roles: token.roles as AdminUserRole[],
+        role: token.role as UserRoleDto,
         displayName: token.displayName as string,
         nationalId: token.nationalId,
-        id: token.adminUserId as string,
+        id: token.userId as string,
       }
 
       // Add tokens to session
       session.accessToken = token.accessToken as string
       session.idToken = token.idToken as string
 
+      // If token is invalid, set invalid flag to session
       if (token.invalid) {
         session.invalid = true
-      }
-
-      const decoded = decode(token.accessToken)
-
-      if (
-        decoded &&
-        !(typeof decoded === 'string') &&
-        decoded['exp'] &&
-        decoded['scope']
-      ) {
-        session.expires = JSON.stringify(new Date(decoded.exp * 1000))
-        session.scope = decoded.scope
       }
 
       return session
@@ -151,27 +123,22 @@ export const authOptions: AuthOptions = {
         account?.provider === identityServerConfig.id &&
         account.access_token
       ) {
-        const decodedAccessToken = decode(account.access_token) as JWT
-
-        user.nationalId = decodedAccessToken?.nationalId as string
-        user.accessToken = account.access_token
-        user.refreshToken = account.refresh_token
-        user.idToken = account?.id_token
-
-        // Custom auth member from DB.
-        const authMember = await authorize(
-          user.nationalId,
-          account.access_token,
-        )
-
+        // Return false if no id_token is found
+        if (!account?.id_token) {
+          return false
+        }
+        const decodedAccessToken = decode(account?.id_token) as JWT
+        const nationalId = decodedAccessToken?.nationalId
+        const authMember = await authorize(nationalId, account?.id_token)
+        // Return false if no user is found
         if (!authMember) {
           return false
         }
-
-        user.roles = authMember.roles
+        // Mutate user object to include roles, nationalId and displayName
+        user.role = authMember.role
+        user.nationalId = nationalId
         user.displayName = authMember.displayName
         user.id = authMember.id
-
         return true
       }
 
@@ -182,7 +149,7 @@ export const authOptions: AuthOptions = {
     IdentityServer4({
       id: identityServerConfig.id,
       name: identityServerConfig.name,
-      clientId: identityServerConfig.clientId,
+      clientId: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID ?? '',
       clientSecret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
       issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {

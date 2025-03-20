@@ -1,7 +1,6 @@
 import { Transaction } from 'sequelize'
 import {
   ApplicationFeeCodesResponse,
-  Category,
   CreateAdvert,
   CreateMainCategory,
   DefaultSearchParams,
@@ -22,7 +21,6 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
-  MainCategory,
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,

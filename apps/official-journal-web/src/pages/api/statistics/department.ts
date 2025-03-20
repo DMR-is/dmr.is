@@ -1,15 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 import { isResponse } from '@dmr.is/utils/client'
 
 import { DepartmentSlugEnum } from '../../../gen/fetch'
-import { createDmrClient } from '../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 
-class GetStatisticsForDepartmentHandler {
-  private readonly client = createDmrClient()
-
+class GetStatisticsForDepartmentHandler extends RouteHandler {
   @LogMethod(false)
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -33,16 +30,13 @@ class GetStatisticsForDepartmentHandler {
   private async get(req: NextApiRequest, res: NextApiResponse) {
     const slug = req.query?.slug as DepartmentSlugEnum
 
-    const statistics = await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .getStatisticsForDepartment({
-        slug: slug,
-      })
+    const statistics = await this.client.getStatisticsForDepartment({
+      slug: slug,
+    })
 
     return res.status(200).json(statistics)
   }
 }
 
-const instance = new GetStatisticsForDepartmentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, GetStatisticsForDepartmentHandler)

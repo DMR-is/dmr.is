@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  regulations_db:
+    image: public.ecr.aws/docker/library/postgres:16
+    container_name: ${REGULATIONS_DB_HOST}
+    volumes:
+      - regulations_db_vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${REGULATIONS_DB_NAME}
+      - POSTGRES_USER=${REGULATIONS_DB_USER}
+      - POSTGRES_PASSWORD=${REGULATIONS_DB_PASSWORD}
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${REGULATIONS_DB_USER}",
+          "-d",
+          "${REGULATIONS_DB_NAME}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - '6379:6379'
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - '9200:9200'
+      - '9600:9600'
+
+volumes:
+  regulations_db_vol:
+  redis_data:
+  opensearch_data:

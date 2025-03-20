@@ -1,0 +1,36 @@
+name: 🚀 Deploy to Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-tag:
+        type: string
+        description: 'The version tag to deploy'
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}
+
+permissions:
+  id-token: write # Required f. IAM Token
+  contents: read
+
+env:
+  AWS_PROD_ACCOUNT_ID: 704383808130
+  ENV: prod
+
+jobs:
+  deploy-to-prod:
+    name: 🚀 Deploy to Prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🚀 Deploy to Prod
+        uses: ./.github/actions/deploy/deploy
+        with:
+          ENV: ${{ env.ENV }}
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          VERSION_TAG: ${{ github.event.inputs.version-tag }}
+          PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web

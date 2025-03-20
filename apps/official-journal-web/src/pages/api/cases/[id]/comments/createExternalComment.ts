@@ -1,15 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../lib/api/routeHandler'
 
 const commentBodySchema = z.object({
   comment: z.string(),
 })
 
-class CreateExternalCommentHandler {
+class CreateExternalCommentHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   @Post()
@@ -22,23 +24,18 @@ class CreateExternalCommentHandler {
 
     commentBodySchema.parse(req.body)
 
-    const dmrClient = createDmrClient()
-
     const body: z.infer<typeof commentBodySchema> = req.body
 
-    const addCommentResponse = await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createExternalComment({
-        id: id,
-        externalCommentBodyDto: {
-          comment: body.comment,
-        },
-      })
+    const addCommentResponse = await this.client.createExternalComment({
+      id: id,
+      externalCommentBodyDto: {
+        comment: body.comment,
+      },
+    })
 
     return res.status(200).json(addCommentResponse)
   }
 }
 
-const instance = new CreateExternalCommentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, CreateExternalCommentHandler)

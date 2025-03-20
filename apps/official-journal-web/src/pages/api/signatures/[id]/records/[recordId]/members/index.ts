@@ -1,16 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
 import { CreateSignatureMemberMemberTypeEnum } from '../../../../../../../gen/fetch'
-import { createDmrClient } from '../../../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../../../lib/api/routeHandler'
 
 const bodyShema = z.object({
   memberType: z.nativeEnum(CreateSignatureMemberMemberTypeEnum),
 })
 
-class SignatureMembersHandler {
+class SignatureMembersHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,20 +35,15 @@ class SignatureMembersHandler {
       return res.status(400).end()
     }
 
-    const dmrClient = createDmrClient()
-
-    await dmrClient
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createSignatureMember({
-        signatureId: id,
-        recordId: recordId,
-        memberType: parsed.data.memberType,
-      })
+    await this.client.createSignatureMember({
+      signatureId: id,
+      recordId: recordId,
+      memberType: parsed.data.memberType,
+    })
 
     return res.status(204).end()
   }
 }
 
-const instance = new SignatureMembersHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, SignatureMembersHandler)

@@ -1,6 +1,5 @@
 import { GetServerSideProps } from 'next'
-import { getSession } from 'next-auth/react'
-import { AuthMiddleware } from '@dmr.is/middleware'
+import { getServerSession } from 'next-auth'
 
 import {
   GridColumn,
@@ -20,9 +19,10 @@ import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/categoryContext'
 import { Category, Department, MainCategory } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
-import { createDmrClient } from '../../lib/api/createClient'
+import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
-import { loginRedirect } from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 type Props = {
   mainCategories: MainCategory[]
@@ -83,8 +83,8 @@ export default function CasePublishingOverview({
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const session = await getSession({ req })
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getServerSession(req, res, authOptions)
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: false,
@@ -95,23 +95,17 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     return loginRedirect(Routes.MainCategories)
   }
 
-  const client = createDmrClient()
+  const client = getDmrClient(session.idToken)
 
-  const mainCategoriesPromise = client
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getMainCategories({
-      pageSize: 1000,
-    })
+  const mainCategoriesPromise = client.getMainCategories({
+    pageSize: 1000,
+  })
 
-  const categoriesPromise = client
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getCategories({
-      pageSize: 1000,
-    })
+  const categoriesPromise = client.getCategories({
+    pageSize: 1000,
+  })
 
-  const departmentsPromise = client
-    .withMiddleware(new AuthMiddleware(session.accessToken))
-    .getDepartments({ pageSize: 10 })
+  const departmentsPromise = client.getDepartments({ pageSize: 10 })
 
   const [mainCategories, categories, departments] = await Promise.all([
     mainCategoriesPromise,
@@ -120,11 +114,12 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   ])
 
   return {
-    props: {
+    props: deleteUndefined({
+      session,
       layout,
       mainCategories: mainCategories.mainCategories,
       categories: categories.categories,
       departments: departments.departments,
-    },
+    }),
   }
 }

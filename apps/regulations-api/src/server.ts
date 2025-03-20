@@ -1,12 +1,14 @@
+/* eslint-disable no-console */
 import { fastify as fast } from 'fastify'
-import fastifyBasicAuth, { FastifyBasicAuthOptions } from 'fastify-basic-auth'
-import fastifyCompress from 'fastify-compress'
+import fastifyBasicAuth, { FastifyBasicAuthOptions } from '@fastify/basic-auth'
+import fastifyCompress from '@fastify/compress'
+import fastifyMultipart from '@fastify/multipart'
 import FastifyOpenSearch from '@fastify/opensearch'
-import fastifyMultipart from 'fastify-multipart'
-import fastifyRateLimiter from 'fastify-rate-limit'
+import fastifyRateLimiter from '@fastify/rate-limit'
 import fastifyRedis from '@fastify/redis'
 
 import { fileUploadRoutes } from './routes/fileUploadRoutes'
+import { healthCheck } from './routes/health'
 import { lawChapterRoutes } from './routes/lawChapterRoutes'
 import { ministryRoutes } from './routes/ministryRoutes'
 import { redirectsRoutes } from './routes/redirectsRoutes'
@@ -19,7 +21,6 @@ import {
 import { yearsRoutes } from './routes/yearsRoutes'
 import { connectSequelize } from './utils/sequelize'
 import { serveRobotsTxt } from './utils/server-utils'
-import { healthCheck } from './routes/health'
 
 // ===========================================================================
 
@@ -102,7 +103,7 @@ const start = async () => {
     connectSequelize()
     const serverPort = PORT || 3000
 
-    await fastify.listen(serverPort, '0.0.0.0')
+    fastify.listen({port: 3000, host: '0.0.0.0'})
 
     console.info('API up and running on port ' + serverPort)
   } catch (err) {

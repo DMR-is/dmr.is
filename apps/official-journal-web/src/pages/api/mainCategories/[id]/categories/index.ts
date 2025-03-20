@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
-import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../../lib/api/createClient'
+import {
+  handlerWrapper,
+  RouteHandler,
+} from '../../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../../lib/constants'
 
-class MainCategoryCategoriesHandler {
-  private readonly client = createDmrClient()
-
+class MainCategoryCategoriesHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,19 +33,16 @@ class MainCategoryCategoriesHandler {
     req: NextApiRequest,
     res: NextApiResponse,
   ) {
-    await this.client
-      .withMiddleware(new AuthMiddleware(req.headers.authorization))
-      .createMainCategoryCategories({
-        mainCategoryId: req.query.id as string,
-        createMainCategoryCategories: {
-          categories: req.body.categories,
-        },
-      })
+    await this.client.createMainCategoryCategories({
+      mainCategoryId: req.query.id as string,
+      createMainCategoryCategories: {
+        categories: req.body.categories,
+      },
+    })
 
     return void res.status(204).end()
   }
 }
 
-const instance = new MainCategoryCategoriesHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, MainCategoryCategoriesHandler)

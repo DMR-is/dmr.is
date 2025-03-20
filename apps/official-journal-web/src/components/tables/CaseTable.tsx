@@ -1,6 +1,9 @@
-import reverse from 'lodash/reverse'
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
-import { useMemo, useState } from 'react'
+import {
+  parseAsInteger,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate'
+import { useState } from 'react'
 
 import {
   Box,
@@ -61,58 +64,35 @@ export const CaseTable = ({
   loading = false,
   modalLink,
   columns,
-  rows,
+  rows: maybeRows,
   defaultSort,
   paging,
 }: Props) => {
+  const rows = maybeRows ?? []
+
   const { formatMessage } = useFormatMessage()
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   const breakpoints = useBreakpoints()
 
-  const [sorting, setSorting] = useState<{
-    key: string
-    direction: 'asc' | 'desc'
-  }>({
-    ...defaultSort,
-  })
+  const [_sortKey, setSortKey] = useQueryState(
+    'sortBy',
+    parseAsString.withDefault(defaultSort.key),
+  )
+  const [sortDirection, setSortDirection] = useQueryState(
+    'direction',
+    parseAsString.withDefault(defaultSort.direction),
+  )
 
   const [_, setPage] = useQueryState(
     'page',
     parseAsInteger.withDefault(paging?.page || 1),
   )
 
-  const sortedData = useMemo(() => {
-    if (!rows) return []
-    const sorted = [...rows].sort((a, b) => {
-      const nameA = a.cells.find((cell) => cell.sortingKey === sorting.key)
-      const nameB = b.cells.find((cell) => cell.sortingKey === sorting.key)
-
-      if (!nameA?.sortingValue || !nameB?.sortingValue) return 0
-
-      if (nameA.sortingValue < nameB.sortingValue) {
-        return -1
-      }
-      if (nameA.sortingValue > nameB.sortingValue) {
-        return 1
-      }
-      return 0
-    })
-
-    return sorting.direction === 'asc' ? sorted : reverse(sorted)
-  }, [sorting, rows])
-
   const onSortClick = (key: string) => {
-    setSorting({
-      key: key,
-      direction:
-        sorting.key === key
-          ? sorting.direction === 'asc'
-            ? 'desc'
-            : 'asc'
-          : 'asc',
-    })
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    setSortKey(key)
   }
 
   return (
@@ -127,6 +107,7 @@ export const CaseTable = ({
             )}
             {columns.map((column, index) => (
               <TableHeadCell
+                name={column.name}
                 key={index}
                 size={column.size}
                 sortable={column.sortable}
@@ -146,11 +127,11 @@ export const CaseTable = ({
             )}
           </T.Row>
         </T.Head>
-        {sortedData.length === 0 ? (
+        {rows.length === 0 ? (
           <CaseTableEmpty columns={columns.length} />
         ) : (
           <T.Body>
-            {sortedData.map((row) => (
+            {rows.map((row) => (
               <tr
                 className={styles.tableRow}
                 onMouseOver={() => setHoveredRow(row.case.id)}

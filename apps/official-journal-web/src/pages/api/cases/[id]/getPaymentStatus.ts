@@ -2,10 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { AuthMiddleware } from '@dmr.is/middleware'
 
-import { createDmrClient } from '../../../../lib/api/createClient'
+import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../../lib/constants'
 
-class GetPaymentHandler {
+class GetPaymentHandler extends RouteHandler {
   @LogMethod(false)
   @HandleApiException()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,9 +17,7 @@ class GetPaymentHandler {
         .json(OJOIWebException.badRequest('Invalid request body'))
     }
 
-    const dmrClient = createDmrClient()
-
-    const paymentStatus = await dmrClient
+    const paymentStatus = await this.client
       .withMiddleware(new AuthMiddleware(req.headers.authorization))
       .getCasePaymentStatus({
         id,
@@ -29,6 +27,5 @@ class GetPaymentHandler {
   }
 }
 
-const instance = new GetPaymentHandler()
 export default (req: NextApiRequest, res: NextApiResponse) =>
-  instance.handler(req, res)
+  handlerWrapper(req, res, GetPaymentHandler)

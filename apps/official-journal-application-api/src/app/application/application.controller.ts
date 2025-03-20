@@ -1,33 +1,47 @@
-import { CurrentUser, WithCase } from '@dmr.is/decorators'
 import {
-  ApplicationAuthGaurd,
+  ALLOWED_MIME_TYPES,
+  AttachmentTypeParam,
+  ONE_MEGA_BYTE,
+  UserRoleEnum,
+} from '@dmr.is/constants'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
   IApplicationService,
-  IApplicationUserService,
+  InvolvedPartyGuard,
   ISignatureService,
+  IUserService,
+  RoleGuard,
+  TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import {
+  EnumValidationPipe,
+  FileTypeValidationPipe,
+  IsStringValidationPipe,
+  UUIDValidationPipe,
+} from '@dmr.is/pipelines'
+import {
+  AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
-  ApplicationUser,
-  ApplicationUserInvolvedPartiesResponse,
   CasePriceResponse,
   GetAdvertTemplateResponse,
-  AdvertTemplateDetails,
+  GetApplicationAdvertsQuery,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
+  GetApplicationPriceQuery,
   GetApplicationResponse,
+  GetComments,
+  GetInvoledPartiesByUserResponse,
   GetPresignedUrlBody,
+  GetSignature,
   PostApplicationAttachmentBody,
   PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
-  GetComments,
-  GetSignature,
-  GetApplicationAdvertsQuery,
-  GetApplicationPriceQuery,
+  UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { FilesInterceptor } from '@nestjs/platform-express'
-import 'multer'
+
 import {
   Body,
   Controller,
@@ -43,18 +57,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import {
-  UUIDValidationPipe,
-  FileTypeValidationPipe,
-  EnumValidationPipe,
-  IsStringValidationPipe,
-} from '@dmr.is/pipelines'
-import {
-  ALLOWED_MIME_TYPES,
-  AttachmentTypeParam,
-  ONE_MEGA_BYTE,
-} from '@dmr.is/constants'
-import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiNoContentResponse,
@@ -62,14 +67,16 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import 'multer'
 
 @Controller({
   path: 'applications',
   version: '1',
 })
-@UseGuards(ApplicationAuthGaurd)
-@WithCase(false)
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@ApiBearerAuth()
+@Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
@@ -78,8 +85,8 @@ export class ApplicationController {
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
 
-    @Inject(IApplicationUserService)
-    private readonly applicationUserService: IApplicationUserService,
+    @Inject(IUserService)
+    private readonly userService: IUserService,
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -130,7 +137,7 @@ export class ApplicationController {
   @Get(':id/comments')
   @ApiOperation({ operationId: 'getComments' })
   @ApiResponse({ status: 200, type: GetComments })
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async getComments(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ): Promise<GetComments> {
@@ -142,11 +149,11 @@ export class ApplicationController {
   @Post(':id/comments')
   @ApiOperation({ operationId: 'postComment' })
   @ApiNoContentResponse()
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async postComment(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
     @Body() commentBody: PostApplicationComment,
-    @CurrentUser() user: ApplicationUser,
+    @CurrentUser() user: UserDto,
   ): Promise<void> {
     ResultWrapper.unwrap(
       await this.applicationService.postComment(
@@ -280,17 +287,17 @@ export class ApplicationController {
 
   @Get(':id/involved-parties')
   @ApiOperation({ operationId: 'getInvolvedParties' })
-  @ApiResponse({ type: ApplicationUserInvolvedPartiesResponse })
-  async getInvolvedParties(@CurrentUser() user: ApplicationUser) {
+  @ApiResponse({ type: GetInvoledPartiesByUserResponse })
+  async getInvolvedParties(@CurrentUser() user: UserDto) {
     return ResultWrapper.unwrap(
-      await this.applicationUserService.getUserInvolvedParties(user.id),
+      await this.userService.getInvolvedPartiesByUser(user),
     )
   }
 
   @Get(':id/case')
   @ApiOperation({ operationId: 'getApplicationCase' })
   @ApiResponse({ type: GetApplicationCaseResponse })
-  @WithCase(true)
+  @UseGuards(InvolvedPartyGuard)
   async getApplicationCase(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ) {

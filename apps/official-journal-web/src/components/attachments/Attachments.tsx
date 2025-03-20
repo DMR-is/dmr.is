@@ -66,8 +66,6 @@ export const Attachments = () => {
 
   return (
     <Box>
-      <Text variant="h5">{formatMessage(messages.attachments.title)}</Text>
-
       {error && (
         <Box marginY={2}>
           <AlertMessage type="warning" title="Villa kom upp" message={error} />

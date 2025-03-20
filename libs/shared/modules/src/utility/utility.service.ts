@@ -4,7 +4,7 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { GetApplicationResponse, User } from '@dmr.is/shared/dto'
+import { GetApplicationResponse } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
@@ -13,10 +13,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import {
-  ApplicationAttachmentModel,
-  ApplicationAttachmentTypeModel,
-} from '../attachments/models'
-import {
+  CaseAdditionModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -26,15 +23,12 @@ import { CaseCategoriesModel } from '../case/models/case-categories.model'
 import { casesDetailedIncludes } from '../case/relations'
 import {
   AdvertCategoryModel,
-  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusModel,
 } from '../journal/models'
 import { SignatureModel } from '../signature/models/signature.model'
-import { SignatureMemberModel } from '../signature/models/signature-member.model'
-import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from './utility.service.interface'
 
 export class UtilityService implements IUtilityService {
@@ -73,15 +67,35 @@ export class UtilityService implements IUtilityService {
   async institutionLookup(
     institutionId: string,
   ): Promise<ResultWrapper<AdvertInvolvedPartyModel>> {
-    const institution = await this.advertInvolvedPartyModel.findByPk(
-      institutionId,
-    )
+    const institution =
+      await this.advertInvolvedPartyModel.findByPk(institutionId)
 
     if (!institution) {
       throw new NotFoundException(`Institution<${institutionId}> not found`)
     }
 
     return ResultWrapper.ok(institution)
+  }
+
+  @LogAndHandle()
+  async getCaseInvolvedPartyByApplicationId(
+    applicationId: string,
+  ): Promise<ResultWrapper<{ involvedPartyId: string }>> {
+    const found = await this.caseModel.findOne({
+      attributes: ['involvedPartyId'],
+      where: {
+        applicationId: applicationId,
+      },
+    })
+
+    if (!found) {
+      return ResultWrapper.err({
+        code: 404,
+        message: `Case with applicationId<${applicationId}> not found`,
+      })
+    }
+
+    return ResultWrapper.ok({ involvedPartyId: found.involvedPartyId })
   }
 
   @LogAndHandle()
@@ -228,7 +242,7 @@ export class UtilityService implements IUtilityService {
   }
 
   @LogAndHandle()
-  async userLookup(userId: string): Promise<ResultWrapper<User>> {
+  async userLookup(userId: string): Promise<ResultWrapper> {
     const userLookup = ALL_MOCK_USERS.find((u) => u.id === userId)
 
     if (!userLookup) {
@@ -396,6 +410,9 @@ export class UtilityService implements IUtilityService {
         ...casesDetailedIncludes,
         {
           model: SignatureModel,
+        },
+        {
+          model: CaseAdditionModel,
         },
       ],
 

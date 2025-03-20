@@ -1,7 +1,9 @@
+import { useSession } from 'next-auth/react'
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetSignature } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { getDmrClient } from '../../../lib/api/createClient'
+import { swrFetcher } from '../../../lib/constants'
 
 type UseSignatureParams = {
   signatureId: string
@@ -9,14 +11,14 @@ type UseSignatureParams = {
 }
 
 export const useSignature = ({ signatureId, options }: UseSignatureParams) => {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<
-    GetSignature,
-    Error
-  >(
-    signatureId ? [APIRoutes.Signature, signatureId] : null,
-    ([url, id]: [url: string, id: string]) =>
-      fetcher(url.replace(':id', id), {
-        arg: { withAuth: true, method: 'GET' },
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    session ? ['getSignature', session?.user, signatureId] : null,
+    ([_key, _user, id]) =>
+      swrFetcher({
+        func: () => dmrClient.getSignature({ signatureId: id }),
       }),
     {
       revalidateOnFocus: false,

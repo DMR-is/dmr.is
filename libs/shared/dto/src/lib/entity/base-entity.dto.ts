@@ -8,7 +8,8 @@ import { ApiProperty } from '@nestjs/swagger'
  * - and DRU (Don't Repeat Yourself)
  * - https://docs.nestjs.com/openapi/mapped-types
  */
-export class BaseEntity {
+
+export class BaseEntity<T = string> {
   @ApiProperty({
     type: String,
     description: 'Id of the entity',
@@ -16,10 +17,10 @@ export class BaseEntity {
   id!: string
 
   @ApiProperty({
-    type: String,
+    type: String, // TODO: figure out how to have this be of type T
     description: 'Title of the entity',
   })
-  title!: string
+  title!: T
 
   @ApiProperty({
     type: String,

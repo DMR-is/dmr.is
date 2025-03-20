@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react'
-
 import {
   AccordionItem,
   Checkbox,
@@ -9,6 +7,7 @@ import {
   SkeletonLoader,
   Stack,
   toast,
+  useBreakpoint,
 } from '@island.is/island-ui/core'
 
 import { useUpdatePublishDate } from '../../hooks/api'
@@ -17,7 +16,6 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { PriceCalculator } from '../price/calculator'
-import { Spinner } from '../spinner/Spinner'
 
 type Props = {
   toggle: boolean
@@ -27,31 +25,24 @@ type Props = {
 export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const { currentCase, refetch, canEdit } = useCaseContext()
+  const { currentCase, refetch, canEdit, handleOptimisticUpdate } =
+    useCaseContext()
 
-  const [fastTrack, setFastTrack] = useState(currentCase.fastTrack)
-  const [fastTrackDelay, setFastTrackDelay] = useState(false)
-
-  useEffect(() => {
-    setFastTrackDelay(true)
-    const delay = setInterval(() => {
-      setFastTrackDelay(false)
-    }, 1000)
-
-    return () => {
-      clearInterval(delay)
-    }
-  }, [fastTrack])
+  const { md } = useBreakpoint()
 
   const { trigger: updateFasttrack } = useUpdateFastTrack({
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð')
+        toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð', {
+          toastId: 'fasttrack',
+        })
         refetch()
       },
       onError: () => {
-        toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar')
+        toast.error('Ekki tókst að uppfæra hraðbirtingarstaða auglýsingar', {
+          toastId: 'fasttrack',
+        })
       },
     },
   })
@@ -106,20 +97,25 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               placeholderText="Dagsetning birtingar"
               selected={new Date(currentCase.requestedPublicationDate)}
               label={formatMessage(messages.grunnvinnsla.publicationDate)}
-              handleChange={(date) =>
-                updatePublishingDate({ date: date.toISOString() })
-              }
+              handleChange={(date) => {
+                const publishingDate = date.toISOString()
+                handleOptimisticUpdate(
+                  { ...currentCase, requestedPublicationDate: publishingDate },
+                  () => updatePublishingDate({ date: publishingDate }),
+                )
+              }}
             />
           )}
           <Inline alignY="center" space={1}>
-            {fastTrackDelay && <Spinner />}
             <Checkbox
-              disabled={fastTrackDelay || !canEdit}
+              disabled={!canEdit}
               checked={currentCase.fastTrack}
               label="Óskað er eftir hraðbirtingu"
               onChange={(e) => {
-                updateFasttrack({ fastTrack: e.target.checked })
-                setFastTrack(e.target.checked)
+                handleOptimisticUpdate(
+                  { ...currentCase, fastTrack: e.target.checked },
+                  () => updateFasttrack({ fastTrack: e.target.checked }),
+                )
               }}
             />
           </Inline>

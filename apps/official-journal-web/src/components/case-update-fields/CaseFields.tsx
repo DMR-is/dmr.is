@@ -18,6 +18,7 @@ import { AttachmentFields } from './AttachmentsFields'
 import { CaseCorrectionFields } from './CaseCorrectionField'
 import { CommentFields } from './CommentFields'
 import { CommonFields } from './CommonFields'
+import { CommunicationChannelsField } from './CommunicationChannelsField'
 import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
 import { SignatureFields } from './SignatureFields'
@@ -33,6 +34,7 @@ export const CaseFields = () => {
   const messageToggle = useToggle(false)
   const commentToggle = useToggle(false)
   const correctionToggle = useToggle(false)
+  const communicationChannelsToggle = useToggle(false)
 
   const toggles = [
     commonToggle,
@@ -43,28 +45,15 @@ export const CaseFields = () => {
     messageToggle,
     commentToggle,
     correctionToggle,
+    communicationChannelsToggle,
   ]
 
   const expandAll = () => {
-    commonToggle.setToggle(true)
-    publishingToggle.setToggle(true)
-    advertToggle.setToggle(true)
-    signatureToggle.setToggle(true)
-    attachmentToggle.setToggle(true)
-    messageToggle.setToggle(true)
-    commentToggle.setToggle(true)
-    correctionToggle.setToggle(true)
+    toggles.forEach((toggle) => toggle.setToggle(true))
   }
 
   const closeAll = () => {
-    commonToggle.setToggle(false)
-    publishingToggle.setToggle(false)
-    advertToggle.setToggle(false)
-    signatureToggle.setToggle(false)
-    attachmentToggle.setToggle(false)
-    messageToggle.setToggle(false)
-    commentToggle.setToggle(false)
-    correctionToggle.setToggle(false)
+    toggles.forEach((toggle) => toggle.setToggle(false))
   }
 
   const isSomeOpen = toggles.some((toggle) => toggle.toggle)
@@ -127,6 +116,10 @@ export const CaseFields = () => {
               <AttachmentFields
                 toggle={attachmentToggle.toggle}
                 onToggle={attachmentToggle.onToggle}
+              />
+              <CommunicationChannelsField
+                toggle={communicationChannelsToggle.toggle}
+                onToggle={communicationChannelsToggle.onToggle}
               />
               <MessageField
                 toggle={messageToggle.toggle}

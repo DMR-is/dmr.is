@@ -1,11 +1,11 @@
 // import { usePathname } from 'next/navigation'
 
+import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
 import {
   Box,
-  DropdownMenu,
   Icon,
   Inline,
   LinkV2,
@@ -17,6 +17,7 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { PagePaths } from '../../lib/constants'
 import * as styles from './ControlPanel.css'
 export const ControlPanel = () => {
+  const { data } = useSession()
   const { formatMessage } = useFormatMessage()
   const [toggle, setToggle] = useState(false)
   const popover = usePopoverState({
@@ -24,18 +25,22 @@ export const ControlPanel = () => {
     visible: toggle,
     gutter: 0,
   })
-  // const pathBranch = usePathname().split('/')[1]
 
-  // const activePath = PagePaths.find(
-  //   (path) => path.pathname === `/${pathBranch}`,
-  // )
+  const isAdmin = data?.user.role.slug === 'ritstjori'
 
-  const paths = PagePaths.sort((a, b) => a.order - b.order).map((path) => {
-    return {
-      title: path.title,
-      href: path.pathname,
-    }
-  })
+  const paths = isAdmin
+    ? PagePaths.sort((a, b) => a.order - b.order).map((path) => {
+        return {
+          title: path.title,
+          href: path.pathname,
+        }
+      })
+    : [
+        {
+          title: 'Notendur',
+          href: '/notendur',
+        },
+      ]
 
   return (
     <>

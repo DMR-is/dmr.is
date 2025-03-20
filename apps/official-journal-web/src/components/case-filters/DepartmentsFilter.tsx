@@ -28,12 +28,7 @@ export const DepartmentsFilter = () => {
     <FilterGroup
       label="Deild"
       queryKey="department"
-      options={
-        departments?.map((dep) => ({
-          label: dep.title,
-          value: dep.title,
-        })) ?? []
-      }
+      options={departments ?? []}
       loading={isLoading}
     />
   )

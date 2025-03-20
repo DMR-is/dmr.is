@@ -34,7 +34,7 @@ export const CaseTableInReview = ({ cases, paging, isLoading }: TableProps) => {
     },
     {
       name: 'caseDepartment',
-      sortable: true,
+      sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.inReview.columns.department),
     },

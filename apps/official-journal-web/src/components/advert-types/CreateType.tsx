@@ -5,7 +5,6 @@ import {
   Button,
   Inline,
   Input,
-  Select,
   Stack,
   toast,
 } from '@island.is/island-ui/core'

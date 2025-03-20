@@ -117,7 +117,7 @@ export const fetcher = async <TData, TBody = never>(
 
   if (withAuth) {
     const session = await getSession()
-    authHeader = session ? `${session.accessToken}` : ''
+    authHeader = session ? `${session.idToken}` : ''
   }
 
   const fullUrl = arg.query ? `${url}?${arg.query.toString()}` : url
@@ -141,6 +141,17 @@ export const fetcher = async <TData, TBody = never>(
   }
 
   return res.json()
+}
+
+type SWRFetcherArgs<T> = {
+  func: () => Promise<T>
+}
+export const swrFetcher = async <T>({
+  func,
+}: SWRFetcherArgs<T>): Promise<T> => {
+  const res = await func()
+
+  return res
 }
 
 export enum APIRoutes {
@@ -189,10 +200,6 @@ export enum APIRoutes {
   PublishCases = '/api/cases/publish',
   UnpublishCase = '/api/cases/:id/unpublish',
   RejectCase = '/api/cases/:id/reject',
-  AdminUsers = '/api/admin-users',
-  AdminUser = '/api/admin-users/:id',
-  ApplicationUsers = '/api/application-users',
-  ApplicationUser = '/api/application-users/:id',
   Institutions = '/api/institutions',
   Institution = '/api/institutions/:id',
   UpdateCaseType = '/api/cases/:id/updateType',

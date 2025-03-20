@@ -1,9 +1,10 @@
+import { useSession } from 'next-auth/react'
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCategoriesResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { getDmrClient } from '../../../lib/api/createClient'
+import { swrFetcher } from '../../../lib/constants'
 import { SearchParams } from '../../../lib/types'
-import { generateParams } from '../../../lib/utils'
 
 type SWRCategoriesOptions = SWRConfiguration<GetCategoriesResponse, Error>
 
@@ -16,17 +17,16 @@ export const useCategories = ({
   options,
   params,
 }: UseCategoriesParams = {}) => {
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
   const { data, error, isLoading, mutate, isValidating } = useSWR<
     GetCategoriesResponse,
     Error
   >(
-    [APIRoutes.Categories, params],
-    ([url, qsp]: [url: string, qsp: SearchParams]) =>
-      fetcher(url, {
-        arg: {
-          method: 'GET',
-          query: generateParams(qsp),
-        },
+    session ? ['getCategories', params] : null,
+    ([_key, qsp]: [_key: string, qsp: SearchParams]) =>
+      swrFetcher({
+        func: () => dmrClient.getCategories(qsp),
       }),
     {
       refreshInterval: 0,

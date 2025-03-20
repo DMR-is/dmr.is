@@ -1,11 +1,12 @@
-import { Injectable, NestMiddleware } from '@nestjs/common'
-import { Request, Response, NextFunction } from 'express'
+import { NextFunction,Request, Response } from 'express'
 import { logger } from '@dmr.is/logging'
+
+import { Injectable, NestMiddleware } from '@nestjs/common'
 
 @Injectable()
 export class LogRequestMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const { method, url, headers } = req
+    const { method, url } = req
 
     logger.debug(`${method}: ${url}`, {
       context: 'LogRequestMiddleware',

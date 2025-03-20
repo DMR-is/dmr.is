@@ -696,40 +696,22 @@ export class JournalService implements IJournalService {
       offset: (page - 1) * pageSize,
       order: [['title', 'ASC']],
       where: whereParams,
-      include: AdvertMainCategoryModel,
+      include: [
+        {
+          model: AdvertMainCategoryModel,
+          through: {
+            attributes: ['advert_main_category_id', 'advert_category_id'],
+          },
+        },
+      ],
     })
 
     const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
 
-    // TODO: do this better????
-    const withMainCategories = await Promise.all(
-      mapped.map(async (c) => {
-        const mainCategory = await this.advertCategoryCategoriesModel.findAll({
-          where: { advert_category_id: c.id },
-          include: [AdvertMainCategoryModel],
-        })
-
-        return {
-          ...c,
-          mainCategories: mainCategory.map((m) => ({
-            id: m.mainCategory.id,
-            title: m.mainCategory.title,
-            slug: m.mainCategory.slug,
-            description: m.mainCategory.description,
-          })),
-        }
-      }),
-    )
-
-    const paging = generatePaging(
-      withMainCategories,
-      page,
-      pageSize,
-      categories.count,
-    )
+    const paging = generatePaging(mapped, page, pageSize, categories.count)
 
     return ResultWrapper.ok({
-      categories: withMainCategories,
+      categories: mapped,
       paging,
     })
   }
@@ -755,15 +737,27 @@ export class JournalService implements IJournalService {
     }
 
     const ad = advertMigrate(advert)
+
+    let html = advert.documentHtml
+    if (advert.isLegacy) {
+      try {
+        html = dirtyClean(advert.documentHtml as HTMLText)
+      } catch {
+        this.logger.warn("Dirty clean failed for advert's HTML", {
+          category: LOGGING_CATEGORY,
+          metadata: { advertId: id },
+        })
+        html = advert.documentHtml
+      }
+    }
+
     return ResultWrapper.ok({
       advert: {
         ...ad,
         document: {
           isLegacy: advert.isLegacy,
-          html: advert.isLegacy
-            ? dirtyClean(advert.documentHtml as HTMLText)
-            : advert.documentHtml,
-          pdfUrl: `${process.env.ADVERTS_CDN_URL}/${advert.documentPdfUrl}`,
+          html,
+          pdfUrl: `${advert.documentPdfUrl}`,
         },
       },
     })
@@ -870,6 +864,14 @@ export class JournalService implements IJournalService {
       Object.assign(whereParams, {
         publicationDate: {
           [Op.lte]: params.dateTo,
+        },
+      })
+    }
+
+    if (params?.dateTo && params?.dateFrom) {
+      Object.assign(whereParams, {
+        publicationDate: {
+          [Op.between]: [params.dateFrom, params.dateTo],
         },
       })
     }

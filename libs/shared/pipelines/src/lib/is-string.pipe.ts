@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
 import { isString } from 'class-validator'
+
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
 
 @Injectable()
 export class IsStringValidationPipe implements PipeTransform {

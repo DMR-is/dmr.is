@@ -1,10 +1,10 @@
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { IAdminUserService } from '@dmr.is/modules'
+import { IUserService } from '@dmr.is/modules'
 import {
-  AdminUser,
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
+  UserDto,
 } from '@dmr.is/shared/dto'
 
 import { NotImplementedException } from '@nestjs/common'
@@ -32,12 +32,12 @@ describe('StatisticsController', () => {
           },
         },
         {
-          provide: IStatisticsService,
-          useClass: MockStatisticsService,
+          provide: IUserService,
+          useValue: jest.fn(),
         },
         {
-          provide: IAdminUserService,
-          useValue: jest.fn(),
+          provide: IStatisticsService,
+          useClass: MockStatisticsService,
         },
       ],
     }).compile()
@@ -50,6 +50,7 @@ describe('StatisticsController', () => {
         const results = await controller.department(
           department.slug as DepartmentSlugEnum,
         )
+
         expect(results.total).toBeGreaterThanOrEqual(0)
       })
     })
@@ -59,7 +60,7 @@ describe('StatisticsController', () => {
     it('Should return total count larger than 0', async () => {
       const results = await controller.overview(
         StatisticsOverviewQueryType.General,
-        {} as AdminUser,
+        {} as UserDto,
       )
       expect(results.total).toEqual(0)
     })
@@ -68,7 +69,7 @@ describe('StatisticsController', () => {
       try {
         await controller.overview(
           StatisticsOverviewQueryType.General,
-          {} as AdminUser,
+          {} as UserDto,
         )
       } catch (error) {
         if (error instanceof NotImplementedException) {

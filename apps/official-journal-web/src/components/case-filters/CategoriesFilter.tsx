@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react'
+import { useState } from 'react'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -7,7 +7,6 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
 import { FilterGroup } from '../filter-group/FilterGroup'
-
 
 export const CategoriesFilter = () => {
   const { formatMessage } = useFormatMessage()
@@ -34,12 +33,7 @@ export const CategoriesFilter = () => {
     <FilterGroup
       label="Flokkur"
       queryKey="category"
-      options={
-        data?.categories.map((c) => ({
-          label: c.title,
-          value: c.title,
-        })) ?? []
-      }
+      options={data?.categories ?? []}
       search={search}
       setSearch={setSearch}
       loading={isLoading}

@@ -1,12 +1,14 @@
+import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
 
 import {
+  GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsForDepartmentRequest,
   GetStatisticsOverviewRequest,
-  GetStatisticsOverviewResponse,
 } from '../../gen/fetch'
-import { APIRoutes, fetcher } from '../../lib/constants'
+import { getDmrClient } from '../../lib/api/createClient'
+import { APIRoutes, fetcher, swrFetcher } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
 
 type UseStatisticsParams = {
@@ -14,10 +16,10 @@ type UseStatisticsParams = {
   overviewParams?: GetStatisticsOverviewRequest
 }
 
-export const useStatistics = ({
-  departmentParams,
-  overviewParams,
-}: UseStatisticsParams) => {
+export const useStatistics = ({ departmentParams }: UseStatisticsParams) => {
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
   const {
     data: departmentStatistics,
     isLoading: isLoadingDepartmentStatistics,
@@ -42,19 +44,17 @@ export const useStatistics = ({
   )
 
   const {
-    data: overviewData,
-    isLoading: isLoadingOverview,
-    error: errorOverview,
-  } = useSWR<GetStatisticsOverviewResponse>(
-    overviewParams ? [APIRoutes.GetStatisticsOverview, overviewParams] : null,
-    ([url, qsp]: [url: string, qsp: GetStatisticsOverviewRequest]) =>
-      fetcher<GetStatisticsOverviewResponse>(url, {
-        arg: {
-          method: 'GET',
-          query: generateParams(qsp),
-          withAuth: true,
-        },
-      }),
+    data: overviewDashboard,
+    isLoading: overviewDashboardLoading,
+    error: overviewDashboardError,
+  } = useSWR<GetStatisticOverviewDashboardResponse>(
+    session ? ['getOverviewForDashboard', session?.user] : null,
+    ([_key, _user]) => {
+      return swrFetcher({
+        func: () => dmrClient.getStatisticsOverviewDashboard(),
+      })
+    },
+
     {
       refreshInterval: 0,
       revalidateOnFocus: false,
@@ -62,12 +62,19 @@ export const useStatistics = ({
     },
   )
 
+  const overViewDashboardData = Object.fromEntries(
+    overviewDashboard?.items.map((item) => [
+      item.overviewType,
+      item.overview,
+    ]) ?? [],
+  )
+
   return {
     departmentStatistics,
     isLoadingDepartmentStatistics,
     errorDepartmentStatistics,
-    overviewData,
-    isLoadingOverview,
-    errorOverview,
+    overViewDashboardData,
+    overviewDashboardLoading,
+    overviewDashboardError,
   }
 }
