@@ -9,9 +9,12 @@ import {
   AddCaseAdvertCorrection,
   AdvertStatus,
   Case,
+  CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  CreateCaseDto,
+  CreateCaseResponseDto,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
@@ -93,6 +96,8 @@ import { ICaseCreateService } from './services/create/case-create.service.interf
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseChannelModel,
+  CaseChannelsModel,
   CaseCommunicationStatusModel,
   CaseHistoryModel,
   CaseModel,
@@ -141,9 +146,52 @@ export class CaseService implements ICaseService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
+    @InjectModel(CaseChannelModel)
+    private readonly caseChannelModel: typeof CaseChannelModel,
+    @InjectModel(CaseChannelsModel)
+    private readonly caseChannelsModel: typeof CaseChannelsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
+  }
+  @LogAndHandle()
+  @Transactional()
+  async deleteCaseChannel(
+    caseId: string,
+    channelId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    await this.caseChannelsModel.destroy({
+      where: {
+        caseId: caseId,
+        channelId: channelId,
+      },
+      transaction,
+    })
+    await this.caseChannelModel.destroy({
+      where: {
+        id: channelId,
+      },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCase(
+    currentUser: UserDto,
+    body: CreateCaseDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>> {
+    const results = this.createService.createCase(
+      currentUser,
+      body,
+      transaction,
+    )
+
+    return results
   }
 
   @LogAndHandle()
@@ -846,7 +894,7 @@ export class CaseService implements ICaseService {
     caseId: string,
     body: CreateCaseChannelBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<CaseChannel>> {
     return this.createService.createCaseChannel(caseId, body, transaction)
   }
 
@@ -1045,9 +1093,11 @@ export class CaseService implements ICaseService {
    * because we want to use multiple transactions
    */
   @LogAndHandle()
-  async createCase(body: PostApplicationBody): Promise<ResultWrapper> {
+  async createCaseByApplication(
+    body: PostApplicationBody,
+  ): Promise<ResultWrapper> {
     const { id } = ResultWrapper.unwrap(
-      await this.createService.createCase(body),
+      await this.createService.createCaseByApplication(body),
     )
 
     await this.createCaseHistory(id)

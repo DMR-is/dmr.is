@@ -11,6 +11,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
+import { CreateCase } from '../../components/create-case/CreateCase'
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -65,7 +66,10 @@ export default function CaseProccessingOverviewScreen() {
               span={['12/12', '12/12', '12/12', '10/12']}
               offset={['0', '0', '0', '1/12']}
             >
-              <CaseOverviewTabs />
+              <Stack space={[2, 3]}>
+                <CreateCase />
+                <CaseOverviewTabs />
+              </Stack>
             </GridColumn>
           </GridRow>
         </GridContainer>

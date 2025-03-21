@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { Box, Stack } from '@island.is/island-ui/core'
 
+import { useCaseContext } from '../../hooks/useCaseContext'
 import { Tabs } from '../tabs/Tabs'
 import { AddCommentTab } from './AddCommentTab'
 import { CommentList } from './CommentList'
@@ -12,6 +13,7 @@ enum AddCommentTabs {
 }
 
 export const Comments = () => {
+  const { currentCase } = useCaseContext()
   const [selectedTab, setSelectedTab] = useState(AddCommentTabs.INTERNAL)
   const addCommentsTabs = [
     {
@@ -19,7 +21,10 @@ export const Comments = () => {
       label: 'Innri athugasemdir',
       content: <AddCommentTab internal placeholder="Bæta við skilaboðum" />,
     },
-    {
+  ]
+
+  if (currentCase.applicationId) {
+    addCommentsTabs.push({
       id: AddCommentTabs.EXTERNAL,
       label: 'Skilaboð til auglýsanda',
       content: (
@@ -28,8 +33,8 @@ export const Comments = () => {
           placeholder="Bæta við athugasemd (sýnilegt auglýsanda)"
         />
       ),
-    },
-  ]
+    })
+  }
 
   return (
     <Box
@@ -41,12 +46,16 @@ export const Comments = () => {
       <Stack space={[2, 2, 3]}>
         <CommentList />
         <Box background="white" padding={[2, 2, 3]} paddingBottom={0}>
-          <Tabs
-            tabs={addCommentsTabs}
-            selectedTab={selectedTab}
-            onTabChange={(id) => setSelectedTab(id as AddCommentTabs)}
-            label={''}
-          />
+          {addCommentsTabs.length > 1 ? (
+            <Tabs
+              tabs={addCommentsTabs}
+              selectedTab={selectedTab}
+              onTabChange={(id) => setSelectedTab(id as AddCommentTabs)}
+              label={''}
+            />
+          ) : (
+            <AddCommentTab internal placeholder="Bæta við skilaboðum" />
+          )}
         </Box>
       </Stack>
     </Box>

@@ -123,6 +123,17 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     >
       <Stack space={2}>
         <OJOIInput
+          name="applicationId"
+          readOnly
+          label="Auðkenni umsóknar"
+          value={
+            currentCase.applicationId
+              ? currentCase.applicationId
+              : 'Engin umsókn'
+          }
+          width="half"
+        />
+        <OJOIInput
           disabled
           width="half"
           name="institution"
