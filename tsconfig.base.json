@@ -13,6 +13,7 @@
       "@dmr.is/legal-gazette/constants": [
         "libs/legal-gazette/constants/src/index.ts"
       ],
+      "@dmr.is/legal-gazette/dto": ["libs/legal-gazette/dto/src/index.ts"],
       "@dmr.is/legal-gazette/modules/case-type": [
         "libs/legal-gazette/modules/case-type/src/index.ts"
       ],
