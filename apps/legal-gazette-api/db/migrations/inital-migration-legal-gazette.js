@@ -32,7 +32,11 @@ module.exports = {
     return await queryInterface.sequelize.query(`
     BEGIN;
 
-    DROP TABLE TEST_TABLE;
+    DROP TABLE CASE_TYPE;
+
+    DROP TABLE BASE_ENTITY_TABLE;
+
+    DROP TABLE BASE_TABLE;
 
     COMMIT;
 
