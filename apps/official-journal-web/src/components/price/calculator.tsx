@@ -45,6 +45,7 @@ export const PriceCalculator = () => {
   const [customBaseDocumentCount, setCustomBaseDocumentCount] = useState<number>()
   const [customBodyLengthCount, setCustomBodyLengthCount] = useState<number>()
   const [additionalDocuments, setAdditionalDocuments] = useState<number>()
+  const [useCustomInputBase, setCustomInputBase] = useState<boolean>(false)
 
   const { currentCase, refetch, canEdit, feeCodeOptions } =
     useCaseContext()
@@ -71,6 +72,7 @@ export const PriceCalculator = () => {
       currentCase.advertDepartment.slug === 'b-deild'
     ) {
       if (typeof currentCase.transaction?.customBaseCount === 'string') {
+        // TODO: SET base count if no custom base count
         setCustomBodyLengthCount(
           Number(currentCase.transaction?.customBaseCount),
         )
@@ -110,8 +112,6 @@ export const PriceCalculator = () => {
     },
   })
 
-  console.log('paymentData', paymentData)
-
   return (
     <>
       <Box marginBottom={1}>
@@ -119,18 +119,30 @@ export const PriceCalculator = () => {
           Greiðsla
         </Text>
       </Box>
+      <Inline alignY="center" space={[2, 4]}>
+        <Box style={{ minWidth: md ? '308px' : '254px' }}>
+        <OJOIInput
+            name="price"
+            label="Einingafjöldi"
+            type="number"
+            inputMode="numeric"
+            disabled={!useCustomInputBase}
+            placeholder={"0"}
+            value={customBodyLengthCount ?? undefined}
+            onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
+          />
+          </Box>
+        <Inline alignY="center" space={1}>
+          <Checkbox
+            checked={useCustomInputBase}
+            onChange={() => setCustomInputBase(!useCustomInputBase)}
+            label="Notast við innslegið gildi"
+          />
+        </Inline>
+      </Inline>
       <Box marginBottom={3} style={{ maxWidth: md ? '308px' : '254px' }}>
         <Stack space={2}>
           <Box>
-            <OJOIInput
-              name="price"
-              label="Einingafjöldi"
-              type="number"
-              inputMode="numeric"
-              placeholder={"0"}
-              value={customBodyLengthCount ?? undefined}
-              onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
-            />
             <Text variant="small" color="blue600">
               Einingarverð:{' '}
               {amountFormat(

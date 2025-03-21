@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
-import { OJOIWebException } from '../../../../lib/constants'
 import { handlerWrapper, RouteHandler } from '../../../../lib/api/routeHandler'
+import { OJOIWebException } from '../../../../lib/constants'
 
 const updatePriceBody = z.object({
   imageTier: z.string().optional(),

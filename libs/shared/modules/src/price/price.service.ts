@@ -205,7 +205,7 @@ export class PriceService implements IPriceService {
   ): Promise<ResultWrapper<PriceByDepartmentResponse>> {
     const feeCodes = await this.feeCodeModel.findAndCountAll({
       distinct: true,
-      attributes: ['id', 'feeCode', 'feeType', 'value'],
+      attributes: ['id', 'feeCode', 'feeType', 'value', 'description'],
       where: {
         department: {
           [Op.eq]: body.slug,
@@ -226,6 +226,9 @@ export class PriceService implements IPriceService {
     const baseModifierFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.BaseModifier,
     )
+    // const customMultiplierFee = fees.find(
+    //   (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
+    // )
     const imageTierFee = fees.find(
       (fee) => fee.feeCode === body.imageTier,
     )
@@ -245,6 +248,7 @@ export class PriceService implements IPriceService {
     let additionalDocPrice = 0
     let imageTierPrice = 0
     let fastTrackMultiplier = 1
+    // const customMultiplierValue = 0
     let baseTransactionFee = baseFee.value
     let charactersOverBaseMax = 0
     let baseCount = 0
@@ -269,7 +273,7 @@ export class PriceService implements IPriceService {
 
       expenses.push({
         FeeCode: baseFee.feeCode,
-        Reference: 'Grunngjald',
+        Reference: baseFee.description,
         Quantity: 1,
         UnitPrice: baseFee.value,
         Sum: baseFee.value,
@@ -277,7 +281,7 @@ export class PriceService implements IPriceService {
 
       expenses.push({
         FeeCode: baseModifierFee.feeCode,
-        Reference: '% yfir grunngjald',
+        Reference: baseModifierFee.description,
         Quantity: charactersOverBaseMax,
         UnitPrice: baseModifierFee?.value,
         Sum: characterFee,
@@ -290,7 +294,7 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(baseFee.feeCode)
       expenses.push({
         FeeCode: baseFee.feeCode,
-        Reference: 'Grunngjald',
+        Reference: baseFee.description,
         Quantity: body.baseDocumentCount,
         UnitPrice: baseFee.value,
         Sum: baseTransactionFee,
@@ -300,7 +304,7 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(baseFee.feeCode)
       expenses.push({
         FeeCode: baseFee.feeCode,
-        Reference: 'Grunngjald',
+        Reference: baseFee.description,
         Quantity: 1,
         UnitPrice: baseFee.value,
         Sum: baseFee.value,
@@ -312,7 +316,7 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(additionalDocFee.feeCode)
       expenses.push({
         FeeCode: additionalDocFee.feeCode,
-        Reference: 'Viðbótarskjöl',
+        Reference: additionalDocFee.description,
         Quantity: body.additionalDocCount,
         UnitPrice: additionalDocFee.value,
         Sum: additionalDocPrice
@@ -324,12 +328,24 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(imageTierFee.feeCode)
       expenses.push({
         FeeCode: imageTierFee.feeCode,
-        Reference: 'Myndir í máli',
+        Reference: imageTierFee.description,
         Quantity: 1,
         UnitPrice: imageTierFee.value,
         Sum: imageTierFee.value
       })
     }
+
+    // if (customMultiplierFee?.value) {
+    //   // customMultiplierValue = (baseTransactionFee * body.customMultiplierValue) - baseTransactionFee
+    //   usedFeeCodes.push(customMultiplierFee.feeCode)
+    //   expenses.push({
+    //     FeeCode: customMultiplierFee.feeCode,
+    //     Reference: customMultiplierFee.description,
+    //     Quantity: 1,
+    //     UnitPrice: customMultiplierValue,
+    //     Sum: customMultiplierValue,
+    //   })
+    // }
 
     if (fastTrackModifier?.value && body.isFastTrack) {
       usedFeeCodes.push(fastTrackModifier.feeCode)
@@ -338,7 +354,7 @@ export class PriceService implements IPriceService {
       const fastTrackPrice = (baseTransactionFee * fastTrackMultiplier) - baseTransactionFee
       expenses.push({
         FeeCode: fastTrackModifier.feeCode,
-        Reference: 'Upphæð vegna flýtibirtingar',
+        Reference: fastTrackModifier.feeCode,
         Quantity: 1,
         UnitPrice: fastTrackPrice,
         Sum: fastTrackPrice
