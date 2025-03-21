@@ -8,16 +8,24 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-interface BaseAttributes {
+type BaseModelCreateAttributes = {}
+
+type BaseModelAttributes = {
   id: string
-  created: Date
-  updated: Date
-  deleted: Date | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt: Date | null
 }
 
-export type BaseModelAttributes<T> = T & BaseAttributes
+export type BaseModelWithAttributes<T> = T & BaseModelAttributes
 
-export class BaseModel<T> extends Model<BaseModelAttributes<T>> {
+export class BaseModel<
+  ModelAttributes extends BaseModelAttributes,
+  ModelCreateAttributes extends BaseModelCreateAttributes,
+> extends Model<
+  BaseModelWithAttributes<ModelAttributes>,
+  ModelCreateAttributes
+> {
   @PrimaryKey
   @Column({
     type: DataType.UUID,
@@ -25,11 +33,11 @@ export class BaseModel<T> extends Model<BaseModelAttributes<T>> {
   id!: string
 
   @CreatedAt
-  created!: Date
+  createdAt!: Date
 
   @UpdatedAt
-  updated!: Date
+  updatedAt!: Date
 
   @DeletedAt
-  deleted!: Date | null
+  deletedAt!: Date | null
 }

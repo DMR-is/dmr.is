@@ -1,32 +1,27 @@
-import { Column } from 'sequelize-typescript'
-import { BaseModel } from './base.model'
+import { Column, DataType } from 'sequelize-typescript'
+import { BaseModel, BaseModelWithAttributes } from './base.model'
 
-type EnumEntityType = { [key: string]: string | number }
-
-type BaseEntityAttributes<EntityType extends EnumEntityType | string> = {
-  title: EntityType extends string ? string : EntityType
+type BaseEntityModelCreateAttributes = {
+  title: string
   slug: string
 }
 
-export class BaseEntityModel<
-  EntityType extends EnumEntityType | string,
-> extends BaseModel<BaseEntityAttributes<EntityType>> {
-  @Column
-  title!: EntityType extends string ? string : EntityType
+export type BaseEntityModelAttributes =
+  BaseModelWithAttributes<BaseEntityModelCreateAttributes>
 
-  @Column
+export class BaseEntityModel extends BaseModel<
+  BaseEntityModelAttributes,
+  BaseEntityModelCreateAttributes
+> {
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  title!: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
   slug!: string
 }
-
-// enum TestEnum {
-//   A = 'A',
-//   B = 'B',
-// }
-
-// const entity = new BaseEntityModel<TestEnum>({
-//   title: TestEnum,
-//   slug: 'a',
-//   id: '1',
-//   created: new Date(), // Example created date
-//   updated: new Date(), // Example updated date
-// })
