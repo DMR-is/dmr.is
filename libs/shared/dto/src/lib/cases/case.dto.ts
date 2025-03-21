@@ -31,6 +31,7 @@ import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
+import { CaseTransaction } from './case-transaction.dto'
 
 export class CaseDetailed {
   @ApiProperty({
@@ -199,22 +200,13 @@ export class CaseDetailed {
   })
   readonly advertCategories!: Category[]
 
-  @ApiProperty({
-    type: Number,
-    example: 23000,
-    description: 'The cost of the case.',
+    @ApiProperty({
+    description: 'Case fee transaction.',
+    required: true,
+    type: CaseTransaction,
+    nullable: true,
   })
-  @ValidateIf((o) => o.price !== null)
-  @IsNumber()
-  price!: number | null
-
-  @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Is the case paid for.',
-  })
-  @IsBoolean()
-  paid!: boolean
+  readonly transaction?: CaseTransaction
 
   @ApiProperty({
     type: String,
@@ -363,7 +355,6 @@ export class StatusCounter {
   })
   count!: number
 }
-
 export class GetCasesWithDepartmentCount {
   @ApiProperty({
     type: [DepartmentCounter],

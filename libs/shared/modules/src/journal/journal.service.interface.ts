@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import {
+  ApplicationFeeCodesResponse,
   CreateAdvert,
   CreateMainCategory,
   DefaultSearchParams,
@@ -9,6 +10,7 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
+  GetAllFeeCodesParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
@@ -103,6 +105,11 @@ export interface IJournalService {
   getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
+
+  getAllFeeCodes(
+    params?: GetAllFeeCodesParams,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<ApplicationFeeCodesResponse>>
 
   // TODO Testing logging process only, remove later
   error(): void

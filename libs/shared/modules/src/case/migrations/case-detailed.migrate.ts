@@ -5,6 +5,7 @@ import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
+import { applicationFeeCodeMigrate } from '../../journal/migrations/advert-fee-codes.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
 import { userMigrate } from '../../user/migration/user.migrate'
@@ -15,6 +16,7 @@ import { caseCommunicationStatusMigrate } from './case-communication-status.migr
 import { caseHistoryMigrate } from './case-history.migrate'
 import { caseStatusMigrate } from './case-status.migrate'
 import { caseTagMigrate } from './case-tag.migrate'
+import { caseTransactionMigrate } from './case-transaction.migrate'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
@@ -34,13 +36,14 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     fastTrack: model.fastTrack,
     isLegacy: model.isLegacy,
     modifiedAt: model.updatedAt,
-    paid: model.paid ?? false,
-    price: model.price,
     publishedAt: model.publishedAt,
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
     advertDepartment: advertDepartmentMigrate(model.department),
     advertType: model.advertType,
+    transaction: model.transaction
+      ? caseTransactionMigrate(model.transaction)
+      : undefined,
     message: model.message,
     html: model.html,
     publicationNumber: model.publicationNumber,

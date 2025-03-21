@@ -7,6 +7,7 @@ import { StringOption } from '@island.is/island-ui/core'
 import {
   AdvertCorrection,
   AdvertType,
+  ApplicationFeeCode,
   CaseDetailed,
   CaseStatusEnum,
   CaseTag,
@@ -42,6 +43,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
+  feeCodeOptions: ApplicationFeeCode[]
   handleOptimisticUpdate: (
     newCase: CaseDetailed,
     cb: () => Promise<Response | void>,
@@ -69,6 +71,7 @@ export const CaseContext = createContext<CaseState>({
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
+  feeCodeOptions: [],
   handleOptimisticUpdate: () => undefined,
 })
 
@@ -78,6 +81,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
+  feeCodes: ApplicationFeeCode[]
   employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string
@@ -89,6 +93,7 @@ export const CaseProvider = ({
   categories,
   tags,
   types,
+  feeCodes,
   employees,
   currentUserId,
   children,
@@ -166,6 +171,12 @@ export const CaseProvider = ({
 
   const tagOptions = createOptions(tags)
 
+  const feeCodeOptions = feeCodes?.filter(
+    (item) =>
+      item.feeCode.charAt(0).toLowerCase() ===
+      currentCase.advertDepartment.slug.charAt(0).toLowerCase(),
+  )
+
   const employeeOptions = createOptions(
     employees.map((e) => ({
       id: e.id,
@@ -221,6 +232,7 @@ export const CaseProvider = ({
         canUpdateAdvert,
         refetchSignature,
         isRefetchingSignature,
+        feeCodeOptions,
         handleOptimisticUpdate,
       }}
     >

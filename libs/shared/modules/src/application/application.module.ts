@@ -19,6 +19,7 @@ import { AwsModule } from '../aws/aws'
 import caseModels from '../case/models'
 import commentModels from '../comment/v1/models'
 import advertModels from '../journal/models'
+import { PriceModule } from '../price/price.module'
 import { SignatureModule } from '../signature/signature.module'
 
 @Module({
@@ -29,6 +30,7 @@ import { SignatureModule } from '../signature/signature.module'
       ...commentModels,
     ]),
     AwsModule,
+    PriceModule,
     LoggingModule,
     AuthModule,
     AttachmentsModule,

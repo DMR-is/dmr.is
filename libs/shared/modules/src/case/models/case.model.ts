@@ -33,6 +33,7 @@ import { CaseCommunicationStatusModel } from './case-communication-status.model'
 import { CaseHistoryModel } from './case-history.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
+import { CaseTransactionModel } from './case-transaction.model'
 
 @Table({ tableName: 'case_case', timestamps: false })
 export class CaseModel extends Model {
@@ -130,18 +131,6 @@ export class CaseModel extends Model {
   publishedAt!: string | null
 
   @Column({
-    type: DataType.INTEGER,
-    allowNull: true,
-  })
-  price!: number | null
-
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: true,
-  })
-  paid!: boolean | null
-
-  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     field: 'fast_track',
@@ -231,6 +220,17 @@ export class CaseModel extends Model {
     through: { model: () => CaseAdditionsModel },
   })
   additions?: CaseAdditionModel[]
+
+  @ForeignKey(() => CaseTransactionModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'transaction_id',
+  })
+  transactionId!: string | null
+
+  @BelongsTo(() => CaseTransactionModel)
+  transaction?: CaseTransactionModel
 
   @HasMany(() => CaseHistoryModel)
   history!: CaseHistoryModel[]

@@ -28,6 +28,7 @@ import {
   GetApplicationAdvertsQuery,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
+  GetApplicationPriceQuery,
   GetApplicationResponse,
   GetComments,
   GetInvoledPartiesByUserResponse,
@@ -104,9 +105,10 @@ export class ApplicationController {
   @ApiResponse({ type: CasePriceResponse })
   async getPrice(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @Query() query: GetApplicationPriceQuery,
   ): Promise<CasePriceResponse> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getPrice(applicationId),
+      await this.applicationService.getPrice(applicationId, query.feeCodes),
     )
   }
 

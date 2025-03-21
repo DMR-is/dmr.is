@@ -25,6 +25,8 @@ import {
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentQuery,
+  GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -40,7 +42,6 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -80,6 +81,7 @@ import {
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
+import { IPriceService } from '../price/price.service.interface'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
@@ -135,6 +137,9 @@ export class CaseService implements ICaseService {
 
     @InjectModel(AdvertCorrectionModel)
     private advertCorrectionModel: typeof AdvertCorrectionModel,
+
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
 
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
@@ -625,15 +630,6 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseTitle(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCasePaid(caseId, body, transaction)
   }
   @LogAndHandle()
   @Transactional()
@@ -1479,6 +1475,15 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     return Promise.resolve(ResultWrapper.ok({ url: signedUrl }))
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async getCasePaymentStatus(
+    params: GetPaymentQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetPaymentResponse>> {
+    return await this.priceService.getExternalPaymentStatus(params)
   }
 
   @LogAndHandle()

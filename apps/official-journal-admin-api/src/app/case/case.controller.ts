@@ -11,6 +11,7 @@ import {
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
+  ApplicationFeeCodesResponse,
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCategory,
@@ -19,6 +20,7 @@ import {
   DefaultSearchParams,
   DepartmentEnum,
   ExternalCommentBodyDto,
+  GetAllFeeCodesParams,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -36,6 +38,7 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
   PostApplicationAssetBody,
@@ -54,7 +57,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -142,6 +144,17 @@ export class CaseController {
   @ApiResponse({ status: 200, type: GetTagsResponse })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
+  }
+
+  @Get('feeCodes')
+  @ApiOperation({ operationId: 'getFeeCodes' })
+  @ApiResponse({ status: 200, type: ApplicationFeeCodesResponse })
+  async feeCodes(
+    @Query() params?: GetAllFeeCodesParams,
+  ): Promise<ApplicationFeeCodesResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getAllFeeCodes(params),
+    )
   }
 
   @Get('categories')
@@ -300,14 +313,17 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
   }
 
-  @Put(':id/paid')
-  @ApiOperation({ operationId: 'updatePaid' })
-  @ApiNoContentResponse()
-  async updatePaid(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdatePaidBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
+  @Get(':id/price/payment-status')
+  @ApiOperation({ operationId: 'getCasePaymentStatus' })
+  @ApiResponse({ status: 200, type: GetPaymentResponse })
+  async getCasePaymentStatus(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+  ): Promise<GetPaymentResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasePaymentStatus({
+        caseId: caseId,
+      }),
+    )
   }
 
   @Put(':id/fasttrack')

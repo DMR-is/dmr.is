@@ -42,7 +42,10 @@ export interface IApplicationService {
     applicationUser: UserDto,
   ): Promise<ResultWrapper>
 
-  getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
+  getPrice(
+    applicationId: string,
+    feeCodes?: string[],
+  ): Promise<ResultWrapper<CasePriceResponse>>
 
   uploadAttachments(
     applicationId: string,

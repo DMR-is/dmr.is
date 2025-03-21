@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
   DatabaseError,
@@ -11,7 +12,6 @@ import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
-  DEFAULT_PRICE,
   FAST_TRACK_DAYS,
   ONE_MEGA_BYTE,
   PAGING_MAXIMUM_PAGE_SIZE,
@@ -42,6 +42,8 @@ import {
   templateGjaldskra,
   templateReglugerd,
 } from './constants'
+
+export const MAX_CHARACTERS_BASE_APPLICATION = 1000
 
 type GetLimitAndOffsetParams = {
   page?: number
@@ -150,12 +152,14 @@ export const getFastTrack = (date: Date) => {
   }
 }
 
-/**
- * Calculates the price for the application
- * For now we dont know how to calculate the price
- * so we will return default price
- */
-export const calculatePriceForApplication = () => DEFAULT_PRICE
+export const getHtmlTextLength = (str: string): number => {
+  const sanitized = sanitizeHtml(str, {
+    allowedTags: [],
+    allowedAttributes: {},
+  })
+
+  return sanitized.length
+}
 
 type EnumType = { [s: number]: string }
 

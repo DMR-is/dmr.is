@@ -10,3 +10,14 @@ export enum AdvertStatus {
   ReadyForPublication = 'Tilbúin til útgáfu',
   Published = 'Útgefin',
 }
+
+export enum AdvertFeeType {
+  Base = 'BASE',
+  AdditionalDoc = 'ADDITIONAL_DOC',
+  FastTrack = 'FAST_TRACK',
+  BaseModifier = 'BASE_MODIFIER',
+  CustomMultiplier = 'CUSTOM_MULTIPLIER',
+  ImageTier = 'IMAGE_TIER',
+  Lowererd = 'LOWERED',
+  Percentage = 'PERCENTAGE',
+}
