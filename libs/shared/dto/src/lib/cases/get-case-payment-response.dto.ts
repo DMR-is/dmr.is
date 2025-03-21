@@ -1,5 +1,4 @@
-import { Transform } from 'class-transformer'
-import { IsArray, IsBoolean, IsNumber, IsString, IsUUID } from 'class-validator'
+import { IsBoolean, IsNumber, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 

@@ -226,9 +226,11 @@ export class PriceService implements IPriceService {
     const baseModifierFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.BaseModifier,
     )
+
     // const customMultiplierFee = fees.find(
     //   (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
     // )
+    
     const imageTierFee = fees.find(
       (fee) => fee.feeCode === body.imageTier,
     )

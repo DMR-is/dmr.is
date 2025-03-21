@@ -1,7 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
-import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTemplateDetails,
@@ -49,11 +49,9 @@ import { IAuthService } from '../auth/auth.service.interface'
 import { IAWSService } from '../aws/aws.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
-import { applicationFeeCodeMigrate } from '../journal/migrations/advert-fee-codes.migrate'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
-  AdvertFeeCodesModel,
   AdvertModel,
 } from '../journal/models'
 import { IPriceService } from '../price/price.service.interface'
