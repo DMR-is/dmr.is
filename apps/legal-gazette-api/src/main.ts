@@ -1,21 +1,42 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
-import { Logger } from '@nestjs/common'
+import { Logger, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app/app.module'
+import { WinstonModule } from 'nest-winston'
+
+import { logger } from '@dmr.is/logging'
+import { SwaggerModule } from '@nestjs/swagger'
+
+import { apmInit } from '@dmr.is/apm'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
   const globalPrefix = 'api'
+  const version = 'v1'
+  const swaggerPath = 'swagger'
+
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger({ instance: logger }),
+  })
+
   app.setGlobalPrefix(globalPrefix)
+  app.enableCors()
+  app.enableVersioning({
+    type: VersioningType.URI,
+  })
+
+  const document = SwaggerModule.createDocument(app, {
+    info: { title: 'Legal Gazette API', version: '1' },
+    openapi: '',
+  })
+  SwaggerModule.setup(swaggerPath, app, document)
+
+  apmInit()
+
   const port = process.env.LEGAL_GAZETTE_API_PORT || 4100
   await app.listen(port)
+
   Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
+    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
   )
 }
 

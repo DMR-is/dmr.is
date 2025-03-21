@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { AppController } from './app.controller'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { AppService } from './app.service'
 import { SequelizeModule } from '@nestjs/sequelize'
+import { LoggingModule } from '@dmr.is/logging'
+import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
 
 @Module({
   imports: [
+    LoggingModule,
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -22,10 +23,10 @@ import { SequelizeModule } from '@nestjs/sequelize'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    CaseTypeModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,

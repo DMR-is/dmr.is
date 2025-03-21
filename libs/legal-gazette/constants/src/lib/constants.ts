@@ -1,3 +1,3 @@
 export enum LegalGazetteModels {
-  CASE_TYPE = 'CASE_TYPE',
+  CASE_TYPE = 'case_type',
 }

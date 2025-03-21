@@ -12,4 +12,4 @@ import { BaseEntityModel } from '@dmr.is/shared/models/base'
     attributes: ['id', 'title', 'slug', 'createdAt', 'updatedAt', 'deletedAt'],
   },
 }))
-export class CaseType extends BaseEntityModel {}
+export class CaseTypeModel extends BaseEntityModel {}
