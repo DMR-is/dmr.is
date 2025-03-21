@@ -1,1 +1,2 @@
-export * from './lib/shared-models-base'
+export * from './lib/base-entity.model'
+export * from './lib/base.model'

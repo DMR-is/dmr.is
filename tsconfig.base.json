@@ -10,6 +10,9 @@
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
+      "@dmr.is/legal-gazette/constants": [
+        "libs/legal-gazette/constants/src/index.ts"
+      ],
       "@dmr.is/legal-gazette/modules/case-type": [
         "libs/legal-gazette/modules/case-type/src/index.ts"
       ],
