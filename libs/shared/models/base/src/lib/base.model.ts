@@ -28,7 +28,8 @@ export class BaseModel<
 > {
   @PrimaryKey
   @Column({
-    type: DataType.UUID,
+    type: DataType.UUIDV4,
+    defaultValue: DataType.UUIDV4,
   })
   id!: string
 

@@ -1,9 +1,31 @@
-import { GetCaseTypesDetailedDto, GetCaseTypesDto } from './dto/case-type.dto'
+import { Transaction } from 'sequelize'
+import {
+  CreateCaseTypeDto,
+  GetCaseTypeDto,
+  GetCaseTypesDetailedDto,
+  GetCaseTypesDto,
+  UpdateCaseTypeDto,
+} from './dto/case-type.dto'
 
 export interface ICaseTypeService {
-  getCaseTypes(): Promise<GetCaseTypesDto>
+  getCaseTypes(transaction?: Transaction): Promise<GetCaseTypesDto>
 
-  getCaseTypesDetail(): Promise<GetCaseTypesDetailedDto>
+  getCaseTypesDetailed(
+    transaction?: Transaction,
+  ): Promise<GetCaseTypesDetailedDto>
+
+  createCaseType(
+    body: CreateCaseTypeDto,
+    transaction?: Transaction,
+  ): Promise<GetCaseTypeDto>
+
+  updateCaseType(
+    id: string,
+    body: UpdateCaseTypeDto,
+    transaction?: Transaction,
+  ): Promise<GetCaseTypeDto>
+
+  deleteCaseType(id: string, transaction?: Transaction): Promise<void>
 }
 
 export const ICaseTypeService = Symbol('ICaseTypeService')

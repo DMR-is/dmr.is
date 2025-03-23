@@ -8,6 +8,7 @@ import { logger } from '@dmr.is/logging'
 import { SwaggerModule } from '@nestjs/swagger'
 
 import { apmInit } from '@dmr.is/apm'
+import { openApi } from './openApi'
 
 async function bootstrap() {
   const globalPrefix = 'api'
@@ -24,10 +25,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   })
 
-  const document = SwaggerModule.createDocument(app, {
-    info: { title: 'Legal Gazette API', version: '1' },
-    openapi: '',
-  })
+  const document = SwaggerModule.createDocument(app, openApi)
   SwaggerModule.setup(swaggerPath, app, document)
 
   apmInit()

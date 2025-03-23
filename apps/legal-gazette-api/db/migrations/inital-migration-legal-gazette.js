@@ -16,12 +16,14 @@ module.exports = {
     );
 
     CREATE TABLE BASE_ENTITY_TABLE (
-      TITLE TEXT,
-      SLUG TEXT,
+      TITLE TEXT NOT NULL,
+      SLUG TEXT NOT NULL,
       CONSTRAINT BASE_ENTITY_TABLE_SLUG_UNIQUE UNIQUE (SLUG)
     ) INHERITS (BASE_TABLE);
 
     CREATE TABLE CASE_TYPE () INHERITS (BASE_ENTITY_TABLE);
+
+    CREATE UNIQUE INDEX CASE_TYPE_SLUG_UNIQUE ON CASE_TYPE (SLUG);
 
     COMMIT;
 
@@ -31,6 +33,8 @@ module.exports = {
   async down(queryInterface) {
     return await queryInterface.sequelize.query(`
     BEGIN;
+
+    DROP INDEX CASE_TYPE_SLUG_UNIQUE;
 
     DROP TABLE CASE_TYPE;
 

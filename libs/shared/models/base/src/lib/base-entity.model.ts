@@ -9,6 +9,13 @@ type BaseEntityModelCreateAttributes = {
 export type BaseEntityModelAttributes =
   BaseModelWithAttributes<BaseEntityModelCreateAttributes>
 
+export type BaseEntityAttributes = Pick<
+  BaseEntityModelAttributes,
+  'id' | 'title' | 'slug'
+>
+
+export type BaseEntityAttributesDetailed = BaseEntityModelAttributes
+
 export class BaseEntityModel extends BaseModel<
   BaseEntityModelAttributes,
   BaseEntityModelCreateAttributes
