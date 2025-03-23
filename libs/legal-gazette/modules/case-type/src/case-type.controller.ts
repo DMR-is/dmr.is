@@ -9,13 +9,14 @@ import {
   Put,
 } from '@nestjs/common'
 import { ICaseTypeService } from './case-type.service.interface'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiTags } from '@nestjs/swagger'
 import {
   CreateCaseTypeDto,
   GetCaseTypeDto,
   GetCaseTypesDto,
   UpdateCaseTypeDto,
 } from './dto/case-type.dto'
+import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 @Controller({ path: 'types', version: '1' })
 @ApiTags('Case Types')
@@ -26,22 +27,19 @@ export class CaseTypeController {
   ) {}
 
   @Get()
-  @ApiOperation({ operationId: 'getTypes' })
-  @ApiResponse({ status: 200, type: GetCaseTypesDto })
+  @LGResponse({ operationId: 'getTypes', type: GetCaseTypesDto })
   async getCaseTypes(): Promise<GetCaseTypesDto> {
     return this.caseTypeService.getCaseTypes()
   }
 
-  @Get('/detailed')
-  @ApiOperation({ operationId: 'getTypes' })
-  @ApiResponse({ status: 200, type: GetCaseTypesDto })
+  @Get('detailed')
+  @LGResponse({ operationId: 'getTypesDetailed', type: GetCaseTypesDto })
   async getCaseTypesDetailed(): Promise<GetCaseTypesDto> {
     return this.caseTypeService.getCaseTypesDetailed()
   }
 
   @Post()
-  @ApiOperation({ operationId: 'createType' })
-  @ApiResponse({ status: 201, type: GetCaseTypeDto })
+  @LGResponse({ operationId: 'createType', status: 201, type: GetCaseTypeDto })
   async createCaseType(
     @Body() body: CreateCaseTypeDto,
   ): Promise<GetCaseTypeDto> {
@@ -49,8 +47,7 @@ export class CaseTypeController {
   }
 
   @Put(':id')
-  @ApiOperation({ operationId: 'updateType' })
-  @ApiResponse({ status: 200, type: GetCaseTypeDto })
+  @LGResponse({ operationId: 'updateType', type: GetCaseTypeDto })
   async updateCaseType(
     @Param('id') id: string,
     @Body() body: UpdateCaseTypeDto,
@@ -59,8 +56,7 @@ export class CaseTypeController {
   }
 
   @Delete(':id')
-  @ApiOperation({ operationId: 'deleteType' })
-  @ApiResponse({ status: 200, type: GetCaseTypeDto })
+  @LGResponse({ operationId: 'deleteType', type: GetCaseTypeDto })
   async deleteCaseType(@Param('id') id: string): Promise<GetCaseTypeDto> {
     return this.caseTypeService.deleteCaseType(id)
   }
