@@ -9,12 +9,7 @@ import {
   Put,
 } from '@nestjs/common'
 import { ICaseTypeService } from './case-type.service.interface'
-import {
-  ApiNoContentResponse,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import {
   CreateCaseTypeDto,
   GetCaseTypeDto,
@@ -65,8 +60,8 @@ export class CaseTypeController {
 
   @Delete(':id')
   @ApiOperation({ operationId: 'deleteType' })
-  @ApiNoContentResponse()
-  async deleteCaseType(@Param('id') id: string): Promise<void> {
+  @ApiResponse({ status: 200, type: GetCaseTypeDto })
+  async deleteCaseType(@Param('id') id: string): Promise<GetCaseTypeDto> {
     return this.caseTypeService.deleteCaseType(id)
   }
 }

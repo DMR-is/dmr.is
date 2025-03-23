@@ -25,7 +25,7 @@ export interface ICaseTypeService {
     transaction?: Transaction,
   ): Promise<GetCaseTypeDto>
 
-  deleteCaseType(id: string, transaction?: Transaction): Promise<void>
+  deleteCaseType(id: string, transaction?: Transaction): Promise<GetCaseTypeDto>
 }
 
 export const ICaseTypeService = Symbol('ICaseTypeService')

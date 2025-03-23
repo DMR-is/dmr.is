@@ -127,7 +127,24 @@ export class CaseTypeService implements ICaseTypeService {
       },
     }
   }
-  async deleteCaseType(id: string, transaction?: Transaction): Promise<void> {
+  async deleteCaseType(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<GetCaseTypeDto> {
+    const found = await this.caseTypeModel.findByPk(id, { transaction })
+
+    if (!found) {
+      throw new NotFoundException('Case type not found')
+    }
+
     await this.caseTypeModel.destroy({ where: { id }, transaction })
+
+    return {
+      type: {
+        id: found.id,
+        title: found.title,
+        slug: found.slug,
+      },
+    }
   }
 }
