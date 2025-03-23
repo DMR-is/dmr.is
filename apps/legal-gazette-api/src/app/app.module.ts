@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { LoggingModule } from '@dmr.is/logging'
 import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
+import {
+  GlobalExceptionFilter,
+  HttpExceptionFilter,
+  SequelizeExceptionFilter,
+} from '@dmr.is/shared/filters'
 
 @Module({
   imports: [
@@ -30,6 +35,18 @@ import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SequelizeExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
     },
   ],
 })
