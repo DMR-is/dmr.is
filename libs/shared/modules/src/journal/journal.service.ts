@@ -48,6 +48,7 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -734,7 +735,8 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
-        html = dirtyClean(advert.documentHtml as HTMLText)
+        html = removeSubjectFromHtml(html, advert.subject)
+        html = dirtyClean(html as HTMLText)
       } catch {
         this.logger.warn("Dirty clean failed for advert's HTML", {
           category: LOGGING_CATEGORY,
