@@ -56,10 +56,17 @@ export class CaseTransactionModel extends Model {
 
   @Column({
     type: DataType.INTEGER,
+    field: 'custom_unit_additional_character_count',
+    allowNull: true,
+  })
+  customAdditionalCharacterCount!: number | null
+
+  @Column({
+    type: DataType.INTEGER,
     field: 'custom_unit_additional_doc_count',
     allowNull: true,
   })
-  customDocCount!: number | null
+  customAdditionalDocCount!: number | null
 
   @Column({
     type: DataType.STRING,
@@ -67,10 +74,4 @@ export class CaseTransactionModel extends Model {
     allowNull: true,
   })
   imageTier!: string | null
-
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: true,
-  })
-  paid!: boolean | null
 }

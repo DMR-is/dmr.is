@@ -3258,6 +3258,7 @@
               "ADDITIONAL_DOC",
               "FAST_TRACK",
               "BASE_MODIFIER",
+              "CUSTOM_MULTIPLIER",
               "IMAGE_TIER",
               "LOWERED",
               "PERCENTAGE"
@@ -3910,9 +3911,13 @@
             "type": "number",
             "description": "How many base units are there"
           },
-          "customDocCount": {
+          "customAdditionalDocCount": {
             "type": "number",
             "description": "How many additional documents are there"
+          },
+          "customAdditionalCharacterCount": {
+            "type": "number",
+            "description": "Custom additional character count"
           },
           "paid": {
             "type": "boolean",

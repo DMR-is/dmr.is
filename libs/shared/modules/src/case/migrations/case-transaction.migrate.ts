@@ -12,8 +12,8 @@ export const caseTransactionMigrate = (
       price: model.price,
       feeCodes: model.feeCodes,
       customBaseCount: model.customBaseCount,
-      customDocCount: model.customDocCount,
-      paid: model.paid,
+      customAdditionalDocCount: model.customAdditionalDocCount,
+      customAdditionalCharacterCount: model.customAdditionalCharacterCount,
       imageTier: model.imageTier,
     }
 

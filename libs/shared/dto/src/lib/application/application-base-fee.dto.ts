@@ -28,8 +28,7 @@ export class ApplicationFeeCode {
   readonly description!: string
 
   @ApiProperty({
-    description:
-      "Type of fee",
+    description: 'Type of fee',
     example: 'BASE',
     required: true,
     enum: AdvertFeeType,
@@ -40,7 +39,7 @@ export class ApplicationFeeCode {
   @ApiProperty({
     description:
       'Fee amount if fixed, or percentage multiplier if percentage-based.',
-    example: 7000, // Example for FIXED
+    example: 7000,
     required: true,
     type: Number,
   })

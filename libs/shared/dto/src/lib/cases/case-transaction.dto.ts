@@ -56,13 +56,14 @@ export class CaseTransaction {
   })
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value, 10))
-  readonly customDocCount!: number | null
+  readonly customAdditionalDocCount!: number | null
 
   @ApiProperty({
-    type: Boolean,
-    description: 'Has advert been paid for',
+    type: Number,
+    description: 'Custom additional character count',
     required: false,
-    default: false,
   })
-  readonly paid?: boolean | null
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  readonly customAdditionalCharacterCount!: number | null
 }

@@ -6,7 +6,7 @@ import {
   GetPaymentQuery,
   GetPaymentResponse,
   UpdateCasePaymentBody,
-  UpdateCasePriceBody
+  UpdateCasePriceBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -35,6 +35,10 @@ export interface IPriceService {
     params: GetPaymentQuery,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>>
+  postExternalPaymentByCaseId(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const IPriceService = Symbol('IPriceService')

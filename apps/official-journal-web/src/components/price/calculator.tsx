@@ -42,13 +42,13 @@ const imageTiers = [
 
 export const PriceCalculator = () => {
   const [selectedItem, setSelectedItem] = useState<OptionType | undefined>()
-  const [customBaseDocumentCount, setCustomBaseDocumentCount] = useState<number>()
+  const [customBaseDocumentCount, setCustomBaseDocumentCount] =
+    useState<number>()
   const [customBodyLengthCount, setCustomBodyLengthCount] = useState<number>()
   const [additionalDocuments, setAdditionalDocuments] = useState<number>()
   const [useCustomInputBase, setCustomInputBase] = useState<boolean>(false)
 
-  const { currentCase, refetch, canEdit, feeCodeOptions } =
-    useCaseContext()
+  const { currentCase, refetch, canEdit, feeCodeOptions } = useCaseContext()
 
   const { md } = useBreakpoint()
   const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id })
@@ -60,11 +60,17 @@ export const PriceCalculator = () => {
       )
       setSelectedItem(tier)
     }
-    if (currentCase.transaction?.customDocCount) {
-      if (typeof currentCase.transaction?.customDocCount === 'string') {
-        setAdditionalDocuments(Number(currentCase.transaction?.customDocCount))
+    if (currentCase.transaction?.customAdditionalDocCount) {
+      if (
+        typeof currentCase.transaction?.customAdditionalDocCount === 'string'
+      ) {
+        setAdditionalDocuments(
+          Number(currentCase.transaction?.customAdditionalDocCount),
+        )
       } else {
-        setAdditionalDocuments(currentCase.transaction?.customDocCount)
+        setAdditionalDocuments(
+          currentCase.transaction?.customAdditionalDocCount,
+        )
       }
     }
     if (
@@ -72,7 +78,6 @@ export const PriceCalculator = () => {
       currentCase.advertDepartment.slug === 'b-deild'
     ) {
       if (typeof currentCase.transaction?.customBaseCount === 'string') {
-        // TODO: SET base count if no custom base count
         setCustomBodyLengthCount(
           Number(currentCase.transaction?.customBaseCount),
         )
@@ -95,7 +100,7 @@ export const PriceCalculator = () => {
   }, [
     currentCase?.transaction?.imageTier,
     currentCase.transaction?.customBaseCount,
-    currentCase.transaction?.customDocCount,
+    currentCase.transaction?.customAdditionalDocCount,
     currentCase.advertDepartment.slug,
   ])
 
@@ -121,17 +126,32 @@ export const PriceCalculator = () => {
       </Box>
       <Inline alignY="center" space={[2, 4]}>
         <Box style={{ minWidth: md ? '308px' : '254px' }}>
-        <OJOIInput
-            name="price"
-            label="Einingafjöldi"
-            type="number"
-            inputMode="numeric"
-            disabled={!useCustomInputBase}
-            placeholder={"0"}
-            value={customBodyLengthCount ?? undefined}
-            onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
-          />
-          </Box>
+          {currentCase.advertDepartment.slug === 'b-deild' ? (
+            <OJOIInput
+              name="price"
+              label="Einingafjöldi"
+              type="number"
+              inputMode="numeric"
+              disabled={!useCustomInputBase}
+              placeholder="0"
+              value={customBodyLengthCount ?? undefined}
+              onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
+            />
+          ) : (
+            <OJOIInput
+              name="price"
+              label="Einingafjöldi"
+              type="number"
+              inputMode="numeric"
+              disabled={!useCustomInputBase}
+              placeholder="0"
+              value={customBaseDocumentCount ?? undefined}
+              onChange={(e) =>
+                setCustomBaseDocumentCount(Number(e.target.value))
+              }
+            />
+          )}
+        </Box>
         <Inline alignY="center" space={1}>
           <Checkbox
             checked={useCustomInputBase}
@@ -146,8 +166,11 @@ export const PriceCalculator = () => {
             <Text variant="small" color="blue600">
               Einingarverð:{' '}
               {amountFormat(
-                feeCodeOptions.find(
-                  (feeCode) => feeCode.feeType === 'BASE_MODIFIER',
+                feeCodeOptions.find((feeCode) =>
+                  currentCase.advertDepartment.slug === 'b-deild'
+                    ? feeCode.feeType === 'BASE_MODIFIER'
+                    : feeCode.feeType === 'BASE' &&
+                      feeCode.department === currentCase.advertDepartment.slug,
                 )?.value,
               )}
             </Text>
@@ -155,54 +178,59 @@ export const PriceCalculator = () => {
               Álag vegna hraðbirtingar: {currentCase.fastTrack ? '80%' : '0%'}
             </Text>
           </Box>
-          <Box>
-            <OJOIInput
-              name="price"
-              label="Fylgiskjöl"
-              placeholder={"0"}
-              type="number"
-              inputMode="numeric"
-              value={additionalDocuments}
-              onChange={(e) => setAdditionalDocuments(Number(e.target.value))}
-            />
-            {additionalDocuments ? (
+          {currentCase.advertDepartment.slug === 'b-deild' ||
+          currentCase.advertDepartment.slug === 'a-deild' ? ( // Additional documents are only for A and B
+            <Box>
+              <OJOIInput
+                name="price"
+                label="Fylgiskjöl"
+                placeholder="0"
+                type="number"
+                inputMode="numeric"
+                value={additionalDocuments}
+                onChange={(e) => setAdditionalDocuments(Number(e.target.value))}
+              />
+              {additionalDocuments ? (
+                <Text variant="small" color="blue600">
+                  Einingarverð:{' '}
+                  {amountFormat(
+                    feeCodeOptions.find(
+                      (feeCode) => feeCode.feeType === 'ADDITIONAL_DOC',
+                    )?.value ?? 0,
+                  )}
+                </Text>
+              ) : undefined}
+            </Box>
+          ) : undefined}
+          {currentCase.advertDepartment.slug === 'b-deild' ? ( // Images are only for B
+            <Box>
+              <OJOISelect
+                isDisabled={!canEdit}
+                label="Myndir"
+                placeholder="Veldu myndafjölda"
+                options={imageTiers}
+                value={selectedItem}
+                onChange={(opt) => {
+                  if (opt?.value && opt.label) {
+                    setSelectedItem({
+                      value: opt.value,
+                      label: opt.label,
+                    })
+                  } else {
+                    setSelectedItem(undefined)
+                  }
+                }}
+              />
               <Text variant="small" color="blue600">
-                Einingarverð:{' '}
+                Myndir einingarverð:{' '}
                 {amountFormat(
                   feeCodeOptions.find(
-                    (feeCode) => feeCode.feeType === 'ADDITIONAL_DOC',
+                    (feeCode) => feeCode.feeCode === selectedItem?.value,
                   )?.value ?? 0,
                 )}
               </Text>
-            ) : undefined}
-          </Box>
-          <Box>
-            <OJOISelect
-              isDisabled={!canEdit}
-              label="Myndir"
-              placeholder="Veldu myndafjölda"
-              options={imageTiers}
-              value={selectedItem}
-              onChange={(opt) => {
-                if (opt?.value && opt.label) {
-                  setSelectedItem({
-                    value: opt.value,
-                    label: opt.label,
-                  })
-                } else {
-                  setSelectedItem(undefined)
-                }
-              }}
-            />
-            <Text variant="small" color="blue600">
-              Myndir einingarverð:{' '}
-              {amountFormat(
-                feeCodeOptions.find(
-                  (feeCode) => feeCode.feeCode === selectedItem?.value,
-                )?.value ?? 0,
-              )}
-            </Text>
-          </Box>
+            </Box>
+          ) : undefined}
         </Stack>
       </Box>
       <Inline alignY="center" space={[2, 4]}>
@@ -238,13 +266,11 @@ export const PriceCalculator = () => {
         >
           Uppfæra verð
         </button>
-        {
-          paymentData?.created ? (
-            <Text>Auglýsing hefur verið send til TBR</Text>
-          ) : (
-            <Text>Auglýsing verður send til TBR við staðfestingu á útgáfu.</Text>
-          )
-        }
+        {paymentData?.created ? (
+          <Text>Auglýsing hefur verið send til TBR</Text>
+        ) : (
+          <Text>Auglýsing verður send til TBR við staðfestingu á útgáfu.</Text>
+        )}
       </Box>
     </>
   )

@@ -9,8 +9,10 @@ import {
   CasePriceResponse,
   CaseTransaction,
   GetAllFeeCodesParams,
-  GetPaymentQuery, GetPaymentResponse,
-  PaymentExpenses, UpdateCasePaymentBody,
+  GetPaymentQuery,
+  GetPaymentResponse,
+  PaymentExpenses,
+  UpdateCasePaymentBody,
   UpdateCasePriceBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -31,7 +33,9 @@ import { AdvertDepartmentModel, AdvertFeeCodesModel } from '../journal/models'
 import { IPriceService } from './price.service.interface'
 
 const LOGGING_CATEGORY = 'price-service'
-type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & { expenses: PaymentExpenses[] }
+type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & {
+  expenses: PaymentExpenses[]
+}
 
 /**
  * Service class for getting and calculating prices for applications and cases.
@@ -114,6 +118,70 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
+  async postExternalPaymentByCaseId(
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['id', 'transactionId', 'transaction', 'caseNumber'],
+      include: [
+        {
+          model: CaseTransactionModel,
+          attributes: ['id', 'slug'],
+        },
+      ],
+      transaction,
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    if (!caseLookup.transaction) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case transaction not found',
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    const caseFeeCalculation = await this.getPriceByDepartmentSlug(
+      {
+        slug: caseLookup.department.slug,
+        isFastTrack: caseLookup.fastTrack,
+        imageTier: caseLookup?.transaction.imageTier ?? undefined,
+        baseDocumentCount: caseLookup?.transaction.customBaseCount ?? 0,
+        bodyLengthCount:
+          caseLookup?.transaction.customAdditionalCharacterCount ??
+          getHtmlTextLength(caseLookup.html),
+        additionalDocCount:
+          caseLookup?.transaction.customAdditionalDocCount ?? 0,
+      },
+      transaction,
+    )
+
+    const feeCalculation = caseFeeCalculation.unwrap()
+
+    this.postExternalPayment(
+      caseId,
+      {
+        id: caseLookup?.transaction.id,
+        chargeBase: caseLookup.caseNumber,
+        Expenses: feeCalculation.expenses,
+        debtorNationalId: caseLookup.involvedParty.nationalId,
+      },
+      transaction,
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async updateCasePriceByCaseId(
     caseId: string,
     body: UpdateCasePriceBody,
@@ -168,23 +236,14 @@ export class PriceService implements IPriceService {
           caseId,
           externalReference: caseLookup.caseNumber,
           price: feeCalculation.price,
-          customBaseCount: feeCalculation.customBaseCount ?? null,
-          customDocCount: body.customAdditionalDocCount ?? null,
+          customBaseCount: body.customBaseDocumentCount ?? null,
+          customAdditionalDocCount: body.customAdditionalDocCount ?? null,
+          customAdditionalCharacterCount: body.customBodyLengthCount ?? null,
           feeCodes: feeCalculation.feeCodes,
           imageTier: body.imageTier ?? null,
-          paid: false,
         },
         { transaction, conflictFields: ['case_id'] },
       )
-
-      // Add to case update service instead:
-      // this.postExternalPayment(caseId, {
-      //   id: caseTransaction.id,
-      //   chargeBase: caseLookup.caseNumber,
-      //   Expenses: feeCalculation.expenses,
-      //   // debtorNationalId: caseTransaction.involvedParty.nationalId,
-      //   debtorNationalId: '0101307789',
-      // }, transaction)
 
       await this.caseModel.update(
         { transactionId: caseTransaction.id },
@@ -217,9 +276,7 @@ export class PriceService implements IPriceService {
     const fees = feeCodes.rows.map((feeCode) =>
       applicationFeeCodeMigrate(feeCode),
     )
-    const baseFee = fees.find(
-      (fee) => fee.feeType === AdvertFeeType.Base,
-    )
+    const baseFee = fees.find((fee) => fee.feeType === AdvertFeeType.Base)
     const additionalDocFee = fees.find(
       (fee) => fee.feeType === AdvertFeeType.AdditionalDoc,
     )
@@ -230,10 +287,8 @@ export class PriceService implements IPriceService {
     // const customMultiplierFee = fees.find(
     //   (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
     // )
-    
-    const imageTierFee = fees.find(
-      (fee) => fee.feeCode === body.imageTier,
-    )
+
+    const imageTierFee = fees.find((fee) => fee.feeCode === body.imageTier)
     const fastTrackModifier = fees.find(
       (fee) => fee.feeType === AdvertFeeType.FastTrack,
     )
@@ -266,8 +321,7 @@ export class PriceService implements IPriceService {
     ) {
       // B-department
       charactersOverBaseMax = characterLength - MAX_CHARACTERS_BASE_APPLICATION
-      characterFee =
-        baseModifierFee.value * charactersOverBaseMax
+      characterFee = baseModifierFee.value * charactersOverBaseMax
       baseTransactionFee = baseFee.value + characterFee
       usedFeeCodes.push(baseModifierFee.feeCode)
       usedFeeCodes.push(baseFee.feeCode)
@@ -321,7 +375,7 @@ export class PriceService implements IPriceService {
         Reference: additionalDocFee.description,
         Quantity: body.additionalDocCount,
         UnitPrice: additionalDocFee.value,
-        Sum: additionalDocPrice
+        Sum: additionalDocPrice,
       })
     }
 
@@ -333,7 +387,7 @@ export class PriceService implements IPriceService {
         Reference: imageTierFee.description,
         Quantity: 1,
         UnitPrice: imageTierFee.value,
-        Sum: imageTierFee.value
+        Sum: imageTierFee.value,
       })
     }
 
@@ -353,13 +407,14 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(fastTrackModifier.feeCode)
       fastTrackMultiplier = fastTrackModifier.value
 
-      const fastTrackPrice = (baseTransactionFee * fastTrackMultiplier) - baseTransactionFee
+      const fastTrackPrice =
+        baseTransactionFee * fastTrackMultiplier - baseTransactionFee
       expenses.push({
         FeeCode: fastTrackModifier.feeCode,
         Reference: fastTrackModifier.feeCode,
         Quantity: 1,
         UnitPrice: fastTrackPrice,
-        Sum: fastTrackPrice
+        Sum: fastTrackPrice,
       })
     }
 
@@ -375,7 +430,6 @@ export class PriceService implements IPriceService {
       customDocCount: body.additionalDocCount ?? null,
       feeCodes: usedFeeCodes,
       imageTier: body.imageTier ?? null,
-      paid: false,
       expenses,
     })
   }
@@ -384,7 +438,11 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async postExternalPayment(caseId: string, body: UpdateCasePaymentBody, transaction?: Transaction): Promise<ResultWrapper> {
+  async postExternalPayment(
+    caseId: string,
+    body: UpdateCasePaymentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
         category: LOGGING_CATEGORY,
@@ -392,7 +450,7 @@ export class PriceService implements IPriceService {
         message: 'Fee service credentials not found',
       })
     }
-    
+
     const credentials = btoa(process.env.FEE_SERVICE_CRED)
     const res = await this.authService.xroadFetch(
       `${process.env.XROAD_FJS_PATH}/claim`,
@@ -419,7 +477,10 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async getExternalPaymentStatus(parameters: GetPaymentQuery, transaction?: Transaction): Promise<ResultWrapper<GetPaymentResponse>> {
+  async getExternalPaymentStatus(
+    parameters: GetPaymentQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetPaymentResponse>> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
         category: LOGGING_CATEGORY,
@@ -429,10 +490,7 @@ export class PriceService implements IPriceService {
     }
 
     const caseLookup = await this.caseModel.findByPk(parameters.caseId, {
-      attributes: [
-        'id',
-        'caseNumber',
-      ],
+      attributes: ['id', 'caseNumber'],
       transaction,
     })
 
@@ -454,7 +512,7 @@ export class PriceService implements IPriceService {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${credentials}`,
-        }
+        },
       },
     )
 
@@ -484,9 +542,9 @@ export class PriceService implements IPriceService {
       })
     }
 
-    const jsonResponse = await res.json();
-    const paymentStatus = jsonResponse.result;
-    
+    const jsonResponse = await res.json()
+    const paymentStatus = jsonResponse.result
+
     return ResultWrapper.ok({
       created: true,
       capital: paymentStatus.capital,
