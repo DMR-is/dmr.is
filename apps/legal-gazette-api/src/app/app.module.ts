@@ -10,6 +10,7 @@ import {
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
+import { HealthModule } from '@dmr.is/modules'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import {
       inject: [DMRSequelizeConfigService],
     }),
     CaseTypeModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [
