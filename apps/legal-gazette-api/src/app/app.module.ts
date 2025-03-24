@@ -23,6 +23,7 @@ import { HealthModule } from '@dmr.is/modules'
           password: process.env.DB_PASSWORD || 'dev_db',
           username: process.env.DB_USERNAME || 'dev_db',
           port: 5434,
+          clsNamespace: 'legal_gazette',
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>

@@ -8,9 +8,6 @@ import {
   UpdateCaseTypeDto,
 } from './dto/case-type.dto'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Transactional } from '@dmr.is/decorators'
-import { Sequelize } from 'sequelize-typescript'
-import { Transaction } from 'sequelize'
 import { InjectModel } from '@nestjs/sequelize'
 import { CaseTypeModel } from './models/case-type.model'
 import slugify from 'slugify'
@@ -22,23 +19,19 @@ export class CaseTypeService implements ICaseTypeService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseTypeModel) private caseTypeModel: typeof CaseTypeModel,
-    private sequelize: Sequelize,
   ) {
     this.logger.info('CaseTypeService instantiated', {
       context: LOGGING_CONTEXT,
     })
   }
 
-  async createCaseType(
-    body: CreateCaseTypeDto,
-    transaction?: Transaction,
-  ): Promise<GetCaseTypeDto> {
+  async createCaseType(body: CreateCaseTypeDto): Promise<GetCaseTypeDto> {
     const newType = await this.caseTypeModel.create(
       {
         title: body.title,
         slug: slugify(body.title, { lower: true }),
       },
-      { transaction, returning: true },
+      { returning: true },
     )
 
     return {
@@ -50,9 +43,8 @@ export class CaseTypeService implements ICaseTypeService {
     }
   }
 
-  @Transactional()
-  async getCaseTypes(transaction?: Transaction): Promise<GetCaseTypesDto> {
-    const caseTypes = await this.caseTypeModel.findAll({ transaction })
+  async getCaseTypes(): Promise<GetCaseTypesDto> {
+    const caseTypes = await this.caseTypeModel.findAll()
 
     return {
       types: caseTypes.map((caseType) => ({
@@ -63,13 +55,8 @@ export class CaseTypeService implements ICaseTypeService {
     }
   }
 
-  @Transactional()
-  async getCaseTypesDetailed(
-    transaction?: Transaction,
-  ): Promise<GetCaseTypesDetailedDto> {
-    const caseTypes = await this.caseTypeModel
-      .scope('full')
-      .findAll({ transaction })
+  async getCaseTypesDetailed(): Promise<GetCaseTypesDetailedDto> {
+    const caseTypes = await this.caseTypeModel.scope('full').findAll()
 
     return {
       types: caseTypes.map((caseType) => ({
@@ -85,13 +72,11 @@ export class CaseTypeService implements ICaseTypeService {
     }
   }
 
-  @Transactional()
   async updateCaseType(
     id: string,
     body: UpdateCaseTypeDto,
-    transaction?: Transaction,
   ): Promise<GetCaseTypeDto> {
-    const found = await this.caseTypeModel.findByPk(id, { transaction })
+    const found = await this.caseTypeModel.findByPk(id)
 
     if (!found) {
       throw new NotFoundException('Case type not found')
@@ -115,7 +100,6 @@ export class CaseTypeService implements ICaseTypeService {
       {
         where: { id },
         returning: true,
-        transaction,
       },
     )
 
@@ -127,17 +111,14 @@ export class CaseTypeService implements ICaseTypeService {
       },
     }
   }
-  async deleteCaseType(
-    id: string,
-    transaction?: Transaction,
-  ): Promise<GetCaseTypeDto> {
-    const found = await this.caseTypeModel.findByPk(id, { transaction })
+  async deleteCaseType(id: string): Promise<GetCaseTypeDto> {
+    const found = await this.caseTypeModel.findByPk(id)
 
     if (!found) {
       throw new NotFoundException('Case type not found')
     }
 
-    await this.caseTypeModel.destroy({ where: { id }, transaction })
+    await this.caseTypeModel.destroy({ where: { id } })
 
     return {
       type: {

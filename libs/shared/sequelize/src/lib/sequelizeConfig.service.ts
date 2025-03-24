@@ -1,3 +1,6 @@
+import { createNamespace } from 'cls-hooked'
+import { Sequelize } from 'sequelize-typescript'
+
 import { Inject, Injectable } from '@nestjs/common'
 import {
   SequelizeModuleOptions,
@@ -15,8 +18,15 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
   ) {}
 
   createSequelizeOptions(): SequelizeModuleOptions {
+    const { clsNamespace, ...config } = this.config
+
+    if (clsNamespace) {
+      const namespace = createNamespace(clsNamespace)
+      Sequelize.useCLS(namespace)
+    }
+
     return {
-      ...this.config,
+      ...config,
       ...getOptions(),
       dialect: 'postgres',
       autoLoadModels: true,
