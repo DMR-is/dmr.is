@@ -43,10 +43,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
-import {
-  Inject,
-} from '@nestjs/common'
-
+import { Inject } from '@nestjs/common'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock {

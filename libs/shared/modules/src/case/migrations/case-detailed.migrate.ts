@@ -5,7 +5,6 @@ import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
 import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
-import { applicationFeeCodeMigrate } from '../../journal/migrations/advert-fee-codes.migrate'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
 import { signatureMigrate } from '../../signature/migrations/signature.migrate'
 import { userMigrate } from '../../user/migration/user.migrate'
@@ -48,7 +47,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     html: model.html,
     publicationNumber: model.publicationNumber,
     advertCategories: model.categories
-      ? model.categories.map((c) => advertCategoryMigrate(c)) ?? []
+      ? (model.categories.map((c) => advertCategoryMigrate(c)) ?? [])
       : [],
     channels: model.channels
       ? model.channels.map((c) => caseChannelMigrate(c))

@@ -24,6 +24,13 @@ export class CaseChannelModel extends Model {
   @Column({
     type: DataType.TEXT,
     allowNull: false,
+    field: 'name',
+  })
+  name!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
     field: 'email',
   })
   email!: string

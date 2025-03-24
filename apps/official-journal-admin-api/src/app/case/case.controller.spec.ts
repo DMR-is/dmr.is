@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize-typescript'
+import { UserRoleEnum } from '@dmr.is/constants'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
 import {
@@ -123,13 +124,48 @@ describe('CaseController', () => {
         .spyOn(caseService, 'createCase')
         .mockImplementation(() => Promise.resolve(ResultWrapper.ok()))
 
-      await caseController.createCase({
-        applicationId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
-      })
+      const mockUser: UserDto = {
+        id: 'mock-user-id',
+        nationalId: '1234567890',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        role: {
+          id: 'mock-role-id',
+          title: 'Mock role title' as UserRoleEnum,
+          slug: 'mock-role-slug',
+        },
+        createdAt: '2024-03-12T12:45:48.21Z',
+        updatedAt: '2024-03-12T12:45:48.21Z',
+        deletedAt: null,
+        displayName: 'John Doe',
+        fullName: 'John Doe',
+        involvedParties: [],
+      }
 
-      expect(createSpy).toHaveBeenCalledWith({
-        applicationId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
-      })
+      const args: [
+        UserDto,
+        {
+          applicationId: string
+          departmentId: string
+          involvedPartyId: string
+          typeId: string
+          subject: string
+        },
+      ] = [
+        mockUser,
+        {
+          applicationId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
+          departmentId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
+          involvedPartyId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
+          typeId: 'ab0ba2b6-ecab-4536-bd9b-3e3417605e5c',
+          subject: 'Test subject',
+        },
+      ]
+
+      await caseController.createCase(...args)
+
+      expect(createSpy).toHaveBeenCalledWith(...args)
     })
   })
 

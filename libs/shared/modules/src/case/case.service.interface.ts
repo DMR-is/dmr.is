@@ -4,6 +4,8 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   CreateCaseChannelBody,
+  CreateCaseDto,
+  CreateCaseResponseDto,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
@@ -54,10 +56,16 @@ export interface ICaseService {
     department: DepartmentEnum,
     query?: GetCasesWithDepartmentCountQuery,
   ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
-  createCase(
+  createCaseByApplication(
     body: PostApplicationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  createCase(
+    currentUser: UserDto,
+    body: CreateCaseDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>>
 
   publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
   getCasesWithStatusCount(
@@ -70,6 +78,8 @@ export interface ICaseService {
     caseId: string,
     body: CreateCaseChannelBody,
   ): Promise<ResultWrapper>
+
+  deleteCaseChannel(caseId: string, channelId: string): Promise<ResultWrapper>
 
   updateCase(
     body: UpdateCaseBody,

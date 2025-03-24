@@ -12,8 +12,12 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
   ApplicationFeeCodesResponse,
+  CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  CreateCaseChannelBody,
+  CreateCaseDto,
+  CreateCaseResponseDto,
   CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
@@ -43,7 +47,6 @@ import {
   InternalCommentBodyDto,
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
-  PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
   UpdateAdvertHtmlBody,
@@ -107,6 +110,28 @@ export class CaseController {
 
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  @Post(':caseId/communication-channels')
+  @ApiOperation({ operationId: 'createCommunicationChannel' })
+  @ApiResponse({ status: 200, type: CaseChannel })
+  async createCommunicationChannel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateCaseChannelBody,
+  ) {
+    return this.caseService.createCaseChannel(caseId, body)
+  }
+
+  @Delete(':caseId/communication-channels/:channelId')
+  @ApiOperation({ operationId: 'deleteCommunicationChannel' })
+  @ApiNoContentResponse()
+  async deleteCommunicationChannel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('channelId', new UUIDValidationPipe()) channelId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteCaseChannel(caseId, channelId),
+    )
+  }
 
   @Get('nextPublicationNumber/:departmentId')
   @ApiOperation({ operationId: 'getNextPublicationNumber' })
@@ -581,9 +606,14 @@ export class CaseController {
 
   @Post()
   @ApiOperation({ operationId: 'createCase' })
-  @ApiNoContentResponse()
-  async createCase(@Body() body: PostApplicationBody) {
-    ResultWrapper.unwrap(await this.caseService.createCase(body))
+  @ApiResponse({ status: 200, type: CreateCaseResponseDto })
+  async createCase(
+    @CurrentUser() currentUser: UserDto,
+    @Body() body: CreateCaseDto,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.caseService.createCase(currentUser, body),
+    )
   }
 
   @Get()
