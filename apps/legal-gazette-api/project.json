@@ -11,7 +11,7 @@
       "options": {
         "target": "node",
         "compiler": "tsc",
-        "outputPath": "dist/apps/legal-gazette-api",
+        "outputPath": "apps/legal-gazette-api/dist",
         "main": "apps/legal-gazette-api/src/main.ts",
         "tsConfig": "apps/legal-gazette-api/tsconfig.app.json",
         "assets": ["apps/legal-gazette-api/src/assets"],
