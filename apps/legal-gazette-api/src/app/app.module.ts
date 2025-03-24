@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
@@ -11,6 +11,9 @@ import {
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
 import { HealthModule } from '@dmr.is/modules'
+import { CLSMiddleware } from '@dmr.is/middleware'
+import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
+import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
 
 @Module({
   imports: [
@@ -23,7 +26,7 @@ import { HealthModule } from '@dmr.is/modules'
           password: process.env.DB_PASSWORD || 'dev_db',
           username: process.env.DB_USERNAME || 'dev_db',
           port: 5434,
-          clsNamespace: 'legal_gazette',
+          clsNamespace: LEGAL_GAZETTE_NAMESPACE,
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>
@@ -41,7 +44,7 @@ import { HealthModule } from '@dmr.is/modules'
     },
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
+      useClass: GlobalExceptionFilter,
     },
     {
       provide: APP_FILTER,
@@ -49,8 +52,13 @@ import { HealthModule } from '@dmr.is/modules'
     },
     {
       provide: APP_FILTER,
-      useClass: GlobalExceptionFilter,
+      useClass: HttpExceptionFilter,
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LegalGazetteNamespaceMiddleware).forRoutes('*')
+    consumer.apply(CLSMiddleware).forRoutes('*')
+  }
+}

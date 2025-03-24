@@ -4,6 +4,8 @@ import {
 } from '@dmr.is/shared/models/base'
 import { Order } from 'sequelize'
 
+export const LEGAL_GAZETTE_NAMESPACE = 'legal-gazette'
+
 export enum LegalGazetteModels {
   CASE_TYPE = 'case_type',
 }

@@ -1,4 +1,3 @@
-import { Transaction } from 'sequelize'
 import {
   CreateCaseTypeDto,
   GetCaseTypeDto,
@@ -8,24 +7,15 @@ import {
 } from './dto/case-type.dto'
 
 export interface ICaseTypeService {
-  getCaseTypes(transaction?: Transaction): Promise<GetCaseTypesDto>
+  getCaseTypes(): Promise<GetCaseTypesDto>
 
-  getCaseTypesDetailed(
-    transaction?: Transaction,
-  ): Promise<GetCaseTypesDetailedDto>
+  getCaseTypesDetailed(): Promise<GetCaseTypesDetailedDto>
 
-  createCaseType(
-    body: CreateCaseTypeDto,
-    transaction?: Transaction,
-  ): Promise<GetCaseTypeDto>
+  createCaseType(body: CreateCaseTypeDto): Promise<GetCaseTypeDto>
 
-  updateCaseType(
-    id: string,
-    body: UpdateCaseTypeDto,
-    transaction?: Transaction,
-  ): Promise<GetCaseTypeDto>
+  updateCaseType(id: string, body: UpdateCaseTypeDto): Promise<GetCaseTypeDto>
 
-  deleteCaseType(id: string, transaction?: Transaction): Promise<GetCaseTypeDto>
+  deleteCaseType(id: string): Promise<GetCaseTypeDto>
 }
 
 export const ICaseTypeService = Symbol('ICaseTypeService')
