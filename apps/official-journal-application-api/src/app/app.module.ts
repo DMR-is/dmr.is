@@ -1,4 +1,4 @@
-import { SequelizeConfigService } from '@dmr.is/db'
+import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   AdvertTypeController,
@@ -26,7 +26,18 @@ import { ApplicationController } from './application/application.controller'
 @Module({
   imports: [
     SequelizeModule.forRootAsync({
-      useClass: SequelizeConfigService,
+      imports: [
+        DMRSequelizeConfigModule.register({
+          database: process.env.DB_NAME || 'dev_db_official_journal',
+          host: process.env.DB_HOST || 'localhost',
+          password: process.env.DB_PASSWORD || 'dev_db',
+          username: process.env.DB_USERNAME || 'dev_db',
+          port: Number(process.env.DB_PORT) || 5433,
+        }),
+      ],
+      useFactory: (configService: DMRSequelizeConfigService) =>
+        configService.createSequelizeOptions(),
+      inject: [DMRSequelizeConfigService],
     }),
     ApplicationModule,
     SignatureModule,
