@@ -2,7 +2,6 @@ import { Transaction } from 'sequelize'
 import {
   ApplicationFeeCodesResponse,
   CasePriceResponse,
-  GetAllFeeCodesParams,
   GetPaymentQuery,
   GetPaymentResponse,
   UpdateCasePaymentBody,
@@ -23,7 +22,6 @@ export interface IPriceService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
   getAllFeeCodes(
-    params?: GetAllFeeCodesParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationFeeCodesResponse>>
   postExternalPayment(

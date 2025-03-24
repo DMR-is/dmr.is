@@ -8,7 +8,6 @@ import {
   CaseFeeCalculationBody,
   CasePriceResponse,
   CaseTransaction,
-  GetAllFeeCodesParams,
   GetPaymentQuery,
   GetPaymentResponse,
   PaymentExpenses,
@@ -556,7 +555,6 @@ export class PriceService implements IPriceService {
   @LogAndHandle()
   @Transactional()
   async getAllFeeCodes(
-    params?: GetAllFeeCodesParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationFeeCodesResponse>> {
     const feeCodes = await this.feeCodeModel.findAndCountAll({

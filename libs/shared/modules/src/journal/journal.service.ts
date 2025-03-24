@@ -16,7 +16,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAllFeeCodesParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
@@ -65,7 +64,6 @@ import {
   AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
-  AdvertFeeCodesModel,
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
   AdvertModel,
@@ -965,9 +963,8 @@ export class JournalService implements IJournalService {
   @LogAndHandle()
   @Transactional()
   async getAllFeeCodes(
-    params?: GetAllFeeCodesParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationFeeCodesResponse>> {
-    return await this.priceService.getAllFeeCodes(params, transaction)
+    return await this.priceService.getAllFeeCodes(transaction)
   }
 }

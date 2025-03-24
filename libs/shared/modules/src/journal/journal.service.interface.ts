@@ -10,7 +10,6 @@ import {
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetAllFeeCodesParams,
   GetCategoriesResponse,
   GetCategoryResponse,
   GetDepartmentResponse,
@@ -107,7 +106,6 @@ export interface IJournalService {
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
 
   getAllFeeCodes(
-    params?: GetAllFeeCodesParams,
     transaction?: Transaction,
   ): Promise<ResultWrapper<ApplicationFeeCodesResponse>>
 

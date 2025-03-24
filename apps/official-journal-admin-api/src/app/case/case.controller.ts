@@ -24,7 +24,6 @@ import {
   DefaultSearchParams,
   DepartmentEnum,
   ExternalCommentBodyDto,
-  GetAllFeeCodesParams,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -174,12 +173,8 @@ export class CaseController {
   @Get('feeCodes')
   @ApiOperation({ operationId: 'getFeeCodes' })
   @ApiResponse({ status: 200, type: ApplicationFeeCodesResponse })
-  async feeCodes(
-    @Query() params?: GetAllFeeCodesParams,
-  ): Promise<ApplicationFeeCodesResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.getAllFeeCodes(params),
-    )
+  async feeCodes(): Promise<ApplicationFeeCodesResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getAllFeeCodes())
   }
 
   @Get('categories')

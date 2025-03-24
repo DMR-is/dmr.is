@@ -10,7 +10,9 @@ import {
 } from '@nestjs/common'
 
 import { IAuthService, IdsToken } from './auth.service.interface'
-const LOGGING_CATEGORY = 'AuthService'
+const LOGGING_CONTEXT = 'AuthService'
+const LOGGING_CATEGORY = 'auth-service'
+
 @Injectable()
 export class AuthService implements IAuthService {
   private idsToken: IdsToken | null = null
@@ -78,6 +80,7 @@ export class AuthService implements IAuthService {
     if (!idsUrl || !clientSecret || !clientId || !clientScopes) {
       this.logger.error('Missing required environment variables', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
       })
       throw new InternalServerErrorException(
         'Missing required environment variables',
@@ -111,6 +114,7 @@ export class AuthService implements IAuthService {
       } else {
         this.logger.error('Failed to fetch access token from ids', {
           category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
           status: tokenResponse.status,
         })
       }
@@ -122,10 +126,7 @@ export class AuthService implements IAuthService {
   }
 
   @LogMethod()
-  async xroadFetch(
-    url: string,
-    options: RequestInit,
-  ): Promise<Response> {
+  async xroadFetch(url: string, options: RequestInit): Promise<Response> {
     const idsToken = await this.getAccessToken()
 
     if (!idsToken) {
@@ -147,6 +148,7 @@ export class AuthService implements IAuthService {
 
     this.logger.info(`${options.method}: ${url}`, {
       category: LOGGING_CATEGORY,
+      context: LOGGING_CONTEXT,
       url: url,
     })
 
@@ -167,12 +169,15 @@ export class AuthService implements IAuthService {
         },
       })
     } catch (error) {
-      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
+      this.logger.error('Failed to fetch in auth xroadFetch', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
         error,
       })
 
-      throw new InternalServerErrorException('Failed to fetch')
+      throw new InternalServerErrorException(
+        'Failed to fetch in auth.service xroadFetch',
+      )
     }
   }
 }

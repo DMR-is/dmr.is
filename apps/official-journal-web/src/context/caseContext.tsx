@@ -172,9 +172,7 @@ export const CaseProvider = ({
   const tagOptions = createOptions(tags)
 
   const feeCodeOptions = feeCodes?.filter(
-    (item) =>
-      item.feeCode.charAt(0).toLowerCase() ===
-      currentCase.advertDepartment.slug.charAt(0).toLowerCase(),
+    (item) => item.department === currentCase.advertDepartment.slug,
   )
 
   const employeeOptions = createOptions(
