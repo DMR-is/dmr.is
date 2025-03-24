@@ -407,7 +407,7 @@ export class ApplicationService implements IApplicationService {
       return ResultWrapper.ok()
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() === 404) {
-        return await this.caseService.createCase({
+        return await this.caseService.createCaseByApplication({
           applicationId,
         })
       }

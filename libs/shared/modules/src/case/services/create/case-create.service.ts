@@ -4,7 +4,13 @@ import { v4 as uuid } from 'uuid'
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { BaseEntity } from '@dmr.is/shared/dto'
+import {
+  BaseEntity,
+  CaseChannel,
+  CreateCaseDto,
+  CreateCaseResponseDto,
+  UserDto,
+} from '@dmr.is/shared/dto'
 import {
   AdditionType,
   Application,
@@ -26,6 +32,7 @@ import { IAttachmentService } from '../../../attachments/attachment.service.inte
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
+import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import {
   CaseAdditionModel,
   CaseAdditionsModel,
@@ -105,6 +112,109 @@ export class CaseCreateService implements ICaseCreateService {
 
     private readonly sequelize: Sequelize,
   ) {}
+
+  @LogAndHandle()
+  @Transactional()
+  async createCase(
+    currentUser: UserDto,
+    body: CreateCaseDto,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>> {
+    const now = new Date()
+    const nowIso = now.toISOString()
+
+    const nextWeekdayAfterTenDays = (date: Date) => {
+      const result = new Date(date)
+      result.setDate(date.getDate() + 10)
+      while (result.getDay() === 0 || result.getDay() === 6) {
+        result.setDate(result.getDate() + 1)
+      }
+      return result
+    }
+
+    const caseNumberPromise = this.utilityService.getNextCaseNumber(
+      body.departmentId,
+      now.getFullYear(),
+      transaction,
+    )
+
+    const statusPromise = this.utilityService.caseStatusLookup(
+      CaseStatusEnum.Submitted,
+      transaction,
+    )
+
+    const communicationStatusPromise =
+      this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.NotStarted,
+        transaction,
+      )
+
+    const caseTagPromise = this.utilityService.caseTagLookup(
+      CaseTagEnum.NotStarted,
+      transaction,
+    )
+
+    const [
+      caseNumberResult,
+      statusResult,
+      communicationStatusResult,
+      caseTagResult,
+    ] = await Promise.all([
+      caseNumberPromise,
+      statusPromise,
+      communicationStatusPromise,
+      caseTagPromise,
+    ])
+
+    const caseNumber = ResultWrapper.unwrap(caseNumberResult)
+    const status = ResultWrapper.unwrap(statusResult)
+    const communicationStatus = ResultWrapper.unwrap(communicationStatusResult)
+    const caseTag = ResultWrapper.unwrap(caseTagResult)
+
+    const createResults = await this.caseModel.create(
+      {
+        involvedPartyId: body.involvedPartyId,
+        departmentId: body.departmentId,
+        applicationId: body.applicationId,
+        year: now.getFullYear(),
+        statusId: status.id,
+        tagId: caseTag.id,
+        assignedUserId: currentUser.id,
+        communicationStatusId: communicationStatus.id,
+        caseNumber: caseNumber,
+        advertTypeId: body.typeId,
+        advertTitle: body.subject,
+        html: '<h3 class="article__title">1. gr.</h3>',
+        requestedPublicationDate: nextWeekdayAfterTenDays(now).toISOString(),
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        isLegacy: false,
+        fastTrack: false,
+      },
+      {
+        transaction: transaction,
+        returning: ['id'],
+      },
+    )
+    await this.signatureService.createSignature(
+      createResults.id,
+      {
+        involvedPartyId: body.involvedPartyId,
+        records: [],
+      },
+      transaction,
+    )
+
+    await this.commentService.createSubmitComment(
+      createResults.id,
+      {
+        institutionCreatorId: body.involvedPartyId,
+      },
+      transaction,
+    )
+
+    return ResultWrapper.ok({ id: createResults.id })
+  }
 
   @LogAndHandle()
   @Transactional()
@@ -227,6 +337,7 @@ export class CaseCreateService implements ICaseCreateService {
     const channels =
       application.answers.advert.channels?.map((channel) => {
         return {
+          name: channel.name,
           email: channel.email,
           phone: channel.phone,
         }
@@ -320,9 +431,10 @@ export class CaseCreateService implements ICaseCreateService {
     caseId: string,
     body: CreateCaseChannelBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<CaseChannel>> {
     const channel = await this.caseChannelModel.create(
       {
+        name: body.name,
         email: body.email,
         phone: body.phone,
       },
@@ -342,11 +454,29 @@ export class CaseCreateService implements ICaseCreateService {
       },
     )
 
-    return ResultWrapper.ok()
+    const newChannel = await this.caseChannelModel.findByPk(channel.id, {
+      transaction,
+    })
+
+    if (!newChannel) {
+      this.logger.warn('Failed to find newly created channel', {
+        category: LOGGING_CATEGORY,
+        caseId,
+        channelId: channel.id,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to create channel',
+      })
+    }
+
+    const migrated = caseChannelMigrate(newChannel)
+
+    return ResultWrapper.ok(migrated)
   }
 
   @LogAndHandle()
-  async createCase(
+  async createCaseByApplication(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<{ id: string }>> {
     const { application } = (

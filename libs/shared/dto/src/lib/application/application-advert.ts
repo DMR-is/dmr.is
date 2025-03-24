@@ -14,6 +14,11 @@ import { BaseEntity } from '../entity'
 export class ApplicationCommunicationChannel {
   @ApiProperty({
     type: String,
+  })
+  name!: string
+
+  @ApiProperty({
+    type: String,
     example: 'test@test.is',
     description: 'Email of the communication channel',
   })
@@ -24,9 +29,10 @@ export class ApplicationCommunicationChannel {
     type: String,
     example: '555 5555',
     description: 'Phone number of the communication channel',
+    required: true,
   })
   @IsOptional()
-  phone!: string
+  phone?: string
 }
 
 export class ApplicationAddition {

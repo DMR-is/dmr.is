@@ -1,6 +1,10 @@
+import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { z } from 'zod'
 
+import { toast } from '@island.is/island-ui/core'
+
+import { getDmrClient } from '../lib/api/createClient'
 import { ADDITIONAL_DOCUMENTS } from '../lib/constants'
 import { overrideAttachmentSchema } from '../lib/types'
 
@@ -13,11 +17,14 @@ export const useAttachments = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
   const fetchAttachment = async ({
     caseId,
     attachmentId,
   }: FetchAttachmentParams) => {
-    return await fetch(`/api/cases/${caseId}/attachments/${attachmentId}`)
+    return await dmrClient.getCaseAttachment({ caseId, attachmentId })
   }
 
   const downloadAttachment = async ({
@@ -28,31 +35,30 @@ export const useAttachments = () => {
     setError(null)
     const response = await fetchAttachment({ caseId, attachmentId })
 
-    if (!response.ok) {
-      setError(`Ekki tókst að sækja skjal`)
-      setLoading(false)
-      return
-    }
+    const { url } = response
 
-    const json = await response.json()
-    const { url } = json
-
-    const link = document.createElement('a')
-
-    const fileName = new URL(url).pathname.split('/').pop()
-
-    if (!fileName) return
-
-    link.setAttribute('style', 'display: none')
-    link.setAttribute('href', url)
-    link.setAttribute('download', fileName)
-
-    document.body.appendChild(link)
-
-    link.click()
-
-    document.body.removeChild(link)
-    setLoading(false)
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          toast.error('Ekki tókst að sækja skjal úr gagnageymslu', {
+            toastId: 'donloadAttachmentError',
+          })
+          throw new Error('Ekki tókst að sækja skjal úr gagnageymslu')
+        }
+        return response.blob()
+      })
+      .then((blob) => {
+        const link = document.createElement('a')
+        link.href = window.URL.createObjectURL(blob)
+        link.download = 'downloaded.pdf'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
   }
 
   const overwriteAttachment = async ({
@@ -123,6 +129,7 @@ export const useAttachments = () => {
     }
 
     setLoading(false)
+
     onSuccess && onSuccess()
   }
 

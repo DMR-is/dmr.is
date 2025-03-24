@@ -1,5 +1,6 @@
 import debounce from 'lodash/debounce'
 import dynamic from 'next/dynamic'
+import { useCallback } from 'react'
 
 import {
   AccordionItem,
@@ -43,14 +44,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     },
   })
 
-  const debouncedUpdate = debounce(trigger, 500)
-
-  const onChangeHandler = (val: string) => {
-    debouncedUpdate.cancel()
-    debouncedUpdate({
-      advertHtml: val,
-    })
-  }
+  const onChangeHandler = useCallback(debounce(trigger, 500), [])
 
   const fileUploader = useFileUploader(
     currentCase.applicationId ?? 'no-application-id',
@@ -71,7 +65,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
           <HTMLEditor
             readonly={!canEdit}
             defaultValue={currentCase.html}
-            onChange={(val) => onChangeHandler(val)}
+            onChange={(val) => onChangeHandler({ advertHtml: val })}
             handleUpload={fileUploader()}
           />
         </Box>
