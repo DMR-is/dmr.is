@@ -122,16 +122,7 @@ export class PriceService implements IPriceService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: [
-        'id',
-        'transactionId',
-        'transaction',
-        'caseNumber',
-        'involvedPartyId',
-        'involvedParty',
-        'html',
-        'fastTrack',
-      ],
+      attributes: ['id', 'caseNumber', 'html', 'fastTrack'],
       include: [
         {
           model: CaseTransactionModel,
@@ -164,13 +155,13 @@ export class PriceService implements IPriceService {
       {
         slug: caseLookup.department.slug,
         isFastTrack: caseLookup.fastTrack,
-        imageTier: caseLookup?.transaction.imageTier ?? undefined,
-        baseDocumentCount: caseLookup?.transaction.customBaseCount ?? 0,
+        imageTier: caseLookup.transaction.imageTier ?? undefined,
+        baseDocumentCount: caseLookup.transaction.customBaseCount ?? 0,
         bodyLengthCount:
-          caseLookup?.transaction.customAdditionalCharacterCount ??
+          caseLookup.transaction.customAdditionalCharacterCount ??
           getHtmlTextLength(caseLookup.html),
         additionalDocCount:
-          caseLookup?.transaction.customAdditionalDocCount ?? 0,
+          caseLookup.transaction.customAdditionalDocCount ?? 0,
       },
       transaction,
     )
@@ -180,7 +171,7 @@ export class PriceService implements IPriceService {
     this.postExternalPayment(
       caseId,
       {
-        id: caseLookup?.transaction.id,
+        id: caseLookup.transaction.id,
         chargeBase: caseLookup.caseNumber,
         Expenses: feeCalculation.expenses,
         debtorNationalId: caseLookup.involvedParty.nationalId,
@@ -198,13 +189,11 @@ export class PriceService implements IPriceService {
     body: UpdateCasePriceBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    // try {
     const caseLookup = await this.caseModel.findByPk(caseId, {
       attributes: [
         'id',
         'html',
         'requestedPublicationDate',
-        'departmentId',
         'fastTrack',
         'caseNumber',
       ],
@@ -459,26 +448,24 @@ export class PriceService implements IPriceService {
     }
 
     const credentials = btoa(process.env.FEE_SERVICE_CRED)
-    const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_FJS_PATH}/claim`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${credentials}`,
-        },
-        body: JSON.stringify({
-          UUID: body.id,
-          office: process.env.FEE_SERVICE_OFFICE_ID,
-          chargeCategory: process.env.FEE_SERVICE_CHARGE_CATEGORY,
-          chargeBase: body.chargeBase,
-          Expenses: body.Expenses,
-          debtorNationalId: body.debtorNationalId,
-          employeeNationalId: body.debtorNationalId,
-          extraData: body.extra,
-        }),
+    await this.authService.xroadFetch(`${process.env.XROAD_FJS_PATH}/claim`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${credentials}`,
       },
-    )
+      body: JSON.stringify({
+        UUID: body.id,
+        office: process.env.FEE_SERVICE_OFFICE_ID,
+        chargeCategory: process.env.FEE_SERVICE_CHARGE_CATEGORY,
+        chargeBase: body.chargeBase,
+        Expenses: body.Expenses,
+        debtorNationalId: body.debtorNationalId,
+        employeeNationalId: body.debtorNationalId,
+        extraData: body.extra,
+      }),
+    })
+
     return ResultWrapper.ok()
   }
 
@@ -497,7 +484,7 @@ export class PriceService implements IPriceService {
     }
 
     const caseLookup = await this.caseModel.findByPk(parameters.caseId, {
-      attributes: ['id', 'caseNumber', 'involvedPartyId', 'involvedParty'],
+      attributes: ['id', 'caseNumber'],
       include: [
         {
           model: AdvertInvolvedPartyModel,
