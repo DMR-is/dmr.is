@@ -240,6 +240,7 @@ export const PriceCalculator = () => {
             label="Samtals"
             type="text"
             loading={isPriceLoading}
+            onBlur={updateAllPrices}
           />
         </Box>
         <Inline alignY="center" space={1}>
