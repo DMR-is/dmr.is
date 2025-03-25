@@ -110,6 +110,25 @@ function getIcelandicDative(days: number) {
   return 'dögum'
 }
 
+export const imageTiers = [
+  {
+    value: 'B108',
+    label: '1-5 myndir í máli',
+  },
+  {
+    value: 'B109',
+    label: '6-15 myndir í máli',
+  },
+  {
+    value: 'B110',
+    label: '>15 myndir í máli',
+  },
+  {
+    value: '',
+    label: 'Engar myndir',
+  },
+]
+
 export const convertDateToDaysAgo = (dateIso: string): string => {
   try {
     const date = new Date(dateIso)
@@ -614,4 +633,18 @@ export function useFileUploader(applicationId: string, caseId: string) {
       }
     }
   return fileUploader
+}
+
+export const numberFormat = (value: number): string =>
+  value
+    .toString()
+    .split('.')[0]
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+export const amountFormat = (value?: number | string | null): string => {
+  const inputValue = typeof value === 'string' ? parseInt(value) : value
+  if (inputValue === undefined || inputValue === null || isNaN(inputValue)) {
+    return ''
+  }
+  return typeof inputValue === 'number' ? numberFormat(inputValue) + ' kr.' : ''
 }

@@ -17,6 +17,7 @@ import {
   CaseCommunicationStatusModel,
   CaseStatusModel,
   CaseTagModel,
+  CaseTransactionModel,
 } from '../models'
 import { CaseHistoryModel } from '../models/case-history.model'
 
@@ -33,6 +34,9 @@ export const casesDetailedIncludes = [
   {
     model: UserModel,
     include: [{ model: UserRoleModel }, { model: AdvertInvolvedPartyModel }],
+  },
+  {
+    model: CaseTransactionModel,
   },
   {
     model: CommentModel,

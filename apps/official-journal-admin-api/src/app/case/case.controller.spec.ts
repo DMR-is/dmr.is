@@ -7,6 +7,7 @@ import {
   ICaseService,
   ICommentServiceV2,
   IJournalService,
+  IPriceService,
   IUserService,
 } from '@dmr.is/modules'
 import {
@@ -27,6 +28,7 @@ import { CaseController } from './case.controller'
 describe('CaseController', () => {
   let caseService: ICaseService
   let commentService: ICommentServiceV2
+  let priceService: IPriceService
   let caseController: CaseController
 
   const comment = {
@@ -76,6 +78,12 @@ describe('CaseController', () => {
         },
         {
           provide: ICaseService,
+          useClass: jest.fn(() => ({
+            createCase: () => ({}),
+          })),
+        },
+        {
+          provide: IPriceService,
           useClass: jest.fn(() => ({
             createCase: () => ({}),
           })),

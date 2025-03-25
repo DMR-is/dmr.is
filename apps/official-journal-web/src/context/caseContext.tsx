@@ -13,6 +13,7 @@ import {
   Category,
   Department,
   GetAdvertTypes,
+  TransactionFeeCode,
   UserDto,
 } from '../gen/fetch'
 import { useCase, useSignature } from '../hooks/api'
@@ -42,6 +43,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
+  feeCodeOptions: TransactionFeeCode[]
   handleOptimisticUpdate: (
     newCase: CaseDetailed,
     cb: () => Promise<Response | void>,
@@ -69,6 +71,7 @@ export const CaseContext = createContext<CaseState>({
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
+  feeCodeOptions: [],
   handleOptimisticUpdate: () => undefined,
 })
 
@@ -78,6 +81,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
+  feeCodes: TransactionFeeCode[]
   employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string
@@ -89,6 +93,7 @@ export const CaseProvider = ({
   categories,
   tags,
   types,
+  feeCodes,
   employees,
   currentUserId,
   children,
@@ -166,6 +171,10 @@ export const CaseProvider = ({
 
   const tagOptions = createOptions(tags)
 
+  const feeCodeOptions = feeCodes?.filter(
+    (item) => item.department === currentCase.advertDepartment.slug,
+  )
+
   const employeeOptions = createOptions(
     employees.map((e) => ({
       id: e.id,
@@ -221,6 +230,7 @@ export const CaseProvider = ({
         canUpdateAdvert,
         refetchSignature,
         isRefetchingSignature,
+        feeCodeOptions,
         handleOptimisticUpdate,
       }}
     >

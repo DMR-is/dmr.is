@@ -19,6 +19,8 @@ import {
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentQuery,
+  GetPaymentResponse,
   GetTagsResponse,
   PostApplicationAttachmentBody,
   PostApplicationBody,
@@ -34,7 +36,6 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -128,7 +129,6 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   updateCaseTitle(caseId: string, body: UpdateTitleBody): Promise<ResultWrapper>
-  updateCasePaid(caseId: string, body: UpdatePaidBody): Promise<ResultWrapper>
 
   updateCaseFasttrack(
     caseId: string,
@@ -200,6 +200,11 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
+  
+  getCasePaymentStatus(
+    params: GetPaymentQuery,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetPaymentResponse>>
 }
 
 export const ICaseService = Symbol('ICaseService')

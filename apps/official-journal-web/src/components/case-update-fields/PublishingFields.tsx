@@ -1,10 +1,8 @@
-import debounce from 'lodash/debounce'
-
 import {
   AccordionItem,
-  Box,
   Checkbox,
   DatePicker,
+  Divider,
   Inline,
   SkeletonLoader,
   Stack,
@@ -12,13 +10,12 @@ import {
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import { useUpdatePrice, useUpdatePublishDate } from '../../hooks/api'
+import { useUpdatePublishDate } from '../../hooks/api'
 import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'
-import { useUpdatePaid } from '../../hooks/api/update/useUpdatePaid'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
-import { OJOIInput } from '../select/OJOIInput'
+import { PriceCalculator } from '../price/calculator'
 
 type Props = {
   toggle: boolean
@@ -32,36 +29,6 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     useCaseContext()
 
   const { md } = useBreakpoint()
-
-  const { trigger: updatePrice } = useUpdatePrice({
-    caseId: currentCase.id,
-    options: {
-      onSuccess: () => {
-        toast.success('Verð auglýsingar hefur verið uppfært')
-        refetch()
-      },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra verð auglýsingar')
-      },
-    },
-  })
-
-  const { trigger: updatePaid } = useUpdatePaid({
-    caseId: currentCase.id,
-    options: {
-      onSuccess: () => {
-        toast.success('Greiðslustaða auglýsingar hefur verið uppfærð', {
-          toastId: 'paid',
-        })
-        refetch()
-      },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra greiðslustöðu auglýsingar', {
-          toastId: 'paid',
-        })
-      },
-    },
-  })
 
   const { trigger: updateFasttrack } = useUpdateFastTrack({
     caseId: currentCase.id,
@@ -95,13 +62,6 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
       },
     },
   })
-
-  const debouncedUpdatePrice = debounce(updatePrice, 500)
-
-  const updatePriceHandler = (value: string) => {
-    debouncedUpdatePrice.cancel()
-    debouncedUpdatePrice({ price: parseInt(value, 10) })
-  }
 
   return (
     <AccordionItem
@@ -160,32 +120,8 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             />
           </Inline>
         </Inline>
-        <Inline alignY="center" space={[2, 4]}>
-          <Box style={{ minWidth: md ? '308px' : '254px' }}>
-            <OJOIInput
-              disabled={!canEdit}
-              name="price"
-              defaultValue={currentCase.price}
-              label={formatMessage(messages.grunnvinnsla.price)}
-              type="number"
-              inputMode="numeric"
-              onChange={(e) => updatePriceHandler(e.target.value)}
-            />
-          </Box>
-          <Inline alignY="center" space={1}>
-            <Checkbox
-              checked={currentCase.paid}
-              disabled={!canEdit}
-              onChange={(e) => {
-                handleOptimisticUpdate(
-                  { ...currentCase, paid: e.target.checked },
-                  () => updatePaid({ paid: e.target.checked }),
-                )
-              }}
-              label="Búið er að greiða"
-            />
-          </Inline>
-        </Inline>
+        <Divider weight="faded" />
+        <PriceCalculator />
       </Stack>
     </AccordionItem>
   )

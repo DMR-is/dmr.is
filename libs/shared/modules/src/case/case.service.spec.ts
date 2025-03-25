@@ -18,6 +18,7 @@ import {
   AdvertModel,
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
+import { IPriceService } from '../price/price.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
@@ -54,6 +55,7 @@ describe('CaseService', () => {
   let caseChannelsModel: CaseChannelsModel
   let caseCreateService: ICaseCreateService
   let caseUpdateService: ICaseUpdateService
+  let priceService: IPriceService
   let pdfService: IPdfService
   let sequelize: Sequelize
 
@@ -107,6 +109,10 @@ describe('CaseService', () => {
         },
         {
           provide: IPdfService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IPriceService,
           useClass: jest.fn(() => ({})),
         },
         {

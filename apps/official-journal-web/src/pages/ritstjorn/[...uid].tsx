@@ -13,6 +13,7 @@ import {
   CaseTag,
   Category,
   Department,
+  TransactionFeeCode,
   UserDto,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -30,6 +31,7 @@ type Props = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
+  feeCodes: TransactionFeeCode[]
 }
 
 export default function CaseSingle({
@@ -39,6 +41,7 @@ export default function CaseSingle({
   admins,
   tags,
   types,
+  feeCodes,
 }: Props) {
   const { formatMessage } = useFormatMessage()
 
@@ -52,6 +55,7 @@ export default function CaseSingle({
       departments={departments}
       employees={admins}
       types={types}
+      feeCodes={feeCodes}
       currentUserId={session?.user?.id}
     >
       <Meta
@@ -108,14 +112,17 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const tagPromises = dmrClient.getTags()
 
+  const feeCodePromise = dmrClient.getFeeCodes()
+
   try {
-    const [caseResponse, departments, users, categories, tags] =
+    const [caseResponse, departments, users, categories, tags, feeCodes] =
       await Promise.all([
         casePromise,
         departmentsPromise,
         employeesPromise,
         categoriesPromise,
         tagPromises,
+        feeCodePromise,
       ])
 
     const types = await dmrClient.getTypes({
@@ -134,6 +141,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         admins: users.users,
         tags: tags.tags,
         types: types.types,
+        feeCodes: feeCodes.codes,
       }),
     }
   } catch (error) {

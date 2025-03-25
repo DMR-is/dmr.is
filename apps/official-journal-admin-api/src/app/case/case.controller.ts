@@ -5,6 +5,7 @@ import {
   ICaseService,
   ICommentServiceV2,
   IJournalService,
+  IPriceService,
   RoleGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules'
@@ -40,12 +41,14 @@ import {
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
+  GetPaymentResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  TransactionFeeCodesResponse,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
@@ -57,7 +60,6 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdateMainCategory,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -99,6 +101,9 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
+
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
 
     @Inject(IJournalService)
     private readonly journalService: IJournalService,
@@ -167,6 +172,13 @@ export class CaseController {
   @ApiResponse({ status: 200, type: GetTagsResponse })
   async tags(): Promise<GetTagsResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCaseTags())
+  }
+
+  @Get('feeCodes')
+  @ApiOperation({ operationId: 'getFeeCodes' })
+  @ApiResponse({ status: 200, type: TransactionFeeCodesResponse })
+  async feeCodes(): Promise<TransactionFeeCodesResponse> {
+    return ResultWrapper.unwrap(await this.priceService.getAllFeeCodes())
   }
 
   @Get('categories')
@@ -325,14 +337,17 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
   }
 
-  @Put(':id/paid')
-  @ApiOperation({ operationId: 'updatePaid' })
-  @ApiNoContentResponse()
-  async updatePaid(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdatePaidBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCasePaid(id, body))
+  @Get(':id/price/payment-status')
+  @ApiOperation({ operationId: 'getCasePaymentStatus' })
+  @ApiResponse({ status: 200, type: GetPaymentResponse })
+  async getCasePaymentStatus(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+  ): Promise<GetPaymentResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCasePaymentStatus({
+        caseId: caseId,
+      }),
+    )
   }
 
   @Put(':id/fasttrack')

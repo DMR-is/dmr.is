@@ -37,7 +37,6 @@ import {
   UpdateCategoriesBody,
   UpdateCommunicationStatusBody,
   UpdateNextStatusBody,
-  UpdatePaidBody,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
@@ -170,12 +169,6 @@ export class CaseServiceMock {
   udpateCaseTag(
     caseId: string,
     body: UpdateTagBody,
-  ): Promise<ResultWrapper<undefined>> {
-    throw new Error('Method not implemented.')
-  }
-  updateCasePaid(
-    caseId: string,
-    body: UpdatePaidBody,
   ): Promise<ResultWrapper<undefined>> {
     throw new Error('Method not implemented.')
   }

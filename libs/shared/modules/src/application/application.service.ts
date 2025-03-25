@@ -1,11 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import {
-  ApplicationEvent,
-  AttachmentTypeParam,
-  DEFAULT_PRICE,
-} from '@dmr.is/constants'
-import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
+import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTemplateDetails,
@@ -30,7 +26,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
-  calculatePriceForApplication,
   generatePaging,
   getLimitAndOffset,
   getTemplate,
@@ -59,6 +54,7 @@ import {
   AdvertDepartmentModel,
   AdvertModel,
 } from '../journal/models'
+import { IPriceService } from '../price/price.service.interface'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
@@ -83,6 +79,8 @@ export class ApplicationService implements IApplicationService {
     private readonly authService: IAuthService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
     @Inject(IAWSService)
     private readonly s3Service: IAWSService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
@@ -110,90 +108,16 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  @LogMethod()
-  private async xroadFetch(url: string, options: RequestInit) {
-    const idsToken = await this.authService.getAccessToken()
-
-    if (!idsToken) {
-      this.logger.error(
-        'xroadFetch, could not get access token from auth service',
-        {
-          category: LOGGING_CATEGORY,
-        },
-      )
-      throw new Error('Could not get access token from auth service')
-    }
-
-    const xroadClient = process.env.XROAD_DMR_CLIENT
-    if (!xroadClient) {
-      this.logger.error('Missing required environment', {
-        category: LOGGING_CATEGORY,
-      })
-      throw new Error('Missing required environment')
-    }
-
-    this.logger.info(`${options.method}: ${url}`, {
-      category: LOGGING_CATEGORY,
-      url: url,
-    })
-
-    const requestOption = {
-      ...options,
-      headers: {
-        ...options.headers,
-        'X-Road-Client': xroadClient,
-      },
-    }
-
-    try {
-      return await fetch(url, {
-        ...requestOption,
-        headers: {
-          ...requestOption.headers,
-          Authorization: `Bearer ${idsToken.access_token}`,
-        },
-      })
-    } catch (error) {
-      this.logger.error('Failed to fetch in ApplicationService.xroadFetch', {
-        category: LOGGING_CATEGORY,
-        error,
-      })
-
-      throw new InternalServerErrorException('Failed to fetch')
-    }
-  }
-
   @LogAndHandle()
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
-    /**
-     * First we check if there is an existing case for the application.
-     * If so then we return the price of the case.
-     * If not then we calculate the price of the application.
-     */
     try {
-      const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(applicationId)
-      ).unwrap()
-
-      /**
-       * If price has not been set we return default price
-       */
-
-      const price = caseLookup.price ? caseLookup.price : DEFAULT_PRICE
-
-      return ResultWrapper.ok({
-        price: price,
-      })
+      return await this.priceService.getFeeByApplication(applicationId)
     } catch (error) {
-      // ResultWrapper.unwrap(await this.getApplication(applicationId))
-
-      // case does not exist, calculate price
-      const price = calculatePriceForApplication()
-
-      return ResultWrapper.ok({
-        price: price,
+      return ResultWrapper.err({
+        code: 500,
+        message: `Fee calculation failed on application<${applicationId}>. ${error}`,
       })
     }
   }
@@ -202,7 +126,7 @@ export class ApplicationService implements IApplicationService {
   async getApplication(
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
         method: 'GET',
@@ -236,7 +160,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
     event: ApplicationEvent,
   ): Promise<ResultWrapper> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
         method: 'PUT',
@@ -260,7 +184,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
     answers: UpdateApplicationBody,
   ): Promise<ResultWrapper> {
-    const res = await this.xroadFetch(
+    const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
         method: 'PUT',

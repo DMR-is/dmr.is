@@ -276,6 +276,26 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/feeCodes": {
+      "get": {
+        "operationId": "getFeeCodes",
+        "summary": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionFeeCodesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/categories": {
       "get": {
         "operationId": "getCategories",
@@ -768,9 +788,9 @@
         "security": [{ "bearer": [] }]
       }
     },
-    "/api/v1/cases/{id}/paid": {
-      "put": {
-        "operationId": "updatePaid",
+    "/api/v1/cases/{id}/price/payment-status": {
+      "get": {
+        "operationId": "getCasePaymentStatus",
         "summary": "",
         "parameters": [
           {
@@ -780,15 +800,16 @@
             "schema": { "type": "string" }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdatePaidBody" }
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPaymentResponse" }
+              }
             }
           }
         },
-        "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }]
       }
     },
@@ -3303,6 +3324,69 @@
         },
         "required": ["tags"]
       },
+      "TransactionFeeCode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the fee code, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "feeCode": {
+            "type": "string",
+            "description": "Unique fee code identifier.",
+            "example": "A101"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the fee."
+          },
+          "feeType": {
+            "type": "string",
+            "description": "Type of fee",
+            "example": "BASE",
+            "enum": [
+              "BASE",
+              "ADDITIONAL_DOC",
+              "FAST_TRACK",
+              "BASE_MODIFIER",
+              "CUSTOM_MULTIPLIER",
+              "IMAGE_TIER",
+              "LOWERED",
+              "PERCENTAGE"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "Fee amount if fixed, or percentage multiplier if percentage-based.",
+            "example": 7000
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the fee code is associated with."
+          }
+        },
+        "required": [
+          "id",
+          "feeCode",
+          "description",
+          "feeType",
+          "value",
+          "department"
+        ]
+      },
+      "TransactionFeeCodesResponse": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "description": "List of fee codes",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TransactionFeeCode" }
+          }
+        },
+        "required": ["codes"]
+      },
       "CategoryMainCategory": {
         "type": "object",
         "properties": {
@@ -3761,18 +3845,44 @@
       "UpdateCasePriceBody": {
         "type": "object",
         "properties": {
-          "price": {
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "imageTier": { "type": "string", "description": "Tier of the image" },
+          "customBaseDocumentCount": {
             "type": "number",
-            "description": "Price",
-            "example": 12000
+            "description": "Base document count"
+          },
+          "customAdditionalDocCount": {
+            "type": "number",
+            "description": "Additional document count"
+          },
+          "customBodyLengthCount": {
+            "type": "number",
+            "description": "Length of the body"
           }
-        },
-        "required": ["price"]
+        }
       },
-      "UpdatePaidBody": {
+      "GetPaymentResponse": {
         "type": "object",
-        "properties": { "paid": { "type": "boolean" } },
-        "required": ["paid"]
+        "properties": {
+          "paid": {
+            "type": "boolean",
+            "description": "Transaction has been paid"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Has the payment been created"
+          },
+          "canceled": {
+            "type": "boolean",
+            "description": "Has the payment been canceled"
+          },
+          "capital": { "type": "number", "description": "How much is owed" }
+        },
+        "required": ["paid", "created", "canceled", "capital"]
       },
       "UpdateFasttrackBody": {
         "type": "object",
@@ -3871,6 +3981,39 @@
           "documentPdfUrl": { "type": "string", "nullable": true }
         },
         "required": ["advertHtml"]
+      },
+      "CaseTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "Reference to external source"
+          },
+          "imageTier": { "type": "string", "description": "Image tier code" },
+          "price": { "type": "number", "description": "Advert price" },
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "customBaseCount": {
+            "type": "number",
+            "description": "How many base units are there"
+          },
+          "customAdditionalDocCount": {
+            "type": "number",
+            "description": "How many additional documents are there"
+          },
+          "customAdditionalCharacterCount": {
+            "type": "number",
+            "description": "Custom additional character count"
+          }
+        },
+        "required": ["id", "externalReference", "imageTier"]
       },
       "CaseActionEnum": {
         "type": "string",
@@ -4396,15 +4539,10 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/Category" }
           },
-          "price": {
-            "type": "number",
-            "example": 23000,
-            "description": "The cost of the case."
-          },
-          "paid": {
-            "type": "boolean",
-            "example": false,
-            "description": "Is the case paid for."
+          "transaction": {
+            "description": "Case fee transaction.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
           },
           "message": {
             "type": "string",
@@ -4482,8 +4620,7 @@
           "advertDepartment",
           "advertType",
           "advertCategories",
-          "price",
-          "paid",
+          "transaction",
           "message",
           "html",
           "publicationNumber",
