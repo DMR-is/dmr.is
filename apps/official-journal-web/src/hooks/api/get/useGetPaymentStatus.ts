@@ -1,7 +1,9 @@
+import { useSession } from 'next-auth/react'
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetPaymentResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { getDmrClient } from '../../../lib/api/createClient'
+import { swrFetcher } from '../../../lib/constants'
 
 type UsePaymentStatusParams = {
   caseId: string
@@ -9,18 +11,21 @@ type UsePaymentStatusParams = {
 }
 
 export const useGetPaymentStatus = ({
-  caseId, options,
+  caseId,
+  options,
 }: UsePaymentStatusParams) => {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<
-    GetPaymentResponse,
-    Error
-  >(
-    caseId ? [APIRoutes.GetPaymentStatus, caseId] : null,
-    ([url, id]: [url: string, id: string]) =>
-      fetcher(url.replace(':id', id), {
-        arg: { withAuth: true, method: 'GET' },
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    session && caseId ? ['getCase', session?.user, caseId] : null,
+    ([_key, _user, id]) =>
+      swrFetcher({
+        func: () => dmrClient.getCasePaymentStatus({ id }),
       }),
-    { ...options },
+    {
+      ...options,
+    },
   )
 
   return {
