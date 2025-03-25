@@ -26,12 +26,15 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
-import { CaseModel, CaseTransactionModel } from '../case/models'
-import { TransactionFeeCodeMigrate } from '../journal/migrations/advert-fee-codes.migrate'
+import { TransactionFeeCodeMigrate } from '../case/migrations/transaction-fee-codes.migrate'
+import {
+  CaseModel,
+  CaseTransactionModel,
+  TransactionFeeCodesModel,
+} from '../case/models'
 import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
-  TransactionFeeCodesModel,
 } from '../journal/models'
 import { IPriceService } from './price.service.interface'
 

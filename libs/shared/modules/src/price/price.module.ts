@@ -5,11 +5,12 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModule } from '../application/application.module'
 import { AuthModule } from '../auth/auth.module'
-import { CaseModel, CaseTransactionModel } from '../case/models'
 import {
-  AdvertDepartmentModel,
+  CaseModel,
+  CaseTransactionModel,
   TransactionFeeCodesModel,
-} from '../journal/models'
+} from '../case/models'
+import { AdvertDepartmentModel } from '../journal/models'
 import { PriceService } from './price.service'
 import { IPriceService } from './price.service.interface'
 

@@ -10,6 +10,7 @@ import { CasePublishedAdvertsModel } from './case-published-adverts'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
 import { CaseTransactionModel } from './case-transaction.model'
+import { TransactionFeeCodesModel } from './transaction-fee-codes.model'
 
 export {
   CaseModel,
@@ -24,6 +25,7 @@ export {
   CaseAdditionsModel,
   CaseHistoryModel,
   CaseTransactionModel,
+  TransactionFeeCodesModel,
 }
 
 export const models = [
@@ -39,6 +41,7 @@ export const models = [
   CaseAdditionsModel,
   CaseHistoryModel,
   CaseTransactionModel,
+  TransactionFeeCodesModel,
 ]
 
 export default models

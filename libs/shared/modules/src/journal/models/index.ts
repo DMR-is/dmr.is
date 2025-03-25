@@ -6,7 +6,6 @@ import { AdvertCategoryCategoriesModel } from './advert-category-categories.mode
 import { AdvertCategoryDepartmentsModel } from './advert-category-departments.model'
 import { AdvertCorrectionModel } from './advert-correction.model'
 import { AdvertDepartmentModel } from './advert-department.model'
-import { TransactionFeeCodesModel } from './advert-fee-codes.model'
 import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
 import { AdvertMainCategoryModel } from './advert-main-category.model'
 import { AdvertStatusModel } from './advert-status.model'
@@ -23,7 +22,6 @@ export {
   AdvertCategoryDepartmentsModel,
   AdvertCategoryCategoriesModel,
   AdvertCorrectionModel,
-  TransactionFeeCodesModel,
 }
 
 export const models = [
@@ -38,7 +36,6 @@ export const models = [
   AdvertDepartmentModel,
   AdvertCategoryCategoriesModel,
   AdvertCorrectionModel,
-  TransactionFeeCodesModel,
 ]
 
 export default models

@@ -35,7 +35,6 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
-  TransactionFeeCodesResponse,
   UpdateAdvertBody,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
@@ -97,9 +96,6 @@ export class MockJournalService implements IJournalService {
   insertMainCategory(
     model: CreateMainCategory,
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  getAllFeeCodes(): Promise<ResultWrapper<TransactionFeeCodesResponse>> {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(

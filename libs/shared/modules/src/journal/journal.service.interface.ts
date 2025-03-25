@@ -104,10 +104,6 @@ export interface IJournalService {
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
 
-  // getAllFeeCodes(
-  //   transaction?: Transaction,
-  // ): Promise<ResultWrapper<TransactionFeeCodesResponse>>
-
   // TODO Testing logging process only, remove later
   error(): void
 }
