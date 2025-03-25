@@ -1,11 +1,11 @@
-import { ApplicationFeeCode } from '@dmr.is/shared/dto'
+import { TransactionFeeCode } from '@dmr.is/shared/dto'
 
-import { AdvertFeeCodesModel } from '../models'
+import { TransactionFeeCodesModel } from '../models'
 
-export function applicationFeeCodeMigrate(
-  model: AdvertFeeCodesModel,
-): ApplicationFeeCode {
-  const result: ApplicationFeeCode = {
+export function TransactionFeeCodeMigrate(
+  model: TransactionFeeCodesModel,
+): TransactionFeeCode {
+  const result: TransactionFeeCode = {
     id: model.id,
     feeCode: model.feeCode,
     description: model.description,

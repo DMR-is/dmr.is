@@ -5,13 +5,13 @@ import {
   ICaseService,
   ICommentServiceV2,
   IJournalService,
+  IPriceService,
   RoleGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
-  ApplicationFeeCodesResponse,
   CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
@@ -48,6 +48,7 @@ import {
   PostApplicationAttachmentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  TransactionFeeCodesResponse,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
@@ -100,6 +101,9 @@ export class CaseController {
   constructor(
     @Inject(ICaseService)
     private readonly caseService: ICaseService,
+
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
 
     @Inject(IJournalService)
     private readonly journalService: IJournalService,
@@ -172,9 +176,9 @@ export class CaseController {
 
   @Get('feeCodes')
   @ApiOperation({ operationId: 'getFeeCodes' })
-  @ApiResponse({ status: 200, type: ApplicationFeeCodesResponse })
-  async feeCodes(): Promise<ApplicationFeeCodesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getAllFeeCodes())
+  @ApiResponse({ status: 200, type: TransactionFeeCodesResponse })
+  async feeCodes(): Promise<TransactionFeeCodesResponse> {
+    return ResultWrapper.unwrap(await this.priceService.getAllFeeCodes())
   }
 
   @Get('categories')

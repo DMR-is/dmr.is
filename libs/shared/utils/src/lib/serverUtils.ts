@@ -43,7 +43,7 @@ import {
   templateReglugerd,
 } from './constants'
 
-export const MAX_CHARACTERS_BASE_APPLICATION = 1000
+export const MAX_CHARACTER_HTML = 1000
 
 type GetLimitAndOffsetParams = {
   page?: number
@@ -505,8 +505,8 @@ const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
       membersCount === 1
         ? '1fr'
         : membersCount === 3
-        ? '1fr 1fr 1fr'
-        : '1fr 1fr',
+          ? '1fr 1fr 1fr'
+          : '1fr 1fr',
     rowGap: '1.5em',
   }
 
@@ -534,8 +534,8 @@ const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
         } <span class="signature__date">${formattedDate}</span></em></p>
         ${chairmanMarkup}
         <div style="display: ${styleObject.display}; grid-template-columns: ${
-    styleObject.gridTemplateColumns
-  }; row-gap: ${styleObject.rowGap};" class="signature__content">
+          styleObject.gridTemplateColumns
+        }; row-gap: ${styleObject.rowGap};" class="signature__content">
         ${membersMarkup}
         </div>
       </div>`

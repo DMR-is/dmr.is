@@ -110,6 +110,25 @@ function getIcelandicDative(days: number) {
   return 'dögum'
 }
 
+export const imageTiers = [
+  {
+    value: 'B108',
+    label: '1-5 myndir í máli',
+  },
+  {
+    value: 'B109',
+    label: '6-15 myndir í máli',
+  },
+  {
+    value: 'B110',
+    label: '>15 myndir í máli',
+  },
+  {
+    value: '',
+    label: 'Engar myndir',
+  },
+]
+
 export const convertDateToDaysAgo = (dateIso: string): string => {
   try {
     const date = new Date(dateIso)

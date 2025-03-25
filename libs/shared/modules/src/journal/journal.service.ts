@@ -6,7 +6,6 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
-  ApplicationFeeCodesResponse,
   CreateAdvert,
   CreateMainCategory,
   DefaultSearchParams,
@@ -47,7 +46,6 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
-import { IPriceService } from '../price/price.service.interface'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { IJournalService } from './journal.service.interface'
@@ -93,9 +91,6 @@ export class JournalService implements IJournalService {
     private advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertCategoryCategoriesModel)
     private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
-
-    @Inject(IPriceService)
-    private readonly priceService: IPriceService,
 
     @InjectModel(AdvertStatusModel)
     private advertStatusModel: typeof AdvertStatusModel,
@@ -958,13 +953,5 @@ export class JournalService implements IJournalService {
       adverts: mapped,
       paging,
     })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getAllFeeCodes(
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<ApplicationFeeCodesResponse>> {
-    return await this.priceService.getAllFeeCodes(transaction)
   }
 }

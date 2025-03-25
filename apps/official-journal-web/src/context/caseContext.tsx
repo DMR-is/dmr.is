@@ -7,13 +7,13 @@ import { StringOption } from '@island.is/island-ui/core'
 import {
   AdvertCorrection,
   AdvertType,
-  ApplicationFeeCode,
   CaseDetailed,
   CaseStatusEnum,
   CaseTag,
   Category,
   Department,
   GetAdvertTypes,
+  TransactionFeeCode,
   UserDto,
 } from '../gen/fetch'
 import { useCase, useSignature } from '../hooks/api'
@@ -43,7 +43,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
-  feeCodeOptions: ApplicationFeeCode[]
+  feeCodeOptions: TransactionFeeCode[]
   handleOptimisticUpdate: (
     newCase: CaseDetailed,
     cb: () => Promise<Response | void>,
@@ -81,7 +81,7 @@ type CaseProviderProps = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
-  feeCodes: ApplicationFeeCode[]
+  feeCodes: TransactionFeeCode[]
   employees: UserDto[]
   children: React.ReactNode
   currentUserId?: string

@@ -12,7 +12,6 @@ import {
 } from '@dmr.is/mocks'
 import {
   Advert,
-  ApplicationFeeCodesResponse,
   Category,
   CreateAdvert,
   CreateMainCategory,
@@ -36,6 +35,7 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
+  TransactionFeeCodesResponse,
   UpdateAdvertBody,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
@@ -99,7 +99,7 @@ export class MockJournalService implements IJournalService {
   ): Promise<ResultWrapper<GetMainCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
-  getAllFeeCodes(): Promise<ResultWrapper<ApplicationFeeCodesResponse>> {
+  getAllFeeCodes(): Promise<ResultWrapper<TransactionFeeCodesResponse>> {
     throw new Error('Method not implemented.')
   }
   updateMainCategory(

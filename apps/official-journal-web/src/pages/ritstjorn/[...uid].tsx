@@ -9,11 +9,11 @@ import { Meta } from '../../components/meta/Meta'
 import { CaseProvider } from '../../context/caseContext'
 import {
   AdvertType,
-  ApplicationFeeCode,
   CaseDetailed,
   CaseTag,
   Category,
   Department,
+  TransactionFeeCode,
   UserDto,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -31,7 +31,7 @@ type Props = {
   categories: Category[]
   tags: CaseTag[]
   types: AdvertType[]
-  feeCodes: ApplicationFeeCode[]
+  feeCodes: TransactionFeeCode[]
 }
 
 export default function CaseSingle({
@@ -112,10 +112,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const tagPromises = dmrClient.getTags()
 
-  const feeCodePromise = dmrClient
-    .getFeeCodes({
-      excludeBaseCodes: true,
-    })
+  const feeCodePromise = dmrClient.getFeeCodes()
 
   try {
     const [caseResponse, departments, users, categories, tags, feeCodes] =

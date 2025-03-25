@@ -1,9 +1,9 @@
 import { Transaction } from 'sequelize'
 import {
-  ApplicationFeeCodesResponse,
   CasePriceResponse,
   GetPaymentQuery,
   GetPaymentResponse,
+  TransactionFeeCodesResponse,
   UpdateCasePaymentBody,
   UpdateCasePriceBody,
 } from '@dmr.is/shared/dto'
@@ -23,7 +23,7 @@ export interface IPriceService {
   ): Promise<ResultWrapper>
   getAllFeeCodes(
     transaction?: Transaction,
-  ): Promise<ResultWrapper<ApplicationFeeCodesResponse>>
+  ): Promise<ResultWrapper<TransactionFeeCodesResponse>>
   postExternalPayment(
     caseId: string,
     body: UpdateCasePaymentBody,

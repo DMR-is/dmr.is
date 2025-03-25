@@ -1,6 +1,7 @@
 export * from './auth/auth.module'
 export * from './application/application.module'
 export * from './case/case.module'
+export * from './price/price.module'
 export * from './health/health.module'
 export * from './journal'
 export * from './journal/models'

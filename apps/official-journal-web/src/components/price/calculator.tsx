@@ -12,7 +12,7 @@ import {
 
 import { useGetPaymentStatus, useUpdatePrice } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { amountFormat } from '../../lib/utils'
+import { amountFormat, imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 
@@ -20,25 +20,6 @@ type OptionType = {
   value: string
   label: string
 }
-
-const imageTiers = [
-  {
-    value: 'B108',
-    label: '1-5 myndir í máli',
-  },
-  {
-    value: 'B109',
-    label: '6-15 myndir í máli',
-  },
-  {
-    value: 'B110',
-    label: '>15 myndir í máli',
-  },
-  {
-    value: '',
-    label: 'Engar myndir',
-  },
-]
 
 export const PriceCalculator = () => {
   const [selectedItem, setSelectedItem] = useState<OptionType | undefined>()
@@ -61,48 +42,42 @@ export const PriceCalculator = () => {
       setSelectedItem(tier)
     }
     if (currentCase.transaction?.customAdditionalDocCount) {
-      if (
-        typeof currentCase.transaction?.customAdditionalDocCount === 'string'
-      ) {
-        setAdditionalDocuments(
-          Number(currentCase.transaction?.customAdditionalDocCount),
-        )
-      } else {
-        setAdditionalDocuments(
-          currentCase.transaction?.customAdditionalDocCount,
-        )
-      }
+      setAdditionalDocuments(
+        Number(currentCase.transaction?.customAdditionalDocCount),
+      )
     }
     if (
-      currentCase.transaction?.customBaseCount &&
+      currentCase.transaction?.customAdditionalCharacterCount &&
       currentCase.advertDepartment.slug === 'b-deild'
     ) {
-      if (typeof currentCase.transaction?.customBaseCount === 'string') {
-        setCustomBodyLengthCount(
-          Number(currentCase.transaction?.customBaseCount),
-        )
-      } else {
-        setCustomBodyLengthCount(currentCase.transaction?.customBaseCount)
-      }
+      setCustomBodyLengthCount(
+        Number(currentCase.transaction?.customAdditionalCharacterCount),
+      )
     }
     if (
       currentCase.transaction?.customBaseCount &&
       currentCase.advertDepartment.slug !== 'b-deild'
     ) {
-      if (typeof currentCase.transaction?.customBaseCount === 'string') {
-        setCustomBaseDocumentCount(
-          Number(currentCase.transaction?.customBaseCount),
-        )
-      } else {
-        setCustomBaseDocumentCount(currentCase.transaction?.customBaseCount)
-      }
+      setCustomBaseDocumentCount(
+        Number(currentCase.transaction?.customBaseCount),
+      )
     }
   }, [
     currentCase?.transaction?.imageTier,
     currentCase.transaction?.customBaseCount,
+    currentCase.transaction?.customAdditionalCharacterCount,
     currentCase.transaction?.customAdditionalDocCount,
     currentCase.advertDepartment.slug,
   ])
+
+  const updateAllPrices = () => {
+    updatePrice({
+      imageTier: selectedItem?.value ?? undefined,
+      customBaseDocumentCount: customBaseDocumentCount ?? undefined,
+      customBodyLengthCount: customBodyLengthCount ?? undefined,
+      customAdditionalDocCount: additionalDocuments ?? undefined,
+    })
+  }
 
   const { trigger: updatePrice, isMutating: isPriceLoading } = useUpdatePrice({
     caseId: currentCase.id,
@@ -134,8 +109,9 @@ export const PriceCalculator = () => {
               inputMode="numeric"
               disabled={!useCustomInputBase}
               placeholder="0"
-              value={customBodyLengthCount ?? undefined}
+              value={customBodyLengthCount || ''}
               onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
+              onBlur={updateAllPrices}
             />
           ) : (
             <OJOIInput
@@ -145,17 +121,28 @@ export const PriceCalculator = () => {
               inputMode="numeric"
               disabled={!useCustomInputBase}
               placeholder="0"
-              value={customBaseDocumentCount ?? undefined}
+              value={customBaseDocumentCount || ''}
               onChange={(e) =>
                 setCustomBaseDocumentCount(Number(e.target.value))
               }
+              onBlur={updateAllPrices}
             />
           )}
         </Box>
         <Inline alignY="center" space={1}>
           <Checkbox
             checked={useCustomInputBase}
-            onChange={() => setCustomInputBase(!useCustomInputBase)}
+            onChange={() => {
+              if (useCustomInputBase) {
+                updatePrice({
+                  imageTier: selectedItem?.value ?? undefined,
+                  customBaseDocumentCount: 0 ?? undefined,
+                  customBodyLengthCount: 0 ?? undefined,
+                  customAdditionalDocCount: additionalDocuments ?? undefined,
+                })
+              }
+              setCustomInputBase(!useCustomInputBase)
+            }}
             label="Notast við innslegið gildi"
           />
         </Inline>
@@ -187,15 +174,19 @@ export const PriceCalculator = () => {
                 placeholder="0"
                 type="number"
                 inputMode="numeric"
-                value={additionalDocuments}
+                value={additionalDocuments || ''}
                 onChange={(e) => setAdditionalDocuments(Number(e.target.value))}
+                onBlur={updateAllPrices}
               />
               {additionalDocuments ? (
                 <Text variant="small" color="blue600">
                   Einingarverð:{' '}
                   {amountFormat(
                     feeCodeOptions.find(
-                      (feeCode) => feeCode.feeType === 'ADDITIONAL_DOC',
+                      (feeCode) =>
+                        feeCode.feeType === 'ADDITIONAL_DOC' &&
+                        feeCode.department ===
+                          currentCase.advertDepartment.slug,
                     )?.value ?? 0,
                   )}
                 </Text>
@@ -219,6 +210,13 @@ export const PriceCalculator = () => {
                   } else {
                     setSelectedItem(undefined)
                   }
+                  updatePrice({
+                    imageTier: opt?.value ?? undefined,
+                    customBaseDocumentCount:
+                      customBaseDocumentCount ?? undefined,
+                    customBodyLengthCount: customBodyLengthCount ?? undefined,
+                    customAdditionalDocCount: additionalDocuments ?? undefined,
+                  })
                 }}
               />
               <Text variant="small" color="blue600">
@@ -253,19 +251,6 @@ export const PriceCalculator = () => {
         </Inline>
       </Inline>
       <Box marginTop={2}>
-        <button
-          onClick={() =>
-            updatePrice({
-              imageTier: selectedItem?.value ?? undefined,
-              customBaseDocumentCount: customBaseDocumentCount ?? undefined,
-              customBodyLengthCount: customBodyLengthCount ?? undefined,
-              customAdditionalDocCount: additionalDocuments ?? undefined,
-            })
-          }
-          type="button"
-        >
-          Uppfæra verð
-        </button>
         {paymentData?.created ? (
           <Text>Auglýsing hefur verið send til TBR</Text>
         ) : (

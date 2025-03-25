@@ -280,22 +280,14 @@
       "get": {
         "operationId": "getFeeCodes",
         "summary": "",
-        "parameters": [
-          {
-            "name": "excludeBaseCodes",
-            "required": false,
-            "in": "query",
-            "description": "Include base codes in response.",
-            "schema": { "type": "boolean" }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApplicationFeeCodesResponse"
+                  "$ref": "#/components/schemas/TransactionFeeCodesResponse"
                 }
               }
             }
@@ -3332,7 +3324,7 @@
         },
         "required": ["tags"]
       },
-      "ApplicationFeeCode": {
+      "TransactionFeeCode": {
         "type": "object",
         "properties": {
           "id": {
@@ -3384,13 +3376,13 @@
           "department"
         ]
       },
-      "ApplicationFeeCodesResponse": {
+      "TransactionFeeCodesResponse": {
         "type": "object",
         "properties": {
           "codes": {
             "description": "List of fee codes",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ApplicationFeeCode" }
+            "items": { "$ref": "#/components/schemas/TransactionFeeCode" }
           }
         },
         "required": ["codes"]

@@ -6,9 +6,14 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { ApplicationModule } from '../application/application.module'
 import { AuthModule } from '../auth/auth.module'
 import { CaseModel, CaseTransactionModel } from '../case/models'
-import { AdvertDepartmentModel, AdvertFeeCodesModel } from '../journal/models'
+import {
+  AdvertDepartmentModel,
+  TransactionFeeCodesModel,
+} from '../journal/models'
 import { PriceService } from './price.service'
 import { IPriceService } from './price.service.interface'
+
+export { IPriceService, PriceService }
 
 @Module({
   imports: [
@@ -16,7 +21,7 @@ import { IPriceService } from './price.service.interface'
       CaseModel,
       AdvertDepartmentModel,
       CaseTransactionModel,
-      AdvertFeeCodesModel,
+      TransactionFeeCodesModel,
     ]),
     AuthModule,
     forwardRef(() => ApplicationModule),

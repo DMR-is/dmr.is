@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertFeeType } from '../adverts'
 
-export class ApplicationFeeCode {
+export class TransactionFeeCode {
   @ApiProperty({
     description: 'Unique ID for the fee code, GUID format.',
     example: '00000000-0000-0000-0000-000000000000',
@@ -53,11 +53,11 @@ export class ApplicationFeeCode {
   readonly department!: string
 }
 
-export class ApplicationFeeCodesResponse {
+export class TransactionFeeCodesResponse {
   @ApiProperty({
     description: 'List of fee codes',
     required: true,
-    type: [ApplicationFeeCode],
+    type: [TransactionFeeCode],
   })
-  readonly codes!: Array<ApplicationFeeCode>
+  readonly codes!: Array<TransactionFeeCode>
 }
