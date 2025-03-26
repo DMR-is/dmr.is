@@ -27,6 +27,9 @@
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
+      "@dmr.is/modules/auth": [
+        "libs/official-journal/modules/auth/src/index.ts"
+      ],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/official-journal/modules/advert-type": [
         "libs/official-journal/modules/advert-type/src/index.ts"
