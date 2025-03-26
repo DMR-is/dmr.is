@@ -131,6 +131,10 @@ export class PriceService implements IPriceService {
           model: AdvertInvolvedPartyModel,
           attributes: ['id', 'nationalId'],
         },
+        {
+          model: AdvertDepartmentModel,
+          attributes: ['id', 'slug'],
+        },
       ],
       transaction,
     })
@@ -421,7 +425,7 @@ export class PriceService implements IPriceService {
 
     // Return fee codes as well!
     return ResultWrapper.ok({
-      price,
+      price: Math.round(price),
       customBaseCount: baseCount ?? null,
       customDocCount: body.additionalDocCount ?? null,
       feeCodes: usedFeeCodes,

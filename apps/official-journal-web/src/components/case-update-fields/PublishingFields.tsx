@@ -54,7 +54,9 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Dagsetning auglýsingar hefur verið uppfærð')
+        toast.success('Dagsetning auglýsingar hefur verið uppfærð', {
+          toastId: 'dateUpdatePublishing',
+        })
         refetch()
       },
       onError: () => {
