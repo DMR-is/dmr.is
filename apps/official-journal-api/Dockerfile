@@ -23,7 +23,7 @@ ENV PORT 3000
 WORKDIR /usr/src/app
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=deps /usr/src/app/package.json ./package.json
-COPY --from=deps /usr/src/app/migrations ./migrations
+COPY --from=deps /usr/src/app/migrations ./db/migrations
 COPY --from=deps /usr/src/app/.sequelizerc ./
 COPY --from=deps /usr/src/app/sequelize.config.js ./
 COPY ./apps/official-journal-api/dist .
