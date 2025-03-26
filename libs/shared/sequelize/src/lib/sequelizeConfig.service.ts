@@ -1,33 +1,35 @@
-import { Injectable } from '@nestjs/common'
+import { createNamespace } from 'cls-hooked'
+import { Sequelize } from 'sequelize-typescript'
+
+import { Inject, Injectable } from '@nestjs/common'
 import {
   SequelizeModuleOptions,
   SequelizeOptionsFactory,
 } from '@nestjs/sequelize'
 
 import { getOptions } from './sequelize'
-// import { CustomLogger, LOGGER_PROVIDER } from '@dmr.is/logging'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import * as dbConfig from './sequelize.config.js'
+import { DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
 
 @Injectable()
-export class SequelizeConfigService implements SequelizeOptionsFactory {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
-  // @Inject(LOGGER_PROVIDER)
-  // private logger: CustomLogger,
+export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
+  constructor(
+    @Inject(IDMRSequelizeConfig)
+    private readonly config: DMRSequelizeConfig,
+  ) {}
 
   createSequelizeOptions(): SequelizeModuleOptions {
-    const env = process.env.NODE_ENV || 'development'
-    const config = (dbConfig as { [key: string]: object })[env]
-    const options = {
+    const { clsNamespace, ...config } = this.config
+
+    if (clsNamespace) {
+      const namespace = createNamespace(clsNamespace)
+      Sequelize.useCLS(namespace)
+    }
+
+    return {
       ...config,
       ...getOptions(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any
-
-    //options.username = 'foo'
-    options.autoLoadModels = true
-    return options
+      dialect: 'postgres',
+      autoLoadModels: true,
+    }
   }
 }

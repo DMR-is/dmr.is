@@ -25,8 +25,33 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  legal_gazette_db:
+    image: public.ecr.aws/docker/library/postgres:16
+    container_name: ${DB_HOST}
+    volumes:
+      - legal_gazette_db_vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DB_USER}",
+          "-d",
+          "${DB_NAME}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 
 volumes:
   official_journal_db_vol:
   regulations_db_vol:
+  legal_gazette_db_vol:

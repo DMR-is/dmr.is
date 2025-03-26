@@ -135,3 +135,9 @@ sh ./scripts/run-xroad-proxy.sh
 export XROAD_ISLAND_IS_PATH="http://localhost:8000/r1/IS-DEV/GOV/10000/island-is/"
 export XROAD_DMR_CLIENT="IS-DEV/GOV/10014/DMR-Client"
 ```
+
+## Create a new API
+
+```shell
+yarn nx generate @nx/nest:application --name=application-name --e2eTestRunner=none --projectNameAndRootFormat=derived --strict=true --no-interactive
+```
