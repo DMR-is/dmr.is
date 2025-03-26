@@ -1,3 +1,5 @@
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -7,8 +9,7 @@ import {
   GetUsersResponse,
   UpdateUserDto,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+} from './dto'
 
 export interface IUserService {
   getUsers(

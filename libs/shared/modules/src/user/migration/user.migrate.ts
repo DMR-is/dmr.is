@@ -1,6 +1,5 @@
-import { UserDto, UserRoleDto } from '@dmr.is/shared/dto'
-
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
+import { UserDto, UserRoleDto } from '../dto'
 import { UserModel } from '../models/user.model'
 import { UserRoleModel } from '../models/user-role.model'
 

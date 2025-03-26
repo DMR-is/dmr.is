@@ -1,16 +1,6 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateUserDto,
-  GetInvoledPartiesByUserResponse,
-  GetRolesByUserResponse,
-  GetUserResponse,
-  GetUsersQuery,
-  GetUsersResponse,
-  UpdateUserDto,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -36,6 +26,16 @@ import {
 } from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
+import {
+  CreateUserDto,
+  GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+  UpdateUserDto,
+  UserDto,
+} from './dto'
 import { IUserService } from './user.service.interface'
 
 @Controller({

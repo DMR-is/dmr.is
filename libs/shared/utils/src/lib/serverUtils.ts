@@ -26,7 +26,6 @@ import {
   ApplicationSignatureRecord,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
-  CaseStatusEnum,
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'

@@ -3,16 +3,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateUserDto,
-  GetInvoledPartiesByUserResponse,
-  GetRolesByUserResponse,
-  GetUserResponse,
-  GetUsersQuery,
-  GetUsersResponse,
-  UpdateUserDto,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -25,6 +15,16 @@ import { userMigrate, userRoleMigrate } from './migration/user.migrate'
 import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
+import {
+  CreateUserDto,
+  GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+  UpdateUserDto,
+  UserDto,
+} from './dto'
 import { IUserService } from './user.service.interface'
 
 const LOGGING_CONTEXT = 'UserService'
