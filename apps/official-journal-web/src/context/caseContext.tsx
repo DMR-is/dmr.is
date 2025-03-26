@@ -153,7 +153,6 @@ export const CaseProvider = ({
       swrFetcher({
         func: () => dmrClient.getTypes(params),
       }),
-
     {
       revalidateOnFocus: false,
       revalidateIfStale: false,
@@ -163,7 +162,7 @@ export const CaseProvider = ({
 
   const refetchSignature = async () => await mutateSignature()
 
-  const refetch = async () => await mutate()
+  const refetch = () => mutate()
 
   const departmentOptions = createOptions(departments)
 

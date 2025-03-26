@@ -38,7 +38,9 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Meginmál auglýsingar uppfært')
+        toast.success('Meginmál auglýsingar uppfært', {
+          toastId: 'updateAdvertFieldsHtml',
+        })
         refetch()
       },
     },

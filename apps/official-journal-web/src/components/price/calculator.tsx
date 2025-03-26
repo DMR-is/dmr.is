@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   Box,
@@ -15,82 +15,61 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { amountFormat, imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
-
-type OptionType = {
-  value: string
-  label: string
-}
+import { usePriceCalculatorState } from './calculatorContext'
 
 export const PriceCalculator = () => {
-  const [selectedItem, setSelectedItem] = useState<OptionType | undefined>()
-  const [customBaseDocumentCount, setCustomBaseDocumentCount] =
-    useState<number>()
-  const [customBodyLengthCount, setCustomBodyLengthCount] = useState<number>()
-  const [additionalDocuments, setAdditionalDocuments] = useState<number>()
-  const [useCustomInputBase, setCustomInputBase] = useState<boolean>(false)
-
   const { currentCase, refetch, canEdit, feeCodeOptions } = useCaseContext()
-
   const { md } = useBreakpoint()
   const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id })
-
-  useEffect(() => {
-    if (currentCase?.transaction?.imageTier) {
-      const tier = imageTiers.find(
-        (tier) => tier.value === currentCase?.transaction?.imageTier,
-      )
-      setSelectedItem(tier)
-    }
-    if (currentCase.transaction?.customAdditionalDocCount) {
-      setAdditionalDocuments(
-        Number(currentCase.transaction?.customAdditionalDocCount),
-      )
-    }
-    if (
-      currentCase.transaction?.customAdditionalCharacterCount &&
-      currentCase.advertDepartment.slug === 'b-deild'
-    ) {
-      setCustomBodyLengthCount(
-        Number(currentCase.transaction?.customAdditionalCharacterCount),
-      )
-    }
-    if (
-      currentCase.transaction?.customBaseCount &&
-      currentCase.advertDepartment.slug !== 'b-deild'
-    ) {
-      setCustomBaseDocumentCount(
-        Number(currentCase.transaction?.customBaseCount),
-      )
-    }
-  }, [
-    currentCase?.transaction?.imageTier,
-    currentCase.transaction?.customBaseCount,
-    currentCase.transaction?.customAdditionalCharacterCount,
-    currentCase.transaction?.customAdditionalDocCount,
-    currentCase.advertDepartment.slug,
-  ])
-
-  const updateAllPrices = () => {
-    updatePrice({
-      imageTier: selectedItem?.value ?? undefined,
-      customBaseDocumentCount: customBaseDocumentCount ?? undefined,
-      customBodyLengthCount: customBodyLengthCount ?? undefined,
-      customAdditionalDocCount: additionalDocuments ?? undefined,
-    })
-  }
+  const { state, dispatch } = usePriceCalculatorState(currentCase)
+  const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
 
   const { trigger: updatePrice, isMutating: isPriceLoading } = useUpdatePrice({
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
-        toast.success('Verð auglýsingar hefur verið uppfært')
         refetch()
+        const newPrice = currentCase.transaction?.price
+        if (newPrice !== prevPrice) {
+          toast.success('Verð auglýsingar hefur verið uppfært', {
+            toastId: 'price-update',
+          })
+          setPrevPrice(newPrice)
+        }
       },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra verð auglýsingar')
-      },
+      onError: () =>
+        toast.error('Ekki tókst að uppfæra verð auglýsingar', {
+          toastId: 'price-update-error',
+        }),
     },
   })
+
+  const updateAllPrices = () => {
+    setPrevPrice(currentCase.transaction?.price)
+    updatePrice({
+      imageTier: state.selectedItem?.value,
+      customBaseDocumentCount: state.customBaseDocumentCount,
+      customBodyLengthCount: state.useCustomInputBase
+        ? state.customBodyLengthCount
+        : 0,
+      customAdditionalDocCount: state.additionalDocuments,
+    })
+  }
+
+  const unitPrice = useMemo(
+    () =>
+      feeCodeOptions.find((feeCode) =>
+        currentCase.advertDepartment.slug === 'b-deild'
+          ? feeCode.feeType === 'BASE_MODIFIER'
+          : feeCode.feeType === 'BASE' &&
+            feeCode.department === currentCase.advertDepartment.slug,
+      )?.value,
+    [feeCodeOptions, currentCase.advertDepartment.slug],
+  )
+
+  useEffect(() => {
+    updateAllPrices()
+  }, [currentCase.html, currentCase.fastTrack])
 
   return (
     <>
@@ -101,65 +80,51 @@ export const PriceCalculator = () => {
       </Box>
       <Inline alignY="center" space={[2, 4]}>
         <Box style={{ minWidth: md ? '308px' : '254px' }}>
-          {currentCase.advertDepartment.slug === 'b-deild' ? (
-            <OJOIInput
-              name="price"
-              label="Einingafjöldi"
-              type="number"
-              inputMode="numeric"
-              disabled={!useCustomInputBase}
-              placeholder="0"
-              value={customBodyLengthCount || ''}
-              onChange={(e) => setCustomBodyLengthCount(Number(e.target.value))}
-              onBlur={updateAllPrices}
-            />
-          ) : (
-            <OJOIInput
-              name="price"
-              label="Einingafjöldi"
-              type="number"
-              inputMode="numeric"
-              disabled={!useCustomInputBase}
-              placeholder="0"
-              value={customBaseDocumentCount || ''}
-              onChange={(e) =>
-                setCustomBaseDocumentCount(Number(e.target.value))
-              }
-              onBlur={updateAllPrices}
-            />
-          )}
+          <OJOIInput
+            name="price"
+            label="Einingafjöldi"
+            type="number"
+            disabled={!state.useCustomInputBase}
+            placeholder="0"
+            value={
+              currentCase.advertDepartment.slug === 'b-deild'
+                ? state.customBodyLengthCount || ''
+                : state.customBaseDocumentCount || ''
+            }
+            onChange={(e) =>
+              dispatch({
+                type:
+                  currentCase.advertDepartment.slug === 'b-deild'
+                    ? 'SET_CUSTOM_BODY_LENGTH_COUNT'
+                    : 'SET_CUSTOM_BASE_DOC_COUNT',
+                payload: Number(e.target.value),
+              })
+            }
+            onBlur={updateAllPrices}
+          />
         </Box>
-        <Inline alignY="center" space={1}>
+        <Inline alignY="center" space={[2, 4]}>
           <Checkbox
-            checked={useCustomInputBase}
+            checked={state.useCustomInputBase}
             onChange={() => {
-              if (useCustomInputBase) {
-                updatePrice({
-                  imageTier: selectedItem?.value ?? undefined,
-                  customBaseDocumentCount: 0 ?? undefined,
-                  customBodyLengthCount: 0 ?? undefined,
-                  customAdditionalDocCount: additionalDocuments ?? undefined,
-                })
+              dispatch({ type: 'TOGGLE_CUSTOM_INPUT_BASE' })
+              if (state.useCustomInputBase) {
+                dispatch({ type: 'RESET_CUSTOM_INPUT' })
+                updateAllPrices()
+              } else {
+                updateAllPrices()
               }
-              setCustomInputBase(!useCustomInputBase)
             }}
             label="Notast við innslegið gildi"
           />
         </Inline>
       </Inline>
+
       <Box marginBottom={3} style={{ maxWidth: md ? '308px' : '254px' }}>
         <Stack space={2}>
           <Box>
             <Text variant="small" color="blue600">
-              Einingarverð:{' '}
-              {amountFormat(
-                feeCodeOptions.find((feeCode) =>
-                  currentCase.advertDepartment.slug === 'b-deild'
-                    ? feeCode.feeType === 'BASE_MODIFIER'
-                    : feeCode.feeType === 'BASE' &&
-                      feeCode.department === currentCase.advertDepartment.slug,
-                )?.value,
-              )}
+              Einingarverð: {amountFormat(unitPrice)}
             </Text>
             <Text variant="small" color="blue600">
               Álag vegna hraðbirtingar: {currentCase.fastTrack ? '80%' : '0%'}
@@ -169,16 +134,20 @@ export const PriceCalculator = () => {
           currentCase.advertDepartment.slug === 'a-deild' ? ( // Additional documents are only for A and B
             <Box>
               <OJOIInput
-                name="price"
+                name="additionalDocuments"
                 label="Fylgiskjöl"
                 placeholder="0"
                 type="number"
-                inputMode="numeric"
-                value={additionalDocuments || ''}
-                onChange={(e) => setAdditionalDocuments(Number(e.target.value))}
+                value={state.additionalDocuments || ''}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_ADDITIONAL_DOCUMENTS',
+                    payload: Number(e.target.value),
+                  })
+                }
                 onBlur={updateAllPrices}
               />
-              {additionalDocuments ? (
+              {state.additionalDocuments ? (
                 <Text variant="small" color="blue600">
                   Einingarverð:{' '}
                   {amountFormat(
@@ -193,29 +162,27 @@ export const PriceCalculator = () => {
               ) : undefined}
             </Box>
           ) : undefined}
-          {currentCase.advertDepartment.slug === 'b-deild' ? ( // Images are only for B
+          {currentCase.advertDepartment.slug === 'b-deild' && (
             <Box>
               <OJOISelect
                 isDisabled={!canEdit}
                 label="Myndir"
                 placeholder="Veldu myndafjölda"
                 options={imageTiers}
-                value={selectedItem}
+                value={state.selectedItem}
                 onChange={(opt) => {
-                  if (opt?.value && opt.label) {
-                    setSelectedItem({
-                      value: opt.value,
-                      label: opt.label,
-                    })
-                  } else {
-                    setSelectedItem(undefined)
-                  }
+                  dispatch({
+                    type: 'SET_SELECTED_ITEM',
+                    payload: opt || undefined,
+                  })
+                  setPrevPrice(currentCase.transaction?.price)
                   updatePrice({
-                    imageTier: opt?.value ?? undefined,
-                    customBaseDocumentCount:
-                      customBaseDocumentCount ?? undefined,
-                    customBodyLengthCount: customBodyLengthCount ?? undefined,
-                    customAdditionalDocCount: additionalDocuments ?? undefined,
+                    imageTier: opt?.value,
+                    customBaseDocumentCount: state.customBaseDocumentCount,
+                    customBodyLengthCount: state.useCustomInputBase
+                      ? state.customBodyLengthCount
+                      : 0,
+                    customAdditionalDocCount: state.additionalDocuments,
                   })
                 }}
               />
@@ -223,19 +190,20 @@ export const PriceCalculator = () => {
                 Myndir einingarverð:{' '}
                 {amountFormat(
                   feeCodeOptions.find(
-                    (feeCode) => feeCode.feeCode === selectedItem?.value,
-                  )?.value ?? 0,
+                    (feeCode) => feeCode.feeCode === state.selectedItem?.value,
+                  )?.value || 0,
                 )}
               </Text>
             </Box>
-          ) : undefined}
+          )}
         </Stack>
       </Box>
+
       <Inline alignY="center" space={[2, 4]}>
         <Box style={{ minWidth: md ? '308px' : '254px' }}>
           <OJOIInput
             readOnly
-            name="price"
+            name="totalPrice"
             value={amountFormat(currentCase.transaction?.price)}
             label="Samtals"
             type="text"
@@ -252,11 +220,11 @@ export const PriceCalculator = () => {
         </Inline>
       </Inline>
       <Box marginTop={2}>
-        {paymentData?.created ? (
-          <Text>Auglýsing hefur verið send til TBR</Text>
-        ) : (
-          <Text>Auglýsing verður send til TBR við staðfestingu á útgáfu.</Text>
-        )}
+        <Text>
+          {paymentData?.created
+            ? 'Auglýsing hefur verið send til TBR'
+            : 'Auglýsing verður send til TBR við staðfestingu á útgáfu.'}
+        </Text>
       </Box>
     </>
   )
