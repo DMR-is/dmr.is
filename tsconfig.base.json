@@ -34,6 +34,9 @@
       "@dmr.is/official-journal/modules/application": [
         "libs/official-journal/modules/application/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/attachment": [
+        "libs/official-journal/modules/attachment/src/index.ts"
+      ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
