@@ -1,4 +1,6 @@
 import { Transaction } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   AddCaseAdvertCorrection,
   CaseCommunicationStatus,
@@ -40,8 +42,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+} from './dto'
 
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
@@ -200,7 +201,7 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
-  
+
   getCasePaymentStatus(
     params: GetPaymentQuery,
     transaction?: Transaction,
