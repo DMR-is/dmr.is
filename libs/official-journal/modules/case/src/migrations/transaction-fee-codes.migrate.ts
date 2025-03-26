@@ -2,7 +2,7 @@ import { TransactionFeeCode } from '@dmr.is/shared/dto'
 
 import { TransactionFeeCodesModel } from '../models'
 
-export function TransactionFeeCodeMigrate(
+export function transactionFeeCodeMigrate(
   model: TransactionFeeCodesModel,
 ): TransactionFeeCode {
   const result: TransactionFeeCode = {
