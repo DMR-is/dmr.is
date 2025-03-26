@@ -15,8 +15,8 @@ import { JournalModule } from './journal/journal.module'
         DMRSequelizeConfigModule.register({
           database: process.env.DB_NAME || 'dev_db_official_journal',
           host: process.env.DB_HOST || 'localhost',
-          password: process.env.DB_PASSWORD || 'dev_db',
-          username: process.env.DB_USERNAME || 'dev_db',
+          password: process.env.DB_PASS || 'dev_db',
+          username: process.env.DB_USER || 'dev_db',
           port: Number(process.env.DB_PORT) || 5433,
         }),
       ],

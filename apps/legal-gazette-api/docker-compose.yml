@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_DB=dev_db_legal_gazette
       - POSTGRES_USER=dev_db
-      - POSTGRES_PASSWORD=dev_db
+      - POSTGRES_PASS=dev_db
       - PGPORT=5434
       - POSTGRES_INITDB_ARGS=--locale-provider=icu --icu-locale=is-IS
     ports:

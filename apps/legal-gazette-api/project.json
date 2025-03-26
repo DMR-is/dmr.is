@@ -47,6 +47,16 @@
         "jestConfig": "apps/legal-gazette-api/jest.config.ts"
       }
     },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
+      }
+    },
     "dev-services": {
       "executor": "nx:run-commands",
       "options": {
