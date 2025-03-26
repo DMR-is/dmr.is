@@ -1,6 +1,6 @@
 import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
-import { AdvertTypeQuery } from '@dmr.is/shared/dto'
+import { AdvertTypeQuery } from './dto/advert-type.query'
 
 type AdvertTypeWhereParams = {
   id?: {
