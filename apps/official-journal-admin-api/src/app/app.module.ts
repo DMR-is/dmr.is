@@ -1,4 +1,5 @@
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { LoggingModule } from '@dmr.is/logging'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
@@ -36,6 +37,7 @@ import { StatisticsModule } from './statistics/statistics.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    LoggingModule,
     ApplicationModule,
     CaseModule,
     StatisticsModule,

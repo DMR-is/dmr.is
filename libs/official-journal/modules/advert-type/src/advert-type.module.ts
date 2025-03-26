@@ -1,19 +1,13 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertTypeService } from './advert-type.service'
 import { IAdvertTypeService } from './advert-type.service.interface'
-import { models } from './models'
-
-export { AdvertTypeAdminController } from './advert-type-admin.controller'
-export { AdvertTypeController } from './advert-type.controller'
-
-export { AdvertTypeError } from './advert-type-error'
+import { AdvertMainTypeModel } from './models/advert-main-type.model'
+import { AdvertTypeModel } from './models/advert-type.model'
 
 @Module({
-  imports: [SequelizeModule.forFeature([...models]), LoggingModule],
+  imports: [SequelizeModule.forFeature([AdvertMainTypeModel, AdvertTypeModel])],
   providers: [
     {
       provide: IAdvertTypeService,
