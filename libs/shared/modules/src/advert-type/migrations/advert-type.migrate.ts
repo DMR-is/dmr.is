@@ -1,6 +1,5 @@
-import { AdvertType } from '@dmr.is/shared/dto'
-
 import { advertDepartmentMigrate } from '../../journal/migrations'
+import { AdvertType } from '../dto/advert-type.dto'
 import { AdvertTypeModel } from '../models'
 
 export const advertTypeMigrate = (model: AdvertTypeModel): AdvertType => {

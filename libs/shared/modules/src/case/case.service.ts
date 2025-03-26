@@ -5,51 +5,6 @@ import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AddCaseAdvertCorrection,
-  AdvertStatus,
-  Case,
-  CaseChannel,
-  CaseCommunicationStatus,
-  CaseStatusEnum,
-  CreateCaseChannelBody,
-  CreateCaseDto,
-  CreateCaseResponseDto,
-  DeleteCaseAdvertCorrection,
-  DepartmentEnum,
-  GetCaseResponse,
-  GetCasesQuery,
-  GetCasesReponse,
-  GetCasesWithDepartmentCount,
-  GetCasesWithDepartmentCountQuery,
-  GetCasesWithPublicationNumber,
-  GetCasesWithPublicationNumberQuery,
-  GetCasesWithStatusCount,
-  GetCasesWithStatusCountQuery,
-  GetCommunicationSatusesResponse,
-  GetNextPublicationNumberResponse,
-  GetPaymentQuery,
-  GetPaymentResponse,
-  GetTagsResponse,
-  PostApplicationAttachmentBody,
-  PostApplicationBody,
-  PostCasePublishBody,
-  PresignedUrlResponse,
-  UpdateAdvertHtmlBody,
-  UpdateAdvertHtmlCorrection,
-  UpdateCaseBody,
-  UpdateCaseDepartmentBody,
-  UpdateCasePriceBody,
-  UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdateCommunicationStatusBody,
-  UpdateFasttrackBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
@@ -69,13 +24,17 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertTypeModel } from '../advert-type/models'
+import { PostApplicationBody } from '../application/dto'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
+import { PostApplicationAttachmentBody } from '../attachments/dto/post-application-attachment.body'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
 import { IAWSService } from '../aws/aws.service.interface'
+import { PresignedUrlResponse } from '../aws/dto/presigned-url-response.dto'
 import { IJournalService } from '../journal'
+import { AdvertStatus } from '../journal/dto/advert-constants.dto'
 import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
@@ -88,7 +47,59 @@ import { IPriceService } from '../price/price.service.interface'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
+import { UserDto } from '../user/dto'
 import { IUtilityService } from '../utility/utility.service.interface'
+import {
+  AddCaseAdvertCorrection,
+  DeleteCaseAdvertCorrection,
+} from './dto/add-case-advert-correction.dto'
+import {
+  Case,
+  GetCasesWithDepartmentCount,
+  GetCasesWithStatusCount,
+} from './dto/case.dto'
+import { CaseChannel } from './dto/case-channel.dto'
+import {
+  CaseCommunicationStatus,
+  CaseStatusEnum,
+  DepartmentEnum,
+} from './dto/case-constants'
+import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
+import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+} from './dto/get-case-payment-response.dto'
+import { GetCaseResponse } from './dto/get-case-response.dto'
+import { GetCasesQuery } from './dto/get-cases-query.dto'
+import { GetCasesReponse } from './dto/get-cases-response.dto'
+import {
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithStatusCountQuery,
+} from './dto/get-cases-with-count-query.dto'
+import {
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
+} from './dto/get-cases-with-publication-number.dto'
+import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.ts'
+import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
+import { GetTagsResponse } from './dto/get-tags-response.dto'
+import { PostCasePublishBody } from './dto/post-publish-body.dto'
+import {
+  UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
+} from './dto/update-advert-html-body.dto'
+import { UpdateCaseBody } from './dto/update-case-body.dto'
+import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
+import { UpdateCategoriesBody } from './dto/update-category-body.dto'
+import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
+import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
+import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
+import { UpdateCasePriceBody } from './dto/update-price-body.dto'
+import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
+import { UpdateTagBody } from './dto/update-tag-body.dto'
+import { UpdateTitleBody } from './dto/update-title-body.dto'
+import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
@@ -104,7 +115,6 @@ import {
   CaseHistoryModel,
   CaseModel,
   CasePublishedAdvertsModel,
-  CaseStatusModel,
   CaseTagModel,
 } from './models'
 import { casesDetailedIncludes, casesIncludes } from './relations'
@@ -134,8 +144,6 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseTagModel)
     private readonly caseTagModel: typeof CaseTagModel,
-    @InjectModel(CaseStatusModel)
-    private readonly caseStatusModel: typeof CaseStatusModel,
 
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,

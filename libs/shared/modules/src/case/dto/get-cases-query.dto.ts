@@ -8,11 +8,9 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator'
+import { PagingQuery, SortingQuery } from '@dmr.is/shared/dto'
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
-
-import { PagingQuery } from '../paging'
-import { SortingQuery } from '../sorting'
 
 export class CasesQuery {
   @ApiProperty({

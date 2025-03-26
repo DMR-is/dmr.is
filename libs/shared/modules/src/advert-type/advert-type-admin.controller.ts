@@ -2,15 +2,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateAdvertMainTypeBody,
-  CreateAdvertMainTypeBulk,
-  CreateAdvertTypeBody,
-  GetAdvertMainType,
-  GetAdvertType,
-  UpdateAdvertMainType,
-  UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
 
 import {
   Body,
