@@ -132,11 +132,8 @@ export class CaseCreateService implements ICaseCreateService {
       return result
     }
 
-    const caseNumberPromise = this.utilityService.getNextCaseNumber(
-      body.departmentId,
-      now.getFullYear(),
-      transaction,
-    )
+    const caseNumberPromise =
+      this.utilityService.generateInternalCaseNumber(transaction)
 
     const statusPromise = this.utilityService.caseStatusLookup(
       CaseStatusEnum.Submitted,
