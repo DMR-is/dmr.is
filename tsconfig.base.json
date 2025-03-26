@@ -28,6 +28,9 @@
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
+      "@dmr.is/official-journal/modules/advert-type": [
+        "libs/official-journal/modules/advert-type/src/index.ts"
+      ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
