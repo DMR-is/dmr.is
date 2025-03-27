@@ -1,5 +1,3 @@
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-
 import { Test } from '@nestjs/testing'
 
 import { IUtilityService } from '../utility/utility.service.interface'
@@ -11,19 +9,11 @@ describe('PdfService', () => {
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
-      imports: [LoggingModule],
+      imports: [],
       providers: [
         {
           provide: IPdfService,
           useClass: PdfService,
-        },
-        {
-          provide: LOGGER_PROVIDER,
-          useValue: {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-          },
         },
         {
           provide: IUtilityService,

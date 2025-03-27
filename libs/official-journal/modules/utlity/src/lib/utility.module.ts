@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -18,7 +16,6 @@ export { IUtilityService, UtilityService }
       ...advertModels,
       ...advertTypeModels,
     ]),
-    LoggingModule,
     forwardRef(() => ApplicationModule),
   ],
   providers: [

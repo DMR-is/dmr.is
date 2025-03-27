@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -13,10 +11,7 @@ import caseModels from '../case/models'
 import { models as advertModels } from './models'
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([...caseModels, ...advertModels]),
-    LoggingModule,
-  ],
+  imports: [SequelizeModule.forFeature([...caseModels, ...advertModels])],
   controllers: [],
   providers: [
     {

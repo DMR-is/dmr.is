@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -21,7 +19,6 @@ export { UserController } from './user.controller'
       UserInvolvedPartiesModel,
       AdvertInvolvedPartyModel,
     ]),
-    LoggingModule,
   ],
   controllers: [],
   providers: [

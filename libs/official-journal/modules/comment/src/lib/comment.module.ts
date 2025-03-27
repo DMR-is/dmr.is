@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -19,7 +17,6 @@ import { ICommentService } from './comment.service.interface'
       CommentsModel,
       CaseActionModel,
     ]),
-    LoggingModule,
     AwsModule,
   ],
   controllers: [],

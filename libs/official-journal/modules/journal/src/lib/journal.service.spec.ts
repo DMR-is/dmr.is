@@ -1,4 +1,3 @@
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Test } from '@nestjs/testing'
@@ -11,19 +10,10 @@ describe('JournalService', () => {
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
-      imports: [LoggingModule],
       providers: [
         {
           provide: IJournalService,
           useClass: MockJournalService,
-        },
-        {
-          provide: LOGGER_PROVIDER,
-          useValue: {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-          },
         },
       ],
     }).compile()

@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -16,7 +14,6 @@ import { ISignatureService } from './signature.service.interface'
       SignatureRecordModel,
       SignatureMemberModel,
     ]),
-    LoggingModule,
   ],
   controllers: [],
   providers: [

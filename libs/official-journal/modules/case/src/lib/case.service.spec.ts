@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 
 import { getModelToken } from '@nestjs/sequelize'
@@ -61,7 +60,6 @@ describe('CaseService', () => {
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
-      imports: [LoggingModule],
       providers: [
         {
           provide: ICaseService,
@@ -192,15 +190,6 @@ describe('CaseService', () => {
         {
           provide: AdvertCategoryModel,
           useClass: jest.fn(() => ({})),
-        },
-        {
-          provide: LOGGER_PROVIDER,
-          useClass: jest.fn(() => ({
-            info: jest.fn(),
-            error: jest.fn(),
-            warn: jest.fn(),
-            debug: jest.fn(),
-          })),
         },
         {
           provide: Sequelize,

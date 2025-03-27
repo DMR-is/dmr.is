@@ -1,5 +1,3 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -18,7 +16,6 @@ import { CaseAttachmentsModel } from './models/case-attachments.model'
       ApplicationAttachmentTypeModel,
       CaseAttachmentsModel,
     ]),
-    LoggingModule,
   ],
   controllers: [],
   providers: [
