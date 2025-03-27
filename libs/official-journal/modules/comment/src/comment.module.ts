@@ -8,8 +8,8 @@ import { CaseModel } from '../../case/models/case.model'
 import { CaseActionModel } from './models/case-action.model'
 import { CommentModel } from './models/comment.model'
 import { CommentsModel } from './models/comments.model'
-import { CommentServiceV2 } from './comment.service'
-import { ICommentServiceV2 } from './comment.service.interface'
+import { CommentService } from './comment.service'
+import { ICommentService } from './comment.service.interface'
 
 @Module({
   imports: [
@@ -25,10 +25,10 @@ import { ICommentServiceV2 } from './comment.service.interface'
   controllers: [],
   providers: [
     {
-      provide: ICommentServiceV2,
-      useClass: CommentServiceV2,
+      provide: ICommentService,
+      useClass: CommentService,
     },
   ],
-  exports: [ICommentServiceV2],
+  exports: [ICommentService],
 })
-export class CommentModuleV2 {}
+export class CommentModule {}

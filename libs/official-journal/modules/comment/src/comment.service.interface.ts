@@ -13,7 +13,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-export interface ICommentServiceV2 {
+export interface ICommentService {
   getCommentById(
     caseId: string,
     commentId: string,

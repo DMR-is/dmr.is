@@ -1,5 +1,0 @@
-export * from './migrations'
-export * from './models'
-export * from './comment.module'
-export * from './comment.service'
-export * from './comment.service.interface'

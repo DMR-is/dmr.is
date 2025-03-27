@@ -36,12 +36,12 @@ import { commentMigrate } from './migrations/comment.migrate'
 import { CaseActionModel } from './models/case-action.model'
 import { CommentModel } from './models/comment.model'
 import { CommentsModel } from './models/comments.model'
-import { ICommentServiceV2 } from './comment.service.interface'
+import { ICommentService } from './comment.service.interface'
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 
 @Injectable()
-export class CommentServiceV2 implements ICommentServiceV2 {
+export class CommentService implements ICommentService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CommentModel)
