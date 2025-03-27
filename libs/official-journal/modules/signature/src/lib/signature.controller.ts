@@ -24,7 +24,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { MemberTypeEnum } from './lib/types'
+import { MemberTypeEnum } from './types'
 import { ISignatureService } from './signature.service.interface'
 
 @Controller({

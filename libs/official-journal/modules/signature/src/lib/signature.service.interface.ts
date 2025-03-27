@@ -7,7 +7,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { MemberTypeEnum } from './lib/types'
+import { MemberTypeEnum } from './types'
 
 export interface ISignatureService {
   createSignature(

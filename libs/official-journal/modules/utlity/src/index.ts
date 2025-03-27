@@ -1,6 +1,6 @@
 // services
-export { IUtilityService } from './utility.service.interface'
-export { UtilityService } from './utility.service'
+export { IUtilityService } from './lib/utility.service.interface'
+export { UtilityService } from './lib/utility.service'
 
 // modules
-export { UtilityModule } from './utility.module'
+export { UtilityModule } from './lib/utility.module'

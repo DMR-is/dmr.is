@@ -1,7 +1,7 @@
 // dto
-export { GetInstitutionResponse } from './dto/get-institution-response.dto'
-export { GetInstitutionsQueryParams } from './dto/get-institutions-query.dto'
-export { GetInstitutionsResponse } from './dto/get-institutions-response.dto'
+export { GetInstitutionResponse } from './lib/dto/get-institution-response.dto'
+export { GetInstitutionsQueryParams } from './lib/dto/get-institutions-query.dto'
+export { GetInstitutionsResponse } from './lib/dto/get-institutions-response.dto'
 export {
   CreateInstitution,
   GetInstitution,
@@ -10,21 +10,21 @@ export {
   InstitutionDto,
   InstitutionQuery,
   UpdateInstitution,
-} from './dto/institution.dto'
+} from './lib/dto/institution.dto'
 
 // migrations
-export { institutionMigrate } from './migrations/institution.migrate'
+export { institutionMigrate } from './lib/migrations/institution.migrate'
 
 // models
-export { InstitutionModel } from './models/institution.model'
+export { InstitutionModel } from './lib/models/institution.model'
 
 // controllers
-export { InstitutionAdminController } from './controllers/institution-admin.controller'
-export { InstitutionController } from './controllers/institution.controller'
+export { InstitutionAdminController } from './lib/controllers/institution-admin.controller'
+export { InstitutionController } from './lib/controllers/institution.controller'
 
 // services
-export { InstitutionService } from './institution.service'
-export { IInstitutionService } from './institution.service.interface'
+export { InstitutionService } from './lib/institution.service'
+export { IInstitutionService } from './lib/institution.service.interface'
 
 // module
-export { InstitutionModule } from './institution.module'
+export { InstitutionModule } from './lib/institution.module'

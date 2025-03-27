@@ -1,13 +1,13 @@
 // dto
-export { GetPdfUrlResponse } from './dto/get-case-pdf-response.dto'
-export { GetPdfBody, GetPdfRespone } from './dto/get-pdf-response.dto'
+export { GetPdfUrlResponse } from './lib/dto/get-case-pdf-response.dto'
+export { GetPdfBody, GetPdfRespone } from './lib/dto/get-pdf-response.dto'
 
 // controllers
-export { PdfController } from './pdf.controller'
+export { PdfController } from './lib/pdf.controller'
 
 // services
-export { PdfService } from './pdf.service'
-export { IPdfService } from './pdf.service.interface'
+export { PdfService } from './lib/pdf.service'
+export { IPdfService } from './lib/pdf.service.interface'
 
 // module
-export { PdfModule } from './pdf.module'
+export { PdfModule } from './lib/pdf.module'

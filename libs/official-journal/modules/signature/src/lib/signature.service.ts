@@ -15,7 +15,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { MemberTypeEnum } from './lib/types'
+import { MemberTypeEnum } from './types'
 import { signatureMigrate } from './migrations/signature.migrate'
 import { SignatureModel } from './models/signature.model'
 import { SignatureMemberModel } from './models/signature-member.model'
