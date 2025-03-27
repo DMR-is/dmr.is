@@ -26,4 +26,4 @@ import { models as advertModels } from './models'
   ],
   exports: [IJournalService],
 })
-export class SharedJournalModule {}
+export class JournalModule {}
