@@ -3,13 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateSignature,
-  CreateSignatureMember,
-  GetSignature,
-  UpdateSignatureMember,
-  UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
+
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
@@ -22,6 +16,12 @@ import { SignatureMemberModel } from './models/signature-member.model'
 import { SignatureRecordModel } from './models/signature-record.model'
 import { ISignatureService } from './signature.service.interface'
 import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
+import {
+  UpdateSignatureMember,
+  CreateSignatureMember,
+} from './dto/signature-member.dto'
+import { UpdateSignatureRecord } from './dto/signature-record.dto'
+import { CreateSignature, GetSignature } from './dto/signature.dto'
 
 const LOGGING_CONTEXT = 'SignatureService'
 const LOGGING_CATEGORY = 'signature-service'

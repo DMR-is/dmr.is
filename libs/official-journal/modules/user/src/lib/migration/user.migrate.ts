@@ -1,7 +1,8 @@
-import { advertInvolvedPartyMigrate } from '../../journal/migrations'
-import { UserDto, UserRoleDto } from '../dto'
 import { UserModel } from '../models/user.model'
 import { UserRoleModel } from '../models/user-role.model'
+import { UserRoleDto } from '../dto/user-role.dto'
+import { UserDto } from '../dto/user.dto'
+import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
 
 export const userRoleMigrate = (model: UserRoleModel): UserRoleDto => {
   return {

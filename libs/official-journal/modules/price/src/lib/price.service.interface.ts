@@ -1,15 +1,15 @@
 import { Transaction } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
+
+import 'multer'
 import {
   CasePriceResponse,
   GetPaymentQuery,
   GetPaymentResponse,
-  TransactionFeeCodesResponse,
   UpdateCasePaymentBody,
   UpdateCasePriceBody,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-
-import 'multer'
+} from '@dmr.is/official-journal/modules/case'
+import { TransactionFeeCodesResponse } from '@dmr.is/official-journal/modules/application'
 
 export interface IPriceService {
   getFeeByApplication(

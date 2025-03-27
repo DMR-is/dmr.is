@@ -1,8 +1,7 @@
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
-
-import { Institution } from '../institutions'
-import { Paging, PagingQuery } from '../paging'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 import { UserRoleDto } from './user-role.dto'
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 export class UserDto {
   @ApiProperty({

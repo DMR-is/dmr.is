@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Institution } from '../institutions'
 import { CreateSignatureRecord, SignatureRecord } from './signature-record.dto'
-
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 export class Signature {
   @ApiProperty({
     type: String,

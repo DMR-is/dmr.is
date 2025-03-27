@@ -1,16 +1,16 @@
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { ApplicationModule } from '../application/application.module'
-import { AuthModule } from '../auth/auth.module'
+import { PriceService } from './price.service'
+import { IPriceService } from './price.service.interface'
+import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
+import { AuthModule } from '@dmr.is/official-journal/modules/auth'
 import {
   CaseModel,
   CaseTransactionModel,
   TransactionFeeCodesModel,
-} from '../case/models'
-import { AdvertDepartmentModel } from '../journal/models'
-import { PriceService } from './price.service'
-import { IPriceService } from './price.service.interface'
+} from '@dmr.is/official-journal/modules/case'
+import { AdvertDepartmentModel } from '@dmr.is/official-journal/modules/journal'
 
 export { IPriceService, PriceService }
 

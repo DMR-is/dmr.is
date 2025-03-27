@@ -1,10 +1,5 @@
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
-import {
-  CreateSignature,
-  GetSignature,
-  UpdateSignatureMember,
-  UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
+
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -26,6 +21,9 @@ import {
 
 import { MemberTypeEnum } from './types'
 import { ISignatureService } from './signature.service.interface'
+import { UpdateSignatureMember } from './dto/signature-member.dto'
+import { UpdateSignatureRecord } from './dto/signature-record.dto'
+import { CreateSignature, GetSignature } from './dto/signature.dto'
 
 @Controller({
   version: '1',

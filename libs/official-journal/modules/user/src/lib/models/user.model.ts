@@ -13,9 +13,9 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { UserInvolvedPartiesModel } from './user-involved-parties.model'
 import { UserRoleModel } from './user-role.model'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/modules/journal'
 
 @DefaultScope(() => ({
   include: [UserRoleModel, AdvertInvolvedPartyModel],

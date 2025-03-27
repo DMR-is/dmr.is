@@ -9,23 +9,27 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { advertInvolvedPartyMigrate } from '../journal/migrations'
-import { AdvertInvolvedPartyModel } from '../journal/models'
 import { userMigrate, userRoleMigrate } from './migration/user.migrate'
 import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
+
+import { IUserService } from './user.service.interface'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
-  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserDto,
   UserDto,
-} from './dto'
-import { IUserService } from './user.service.interface'
+} from './dto/user.dto'
+import { GetRolesByUserResponse } from './dto/user-role.dto'
+
+import {
+  advertInvolvedPartyMigrate,
+  AdvertInvolvedPartyModel,
+} from '@dmr.is/official-journal/modules/journal'
 
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'

@@ -2,18 +2,7 @@ import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AdvertFeeType,
-  CaseFeeCalculationBody,
-  CasePriceResponse,
-  CaseTransaction,
-  GetPaymentQuery,
-  GetPaymentResponse,
-  PaymentExpenses,
-  TransactionFeeCodesResponse,
-  UpdateCasePaymentBody,
-  UpdateCasePriceBody,
-} from '@dmr.is/shared/dto'
+
 import { ResultWrapper } from '@dmr.is/types'
 import {
   getFastTrack,
@@ -24,19 +13,34 @@ import {
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IApplicationService } from '../application/application.service.interface'
-import { IAuthService } from '../auth/auth.service.interface'
-import { TransactionFeeCodeMigrate } from '../case/migrations/transaction-fee-codes.migrate'
+import { IPriceService } from './price.service.interface'
 import {
+  CaseFeeCalculationBody,
   CaseModel,
+  CasePriceResponse,
+  CaseTransaction,
   CaseTransactionModel,
+  GetPaymentQuery,
+  GetPaymentResponse,
+  PaymentExpenses,
+  transactionFeeCodeMigrate,
   TransactionFeeCodesModel,
-} from '../case/models'
+  UpdateCasePaymentBody,
+  UpdateCasePriceBody,
+} from '@dmr.is/official-journal/modules/case'
+
 import {
   AdvertDepartmentModel,
+  AdvertFeeType,
   AdvertInvolvedPartyModel,
-} from '../journal/models'
-import { IPriceService } from './price.service.interface'
+} from '@dmr.is/official-journal/modules/journal'
+
+import {
+  IApplicationService,
+  TransactionFeeCodesResponse,
+} from '@dmr.is/official-journal/modules/application'
+
+import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 
 const LOGGING_CATEGORY = 'price-service'
 type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & {
@@ -56,9 +60,6 @@ export class PriceService implements IPriceService {
     private applicationService: IApplicationService,
 
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-
-    @InjectModel(AdvertDepartmentModel)
-    private readonly advertDepartmentModel: typeof AdvertDepartmentModel,
 
     @InjectModel(CaseTransactionModel)
     private readonly caseTransactionModel: typeof CaseTransactionModel,
@@ -274,7 +275,7 @@ export class PriceService implements IPriceService {
     })
 
     const fees = feeCodes.rows.map((feeCode) =>
-      TransactionFeeCodeMigrate(feeCode),
+      transactionFeeCodeMigrate(feeCode),
     )
     const baseFee = fees.find((fee) => fee.feeType === AdvertFeeType.Base)
     const additionalDocFee = fees.find(
@@ -576,7 +577,7 @@ export class PriceService implements IPriceService {
     }
 
     const migratedFeeCodes = feeCodes.rows.map((feeCode) =>
-      TransactionFeeCodeMigrate(feeCode),
+      transactionFeeCodeMigrate(feeCode),
     )
 
     return ResultWrapper.ok({ codes: migratedFeeCodes })

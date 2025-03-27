@@ -3,9 +3,10 @@ import is from 'date-fns/locale/is'
 import { Includeable, Op, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { AdvertInvolvedPartyModel } from '../journal/models'
 import { SignatureMemberModel } from './models/signature-member.model'
 import { SignatureRecordModel } from './models/signature-record.model'
+
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/modules/journal'
 
 const memberTemplate = (member: SignatureMemberModel) => {
   const styleObject = {
@@ -47,8 +48,8 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
       membersCount === 1
         ? '1fr'
         : membersCount === 3
-        ? '1fr 1fr 1fr'
-        : '1fr 1fr',
+          ? '1fr 1fr 1fr'
+          : '1fr 1fr',
   }
 
   const formattedDate = format(
@@ -81,8 +82,8 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
         </p>
         ${chairmanMarkup}
         <div style="display: ${styleObject.display}; grid-template-columns: ${
-    styleObject.gridTemplateColumns
-  };" class="signature__content">
+          styleObject.gridTemplateColumns
+        };" class="signature__content">
         ${membersMarkup}
         </div>
         ${record.additional ? additionalMarkup : ''}

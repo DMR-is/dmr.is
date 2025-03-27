@@ -8,8 +8,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { UserModel } from './user.model'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/modules/journal'
 
 @Table({ tableName: 'user_involved_parties', timestamps: false })
 export class UserInvolvedPartiesModel extends Model {

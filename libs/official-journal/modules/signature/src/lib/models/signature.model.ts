@@ -8,9 +8,12 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseModel } from '../../case/models'
-import { AdvertInvolvedPartyModel, AdvertModel } from '../../journal/models'
 import { SignatureRecordModel } from './signature-record.model'
+import {
+  AdvertInvolvedPartyModel,
+  AdvertModel,
+} from '@dmr.is/official-journal/modules/journal'
+import { CaseModel } from '@dmr.is/official-journal/modules/case'
 
 @Table({ tableName: 'signature', timestamps: false })
 export class SignatureModel extends Model {

@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AdvertTypeModel } from '../../advert-type/models'
+import { AdvertTypeModel } from '@dmr.is/official-journal/modules/advert-type'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'

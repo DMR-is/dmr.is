@@ -25,18 +25,19 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../guards'
+import { IUserService } from './user.service.interface'
+
+import { TokenJwtAuthGuard, RoleGuard } from '@dmr.is/official-journal/guards'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
-  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserDto,
   UserDto,
-} from './dto'
-import { IUserService } from './user.service.interface'
+} from './dto/user.dto'
+import { GetRolesByUserResponse } from './dto/user-role.dto'
 
 @Controller({
   path: 'users',

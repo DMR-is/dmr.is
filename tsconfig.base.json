@@ -25,11 +25,8 @@
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
-      "@dmr.is/modules/auth": [
+      "@dmr.is/official-journal/modules/auth": [
         "libs/official-journal/modules/auth/src/index.ts"
-      ],
-      "@dmr.is/modules/case": [
-        "libs/official-journal/modules/case/src/index.ts"
       ],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/official-journal/guards": [
@@ -43,6 +40,9 @@
       ],
       "@dmr.is/official-journal/modules/attachment": [
         "libs/official-journal/modules/attachment/src/index.ts"
+      ],
+      "@dmr.is/official-journal/modules/case": [
+        "libs/official-journal/modules/case/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/comment": [
         "libs/official-journal/modules/comment/src/index.ts"
@@ -69,7 +69,7 @@
         "libs/official-journal/modules/utlity/src/index.ts"
       ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
-      "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
+      "@dmr.is/shared/dto": ["libs/shared/dto/src/index.ts"],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
