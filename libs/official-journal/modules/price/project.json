@@ -1,0 +1,19 @@
+{
+  "name": "official-journal-modules-price",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/official-journal/modules/price/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/official-journal/modules/price/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
