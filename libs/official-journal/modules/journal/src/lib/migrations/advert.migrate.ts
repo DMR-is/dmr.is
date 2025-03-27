@@ -1,7 +1,7 @@
-import { Advert, AdvertAttachment } from '@dmr.is/shared/dto'
-
-import { advertTypeMigrate } from '../../advert-type/migrations'
-import { AdvertModel } from '../models'
+import { AdvertModel } from '@dmr.is/official-journal/models'
+import { advertTypeMigrate } from '@dmr.is/official-journal/modules/advert-type'
+import { AdvertAttachment } from '../dto/advert-attachment'
+import { Advert } from '../dto/advert.dto'
 import { advertCategoryMigrate } from './advert-category.migrate'
 import { advertCorrectionMigrate } from './advert-correction.migrate'
 import { advertDepartmentMigrate } from './advert-department.migrate'

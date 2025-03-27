@@ -15,13 +15,6 @@ export {
 // migrations
 export { attachmentMigrate } from './lib/migrations/attachment.migration'
 
-// models
-export { AdvertAttachmentsModel } from './lib/models/advert-attachments.model'
-export { ApplicationAttachmentTypeModel } from './lib/models/application-attachment-type.model'
-export { ApplicationAttachmentModel } from './lib/models/application-attachment.model'
-export { ApplicationAttachmentsModel } from './lib/models/application-attachments.model'
-export { CaseAttachmentsModel } from './lib/models/case-attachments.model'
-
 // services
 export { AttachmentService } from './lib/attachment.service'
 export { IAttachmentService } from './lib/attachment.service.interface'

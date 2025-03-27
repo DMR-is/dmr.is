@@ -3,34 +3,8 @@ import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateType,
-  Application,
-  CaseActionEnum,
-  CaseCommunicationStatus,
-  CasePriceResponse,
-  GetAdvertTemplateResponse,
-  GetApplicationAdverts,
-  GetApplicationAdvertsQuery,
-  GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
-  GetApplicationResponse,
-  GetComments,
-  PostApplicationAttachmentBody,
-  PostApplicationComment,
-  PresignedUrlResponse,
-  S3UploadFilesResponse,
-  UpdateApplicationBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import {
-  generatePaging,
-  getLimitAndOffset,
-  getTemplate,
-  getTemplateDetails,
-} from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -43,23 +17,29 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
-import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { IAuthService } from '../auth/auth.service.interface'
-import { IAWSService } from '../aws/aws.service.interface'
-import { ICaseService } from '../case/case.module'
-import { ICommentServiceV2 } from '../comment/v2'
-import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
-  AdvertModel,
-} from '../journal/models'
-import { IPriceService } from '../price/price.service.interface'
-import { ISignatureService } from '../signature/signature.service.interface'
-import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
 import { IApplicationService } from './application.service.interface'
-import { applicationCaseMigrate } from './migrations'
+import {
+  AdvertModel,
+  AdvertDepartmentModel,
+  AdvertCategoryModel,
+} from '@dmr.is/official-journal/models'
+import {
+  AdvertTemplateDetails,
+  AdvertTemplateType,
+  GetAdvertTemplateResponse,
+} from '@dmr.is/official-journal/modules/journal'
+import { Application } from 'express'
+import { getTemplateDetails, getTemplate } from './application.utils'
+import {
+  GetApplicationAdvertsQuery,
+  GetApplicationAdverts,
+} from './dto/get-application-advert.dto'
+import { GetApplicationResponse } from './dto/get-application-response.dto'
+import { PostApplicationComment } from './dto/post-application-comment.dto'
+import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
+import { GetApplicationCaseResponse } from '@dmr.is/official-journal/modules/attachment'
+import { CasePriceResponse } from '@dmr.is/official-journal/modules/case'
 
 const LOGGING_CATEGORY = 'application-service'
 

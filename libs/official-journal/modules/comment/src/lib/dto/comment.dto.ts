@@ -1,8 +1,5 @@
+import { BaseEntity } from '@dmr.is/shared/dto'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
-
-import { CaseActionEnum } from '../cases/case-constants'
-import { CaseStatus } from '../cases/case-status.dto'
-import { BaseEntity } from '../entity'
 
 export class CommentCreatorDto extends OmitType(BaseEntity, [
   'slug',

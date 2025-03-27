@@ -21,11 +21,6 @@ export { signatureMemberMigrate } from './lib/migrations/signature-member.migrat
 export { signatureRecordMigrate } from './lib/migrations/signature-record.migrate'
 export { signatureMigrate } from './lib/migrations/signature.migrate'
 
-// models
-export { SignatureMemberModel } from './lib/models/signature-member.model'
-export { SignatureRecordModel } from './lib/models/signature-record.model'
-export { SignatureModel } from './lib/models/signature.model'
-
 // controllers
 export { SignatureController } from './lib/signature.controller'
 

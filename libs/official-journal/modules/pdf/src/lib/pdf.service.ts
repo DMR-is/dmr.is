@@ -8,19 +8,19 @@ import {
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-import { applicationSignatureTemplate, retryAsync } from '@dmr.is/utils'
+import { retryAsync } from '@dmr.is/utils'
 
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
-import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './lib/pdf.css'
 import { IPdfService } from './pdf.service.interface'
 import { advertPdfTemplate } from './lib/pdf-advert-template'
 import { getBrowser } from './lib/puppetBrowser'
+import { caseDetailedMigrate } from '@dmr.is/official-journal/modules/case'
+import { applicationSignatureTemplate } from './pdf.utils'
 
 const LOGGING_CATEGORY = 'pdf-service'
 

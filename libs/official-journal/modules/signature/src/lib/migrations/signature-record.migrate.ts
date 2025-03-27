@@ -1,5 +1,5 @@
+import { SignatureRecordModel } from '@dmr.is/official-journal/models'
 import { SignatureRecord } from '../dto/signature-record.dto'
-import { SignatureRecordModel } from '../models/signature-record.model'
 import { signatureMemberMigrate } from './signature-member.migrate'
 
 export const signatureRecordMigrate = (

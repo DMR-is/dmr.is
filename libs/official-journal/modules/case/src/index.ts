@@ -91,21 +91,6 @@ export { caseTransactionMigrate } from './lib/migrations/case-transaction.migrat
 export { caseMigrate } from './lib/migrations/case.migrate'
 export { transactionFeeCodeMigrate } from './lib/migrations/transaction-fee-codes.migrate'
 
-// models
-export { CaseAdditionModel } from './lib/models/case-addition.model'
-export { CaseAdditionsModel } from './lib/models/case-additions.model'
-export { CaseCategoriesModel } from './lib/models/case-categories.model'
-export { CaseChannelModel } from './lib/models/case-channel.model'
-export { CaseChannelsModel } from './lib/models/case-channels.model'
-export { CaseCommunicationStatusModel } from './lib/models/case-communication-status.model'
-export { CaseHistoryModel } from './lib/models/case-history.model'
-export { CasePublishedAdvertsModel } from './lib/models/case-published-adverts'
-export { CaseStatusModel } from './lib/models/case-status.model'
-export { CaseTagModel } from './lib/models/case-tag.model'
-export { CaseTransactionModel } from './lib/models/case-transaction.model'
-export { CaseModel } from './lib/models/case.model'
-export { TransactionFeeCodesModel } from './lib/models/transaction-fee-codes.model'
-
 // services
 export { CaseCreateService } from './lib/services/create/case-create.service'
 export { ICaseCreateService } from './lib/services/create/case-create.service.interface'

@@ -11,9 +11,6 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { MemberTypeEnum } from './types'
 import { signatureMigrate } from './migrations/signature.migrate'
-import { SignatureModel } from './models/signature.model'
-import { SignatureMemberModel } from './models/signature-member.model'
-import { SignatureRecordModel } from './models/signature-record.model'
 import { ISignatureService } from './signature.service.interface'
 import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
 import {
@@ -22,6 +19,11 @@ import {
 } from './dto/signature-member.dto'
 import { UpdateSignatureRecord } from './dto/signature-record.dto'
 import { CreateSignature, GetSignature } from './dto/signature.dto'
+import {
+  SignatureModel,
+  SignatureMemberModel,
+  SignatureRecordModel,
+} from '@dmr.is/official-journal/models'
 
 const LOGGING_CONTEXT = 'SignatureService'
 const LOGGING_CATEGORY = 'signature-service'

@@ -1,6 +1,6 @@
-import { TransactionFeeCode } from '@dmr.is/shared/dto'
+import { TransactionFeeCodesModel } from '@dmr.is/official-journal/models'
 
-import { TransactionFeeCodesModel } from '../models'
+import { TransactionFeeCode } from '@dmr.is/official-journal/modules/application'
 
 export function transactionFeeCodeMigrate(
   model: TransactionFeeCodesModel,

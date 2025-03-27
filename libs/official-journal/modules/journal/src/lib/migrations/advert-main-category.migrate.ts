@@ -1,6 +1,5 @@
-import { MainCategory } from '@dmr.is/shared/dto'
-
-import { AdvertMainCategoryModel } from '../models'
+import { AdvertMainCategoryModel } from '@dmr.is/official-journal/models'
+import { MainCategory } from '../dto/main-category.dto'
 import { advertCategoryMigrate } from './advert-category.migrate'
 
 export function advertMainCategoryMigrate(

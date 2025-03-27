@@ -1,6 +1,5 @@
-import { MainCategory } from '@dmr.is/shared/dto'
-
-import { AdvertCategoryCategoriesModel } from '../models'
+import { AdvertCategoryCategoriesModel } from '@dmr.is/official-journal/models'
+import { MainCategory } from '../dto/main-category.dto'
 
 export const categoryCategoriesMigrate = (
   models: AdvertCategoryCategoriesModel[],
@@ -31,6 +30,7 @@ export const categoryCategoriesMigrate = (
             title: model.category.title,
           },
         ],
+        departmentId: model.mainCategory.departmentId,
       })
     }
   })

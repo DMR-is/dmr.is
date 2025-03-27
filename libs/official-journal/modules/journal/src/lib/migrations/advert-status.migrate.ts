@@ -1,7 +1,6 @@
-import { AdvertStatus } from '@dmr.is/shared/dto'
+import { AdvertStatusModel } from '@dmr.is/official-journal/models'
 import { safeEnumMapper } from '@dmr.is/utils'
-
-import { AdvertStatusModel } from '../models/advert-status.model'
+import { AdvertStatus } from '../dto/advert-constants.dto'
 
 export function advertStatusMigrate(model: AdvertStatusModel): AdvertStatus {
   const result = safeEnumMapper(model.title, AdvertStatus)

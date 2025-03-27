@@ -16,24 +16,17 @@ import { InjectModel } from '@nestjs/sequelize'
 import { IPriceService } from './price.service.interface'
 import {
   CaseFeeCalculationBody,
-  CaseModel,
   CasePriceResponse,
   CaseTransaction,
-  CaseTransactionModel,
   GetPaymentQuery,
   GetPaymentResponse,
   PaymentExpenses,
   transactionFeeCodeMigrate,
-  TransactionFeeCodesModel,
   UpdateCasePaymentBody,
   UpdateCasePriceBody,
 } from '@dmr.is/official-journal/modules/case'
 
-import {
-  AdvertDepartmentModel,
-  AdvertFeeType,
-  AdvertInvolvedPartyModel,
-} from '@dmr.is/official-journal/modules/journal'
+import { AdvertFeeType } from '@dmr.is/official-journal/modules/journal'
 
 import {
   IApplicationService,
@@ -41,6 +34,13 @@ import {
 } from '@dmr.is/official-journal/modules/application'
 
 import { IAuthService } from '@dmr.is/official-journal/modules/auth'
+import {
+  CaseModel,
+  CaseTransactionModel,
+  TransactionFeeCodesModel,
+  AdvertInvolvedPartyModel,
+  AdvertDepartmentModel,
+} from '@dmr.is/official-journal/models'
 
 const LOGGING_CATEGORY = 'price-service'
 type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & {

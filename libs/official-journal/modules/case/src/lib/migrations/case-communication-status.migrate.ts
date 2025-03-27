@@ -1,10 +1,7 @@
-import {
-  CaseCommunicationStatus,
-  CommunicationStatus,
-} from '@dmr.is/shared/dto'
+import { CaseCommunicationStatusModel } from '@dmr.is/official-journal/models'
 import { enumMapper } from '@dmr.is/utils'
-
-import { CaseCommunicationStatusModel } from '../models'
+import { CaseCommunicationStatus } from '../dto/case-constants'
+import { CommunicationStatus } from '../dto/communication-status.dto'
 
 export const caseCommunicationStatusMigrate = (
   model: CaseCommunicationStatusModel,

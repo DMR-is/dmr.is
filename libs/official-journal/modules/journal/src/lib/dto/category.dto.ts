@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-
-import { CategoryMainCategory } from '../main-categories/category-main-category.dto'
+import { CategoryMainCategory } from './category-main-category.dto'
 
 export class Category {
   @ApiProperty({

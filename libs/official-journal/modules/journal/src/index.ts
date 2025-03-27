@@ -65,19 +65,6 @@ export { advertStatusMigrate } from './lib/migrations/advert-status.migrate'
 export { advertMigrate } from './lib/migrations/advert.migrate'
 export { categoryCategoriesMigrate } from './lib/migrations/category-categories.migrate'
 
-// models
-export { AdvertAttachmentsModel } from './lib/models/advert-attachments.model'
-export { AdvertCategoriesModel } from './lib/models/advert-categories.model'
-export { AdvertCategoryCategoriesModel } from './lib/models/advert-category-categories.model'
-export { AdvertCategoryDepartmentsModel } from './lib/models/advert-category-departments.model'
-export { AdvertCategoryModel } from './lib/models/advert-category.model'
-export { AdvertCorrectionModel } from './lib/models/advert-correction.model'
-export { AdvertDepartmentModel } from './lib/models/advert-department.model'
-export { AdvertInvolvedPartyModel } from './lib/models/advert-involved-party.model'
-export { AdvertMainCategoryModel } from './lib/models/advert-main-category.model'
-export { AdvertStatusModel } from './lib/models/advert-status.model'
-export { AdvertModel } from './lib/models/advert.model'
-
 // services
 export { JournalService } from './lib/journal.service'
 export { IJournalService } from './lib/journal.service.interface'

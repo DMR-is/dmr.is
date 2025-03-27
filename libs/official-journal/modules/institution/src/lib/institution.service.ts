@@ -4,13 +4,7 @@ import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateInstitution,
-  GetInstitution,
-  GetInstitutions,
-  InstitutionQuery,
-  UpdateInstitution,
-} from '@dmr.is/shared/dto'
+
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -18,8 +12,15 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { institutionMigrate } from './migrations/institution.migrate'
-import { InstitutionModel } from './models/institution.model'
 import { IInstitutionService } from './institution.service.interface'
+import { InstitutionModel } from '@dmr.is/official-journal/models'
+import {
+  InstitutionQuery,
+  GetInstitutions,
+  GetInstitution,
+  CreateInstitution,
+  UpdateInstitution,
+} from './dto/institution.dto'
 
 const LOGGING_CATEGORY = 'institution-service'
 

@@ -1,6 +1,5 @@
-import { CaseChannel } from '@dmr.is/shared/dto'
-
-import { CaseChannelModel } from '../models'
+import { CaseChannelModel } from '@dmr.is/official-journal/models'
+import { CaseChannel } from '../dto/case-channel.dto'
 
 export const caseChannelMigrate = (model: CaseChannelModel): CaseChannel => {
   try {

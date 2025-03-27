@@ -1,7 +1,7 @@
 import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
-import { SignatureModel } from '../models/signature.model'
 import { signatureRecordMigrate } from './signature-record.migrate'
 import { Signature } from '../dto/signature.dto'
+import { SignatureModel } from '@dmr.is/official-journal/models'
 
 export const signatureMigrate = (model: SignatureModel): Signature => {
   return {

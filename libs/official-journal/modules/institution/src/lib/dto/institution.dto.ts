@@ -1,9 +1,7 @@
 import { IsOptional } from 'class-validator'
 
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
-
-import { BaseEntity } from '../entity'
-import { Paging, PagingQuery } from '../paging'
+import { BaseEntity, Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 export class Institution {
   @ApiProperty({

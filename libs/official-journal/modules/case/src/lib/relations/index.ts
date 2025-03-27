@@ -1,25 +1,22 @@
-import { Includeable } from 'sequelize'
-
-import { AdvertTypeModel } from '../../advert-type/models'
-import { CaseActionModel } from '../../comment/v2/models/case-action.model'
-import { CommentModel } from '../../comment/v2/models/comment.model'
 import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
-} from '../../journal/models'
-import { UserModel } from '../../user/models/user.model'
-import { UserRoleModel } from '../../user/models/user-role.model'
-import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
-import {
-  CaseAdditionModel,
-  CaseChannelModel,
-  CaseCommunicationStatusModel,
-  CaseStatusModel,
   CaseTagModel,
+  CaseStatusModel,
+  CaseCommunicationStatusModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
+  AdvertCategoryModel,
+  CaseChannelModel,
+  AdvertInvolvedPartyModel,
+  CaseAdditionModel,
+  UserModel,
+  UserRoleModel,
   CaseTransactionModel,
-} from '../models'
-import { CaseHistoryModel } from '../models/case-history.model'
+  CommentModel,
+  CaseActionModel,
+  CaseHistoryModel,
+} from '@dmr.is/official-journal/models'
+import { Includeable } from 'sequelize'
+import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 
 export const casesDetailedIncludes = [
   CaseTagModel,

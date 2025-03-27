@@ -1,6 +1,5 @@
-import { CaseTransaction } from '@dmr.is/shared/dto'
-
-import { CaseTransactionModel } from '../models'
+import { CaseTransactionModel } from '@dmr.is/official-journal/models'
+import { CaseTransaction } from '../dto/case-transaction.dto'
 
 export const caseTransactionMigrate = (
   model: CaseTransactionModel,

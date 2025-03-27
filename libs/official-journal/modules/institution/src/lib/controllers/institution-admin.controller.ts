@@ -1,11 +1,6 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateInstitution,
-  GetInstitution,
-  UpdateInstitution,
-} from '@dmr.is/shared/dto'
 
 import {
   Body,
@@ -25,8 +20,14 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../../guards'
+import { TokenJwtAuthGuard, RoleGuard } from '@dmr.is/official-journal/guards'
+
 import { IInstitutionService } from '../institution.service.interface'
+import {
+  GetInstitution,
+  CreateInstitution,
+  UpdateInstitution,
+} from '../dto/institution.dto'
 
 @Controller({
   version: '1',
@@ -48,9 +49,8 @@ export class InstitutionAdminController {
   async createInstitution(
     @Body() createInstitution: CreateInstitution,
   ): Promise<GetInstitution> {
-    const results = await this.institutionService.createInstitution(
-      createInstitution,
-    )
+    const results =
+      await this.institutionService.createInstitution(createInstitution)
 
     if (!results.result.ok) {
       throw new HttpException(

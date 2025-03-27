@@ -3,10 +3,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  GetApplicationAttachmentResponse,
-  GetApplicationAttachmentsResponse,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
@@ -22,7 +18,9 @@ import {
   ApplicationAttachmentsModel,
   ApplicationAttachmentTypeModel,
   CaseAttachmentsModel,
-} from './models'
+} from '@dmr.is/official-journal/models'
+import { GetApplicationAttachmentResponse } from './dto/get-application-attachment.response'
+import { GetApplicationAttachmentsResponse } from './dto/get-application-attachments.response'
 
 @Injectable()
 export class AttachmentService implements IAttachmentService {

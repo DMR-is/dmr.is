@@ -1,29 +1,33 @@
 import { Transaction } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
 import {
-  CreateAdvert,
-  CreateMainCategory,
-  DefaultSearchParams,
-  Department,
-  GetAdvertResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
-  GetAdvertsQueryParams,
-  GetAdvertsResponse,
-  GetCategoriesResponse,
-  GetCategoryResponse,
-  GetDepartmentResponse,
-  GetDepartmentsResponse,
   GetInstitutionResponse,
   GetInstitutionsResponse,
-  GetMainCategoriesResponse,
-  GetMainCategoryResponse,
-  GetSimilarAdvertsResponse,
   Institution,
-  UpdateAdvertBody,
+} from '@dmr.is/official-journal/modules/institution'
+import { CreateAdvert } from './dto/advert.dto'
+import {
+  CreateMainCategory,
   UpdateCategory,
-  UpdateMainCategory,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
+} from './dto/create-main-category.dto'
+import { DefaultSearchParams } from './dto/default-search-params.dto'
+import { Department } from './dto/department.dto'
+import { GetAdvertResponse } from './dto/get-advert-response.dto'
+import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
+import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
+import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import {
+  GetAdvertsResponse,
+  GetSimilarAdvertsResponse,
+} from './dto/get-adverts-responses.dto'
+import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
+import { GetCategoryResponse } from './dto/get-category-responses.dto'
+import { GetDepartmentResponse } from './dto/get-department-response.dto'
+import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
+import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
+import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
+import { UpdateAdvertBody } from './dto/update-advert-body.dto'
+import { UpdateMainCategory } from './dto/update-main-category.dto'
 
 export interface IJournalService {
   getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>>

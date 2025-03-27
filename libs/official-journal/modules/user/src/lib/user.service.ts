@@ -10,9 +10,6 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { userMigrate, userRoleMigrate } from './migration/user.migrate'
-import { UserModel } from './models/user.model'
-import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
-import { UserRoleModel } from './models/user-role.model'
 
 import { IUserService } from './user.service.interface'
 import {
@@ -26,10 +23,13 @@ import {
 } from './dto/user.dto'
 import { GetRolesByUserResponse } from './dto/user-role.dto'
 
+import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
 import {
-  advertInvolvedPartyMigrate,
+  UserModel,
+  UserRoleModel,
   AdvertInvolvedPartyModel,
-} from '@dmr.is/official-journal/modules/journal'
+  UserInvolvedPartiesModel,
+} from '@dmr.is/official-journal/models'
 
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'

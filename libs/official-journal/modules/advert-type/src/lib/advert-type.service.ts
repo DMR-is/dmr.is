@@ -32,9 +32,11 @@ import { UpdateAdvertTypeBody } from './dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from './dto/update-main-advert-type.dto'
 import { advertMainTypeMigrate } from './migrations/advert-main-type.migrate'
 import { advertTypeMigrate } from './migrations/advert-type.migrate'
-import { AdvertMainTypeModel } from './models/advert-main-type.model'
-import { AdvertTypeModel } from './models/advert-type.model'
-import { AdvertDepartmentModel } from '@dmr.is/official-journal/modules/journal'
+import {
+  AdvertTypeModel,
+  AdvertMainTypeModel,
+  AdvertDepartmentModel,
+} from '@dmr.is/official-journal/models'
 
 const LOGGING_CATEGORY = 'advert-type-service'
 

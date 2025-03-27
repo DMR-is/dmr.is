@@ -10,40 +10,41 @@ import {
   ALL_MOCK_SIGNATURES,
   MOCK_PAGING_SINGLE_PAGE,
 } from '@dmr.is/mocks'
-import {
-  Advert,
-  Category,
-  CreateAdvert,
-  CreateMainCategory,
-  Department,
-  GetAdvertResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
-  GetAdvertsQueryParams,
-  GetAdvertsResponse,
-  GetCategoriesQueryParams,
-  GetCategoriesResponse,
-  GetCategoryResponse,
-  GetDepartmentResponse,
-  GetDepartmentsQueryParams,
-  GetDepartmentsResponse,
-  GetInstitutionResponse,
-  GetInstitutionsQueryParams,
-  GetInstitutionsResponse,
-  GetMainCategoriesQueryParams,
-  GetMainCategoriesResponse,
-  GetMainCategoryResponse,
-  GetSimilarAdvertsResponse,
-  Institution,
-  UpdateAdvertBody,
-  UpdateMainCategory,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import { IJournalService } from './journal.service.interface'
+import {
+  GetInstitutionResponse,
+  Institution,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+} from '@dmr.is/official-journal/modules/institution'
+import { CreateAdvert, Advert } from './dto/advert.dto'
+import { Category } from './dto/category.dto'
+import { CreateMainCategory } from './dto/create-main-category.dto'
+import { Department } from './dto/department.dto'
+import { GetAdvertResponse } from './dto/get-advert-response.dto'
+import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
+import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
+import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import {
+  GetSimilarAdvertsResponse,
+  GetAdvertsResponse,
+} from './dto/get-adverts-responses.dto'
+import { GetCategoriesQueryParams } from './dto/get-categories-query.dto'
+import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
+import { GetCategoryResponse } from './dto/get-category-responses.dto'
+import { GetDepartmentResponse } from './dto/get-department-response.dto'
+import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
+import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
+import { GetMainCategoriesQueryParams } from './dto/get-main-categories-query.dto'
+import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
+import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
+import { UpdateAdvertBody } from './dto/update-advert-body.dto'
+import { UpdateMainCategory } from './dto/update-main-category.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 

@@ -7,20 +7,23 @@ import { CaseUpdateService } from './services/update/case-update.service'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
 import { CaseServiceMock } from './case.service.mock'
-import { CaseAdditionModel } from './models/case-addition.model'
-import { CaseAdditionsModel } from './models/case-additions.model'
-import { CaseCategoriesModel } from './models/case-categories.model'
-import { CaseChannelModel } from './models/case-channel.model'
-import { CaseChannelsModel } from './models/case-channels.model'
-import { CaseCommunicationStatusModel } from './models/case-communication-status.model'
-import { CaseHistoryModel } from './models/case-history.model'
-import { CasePublishedAdvertsModel } from './models/case-published-adverts'
-import { CaseStatusModel } from './models/case-status.model'
-import { CaseTagModel } from './models/case-tag.model'
-import { CaseTransactionModel } from './models/case-transaction.model'
-import { CaseModel } from './models/case.model'
-import { TransactionFeeCodesModel } from './models/transaction-fee-codes.model'
-
+import {
+  CaseModel,
+  CaseStatusModel,
+  CaseHistoryModel,
+  CaseTagModel,
+  CaseChannelModel,
+  CaseAdditionModel,
+  CaseTransactionModel,
+  CaseCategoriesModel,
+  CaseChannelsModel,
+  CaseAdditionsModel,
+  TransactionFeeCodesModel,
+  CaseCommunicationStatusModel,
+} from '@dmr.is/official-journal/models'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
+import { JournalModule } from '@dmr.is/official-journal/modules/journal'
+import { CommentModule } from '@dmr.is/official-journal/modules/comment'
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
@@ -33,16 +36,15 @@ const API_MOCK = process.env.API_MOCK === 'true'
       CaseChannelModel,
       CaseAdditionModel,
       CaseTransactionModel,
-      CasePublishedAdvertsModel,
       CaseCategoriesModel,
       CaseChannelsModel,
       CaseAdditionsModel,
       TransactionFeeCodesModel,
       CaseCommunicationStatusModel,
     ]),
-    SharedJournalModule,
+    JournalModule,
     SignatureModule,
-    CommentModuleV2,
+    CommentModule,
     forwardRef(() => PriceModule),
     forwardRef(() => PdfModule),
     forwardRef(() => AwsModule),

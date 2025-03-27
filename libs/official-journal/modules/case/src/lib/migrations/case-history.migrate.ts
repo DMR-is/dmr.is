@@ -1,6 +1,5 @@
-import { CaseHistory } from '@dmr.is/shared/dto'
-
-import { CaseHistoryModel } from '../models/case-history.model'
+import { CaseHistoryModel } from '@dmr.is/official-journal/models'
+import { CaseHistory } from '../dto/case-history.dto'
 
 export const caseHistoryMigrate = (model: CaseHistoryModel): CaseHistory => {
   return {

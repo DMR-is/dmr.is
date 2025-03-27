@@ -1,13 +1,11 @@
-import { CaseActionEnum } from '@dmr.is/shared/dto'
-import {
-  CommentCreatorDto,
-  CommentDto,
-  CommentReceiverDto,
-} from '@dmr.is/shared/dto'
-
 import { InternalServerErrorException } from '@nestjs/common'
 
-import { CommentModel } from '../models/comment.model'
+import { CommentModel } from '@dmr.is/official-journal/models'
+import {
+  CommentDto,
+  CommentCreatorDto,
+  CommentReceiverDto,
+} from '../dto/comment.dto'
 
 export const commentMigrate = (
   model: CommentModel,

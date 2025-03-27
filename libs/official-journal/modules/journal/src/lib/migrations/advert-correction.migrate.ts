@@ -1,6 +1,5 @@
-import { AdvertCorrection } from '@dmr.is/shared/dto'
-
-import { AdvertCorrectionModel } from '../models'
+import { AdvertCorrectionModel } from '@dmr.is/official-journal/models'
+import { AdvertCorrection } from '../dto/advert-correction.dto'
 
 export function advertCorrectionMigrate(
   model: AdvertCorrectionModel,

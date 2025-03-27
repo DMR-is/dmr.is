@@ -4,8 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
-export { IApplicationService } from './application.service.interface'
-export { ApplicationService } from './application.service'
+import { AdvertModel } from '@dmr.is/official-journal/models'
 @Module({
   imports: [
     SequelizeModule.forFeature([AdvertModel]),

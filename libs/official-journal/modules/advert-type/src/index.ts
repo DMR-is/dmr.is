@@ -16,10 +16,6 @@ export { UpdateAdvertMainType } from './lib/dto/update-main-advert-type.dto'
 export { advertMainTypeMigrate } from './lib/migrations/advert-main-type.migrate'
 export { advertTypeMigrate } from './lib/migrations/advert-type.migrate'
 
-// models
-export { AdvertMainTypeModel } from './lib/models/advert-main-type.model'
-export { AdvertTypeModel } from './lib/models/advert-type.model'
-
 // controllers
 export { AdvertTypeAdminController } from './lib/controllers/advert-type-admin.controller'
 export { AdvertTypeController } from './lib/controllers/advert-type.controller'

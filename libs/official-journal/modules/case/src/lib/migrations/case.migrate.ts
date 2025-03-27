@@ -1,8 +1,9 @@
-import { Case } from '@dmr.is/shared/dto'
-
-import { advertInvolvedPartyMigrate } from '../../journal/migrations'
-import { advertCategoryMigrate } from '../../journal/migrations'
-import { CaseModel } from '../models'
+import { CaseModel } from '@dmr.is/official-journal/models'
+import {
+  advertInvolvedPartyMigrate,
+  advertCategoryMigrate,
+} from '@dmr.is/official-journal/modules/journal'
+import { Case } from '../dto/case.dto'
 
 export const caseMigrate = (model: CaseModel): Case => ({
   id: model.id,

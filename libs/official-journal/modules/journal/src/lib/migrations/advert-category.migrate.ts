@@ -1,6 +1,5 @@
-import { Category } from '@dmr.is/shared/dto'
-
-import { AdvertCategoryModel } from '../models/advert-category.model'
+import { AdvertCategoryModel } from '@dmr.is/official-journal/models'
+import { Category } from '../dto/category.dto'
 
 export function advertCategoryMigrate(model: AdvertCategoryModel): Category {
   const result: Category = {

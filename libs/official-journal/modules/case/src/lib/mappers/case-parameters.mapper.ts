@@ -1,6 +1,6 @@
 import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
-import { GetCasesQuery } from '@dmr.is/shared/dto'
+import { GetCasesQuery } from '../dto/get-cases-query.dto'
 
 type WhereClause = {
   id?: {

@@ -1,49 +1,50 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AddCaseAdvertCorrection,
-  CaseComment,
-  CaseCommunicationStatus,
-  CaseDetailed,
-  CreateCaseChannelBody,
-  CreateCaseResponse,
-  DeleteCaseAdvertCorrection,
-  DepartmentEnum,
-  GetCaseCommentsQuery,
-  GetCaseResponse,
-  GetCasesQuery,
-  GetCasesReponse,
-  GetCasesWithDepartmentCount,
-  GetCasesWithDepartmentCountQuery,
-  GetCasesWithPublicationNumber,
-  GetCasesWithPublicationNumberQuery,
-  GetCasesWithStatusCount,
-  GetCommunicationSatusesResponse,
-  GetNextPublicationNumberResponse,
-  GetTagsResponse,
-  PostApplicationAttachmentBody,
-  PostApplicationBody,
-  PostCaseCommentBody,
-  PostCasePublishBody,
-  PresignedUrlResponse,
-  UpdateAdvertHtmlBody,
-  UpdateAdvertHtmlCorrection,
-  UpdateCaseBody,
-  UpdateCaseDepartmentBody,
-  UpdateCasePriceBody,
-  UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdateCommunicationStatusBody,
-  UpdateNextStatusBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
-} from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject } from '@nestjs/common'
+import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
+import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
+import {
+  AddCaseAdvertCorrection,
+  DeleteCaseAdvertCorrection,
+} from './dto/add-case-advert-correction.dto'
+import { DepartmentEnum, CaseCommunicationStatus } from './dto/case-constants'
+import {
+  GetCasesWithStatusCount,
+  GetCasesWithDepartmentCount,
+  CaseDetailed,
+} from './dto/case.dto'
+import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
+import { CreateCaseResponse } from './dto/create-case-response.dto'
+import { GetCaseResponse } from './dto/get-case-response.dto'
+import { GetCasesQuery } from './dto/get-cases-query.dto'
+import { GetCasesReponse } from './dto/get-cases-response.dto'
+import { GetCasesWithDepartmentCountQuery } from './dto/get-cases-with-count-query.dto'
+import {
+  GetCasesWithPublicationNumberQuery,
+  GetCasesWithPublicationNumber,
+} from './dto/get-cases-with-publication-number.dto'
+import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
+import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
+import { GetTagsResponse } from './dto/get-tags-response.dto'
+import { PostCasePublishBody } from './dto/post-publish-body.dto'
+import {
+  UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
+} from './dto/update-advert-html-body.dto'
+import { UpdateCaseBody } from './dto/update-case-body.dto'
+import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
+import { UpdateCategoriesBody } from './dto/update-category-body.dto'
+import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
+import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
+import { UpdateNextStatusBody } from './dto/update-next-status-body.dto'
+import { UpdateCasePriceBody } from './dto/update-price-body.dto'
+import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
+import { UpdateTagBody } from './dto/update-tag-body.dto'
+import { UpdateTitleBody } from './dto/update-title-body.dto'
+import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock {

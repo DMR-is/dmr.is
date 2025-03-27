@@ -1,7 +1,7 @@
-import { CaseTag, CaseTagEnum } from '@dmr.is/shared/dto'
+import { CaseTagModel } from '@dmr.is/official-journal/models'
 import { enumMapper } from '@dmr.is/utils'
-
-import { CaseTagModel } from '../models'
+import { CaseTagEnum } from '../dto/case-constants'
+import { CaseTag } from '../dto/tag.dto'
 
 export const caseTagMigrate = (model: CaseTagModel): CaseTag => {
   return {

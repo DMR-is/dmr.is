@@ -22,33 +22,6 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-
-import { AdvertTypeModel } from '../advert-type/models'
-import { PostApplicationBody } from '../application/dto'
-import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { PostApplicationAttachmentBody } from '../attachments/dto/post-application-attachment.body'
-import {
-  ApplicationAttachmentModel,
-  ApplicationAttachmentTypeModel,
-} from '../attachments/models'
-import { IAWSService } from '../aws/aws.service.interface'
-import { PresignedUrlResponse } from '../aws/dto/presigned-url-response.dto'
-import { IJournalService } from '../journal'
-import { AdvertStatus } from '../journal/dto/advert-constants.dto'
-import {
-  AdvertCategoryModel,
-  AdvertCorrectionModel,
-  AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
-  AdvertModel,
-} from '../journal/models'
-import { IPdfService } from '../pdf/pdf.service.interface'
-import { IPriceService } from '../price/price.service.interface'
-import { SignatureModel } from '../signature/models/signature.model'
-import { SignatureMemberModel } from '../signature/models/signature-member.model'
-import { SignatureRecordModel } from '../signature/models/signature-record.model'
-import { UserDto } from '../user/dto'
-import { IUtilityService } from '../utility/utility.service.interface'
 import {
   AddCaseAdvertCorrection,
   DeleteCaseAdvertCorrection,
@@ -81,7 +54,6 @@ import {
   GetCasesWithPublicationNumber,
   GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
-import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.ts'
 import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
 import { GetTagsResponse } from './dto/get-tags-response.dto'
 import { PostCasePublishBody } from './dto/post-publish-body.dto'
@@ -108,16 +80,37 @@ import { caseTagMigrate } from './migrations/case-tag.migrate'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
+import { casesDetailedIncludes, casesIncludes } from './relations'
 import {
+  AdvertStatus,
+  IJournalService,
+} from '@dmr.is/official-journal/modules/journal'
+import {
+  CaseModel,
+  CaseTagModel,
+  CaseCommunicationStatusModel,
+  AdvertCorrectionModel,
+  AdvertModel,
+  CaseHistoryModel,
   CaseChannelModel,
   CaseChannelsModel,
-  CaseCommunicationStatusModel,
-  CaseHistoryModel,
-  CaseModel,
-  CasePublishedAdvertsModel,
-  CaseTagModel,
-} from './models'
-import { casesDetailedIncludes, casesIncludes } from './relations'
+  SignatureModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
+  AdvertCategoryModel,
+  ApplicationAttachmentModel,
+  ApplicationAttachmentTypeModel,
+  AdvertInvolvedPartyModel,
+  SignatureRecordModel,
+  SignatureMemberModel,
+} from '@dmr.is/official-journal/models'
+import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
+import {
+  IAttachmentService,
+  PostApplicationAttachmentBody,
+} from '@dmr.is/official-journal/modules/attachment'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
 
 const LOGGING_CATEGORY = 'case-service'
 const LOGGING_QUERY = 'CaseServiceQueryRunner'

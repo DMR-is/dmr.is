@@ -4,14 +4,32 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { JournalService } from './journal.service'
 import { IJournalService } from './journal.service.interface'
 import { MockJournalService } from './journal.service.mock'
+import {
+  AdvertModel,
+  AdvertMainCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertCategoryModel,
+  AdvertCategoryCategoriesModel,
+  AdvertStatusModel,
+  AdvertCategoriesModel,
+} from '@dmr.is/official-journal/models'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
 
-import caseModels from '../case/models'
-import { models as advertModels } from './models'
-
 @Module({
-  imports: [SequelizeModule.forFeature([...caseModels, ...advertModels])],
+  imports: [
+    SequelizeModule.forFeature([
+      AdvertModel,
+      AdvertMainCategoryModel,
+      AdvertDepartmentModel,
+      AdvertInvolvedPartyModel,
+      AdvertCategoryModel,
+      AdvertCategoriesModel,
+      AdvertCategoryCategoriesModel,
+      AdvertStatusModel,
+    ]),
+  ],
   controllers: [],
   providers: [
     {

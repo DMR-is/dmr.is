@@ -1,40 +1,33 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
-import { PostApplicationBody } from '@dmr.is/shared/dto'
-
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { IApplicationService } from '../application/application.service.interface'
-import { IAttachmentService } from '../attachments/attachment.service.interface'
-import { IAWSService } from '../aws/aws.service.interface'
-import { ICommentServiceV2 } from '../comment/v2'
-import { IJournalService } from '../journal'
-import {
-  AdvertCategoryModel,
-  AdvertCorrectionModel,
-  AdvertDepartmentModel,
-  AdvertModel,
-} from '../journal/models'
-import { IPdfService } from '../pdf/pdf.service.interface'
-import { IPriceService } from '../price/price.service.interface'
-import { ISignatureService } from '../signature/signature.service.interface'
-import { IUtilityService } from '../utility/utility.service.interface'
-import { CaseCategoriesModel } from './models/case-categories.model'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseModel,
+  CaseHistoryModel,
+  AdvertModel,
+  CaseCategoriesModel,
+  AdvertCategoryModel,
   CaseChannelModel,
   CaseChannelsModel,
-  CaseCommunicationStatusModel,
-  CaseHistoryModel,
-  CaseModel,
-  CasePublishedAdvertsModel,
   CaseStatusModel,
   CaseTagModel,
-} from './models'
+  CaseCommunicationStatusModel,
+  AdvertDepartmentModel,
+  AdvertCorrectionModel,
+} from '@dmr.is/official-journal/models'
+import {
+  IApplicationService,
+  PostApplicationBody,
+} from '@dmr.is/official-journal/modules/application'
+import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
+import { IJournalService } from '@dmr.is/official-journal/modules/journal'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
 
 describe('CaseService', () => {
   let caseService: ICaseService

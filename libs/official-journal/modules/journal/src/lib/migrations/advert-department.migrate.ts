@@ -1,6 +1,5 @@
-import { Department } from '@dmr.is/shared/dto'
-
-import { AdvertDepartmentModel } from '../models/advert-department.model'
+import { AdvertDepartmentModel } from '@dmr.is/official-journal/models'
+import { Department } from '../dto/department.dto'
 
 export function advertDepartmentMigrate(
   model: AdvertDepartmentModel,

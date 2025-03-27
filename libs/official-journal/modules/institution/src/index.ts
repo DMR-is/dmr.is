@@ -15,9 +15,6 @@ export {
 // migrations
 export { institutionMigrate } from './lib/migrations/institution.migrate'
 
-// models
-export { InstitutionModel } from './lib/models/institution.model'
-
 // controllers
 export { InstitutionAdminController } from './lib/controllers/institution-admin.controller'
 export { InstitutionController } from './lib/controllers/institution.controller'

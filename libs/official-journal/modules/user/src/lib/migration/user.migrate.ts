@@ -1,5 +1,4 @@
-import { UserModel } from '../models/user.model'
-import { UserRoleModel } from '../models/user-role.model'
+import { UserRoleModel, UserModel } from '@dmr.is/official-journal/models'
 import { UserRoleDto } from '../dto/user-role.dto'
 import { UserDto } from '../dto/user.dto'
 import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'

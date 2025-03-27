@@ -1,26 +1,20 @@
 import { Transaction } from 'sequelize'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateType,
-  CasePriceResponse,
-  GetAdvertTemplateResponse,
-  GetApplicationAdverts,
-  GetApplicationAdvertsQuery,
-  GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
-  GetApplicationResponse,
-  GetComments,
-  PostApplicationAttachmentBody,
-  PostApplicationComment,
-  PresignedUrlResponse,
-  S3UploadFilesResponse,
-  UpdateApplicationBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'
+import {
+  AdvertTemplateType,
+  GetAdvertTemplateResponse,
+  AdvertTemplateDetails,
+} from '@dmr.is/official-journal/modules/journal'
+import {
+  GetApplicationAdvertsQuery,
+  GetApplicationAdverts,
+} from './dto/get-application-advert.dto'
+import { GetApplicationResponse } from './dto/get-application-response.dto'
+import { PostApplicationComment } from './dto/post-application-comment.dto'
+import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
 
 export interface IApplicationService {
   getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>

@@ -1,16 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertSignature } from '../advert-signatures/advert-signature.dto'
-import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
-import { AdvertType } from '../advert-type'
-import { Category } from '../categories/category.dto'
-import { Department } from '../departments/department.dto'
-import { Institution } from '../institutions/institution.dto'
 import { AdvertAttachment } from './advert-attachment'
 import { AdvertStatus } from './advert-constants.dto'
 import { AdvertCorrection } from './advert-correction.dto'
 import { AdvertDocument } from './advert-document'
 import { AdvertPublicationNumber } from './advert-publication-number.dto'
+import { AdvertSignatureBody } from './advert-signature-body.dto'
+import { AdvertSignature } from './advert-signature.dto'
+import { Category } from './category.dto'
+import { Department } from './department.dto'
+import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 
 export class Advert {
   @ApiProperty({

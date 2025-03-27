@@ -1,14 +1,5 @@
-import { CaseDetailed } from '@dmr.is/shared/dto'
-
-import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
-import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'
-import { advertDepartmentMigrate } from '../../journal/migrations'
-import { advertCategoryMigrate } from '../../journal/migrations/advert-category.migrate'
-import { advertCorrectionMigrate } from '../../journal/migrations/advert-correction.migrate'
-import { advertInvolvedPartyMigrate } from '../../journal/migrations/advert-involvedparty.migrate'
-import { signatureMigrate } from '../../signature/migrations/signature.migrate'
-import { userMigrate } from '../../user/migration/user.migrate'
-import { CaseModel } from '../models'
+import { CaseModel } from '@dmr.is/official-journal/models'
+import { CaseDetailed } from '../dto/case.dto'
 import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status.migrate'
@@ -16,6 +7,17 @@ import { caseHistoryMigrate } from './case-history.migrate'
 import { caseStatusMigrate } from './case-status.migrate'
 import { caseTagMigrate } from './case-tag.migrate'
 import { caseTransactionMigrate } from './case-transaction.migrate'
+
+import {
+  advertInvolvedPartyMigrate,
+  advertDepartmentMigrate,
+  advertCategoryMigrate,
+  advertCorrectionMigrate,
+} from '@dmr.is/official-journal/modules/journal'
+import { userMigrate } from '@dmr.is/official-journal/modules/user'
+import { signatureMigrate } from '@dmr.is/official-journal/modules/signature'
+import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
+import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {

@@ -3,8 +3,11 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertTypeService } from './advert-type.service'
 import { IAdvertTypeService } from './advert-type.service.interface'
-import { AdvertMainTypeModel } from './models/advert-main-type.model'
-import { AdvertTypeModel } from './models/advert-type.model'
+
+import {
+  AdvertMainTypeModel,
+  AdvertTypeModel,
+} from '@dmr.is/official-journal/models'
 
 @Module({
   imports: [SequelizeModule.forFeature([AdvertMainTypeModel, AdvertTypeModel])],

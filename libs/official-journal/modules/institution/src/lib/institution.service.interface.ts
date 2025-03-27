@@ -1,11 +1,11 @@
-import {
-  CreateInstitution,
-  GetInstitution,
-  GetInstitutions,
-  InstitutionQuery,
-  UpdateInstitution,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import {
+  InstitutionQuery,
+  GetInstitutions,
+  GetInstitution,
+  CreateInstitution,
+  UpdateInstitution,
+} from './dto/institution.dto'
 
 export interface IInstitutionService {
   getInstitutions(

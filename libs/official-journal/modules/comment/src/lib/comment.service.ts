@@ -4,19 +4,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  ApplicationCommentBody,
-  AssignSelfCommentBody,
-  AssignUserCommentBody,
-  CaseActionEnum,
-  ExternalCommentBody,
-  GetComment,
-  GetComments,
-  GetCommentsQuery,
-  InternalCommentBody,
-  SubmitCommentBody,
-  UpdateStatusCommentBody,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -27,16 +14,31 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdvertTypeModel } from '../../advert-type/models'
-import { IAWSService } from '../../aws/aws.service.interface'
-import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
-import { AdvertInvolvedPartyModel } from '../../journal/models'
-import { UserModel } from '../../user/models/user.model'
-import { commentMigrate } from './migrations/comment.migrate'
-import { CaseActionModel } from './models/case-action.model'
-import { CommentModel } from './models/comment.model'
-import { CommentsModel } from './models/comments.model'
 import { ICommentService } from './comment.service.interface'
+import {
+  CommentModel,
+  CaseActionModel,
+  CommentsModel,
+  CaseModel,
+  CaseStatusModel,
+  UserModel,
+  AdvertInvolvedPartyModel,
+  CaseChannelModel,
+  AdvertTypeModel,
+} from '@dmr.is/official-journal/models'
+import {
+  GetComment,
+  GetCommentsQuery,
+  GetComments,
+  SubmitCommentBody,
+  AssignUserCommentBody,
+  AssignSelfCommentBody,
+  UpdateStatusCommentBody,
+  InternalCommentBody,
+  ExternalCommentBody,
+  ApplicationCommentBody,
+} from './dto/comment.dto'
+import { commentMigrate } from './migrations/comment.migrate'
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 

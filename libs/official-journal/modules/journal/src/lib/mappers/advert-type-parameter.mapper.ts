@@ -1,6 +1,5 @@
 import { Op } from 'sequelize'
-import { GetAdvertTypesQueryParams } from '@dmr.is/shared/dto'
-
+import { GetAdvertTypesQueryParams } from '@dmr.is/official-journal/modules/advert-type'
 type WhereClause = {
   title?: { [Op.iLike]: string }
 }

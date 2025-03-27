@@ -1,6 +1,5 @@
-import { Institution } from '@dmr.is/shared/dto'
-
-import { AdvertInvolvedPartyModel } from '../models/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 
 export function advertInvolvedPartyMigrate(
   model: AdvertInvolvedPartyModel,

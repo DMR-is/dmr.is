@@ -7,12 +7,10 @@ import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
 import { AuthModule } from '@dmr.is/official-journal/modules/auth'
 import {
   CaseModel,
+  AdvertDepartmentModel,
   CaseTransactionModel,
   TransactionFeeCodesModel,
-} from '@dmr.is/official-journal/modules/case'
-import { AdvertDepartmentModel } from '@dmr.is/official-journal/modules/journal'
-
-export { IPriceService, PriceService }
+} from '@dmr.is/official-journal/models'
 
 @Module({
   imports: [

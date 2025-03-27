@@ -13,11 +13,6 @@ export {
 // migrations
 export { userMigrate, userRoleMigrate } from './lib/migration/user.migrate'
 
-// models
-export { UserInvolvedPartiesModel } from './lib/models/user-involved-parties.model'
-export { UserRoleModel } from './lib/models/user-role.model'
-export { UserModel } from './lib/models/user.model'
-
 // controllers
 export { UserController } from './lib/user.controller'
 

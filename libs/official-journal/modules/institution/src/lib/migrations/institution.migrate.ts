@@ -1,6 +1,5 @@
-import { InstitutionDto } from '@dmr.is/shared/dto'
-
-import { InstitutionModel } from '../models/institution.model'
+import { InstitutionDto } from '../dto/institution.dto'
+import { InstitutionModel } from '@dmr.is/official-journal/models'
 
 export function institutionMigrate(model: InstitutionModel): InstitutionDto {
   const result: InstitutionDto = {

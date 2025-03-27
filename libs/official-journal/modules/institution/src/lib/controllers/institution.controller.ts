@@ -1,9 +1,4 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  GetInstitution,
-  GetInstitutions,
-  InstitutionQuery,
-} from '@dmr.is/shared/dto'
 
 import {
   Controller,
@@ -16,6 +11,11 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IInstitutionService } from '../institution.service.interface'
+import {
+  GetInstitution,
+  GetInstitutions,
+  InstitutionQuery,
+} from '../dto/institution.dto'
 
 @Controller({
   version: '1',
