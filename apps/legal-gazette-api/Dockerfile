@@ -4,7 +4,7 @@ FROM docker.io/node:20-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/legal-gazette-api/dist/package.json ./
-COPY ./apps/legal-gazette-api/db/migrations ./migrations
+COPY ./apps/legal-gazette-api/db/migrations ./db/migrations
 COPY ./apps/legal-gazette-api/.sequelizerc ./
 COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./
 RUN yarn add pg
