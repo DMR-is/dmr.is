@@ -34,6 +34,9 @@
         "libs/official-journal/modules/case/src/index.ts"
       ],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
+      "@dmr.is/official-journal/guards": [
+        "libs/official-journal/guards/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/advert-type": [
         "libs/official-journal/modules/advert-type/src/index.ts"
       ],
