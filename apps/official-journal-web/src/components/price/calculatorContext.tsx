@@ -28,6 +28,7 @@ interface State {
   customBaseDocumentCount?: number
   customBodyLengthCount?: number
   additionalDocuments?: number
+  extraWorkCount?: number
   useCustomInputBase: boolean
 }
 
@@ -35,6 +36,7 @@ type Action =
   | { type: 'SET_SELECTED_ITEM'; payload?: OptionType }
   | { type: 'SET_CUSTOM_BASE_DOC_COUNT'; payload?: number }
   | { type: 'SET_CUSTOM_BODY_LENGTH_COUNT'; payload?: number }
+  | { type: 'SET_EXTRA_WORK_COUNT'; payload?: number }
   | { type: 'SET_ADDITIONAL_DOCUMENTS'; payload?: number }
   | { type: 'TOGGLE_CUSTOM_INPUT_BASE' }
   | { type: 'RESET_CUSTOM_INPUT' }
@@ -48,6 +50,8 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, customBaseDocumentCount: action.payload }
     case 'SET_CUSTOM_BODY_LENGTH_COUNT':
       return { ...state, customBodyLengthCount: action.payload }
+    case 'SET_EXTRA_WORK_COUNT':
+      return { ...state, extraWorkCount: action.payload }
     case 'SET_ADDITIONAL_DOCUMENTS':
       return { ...state, additionalDocuments: action.payload }
     case 'TOGGLE_CUSTOM_INPUT_BASE':
@@ -84,6 +88,7 @@ export const usePriceCalculatorState = (currentCase: any) => {
         customBaseDocumentCount: Number(
           currentCase.transaction?.customBaseCount || 0,
         ),
+        extraWorkCount: Number(currentCase.transaction?.extraWorkCount || 0),
       },
     })
   }, [currentCase.transaction, currentCase.advertDepartment.slug])

@@ -179,6 +179,14 @@ export class PriceService implements IPriceService {
         chargeBase: caseLookup.caseNumber,
         Expenses: feeCalculation.expenses,
         debtorNationalId: caseLookup.involvedParty.nationalId,
+        extra: caseLookup.transaction.subject
+          ? [
+              {
+                name: 'tilvisun', // 'tilvisun' is needed as name for correct display in TBR.
+                value: caseLookup.transaction.subject,
+              },
+            ]
+          : undefined,
       },
       transaction,
     )
@@ -229,6 +237,7 @@ export class PriceService implements IPriceService {
         imageTier: body.imageTier,
         baseDocumentCount: body.customBaseDocumentCount,
         additionalDocCount: body.customAdditionalDocCount,
+        extraWorkCount: body.extraWorkCount,
       },
       transaction,
     )
@@ -243,8 +252,10 @@ export class PriceService implements IPriceService {
         customBaseCount: body.customBaseDocumentCount ?? null,
         customAdditionalDocCount: body.customAdditionalDocCount ?? null,
         customAdditionalCharacterCount: characterLength ?? null,
+        extraWorkCount: body.extraWorkCount ?? null,
         feeCodes: feeCalculation.feeCodes,
         imageTier: body.imageTier ?? null,
+        subject: body.subject ?? null,
       },
       { transaction, conflictFields: ['case_id'] },
     )
@@ -284,9 +295,9 @@ export class PriceService implements IPriceService {
       (fee) => fee.feeType === AdvertFeeType.BaseModifier,
     )
 
-    // const customMultiplierFee = fees.find(
-    //   (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
-    // )
+    const customMultiplierFee = fees.find(
+      (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
+    )
 
     const imageTierFee = fees.find((fee) => fee.feeCode === body.imageTier)
     const fastTrackModifier = fees.find(
@@ -305,7 +316,7 @@ export class PriceService implements IPriceService {
     let additionalDocPrice = 0
     let imageTierPrice = 0
     let fastTrackMultiplier = 1
-    // const customMultiplierValue = 0
+    let customMultiplier = 1
     let baseTransactionFee = baseFee.value
     let charactersOverBaseMax = 0
     let baseCount = 0
@@ -391,18 +402,6 @@ export class PriceService implements IPriceService {
       })
     }
 
-    // if (customMultiplierFee?.value) {
-    //   // customMultiplierValue = (baseTransactionFee * body.customMultiplierValue) - baseTransactionFee
-    //   usedFeeCodes.push(customMultiplierFee.feeCode)
-    //   expenses.push({
-    //     FeeCode: customMultiplierFee.feeCode,
-    //     Reference: customMultiplierFee.description,
-    //     Quantity: 1,
-    //     UnitPrice: customMultiplierValue,
-    //     Sum: customMultiplierValue,
-    //   })
-    // }
-
     if (fastTrackModifier?.value && body.isFastTrack) {
       usedFeeCodes.push(fastTrackModifier.feeCode)
       fastTrackMultiplier = fastTrackModifier.value
@@ -418,8 +417,22 @@ export class PriceService implements IPriceService {
       })
     }
 
+    if (customMultiplierFee?.feeCode && body.extraWorkCount) {
+      usedFeeCodes.push(customMultiplierFee.feeCode)
+      customMultiplier = body.extraWorkCount / 100 + 1 // Extra work is in percentage
+      const customMultiplierValue =
+        baseTransactionFee * customMultiplier - baseTransactionFee
+      expenses.push({
+        FeeCode: customMultiplierFee.feeCode,
+        Reference: customMultiplierFee.description,
+        Quantity: 1,
+        UnitPrice: customMultiplierValue,
+        Sum: customMultiplierValue,
+      })
+    }
+
     const price =
-      baseTransactionFee * fastTrackMultiplier +
+      baseTransactionFee * fastTrackMultiplier * customMultiplier +
       additionalDocPrice +
       imageTierPrice
 

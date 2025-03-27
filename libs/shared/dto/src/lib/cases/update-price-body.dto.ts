@@ -25,6 +25,24 @@ export class UpdateCasePriceBody {
   imageTier?: string
 
   @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Viðfang (subject)',
+  })
+  @IsOptional()
+  @IsString()
+  subject?: string
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    description: 'How much extra work is there, in percentage',
+  })
+  @IsOptional()
+  @IsNumber()
+  extraWorkCount?: number
+
+  @ApiProperty({
     type: Number,
     required: false,
     description: 'Base document count',
@@ -105,4 +123,14 @@ export class CaseFeeCalculationBody {
   })
   @IsOptional()
   bodyLengthCount?: number
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    description: 'How much extra work is there, in percentage',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  extraWorkCount?: number
 }

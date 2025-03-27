@@ -3851,6 +3851,11 @@
             "items": { "type": "string" }
           },
           "imageTier": { "type": "string", "description": "Tier of the image" },
+          "subject": { "type": "string", "description": "Viðfang (subject)" },
+          "extraWorkCount": {
+            "type": "number",
+            "description": "How much extra work is there, in percentage"
+          },
           "customBaseDocumentCount": {
             "type": "number",
             "description": "Base document count"
@@ -3995,6 +4000,10 @@
           },
           "imageTier": { "type": "string", "description": "Image tier code" },
           "price": { "type": "number", "description": "Advert price" },
+          "subject": {
+            "type": "string",
+            "description": "Advert subject (Viðfang)."
+          },
           "feeCodes": {
             "description": "Fee codes to get the price for",
             "type": "array",
@@ -4007,6 +4016,10 @@
           "customAdditionalDocCount": {
             "type": "number",
             "description": "How many additional documents are there"
+          },
+          "extraWorkCount": {
+            "type": "number",
+            "description": "How much extra work is there, in percentage"
           },
           "customAdditionalCharacterCount": {
             "type": "number",

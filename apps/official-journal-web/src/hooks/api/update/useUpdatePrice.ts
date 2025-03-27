@@ -8,6 +8,7 @@ type UpdatePriceTriggerArgs = {
   customBaseDocumentCount?: number
   customAdditionalDocCount?: number
   customBodyLengthCount?: number
+  extraWorkCount?: number
 }
 
 type SWRUpdatePriceOptions = SWRMutationConfiguration<

@@ -69,6 +69,20 @@ export class CaseTransactionModel extends Model {
   customAdditionalDocCount!: number | null
 
   @Column({
+    type: DataType.INTEGER,
+    field: 'extra_work_count',
+    allowNull: true,
+  })
+  extraWorkCount!: number | null
+
+  @Column({
+    type: DataType.STRING,
+    field: 'subject',
+    allowNull: true,
+  })
+  subject!: string | null
+
+  @Column({
     type: DataType.STRING,
     field: 'image_tier_code',
     allowNull: true,

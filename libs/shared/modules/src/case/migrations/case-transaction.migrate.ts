@@ -14,6 +14,8 @@ export const caseTransactionMigrate = (
       customBaseCount: model.customBaseCount,
       customAdditionalDocCount: model.customAdditionalDocCount,
       customAdditionalCharacterCount: model.customAdditionalCharacterCount,
+      extraWorkCount: model.extraWorkCount,
+      subject: model.subject,
       imageTier: model.imageTier,
     }
 

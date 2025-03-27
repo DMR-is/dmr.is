@@ -33,7 +33,12 @@ export function createAuthErrorMiddleware({
               method: request.method,
             },
           )
-          signOut({ callbackUrl: '/innskraning' })
+          const currentPath = window?.location?.href
+          signOut({
+            callbackUrl: currentPath
+              ? `/innskraning?callbackUrl=${encodeURIComponent(currentPath)}`
+              : '/innskraning',
+          })
         }
       } catch (err) {
         // silently fail if the body can't be parsed
