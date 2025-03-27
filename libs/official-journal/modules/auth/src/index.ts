@@ -1,6 +1,6 @@
 // services
-export { IAuthService } from './auth.service.interface'
-export { AuthService } from './auth.service'
+export { IAuthService } from './lib/auth.service.interface'
+export { AuthService } from './lib/auth.service'
 
 // modules
-export { AuthModule } from './auth.module'
+export { AuthModule } from './lib/auth.module'
