@@ -10,17 +10,6 @@ import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AdvertTypeQuery,
-  CreateAdvertMainTypeBody,
-  CreateAdvertTypeBody,
-  GetAdvertMainType,
-  GetAdvertMainTypes,
-  GetAdvertType,
-  GetAdvertTypes,
-  UpdateAdvertMainType,
-  UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -28,16 +17,24 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
-import { advertMainTypeMigrate, advertTypeMigrate } from './migrations'
-import {
-  AdvertDepartmentModel,
-  AdvertMainTypeModel,
-  AdvertTypeModel,
-} from './models'
 import {
   getAdvertTypeDepartmentWhereParams,
   getAdvertTypeWhereParams,
 } from './utils'
+import { AdvertTypeQuery } from './dto/advert-type.query'
+import { CreateAdvertMainTypeBody } from './dto/create-advert-main-type.dto'
+import { CreateAdvertTypeBody } from './dto/create-advert-type.dto'
+import { GetAdvertMainType } from './dto/get-advert-main-type.dto'
+import { GetAdvertMainTypes } from './dto/get-advert-main-types.dto'
+import { GetAdvertType } from './dto/get-advert-type.dto'
+import { GetAdvertTypes } from './dto/get-advert-types.dto'
+import { UpdateAdvertTypeBody } from './dto/update-advert-type.dto'
+import { UpdateAdvertMainType } from './dto/update-main-advert-type.dto'
+import { advertMainTypeMigrate } from './migrations/advert-main-type.migrate'
+import { advertTypeMigrate } from './migrations/advert-type.migrate'
+import { AdvertMainTypeModel } from './models/advert-main-type.model'
+import { AdvertTypeModel } from './models/advert-type.model'
+import { AdvertDepartmentModel } from '@dmr.is/official-journal/modules/journal'
 
 const LOGGING_CATEGORY = 'advert-type-service'
 

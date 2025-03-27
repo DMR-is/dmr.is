@@ -1,12 +1,10 @@
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
-import {
-  ApplicationModule,
-  HealthModule,
-  SharedJournalModule,
-  SignatureModule,
-} from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/modules'
+import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
+import { JournalModule } from '@dmr.is/official-journal/modules/journal'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import {
@@ -41,7 +39,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     ApplicationModule,
     CaseModule,
     StatisticsModule,
-    SharedJournalModule,
+    JournalModule,
     SignatureModule,
     HealthModule,
     RouterModule.register([
@@ -55,7 +53,7 @@ import { StatisticsModule } from './statistics/statistics.module'
       },
       {
         path: 'journal',
-        module: SharedJournalModule,
+        module: JournalModule,
       },
     ]),
   ],

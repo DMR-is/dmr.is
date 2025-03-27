@@ -1,17 +1,17 @@
 import { Transaction } from 'sequelize'
-import {
-  ApplicationCommentBody,
-  AssignSelfCommentBody,
-  AssignUserCommentBody,
-  ExternalCommentBody,
-  GetComment,
-  GetComments,
-  GetCommentsQuery,
-  InternalCommentBody,
-  SubmitCommentBody,
-  UpdateStatusCommentBody,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import {
+  GetComment,
+  GetCommentsQuery,
+  GetComments,
+  SubmitCommentBody,
+  AssignUserCommentBody,
+  AssignSelfCommentBody,
+  UpdateStatusCommentBody,
+  InternalCommentBody,
+  ExternalCommentBody,
+  ApplicationCommentBody,
+} from './dto/comment.dto'
 
 export interface ICommentService {
   getCommentById(
@@ -73,4 +73,4 @@ export interface ICommentService {
   ): Promise<ResultWrapper<GetComment>>
 }
 
-export const ICommentServiceV2 = Symbol('ICommentServiceV2')
+export const ICommentService = Symbol('ICommentService')

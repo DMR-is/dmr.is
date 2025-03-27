@@ -1,12 +1,10 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 
 import { AWSService } from './aws.service'
 import { IAWSService } from './aws.service.interface'
 
 @Module({
-  imports: [LoggingModule],
+  imports: [],
   controllers: [],
   providers: [
     {
@@ -16,4 +14,4 @@ import { IAWSService } from './aws.service.interface'
   ],
   exports: [IAWSService],
 })
-export class AwsModule {}
+export class AWSModule {}

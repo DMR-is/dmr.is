@@ -1,4 +1,5 @@
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { LoggingModule } from '@dmr.is/logging'
 import { HealthModule } from '@dmr.is/modules'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
@@ -24,6 +25,7 @@ import { JournalModule } from './journal/journal.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    LoggingModule,
     JournalModule,
     HealthModule,
   ],

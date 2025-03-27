@@ -2,15 +2,6 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  ICaseService,
-  ICommentServiceV2,
-  IJournalService,
-  IPriceService,
-  RoleGuard,
-  TokenJwtAuthGuard,
-} from '@dmr.is/modules'
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
-import {
   AddCaseAdvertCorrection,
   CaseChannel,
   CaseCommunicationStatus,
@@ -18,12 +9,7 @@ import {
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
-  CreateCategory,
-  CreateMainCategory,
-  CreateMainCategoryCategories,
-  DefaultSearchParams,
   DepartmentEnum,
-  ExternalCommentBodyDto,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -33,22 +19,12 @@ import {
   GetCasesWithPublicationNumberQuery,
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
-  GetCategoriesResponse,
-  GetComment,
-  GetComments,
   GetCommunicationSatusesResponse,
-  GetDepartmentsResponse,
-  GetMainCategoriesQueryParams,
-  GetMainCategoriesResponse,
   GetNextPublicationNumberResponse,
   GetPaymentResponse,
   GetTagsResponse,
-  InternalCommentBodyDto,
-  PostApplicationAssetBody,
-  PostApplicationAttachmentBody,
+  ICaseService,
   PostCasePublishBody,
-  PresignedUrlResponse,
-  TransactionFeeCodesResponse,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
@@ -56,15 +32,41 @@ import {
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
-  UpdateCategory,
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
-  UpdateMainCategory,
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/modules/case'
+import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TransactionFeeCodesResponse } from '@dmr.is/official-journal/modules/application'
+import {
+  PostApplicationAssetBody,
+  PostApplicationAttachmentBody,
+} from '@dmr.is/official-journal/modules/attachment'
+import {
+  ExternalCommentBodyDto,
+  GetComment,
+  GetComments,
+  ICommentService,
+  InternalCommentBodyDto,
+} from '@dmr.is/official-journal/modules/comment'
+import {
+  CreateCategory,
+  CreateMainCategory,
+  CreateMainCategoryCategories,
+  DefaultSearchParams,
+  GetCategoriesResponse,
+  GetDepartmentsResponse,
+  GetMainCategoriesQueryParams,
+  GetMainCategoriesResponse,
+  IJournalService,
+  UpdateCategory,
+  UpdateMainCategory,
+} from '@dmr.is/official-journal/modules/journal'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -107,11 +109,9 @@ export class CaseController {
 
     @Inject(IJournalService)
     private readonly journalService: IJournalService,
-
-    @Inject(ICommentServiceV2)
-    private readonly commentServiceV2: ICommentServiceV2,
-
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(ICommentService) private readonly commentService: ICommentService,
+    @Inject(LOGGER_PROVIDER)
+    private readonly logger: Logger,
   ) {}
 
   @Post(':caseId/communication-channels')
@@ -667,7 +667,7 @@ export class CaseController {
   async getComments(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetComments> {
-    return ResultWrapper.unwrap(await this.commentServiceV2.getComments(id))
+    return ResultWrapper.unwrap(await this.commentService.getComments(id))
   }
 
   @Post(':id/comments/v2/internal')
@@ -679,7 +679,7 @@ export class CaseController {
     @Body() body: InternalCommentBodyDto,
   ): Promise<GetComment> {
     return ResultWrapper.unwrap(
-      await this.commentServiceV2.createInternalComment(id, {
+      await this.commentService.createInternalComment(id, {
         adminUserCreatorId: user.id,
         comment: body.comment,
       }),
@@ -713,7 +713,7 @@ export class CaseController {
     }
 
     return ResultWrapper.unwrap(
-      await this.commentServiceV2.createExternalComment(id, {
+      await this.commentService.createExternalComment(id, {
         adminUserCreatorId: user.id,
         comment: body.comment,
       }),
@@ -727,9 +727,7 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Param('commentId', new UUIDValidationPipe()) commentId: string,
   ) {
-    ResultWrapper.unwrap(
-      await this.commentServiceV2.deleteComment(id, commentId),
-    )
+    ResultWrapper.unwrap(await this.commentService.deleteComment(id, commentId))
   }
 
   @Get('/with-publication-number/:department')

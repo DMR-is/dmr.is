@@ -26,7 +26,6 @@
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
-      "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
       "@dmr.is/modules/auth": [
         "libs/official-journal/modules/auth/src/index.ts"
       ],
@@ -75,6 +74,10 @@
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
+      "@dmr.is/shared/modules/aws": ["libs/shared/modules/aws/src/index.ts"],
+      "@dmr.is/shared/modules/health": [
+        "libs/shared/modules/health/src/index.ts"
+      ],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui": ["libs/shared/dmr-ui/src/index.ts"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],

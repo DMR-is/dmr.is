@@ -1,4 +1,5 @@
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { LoggingModule } from '@dmr.is/logging'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   AdvertTypeController,
@@ -39,6 +40,7 @@ import { ApplicationController } from './application/application.controller'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    LoggingModule,
     ApplicationModule,
     SignatureModule,
     HealthModule,

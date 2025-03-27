@@ -1,16 +1,14 @@
 import { Transaction } from 'sequelize'
-import {
-  AdvertTypeQuery,
-  CreateAdvertMainTypeBody,
-  CreateAdvertTypeBody,
-  GetAdvertMainType,
-  GetAdvertMainTypes,
-  GetAdvertType,
-  GetAdvertTypes,
-  UpdateAdvertMainType,
-  UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import { AdvertTypeQuery } from './dto/advert-type.query'
+import { CreateAdvertMainTypeBody } from './dto/create-advert-main-type.dto'
+import { CreateAdvertTypeBody } from './dto/create-advert-type.dto'
+import { GetAdvertMainType } from './dto/get-advert-main-type.dto'
+import { GetAdvertMainTypes } from './dto/get-advert-main-types.dto'
+import { GetAdvertType } from './dto/get-advert-type.dto'
+import { GetAdvertTypes } from './dto/get-advert-types.dto'
+import { UpdateAdvertTypeBody } from './dto/update-advert-type.dto'
+import { UpdateAdvertMainType } from './dto/update-main-advert-type.dto'
 
 export interface IAdvertTypeService {
   getTypes(query?: AdvertTypeQuery): Promise<ResultWrapper<GetAdvertTypes>>
