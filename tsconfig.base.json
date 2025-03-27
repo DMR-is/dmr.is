@@ -46,6 +46,9 @@
       "@dmr.is/official-journal/modules/comment": [
         "libs/official-journal/modules/comment/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/institution": [
+        "libs/official-journal/modules/institution/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/journal": [
         "libs/official-journal/modules/journal/src/index.ts"
       ],
