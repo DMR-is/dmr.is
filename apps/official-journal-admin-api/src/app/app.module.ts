@@ -1,18 +1,12 @@
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
-import { LogRequestMiddleware } from '@dmr.is/middleware'
 import { HealthModule } from '@dmr.is/modules'
 import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
 import { JournalModule } from '@dmr.is/official-journal/modules/journal'
 import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -64,10 +58,4 @@ import { StatisticsModule } from './statistics/statistics.module'
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LogRequestMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL })
-  }
-}
+export class AppModule {}
