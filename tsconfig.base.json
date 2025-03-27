@@ -8,7 +8,6 @@
     "paths": {
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
-      "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
       "@dmr.is/legal-gazette/ middleware": [
         "libs/legal-gazette/middleware/src/index.ts"
@@ -77,6 +76,9 @@
       "@dmr.is/shared/modules/aws": ["libs/shared/modules/aws/src/index.ts"],
       "@dmr.is/shared/modules/health": [
         "libs/shared/modules/health/src/index.ts"
+      ],
+      "@dmr.is/shared/modules/sequelize": [
+        "libs/shared/modules/sequelize/src/index.ts"
       ],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui": ["libs/shared/dmr-ui/src/index.ts"],

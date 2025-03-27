@@ -1,4 +1,7 @@
-import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import {
+  DMRSequelizeConfigModule,
+  DMRSequelizeConfigService,
+} from '@dmr.is/shared/modules/sequelize'
 import { LoggingModule } from '@dmr.is/logging'
 import { HealthModule } from '@dmr.is/modules'
 import { ApplicationModule } from '@dmr.is/official-journal/modules/application'

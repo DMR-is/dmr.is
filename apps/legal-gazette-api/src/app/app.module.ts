@@ -1,5 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import {
+  DMRSequelizeConfigModule,
+  DMRSequelizeConfigService,
+} from '@dmr.is/shared/modules/sequelize'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { SequelizeModule } from '@nestjs/sequelize'
