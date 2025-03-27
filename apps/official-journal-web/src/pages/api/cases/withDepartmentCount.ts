@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { HandleApiException, TimeLog } from '@dmr.is/decorators'
+import { HandleApiException } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
 
 import { OJOIWebException } from '../../..//lib/constants'
@@ -8,7 +8,6 @@ import { transformQueryToCaseWithDepartmentCountParams } from '../../../lib/util
 
 class GetCasesWithDepartmentCountHandler extends RouteHandler {
   @HandleApiException()
-  @TimeLog()
   public async handler(req: NextApiRequest, res: NextApiResponse) {
     try {
       const params = transformQueryToCaseWithDepartmentCountParams(req.query)
