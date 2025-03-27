@@ -7,8 +7,6 @@ import { PdfController } from './pdf.controller'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
 
-export { IPdfService }
-
 @Module({
   imports: [LoggingModule, UtilityModule],
   controllers: [PdfController],

@@ -17,10 +17,10 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'
-import { pdfCss } from './pdf.css'
+import { pdfCss } from './lib/pdf.css'
 import { IPdfService } from './pdf.service.interface'
-import { advertPdfTemplate } from './pdf-advert-template'
-import { getBrowser } from './puppetBrowser'
+import { advertPdfTemplate } from './lib/pdf-advert-template'
+import { getBrowser } from './lib/puppetBrowser'
 
 const LOGGING_CATEGORY = 'pdf-service'
 
@@ -46,9 +46,8 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     applicationId: string,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
-    const applicationLookup = await this.utilityService.applicationLookup(
-      applicationId,
-    )
+    const applicationLookup =
+      await this.utilityService.applicationLookup(applicationId)
 
     if (!applicationLookup.result.ok) {
       this.logger.error(
