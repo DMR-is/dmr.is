@@ -5,8 +5,12 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
-import { AdditionType } from '@dmr.is/shared/dto'
 import { OfficialJournalModels } from '../constants'
+
+export enum AdditionTypeEnum {
+  Html = 'html',
+  File = 'file',
+}
 
 @Table({ tableName: OfficialJournalModels.CASE_ADDITION, timestamps: false })
 @DefaultScope(() => ({
@@ -42,5 +46,5 @@ export class CaseAdditionModel extends Model {
     allowNull: false,
     field: 'type',
   })
-  type!: AdditionType
+  type!: AdditionTypeEnum
 }

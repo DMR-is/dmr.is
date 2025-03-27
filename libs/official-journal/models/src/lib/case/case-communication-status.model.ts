@@ -5,8 +5,15 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
-import { CaseCommunicationStatus } from '@dmr.is/shared/dto'
+
 import { OfficialJournalModels } from '../constants'
+
+export enum CaseCommunicationStatus {
+  NotStarted = 'Ekki hafin',
+  WaitingForAnswers = 'Beðið eftir svörum',
+  HasAnswers = 'Svör hafa borist',
+  Done = 'Lokið',
+}
 
 @Table({
   tableName: OfficialJournalModels.CASE_COMMUNICATION_STATUS,

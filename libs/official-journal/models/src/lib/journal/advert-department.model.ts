@@ -4,6 +4,12 @@ import { OfficialJournalModels } from '../constants'
 import { AdvertMainTypeModel } from '../advert-type/advert-main-type.model'
 import { CaseModel } from '../case/case.model'
 
+export enum DepartmentEnum {
+  A = 'A deild',
+  B = 'B deild',
+  C = 'C deild',
+}
+
 @Table({ tableName: OfficialJournalModels.DEPARTMENT, timestamps: false })
 export class AdvertDepartmentModel extends Model {
   @Column({
@@ -15,7 +21,7 @@ export class AdvertDepartmentModel extends Model {
   override id!: string
 
   @Column
-  title!: string
+  title!: DepartmentEnum
 
   @Column
   slug!: string

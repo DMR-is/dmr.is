@@ -10,21 +10,33 @@ export { ApplicationAttachmentsModel } from './lib/attachment/application-attach
 export { CaseAttachmentsModel } from './lib/attachment/case-attachments.model'
 
 // case models
-export { CaseAdditionModel } from './lib/case/case-addition.model'
+export {
+  CaseAdditionModel,
+  AdditionTypeEnum,
+} from './lib/case/case-addition.model'
 export { CaseAdditionsModel } from './lib/case/case-additions.model'
 export { CaseCategoriesModel } from './lib/case/case-categories.model'
 export { CaseChannelModel } from './lib/case/case-channel.model'
 export { CaseChannelsModel } from './lib/case/case-channels.model'
-export { CaseCommunicationStatusModel } from './lib/case/case-communication-status.model'
+export {
+  CaseCommunicationStatusModel,
+  CaseCommunicationStatus,
+} from './lib/case/case-communication-status.model'
 export { CaseHistoryModel } from './lib/case/case-history.model'
-export { CaseStatusModel } from './lib/case/case-status.model'
+export { CaseStatusModel, CaseStatusEnum } from './lib/case/case-status.model'
 export { CaseTagModel } from './lib/case/case-tag.model'
 export { CaseTransactionModel } from './lib/case/case-transaction.model'
 export { CaseModel } from './lib/case/case.model'
-export { TransactionFeeCodesModel } from './lib/case/transaction-fee-codes.model'
+export {
+  TransactionFeeCodesModel,
+  AdvertFeeTypeEnum,
+} from './lib/case/transaction-fee-codes.model'
 
 // comment models
-export { CaseActionModel } from './lib/comment/case-action.model'
+export {
+  CaseActionModel,
+  CaseActionEnum,
+} from './lib/comment/case-action.model'
 export { CommentModel } from './lib/comment/comment.model'
 export { CommentsModel } from './lib/comment/comments.model'
 
@@ -36,10 +48,16 @@ export { AdvertCategoriesModel } from './lib/journal/advert-categories.model'
 export { AdvertCategoryCategoriesModel } from './lib/journal/advert-category-categories.model'
 export { AdvertCategoryModel } from './lib/journal/advert-category.model'
 export { AdvertCorrectionModel } from './lib/journal/advert-correction.model'
-export { AdvertDepartmentModel } from './lib/journal/advert-department.model'
+export {
+  AdvertDepartmentModel,
+  DepartmentEnum,
+} from './lib/journal/advert-department.model'
 export { AdvertInvolvedPartyModel } from './lib/journal/advert-involved-party.model'
 export { AdvertMainCategoryModel } from './lib/journal/advert-main-category.model'
-export { AdvertStatusModel } from './lib/journal/advert-status.model'
+export {
+  AdvertStatusModel,
+  AdvertStatusEnum,
+} from './lib/journal/advert-status.model'
 export { AdvertModel } from './lib/journal/advert.model'
 
 // signature models

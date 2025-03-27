@@ -6,10 +6,19 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
-import { CaseStatusEnum } from '@dmr.is/shared/dto'
 
 import { CaseModel } from './case.model'
 import { OfficialJournalModels } from '../constants'
+
+export enum CaseStatusEnum {
+  Submitted = 'Innsent',
+  InProgress = 'Grunnvinnsla',
+  InReview = 'Yfirlestur',
+  ReadyForPublishing = 'Tilbúið',
+  Published = 'Útgefið',
+  Unpublished = 'Tekið úr birtingu',
+  Rejected = 'Birtingu hafnað',
+}
 
 @Table({ tableName: OfficialJournalModels.CASE_STATUS, timestamps: false })
 @DefaultScope(() => ({

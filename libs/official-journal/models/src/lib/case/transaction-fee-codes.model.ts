@@ -1,6 +1,16 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript'
-import { AdvertFeeType } from '@dmr.is/shared/dto'
 import { OfficialJournalModels } from '../constants'
+
+export enum AdvertFeeTypeEnum {
+  Base = 'BASE',
+  AdditionalDoc = 'ADDITIONAL_DOC',
+  FastTrack = 'FAST_TRACK',
+  BaseModifier = 'BASE_MODIFIER',
+  CustomMultiplier = 'CUSTOM_MULTIPLIER',
+  ImageTier = 'IMAGE_TIER',
+  Lowererd = 'LOWERED',
+  Percentage = 'PERCENTAGE',
+}
 
 @Table({
   tableName: OfficialJournalModels.TRANSACTION_FEE_CODES,
@@ -25,10 +35,10 @@ export class TransactionFeeCodesModel extends Model {
   description!: string
 
   @Column({
-    type: DataType.ENUM(...Object.values(AdvertFeeType)),
+    type: DataType.ENUM(...Object.values(AdvertFeeTypeEnum)),
     allowNull: false,
   })
-  feeType!: AdvertFeeType
+  feeType!: AdvertFeeTypeEnum
 
   @Column({
     type: DataType.DECIMAL(10, 2),

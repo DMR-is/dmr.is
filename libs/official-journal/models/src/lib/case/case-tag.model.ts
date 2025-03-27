@@ -5,8 +5,14 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
-import { CaseTagEnum } from '@dmr.is/shared/dto'
 import { OfficialJournalModels } from '../constants'
+
+export enum CaseTagEnum {
+  NotStarted = 'Ekki hafið',
+  InReview = 'Í yfirlestri',
+  MultipleReviewers = 'Samlesin',
+  RequiresReview = 'Þarf skoðun',
+}
 
 @Table({ tableName: OfficialJournalModels.CASE_TAG, timestamps: false })
 @DefaultScope(() => ({
