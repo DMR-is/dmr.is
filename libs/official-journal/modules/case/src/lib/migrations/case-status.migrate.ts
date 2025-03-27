@@ -1,14 +1,12 @@
 import { CaseStatus, CaseStatusEnum } from '@dmr.is/shared/dto'
-import { enumMapper, withTryCatch } from '@dmr.is/utils'
+import { enumMapper } from '@dmr.is/utils'
 
 import { CaseStatusModel } from '../models'
 
 export const caseStatusMigrate = (model: CaseStatusModel): CaseStatus => {
-  return withTryCatch(() => {
-    return {
-      id: model.id,
-      title: enumMapper(model.title, CaseStatusEnum),
-      slug: model.slug,
-    }
-  }, `Failed to migrate case status with id: ${model.id}`)
+  return {
+    id: model.id,
+    title: enumMapper(model.title, CaseStatusEnum),
+    slug: model.slug,
+  }
 }
