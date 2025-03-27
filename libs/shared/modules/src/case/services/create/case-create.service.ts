@@ -178,7 +178,7 @@ export class CaseCreateService implements ICaseCreateService {
         tagId: caseTag.id,
         assignedUserId: currentUser.id,
         communicationStatusId: communicationStatus.id,
-        caseNumber: caseNumber,
+        caseNumber: caseNumber.internalCaseNumber,
         advertTypeId: body.typeId,
         advertTitle: body.subject,
         html: '<h3 class="article__title">1. gr.</h3>',
