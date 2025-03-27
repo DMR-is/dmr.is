@@ -22,8 +22,8 @@ import {
 } from '@nestjs/swagger'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
-import { IAdvertTypeService } from './advert-type.service.interface'
-import { AdvertTypeError } from './advert-type-error'
+import { IAdvertTypeService } from '../advert-type.service.interface'
+import { AdvertTypeError } from '../advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
 @ApiBearerAuth()

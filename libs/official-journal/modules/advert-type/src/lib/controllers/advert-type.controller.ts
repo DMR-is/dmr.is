@@ -10,8 +10,8 @@ import {
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { IAdvertTypeService } from './advert-type.service.interface'
-import { AdvertTypeError } from './advert-type-error'
+import { IAdvertTypeService } from '../advert-type.service.interface'
+import { AdvertTypeError } from '../advert-type-error'
 
 @Controller({ path: 'advert-types', version: '1' })
 export class AdvertTypeController {
