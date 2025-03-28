@@ -47,9 +47,6 @@
       "@dmr.is/official-journal/modules/institution": [
         "libs/official-journal/modules/institution/src/index.ts"
       ],
-      "@dmr.is/official-journal/modules/journal": [
-        "libs/official-journal/modules/journal/src/index.ts"
-      ],
       "@dmr.is/official-journal/modules/pdf": [
         "libs/official-journal/modules/pdf/src/index.ts"
       ],
