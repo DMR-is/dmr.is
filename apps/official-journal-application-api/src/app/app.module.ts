@@ -1,25 +1,27 @@
-import {
-  DMRSequelizeConfigModule,
-  DMRSequelizeConfigService,
-} from '@dmr.is/shared/modules/sequelize'
 import { LoggingModule } from '@dmr.is/logging'
 import {
   AdvertTypeController,
   AdvertTypeModule,
-  ApplicationModule,
-  HealthModule,
-  PdfModule,
-  SignatureModule,
-  UserModule,
-  UtilityModule,
-} from '@dmr.is/modules'
+} from '@dmr.is/official-journal/modules/advert-type'
+import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
+import { UserModule } from '@dmr.is/official-journal/modules/user'
+import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { ApplicationModule } from '@dmr.is/shared/modules/application'
+import { HealthModule } from '@dmr.is/shared/modules/health'
+import {
+  DMRSequelizeConfigModule,
+  DMRSequelizeConfigService,
+} from '@dmr.is/shared/modules/sequelize'
 
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationController } from './application/application.controller'
+import { OfficialJournalApplicationService } from './application/application.service'
+import { IOfficialJournalApplicationService } from './application/application.service.interface'
 
 @Module({
   imports: [
@@ -40,17 +42,21 @@ import { ApplicationController } from './application/application.controller'
     LoggingModule,
     ApplicationModule,
     SignatureModule,
-    HealthModule,
     PdfModule,
     UtilityModule,
     AdvertTypeModule,
     UserModule,
+    HealthModule,
   ],
   controllers: [ApplicationController, AdvertTypeController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: IOfficialJournalApplicationService,
+      useClass: OfficialJournalApplicationService,
     },
   ],
 })

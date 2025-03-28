@@ -3,6 +3,7 @@ import {
   AdvertTemplateTypeEnums,
   GetAdvertTemplateResponse,
 } from '@dmr.is/official-journal/modules/journal'
+
 import {
   templateAuglysing,
   templateGjaldskra,

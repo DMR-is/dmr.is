@@ -35,9 +35,7 @@
       "@dmr.is/official-journal/modules/advert-type": [
         "libs/official-journal/modules/advert-type/src/index.ts"
       ],
-      "@dmr.is/official-journal/modules/application": [
-        "libs/official-journal/modules/application/src/index.ts"
-      ],
+
       "@dmr.is/official-journal/modules/attachment": [
         "libs/official-journal/modules/attachment/src/index.ts"
       ],
@@ -76,6 +74,9 @@
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
+      "@dmr.is/shared/modules/application": [
+        "libs/shared/modules/application/src/index.ts"
+      ],
       "@dmr.is/shared/modules/aws": ["libs/shared/modules/aws/src/index.ts"],
       "@dmr.is/shared/modules/health": [
         "libs/shared/modules/health/src/index.ts"

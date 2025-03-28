@@ -1,7 +1,7 @@
 {
-  "name": "official-journal-modules-application",
+  "name": "shared-modules-application",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/official-journal/modules/application/src",
+  "sourceRoot": "libs/shared/modules/application/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -11,7 +11,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "libs/official-journal/modules/application/jest.config.ts"
+        "jestConfig": "libs/shared/modules/application/jest.config.ts"
       }
     }
   },

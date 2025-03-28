@@ -1,45 +1,30 @@
 import { Transaction } from 'sequelize'
-import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
-import { ResultWrapper } from '@dmr.is/types'
-
-import 'multer'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
-  AdvertTemplateType,
-  GetAdvertTemplateResponse,
-  AdvertTemplateDetails,
-} from '@dmr.is/official-journal/modules/journal'
-import {
-  GetApplicationAdvertsQuery,
   GetApplicationAdverts,
-} from './dto/get-application-advert.dto'
-import { GetApplicationResponse } from './dto/get-application-response.dto'
-import { PostApplicationComment } from './dto/post-application-comment.dto'
-import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
+  GetApplicationAdvertsQuery,
+  PostApplicationComment,
+} from '@dmr.is/official-journal/modules/application'
 import {
-  PostApplicationAttachmentBody,
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
+  PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
 import { CasePriceResponse } from '@dmr.is/official-journal/modules/case'
 import { GetComments } from '@dmr.is/official-journal/modules/comment'
+import {
+  AdvertTemplateDetails,
+  AdvertTemplateType,
+  GetAdvertTemplateResponse,
+} from '@dmr.is/official-journal/modules/journal'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
 import {
-  S3UploadFilesResponse,
   PresignedUrlResponse,
+  S3UploadFilesResponse,
 } from '@dmr.is/shared/modules/aws'
+import { ResultWrapper } from '@dmr.is/types'
 
-export interface IApplicationService {
-  getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>
-
-  updateApplication(
-    id: string,
-    answers?: UpdateApplicationBody,
-  ): Promise<ResultWrapper>
-
-  submitApplication(id: string, event: ApplicationEvent): Promise<ResultWrapper>
-
-  postApplication(id: string): Promise<ResultWrapper>
-
+export interface IOfficialJournalApplicationService {
   getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 
   postComment(
@@ -55,14 +40,6 @@ export interface IApplicationService {
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>>
 
-  /**
-   * Gets a presigned url from the S3 service.
-   * @param applicationId
-   * @param fileName
-   * @param fileType
-   * @param isOriginal
-   * @returns A presigned URL.
-   */
   getPresignedUrl(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 
   /**
@@ -105,4 +82,6 @@ export interface IApplicationService {
   ): Promise<ResultWrapper<GetApplicationAdverts>>
 }
 
-export const IApplicationService = Symbol('IApplicationService')
+export const IOfficialJournalApplicationService = Symbol(
+  'IOfficialJournalApplicationService',
+)

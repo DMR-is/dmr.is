@@ -1,47 +1,16 @@
 import { Op, Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
-import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
-
 import {
-  BadRequestException,
-  forwardRef,
-  HttpException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
-import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
-import { IApplicationService } from './application.service.interface'
-import {
-  AdvertModel,
-  AdvertDepartmentModel,
   AdvertCategoryModel,
+  AdvertDepartmentModel,
   AdvertMainTypeModel,
+  AdvertModel,
   AdvertTypeModel,
   CaseActionEnum,
   CaseCommunicationStatusEnum,
 } from '@dmr.is/official-journal/models'
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateType,
-  GetAdvertTemplateResponse,
-} from '@dmr.is/official-journal/modules/journal'
-
-import { getTemplateDetails, getTemplate } from './application.utils'
-import {
-  GetApplicationAdvertsQuery,
-  GetApplicationAdverts,
-} from './dto/get-application-advert.dto'
-import { GetApplicationResponse } from './dto/get-application-response.dto'
-import { PostApplicationComment } from './dto/post-application-comment.dto'
-import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
 import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
@@ -52,50 +21,62 @@ import {
   CasePriceResponse,
   ICaseService,
 } from '@dmr.is/official-journal/modules/case'
-import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 import {
   GetComments,
   ICommentService,
 } from '@dmr.is/official-journal/modules/comment'
+import {
+  AdvertTemplateDetails,
+  AdvertTemplateType,
+  GetAdvertTemplateResponse,
+} from '@dmr.is/official-journal/modules/journal'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
-import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
 import {
   IAWSService,
-  S3UploadFilesResponse,
   PresignedUrlResponse,
+  S3UploadFilesResponse,
 } from '@dmr.is/shared/modules/aws'
-import { applicationCaseMigrate } from './migrations/application-case.migrate'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
-import { Application } from './dto/application.dto'
+import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-const LOGGING_CATEGORY = 'application-service'
+import { HttpException, Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Application } from './dto/application.dto'
+import {
+  GetApplicationAdverts,
+  GetApplicationAdvertsQuery,
+} from './dto/get-application-advert.dto'
+import { PostApplicationComment } from './dto/post-application-comment.dto'
+import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
+import { applicationCaseMigrate } from './migrations/application-case.migrate'
+import { IOfficialJournalApplicationService } from './application.service.interface'
+import { getTemplate, getTemplateDetails } from './utils'
+
+const LOGGING_CATEGORY = 'official-journal-application-api-application-service'
+const LOGGING_CONTEXT = 'OfficialJournalApplicationApiApplicationService'
 
 @Injectable()
-export class ApplicationService implements IApplicationService {
+export class OfficialJournalApplicationService
+  implements IOfficialJournalApplicationService
+{
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IApplicationService)
+    private readonly applicationService: IApplicationService,
+    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
+    @Inject(IPriceService) private readonly priceService: IPriceService,
+    @Inject(ICommentService) private readonly commentService: ICommentService,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(IAWSService) private readonly s3Service: IAWSService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
-    @Inject(forwardRef(() => IUtilityService))
-    private readonly utilityService: IUtilityService,
-    @Inject(forwardRef(() => ICommentService))
-    private readonly commentService: ICommentService,
-    @Inject(forwardRef(() => ICaseService))
-    private readonly caseService: ICaseService,
-    @Inject(IAuthService)
-    private readonly authService: IAuthService,
-    @Inject(ISignatureService)
-    private readonly signatureService: ISignatureService,
-    @Inject(IPriceService)
-    private readonly priceService: IPriceService,
-    @Inject(IAWSService)
-    private readonly s3Service: IAWSService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    private readonly sequelize: Sequelize,
-  ) {
-    this.logger.info('Using ApplicationService')
-  }
+  ) {}
+
   async getApplicationCase(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
@@ -117,6 +98,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   @LogAndHandle()
+  @Transactional()
   async getPrice(
     applicationId: string,
   ): Promise<ResultWrapper<CasePriceResponse>> {
@@ -128,227 +110,6 @@ export class ApplicationService implements IApplicationService {
         message: `Fee calculation failed on application<${applicationId}>. ${error}`,
       })
     }
-  }
-
-  @LogAndHandle()
-  async getApplication(
-    id: string,
-  ): Promise<ResultWrapper<GetApplicationResponse>> {
-    const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
-      {
-        method: 'GET',
-      },
-    )
-
-    if (!res.ok) {
-      this.logger.error(
-        `Appliction.service.getApplication, could not get application<${id}>`,
-        {
-          applicationId: id,
-          status: res.status,
-          category: LOGGING_CATEGORY,
-        },
-      )
-      return ResultWrapper.err({
-        code: res.status,
-        message: `Application<${id}> not found`,
-      })
-    }
-
-    const application: Application = await res.json()
-
-    return ResultWrapper.ok({
-      application,
-    })
-  }
-
-  @LogAndHandle()
-  async submitApplication(
-    id: string,
-    event: ApplicationEvent,
-  ): Promise<ResultWrapper> {
-    const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
-      {
-        method: 'PUT',
-        body: new URLSearchParams({
-          event: event,
-        }),
-      },
-    )
-
-    if (!res.ok) {
-      throw new InternalServerErrorException(
-        `Could not submit application<${id}>`,
-      )
-    }
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  async updateApplication(
-    id: string,
-    answers: UpdateApplicationBody,
-  ): Promise<ResultWrapper> {
-    const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(answers),
-      },
-    )
-
-    if (!res.ok) {
-      const info = await res.json()
-      const { status, statusText } = res
-      this.logger.warn(`Could not update application<${id}>`, {
-        category: LOGGING_CATEGORY,
-        details: info,
-        status,
-        statusText,
-      })
-
-      switch (res.status) {
-        case 400: {
-          throw new BadRequestException()
-        }
-        case 404: {
-          throw new NotFoundException(`Application<${id}> not found`)
-        }
-        default: {
-          const resInfo = await res.text()
-          throw new InternalServerErrorException(
-            `Could not update application<${id}>, ${resInfo}`,
-          )
-        }
-      }
-    }
-
-    return ResultWrapper.ok()
-  }
-
-  /**
-   * Posts an application.
-   * If case with the given applicationId does not exist, it will be created.
-   * If case with the given applicationId already exists, it will be reposted.
-   *
-   * @param applicationId - The ID of the application to be posted.
-   * @returns A `ResultWrapper` containing the result of the operation.
-   * @throws {InternalServerErrorException} If an error occurs while posting the application.
-   */
-  @LogAndHandle()
-  @Transactional()
-  async postApplication(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    ResultWrapper
-    try {
-      const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(
-          applicationId,
-          transaction,
-        )
-      ).unwrap()
-
-      const { application } = ResultWrapper.unwrap(
-        await this.getApplication(applicationId),
-      )
-
-      // const { signatures } = ResultWrapper.unwrap(
-      //   await this.signatureService.getSignaturesByCaseId(
-      //     caseLookup.id,
-      //     undefined,
-      //     transaction,
-      //   ),
-      // )
-
-      // Promise.all(
-      //   signatures.map(async (signature) => {
-      //     this.signatureService.deleteSignature(signature.id, transaction)
-      //   }),
-      // )
-
-      // const signatureArray = signatureMapper(
-      //   application.answers.signatures,
-      //   application.answers.misc.signatureType,
-      //   caseLookup.id,
-      //   caseLookup.involvedPartyId,
-      // )
-      // Promise.all(
-      //   signatureArray.map(async (signature) => {
-      //     await this.signatureService.createCaseSignature(
-      //       signature,
-      //       transaction,
-      //     )
-      //   }),
-      // )
-
-      ResultWrapper.unwrap(
-        await this.caseService.updateCase(
-          {
-            caseId: caseLookup.id,
-            applicationId: applicationId,
-            advertTitle: application.answers.advert.title,
-            departmentId: application.answers.advert.department.id,
-            advertTypeId: application.answers.advert.type.id,
-            requestedPublicationDate: application.answers.advert.requestedDate,
-            message: application.answers.advert.message,
-            categoryIds: application.answers.advert.categories.map((c) => c.id),
-          },
-          transaction,
-        ),
-      )
-
-      const commStatus = ResultWrapper.unwrap(
-        await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatusEnum.HasAnswers,
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.updateCaseCommunicationStatus(
-          caseLookup.id,
-          {
-            statusId: commStatus.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.commentService.createSubmitComment(
-          caseLookup.id,
-          {
-            institutionCreatorId: caseLookup.involvedParty.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.createCaseHistory(caseLookup.id, transaction),
-      )
-
-      return ResultWrapper.ok()
-    } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === 404) {
-        return await this.caseService.createCaseByApplication({
-          applicationId,
-        })
-      }
-    }
-
-    return ResultWrapper.err({
-      code: 500,
-      message: 'Could not post application',
-    })
   }
 
   /**
@@ -444,8 +205,6 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     files: Array<Express.Multer.File>,
   ): Promise<ResultWrapper<S3UploadFilesResponse>> {
-    ResultWrapper.unwrap(await this.getApplication(applicationId))
-
     const uploadedFiles = (
       await this.s3Service.uploadApplicationAttachments(applicationId, files)
     ).unwrap()
@@ -505,6 +264,7 @@ export class ApplicationService implements IApplicationService {
       // No transactional rollback is needed.
       this.logger.warn('Could not find case for application', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
         error: e,
       })
     }
@@ -522,6 +282,7 @@ export class ApplicationService implements IApplicationService {
     if (!applicationAttachmentCreation.result.ok) {
       this.logger.error('Could not create attachment', {
         category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
         error: applicationAttachmentCreation.result.error,
       })
       return ResultWrapper.err({
@@ -641,6 +402,125 @@ export class ApplicationService implements IApplicationService {
     return ResultWrapper.ok({
       adverts: migrated,
       paging,
+    })
+  }
+
+  /**
+   * Posts an application.
+   * If case with the given applicationId does not exist, it will be created.
+   * If case with the given applicationId already exists, it will be reposted.
+   *
+   * @param applicationId - The ID of the application to be posted.
+   * @returns A `ResultWrapper` containing the result of the operation.
+   * @throws {InternalServerErrorException} If an error occurs while posting the application.
+   */
+  @LogAndHandle()
+  @Transactional()
+  async postApplication(
+    applicationId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    ResultWrapper
+    try {
+      const caseLookup = (
+        await this.utilityService.caseLookupByApplicationId(
+          applicationId,
+          transaction,
+        )
+      ).unwrap()
+
+      const application = (await this.applicationService.getApplication(
+        applicationId,
+      )) as Application
+
+      // const { signatures } = ResultWrapper.unwrap(
+      //   await this.signatureService.getSignaturesByCaseId(
+      //     caseLookup.id,
+      //     undefined,
+      //     transaction,
+      //   ),
+      // )
+
+      // Promise.all(
+      //   signatures.map(async (signature) => {
+      //     this.signatureService.deleteSignature(signature.id, transaction)
+      //   }),
+      // )
+
+      // const signatureArray = signatureMapper(
+      //   application.answers.signatures,
+      //   application.answers.misc.signatureType,
+      //   caseLookup.id,
+      //   caseLookup.involvedPartyId,
+      // )
+      // Promise.all(
+      //   signatureArray.map(async (signature) => {
+      //     await this.signatureService.createCaseSignature(
+      //       signature,
+      //       transaction,
+      //     )
+      //   }),
+      // )
+
+      ResultWrapper.unwrap(
+        await this.caseService.updateCase(
+          {
+            caseId: caseLookup.id,
+            applicationId: applicationId,
+            advertTitle: application.answers.advert.title,
+            departmentId: application.answers.advert.department.id,
+            advertTypeId: application.answers.advert.type.id,
+            requestedPublicationDate: application.answers.advert.requestedDate,
+            message: application.answers.advert.message,
+            categoryIds: application.answers.advert.categories.map((c) => c.id),
+          },
+          transaction,
+        ),
+      )
+
+      const commStatus = ResultWrapper.unwrap(
+        await this.utilityService.caseCommunicationStatusLookup(
+          CaseCommunicationStatusEnum.HasAnswers,
+          transaction,
+        ),
+      )
+
+      ResultWrapper.unwrap(
+        await this.caseService.updateCaseCommunicationStatus(
+          caseLookup.id,
+          {
+            statusId: commStatus.id,
+          },
+          transaction,
+        ),
+      )
+
+      ResultWrapper.unwrap(
+        await this.commentService.createSubmitComment(
+          caseLookup.id,
+          {
+            institutionCreatorId: caseLookup.involvedParty.id,
+          },
+          transaction,
+        ),
+      )
+
+      ResultWrapper.unwrap(
+        await this.caseService.createCaseHistory(caseLookup.id, transaction),
+      )
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === 404) {
+        return await this.caseService.createCaseByApplication({
+          applicationId,
+        })
+      }
+    }
+
+    return ResultWrapper.err({
+      code: 500,
+      message: 'Could not post application',
     })
   }
 }
