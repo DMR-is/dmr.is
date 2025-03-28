@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator'
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -80,11 +86,11 @@ export class UpdateCasePaymentBody {
 
   @ApiProperty({
     type: [PaymentExtraData],
-    description: 'Extra info for payment. Not available yet. Waiting for service provider update.',
+    description:
+      'Extra info for payment. Not available yet. Waiting for service provider update.',
   })
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
   @IsOptional()
   extra?: PaymentExtraData[]
 
