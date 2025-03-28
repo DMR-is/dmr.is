@@ -1,6 +1,11 @@
 import { ROLES_KEY } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdvertInvolvedPartyModel,
+  UserModel,
+  UserRoleModel,
+} from '@dmr.is/official-journal/models'
 import { UserRoleTitle } from '@dmr.is/types'
 
 import {
@@ -11,8 +16,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-
-import { IUserService } from '@dmr.is/official-journal/modules/user'
+import { InjectModel } from '@nestjs/sequelize'
+import { Op } from 'sequelize'
 
 const LOGGING_CATEGORY = 'role-guard'
 const LOGGING_CONTEXT = 'RoleGuard'
@@ -23,8 +28,8 @@ export class RoleGuard implements CanActivate {
     private readonly reflector: Reflector,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
-    @Inject(IUserService)
-    private readonly userService: IUserService,
+    @InjectModel(UserModel)
+    private readonly userModel: typeof UserModel,
   ) {}
 
   @LogMethod(false)
@@ -46,20 +51,22 @@ export class RoleGuard implements CanActivate {
 
     try {
       // Check if user has required roles
-      const userLookup = await this.userService.getUserByNationalId(
-        request.user.nationalId,
-      )
+      const userLookup = await this.userModel.findOne({
+        include: [UserRoleModel, AdvertInvolvedPartyModel],
+        where: {
+          nationalId: { [Op.eq]: request.user.nationalId },
+        },
+      })
 
-      if (!userLookup.result.ok) {
-        this.logger.warn('Could not find user', {
-          error: userLookup.result.error,
+      if (!userLookup) {
+        this.logger.warn('User not found', {
           category: LOGGING_CATEGORY,
           context: LOGGING_CONTEXT,
         })
         return false
       }
 
-      const user = userLookup.result.value.user
+      const user = userLookup
 
       const hasRole = requiredRoles?.some((role) =>
         user.role.title === role ? true : false,
@@ -75,7 +82,31 @@ export class RoleGuard implements CanActivate {
         return false
       }
 
-      request.user = user
+      request.user = {
+        id: userLookup.id,
+        nationalId: userLookup.nationalId,
+        firstName: userLookup.firstName,
+        lastName: userLookup.lastName,
+        fullName: `${userLookup.firstName} ${userLookup.lastName}`,
+        displayName: userLookup.displayName,
+        email: userLookup.email,
+        role: {
+          id: userLookup.role.id,
+          title: userLookup.role.title,
+          slug: userLookup.role.slug,
+        },
+        involvedParties: userLookup.involvedParties.map((involvedParty) => ({
+          id: involvedParty.id,
+          title: involvedParty.title,
+          slug: involvedParty.slug,
+          nationalId: involvedParty.nationalId,
+        })),
+        createdAt: userLookup.createdAt.toISOString(),
+        updatedAt: userLookup.updatedAt.toISOString(),
+        deletedAt: userLookup.deletedAt
+          ? userLookup.deletedAt.toISOString()
+          : null,
+      }
       request.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
