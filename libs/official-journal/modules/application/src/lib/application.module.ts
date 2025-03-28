@@ -5,16 +5,24 @@ import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
 import { AdvertModel } from '@dmr.is/official-journal/models'
+import { AuthModule } from '@dmr.is/official-journal/modules/auth'
+import { PriceModule } from '@dmr.is/official-journal/modules/price'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
+import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
+import { AWSModule } from '@dmr.is/shared/modules/aws'
+import { AttachmentModule } from '@dmr.is/official-journal/modules/attachment'
+import { CommentModule } from '@dmr.is/official-journal/modules/comment'
+import { CaseModule } from '@dmr.is/official-journal/modules/case'
 @Module({
   imports: [
     SequelizeModule.forFeature([AdvertModel]),
-    AwsModule,
+    AWSModule,
     PriceModule,
     AuthModule,
-    AttachmentsModule,
+    AttachmentModule,
     SignatureModule,
-    CommentModuleV2,
-    forwardRef(() => SharedCaseModule),
+    CommentModule,
+    forwardRef(() => CaseModule),
     forwardRef(() => UtilityModule),
   ],
   controllers: [],

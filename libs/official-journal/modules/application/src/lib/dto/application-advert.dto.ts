@@ -7,9 +7,8 @@ import {
 } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
-
-import { AdditionType } from '../cases'
-import { BaseEntity } from '../entity'
+import { BaseEntity } from '@dmr.is/shared/dto'
+import { AdditionTypeEnum } from '@dmr.is/official-journal/models'
 
 export class ApplicationCommunicationChannel {
   @ApiProperty({
@@ -61,12 +60,12 @@ export class ApplicationAddition {
   content?: string
 
   @ApiProperty({
-    enum: AdditionType,
+    enum: AdditionTypeEnum,
     description: 'Type of the addition',
   })
-  @IsEnum(AdditionType)
+  @IsEnum(AdditionTypeEnum)
   @IsOptional()
-  type!: AdditionType
+  type!: AdditionTypeEnum
 }
 
 /**

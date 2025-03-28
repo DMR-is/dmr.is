@@ -1,6 +1,5 @@
+import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { CaseStatusEnum } from './case-constants'
 
 export class CaseStatus {
   @ApiProperty({

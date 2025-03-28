@@ -1,20 +1,36 @@
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { models as advertTypeModels } from '../advert-type/models'
-import { ApplicationModule } from '../application/application.module'
-import caseModels from '../case/models'
-import advertModels from '../journal/models'
 import { UtilityService } from './utility.service'
 import { IUtilityService } from './utility.service.interface'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
+} from '@dmr.is/official-journal/models'
+import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
 
 export { IUtilityService, UtilityService }
 @Module({
   imports: [
     SequelizeModule.forFeature([
-      ...caseModels,
-      ...advertModels,
-      ...advertTypeModels,
+      AdvertModel,
+      CaseModel,
+      AdvertDepartmentModel,
+      AdvertTypeModel,
+      AdvertCategoryModel,
+      CaseStatusModel,
+      CaseTagModel,
+      CaseCommunicationStatusModel,
+      AdvertInvolvedPartyModel,
+      AdvertStatusModel,
     ]),
     forwardRef(() => ApplicationModule),
   ],

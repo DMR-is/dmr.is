@@ -4,44 +4,42 @@ import { v4 as uuid } from 'uuid'
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  BaseEntity,
-  CaseChannel,
-  CreateCaseDto,
-  CreateCaseResponseDto,
-  UserDto,
-} from '@dmr.is/shared/dto'
-import {
-  AdditionType,
-  Application,
-  CaseCommunicationStatus,
-  CaseStatusEnum,
-  CaseTagEnum,
-  CreateCaseBody,
-  CreateCaseChannelBody,
-  PostApplicationBody,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IApplicationService } from '../../../application/application.service.interface'
-import { IAttachmentService } from '../../../attachments/attachment.service.interface'
-import { ICommentServiceV2 } from '../../../comment/v2'
-import { ISignatureService } from '../../../signature/signature.service.interface'
-import { IUtilityService } from '../../../utility/utility.module'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
+import { ICaseCreateService } from './case-create.service.interface'
+import { BaseEntity } from '@dmr.is/shared/dto'
 import {
-  CaseAdditionModel,
-  CaseAdditionsModel,
-  CaseCategoriesModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseModel,
-} from '../../models'
-import { ICaseCreateService } from './case-create.service.interface'
+  CaseCategoriesModel,
+  CaseAdditionModel,
+  CaseAdditionsModel,
+  CaseStatusEnum,
+  CaseCommunicationStatusEnum,
+  CaseTagEnum,
+  AdditionTypeEnum,
+} from '@dmr.is/official-journal/models'
+import {
+  IApplicationService,
+  PostApplicationBody,
+  Application,
+} from '@dmr.is/official-journal/modules/application'
+
+import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { CaseChannel } from '../../dto/case-channel.dto'
+import { CreateCaseBody } from '../../dto/create-case-body.dto'
+import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
+import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 
 const LOGGING_CATEGORY = 'CaseCreateService'
 
@@ -93,8 +91,8 @@ export class CaseCreateService implements ICaseCreateService {
     private readonly attachmentService: IAttachmentService,
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
-    @Inject(ICommentServiceV2)
-    private readonly commentService: ICommentServiceV2,
+    @Inject(ICommentService)
+    private readonly commentService: ICommentService,
     @InjectModel(CaseChannelModel)
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
@@ -145,7 +143,7 @@ export class CaseCreateService implements ICaseCreateService {
 
     const communicationStatusPromise =
       this.utilityService.caseCommunicationStatusLookup(
-        CaseCommunicationStatus.NotStarted,
+        CaseCommunicationStatusEnum.NotStarted,
         transaction,
       )
 
@@ -232,7 +230,7 @@ export class CaseCreateService implements ICaseCreateService {
       ),
       this.utilityService.caseTagLookup(CaseTagEnum.NotStarted, transaction),
       this.utilityService.caseCommunicationStatusLookup(
-        CaseCommunicationStatus.NotStarted,
+        CaseCommunicationStatusEnum.NotStarted,
         transaction,
       ),
       this.utilityService.generateInternalCaseNumber(transaction),
@@ -633,7 +631,7 @@ export class CaseCreateService implements ICaseCreateService {
           id: additionId,
           title,
           content,
-          type: AdditionType.Html,
+          type: AdditionTypeEnum.Html,
         },
         {
           transaction,

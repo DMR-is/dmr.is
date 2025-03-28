@@ -36,13 +36,15 @@ import {
   AdvertStatusModel,
   AdvertAttachmentsModel,
   AdvertTypeModel,
+  AdvertMainTypeModel,
+  AdvertStatusEnum,
 } from '@dmr.is/official-journal/models'
 import {
   Institution,
   GetInstitutionResponse,
   GetInstitutionsResponse,
 } from '@dmr.is/official-journal/modules/institution'
-import { AdvertStatus } from './dto/advert-constants.dto'
+
 import { CreateAdvert } from './dto/advert.dto'
 import {
   CreateMainCategory,
@@ -111,13 +113,13 @@ export class JournalService implements IJournalService {
     const id = uuid()
 
     const status = await this.advertStatusModel.findOne({
-      where: { title: { [Op.eq]: AdvertStatus.Published } },
+      where: { title: { [Op.eq]: AdvertStatusEnum.Published } },
     })
 
     if (!status) {
       this.logger.error('Advert status not found', {
         category: LOGGING_CATEGORY,
-        metadata: { status: AdvertStatus.Published },
+        metadata: { status: AdvertStatusEnum.Published },
       })
       throw new InternalServerErrorException('Advert status not found')
     }

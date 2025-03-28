@@ -13,7 +13,7 @@ import {
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
-import { HealthModule } from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/shared/modules/health'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'

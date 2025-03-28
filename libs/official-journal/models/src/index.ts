@@ -20,11 +20,11 @@ export { CaseChannelModel } from './lib/case/case-channel.model'
 export { CaseChannelsModel } from './lib/case/case-channels.model'
 export {
   CaseCommunicationStatusModel,
-  CaseCommunicationStatus,
+  CaseCommunicationStatusEnum,
 } from './lib/case/case-communication-status.model'
 export { CaseHistoryModel } from './lib/case/case-history.model'
 export { CaseStatusModel, CaseStatusEnum } from './lib/case/case-status.model'
-export { CaseTagModel } from './lib/case/case-tag.model'
+export { CaseTagModel, CaseTagEnum } from './lib/case/case-tag.model'
 export { CaseTransactionModel } from './lib/case/case-transaction.model'
 export { CaseModel } from './lib/case/case.model'
 export {

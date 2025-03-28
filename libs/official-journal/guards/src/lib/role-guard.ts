@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { IUserService } from '../user/user.service.interface'
+import { IUserService } from '@dmr.is/official-journal/modules/user'
 
 const LOGGING_CATEGORY = 'role-guard'
 const LOGGING_CONTEXT = 'RoleGuard'

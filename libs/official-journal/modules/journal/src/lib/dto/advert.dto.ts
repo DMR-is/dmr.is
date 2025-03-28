@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertAttachment } from './advert-attachment'
-import { AdvertStatus } from './advert-constants.dto'
+
 import { AdvertCorrection } from './advert-correction.dto'
 import { AdvertDocument } from './advert-document'
 import { AdvertPublicationNumber } from './advert-publication-number.dto'
@@ -9,7 +9,9 @@ import { AdvertSignatureBody } from './advert-signature-body.dto'
 import { AdvertSignature } from './advert-signature.dto'
 import { Category } from './category.dto'
 import { Department } from './department.dto'
+import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 
 export class Advert {
   @ApiProperty({
@@ -55,14 +57,13 @@ export class Advert {
   readonly title!: string
 
   @ApiProperty({
-    enum: AdvertStatus,
+    enum: AdvertStatusEnum,
     description: 'Status of the advert',
     required: true,
     nullable: false,
-    type: AdvertStatus,
     example: 'Virk',
   })
-  readonly status!: AdvertStatus | null
+  readonly status!: AdvertStatusEnum | null
 
   @ApiProperty({
     description: 'Publication number of the advert',

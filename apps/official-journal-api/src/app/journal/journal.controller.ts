@@ -4,26 +4,28 @@ import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
 } from '@dmr.is/constants'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService, IJournalService } from '@dmr.is/modules'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 import {
-  CaseStatusEnum,
+  GetCasesInProgressReponse,
+  ICaseService,
+} from '@dmr.is/official-journal/modules/case'
+import { GetInstitutionsResponse } from '@dmr.is/official-journal/modules/institution'
+import {
   DefaultSearchParams,
   GetAdvertResponse,
   GetAdvertSignatureQuery,
   GetAdvertSignatureResponse,
   GetAdvertsQueryParams,
   GetAdvertsResponse,
-  GetCasesInProgressReponse,
   GetCategoriesResponse,
   GetDepartmentResponse,
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
-  GetInstitutionsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
-} from '@dmr.is/shared/dto'
+  IJournalService,
+} from '@dmr.is/official-journal/modules/journal'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
@@ -38,7 +40,6 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(ICaseService) private readonly caseService: ICaseService,
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get('/adverts/:id')

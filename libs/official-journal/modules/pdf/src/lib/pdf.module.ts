@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 
-import { UtilityModule } from '../utility/utility.module'
 import { PdfController } from './pdf.controller'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
+import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 
 @Module({
   imports: [UtilityModule],

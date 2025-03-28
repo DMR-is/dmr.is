@@ -1,7 +1,5 @@
+import { BaseEntity, Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { BaseEntity } from '../entity'
-import { Paging, PagingQuery } from '../paging'
 
 export class ApplicationAdvertItem {
   @ApiProperty({

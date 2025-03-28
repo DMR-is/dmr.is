@@ -8,7 +8,7 @@ import {
 
 import { OfficialJournalModels } from '../constants'
 
-export enum CaseCommunicationStatus {
+export enum CaseCommunicationStatusEnum {
   NotStarted = 'Ekki hafin',
   WaitingForAnswers = 'Beðið eftir svörum',
   HasAnswers = 'Svör hafa borist',
@@ -37,7 +37,7 @@ export class CaseCommunicationStatusModel extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  title!: CaseCommunicationStatus
+  title!: CaseCommunicationStatusEnum
 
   @Column({
     type: DataType.STRING,

@@ -5,15 +5,6 @@ export {
 } from './lib/dto/add-case-advert-correction.dto'
 export { CaseAddition } from './lib/dto/case-addition.dto'
 export { CaseChannel, CreateCaseChannelDto } from './lib/dto/case-channel.dto'
-export {
-  AdditionType,
-  CaseActionEnum,
-  CaseCommunicationStatus,
-  CaseStatusEnum,
-  CaseTagEnum,
-  DepartmentEnum,
-  DepartmentSlugEnum,
-} from './lib/dto/case-constants'
 export { CaseHistory } from './lib/dto/case-history.dto'
 export { CaseInProgress } from './lib/dto/case-in-progress.dto'
 export {
@@ -101,3 +92,6 @@ export { ICaseService } from './lib/case.service.interface'
 
 // module
 export { CaseModule } from './lib/case.module'
+
+// relations -> TODO REMOVE THIS USE SCOPES INSTEAD
+export { casesDetailedIncludes, casesIncludes } from './lib/relations'

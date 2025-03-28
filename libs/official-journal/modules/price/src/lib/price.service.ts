@@ -26,8 +26,6 @@ import {
   UpdateCasePriceBody,
 } from '@dmr.is/official-journal/modules/case'
 
-import { AdvertFeeType } from '@dmr.is/official-journal/modules/journal'
-
 import {
   IApplicationService,
   TransactionFeeCodesResponse,
@@ -40,6 +38,7 @@ import {
   TransactionFeeCodesModel,
   AdvertInvolvedPartyModel,
   AdvertDepartmentModel,
+  AdvertFeeTypeEnum,
 } from '@dmr.is/official-journal/models'
 
 const LOGGING_CATEGORY = 'price-service'
@@ -277,21 +276,21 @@ export class PriceService implements IPriceService {
     const fees = feeCodes.rows.map((feeCode) =>
       transactionFeeCodeMigrate(feeCode),
     )
-    const baseFee = fees.find((fee) => fee.feeType === AdvertFeeType.Base)
+    const baseFee = fees.find((fee) => fee.feeType === AdvertFeeTypeEnum.Base)
     const additionalDocFee = fees.find(
-      (fee) => fee.feeType === AdvertFeeType.AdditionalDoc,
+      (fee) => fee.feeType === AdvertFeeTypeEnum.AdditionalDoc,
     )
     const baseModifierFee = fees.find(
-      (fee) => fee.feeType === AdvertFeeType.BaseModifier,
+      (fee) => fee.feeType === AdvertFeeTypeEnum.BaseModifier,
     )
 
     // const customMultiplierFee = fees.find(
-    //   (fee) => fee.feeType === AdvertFeeType.CustomMultiplier,
+    //   (fee) => fee.feeType === AdvertFeeTypeEnum.CustomMultiplier,
     // )
 
     const imageTierFee = fees.find((fee) => fee.feeCode === body.imageTier)
     const fastTrackModifier = fees.find(
-      (fee) => fee.feeType === AdvertFeeType.FastTrack,
+      (fee) => fee.feeType === AdvertFeeTypeEnum.FastTrack,
     )
 
     if (!baseFee) {
@@ -440,9 +439,9 @@ export class PriceService implements IPriceService {
   @LogAndHandle()
   @Transactional()
   async postExternalPayment(
-    caseId: string,
+    _caseId: string,
     body: UpdateCasePaymentBody,
-    transaction?: Transaction,
+    _transaction?: Transaction,
   ): Promise<ResultWrapper> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({

@@ -1,11 +1,10 @@
-import { ApplicationCase } from '@dmr.is/shared/dto'
-
-import { caseCommunicationStatusMigrate } from '../../case/migrations/case-communication-status.migrate'
-import { CaseModel } from '../../case/models'
+import { CaseModel } from '@dmr.is/official-journal/models'
+import { ApplicationCase } from '@dmr.is/official-journal/modules/attachment'
+import { caseCommunicationStatusMigrate } from '@dmr.is/official-journal/modules/case'
 import {
-  advertCategoryMigrate,
   advertDepartmentMigrate,
-} from '../../journal/migrations'
+  advertCategoryMigrate,
+} from '@dmr.is/official-journal/modules/journal'
 
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   let fullHtml = `

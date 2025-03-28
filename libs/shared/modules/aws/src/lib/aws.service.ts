@@ -16,7 +16,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ONE_HOUR } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getS3Bucket } from '@dmr.is/utils'
 
@@ -27,6 +26,8 @@ import {
 } from '@nestjs/common'
 
 import { IAWSService } from './aws.service.interface'
+import { PresignedUrlResponse } from './dto/presigned-url-response.dto'
+import { S3UploadFileResponse } from './dto/upload-file-respone.dto'
 
 const LOGGING_CATEGORY = 's3-service'
 

@@ -23,13 +23,17 @@ import {
   AdvertModel,
   AdvertDepartmentModel,
   AdvertCategoryModel,
+  AdvertMainTypeModel,
+  AdvertTypeModel,
+  CaseActionEnum,
+  CaseCommunicationStatusEnum,
 } from '@dmr.is/official-journal/models'
 import {
   AdvertTemplateDetails,
   AdvertTemplateType,
   GetAdvertTemplateResponse,
 } from '@dmr.is/official-journal/modules/journal'
-import { Application } from 'express'
+
 import { getTemplateDetails, getTemplate } from './application.utils'
 import {
   GetApplicationAdvertsQuery,
@@ -38,8 +42,32 @@ import {
 import { GetApplicationResponse } from './dto/get-application-response.dto'
 import { PostApplicationComment } from './dto/post-application-comment.dto'
 import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
-import { GetApplicationCaseResponse } from '@dmr.is/official-journal/modules/attachment'
-import { CasePriceResponse } from '@dmr.is/official-journal/modules/case'
+import {
+  GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
+  IAttachmentService,
+  PostApplicationAttachmentBody,
+} from '@dmr.is/official-journal/modules/attachment'
+import {
+  CasePriceResponse,
+  ICaseService,
+} from '@dmr.is/official-journal/modules/case'
+import { IAuthService } from '@dmr.is/official-journal/modules/auth'
+import {
+  GetComments,
+  ICommentService,
+} from '@dmr.is/official-journal/modules/comment'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import {
+  IAWSService,
+  S3UploadFilesResponse,
+  PresignedUrlResponse,
+} from '@dmr.is/shared/modules/aws'
+import { applicationCaseMigrate } from './migrations/application-case.migrate'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { Application } from './dto/application.dto'
 
 const LOGGING_CATEGORY = 'application-service'
 
@@ -51,8 +79,8 @@ export class ApplicationService implements IApplicationService {
     private readonly attachmentService: IAttachmentService,
     @Inject(forwardRef(() => IUtilityService))
     private readonly utilityService: IUtilityService,
-    @Inject(forwardRef(() => ICommentServiceV2))
-    private readonly commentService: ICommentServiceV2,
+    @Inject(forwardRef(() => ICommentService))
+    private readonly commentService: ICommentService,
     @Inject(forwardRef(() => ICaseService))
     private readonly caseService: ICaseService,
     @Inject(IAuthService)
@@ -279,7 +307,7 @@ export class ApplicationService implements IApplicationService {
 
       const commStatus = ResultWrapper.unwrap(
         await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatus.HasAnswers,
+          CaseCommunicationStatusEnum.HasAnswers,
           transaction,
         ),
       )
@@ -390,7 +418,7 @@ export class ApplicationService implements IApplicationService {
   async postComment(
     applicationId: string,
     body: PostApplicationComment,
-    UserDto: UserDto,
+    userDto: UserDto,
   ): Promise<ResultWrapper> {
     const caseLookup = (
       await this.utilityService.caseLookupByApplicationId(applicationId)
@@ -398,14 +426,14 @@ export class ApplicationService implements IApplicationService {
 
     ResultWrapper.unwrap(
       await this.commentService.createApplicationComment(caseLookup.id, {
-        applicationUserCreatorId: UserDto.id,
+        applicationUserCreatorId: userDto.id,
         comment: body.comment,
       }),
     )
 
     await this.caseService.updateCaseCommunicationStatusByStatus(
       caseLookup.id,
-      CaseCommunicationStatus.HasAnswers,
+      CaseCommunicationStatusEnum.HasAnswers,
     )
 
     return ResultWrapper.ok()

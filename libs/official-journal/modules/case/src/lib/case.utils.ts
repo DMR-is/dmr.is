@@ -1,4 +1,5 @@
-import { CaseStatusEnum } from './dto/case-constants'
+import { CaseStatusEnum } from '@dmr.is/official-journal/models'
+
 export const getNextStatus = (status: CaseStatusEnum): CaseStatusEnum => {
   switch (status) {
     case CaseStatusEnum.Submitted:

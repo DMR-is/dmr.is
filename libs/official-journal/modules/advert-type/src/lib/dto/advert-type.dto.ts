@@ -1,6 +1,5 @@
+import { Department } from '@dmr.is/official-journal/modules/journal'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { Department } from '../departments'
 
 export class AdvertType {
   @ApiProperty({

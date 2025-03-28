@@ -22,8 +22,14 @@ import {
   CaseCommunicationStatusModel,
 } from '@dmr.is/official-journal/models'
 import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
-import { JournalModule } from '@dmr.is/official-journal/modules/journal'
 import { CommentModule } from '@dmr.is/official-journal/modules/comment'
+import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
+import { PriceModule } from '@dmr.is/official-journal/modules/price'
+import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
+import { AttachmentModule } from '@dmr.is/official-journal/modules/attachment'
+import { AWSModule } from '@dmr.is/shared/modules/aws'
+import { JournalModule } from '@dmr.is/official-journal/modules/journal'
+import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
@@ -47,11 +53,11 @@ const API_MOCK = process.env.API_MOCK === 'true'
     CommentModule,
     forwardRef(() => PriceModule),
     forwardRef(() => PdfModule),
-    forwardRef(() => AwsModule),
-    forwardRef(() => AttachmentsModule),
+    forwardRef(() => AWSModule),
+    forwardRef(() => AttachmentModule),
     forwardRef(() => UtilityModule),
     forwardRef(() => ApplicationModule),
-    forwardRef(() => SharedJournalModule),
+    forwardRef(() => JournalModule),
   ],
   providers: [
     {

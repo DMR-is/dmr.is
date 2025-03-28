@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Paging } from '../paging/paging.dto'
 import { AdvertSignature } from './advert-signature.dto'
+import { Paging } from '@dmr.is/shared/dto'
 
 export class GetAdvertSignatureResponse {
   @ApiProperty({

@@ -4,32 +4,31 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { GetApplicationResponse } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+import { IUtilityService } from './utility.service.interface'
 
-import { AdvertTypeModel } from '../advert-type/models'
-import { IApplicationService } from '../application/application.service.interface'
 import {
-  CaseAdditionModel,
-  CaseCommunicationStatusModel,
+  GetApplicationResponse,
+  IApplicationService,
+} from '@dmr.is/official-journal/modules/application'
+import {
+  AdvertModel,
   CaseModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
+  AdvertCategoryModel,
   CaseStatusModel,
   CaseTagModel,
-} from '../case/models'
-import { CaseCategoriesModel } from '../case/models/case-categories.model'
-import { casesDetailedIncludes } from '../case/relations'
-import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
+  CaseCommunicationStatusModel,
   AdvertInvolvedPartyModel,
-  AdvertModel,
   AdvertStatusModel,
-} from '../journal/models'
-import { SignatureModel } from '../signature/models/signature.model'
-import { IUtilityService } from './utility.service.interface'
+  SignatureModel,
+  CaseAdditionModel,
+} from '@dmr.is/official-journal/models'
+import { casesDetailedIncludes } from '@dmr.is/official-journal/modules/case'
 
 export class UtilityService implements IUtilityService {
   constructor(
@@ -52,8 +51,6 @@ export class UtilityService implements IUtilityService {
     @InjectModel(CaseTagModel) private caseTagModel: typeof CaseTagModel,
     @InjectModel(CaseCommunicationStatusModel)
     private caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
-    @InjectModel(CaseCategoriesModel)
-    private caseCategoriesModel: typeof CaseCategoriesModel,
 
     @InjectModel(AdvertInvolvedPartyModel)
     private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,

@@ -3,8 +3,8 @@ import { IsArray, IsEnum, IsOptional } from 'class-validator'
 
 import { ApiProperty, IntersectionType, OmitType } from '@nestjs/swagger'
 
-import { CaseStatusEnum } from './case-constants'
 import { GetCasesQuery } from './get-cases-query.dto'
+import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 
 class StatusesToBeCounted {
   @ApiProperty({

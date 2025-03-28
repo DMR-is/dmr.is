@@ -15,6 +15,18 @@ import {
 import { GetApplicationResponse } from './dto/get-application-response.dto'
 import { PostApplicationComment } from './dto/post-application-comment.dto'
 import { UpdateApplicationBody } from './dto/updateApplication-body.dto'
+import {
+  PostApplicationAttachmentBody,
+  GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
+} from '@dmr.is/official-journal/modules/attachment'
+import { CasePriceResponse } from '@dmr.is/official-journal/modules/case'
+import { GetComments } from '@dmr.is/official-journal/modules/comment'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import {
+  S3UploadFilesResponse,
+  PresignedUrlResponse,
+} from '@dmr.is/shared/modules/aws'
 
 export interface IApplicationService {
   getApplication(id: string): Promise<ResultWrapper<GetApplicationResponse>>

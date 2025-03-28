@@ -1,17 +1,15 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AdvertTypeQuery,
-  GetAdvertMainType,
-  GetAdvertMainTypes,
-  GetAdvertType,
-  GetAdvertTypes,
-} from '@dmr.is/shared/dto'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IAdvertTypeService } from '../advert-type.service.interface'
 import { AdvertTypeError } from '../advert-type-error'
+import { AdvertTypeQuery } from '../dto/advert-type.query'
+import { GetAdvertMainType } from '../dto/get-advert-main-type.dto'
+import { GetAdvertMainTypes } from '../dto/get-advert-main-types.dto'
+import { GetAdvertType } from '../dto/get-advert-type.dto'
+import { GetAdvertTypes } from '../dto/get-advert-types.dto'
 
 @Controller({ path: 'advert-types', version: '1' })
 export class AdvertTypeController {

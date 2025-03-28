@@ -8,11 +8,6 @@ import {
   DeleteCaseAdvertCorrection,
 } from './dto/add-case-advert-correction.dto'
 import {
-  DepartmentEnum,
-  CaseStatusEnum,
-  CaseCommunicationStatus,
-} from './dto/case-constants'
-import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case.dto'
@@ -52,6 +47,12 @@ import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
 import { UpdateTagBody } from './dto/update-tag-body.dto'
 import { UpdateTitleBody } from './dto/update-title-body.dto'
 import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
+import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
+import {
+  CaseCommunicationStatusEnum,
+  CaseStatusEnum,
+  DepartmentEnum,
+} from '@dmr.is/official-journal/models'
 
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
@@ -114,7 +115,6 @@ export interface ICaseService {
 
   rejectCase(id: string): Promise<ResultWrapper>
 
-  unpublishCase(id: string): Promise<ResultWrapper>
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,
@@ -155,7 +155,7 @@ export interface ICaseService {
 
   updateCaseCommunicationStatusByStatus(
     caseId: string,
-    body: CaseCommunicationStatus,
+    body: CaseCommunicationStatusEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

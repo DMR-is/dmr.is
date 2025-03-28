@@ -3,37 +3,41 @@ import { Sequelize } from 'sequelize-typescript'
 import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CaseCommunicationStatus,
-  CaseStatusEnum,
-  UpdateAdvertHtmlBody,
-  UpdateCaseBody,
-  UpdateCaseCommunicationBody,
-  UpdateCaseDepartmentBody,
-  UpdateCasePriceBody,
-  UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdateCommunicationStatusBody,
-  UpdateFasttrackBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils'
+import { getFastTrack } from '@dmr.is/utils'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IApplicationService } from '../../../application/application.service.interface'
-import { ICommentServiceV2 } from '../../../comment/v2'
-import { IPriceService } from '../../../price/price.service.interface'
-import { IUtilityService } from '../../../utility/utility.module'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
-import { CaseCategoriesModel, CaseModel, CaseStatusModel } from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
+
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { IApplicationService } from '@dmr.is/official-journal/modules/application'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import {
+  CaseModel,
+  CaseCategoriesModel,
+  CaseCommunicationStatusEnum,
+  CaseStatusModel,
+  CaseStatusEnum,
+} from '@dmr.is/official-journal/models'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { getNextStatus, getPreviousStatus } from '../../case.utils'
+import { UpdateAdvertHtmlBody } from '../../dto/update-advert-html-body.dto'
+import { UpdateCaseBody } from '../../dto/update-case-body.dto'
+import { UpdateCaseCommunicationBody } from '../../dto/update-case-communication-body.dto'
+import { UpdateCaseStatusBody } from '../../dto/update-case-status-body.dto'
+import { UpdateCategoriesBody } from '../../dto/update-category-body.dto'
+import { UpdateCommunicationStatusBody } from '../../dto/update-communication-status.dto'
+import { UpdateCaseDepartmentBody } from '../../dto/update-department-body.dto'
+import { UpdateFasttrackBody } from '../../dto/update-fasttrack-body.dto'
+import { UpdateCasePriceBody } from '../../dto/update-price-body.dto'
+import { UpdatePublishDateBody } from '../../dto/update-publish-date-body.dto'
+import { UpdateTagBody } from '../../dto/update-tag-body.dto'
+import { UpdateTitleBody } from '../../dto/update-title-body.dto'
+import { UpdateCaseTypeBody } from '../../dto/update-type-body.dto'
 
 const LOGGING_CATEGORY = 'case-update-service'
 const LOGGING_CONTEXT = 'CaseUpdateService'
@@ -45,8 +49,8 @@ export class CaseUpdateService implements ICaseUpdateService {
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
-    @Inject(ICommentServiceV2)
-    private readonly commentService: ICommentServiceV2,
+    @Inject(ICommentService)
+    private readonly commentService: ICommentService,
 
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
@@ -86,7 +90,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   ): Promise<ResultWrapper> {
     if (body.reject) {
       this.logger.debug(
-        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+        `Communication status set to ${CaseCommunicationStatusEnum.WaitingForAnswers}, rejecting application`,
       )
 
       const caseLookup = await this.caseModel.findByPk(body.caseId, {
@@ -232,9 +236,9 @@ export class CaseUpdateService implements ICaseUpdateService {
       )
     ).unwrap()
 
-    if (lookup.title === CaseCommunicationStatus.WaitingForAnswers) {
+    if (lookup.title === CaseCommunicationStatusEnum.WaitingForAnswers) {
       this.logger.debug(
-        `Communication status set to ${CaseCommunicationStatus.WaitingForAnswers}, rejecting application`,
+        `Communication status set to ${CaseCommunicationStatusEnum.WaitingForAnswers}, rejecting application`,
       )
       return this.updateCommunication(
         { caseId: caseId, communicationLookupId: lookup.id, reject: true },
@@ -252,7 +256,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   @Transactional()
   async updateCaseCommunicationStatusByStatus(
     caseId: string,
-    status: CaseCommunicationStatus,
+    status: CaseCommunicationStatusEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const lookup = (
@@ -262,7 +266,7 @@ export class CaseUpdateService implements ICaseUpdateService {
       )
     ).unwrap()
 
-    if (status === CaseCommunicationStatus.WaitingForAnswers) {
+    if (status === CaseCommunicationStatusEnum.WaitingForAnswers) {
       this.logger.debug(
         `Communication status set to ${status}, rejecting application`,
       )

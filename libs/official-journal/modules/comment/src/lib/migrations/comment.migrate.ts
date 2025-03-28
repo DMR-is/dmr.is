@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common'
 
-import { CommentModel } from '@dmr.is/official-journal/models'
+import { CaseActionEnum, CommentModel } from '@dmr.is/official-journal/models'
 import {
   CommentDto,
   CommentCreatorDto,

@@ -1,5 +1,7 @@
+import { CaseActionEnum } from '@dmr.is/official-journal/models'
 import { BaseEntity } from '@dmr.is/shared/dto'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { CaseStatus } from '@dmr.is/official-journal/modules/case'
 
 export class CommentCreatorDto extends OmitType(BaseEntity, [
   'slug',

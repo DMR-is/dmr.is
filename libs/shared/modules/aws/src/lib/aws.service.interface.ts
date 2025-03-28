@@ -1,7 +1,10 @@
 import { SentMessageInfo } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
-import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
+
 import { ResultWrapper } from '@dmr.is/types'
+
+import { PresignedUrlResponse } from './dto/presigned-url-response.dto'
+import { S3UploadFileResponse } from './dto/upload-file-respone.dto'
 
 import 'multer'
 

@@ -6,6 +6,8 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { IAWSService } from '@dmr.is/shared/modules/aws'
+
 import {
   Inject,
   Injectable,
@@ -25,6 +27,7 @@ import {
   AdvertInvolvedPartyModel,
   CaseChannelModel,
   AdvertTypeModel,
+  CaseActionEnum,
 } from '@dmr.is/official-journal/models'
 import {
   GetComment,

@@ -1,21 +1,19 @@
 import { Transaction } from 'sequelize'
-import {
-  CaseCommunicationStatus,
-  UpdateAdvertHtmlBody,
-  UpdateCaseBody,
-  UpdateCaseDepartmentBody,
-  UpdateCasePriceBody,
-  UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdateCommunicationStatusBody,
-  UpdateFasttrackBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+import { CaseCommunicationStatusEnum } from '@dmr.is/official-journal/models'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { UpdateAdvertHtmlBody } from '../../dto/update-advert-html-body.dto'
+import { UpdateCaseBody } from '../../dto/update-case-body.dto'
+import { UpdateCaseStatusBody } from '../../dto/update-case-status-body.dto'
+import { UpdateCategoriesBody } from '../../dto/update-category-body.dto'
+import { UpdateCommunicationStatusBody } from '../../dto/update-communication-status.dto'
+import { UpdateCaseDepartmentBody } from '../../dto/update-department-body.dto'
+import { UpdateFasttrackBody } from '../../dto/update-fasttrack-body.dto'
+import { UpdateCasePriceBody } from '../../dto/update-price-body.dto'
+import { UpdatePublishDateBody } from '../../dto/update-publish-date-body.dto'
+import { UpdateTagBody } from '../../dto/update-tag-body.dto'
+import { UpdateTitleBody } from '../../dto/update-title-body.dto'
+import { UpdateCaseTypeBody } from '../../dto/update-type-body.dto'
 
 export interface ICaseUpdateService {
   updateCase(
@@ -100,7 +98,7 @@ export interface ICaseUpdateService {
 
   updateCaseCommunicationStatusByStatus(
     caseId: string,
-    body: CaseCommunicationStatus,
+    body: CaseCommunicationStatusEnum,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 

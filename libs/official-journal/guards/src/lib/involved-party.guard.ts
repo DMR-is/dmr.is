@@ -3,7 +3,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
 
-import { IUtilityService } from '../utility/utility.service.interface'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 
 export class InvolvedPartyGuard implements CanActivate {
   constructor(

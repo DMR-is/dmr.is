@@ -1,6 +1,8 @@
-import { CaseStatusModel } from '@dmr.is/official-journal/models'
+import {
+  CaseStatusEnum,
+  CaseStatusModel,
+} from '@dmr.is/official-journal/models'
 import { enumMapper } from '@dmr.is/utils'
-import { CaseStatusEnum } from '../dto/case-constants'
 import { CaseStatus } from '../dto/case-status.dto'
 
 export const caseStatusMigrate = (model: CaseStatusModel): CaseStatus => {

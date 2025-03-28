@@ -1,4 +1,4 @@
-import { Advert } from '@dmr.is/shared/dto'
+import { Advert } from '@dmr.is/official-journal/modules/journal'
 
 export const AdvertsToRss = (
   adverts: Array<Advert>,

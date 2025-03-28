@@ -1,10 +1,10 @@
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { AdvertType } from '../advert-type'
-import { Department } from '../departments'
-import { Institution } from '../institutions'
-import { UserDto } from '../users'
 import { CaseStatus } from './case-status.dto'
+import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
+import { Department } from '@dmr.is/official-journal/modules/journal'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
 
 const BASE_ATTRIBUTES = ['id', 'title', 'slug'] as const
 

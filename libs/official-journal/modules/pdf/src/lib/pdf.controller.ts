@@ -7,6 +7,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { IPdfService } from './pdf.service.interface'
 import { GetPdfUrlResponse } from './dto/get-case-pdf-response.dto'
 import { GetPdfRespone, GetPdfBody } from './dto/get-pdf-response.dto'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 
 @Controller({
   path: 'pdf',

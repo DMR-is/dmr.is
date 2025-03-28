@@ -1,6 +1,5 @@
+import { AdvertFeeTypeEnum } from '@dmr.is/official-journal/models'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { AdvertFeeType } from '../adverts'
 
 export class TransactionFeeCode {
   @ApiProperty({
@@ -31,10 +30,9 @@ export class TransactionFeeCode {
     description: 'Type of fee',
     example: 'BASE',
     required: true,
-    enum: AdvertFeeType,
-    type: AdvertFeeType,
+    enum: AdvertFeeTypeEnum,
   })
-  readonly feeType!: AdvertFeeType
+  readonly feeType!: AdvertFeeTypeEnum
 
   @ApiProperty({
     description:

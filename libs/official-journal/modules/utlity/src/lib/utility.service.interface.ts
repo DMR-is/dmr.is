@@ -1,20 +1,18 @@
 import { Transaction } from 'sequelize'
-import { GetApplicationResponse } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
 
-import { AdvertTypeModel } from '../advert-type/models'
+import { ResultWrapper } from '@dmr.is/types'
 import {
-  CaseCommunicationStatusModel,
+  AdvertStatusModel,
+  AdvertDepartmentModel,
+  AdvertTypeModel,
+  AdvertCategoryModel,
   CaseModel,
   CaseStatusModel,
   CaseTagModel,
-} from '../case/models'
-import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
+  CaseCommunicationStatusModel,
   AdvertInvolvedPartyModel,
-  AdvertStatusModel,
-} from '../journal/models'
+} from '@dmr.is/official-journal/models'
+import { GetApplicationResponse } from '@dmr.is/official-journal/modules/application'
 
 export interface IUtilityService {
   getCaseInvolvedPartyByApplicationId(

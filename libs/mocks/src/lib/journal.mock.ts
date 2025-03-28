@@ -1,12 +1,12 @@
+import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
+import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 import {
   Advert,
-  AdvertStatus,
-  AdvertType,
   Category,
   Department,
-  Institution,
   MainCategory,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/official-journal/modules/journal'
 
 import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 
@@ -273,7 +273,7 @@ export const emptyAdvert: Advert = {
   },
   subject: '',
   title: '',
-  status: AdvertStatus.Submitted,
+  status: AdvertStatusEnum.Submitted,
   publicationNumber: {
     number: 0,
     year: 0,
@@ -305,7 +305,7 @@ export const ADVERT_NEW: Advert = {
   type: DEPT_B_AUGLYSING,
   subject: 'um breytingar á einhverju í Reykjavík.',
   title: 'AUGLÝSING um breytingar á einhverju í Reykjavík.',
-  status: AdvertStatus.Submitted,
+  status: AdvertStatusEnum.Submitted,
   publicationNumber: null,
   createdDate: '2024-03-12T12:45:48.21Z',
   updatedDate: '',
@@ -335,7 +335,7 @@ export const ADVERT_READY_A: Advert = {
   type: DEPT_A_AUGLYSING,
   subject: 'um eitthvað í A deild.',
   title: 'AUGLÝSING um eitthvað í A deild.',
-  status: AdvertStatus.ReadyForPublication,
+  status: AdvertStatusEnum.ReadyForPublication,
   publicationNumber: {
     number: 123,
     year: 2024,
@@ -369,7 +369,7 @@ export const ADVERT_READY_B: Advert = {
   type: DEPT_B_REGLUGERD,
   subject: 'um eitthvað í B deild.',
   title: 'REGLUGERÐ um eitthvað í B deild.',
-  status: AdvertStatus.ReadyForPublication,
+  status: AdvertStatusEnum.ReadyForPublication,
   publicationNumber: {
     number: 122,
     year: 2024,
@@ -403,7 +403,7 @@ export const ADVERT_READY_B_2: Advert = {
   type: DEPT_B_REGLUGERD,
   subject: 'um eitthvað annað í B deild.',
   title: 'REGLUGERÐ um eitthvað annað í B deild.',
-  status: AdvertStatus.ReadyForPublication,
+  status: AdvertStatusEnum.ReadyForPublication,
   publicationNumber: {
     number: 123,
     year: 2024,
@@ -437,7 +437,7 @@ export const ADVERT_B_866_2006: Advert = {
   type: DEPT_B_AUGLYSING,
   subject: 'um breytingar á deiliskipulagsáætlunum í Reykjavík.',
   title: 'AUGLÝSING um breytingar á deiliskipulagsáætlunum í Reykjavík.',
-  status: AdvertStatus.Published,
+  status: AdvertStatusEnum.Published,
   publicationNumber: {
     number: 866,
     year: 2006,
@@ -471,7 +471,7 @@ export const ADVERT_B_1278_2023: Advert = {
   type: DEPT_B_GJALDSKRA,
   subject: 'fyrir hundahald í Reykjavíkurborg.',
   title: 'GJALDSKRÁ fyrir hundahald í Reykjavíkurborg.',
-  status: AdvertStatus.Published,
+  status: AdvertStatusEnum.Published,
   publicationNumber: {
     number: 1278,
     year: 2023,
@@ -505,7 +505,7 @@ export const ADVERT_A_32_2024: Advert = {
   type: DEPT_A_FORSETAURSKURDUR,
   subject: 'um skiptingu starfa ráðherra.',
   title: 'FORSETAÚRSKURÐUR um skiptingu starfa ráðherra.',
-  status: AdvertStatus.Published,
+  status: AdvertStatusEnum.Published,
   publicationNumber: null,
   createdDate: '2024-04-01 13:45:44.617',
   updatedDate: '',

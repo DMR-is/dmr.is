@@ -21,6 +21,7 @@ import { advertPdfTemplate } from './lib/pdf-advert-template'
 import { getBrowser } from './lib/puppetBrowser'
 import { caseDetailedMigrate } from '@dmr.is/official-journal/modules/case'
 import { applicationSignatureTemplate } from './pdf.utils'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 
 const LOGGING_CATEGORY = 'pdf-service'
 

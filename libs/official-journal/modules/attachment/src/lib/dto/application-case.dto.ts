@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertType } from '../advert-type'
-import { CaseStatus } from '../cases/case-status.dto'
-import { Category } from '../categories'
-import { CommunicationStatus } from '../communication-status'
-import { Department } from '../departments'
+import {
+  CaseStatus,
+  CommunicationStatus,
+} from '@dmr.is/official-journal/modules/case'
+import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { Category, Department } from '@dmr.is/official-journal/modules/journal'
 
 export class ApplicationCase {
   @ApiProperty({

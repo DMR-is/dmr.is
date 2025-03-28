@@ -1,6 +1,5 @@
 // dto
 export { AdvertAttachment } from './lib/dto/advert-attachment'
-export { AdvertFeeType, AdvertStatus } from './lib/dto/advert-constants.dto'
 export { AdvertCorrection } from './lib/dto/advert-correction.dto'
 export { AdvertDocument } from './lib/dto/advert-document'
 export { AdvertPublicationNumber } from './lib/dto/advert-publication-number.dto'

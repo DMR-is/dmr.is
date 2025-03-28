@@ -1,6 +1,5 @@
+import { CaseCommunicationStatusEnum } from '@dmr.is/official-journal/models'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { CaseCommunicationStatus } from '../cases'
 
 export class CommunicationStatus {
   @ApiProperty({
@@ -10,10 +9,10 @@ export class CommunicationStatus {
   readonly id!: string
 
   @ApiProperty({
-    enum: CaseCommunicationStatus,
+    enum: CaseCommunicationStatusEnum,
     description: 'The title of the communication status',
   })
-  title!: CaseCommunicationStatus
+  title!: CaseCommunicationStatusEnum
 
   @ApiProperty({
     type: String,

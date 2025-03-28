@@ -25,7 +25,6 @@ export {
 export { GetApplicationResponse } from './lib/dto/get-application-response.dto'
 export { PostApplicationBody } from './lib/dto/post-application-body.dto'
 export { PostApplicationComment } from './lib/dto/post-application-comment.dto'
-export { PostApplicationResponse } from './lib/dto/post-application-response.dto'
 export {
   UpdateApplicationAdvertDto,
   UpdateApplicationAnswersBody,

@@ -8,6 +8,7 @@ import {
   CommentsModel,
   CaseActionModel,
 } from '@dmr.is/official-journal/models'
+import { AWSModule } from '@dmr.is/shared/modules/aws'
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import {
       CommentsModel,
       CaseActionModel,
     ]),
-    AwsModule,
+    AWSModule,
   ],
   controllers: [],
   providers: [

@@ -15,23 +15,24 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { AdvertCorrection } from '../adverts/advert-correction.dto'
-import { ApplicationAttachment } from '../attachments'
-import { Category } from '../categories'
-import { CommentDto } from '../comments/comment.dto'
-import { CommunicationStatus } from '../communication-status'
-import { Department } from '../departments/department.dto'
-import { BaseEntity } from '../entity'
-import { Institution } from '../institutions'
-import { Paging } from '../paging'
-import { Signature } from '../signatures'
-import { CaseTag } from '../tags'
-import { UserDto } from '../users'
 import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseHistory } from './case-history.dto'
 import { CaseStatus } from './case-status.dto'
 import { CaseTransaction } from './case-transaction.dto'
+import { ApplicationAttachment } from '@dmr.is/official-journal/modules/attachment'
+import { CommentDto } from '@dmr.is/official-journal/modules/comment'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
+import {
+  Department,
+  Category,
+  AdvertCorrection,
+} from '@dmr.is/official-journal/modules/journal'
+import { Signature } from '@dmr.is/official-journal/modules/signature'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { BaseEntity, Paging } from '@dmr.is/shared/dto'
+import { CommunicationStatus } from './communication-status.dto'
+import { CaseTag } from './tag.dto'
 
 export class CaseDetailed {
   @ApiProperty({
@@ -200,7 +201,7 @@ export class CaseDetailed {
   })
   readonly advertCategories!: Category[]
 
-    @ApiProperty({
+  @ApiProperty({
     description: 'Case fee transaction.',
     required: true,
     type: CaseTransaction,
