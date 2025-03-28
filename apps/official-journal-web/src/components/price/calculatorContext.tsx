@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer } from 'react'
 
+import { CaseDetailed } from '../../gen/fetch'
 import { imageTiers } from '../../lib/utils'
 
 interface PriceCalculatorContextProps {
@@ -29,6 +30,7 @@ interface State {
   customBodyLengthCount?: number
   additionalDocuments?: number
   extraWorkCount?: number
+  subject?: string
   useCustomInputBase: boolean
 }
 
@@ -38,6 +40,7 @@ type Action =
   | { type: 'SET_CUSTOM_BODY_LENGTH_COUNT'; payload?: number }
   | { type: 'SET_EXTRA_WORK_COUNT'; payload?: number }
   | { type: 'SET_ADDITIONAL_DOCUMENTS'; payload?: number }
+  | { type: 'SET_SUBJECT'; payload?: string }
   | { type: 'TOGGLE_CUSTOM_INPUT_BASE' }
   | { type: 'RESET_CUSTOM_INPUT' }
   | { type: 'INIT_STATE'; payload: Partial<State> }
@@ -54,6 +57,8 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, extraWorkCount: action.payload }
     case 'SET_ADDITIONAL_DOCUMENTS':
       return { ...state, additionalDocuments: action.payload }
+    case 'SET_SUBJECT':
+      return { ...state, subject: action.payload }
     case 'TOGGLE_CUSTOM_INPUT_BASE':
       return { ...state, useCustomInputBase: !state.useCustomInputBase }
     case 'RESET_CUSTOM_INPUT':
@@ -69,7 +74,7 @@ const reducer = (state: State, action: Action): State => {
   }
 }
 
-export const usePriceCalculatorState = (currentCase: any) => {
+export const usePriceCalculatorState = (currentCase: CaseDetailed) => {
   const [state, dispatch] = useReducer(reducer, { useCustomInputBase: false })
 
   useEffect(() => {
@@ -89,6 +94,7 @@ export const usePriceCalculatorState = (currentCase: any) => {
           currentCase.transaction?.customBaseCount || 0,
         ),
         extraWorkCount: Number(currentCase.transaction?.extraWorkCount || 0),
+        subject: currentCase.transaction?.subject ?? '',
       },
     })
   }, [currentCase.transaction, currentCase.advertDepartment.slug])

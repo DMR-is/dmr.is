@@ -56,6 +56,7 @@ export const PriceCalculator = () => {
           : 0,
         customAdditionalDocCount: state.additionalDocuments,
         extraWorkCount: state.extraWorkCount,
+        subject: state.subject ?? undefined,
       })
     }
   }
@@ -170,7 +171,7 @@ export const PriceCalculator = () => {
                 <span className={styles.percentage}>%</span>
                 <OJOIInput
                   name="extrawork"
-                  label="Álag v. vinnu"
+                  label="Álag"
                   placeholder="0"
                   type="number"
                   value={state.extraWorkCount || ''}
@@ -182,6 +183,9 @@ export const PriceCalculator = () => {
                   }
                   onBlur={updateAllPrices}
                 />
+                <Text variant="small" color="blue600">
+                  % álag vegna vinnu
+                </Text>
               </Box>
             </>
           ) : undefined}
@@ -207,6 +211,7 @@ export const PriceCalculator = () => {
                       : 0,
                     customAdditionalDocCount: state.additionalDocuments,
                     extraWorkCount: state.extraWorkCount,
+                    subject: state.subject ?? undefined,
                   })
                 }}
               />
@@ -222,6 +227,29 @@ export const PriceCalculator = () => {
           )}
         </Stack>
       </Box>
+
+      <Inline alignY="center" space={[2, 4]}>
+        <Box marginBottom={3} style={{ minWidth: md ? '308px' : '254px' }}>
+          <OJOIInput
+            name="subject"
+            label="Viðfang"
+            type="text"
+            placeholder="Tilvísun"
+            maxLength={16}
+            value={state.subject || ''}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_SUBJECT',
+                payload: e.target.value,
+              })
+            }
+            onBlur={updateAllPrices}
+          />
+          <Text variant="small" color="blue600">
+            Tilvísun á reikningi
+          </Text>
+        </Box>
+      </Inline>
 
       <Inline alignY="center" space={[2, 4]}>
         <Box style={{ minWidth: md ? '308px' : '254px' }}>
