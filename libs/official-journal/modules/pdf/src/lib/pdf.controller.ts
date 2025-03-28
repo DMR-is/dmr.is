@@ -1,5 +1,4 @@
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
@@ -7,17 +6,13 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { IPdfService } from './pdf.service.interface'
 import { GetPdfUrlResponse } from './dto/get-case-pdf-response.dto'
 import { GetPdfRespone, GetPdfBody } from './dto/get-pdf-response.dto'
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 
 @Controller({
   path: 'pdf',
   version: '1',
 })
 export class PdfController {
-  constructor(
-    @Inject(IPdfService) private readonly pdfService: IPdfService,
-    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
-  ) {}
+  constructor(@Inject(IPdfService) private readonly pdfService: IPdfService) {}
 
   @Get('case/:id')
   @ApiOperation({ operationId: 'getPdfByCaseId' })
@@ -56,8 +51,6 @@ export class PdfController {
   async getPdfUrlByCaseId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
-    ResultWrapper.unwrap(await this.utilityService.caseLookup(id))
-
     const url =
       process.env.NODE_ENV === 'development'
         ? `http://localhost:${
@@ -76,10 +69,6 @@ export class PdfController {
   async getPdfUrlByApplicationId(
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetPdfUrlResponse> {
-    const applicationLookup = (
-      await this.utilityService.applicationLookup(id)
-    ).unwrap()
-
     const url =
       process.env.NODE_ENV === 'development'
         ? `http://localhost:${
@@ -88,7 +77,7 @@ export class PdfController {
         : `${
             process.env.DMR_PDF_BASE_PATH ||
             'https://application-api.official-journal.dev.dmr-dev.cloud'
-          }/api/v1/pdf/application/${applicationLookup.application.id}`
+          }/api/v1/pdf/application/${id}`
 
     return {
       url: url,

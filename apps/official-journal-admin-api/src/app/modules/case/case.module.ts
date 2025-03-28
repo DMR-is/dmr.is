@@ -22,11 +22,7 @@ import {
   CaseCommunicationStatusModel,
 } from '@dmr.is/official-journal/models'
 import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
-import { CommentModule } from '@dmr.is/official-journal/modules/comment'
-import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
-import { PriceModule } from '@dmr.is/official-journal/modules/price'
 import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
-import { AttachmentModule } from '@dmr.is/official-journal/modules/attachment'
 import { AWSModule } from '@dmr.is/shared/modules/aws'
 import { JournalModule } from '@dmr.is/official-journal/modules/journal'
 import { UtilityModule } from '@dmr.is/official-journal/modules/utility'

@@ -1,20 +1,20 @@
+import { LoggingModule } from '@dmr.is/logging'
+import { JournalModule } from '@dmr.is/official-journal/modules/journal'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { ApplicationModule } from '@dmr.is/shared/modules/application'
+import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
   DMRSequelizeConfigModule,
   DMRSequelizeConfigService,
 } from '@dmr.is/shared/modules/sequelize'
-import { LoggingModule } from '@dmr.is/logging'
-import { HealthModule } from '@dmr.is/modules'
-import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
-import { JournalModule } from '@dmr.is/official-journal/modules/journal'
-import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CaseModule } from './case/case.module'
-import { StatisticsModule } from './statistics/statistics.module'
+import { CaseModule } from './modules/case/case.module'
+import { StatisticsModule } from './modules/statistics/statistics.module'
 
 @Module({
   imports: [

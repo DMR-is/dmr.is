@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { UtilityService } from './utility.service'
@@ -6,7 +6,6 @@ import { IUtilityService } from './utility.service.interface'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusModel,
   AdvertTypeModel,
@@ -15,7 +14,6 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from '@dmr.is/official-journal/models'
-import { ApplicationModule } from '@dmr.is/official-journal/modules/application'
 
 export { IUtilityService, UtilityService }
 @Module({
@@ -29,10 +27,8 @@ export { IUtilityService, UtilityService }
       CaseStatusModel,
       CaseTagModel,
       CaseCommunicationStatusModel,
-      AdvertInvolvedPartyModel,
       AdvertStatusModel,
     ]),
-    forwardRef(() => ApplicationModule),
   ],
   providers: [
     {

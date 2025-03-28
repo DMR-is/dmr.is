@@ -10,7 +10,12 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 import { retryAsync } from '@dmr.is/utils'
 
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  OnModuleDestroy,
+} from '@nestjs/common'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
@@ -19,9 +24,15 @@ import { pdfCss } from './lib/pdf.css'
 import { IPdfService } from './pdf.service.interface'
 import { advertPdfTemplate } from './lib/pdf-advert-template'
 import { getBrowser } from './lib/puppetBrowser'
-import { caseDetailedMigrate } from '@dmr.is/official-journal/modules/case'
 import { applicationSignatureTemplate } from './pdf.utils'
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
+import { InjectModel } from '@nestjs/sequelize'
+import {
+  AdvertTypeModel,
+  CaseAdditionModel,
+  CaseModel,
+  SignatureModel,
+} from '@dmr.is/official-journal/models'
 
 const LOGGING_CATEGORY = 'pdf-service'
 
@@ -31,9 +42,10 @@ type PdfBrowser = Browser | CoreBrowser
 export class PdfService implements OnModuleDestroy, IPdfService {
   private browser: PdfBrowser | null = null
   constructor(
-    @Inject(IUtilityService)
-    private readonly utilityService: IUtilityService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IApplicationService)
+    private readonly applicationService: IApplicationService,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
   async onModuleDestroy() {
@@ -47,24 +59,10 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     applicationId: string,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
-    const applicationLookup =
-      await this.utilityService.applicationLookup(applicationId)
+    const application =
+      await this.applicationService.getApplication(applicationId)
 
-    if (!applicationLookup.result.ok) {
-      this.logger.error(
-        `Could not find application<${applicationId}>, when trying to generate PDF`,
-        {
-          category: LOGGING_CATEGORY,
-          error: applicationLookup.result.error,
-        },
-      )
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Application not found',
-      })
-    }
-
-    const { answers } = applicationLookup.result.value.application
+    const { answers } = application
     const signatureType =
       answers.misc?.signatureType === SignatureType.Committee
         ? SignatureType.Committee
@@ -81,7 +79,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     if (answers.advert.additions) {
       additionHtml = answers.advert.additions
         .map(
-          (addition) => `
+          (addition: { title: string; content: string }) => `
             <section class="appendix">
               <h2 class="appendix__title">${addition.title}</h2>
               <div class="appendix__text">
@@ -152,26 +150,32 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
   @LogAndHandle()
   async generatePdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
-    const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
-    const activeCase = caseDetailedMigrate(caseLookup)
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['advertTitle', 'html'],
+      include: [CaseAdditionModel, SignatureModel, AdvertTypeModel],
+    })
+
+    if (!caseLookup) {
+      throw new NotFoundException('Case not found')
+    }
 
     const markup = advertPdfTemplate({
-      title: activeCase.advertTitle,
-      type: activeCase.advertType.title,
-      content: cleanupSingleEditorOutput(activeCase.html as HTMLText),
-      additions: activeCase.additions
-        .map(
+      title: caseLookup.advertTitle,
+      type: caseLookup.advertType.title,
+      content: cleanupSingleEditorOutput(caseLookup.html as HTMLText),
+      additions: caseLookup?.additions
+        ?.map(
           (addition) => `
         <section class="appendix">
           <h2 class="appendix__title">${addition.title}</h2>
           <div class="appendix__text">
-            ${cleanupSingleEditorOutput(addition.html as HTMLText)}
+            ${cleanupSingleEditorOutput(addition.content as HTMLText)}
           </div>
         </section>
       `,
         )
         .join(''),
-      signature: activeCase.signature.html,
+      signature: caseLookup.signature.html,
     })
 
     const pdfResults = await this.generatePdfFromHtml(markup)
