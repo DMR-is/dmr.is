@@ -849,44 +849,56 @@ export class JournalService implements IJournalService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
 
-    // Check if the search is for an internal case number
-    const isearchingForInternalCaseNumber = /^\d{10}$/.test(
-      params?.search ?? '',
-    )
-    if (isearchingForInternalCaseNumber) {
-      const found = await this.caseModel.findOne({
-        include: [
-          {
-            model: AdvertModel,
-            include: [
-              AdvertDepartmentModel,
-              AdvertInvolvedPartyModel,
-              AdvertTypeModel,
-              AdvertStatusModel,
-              AdvertCategoryModel,
-              AdvertAttachmentsModel,
-            ],
+    try {
+      // Check if the search is for an internal case number
+      const isearchingForInternalCaseNumber = /^\d{11}$/.test(
+        params?.search ?? '',
+      )
+      if (isearchingForInternalCaseNumber) {
+        const found = await this.caseModel.findOne({
+          include: [
+            {
+              model: AdvertModel,
+              include: [
+                {
+                  model: AdvertTypeModel,
+                  as: 'type',
+                  include: [
+                    {
+                      model: AdvertDepartmentModel,
+                    },
+                  ],
+                },
+                AdvertDepartmentModel,
+                AdvertStatusModel,
+                AdvertInvolvedPartyModel,
+                AdvertAttachmentsModel,
+                AdvertCategoryModel,
+              ],
+            },
+          ],
+          where: {
+            caseNumber: params?.search,
           },
-        ],
-        where: {
-          internalCaseNumber: params?.search,
-        },
-      })
+        })
 
-      if (!found?.advert) {
+        if (!found?.advert) {
+          return ResultWrapper.ok({
+            adverts: [],
+            paging: generatePaging([], 1, pageSize, 1),
+          })
+        }
+
+        const migrated = advertMigrate(found.advert)
+        const paging = generatePaging([migrated], 1, pageSize, 1)
+
         return ResultWrapper.ok({
-          adverts: [],
-          paging: generatePaging([], 1, pageSize, 1),
+          adverts: [migrated],
+          paging,
         })
       }
-
-      const migrated = advertMigrate(found.advert)
-      const paging = generatePaging([migrated], 1, pageSize, 1)
-
-      return ResultWrapper.ok({
-        adverts: [migrated],
-        paging,
-      })
+    } catch (error) {
+      // do nothing, just continue.
     }
 
     const whereParams = {}
