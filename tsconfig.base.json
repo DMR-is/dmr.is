@@ -42,7 +42,7 @@
         "libs/official-journal/modules/auth/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/category": [
-        "libs/official-journal/category/category/src/index.ts"
+        "libs/official-journal/modules/category/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/comment": [
         "libs/official-journal/modules/comment/src/index.ts"

@@ -1,8 +1,7 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertAttachmentsModel,
@@ -12,7 +11,6 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
-  AdvertMainTypeModel,
   AdvertModel,
   AdvertStatusEnum,
   AdvertStatusModel,
@@ -32,7 +30,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  NotImplementedException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -40,34 +37,17 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { CreateAdvert } from './dto/advert.dto'
-import {
-  CreateMainCategory,
-  UpdateCategory,
-} from './dto/create-main-category.dto'
 import { DefaultSearchParams } from './dto/default-search-params.dto'
-import { Department } from './dto/department.dto'
 import { GetAdvertResponse } from './dto/get-advert-response.dto'
-import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
-import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
 import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
 import {
   GetAdvertsResponse,
   GetSimilarAdvertsResponse,
 } from './dto/get-adverts-responses.dto'
-import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
-import { GetCategoryResponse } from './dto/get-category-responses.dto'
-import { GetDepartmentResponse } from './dto/get-department-response.dto'
-import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
-import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
-import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
 import { UpdateAdvertBody } from './dto/update-advert-body.dto'
-import { UpdateMainCategory } from './dto/update-main-category.dto'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertMigrate } from './migrations/advert.migrate'
-import { advertCategoryMigrate } from './migrations/advert-category.migrate'
-import { advertDepartmentMigrate } from './migrations/advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './migrations/advert-involvedparty.migrate'
-import { advertMainCategoryMigrate } from './migrations/advert-main-category.migrate'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
 import { IJournalService } from './journal.service.interface'
@@ -117,6 +97,9 @@ export class JournalService implements IJournalService {
     if (!status) {
       this.logger.error('Advert status not found', {
         category: LOGGING_CATEGORY,
+  getSignatures(params?: GetAdvertSignatureQuery): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
+    throw new Error('Method not implemented.')
+  }
         metadata: { status: AdvertStatusEnum.Published },
       })
       throw new InternalServerErrorException('Advert status not found')
@@ -213,44 +196,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  async insertDepartment(
-    model: Department,
-  ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    if (!model) {
-      throw new BadRequestException()
-    }
-
-    const dep = await this.advertDepartmentModel.create({
-      title: model.title,
-      slug: model.slug,
-    })
-
-    return ResultWrapper.ok({ department: advertDepartmentMigrate(dep) })
-  }
-
-  @LogAndHandle()
-  async updateDepartment(
-    model: Department,
-  ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    if (!model || !model.id) {
-      throw new BadRequestException()
-    }
-
-    const dep = await this.advertDepartmentModel.update(
-      { title: model.title, slug: model.slug },
-      { where: { id: model.id }, returning: true },
-    )
-
-    if (!dep) {
-      throw new NotFoundException(`Department<${model.id}> not found`)
-    }
-
-    return ResultWrapper.ok({
-      department: advertDepartmentMigrate(dep[1][0]),
-    })
-  }
-
-  @LogAndHandle()
   async insertInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>> {
@@ -288,320 +233,6 @@ export class JournalService implements IJournalService {
     })
   }
 
-  @LogAndHandle()
-  async getSignatures(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    params?: GetAdvertSignatureQuery,
-  ): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
-    throw new NotImplementedException()
-  }
-
-  @LogAndHandle()
-  error(): void {
-    throw new NotImplementedException()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async insertMainCategory(
-    model: CreateMainCategory,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
-    if (!model) {
-      throw new BadRequestException()
-    }
-
-    const newMainCatId = uuid()
-
-    const mainCategory = await this.advertMainCategoryModel.create(
-      {
-        id: newMainCatId,
-        title: model.title,
-        slug: slugify(model.title, { lower: true }),
-        description: model.description,
-        departmentId: model.departmentId,
-      },
-      {
-        transaction,
-      },
-    )
-
-    const relations = await this.advertCategoryCategoriesModel.bulkCreate(
-      model.categories.map((id) => ({
-        mainCategoryId: newMainCatId,
-        categoryId: id,
-      })),
-      { transaction },
-    )
-
-    await Promise.all(relations)
-
-    return ResultWrapper.ok({
-      mainCategory: advertMainCategoryMigrate(mainCategory),
-    })
-  }
-
-  @LogAndHandle()
-  async deleteMainCategory(id: string): Promise<ResultWrapper> {
-    if (!id) {
-      return ResultWrapper.err({
-        message: 'No id provided',
-        code: 400,
-      })
-    }
-
-    const mainCategory = await this.advertMainCategoryModel.findByPk(id)
-
-    const relations = await this.advertCategoryCategoriesModel.findAll({
-      where: { mainCategoryId: id },
-    })
-
-    await Promise.all(relations.map((r) => r.destroy()))
-
-    if (!mainCategory) {
-      this.logger.warn(`Delete main category<${id}> not found`, {
-        category: LOGGING_CATEGORY,
-      })
-      return ResultWrapper.err({
-        message: `Main category<${id}> not found`,
-        code: 404,
-      })
-    }
-
-    await mainCategory.destroy()
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  async deleteMainCategoryCategory(
-    mainCategoryId: string,
-    categoryId: string,
-  ): Promise<ResultWrapper> {
-    await this.advertCategoryCategoriesModel.destroy({
-      where: { mainCategoryId, categoryId },
-    })
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  async insertMainCategoryCategories(
-    mainCategoryId: string,
-    categoryIds: string[],
-  ): Promise<ResultWrapper> {
-    const promises = categoryIds.map((id) =>
-      this.advertCategoryCategoriesModel.create({
-        mainCategoryId: mainCategoryId,
-        categoryId: id,
-      }),
-    )
-
-    await Promise.all(promises)
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  async updateMainCategory(
-    id: string,
-    body: UpdateMainCategory,
-  ): Promise<ResultWrapper<GetMainCategoryResponse>> {
-    const updateTransaction = await this.sequelize.transaction()
-    try {
-      const found = await this.advertMainCategoryModel.findByPk(id, {
-        transaction: updateTransaction,
-      })
-
-      if (!found) {
-        return ResultWrapper.err({
-          message: `Main category<${id}> not found`,
-          code: 404,
-        })
-      }
-
-      const updateBody = {
-        title: body.title ? body.title : found.title,
-        slug: body.title ? slugify(body.title, { lower: true }) : found.slug,
-        description: body.description ? body.description : found.description,
-        departmentId: body.departmentId
-          ? body.departmentId
-          : found.departmentId,
-      }
-
-      await found.update(updateBody, {
-        transaction: updateTransaction,
-      })
-
-      await updateTransaction.commit()
-      return ResultWrapper.ok()
-    } catch (error) {
-      this.logger.error(`Failed to update MainCategory<${id}>`, {
-        category: LOGGING_CATEGORY,
-        error: error,
-      })
-      await updateTransaction.rollback()
-      return ResultWrapper.err({
-        message: 'Failed to update MainCategory',
-        code: 500,
-      })
-    }
-  }
-
-  @LogAndHandle()
-  async insertCategory(
-    title: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetCategoryResponse>> {
-    if (!title) {
-      throw new BadRequestException()
-    }
-
-    const slug = slugify(title, { lower: true })
-
-    const category = await this.advertCategoryModel.create(
-      {
-        title,
-        slug,
-      },
-      {
-        transaction,
-        returning: true,
-      },
-    )
-
-    return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
-  }
-
-  @LogAndHandle()
-  async deleteCategory(id: string): Promise<ResultWrapper> {
-    if (!id) {
-      return ResultWrapper.err({
-        message: 'No id provided',
-        code: 400,
-      })
-    }
-
-    await this.advertCategoryModel.destroy({ where: { id } })
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  async updateCategory(
-    id: string,
-    model: UpdateCategory,
-  ): Promise<ResultWrapper<GetCategoryResponse>> {
-    if (!model || !model.title) {
-      throw new BadRequestException()
-    }
-
-    const slug = slugify(model.title, { lower: true })
-    const category = await this.advertCategoryModel.update(
-      {
-        title: model.title,
-        slug,
-      },
-      { where: { id: id }, returning: true },
-    )
-
-    if (!category) {
-      throw new NotFoundException(`Category<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ category: advertCategoryMigrate(category[1][0]) })
-  }
-
-  @LogAndHandle()
-  async getMainCategories(
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
-    const page = params?.page ?? 1
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const whereParams = {}
-
-    if (params?.search) {
-      Object.assign(whereParams, {
-        title: { [Op.iLike]: `%${params.search}%` },
-      })
-    }
-
-    const mainCategories = await this.advertMainCategoryModel.findAndCountAll({
-      distinct: true,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      where: whereParams,
-      include: [AdvertCategoryModel],
-    })
-
-    const mapped = mainCategories.rows.map((cat) =>
-      advertMainCategoryMigrate(cat),
-    )
-    const paging = generatePaging(mapped, page, pageSize, mainCategories.count)
-
-    return ResultWrapper.ok({
-      mainCategories: mapped,
-      paging,
-    })
-  }
-
-  @LogAndHandle()
-  async getDepartment(
-    id: string,
-  ): Promise<ResultWrapper<GetDepartmentResponse>> {
-    if (!id) {
-      throw new BadRequestException()
-    }
-
-    const department = await this.advertDepartmentModel.findOne({
-      where: { id },
-    })
-
-    if (!department) {
-      throw new NotFoundException(`Department<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ department: advertDepartmentMigrate(department) })
-  }
-
-  @LogAndHandle()
-  async getDepartments(
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetDepartmentsResponse>> {
-    const page = params?.page ?? 1
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const whereParams = {
-      slug: {
-        [Op.like]: '%deild%',
-      },
-    }
-    if (params?.search) {
-      Object.assign(whereParams, {
-        title: { [Op.iLike]: `%${params.search}%` },
-      })
-    }
-
-    const departments = await this.advertDepartmentModel.findAndCountAll({
-      distinct: true,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
-      include: [
-        { model: AdvertMainTypeModel, include: [{ model: AdvertTypeModel }] },
-      ],
-      where: whereParams,
-    })
-
-    const mapped = departments.rows.map((item) => advertDepartmentMigrate(item))
-    const paging = generatePaging(mapped, page, pageSize, departments.count)
-
-    return ResultWrapper.ok({
-      departments: mapped,
-      paging,
-    })
-  }
 
   @LogAndHandle()
   async getInstitution(
@@ -644,71 +275,6 @@ export class JournalService implements IJournalService {
 
     return ResultWrapper.ok({
       institutions: mapped,
-      paging,
-    })
-  }
-
-  @LogAndHandle()
-  async getCategory(id: string): Promise<ResultWrapper<GetCategoryResponse>> {
-    if (!id) {
-      throw new BadRequestException()
-    }
-
-    const category = await this.advertCategoryModel.findOne({
-      where: { id },
-      include: AdvertMainCategoryModel,
-    })
-
-    if (!category) {
-      throw new NotFoundException(`Category<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
-  }
-
-  @LogAndHandle()
-  async getCategories(
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetCategoriesResponse>> {
-    const page = params?.page ?? 1
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    const whereParams = {}
-
-    if (params?.search) {
-      Object.assign(whereParams, {
-        title: { [Op.iLike]: `%${params.search}%` },
-      })
-    }
-
-    if (params?.ids) {
-      Object.assign(whereParams, {
-        id: params.ids,
-      })
-    }
-
-    const categories = await this.advertCategoryModel.findAndCountAll({
-      distinct: true,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      order: [['title', 'ASC']],
-      where: whereParams,
-      include: [
-        {
-          model: AdvertMainCategoryModel,
-          through: {
-            attributes: ['advert_main_category_id', 'advert_category_id'],
-          },
-        },
-      ],
-    })
-
-    const mapped = categories.rows.map((item) => advertCategoryMigrate(item))
-
-    const paging = generatePaging(mapped, page, pageSize, categories.count)
-
-    return ResultWrapper.ok({
-      categories: mapped,
       paging,
     })
   }

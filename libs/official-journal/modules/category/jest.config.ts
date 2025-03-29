@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'official-journal-category-category',
+  displayName: 'official-journal-modules-category',
   preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
@@ -8,5 +8,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory:
-    '../../../../coverage/libs/official-journal/category/category',
+    '../../../../coverage/libs/official-journal/modules/category',
 }

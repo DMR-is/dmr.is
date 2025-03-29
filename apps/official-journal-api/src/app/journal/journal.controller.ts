@@ -12,6 +12,8 @@ import { ResultWrapper } from '@dmr.is/types'
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
+import { GetCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-categories-responses.dto'
+import { GetMainCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-categories-response.dto'
 import { AdvertsToRss } from '../../util/AdvertsToRss'
 import { DefaultSearchParams } from './dto/default-search-params.dto'
 import { GetAdvertResponse } from './dto/get-advert-response.dto'
@@ -22,11 +24,6 @@ import {
   GetAdvertsResponse,
   GetSimilarAdvertsResponse,
 } from './dto/get-adverts-responses.dto'
-import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
-import { GetDepartmentResponse } from './dto/get-department-response.dto'
-import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
-import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
-import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
 import { IJournalService } from './journal.service.interface'
 
 @Controller({
@@ -62,27 +59,6 @@ export class JournalController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
-  }
-
-  @Get('/departments/:id')
-  @ApiOperation({ operationId: 'getDepartmentById' })
-  @ApiResponse({ status: 200, type: GetDepartmentResponse })
-  async department(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetDepartmentResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getDepartment(id))
-  }
-
-  @Get('/departments')
-  @ApiOperation({ operationId: 'getDepartments' })
-  @ApiResponse({ status: 200, type: GetDepartmentsResponse })
-  async departments(
-    @Query()
-    params?: GetDepartmentsQueryParams,
-  ): Promise<GetDepartmentsResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.getDepartments(params),
-    )
   }
 
   @Get('/maincategories')

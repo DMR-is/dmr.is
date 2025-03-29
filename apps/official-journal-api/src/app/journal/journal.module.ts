@@ -9,6 +9,7 @@ import {
   AdvertStatusModel,
   CaseModel,
 } from '@dmr.is/official-journal/models'
+import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
 
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -32,6 +33,7 @@ const MOCK_DATA = process.env.API_MOCK === 'true'
       AdvertStatusModel,
       CaseModel,
     ]),
+    DepartmentModule,
   ],
   controllers: [],
   providers: [

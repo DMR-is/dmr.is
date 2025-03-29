@@ -23,8 +23,8 @@ import {
   GetInstitutionsResponse,
 } from '@dmr.is/official-journal/modules/institution'
 import { CreateAdvert, Advert } from './dto/advert.dto'
-import { Category } from './dto/category.dto'
-import { CreateMainCategory } from './dto/create-main-category.dto'
+import { Category } from '../../../../../libs/official-journal/modules/category/src/lib/dto/category.dto'
+import { CreateMainCategory } from '../../../../../libs/official-journal/modules/category/src/lib/dto/create-main-category.dto'
 import { Department } from './dto/department.dto'
 import { GetAdvertResponse } from './dto/get-advert-response.dto'
 import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
@@ -35,16 +35,16 @@ import {
   GetAdvertsResponse,
 } from './dto/get-adverts-responses.dto'
 import { GetCategoriesQueryParams } from './dto/get-categories-query.dto'
-import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
-import { GetCategoryResponse } from './dto/get-category-responses.dto'
+import { GetCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-categories-responses.dto'
+import { GetCategoryResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-category-responses.dto'
 import { GetDepartmentResponse } from './dto/get-department-response.dto'
 import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
 import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
-import { GetMainCategoriesQueryParams } from './dto/get-main-categories-query.dto'
-import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
-import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
+import { GetMainCategoriesQueryParams } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-categories-query.dto'
+import { GetMainCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-categories-response.dto'
+import { GetMainCategoryResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-category-response.dto'
 import { UpdateAdvertBody } from './dto/update-advert-body.dto'
-import { UpdateMainCategory } from './dto/update-main-category.dto'
+import { UpdateMainCategory } from '../../../../../libs/official-journal/modules/category/src/lib/dto/update-main-category.dto'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 

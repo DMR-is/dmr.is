@@ -1,6 +1,6 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
 import { AdvertSimilar } from '../dto/advert-similar.dto'
-import { advertCategoryMigrate } from './advert-category.migrate'
+import { advertCategoryMigrate } from '../../../../../../libs/official-journal/modules/category/src/lib/migrations/advert-category.migrate'
 import { advertDepartmentMigrate } from './advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
 
