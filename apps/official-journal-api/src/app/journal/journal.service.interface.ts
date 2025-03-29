@@ -9,8 +9,6 @@ import { ResultWrapper } from '@dmr.is/types'
 import { CreateAdvert } from './dto/advert.dto'
 import { DefaultSearchParams } from './dto/default-search-params.dto'
 import { GetAdvertResponse } from './dto/get-advert-response.dto'
-import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
-import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
 import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
 import {
   GetAdvertsResponse,
@@ -46,10 +44,6 @@ export interface IJournalService {
   updateInstitution(
     model: Institution,
   ): Promise<ResultWrapper<GetInstitutionResponse>>
-
-  getSignatures(
-    params?: GetAdvertSignatureQuery,
-  ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
 }
 
 // Token for DI, based on https://stackoverflow.com/a/70088972

@@ -1,10 +1,10 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
 import { advertTypeMigrate } from '@dmr.is/official-journal/modules/advert-type'
-import { AdvertAttachment } from '../dto/advert-attachment'
+import { baseEntityMigrate } from '@dmr.is/shared/dto'
+
 import { Advert } from '../dto/advert.dto'
-import { advertCategoryMigrate } from '../../../../../../libs/official-journal/modules/category/src/lib/migrations/advert-category.migrate'
+import { AdvertAttachment } from '../dto/advert-attachment'
 import { advertCorrectionMigrate } from './advert-correction.migrate'
-import { advertDepartmentMigrate } from './advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
 import { advertStatusMigrate } from './advert-status.migrate'
 
@@ -21,9 +21,7 @@ export function advertMigrate(model: AdvertModel): Advert {
   const advert: Advert = {
     id: model.id,
     title: `${model.type.title} ${model.subject}`,
-    department: model.department
-      ? advertDepartmentMigrate(model.department)
-      : null,
+    department: baseEntityMigrate(model.department),
     type: model.type ? advertTypeMigrate(model.type) : null,
     subject: model.subject,
     status: advertStatusMigrate(model.status),
@@ -37,7 +35,7 @@ export function advertMigrate(model: AdvertModel): Advert {
     signatureDate: model.signatureDate.toISOString(),
     publicationDate: model.publicationDate.toISOString(),
     categories: model.categories
-      ? model.categories.map((item) => advertCategoryMigrate(item))
+      ? model.categories.map((item) => baseEntityMigrate(item))
       : [],
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     document: {

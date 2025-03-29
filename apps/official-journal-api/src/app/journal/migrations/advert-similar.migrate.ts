@@ -1,16 +1,14 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
+import { baseEntityMigrate } from '@dmr.is/shared/dto'
+
 import { AdvertSimilar } from '../dto/advert-similar.dto'
-import { advertCategoryMigrate } from '../../../../../../libs/official-journal/modules/category/src/lib/migrations/advert-category.migrate'
-import { advertDepartmentMigrate } from './advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
 
 export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
   const advert: AdvertSimilar = {
     id: model.id,
     title: `${model.type.title} ${model.subject}`,
-    department: model.department
-      ? advertDepartmentMigrate(model.department)
-      : null,
+    department: model.department ? baseEntityMigrate(model.department) : null,
     subject: model.subject,
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
@@ -19,7 +17,7 @@ export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
     },
     publicationDate: model.publicationDate.toISOString(),
     categories: model.categories
-      ? model.categories.map((item) => advertCategoryMigrate(item))
+      ? model.categories.map((item) => baseEntityMigrate(item))
       : [],
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
   }

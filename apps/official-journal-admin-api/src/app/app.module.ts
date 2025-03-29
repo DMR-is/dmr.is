@@ -1,6 +1,23 @@
 import { LoggingModule } from '@dmr.is/logging'
-import { JournalModule } from '@dmr.is/official-journal/modules/journal'
+import { AdvertTypeAdminController } from '@dmr.is/official-journal/modules/advert-type'
+import {
+  CategoryAdminController,
+  CategoryModule,
+} from '@dmr.is/official-journal/modules/category'
+import { CommentModule } from '@dmr.is/official-journal/modules/comment'
+import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
+import {
+  InstitutionAdminController,
+  InstitutionModule,
+} from '@dmr.is/official-journal/modules/institution'
+import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
+import { PriceModule } from '@dmr.is/official-journal/modules/price'
 import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
+import {
+  UserController,
+  UserModule,
+} from '@dmr.is/official-journal/modules/user'
+import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { ApplicationModule } from '@dmr.is/shared/modules/application'
 import { HealthModule } from '@dmr.is/shared/modules/health'
@@ -10,7 +27,7 @@ import {
 } from '@dmr.is/shared/modules/sequelize'
 
 import { Module } from '@nestjs/common'
-import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CaseModule } from './modules/case/case.module'
@@ -18,6 +35,8 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
 
 @Module({
   imports: [
+    LoggingModule,
+    HealthModule,
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -32,27 +51,24 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    LoggingModule,
-    ApplicationModule,
     CaseModule,
+    ApplicationModule,
     StatisticsModule,
-    JournalModule,
     SignatureModule,
-    HealthModule,
-    RouterModule.register([
-      {
-        path: '/',
-        module: CaseModule,
-      },
-      {
-        path: 'statistics',
-        module: StatisticsModule,
-      },
-      {
-        path: 'journal',
-        module: JournalModule,
-      },
-    ]),
+    CategoryModule,
+    DepartmentModule,
+    UserModule,
+    InstitutionModule,
+    CommentModule,
+    PdfModule,
+    PriceModule,
+    UtilityModule,
+  ],
+  controllers: [
+    CategoryAdminController,
+    AdvertTypeAdminController,
+    UserController,
+    InstitutionAdminController,
   ],
   providers: [
     {

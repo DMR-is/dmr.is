@@ -1,7 +1,7 @@
 import { IsBoolean, IsDateString, IsString, IsUUID } from 'class-validator'
+import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 
 import { ApiProperty } from '@nestjs/swagger'
-import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 
 // This is a Partial DTO of Case, intended for public API responses
 export class CaseInProgress {

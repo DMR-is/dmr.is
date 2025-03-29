@@ -5,12 +5,9 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertAttachmentsModel,
-  AdvertCategoriesModel,
-  AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
-  AdvertMainCategoryModel,
   AdvertModel,
   AdvertStatusEnum,
   AdvertStatusModel,
@@ -61,21 +58,8 @@ export class JournalService implements IJournalService {
 
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
-
-    @InjectModel(AdvertMainCategoryModel)
-    private advertMainCategoryModel: typeof AdvertMainCategoryModel,
-
-    @InjectModel(AdvertDepartmentModel)
-    private advertDepartmentModel: typeof AdvertDepartmentModel,
-    @InjectModel(AdvertInvolvedPartyModel)
     private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
     @InjectModel(AdvertCategoryModel)
-    private advertCategoryModel: typeof AdvertCategoryModel,
-    @InjectModel(AdvertCategoriesModel)
-    private advertCategoriesModel: typeof AdvertCategoriesModel,
-    @InjectModel(AdvertCategoryCategoriesModel)
-    private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
-
     @InjectModel(AdvertStatusModel)
     private advertStatusModel: typeof AdvertStatusModel,
     private readonly sequelize: Sequelize,
@@ -97,9 +81,6 @@ export class JournalService implements IJournalService {
     if (!status) {
       this.logger.error('Advert status not found', {
         category: LOGGING_CATEGORY,
-  getSignatures(params?: GetAdvertSignatureQuery): Promise<ResultWrapper<GetAdvertSignatureResponse>> {
-    throw new Error('Method not implemented.')
-  }
         metadata: { status: AdvertStatusEnum.Published },
       })
       throw new InternalServerErrorException('Advert status not found')
@@ -232,7 +213,6 @@ export class JournalService implements IJournalService {
       institution: advertInvolvedPartyMigrate(inst[1][0]),
     })
   }
-
 
   @LogAndHandle()
   async getInstitution(

@@ -52,17 +52,9 @@ import {
   InternalCommentBodyDto,
 } from '@dmr.is/official-journal/modules/comment'
 import {
-  CreateCategory,
-  CreateMainCategory,
-  CreateMainCategoryCategories,
   DefaultSearchParams,
-  GetCategoriesResponse,
   GetDepartmentsResponse,
-  GetMainCategoriesQueryParams,
-  GetMainCategoriesResponse,
   IJournalService,
-  UpdateCategory,
-  UpdateMainCategory,
 } from '@dmr.is/official-journal/modules/journal'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
@@ -179,109 +171,6 @@ export class CaseController {
   @ApiResponse({ status: 200, type: TransactionFeeCodesResponse })
   async feeCodes(): Promise<TransactionFeeCodesResponse> {
     return ResultWrapper.unwrap(await this.priceService.getAllFeeCodes())
-  }
-
-  @Get('categories')
-  @ApiOperation({ operationId: 'getCategories' })
-  @ApiResponse({ status: 200, type: GetCategoriesResponse })
-  async categories(
-    @Query()
-    params?: DefaultSearchParams,
-  ): Promise<GetCategoriesResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getCategories(params))
-  }
-
-  @Get('main-categories')
-  @ApiOperation({ operationId: 'getMainCategories' })
-  @ApiResponse({ status: 200, type: GetMainCategoriesResponse })
-  async mainCategories(
-    @Query() query: GetMainCategoriesQueryParams,
-  ): Promise<GetMainCategoriesResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.getMainCategories(query),
-    )
-  }
-
-  @Delete('main-categories/:id')
-  @ApiOperation({ operationId: 'deleteMainCategory' })
-  @ApiNoContentResponse()
-  async deleteMainCategory(@Param('id', new UUIDValidationPipe()) id: string) {
-    ResultWrapper.unwrap(await this.journalService.deleteMainCategory(id))
-  }
-
-  @Delete('main-categories/:mainCategoryId/categories/:categoryId')
-  @ApiOperation({ operationId: 'deleteMainCategoryCategory' })
-  @ApiNoContentResponse()
-  async deleteMainCategoryCategory(
-    @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
-    @Param('categoryId', new UUIDValidationPipe()) categoryId: string,
-  ) {
-    ResultWrapper.unwrap(
-      await this.journalService.deleteMainCategoryCategory(
-        mainCategoryId,
-        categoryId,
-      ),
-    )
-  }
-
-  @Post('main-categories')
-  @ApiOperation({ operationId: 'createMainCategory' })
-  @ApiNoContentResponse()
-  async createMainCategory(@Body() body: CreateMainCategory) {
-    ResultWrapper.unwrap(
-      await this.journalService.insertMainCategory({
-        categories: body.categories,
-        title: body.title,
-        description: body.description,
-        departmentId: body.departmentId,
-      }),
-    )
-  }
-
-  @Post('categories')
-  @ApiOperation({ operationId: 'createCategory' })
-  @ApiNoContentResponse()
-  async createCategory(@Body() body: CreateCategory) {
-    ResultWrapper.unwrap(await this.journalService.insertCategory(body.title))
-  }
-
-  @Put('categories/:id')
-  @ApiOperation({ operationId: 'updateCategory' })
-  @ApiNoContentResponse()
-  async updateCategory(@Param('id') id: string, @Body() body: UpdateCategory) {
-    ResultWrapper.unwrap(await this.journalService.updateCategory(id, body))
-  }
-
-  @Delete('categories/:id')
-  @ApiOperation({ operationId: 'deleteCategory' })
-  @ApiNoContentResponse()
-  async deleteCategory(@Param('id') id: string) {
-    ResultWrapper.unwrap(await this.journalService.deleteCategory(id))
-  }
-
-  @Post('main-categories/:mainCategoryId/categories')
-  @ApiOperation({ operationId: 'createMainCategoryCategories' })
-  @ApiNoContentResponse()
-  async createMainCategoryCategories(
-    @Param('mainCategoryId', new UUIDValidationPipe()) mainCategoryId: string,
-    @Body() body: CreateMainCategoryCategories,
-  ) {
-    ResultWrapper.unwrap(
-      await this.journalService.insertMainCategoryCategories(
-        mainCategoryId,
-        body.categories,
-      ),
-    )
-  }
-
-  @Put('main-categories/:id')
-  @ApiOperation({ operationId: 'updateMainCategory' })
-  @ApiNoContentResponse()
-  async updateMainCategory(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateMainCategory,
-  ) {
-    ResultWrapper.unwrap(await this.journalService.updateMainCategory(id, body))
   }
 
   @Get('/status-count/:status')
