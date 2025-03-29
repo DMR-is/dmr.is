@@ -14,13 +14,13 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
 import { DefaultSearchParams } from './dto/default-search-params.dto'
-import { GetAdvertResponse } from './dto/get-advert-response.dto'
-import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import { GetAdvertResponse } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-advert-response.dto'
+import { GetAdvertsQueryParams } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-adverts-query.dto'
 import {
   GetAdvertsResponse,
   GetSimilarAdvertsResponse,
-} from './dto/get-adverts-responses.dto'
-import { GetCasesInProgressReponse } from './dto/get-cases-in-progress-response.dto'
+} from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-adverts-responses.dto'
+import { GetCasesInProgressReponse } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-cases-in-progress-response.dto'
 import { IJournalService } from './journal.service.interface'
 
 @Controller({

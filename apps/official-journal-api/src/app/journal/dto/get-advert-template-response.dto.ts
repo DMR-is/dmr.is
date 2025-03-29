@@ -2,7 +2,7 @@ import { IsEnum } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertTemplateTypeEnums } from './advert-types.dto'
+import { AdvertTemplateTypeEnums } from '../../../../../../libs/official-journal/modules/advert/src/lib/dto/advert-types.dto'
 
 export class GetAdvertTemplateResponse {
   @ApiProperty({

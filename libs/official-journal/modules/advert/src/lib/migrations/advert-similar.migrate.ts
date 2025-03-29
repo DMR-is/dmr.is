@@ -2,7 +2,7 @@ import { AdvertModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { AdvertSimilar } from '../dto/advert-similar.dto'
-import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
+import { institutionMigrate } from '@dmr.is/official-journal/modules/institution'
 
 export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
   const advert: AdvertSimilar = {
@@ -19,7 +19,7 @@ export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
     categories: model.categories
       ? model.categories.map((item) => baseEntityMigrate(item))
       : [],
-    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    involvedParty: institutionMigrate(model.involvedParty),
   }
   return advert
 }

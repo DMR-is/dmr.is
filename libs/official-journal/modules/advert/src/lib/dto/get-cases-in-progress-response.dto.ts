@@ -1,7 +1,6 @@
 import { Paging } from '@dmr.is/shared/dto'
 
 import { ApiProperty } from '@nestjs/swagger'
-
 import { CaseInProgress } from './case-in-progress.dto'
 
 export class GetCasesInProgressReponse {

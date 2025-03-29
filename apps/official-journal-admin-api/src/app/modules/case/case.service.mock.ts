@@ -1,21 +1,32 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { GenericError, ResultWrapper } from '@dmr.is/types'
+import {
+  CaseCommunicationStatusEnum,
+  CaseStatusEnum,
+  DepartmentEnum,
+} from '@dmr.is/official-journal/models'
+import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject } from '@nestjs/common'
-import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
+
 import {
   AddCaseAdvertCorrection,
   DeleteCaseAdvertCorrection,
 } from './dto/add-case-advert-correction.dto'
 import {
-  GetCasesWithStatusCount,
   GetCasesWithDepartmentCount,
-  CaseDetailed,
+  GetCasesWithStatusCount,
 } from './dto/case.dto'
+import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
-import { CreateCaseResponse } from './dto/create-case-response.dto'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+} from './dto/get-case-payment-response.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import { GetCasesReponse } from './dto/get-cases-response.dto'
@@ -24,8 +35,8 @@ import {
   GetCasesWithStatusCountQuery,
 } from './dto/get-cases-with-count-query.dto'
 import {
-  GetCasesWithPublicationNumberQuery,
   GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
 import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
 import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
@@ -40,27 +51,13 @@ import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
 import { UpdateCategoriesBody } from './dto/update-category-body.dto'
 import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
 import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
-import { UpdateNextStatusBody } from './dto/update-next-status-body.dto'
+import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
 import { UpdateCasePriceBody } from './dto/update-price-body.dto'
 import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
 import { UpdateTagBody } from './dto/update-tag-body.dto'
 import { UpdateTitleBody } from './dto/update-title-body.dto'
 import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
-import {
-  CaseCommunicationStatusEnum,
-  CaseStatusEnum,
-  DepartmentEnum,
-} from '@dmr.is/official-journal/models'
-import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ICaseService } from './case.service.interface'
-import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
-import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
-import {
-  GetPaymentQuery,
-  GetPaymentResponse,
-} from './dto/get-case-payment-response.dto'
-import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock implements ICaseService {

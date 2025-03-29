@@ -1,14 +1,8 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
-  AdvertStatus,
+  AdvertStatusEnum,
   CaseStatusEnum,
-  GetStatisticOverviewDashboardResponse,
-  GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
-  StatisticsOverviewCategory,
-  StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -18,6 +12,13 @@ import {
   NotImplementedException,
 } from '@nestjs/common'
 
+import { GetStatisticsDepartmentResponse } from './dto/statistics-department.dto'
+import { StatisticsOverviewQueryType } from './dto/statistics-overview-constants.dto'
+import {
+  GetStatisticOverviewDashboardResponse,
+  GetStatisticsOverviewResponse,
+  StatisticsOverviewCategory,
+} from './dto/statistics-overview-dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
@@ -29,13 +30,13 @@ export class MockStatisticsService implements IStatisticsService {
     id: string,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const statuses = [
-      AdvertStatus.Submitted,
-      AdvertStatus.InProgress,
-      AdvertStatus.Active,
-      AdvertStatus.ReadyForPublication,
+      AdvertStatusEnum.Submitted,
+      AdvertStatusEnum.InProgress,
+      AdvertStatusEnum.Active,
+      AdvertStatusEnum.ReadyForPublication,
     ]
 
-    const adverts = ALL_MOCK_ADVERTS.filter(
+    const adverts = [ALL_MOCK_ADVERTS].filter(
       (advert) =>
         advert?.department?.id === id &&
         advert.status &&
@@ -49,16 +50,16 @@ export class MockStatisticsService implements IStatisticsService {
 
     adverts.forEach((advert) => {
       switch (advert.status) {
-        case AdvertStatus.Submitted:
+        case AdvertStatusEnum.Submitted:
           submitted++
           break
-        case AdvertStatus.InProgress:
+        case AdvertStatusEnum.InProgress:
           inProgress++
           break
-        case AdvertStatus.Active:
+        case AdvertStatusEnum.Active:
           inReview++
           break
-        case AdvertStatus.ReadyForPublication:
+        case AdvertStatusEnum.ReadyForPublication:
           ready++
           break
       }
@@ -122,19 +123,19 @@ export class MockStatisticsService implements IStatisticsService {
       // fast track functionality is not implemented yet
 
       const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.Submitted) {
+        if (advert.status === AdvertStatusEnum.Submitted) {
           submitted++
         }
 
-        if (advert.status === AdvertStatus.InProgress) {
+        if (advert.status === AdvertStatusEnum.InProgress) {
           inProgress++
         }
 
-        // if(advert.status === JournalAdvertStatus.Active) {
+        // if(advert.status === JournalAdvertStatusEnum.Active) {
         //   submittedFastTrack++
         // }
 
-        // if(advert.status === JournalAdvertStatus.ReadyForPublication) {
+        // if(advert.status === JournalAdvertStatusEnum.ReadyForPublication) {
         //   inReviewFastTrack++
         // }
       })
@@ -165,14 +166,14 @@ export class MockStatisticsService implements IStatisticsService {
       let pastDue = 0
 
       const adverts = ALL_MOCK_ADVERTS.filter((advert) => {
-        if (advert.status === AdvertStatus.ReadyForPublication) {
+        if (advert.status === AdvertStatusEnum.ReadyForPublication) {
           today++
         }
 
         if (
           advert.publicationDate &&
           new Date(advert.publicationDate) < new Date() &&
-          advert.status === AdvertStatus.ReadyForPublication
+          advert.status === AdvertStatusEnum.ReadyForPublication
         ) {
           pastDue++
         }

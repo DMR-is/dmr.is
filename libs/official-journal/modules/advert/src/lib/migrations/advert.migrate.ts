@@ -3,10 +3,10 @@ import { advertTypeMigrate } from '@dmr.is/official-journal/modules/advert-type'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { Advert } from '../dto/advert.dto'
-import { AdvertAttachment } from '../dto/advert-attachment'
-import { advertCorrectionMigrate } from './advert-correction.migrate'
-import { advertInvolvedPartyMigrate } from './advert-involvedparty.migrate'
-import { advertStatusMigrate } from './advert-status.migrate'
+import { AdvertAttachment } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-attachment'
+import { advertCorrectionMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-correction.migrate'
+import { advertInvolvedPartyMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-involvedparty.migrate'
+import { advertStatusMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-status.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
   const attachmentsmodel = model.attachments.map<AdvertAttachment>((item) => {

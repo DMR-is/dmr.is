@@ -10,41 +10,44 @@ import {
   ALL_MOCK_SIGNATURES,
   MOCK_PAGING_SINGLE_PAGE,
 } from '@dmr.is/mocks'
+import { Category } from '@dmr.is/official-journal/modules/category'
+import { CreateMainCategory } from '@dmr.is/official-journal/modules/category'
+import { GetCategoriesResponse } from '@dmr.is/official-journal/modules/category'
+import { GetCategoryResponse } from '@dmr.is/official-journal/modules/category'
+import { GetMainCategoriesQueryParams } from '@dmr.is/official-journal/modules/category'
+import { GetMainCategoriesResponse } from '@dmr.is/official-journal/modules/category'
+import { GetMainCategoryResponse } from '@dmr.is/official-journal/modules/category'
+import { UpdateMainCategory } from '@dmr.is/official-journal/modules/category'
+import {
+  GetInstitutionResponse,
+  GetInstitutionsQueryParams,
+  GetInstitutionsResponse,
+  Institution,
+} from '@dmr.is/official-journal/modules/institution'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
 
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
-import { IJournalService } from './journal.service.interface'
 import {
-  GetInstitutionResponse,
-  Institution,
-  GetInstitutionsQueryParams,
-  GetInstitutionsResponse,
-} from '@dmr.is/official-journal/modules/institution'
-import { CreateAdvert, Advert } from './dto/advert.dto'
-import { Category } from '../../../../../libs/official-journal/modules/category/src/lib/dto/category.dto'
-import { CreateMainCategory } from '../../../../../libs/official-journal/modules/category/src/lib/dto/create-main-category.dto'
+  Advert,
+  CreateAdvert,
+} from '../../../../../libs/official-journal/modules/advert/src/lib/dto/advert.dto'
 import { Department } from './dto/department.dto'
-import { GetAdvertResponse } from './dto/get-advert-response.dto'
+import { GetAdvertResponse } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-advert-response.dto'
 import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
 import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
-import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import { GetAdvertsQueryParams } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-adverts-query.dto'
 import {
-  GetSimilarAdvertsResponse,
   GetAdvertsResponse,
-} from './dto/get-adverts-responses.dto'
+  GetSimilarAdvertsResponse,
+} from '../../../../../libs/official-journal/modules/advert/src/lib/dto/get-adverts-responses.dto'
 import { GetCategoriesQueryParams } from './dto/get-categories-query.dto'
-import { GetCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-categories-responses.dto'
-import { GetCategoryResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-category-responses.dto'
 import { GetDepartmentResponse } from './dto/get-department-response.dto'
 import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
 import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
-import { GetMainCategoriesQueryParams } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-categories-query.dto'
-import { GetMainCategoriesResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-categories-response.dto'
-import { GetMainCategoryResponse } from '../../../../../libs/official-journal/modules/category/src/lib/dto/get-main-category-response.dto'
-import { UpdateAdvertBody } from './dto/update-advert-body.dto'
-import { UpdateMainCategory } from '../../../../../libs/official-journal/modules/category/src/lib/dto/update-main-category.dto'
+import { UpdateAdvertBody } from '../../../../../libs/official-journal/modules/advert/src/lib/dto/update-advert-body.dto'
+import { IJournalService } from './journal.service.interface'
 
 const allMockAdverts = [ADVERT_B_1278_2023, ADVERT_B_866_2006]
 

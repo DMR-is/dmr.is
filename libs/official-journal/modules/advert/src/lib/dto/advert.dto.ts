@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertAttachment } from './advert-attachment'
+import { AdvertAttachment } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-attachment'
 
-import { AdvertCorrection } from './advert-correction.dto'
-import { AdvertDocument } from './advert-document'
-import { AdvertPublicationNumber } from './advert-publication-number.dto'
-import { AdvertSignatureBody } from './advert-signature-body.dto'
-import { AdvertSignature } from './advert-signature.dto'
-import { Category } from '../../../../../../libs/official-journal/modules/category/src/lib/dto/category.dto'
-import { Department } from './department.dto'
+import { AdvertCorrection } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-correction.dto'
+import { AdvertDocument } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-document'
+import { AdvertPublicationNumber } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-publication-number.dto'
+import { AdvertSignatureBody } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-signature-body.dto'
+import { AdvertSignature } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-signature.dto'
+import { Category } from '../../../../category/src/lib/dto/category.dto'
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 import { Institution } from '@dmr.is/official-journal/modules/institution'
+import { BaseEntity } from '@dmr.is/shared/dto'
 
 export class Advert {
   @ApiProperty({
@@ -27,10 +27,10 @@ export class Advert {
     description: 'The department the advert is for.',
     required: true,
     nullable: false,
-    type: Department,
+    type: BaseEntity,
     example: 'A deild',
   })
-  readonly department!: Department | null
+  readonly department!: BaseEntity | null
 
   @ApiProperty({
     description: 'Type of the advert.',
