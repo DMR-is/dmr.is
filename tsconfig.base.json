@@ -41,8 +41,14 @@
       "@dmr.is/official-journal/modules/auth": [
         "libs/official-journal/modules/auth/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/category": [
+        "libs/official-journal/category/category/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/comment": [
         "libs/official-journal/modules/comment/src/index.ts"
+      ],
+      "@dmr.is/official-journal/modules/department": [
+        "libs/official-journal/modules/department/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/institution": [
         "libs/official-journal/modules/institution/src/index.ts"

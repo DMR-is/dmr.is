@@ -1,9 +1,10 @@
+import { Paging } from '@dmr.is/shared/dto'
+
 import { HttpStatus } from '@nestjs/common'
 import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 
 import { Advert } from './advert.dto'
 import { AdvertSimilar } from './advert-similar.dto'
-import { Paging } from '@dmr.is/shared/dto'
 
 @ApiResponse({
   status: 404,

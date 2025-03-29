@@ -1,7 +1,8 @@
+import { Paging } from '@dmr.is/shared/dto'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { MainCategory } from './main-category.dto'
-import { Paging } from '@dmr.is/shared/dto'
 
 export class GetMainCategoriesResponse {
   @ApiProperty({

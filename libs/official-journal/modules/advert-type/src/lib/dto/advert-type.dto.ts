@@ -1,4 +1,4 @@
-import { Department } from '@dmr.is/official-journal/modules/journal'
+import { BaseEntity } from '@dmr.is/shared/dto'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class AdvertType {
@@ -24,9 +24,9 @@ export class AdvertType {
   slug!: string
 
   @ApiProperty({
-    type: Department,
+    type: BaseEntity,
     description: 'The department of the main advert type',
     required: true,
   })
-  department!: Department
+  department!: BaseEntity
 }

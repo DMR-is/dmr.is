@@ -1,0 +1,19 @@
+{
+  "name": "official-journal-category-category",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/official-journal/category/category/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/official-journal/category/category/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

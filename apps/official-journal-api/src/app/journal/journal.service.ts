@@ -4,7 +4,25 @@ import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
+import {
+  AdvertAttachmentsModel,
+  AdvertCategoriesModel,
+  AdvertCategoryCategoriesModel,
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertMainCategoryModel,
+  AdvertMainTypeModel,
+  AdvertModel,
+  AdvertStatusEnum,
+  AdvertStatusModel,
+  AdvertTypeModel,
+} from '@dmr.is/official-journal/models'
+import {
+  GetInstitutionResponse,
+  GetInstitutionsResponse,
+  Institution,
+} from '@dmr.is/official-journal/modules/institution'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
@@ -21,30 +39,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
-import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
-import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
-import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
-import { IJournalService } from './journal.service.interface'
-import {
-  AdvertModel,
-  AdvertMainCategoryModel,
-  AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
-  AdvertCategoryModel,
-  AdvertCategoriesModel,
-  AdvertCategoryCategoriesModel,
-  AdvertStatusModel,
-  AdvertAttachmentsModel,
-  AdvertTypeModel,
-  AdvertMainTypeModel,
-  AdvertStatusEnum,
-} from '@dmr.is/official-journal/models'
-import {
-  Institution,
-  GetInstitutionResponse,
-  GetInstitutionsResponse,
-} from '@dmr.is/official-journal/modules/institution'
-
 import { CreateAdvert } from './dto/advert.dto'
 import {
   CreateMainCategory,
@@ -57,8 +51,8 @@ import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
 import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
 import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
 import {
-  GetSimilarAdvertsResponse,
   GetAdvertsResponse,
+  GetSimilarAdvertsResponse,
 } from './dto/get-adverts-responses.dto'
 import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
 import { GetCategoryResponse } from './dto/get-category-responses.dto'
@@ -68,11 +62,15 @@ import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dt
 import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
 import { UpdateAdvertBody } from './dto/update-advert-body.dto'
 import { UpdateMainCategory } from './dto/update-main-category.dto'
+import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { advertMigrate } from './migrations/advert.migrate'
 import { advertCategoryMigrate } from './migrations/advert-category.migrate'
 import { advertDepartmentMigrate } from './migrations/advert-department.migrate'
 import { advertInvolvedPartyMigrate } from './migrations/advert-involvedparty.migrate'
 import { advertMainCategoryMigrate } from './migrations/advert-main-category.migrate'
-import { advertMigrate } from './migrations/advert.migrate'
+import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
+import { IJournalService } from './journal.service.interface'
 
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'

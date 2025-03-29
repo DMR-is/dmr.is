@@ -1,4 +1,5 @@
 export { BaseEntity } from './lib/entity/base-entity.dto'
+export { baseEntityMigrate } from './lib/entity/base-entity.migrate'
 export { Paging } from './lib/paging/paging.dto'
 export { PagingQuery } from './lib/paging/paging.query'
 export { Sorting } from './lib/sorting/sorting.dto'

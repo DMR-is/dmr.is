@@ -5,26 +5,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@dmr.is/constants'
 import { CaseStatusEnum } from '@dmr.is/official-journal/models'
-import {
-  GetCasesInProgressReponse,
-  ICaseService,
-} from '@dmr.is/official-journal/modules/case'
 import { GetInstitutionsResponse } from '@dmr.is/official-journal/modules/institution'
-import {
-  DefaultSearchParams,
-  GetAdvertResponse,
-  GetAdvertSignatureQuery,
-  GetAdvertSignatureResponse,
-  GetAdvertsQueryParams,
-  GetAdvertsResponse,
-  GetCategoriesResponse,
-  GetDepartmentResponse,
-  GetDepartmentsQueryParams,
-  GetDepartmentsResponse,
-  GetMainCategoriesResponse,
-  GetSimilarAdvertsResponse,
-  IJournalService,
-} from '@dmr.is/official-journal/modules/journal'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -32,6 +13,21 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
+import { DefaultSearchParams } from './dto/default-search-params.dto'
+import { GetAdvertResponse } from './dto/get-advert-response.dto'
+import { GetAdvertSignatureQuery } from './dto/get-advert-signature-query.dto'
+import { GetAdvertSignatureResponse } from './dto/get-advert-signature-response.dto'
+import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import {
+  GetAdvertsResponse,
+  GetSimilarAdvertsResponse,
+} from './dto/get-adverts-responses.dto'
+import { GetCategoriesResponse } from './dto/get-categories-responses.dto'
+import { GetDepartmentResponse } from './dto/get-department-response.dto'
+import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
+import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
+import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
+import { IJournalService } from './journal.service.interface'
 
 @Controller({
   version: '1',
@@ -39,7 +35,6 @@ import { AdvertsToRss } from '../../util/AdvertsToRss'
 export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
-    @Inject(ICaseService) private readonly caseService: ICaseService,
   ) {}
 
   @Get('/adverts/:id')

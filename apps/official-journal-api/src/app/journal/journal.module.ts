@@ -7,6 +7,7 @@ import {
   AdvertMainCategoryModel,
   AdvertModel,
   AdvertStatusModel,
+  CaseModel,
 } from '@dmr.is/official-journal/models'
 
 import { Module } from '@nestjs/common'
@@ -29,6 +30,7 @@ const MOCK_DATA = process.env.API_MOCK === 'true'
       AdvertCategoriesModel,
       AdvertCategoryCategoriesModel,
       AdvertStatusModel,
+      CaseModel,
     ]),
   ],
   controllers: [],

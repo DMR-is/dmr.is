@@ -1,7 +1,8 @@
+import { Paging } from '@dmr.is/shared/dto'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Department } from './department.dto'
-import { Paging } from '@dmr.is/shared/dto'
 
 export class GetDepartmentsResponse {
   @ApiProperty({
