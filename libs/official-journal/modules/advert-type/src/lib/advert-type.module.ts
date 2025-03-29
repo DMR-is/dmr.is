@@ -8,6 +8,7 @@ import {
   AdvertMainTypeModel,
   AdvertTypeModel,
 } from '@dmr.is/official-journal/models'
+import { AdvertTypeController } from './controllers/advert-type.controller'
 
 @Module({
   imports: [SequelizeModule.forFeature([AdvertMainTypeModel, AdvertTypeModel])],
@@ -17,7 +18,7 @@ import {
       useClass: AdvertTypeService,
     },
   ],
-  controllers: [],
+  controllers: [AdvertTypeController],
   exports: [IAdvertTypeService],
 })
 export class AdvertTypeModule {}

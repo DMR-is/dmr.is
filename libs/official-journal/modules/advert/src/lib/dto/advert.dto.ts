@@ -1,17 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertAttachment } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-attachment'
-
-import { AdvertCorrection } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-correction.dto'
-import { AdvertDocument } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-document'
-import { AdvertPublicationNumber } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-publication-number.dto'
-import { AdvertSignatureBody } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-signature-body.dto'
-import { AdvertSignature } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-signature.dto'
-import { Category } from '../../../../category/src/lib/dto/category.dto'
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 import { Institution } from '@dmr.is/official-journal/modules/institution'
 import { BaseEntity } from '@dmr.is/shared/dto'
+import { AdvertPublicationNumber } from './advert-publication-number.dto'
+import { Category } from '@dmr.is/official-journal/modules/category'
+import { AdvertDocument } from './advert-document.dto'
+import { AdvertAttachment } from './advert-attachment.dto'
+import { AdvertCorrection } from './advert-correction.dto'
 
 export class Advert {
   @ApiProperty({
@@ -136,13 +133,6 @@ export class Advert {
     type: AdvertDocument,
   })
   readonly document!: AdvertDocument
-
-  @ApiProperty({
-    type: AdvertSignature,
-    description: 'Signatures for the advert.',
-    required: true,
-  })
-  readonly signature!: AdvertSignatureBody | null
 
   @ApiProperty({
     type: [AdvertAttachment],

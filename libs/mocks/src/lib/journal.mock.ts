@@ -1,7 +1,12 @@
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
+import { Advert } from '@dmr.is/official-journal/modules/advert'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
-import { MainCategory } from '@dmr.is/official-journal/modules/category'
+import {
+  Category,
+  MainCategory,
+} from '@dmr.is/official-journal/modules/category'
 import { Department } from '@dmr.is/official-journal/modules/department'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
 
 import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 

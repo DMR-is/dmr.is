@@ -1,24 +1,12 @@
-import {
-  GetInstitutionResponse,
-  GetInstitutionsResponse,
-  Institution,
-} from '@dmr.is/official-journal/modules/institution'
+import { DefaultSearchParams } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { DefaultSearchParams } from './dto/default-search-params.dto'
+import { GetCasesInProgressReponse } from './dto/get-cases-in-progress-response.dto'
 
 export interface IJournalService {
-  getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>>
-  getInstitutions(
-    params?: DefaultSearchParams,
-  ): Promise<ResultWrapper<GetInstitutionsResponse>>
-  insertInstitution(
-    model: Institution,
-  ): Promise<ResultWrapper<GetInstitutionResponse>>
-  updateInstitution(
-    model: Institution,
-  ): Promise<ResultWrapper<GetInstitutionResponse>>
+  getCasesInProgress(
+    params: DefaultSearchParams,
+  ): Promise<ResultWrapper<GetCasesInProgressReponse>>
 }
 
-// Token for DI, based on https://stackoverflow.com/a/70088972
 export const IJournalService = Symbol('IJournalService')

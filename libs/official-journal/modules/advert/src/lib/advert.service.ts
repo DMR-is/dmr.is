@@ -20,6 +20,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { InjectModel } from '@nestjs/sequelize'
 import {
   AdvertAttachmentsModel,
+  AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
@@ -27,6 +28,7 @@ import {
   AdvertStatusEnum,
   AdvertStatusModel,
   AdvertTypeModel,
+  CaseModel,
 } from '@dmr.is/official-journal/models'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
@@ -48,6 +50,11 @@ export class AdvertService implements IAdvertService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertCategoriesModel)
+    private readonly advertCategoriesModel: typeof AdvertCategoriesModel,
+    @InjectModel(AdvertStatusModel)
+    private readonly advertStatusModel: typeof AdvertStatusModel,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
   @LogAndHandle()

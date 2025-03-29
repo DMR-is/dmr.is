@@ -3,7 +3,6 @@ import { CaseStatusEnum } from '@dmr.is/official-journal/models'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-// This is a Partial DTO of Case, intended for public API responses
 export class CaseInProgress {
   @ApiProperty({
     type: String,

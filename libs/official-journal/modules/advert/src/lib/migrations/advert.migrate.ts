@@ -3,28 +3,15 @@ import { advertTypeMigrate } from '@dmr.is/official-journal/modules/advert-type'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { Advert } from '../dto/advert.dto'
-import { AdvertAttachment } from '../../../../../../../apps/official-journal-api/src/app/journal/dto/advert-attachment'
-import { advertCorrectionMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-correction.migrate'
-import { advertInvolvedPartyMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-involvedparty.migrate'
-import { advertStatusMigrate } from '../../../../../../../apps/official-journal-api/src/app/journal/migrations/advert-status.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
-  const attachmentsmodel = model.attachments.map<AdvertAttachment>((item) => {
-    const result: AdvertAttachment = {
-      type: item.type,
-      name: item.name,
-      url: item.url,
-    }
-    return result
-  })
-
   const advert: Advert = {
     id: model.id,
     title: `${model.type.title} ${model.subject}`,
     department: baseEntityMigrate(model.department),
     type: model.type ? advertTypeMigrate(model.type) : null,
     subject: model.subject,
-    status: advertStatusMigrate(model.status),
+    status: model.status.title,
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
       number: model.serialNumber,
@@ -37,17 +24,34 @@ export function advertMigrate(model: AdvertModel): Advert {
     categories: model.categories
       ? model.categories.map((item) => baseEntityMigrate(item))
       : [],
-    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    involvedParty: {
+      id: model.involvedParty.id,
+      title: model.involvedParty.title,
+      slug: model.involvedParty.slug,
+      nationalId: model.involvedParty.nationalId,
+    },
     document: {
       //no migrate because this is not a database table.
       html: model.documentHtml,
       isLegacy: model.isLegacy,
       pdfUrl: model.documentPdfUrl,
     },
-    signature: null,
-    attachments: attachmentsmodel.map((item) => ({ ...item, type: '' })),
+    attachments: model.attachments.map((item) => ({
+      type: item.type,
+      name: item.name,
+      url: item.url,
+    })),
     corrections: model.corrections
-      ? model.corrections.map((item) => advertCorrectionMigrate(item))
+      ? model.corrections.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          documentHtml: item.documentHtml ?? null,
+          documentPdfUrl: item.documentPdfUrl ?? null,
+          createdDate: item.created.toISOString(),
+          updatedDate: item.updated.toISOString(),
+          advertId: item.advertId,
+        }))
       : undefined,
   }
   return advert

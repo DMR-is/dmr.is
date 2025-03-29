@@ -1,4 +1,9 @@
 import { LoggingModule } from '@dmr.is/logging'
+import { AdvertModule } from '@dmr.is/official-journal/modules/advert'
+import { AdvertTypeModule } from '@dmr.is/official-journal/modules/advert-type'
+import { CategoryModule } from '@dmr.is/official-journal/modules/category'
+import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
+import { InstitutionModule } from '@dmr.is/official-journal/modules/institution'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
@@ -10,10 +15,9 @@ import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { JournalModule } from './journal/journal.module'
-
 @Module({
   imports: [
+    LoggingModule,
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -28,10 +32,14 @@ import { JournalModule } from './journal/journal.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    LoggingModule,
-    JournalModule,
     HealthModule,
+    DepartmentModule,
+    AdvertTypeModule,
+    CategoryModule,
+    InstitutionModule,
+    AdvertModule,
   ],
+  controllers: [],
   providers: [
     {
       provide: APP_INTERCEPTOR,
