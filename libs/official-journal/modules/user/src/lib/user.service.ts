@@ -23,7 +23,7 @@ import {
 } from './dto/user.dto'
 import { GetRolesByUserResponse } from './dto/user-role.dto'
 
-import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
+import { institutionMigrate } from '@dmr.is/official-journal/modules/institution'
 import {
   UserModel,
   UserRoleModel,
@@ -382,7 +382,7 @@ export class UserService implements IUserService {
     }
 
     const migrated = results.map((involvedParty) =>
-      advertInvolvedPartyMigrate(involvedParty),
+      institutionMigrate(involvedParty),
     )
 
     return ResultWrapper.ok({

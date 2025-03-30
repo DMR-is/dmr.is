@@ -1,7 +1,7 @@
 import { UserRoleModel, UserModel } from '@dmr.is/official-journal/models'
 import { UserRoleDto } from '../dto/user-role.dto'
 import { UserDto } from '../dto/user.dto'
-import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
+import { institutionMigrate } from '@dmr.is/official-journal/modules/institution'
 
 export const userRoleMigrate = (model: UserRoleModel): UserRoleDto => {
   return {
@@ -22,7 +22,7 @@ export const userMigrate = (model: UserModel): UserDto => {
     email: model.email,
     role: userRoleMigrate(model.role),
     involvedParties: model.involvedParties.map((involvedParty) =>
-      advertInvolvedPartyMigrate(involvedParty),
+      institutionMigrate(involvedParty),
     ),
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),

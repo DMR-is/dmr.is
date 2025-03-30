@@ -1,7 +1,7 @@
-import { advertInvolvedPartyMigrate } from '@dmr.is/official-journal/modules/journal'
 import { signatureRecordMigrate } from './signature-record.migrate'
 import { Signature } from '../dto/signature.dto'
 import { SignatureModel } from '@dmr.is/official-journal/models'
+import { institutionMigrate } from '@dmr.is/official-journal/modules/institution'
 
 export const signatureMigrate = (model: SignatureModel): Signature => {
   return {
@@ -9,7 +9,7 @@ export const signatureMigrate = (model: SignatureModel): Signature => {
     signatureDate: new Date(model.signatureDate).toISOString(),
     created: model.created.toISOString(),
     html: model.html,
-    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    involvedParty: institutionMigrate(model.involvedParty),
     records: model.records.map((r) => signatureRecordMigrate(r)),
   }
 }

@@ -10,6 +10,7 @@ import {
   AdvertTypeModel,
   CaseActionEnum,
   CaseCommunicationStatusEnum,
+  CaseModel,
 } from '@dmr.is/official-journal/models'
 import {
   GetApplicationAttachmentsResponse,
@@ -18,21 +19,11 @@ import {
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
 import {
-  CasePriceResponse,
-  ICaseService,
-} from '@dmr.is/official-journal/modules/case'
-import {
   GetComments,
   ICommentService,
 } from '@dmr.is/official-journal/modules/comment'
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateType,
-  GetAdvertTemplateResponse,
-} from '@dmr.is/official-journal/modules/journal'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import {
   IAWSService,
@@ -45,7 +36,6 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 import { HttpException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Application } from './dto/application.dto'
 import {
   GetApplicationAdverts,
   GetApplicationAdvertsQuery,
@@ -67,30 +57,32 @@ export class OfficialJournalApplicationService
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
-    @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @Inject(IPriceService) private readonly priceService: IPriceService,
     @Inject(ICommentService) private readonly commentService: ICommentService,
-    @Inject(ICaseService) private readonly caseService: ICaseService,
     @Inject(IAWSService) private readonly s3Service: IAWSService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @Inject(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
   async getApplicationCase(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
-    const caseLookup =
-      await this.utilityService.caseLookupByApplicationId(applicationId)
+    const caseLookup = await this.caseModel.findOne({
+      where: {
+        applicationId,
+      },
+    })
 
-    if (!caseLookup.result.ok) {
+    if (!caseLookup) {
       return ResultWrapper.err({
         code: 404,
         message: 'Case not found',
       })
     }
 
-    const migrated = applicationCaseMigrate(caseLookup.result.value)
+    const migrated = applicationCaseMigrate(caseLookup)
 
     return ResultWrapper.ok({
       applicationCase: migrated,
@@ -112,11 +104,6 @@ export class OfficialJournalApplicationService
     }
   }
 
-  /**
-   * Returns list of available advert template types.
-   *
-   * @returns A `ResultWrapper` containing an array of available types.
-   */
   @LogAndHandle()
   @Transactional()
   async getApplicationAdvertTemplates(): Promise<
@@ -127,13 +114,6 @@ export class OfficialJournalApplicationService
     return ResultWrapper.ok(res)
   }
 
-  /**
-   * Creates an advert template.
-   * If no available value is provided for type, it will return 'AUGLÝSING' as default.
-   *
-   * @param type - The type of advert requested.
-   * @returns A `ResultWrapper` containing the result of the operation.
-   */
   @LogAndHandle()
   @Transactional()
   async getApplicationAdvertTemplate(
@@ -422,16 +402,20 @@ export class OfficialJournalApplicationService
   ): Promise<ResultWrapper> {
     ResultWrapper
     try {
-      const caseLookup = (
-        await this.utilityService.caseLookupByApplicationId(
+      const caseLookup = await this.caseModel.findOne({
+        where: {
           applicationId,
-          transaction,
-        )
-      ).unwrap()
+        },
+      })
 
-      const application = (await this.applicationService.getApplication(
-        applicationId,
-      )) as Application
+      const application =
+        await this.applicationService.getApplication(applicationId)
+      // first time submitting the application so we create a case
+      if (!caseLookup) {
+        return await this.caseService.createCaseByApplication({
+          applicationId,
+        })
+      }
 
       // const { signatures } = ResultWrapper.unwrap(
       //   await this.signatureService.getSignaturesByCaseId(

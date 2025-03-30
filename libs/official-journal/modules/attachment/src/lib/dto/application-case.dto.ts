@@ -1,38 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import {
-  CaseStatus,
-  CommunicationStatus,
-} from '@dmr.is/official-journal/modules/case'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
-import { Category, Department } from '@dmr.is/official-journal/modules/journal'
+import { BaseEntity } from '@dmr.is/shared/dto'
 
 export class ApplicationCase {
   @ApiProperty({
-    type: [Category],
+    type: [BaseEntity],
   })
-  categories!: Category[]
+  categories!: BaseEntity[]
 
   @ApiProperty({
-    type: CaseStatus,
+    type: BaseEntity,
     description: 'Current status of the case',
   })
-  status!: CaseStatus
+  status!: BaseEntity
 
   @ApiProperty({
-    type: CommunicationStatus,
+    type: BaseEntity,
   })
-  communicationStatus!: CommunicationStatus
+  communicationStatus!: BaseEntity
 
   @ApiProperty({
-    type: Department,
+    type: BaseEntity,
   })
-  department!: Department
+  department!: BaseEntity
 
   @ApiProperty({
-    type: AdvertType,
+    type: BaseEntity,
   })
-  type!: AdvertType
+  type!: BaseEntity
 
   @ApiProperty({
     type: String,

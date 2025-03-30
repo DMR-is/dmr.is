@@ -24,17 +24,6 @@ import {
   AdvertDepartmentModel,
   AdvertFeeTypeEnum,
 } from '@dmr.is/official-journal/models'
-import {
-  CaseTransaction,
-  PaymentExpenses,
-  CasePriceResponse,
-  UpdateCasePriceBody,
-  CaseFeeCalculationBody,
-  transactionFeeCodeMigrate,
-  UpdateCasePaymentBody,
-  GetPaymentQuery,
-  GetPaymentResponse,
-} from '@dmr.is/official-journal/modules/case'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 
 const LOGGING_CATEGORY = 'price-service'
