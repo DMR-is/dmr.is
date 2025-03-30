@@ -81,7 +81,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     return loginRedirect(resolvedUrl)
   }
 
-  const dmrClient = getDmrClient(session.idToken)
+  const dmrClient = getDmrClient(session.accessToken, req)
   const caseId = query.uid?.[0]
 
   if (!caseId) {

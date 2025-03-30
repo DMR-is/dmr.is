@@ -136,7 +136,7 @@ export const CaseProvider = ({
     })
 
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const typesParams = {
     department: currentCase.advertDepartment.id,

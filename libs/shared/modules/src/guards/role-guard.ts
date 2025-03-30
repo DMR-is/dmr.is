@@ -1,3 +1,4 @@
+import { getToken, JWT } from 'next-auth/jwt'
 import { ROLES_KEY } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -29,7 +30,7 @@ export class RoleGuard implements CanActivate {
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest()
+    const req = context.switchToHttp().getRequest()
 
     let requiredRoles = this.reflector.get<UserRoleTitle[] | undefined>(
       ROLES_KEY,
@@ -45,10 +46,20 @@ export class RoleGuard implements CanActivate {
     }
 
     try {
-      // Check if user has required roles
-      const userLookup = await this.userService.getUserByNationalId(
-        request.user.nationalId,
-      )
+      const tokenNext = (await getToken({
+        req,
+      })) as JWT
+
+      const nationalId =
+        (tokenNext?.nationalId as string) ?? req.user.nationalId
+      if (!nationalId || typeof nationalId !== 'string') {
+        this.logger.warn('Could not find nationalId in token role guard', {
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+        })
+        return false
+      }
+      const userLookup = await this.userService.getUserByNationalId(nationalId)
 
       if (!userLookup.result.ok) {
         this.logger.warn('Could not find user', {
@@ -75,8 +86,8 @@ export class RoleGuard implements CanActivate {
         return false
       }
 
-      request.user = user
-      request.involvedParties = user.involvedParties.map((party) => party.id)
+      req.user = user
+      req.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
     } catch (error) {

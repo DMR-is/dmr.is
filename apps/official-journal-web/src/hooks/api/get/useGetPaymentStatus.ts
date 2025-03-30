@@ -15,7 +15,7 @@ export const useGetPaymentStatus = ({
   options,
 }: UsePaymentStatusParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session && caseId ? ['getCasePaymentStatus', session?.user, caseId] : null,

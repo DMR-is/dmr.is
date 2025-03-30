@@ -77,9 +77,6 @@ export const authOptions: AuthOptions = {
           displayName: user.displayName ?? 'unknown',
           role: user.role,
           accessToken: account.access_token,
-          accessTokenExpires: account.expires_at
-            ? account.expires_at * 1000
-            : 0,
           refreshToken: account.refresh_token,
           userId: user.id,
           idToken: account.id_token,

@@ -44,7 +44,7 @@ export const refreshAccessToken = async (token: JWT) => {
     logger.info('Token refreshed', {
       metadata: {
         timeNow: new Date().toISOString(),
-        prevExpires: new Date(token.accessTokenExpires as number).toISOString(),
+        prevExpires: new Date(token.exp as number).toISOString(),
         newExpires: new Date(expiresIn).toISOString(),
       },
       category: LOGGING_CATEGORY,
@@ -54,7 +54,6 @@ export const refreshAccessToken = async (token: JWT) => {
       ...token,
       accessToken: newTokens.access_token,
       refreshToken: newTokens.refresh_token ?? token.refreshToken,
-      accessTokenExpires: expiresIn,
     }
   } catch (error) {
     logger.error('Refreshing failed', {
