@@ -143,6 +143,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const type = await this.advertTypeModel.findByPk(id, {
       include: [
         { model: AdvertMainTypeModel, include: [AdvertDepartmentModel] },
+        { model: AdvertDepartmentModel },
       ],
       transaction,
     })

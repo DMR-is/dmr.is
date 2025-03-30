@@ -1,4 +1,5 @@
 import { LoggingModule } from '@dmr.is/logging'
+import { OFFICIAL_JOURNAL_DB } from '@dmr.is/official-journal/models'
 import { AdvertTypeAdminController } from '@dmr.is/official-journal/modules/advert-type'
 import {
   CategoryAdminController,
@@ -45,6 +46,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
           password: process.env.DB_PASSWORD || 'dev_db',
           username: process.env.DB_USERNAME || 'dev_db',
           port: Number(process.env.DB_PORT) || 5433,
+          models: [...OFFICIAL_JOURNAL_DB],
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>

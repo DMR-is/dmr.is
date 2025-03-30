@@ -18,7 +18,7 @@ export class CategoryController {
     private readonly categoryService: ICategoryService,
   ) {}
 
-  @Get('/maincategories')
+  @Get('/main')
   @ApiOperation({ operationId: 'getMainCategories' })
   @ApiResponse({ status: 200, type: GetMainCategoriesResponse })
   async mainCategories(
@@ -30,7 +30,7 @@ export class CategoryController {
     )
   }
 
-  @Get('/categories')
+  @Get()
   @ApiOperation({ operationId: 'getCategories' })
   @ApiResponse({ status: 200, type: GetCategoriesResponse })
   async categories(

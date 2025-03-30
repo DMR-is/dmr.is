@@ -11,7 +11,7 @@ import { GetAdvertMainTypes } from '../dto/get-advert-main-types.dto'
 import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { GetAdvertTypes } from '../dto/get-advert-types.dto'
 
-@Controller({ path: 'advert-types', version: '1' })
+@Controller({ path: 'types', version: '1' })
 export class AdvertTypeController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -19,22 +19,23 @@ export class AdvertTypeController {
     private readonly advertTypeService: IAdvertTypeService,
   ) {}
 
-  @Get('/types')
-  @ApiOperation({ operationId: 'getTypes' })
-  @ApiResponse({ status: 200, type: GetAdvertTypes })
+  @Get('/main-types/:id')
+  @ApiOperation({ operationId: 'getMainTypeById' })
+  @ApiResponse({ status: 200, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
+  @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  async getTypes(@Query() query?: AdvertTypeQuery): Promise<GetAdvertTypes> {
-    const results = await this.advertTypeService.getTypes(query)
+  async getMainTypeById(@Param('id') id: string): Promise<GetAdvertMainType> {
+    const result = await this.advertTypeService.getMainTypeById(id)
 
-    if (!results.result.ok) {
+    if (!result.result.ok) {
       throw new AdvertTypeError(
-        results.result.error.message,
-        results.result.error.code,
+        result.result.error.message,
+        result.result.error.code,
       )
     }
 
-    return results.result.value
+    return result.result.value
   }
 
   @Get('/main-types')
@@ -57,7 +58,7 @@ export class AdvertTypeController {
     return results.result.value
   }
 
-  @Get('/types/:id')
+  @Get(':id')
   @ApiOperation({ operationId: 'getTypeById' })
   @ApiResponse({ status: 200, type: GetAdvertType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
@@ -76,22 +77,21 @@ export class AdvertTypeController {
     return result.result.value
   }
 
-  @Get('/main-types/:id')
-  @ApiOperation({ operationId: 'getMainTypeById' })
-  @ApiResponse({ status: 200, type: GetAdvertMainType })
+  @Get()
+  @ApiOperation({ operationId: 'getTypes' })
+  @ApiResponse({ status: 200, type: GetAdvertTypes })
   @ApiResponse({ status: 400, type: AdvertTypeError })
-  @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  async getMainTypeById(@Param('id') id: string): Promise<GetAdvertMainType> {
-    const result = await this.advertTypeService.getMainTypeById(id)
+  async getTypes(@Query() query?: AdvertTypeQuery): Promise<GetAdvertTypes> {
+    const results = await this.advertTypeService.getTypes(query)
 
-    if (!result.result.ok) {
+    if (!results.result.ok) {
       throw new AdvertTypeError(
-        result.result.error.message,
-        result.result.error.code,
+        results.result.error.message,
+        results.result.error.code,
       )
     }
 
-    return result.result.value
+    return results.result.value
   }
 }

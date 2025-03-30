@@ -33,7 +33,7 @@ import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { UpdateAdvertTypeBody } from '../dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from '../dto/update-main-advert-type.dto'
 
-@Controller({ path: 'advert-types', version: '1' })
+@Controller({ path: 'types', version: '1' })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
@@ -45,64 +45,7 @@ export class AdvertTypeAdminController {
     private sequelize: Sequelize,
   ) {}
 
-  @Post('/types')
-  @ApiOperation({ operationId: 'createType' })
-  @ApiResponse({ status: HttpStatus.CREATED, type: GetAdvertType })
-  @ApiResponse({ status: 400, type: AdvertTypeError })
-  @ApiResponse({ status: 500, type: AdvertTypeError })
-  async createType(@Body() body: CreateAdvertTypeBody): Promise<GetAdvertType> {
-    const result = await this.advertTypeService.createType(body)
-
-    if (!result.result.ok) {
-      throw new AdvertTypeError(
-        result.result.error.message,
-        result.result.error.code,
-      )
-    }
-
-    return result.result.value
-  }
-
-  @Put('/types/:id')
-  @ApiOperation({ operationId: 'updateType' })
-  @ApiResponse({ status: 200, type: GetAdvertType })
-  @ApiResponse({ status: 400, type: AdvertTypeError })
-  @ApiResponse({ status: 404, type: AdvertTypeError })
-  @ApiResponse({ status: 500, type: AdvertTypeError })
-  async updateType(
-    @Param('id') id: string,
-    @Body() body: UpdateAdvertTypeBody,
-  ): Promise<GetAdvertType> {
-    const result = await this.advertTypeService.updateType(id, body)
-
-    if (!result.result.ok) {
-      throw new AdvertTypeError(
-        result.result.error.message,
-        result.result.error.code,
-      )
-    }
-
-    return result.result.value
-  }
-
-  @Delete('/types/:id')
-  @ApiOperation({ operationId: 'deleteType' })
-  @ApiResponse({ status: HttpStatus.NO_CONTENT })
-  @ApiResponse({ status: 400, type: AdvertTypeError })
-  @ApiResponse({ status: 404, type: AdvertTypeError })
-  @ApiResponse({ status: 500, type: AdvertTypeError })
-  async deleteType(@Param('id') id: string): Promise<void> {
-    const result = await this.advertTypeService.deleteType(id)
-
-    if (!result.result.ok) {
-      throw new AdvertTypeError(
-        result.result.error.message,
-        result.result.error.code,
-      )
-    }
-  }
-
-  @Post('/main-types')
+  @Post('/main')
   @ApiOperation({ operationId: 'createMainType' })
   @ApiResponse({ status: 201, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
@@ -122,7 +65,7 @@ export class AdvertTypeAdminController {
     return results.result.value
   }
 
-  @Post('/main-types/bulk')
+  @Post('/main/bulk')
   @ApiOperation({ operationId: 'createMainTypesBulk' })
   @ApiCreatedResponse()
   @ApiResponse({ status: 400, type: AdvertTypeError })
@@ -147,7 +90,7 @@ export class AdvertTypeAdminController {
     await transaction.commit()
   }
 
-  @Put('/main-types/:id')
+  @Put('/main/:id')
   @ApiOperation({ operationId: 'updateMainType' })
   @ApiResponse({ status: 200, type: GetAdvertMainType })
   @ApiResponse({ status: 400, type: AdvertTypeError })
@@ -169,7 +112,7 @@ export class AdvertTypeAdminController {
     return results.result.value
   }
 
-  @Delete('/main-types/:id')
+  @Delete('/main/:id')
   @ApiOperation({ operationId: 'deleteMainType' })
   @ApiResponse({ status: HttpStatus.NO_CONTENT })
   @ApiResponse({ status: 400, type: AdvertTypeError })
@@ -184,5 +127,62 @@ export class AdvertTypeAdminController {
         results.result.error.code,
       )
     }
+  }
+
+  @Put('/:id')
+  @ApiOperation({ operationId: 'updateType' })
+  @ApiResponse({ status: 200, type: GetAdvertType })
+  @ApiResponse({ status: 400, type: AdvertTypeError })
+  @ApiResponse({ status: 404, type: AdvertTypeError })
+  @ApiResponse({ status: 500, type: AdvertTypeError })
+  async updateType(
+    @Param('id') id: string,
+    @Body() body: UpdateAdvertTypeBody,
+  ): Promise<GetAdvertType> {
+    const result = await this.advertTypeService.updateType(id, body)
+
+    if (!result.result.ok) {
+      throw new AdvertTypeError(
+        result.result.error.message,
+        result.result.error.code,
+      )
+    }
+
+    return result.result.value
+  }
+
+  @Delete(':id')
+  @ApiOperation({ operationId: 'deleteType' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT })
+  @ApiResponse({ status: 400, type: AdvertTypeError })
+  @ApiResponse({ status: 404, type: AdvertTypeError })
+  @ApiResponse({ status: 500, type: AdvertTypeError })
+  async deleteType(@Param('id') id: string): Promise<void> {
+    const result = await this.advertTypeService.deleteType(id)
+
+    if (!result.result.ok) {
+      throw new AdvertTypeError(
+        result.result.error.message,
+        result.result.error.code,
+      )
+    }
+  }
+
+  @Post()
+  @ApiOperation({ operationId: 'createType' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: GetAdvertType })
+  @ApiResponse({ status: 400, type: AdvertTypeError })
+  @ApiResponse({ status: 500, type: AdvertTypeError })
+  async createType(@Body() body: CreateAdvertTypeBody): Promise<GetAdvertType> {
+    const result = await this.advertTypeService.createType(body)
+
+    if (!result.result.ok) {
+      throw new AdvertTypeError(
+        result.result.error.message,
+        result.result.error.code,
+      )
+    }
+
+    return result.result.value
   }
 }

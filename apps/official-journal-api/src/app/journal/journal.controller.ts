@@ -14,7 +14,7 @@ export class JournalController {
     @Inject(IJournalService) private readonly journalService: IJournalService,
   ) {}
 
-  @Get('/cases')
+  @Get('/cases-in-progress')
   @ApiOperation({ operationId: 'getCasesInProgress' })
   @ApiResponse({ status: 200, type: GetCasesInProgressReponse })
   async getCasesInProgress(
