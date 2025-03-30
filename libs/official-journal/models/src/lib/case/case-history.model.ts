@@ -13,7 +13,7 @@ import { CaseStatusModel } from './case-status.model'
 import { OfficialJournalModels } from '../constants'
 import { AdvertTypeModel } from '../advert-type/advert-type.model'
 import { AdvertDepartmentModel } from '../journal/advert-department.model'
-import { AdvertInvolvedPartyModel } from '../journal/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { UserModel } from '../user/user.model'
 
 @Table({ tableName: OfficialJournalModels.CASE_HISTORY, timestamps: false })

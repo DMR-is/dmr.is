@@ -1,7 +1,9 @@
 import { InstitutionDto } from '../dto/institution.dto'
-import { InstitutionModel } from '@dmr.is/official-journal/models'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
 
-export function institutionMigrate(model: InstitutionModel): InstitutionDto {
+export function institutionMigrate(
+  model: AdvertInvolvedPartyModel,
+): InstitutionDto {
   const result: InstitutionDto = {
     id: model.id,
     slug: model.slug,

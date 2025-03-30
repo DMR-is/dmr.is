@@ -6,9 +6,10 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
+import { OfficialJournalModels } from '../constants'
 
-@Table({ tableName: 'advert_involved_party' })
-export class InstitutionModel extends Model {
+@Table({ tableName: OfficialJournalModels.INSTITUTION, timestamps: false })
+export class AdvertInvolvedPartyModel extends Model {
   @Column({
     type: DataType.UUIDV4,
     primaryKey: true,
@@ -18,10 +19,10 @@ export class InstitutionModel extends Model {
   override id!: string
 
   @Column({ allowNull: false })
-  nationalId!: string
-
-  @Column({ allowNull: false })
   title!: string
+
+  @Column({ allowNull: false, field: 'national_id' })
+  nationalId!: string
 
   @Column({ allowNull: false })
   slug!: string

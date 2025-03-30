@@ -11,7 +11,7 @@ import {
 import { UserModel } from './user.model'
 
 import { OfficialJournalModels } from '../constants'
-import { AdvertInvolvedPartyModel } from '../journal/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 
 @Table({
   tableName: OfficialJournalModels.USER_INVOLVED_PARTIES,

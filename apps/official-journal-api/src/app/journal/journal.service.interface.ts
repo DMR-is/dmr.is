@@ -5,7 +5,7 @@ import { GetCasesInProgressReponse } from './dto/get-cases-in-progress-response.
 
 export interface IJournalService {
   getCasesInProgress(
-    params: DefaultSearchParams,
+    params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCasesInProgressReponse>>
 }
 

@@ -54,7 +54,6 @@ export class AdvertService implements IAdvertService {
     private readonly advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertStatusModel)
     private readonly advertStatusModel: typeof AdvertStatusModel,
-    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
   @LogAndHandle()

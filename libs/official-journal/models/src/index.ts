@@ -41,7 +41,7 @@ export { CommentModel } from './lib/comment/comment.model'
 export { CommentsModel } from './lib/comment/comments.model'
 
 // institution models
-export { InstitutionModel } from './lib/institution/institution.model'
+export { AdvertInvolvedPartyModel } from './lib/institution/institution.model'
 
 // journal models
 export { AdvertCategoriesModel } from './lib/journal/advert-categories.model'
@@ -52,7 +52,6 @@ export {
   AdvertDepartmentModel,
   DepartmentEnum,
 } from './lib/journal/advert-department.model'
-export { AdvertInvolvedPartyModel } from './lib/journal/advert-involved-party.model'
 export { AdvertMainCategoryModel } from './lib/journal/advert-main-category.model'
 export {
   AdvertStatusModel,
@@ -69,3 +68,6 @@ export { SignatureModel } from './lib/signature/signature.model'
 export { UserInvolvedPartiesModel } from './lib/user/user-involved-parties.model'
 export { UserRoleModel } from './lib/user/user-role.model'
 export { UserModel } from './lib/user/user.model'
+
+// database models
+export { OFFICIAL_JOURNAL_DB } from './lib/definitions'

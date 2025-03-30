@@ -13,7 +13,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { institutionMigrate } from './migrations/institution.migrate'
 import { IInstitutionService } from './institution.service.interface'
-import { InstitutionModel } from '@dmr.is/official-journal/models'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
 import {
   InstitutionQuery,
   GetInstitutions,
@@ -28,8 +28,8 @@ const LOGGING_CATEGORY = 'institution-service'
 export class InstitutionService implements IInstitutionService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @InjectModel(InstitutionModel)
-    private readonly institutionModel: typeof InstitutionModel,
+    @InjectModel(AdvertInvolvedPartyModel)
+    private readonly institutionModel: typeof AdvertInvolvedPartyModel,
     private readonly sequelize: Sequelize,
   ) {}
 

@@ -18,11 +18,15 @@ import { Op } from 'sequelize'
 import { Department } from './dto/department.dto'
 import { generatePaging } from '@dmr.is/utils'
 import { LogAndHandle } from '@dmr.is/decorators'
+import { Sequelize } from 'sequelize-typescript'
+import { InjectModel } from '@nestjs/sequelize'
 
 @Injectable()
 export class DepartmentService implements IDepartmentService {
   constructor(
+    @InjectModel(AdvertDepartmentModel)
     private readonly advertDepartmentModel: typeof AdvertDepartmentModel,
+    private readonly sequelize: Sequelize,
   ) {}
 
   @LogAndHandle()

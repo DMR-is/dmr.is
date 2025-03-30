@@ -16,7 +16,7 @@ import {
 import { UserInvolvedPartiesModel } from './user-involved-parties.model'
 import { UserRoleModel } from './user-role.model'
 import { OfficialJournalModels } from '../constants'
-import { AdvertInvolvedPartyModel } from '../journal/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 
 @DefaultScope(() => ({
   include: [UserRoleModel, AdvertInvolvedPartyModel],

@@ -13,7 +13,7 @@ import { CaseActionModel } from './case-action.model'
 import { OfficialJournalModels } from '../constants'
 import { CaseStatusModel } from '../case/case-status.model'
 import { CaseModel } from '../case/case.model'
-import { AdvertInvolvedPartyModel } from '../journal/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { UserModel } from '../user/user.model'
 
 @DefaultScope(() => ({

@@ -2,7 +2,6 @@ import {
   AdvertCategoriesModel,
   AdvertModel,
   AdvertStatusModel,
-  CaseModel,
 } from '@dmr.is/official-journal/models'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -16,7 +15,6 @@ import { AdvertService } from './advert.service'
       AdvertModel,
       AdvertStatusModel,
       AdvertCategoriesModel,
-      CaseModel,
     ]),
   ],
   controllers: [AdvertController],

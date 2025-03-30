@@ -5,6 +5,40 @@ import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdvertCategoryModel,
+  AdvertCorrectionModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertModel,
+  AdvertStatusEnum,
+  AdvertTypeModel,
+  ApplicationAttachmentModel,
+  ApplicationAttachmentTypeModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusEnum,
+  CaseCommunicationStatusModel,
+  CaseHistoryModel,
+  CaseModel,
+  CaseStatusEnum,
+  CaseTagModel,
+  DepartmentEnum,
+  SignatureMemberModel,
+  SignatureModel,
+  SignatureRecordModel,
+} from '@dmr.is/official-journal/models'
+import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
+import {
+  IAttachmentService,
+  PostApplicationAttachmentBody,
+} from '@dmr.is/official-journal/modules/attachment'
+import { IJournalService } from '@dmr.is/official-journal/modules/journal'
+import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { IAWSService, PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
@@ -22,6 +56,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+
 import {
   AddCaseAdvertCorrection,
   DeleteCaseAdvertCorrection,
@@ -49,6 +84,7 @@ import {
   GetCasesWithPublicationNumber,
   GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
+import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
 import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
 import { GetTagsResponse } from './dto/get-tags-response.dto'
 import { PostCasePublishBody } from './dto/post-publish-body.dto'
@@ -76,41 +112,6 @@ import { ICaseCreateService } from './services/create/case-create.service.interf
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
 import { casesDetailedIncludes, casesIncludes } from './relations'
-import { IJournalService } from '@dmr.is/official-journal/modules/journal'
-import {
-  CaseModel,
-  CaseTagModel,
-  CaseCommunicationStatusModel,
-  AdvertCorrectionModel,
-  AdvertModel,
-  CaseHistoryModel,
-  CaseChannelModel,
-  CaseChannelsModel,
-  SignatureModel,
-  AdvertDepartmentModel,
-  AdvertTypeModel,
-  AdvertCategoryModel,
-  ApplicationAttachmentModel,
-  ApplicationAttachmentTypeModel,
-  AdvertInvolvedPartyModel,
-  SignatureRecordModel,
-  SignatureMemberModel,
-  CaseStatusEnum,
-  DepartmentEnum,
-  AdvertStatusEnum,
-  CaseCommunicationStatusEnum,
-} from '@dmr.is/official-journal/models'
-import {
-  IAttachmentService,
-  PostApplicationAttachmentBody,
-} from '@dmr.is/official-journal/modules/attachment'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
-import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
-import { IAWSService, PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
-import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
-import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
-import { IPriceService } from '@dmr.is/official-journal/modules/price'
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 
 const LOGGING_CATEGORY = 'case-service'
 const LOGGING_QUERY = 'CaseServiceQueryRunner'

@@ -11,7 +11,7 @@ import {
 import { SignatureRecordModel } from './signature-record.model'
 import { OfficialJournalModels } from '../constants'
 import { CaseModel } from '../case/case.model'
-import { AdvertInvolvedPartyModel } from '../journal/advert-involved-party.model'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { AdvertModel } from '../journal/advert.model'
 
 @Table({ tableName: OfficialJournalModels.SIGNATURE, timestamps: false })
