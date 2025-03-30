@@ -16,6 +16,8 @@ import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { JournalModule } from './journal/journal.module'
+
 @Module({
   imports: [
     LoggingModule,
@@ -34,13 +36,13 @@ import { SequelizeModule } from '@nestjs/sequelize'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-
-    HealthModule,
+    JournalModule,
+    AdvertModule,
     DepartmentModule,
-    AdvertTypeModule,
     CategoryModule,
     InstitutionModule,
-    AdvertModule,
+    AdvertTypeModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [

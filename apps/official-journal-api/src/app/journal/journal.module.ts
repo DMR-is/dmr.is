@@ -3,12 +3,13 @@ import { CaseModel } from '@dmr.is/official-journal/models'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { JournalController } from './journal.controller'
 import { JournalService } from './journal.service'
 import { IJournalService } from './journal.service.interface'
 
 @Module({
   imports: [SequelizeModule.forFeature([CaseModel])],
-  controllers: [],
+  controllers: [JournalController],
   providers: [
     {
       provide: IJournalService,

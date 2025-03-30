@@ -28,7 +28,6 @@ import {
   AdvertStatusEnum,
   AdvertStatusModel,
   AdvertTypeModel,
-  CaseModel,
 } from '@dmr.is/official-journal/models'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
