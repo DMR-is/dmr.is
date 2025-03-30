@@ -4,26 +4,23 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertDepartmentModel,
+  CaseCommunicationStatusEnum,
   CaseCommunicationStatusModel,
   CaseModel,
-  CaseStatusModel,
-} from '@dmr.is/modules'
-import {
-  CaseCommunicationStatus,
   CaseStatusEnum,
-  DepartmentSlugEnum,
-} from '@dmr.is/shared/dto'
-import {
-  GetStatisticOverviewDashboardResponse,
-  GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
-  StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
+  CaseStatusModel,
+} from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { GetStatisticsDepartmentResponse } from './dto/statistics-department.dto'
+import { StatisticsOverviewQueryType } from './dto/statistics-overview-constants.dto'
+import {
+  GetStatisticOverviewDashboardResponse,
+  GetStatisticsOverviewResponse,
+} from './dto/statistics-overview-dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 const LOGGING_CATEGORY = 'statistics-service'
@@ -45,7 +42,7 @@ export class StatisticsService implements IStatisticsService {
 
   @LogAndHandle()
   async getDepartment(
-    slug: DepartmentSlugEnum,
+    slug: string,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
     const countQuery = await this.caseModel.count({
       benchmark: true,
@@ -208,7 +205,7 @@ export class StatisticsService implements IStatisticsService {
           model: CaseCommunicationStatusModel,
           where: {
             title: {
-              [Op.eq]: CaseCommunicationStatus.HasAnswers,
+              [Op.eq]: CaseCommunicationStatusEnum.HasAnswers,
             },
           },
         },

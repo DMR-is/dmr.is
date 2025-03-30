@@ -1,16 +1,25 @@
-import {
-  ApplicationSignatureMember,
-  ApplicationSignatureRecord,
-} from '@dmr.is/official-journal/modules/application'
-
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-const memberTemplate = (member: ApplicationSignatureMember) => {
+type Member = {
+  name: string
+  below?: string
+  above?: string
+  after?: string
+}
+
+type Record = {
+  institution: string
+  signatureDate: string
+  additional?: string
+  chairman?: Member
+  members: Member[]
+}
+
+const memberTemplate = (member: Member) => {
   const styleObject = {
     marginBottom: member?.below ? '0' : '1.5em',
   }
-
   const name = member?.name ?? ''
   const above = member?.above ?? ''
   const after = member?.after ?? ''
@@ -31,7 +40,7 @@ const memberTemplate = (member: ApplicationSignatureMember) => {
   `
 }
 
-const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
+const signatureRecordTemplate = (record: Record) => {
   const membersCount = record.members?.length ?? 0
 
   const styleObject = {
@@ -76,7 +85,7 @@ const signatureRecordTemplate = (record: ApplicationSignatureRecord) => {
       </div>`
 }
 
-const filteredRecords = (records: ApplicationSignatureRecord[]) => {
+const filteredRecords = (records: Record[]) => {
   if (records.length === 1) {
     return records
   }
@@ -93,9 +102,7 @@ const filteredRecords = (records: ApplicationSignatureRecord[]) => {
   }))
 }
 
-export const applicationSignatureTemplate = (
-  records?: ApplicationSignatureRecord[],
-) => {
+export const applicationSignatureTemplate = (records?: Record[]) => {
   if (!records) {
     return ''
   }

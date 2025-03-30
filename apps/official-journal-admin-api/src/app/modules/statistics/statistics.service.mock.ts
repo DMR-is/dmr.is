@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
   AdvertStatusEnum,
   CaseStatusEnum,
@@ -36,7 +37,7 @@ export class MockStatisticsService implements IStatisticsService {
       AdvertStatusEnum.ReadyForPublication,
     ]
 
-    const adverts = [ALL_MOCK_ADVERTS].filter(
+    const adverts = ALL_MOCK_ADVERTS.filter(
       (advert) =>
         advert?.department?.id === id &&
         advert.status &&

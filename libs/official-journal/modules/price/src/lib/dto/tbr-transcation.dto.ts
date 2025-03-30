@@ -1,9 +1,10 @@
 import { Transform } from 'class-transformer'
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger'
+import { PaymentExpenses } from './payment.dto'
 
-export class CaseTransaction {
+export class TBRTransaction {
   @ApiProperty({
     type: String,
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
@@ -66,4 +67,14 @@ export class CaseTransaction {
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value, 10))
   readonly customAdditionalCharacterCount!: number | null
+}
+
+export class PriceByDepartmentResponse extends PartialType(
+  OmitType(TBRTransaction, ['id'] as const),
+) {
+  @ApiProperty({
+    type: [PaymentExpenses],
+    description: 'Department code',
+  })
+  expenses!: PaymentExpenses[]
 }

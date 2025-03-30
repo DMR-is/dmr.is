@@ -3,27 +3,24 @@ import { Sequelize } from 'sequelize-typescript'
 import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  CaseCategoriesModel,
+  CaseCommunicationStatusEnum,
+  CaseModel,
+  CaseStatusEnum,
+  CaseStatusModel,
+} from '@dmr.is/official-journal/models'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
-import { ICaseUpdateService } from './case-update.service.interface'
-
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
-import { IApplicationService } from '@dmr.is/official-journal/modules/application'
-import { IPriceService } from '@dmr.is/official-journal/modules/price'
-import {
-  CaseModel,
-  CaseCategoriesModel,
-  CaseCommunicationStatusEnum,
-  CaseStatusModel,
-  CaseStatusEnum,
-} from '@dmr.is/official-journal/models'
-import { ICommentService } from '@dmr.is/official-journal/modules/comment'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { getNextStatus, getPreviousStatus } from '../../case.utils'
 import { UpdateAdvertHtmlBody } from '../../dto/update-advert-html-body.dto'
 import { UpdateCaseBody } from '../../dto/update-case-body.dto'
@@ -38,6 +35,8 @@ import { UpdatePublishDateBody } from '../../dto/update-publish-date-body.dto'
 import { UpdateTagBody } from '../../dto/update-tag-body.dto'
 import { UpdateTitleBody } from '../../dto/update-title-body.dto'
 import { UpdateCaseTypeBody } from '../../dto/update-type-body.dto'
+import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
+import { ICaseUpdateService } from './case-update.service.interface'
 
 const LOGGING_CATEGORY = 'case-update-service'
 const LOGGING_CONTEXT = 'CaseUpdateService'

@@ -1,16 +1,9 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
+import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
-import {
-  DepartmentSlugEnum,
-  GetStatisticOverviewDashboardResponse,
-  GetStatisticsDepartmentResponse,
-  GetStatisticsOverviewResponse,
-  StatisticsOverviewQueryType,
-  UserDto,
-} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
@@ -21,6 +14,12 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
+import { GetStatisticsDepartmentResponse } from './dto/statistics-department.dto'
+import { StatisticsOverviewQueryType } from './dto/statistics-overview-constants.dto'
+import {
+  GetStatisticOverviewDashboardResponse,
+  GetStatisticsOverviewResponse,
+} from './dto/statistics-overview-dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 @ApiBearerAuth()
@@ -38,15 +37,10 @@ export class StatisticsController {
 
   @Get('/department/:slug')
   @ApiOperation({ operationId: 'getStatisticsForDepartment' })
-  @ApiParam({
-    name: 'slug',
-    enum: DepartmentSlugEnum,
-    enumName: 'DepartmentSlugEnum',
-  })
+  @ApiParam({ name: 'slug' })
   @ApiResponse({ status: 200, type: GetStatisticsDepartmentResponse })
   async department(
-    @Param('slug', new EnumValidationPipe(DepartmentSlugEnum))
-    slug: DepartmentSlugEnum,
+    @Param('slug') slug: string,
   ): Promise<GetStatisticsDepartmentResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getDepartment(slug),

@@ -1,42 +1,25 @@
 import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
-
-import 'multer'
+import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
+import { PostExternalPaymentBody } from './dto/payment.dto'
 import {
-  CasePriceResponse,
   GetPaymentQuery,
   GetPaymentResponse,
-  UpdateCasePaymentBody,
-  UpdateCasePriceBody,
-} from '@dmr.is/official-journal/modules/case'
-import { TransactionFeeCodesResponse } from '@dmr.is/official-journal/modules/application'
+} from './dto/get-case-payment-response.dto'
+import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
+import { PriceByDepartmentResponse } from './dto/tbr-transcation.dto'
 
 export interface IPriceService {
-  getFeeByApplication(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceResponse>>
-  updateCasePriceByCaseId(
-    caseId: string,
-    body: UpdateCasePriceBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
   getAllFeeCodes(
     transaction?: Transaction,
   ): Promise<ResultWrapper<TransactionFeeCodesResponse>>
-  postExternalPayment(
-    caseId: string,
-    body: UpdateCasePaymentBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  postExternalPayment(body: PostExternalPaymentBody): Promise<ResultWrapper>
   getExternalPaymentStatus(
     params: GetPaymentQuery,
-    transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>>
-  postExternalPaymentByCaseId(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  getPriceByDepartmentSlug(
+    body: CaseFeeCalculationBody,
+  ): Promise<ResultWrapper<PriceByDepartmentResponse>>
 }
 
 export const IPriceService = Symbol('IPriceService')

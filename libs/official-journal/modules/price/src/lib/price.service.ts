@@ -4,13 +4,9 @@ import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ResultWrapper } from '@dmr.is/types'
-import {
-  getFastTrack,
-  getHtmlTextLength,
-  MAX_CHARACTER_HTML,
-} from '@dmr.is/utils'
+import { MAX_CHARACTER_HTML } from '@dmr.is/utils'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IPriceService } from './price.service.interface'
@@ -18,35 +14,29 @@ import { IPriceService } from './price.service.interface'
 import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 import {
   CaseModel,
-  CaseTransactionModel,
   TransactionFeeCodesModel,
-  AdvertInvolvedPartyModel,
-  AdvertDepartmentModel,
   AdvertFeeTypeEnum,
 } from '@dmr.is/official-journal/models'
-import { IApplicationService } from '@dmr.is/shared/modules/application'
+import { transactionFeeCodeMigrate } from './migrations/transaction-fee-code.migrate'
+import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+} from './dto/get-case-payment-response.dto'
+import { PaymentExpenses, PostExternalPaymentBody } from './dto/payment.dto'
+import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
+import { PriceByDepartmentResponse } from './dto/tbr-transcation.dto'
 
 const LOGGING_CATEGORY = 'price-service'
-type PriceByDepartmentResponse = Partial<Omit<CaseTransaction, 'id'>> & {
-  expenses: PaymentExpenses[]
-}
-
 /**
- * Service class for getting and calculating prices for applications and cases.
+ * Service class for getting and calculating prices
  * @implements IPriceService
  */
 @Injectable()
 export class PriceService implements IPriceService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-
-    @Inject(forwardRef(() => IApplicationService))
-    private applicationService: IApplicationService,
-
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-
-    @InjectModel(CaseTransactionModel)
-    private readonly caseTransactionModel: typeof CaseTransactionModel,
 
     @Inject(IAuthService)
     private readonly authService: IAuthService,
@@ -59,191 +49,7 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async getFeeByApplication(
-    applicationId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CasePriceResponse>> {
-    const { application } = (
-      await this.applicationService.getApplication(applicationId)
-    ).unwrap()
-
-    if (!application) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `Application <${applicationId}> not found`,
-        category: LOGGING_CATEGORY,
-      })
-    }
-    // try {
-    const isFastTrack = application.answers?.advert.requestedDate
-      ? getFastTrack(new Date(application.answers?.advert.requestedDate))
-          .fastTrack
-      : false
-
-    const transactionPrice = await this.getPriceByDepartmentSlug(
-      {
-        slug: application.answers.advert.department.slug,
-        bodyLengthCount: getHtmlTextLength(application.answers?.advert.html),
-        isFastTrack,
-      },
-      transaction,
-    )
-    const price = transactionPrice.unwrap().price
-
-    if (!price) {
-      return ResultWrapper.err({
-        code: 404,
-        message: `No price found for <${applicationId}>`,
-        category: LOGGING_CATEGORY,
-      })
-    }
-    return ResultWrapper.ok({ price })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async postExternalPaymentByCaseId(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id', 'caseNumber', 'html', 'fastTrack'],
-      include: [
-        {
-          model: CaseTransactionModel,
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'nationalId'],
-        },
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'slug'],
-        },
-      ],
-      transaction,
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    if (!caseLookup.transaction) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case transaction not found',
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    const caseFeeCalculation = await this.getPriceByDepartmentSlug(
-      {
-        slug: caseLookup.department.slug,
-        isFastTrack: caseLookup.fastTrack,
-        imageTier: caseLookup.transaction.imageTier ?? undefined,
-        baseDocumentCount: caseLookup.transaction.customBaseCount ?? 0,
-        bodyLengthCount:
-          caseLookup.transaction.customAdditionalCharacterCount ??
-          getHtmlTextLength(caseLookup.html),
-        additionalDocCount:
-          caseLookup.transaction.customAdditionalDocCount ?? 0,
-      },
-      transaction,
-    )
-
-    const feeCalculation = caseFeeCalculation.unwrap()
-
-    this.postExternalPayment(
-      caseId,
-      {
-        id: caseLookup.transaction.id,
-        chargeBase: caseLookup.caseNumber,
-        Expenses: feeCalculation.expenses,
-        debtorNationalId: caseLookup.involvedParty.nationalId,
-      },
-      transaction,
-    )
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updateCasePriceByCaseId(
-    caseId: string,
-    body: UpdateCasePriceBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: [
-        'id',
-        'html',
-        'requestedPublicationDate',
-        'fastTrack',
-        'caseNumber',
-      ],
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'slug'],
-        },
-      ],
-      transaction,
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    const characterLength =
-      body.customBodyLengthCount || getHtmlTextLength(caseLookup.html)
-
-    const caseFeeCalculation = await this.getPriceByDepartmentSlug(
-      {
-        slug: caseLookup.department.slug,
-        bodyLengthCount: characterLength,
-        isFastTrack: caseLookup.fastTrack,
-        imageTier: body.imageTier,
-        baseDocumentCount: body.customBaseDocumentCount,
-        additionalDocCount: body.customAdditionalDocCount,
-      },
-      transaction,
-    )
-
-    const feeCalculation = caseFeeCalculation.unwrap()
-
-    const [caseTransaction] = await this.caseTransactionModel.upsert(
-      {
-        caseId,
-        externalReference: caseLookup.caseNumber,
-        price: feeCalculation.price,
-        customBaseCount: body.customBaseDocumentCount ?? null,
-        customAdditionalDocCount: body.customAdditionalDocCount ?? null,
-        customAdditionalCharacterCount: characterLength ?? null,
-        feeCodes: feeCalculation.feeCodes,
-        imageTier: body.imageTier ?? null,
-      },
-      { transaction, conflictFields: ['case_id'] },
-    )
-
-    await this.caseModel.update(
-      { transactionId: caseTransaction.id },
-      { where: { id: caseId }, transaction },
-    )
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  private async getPriceByDepartmentSlug(
+  async getPriceByDepartmentSlug(
     body: CaseFeeCalculationBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PriceByDepartmentResponse>> {
@@ -408,7 +214,6 @@ export class PriceService implements IPriceService {
       additionalDocPrice +
       imageTierPrice
 
-    // Return fee codes as well!
     return ResultWrapper.ok({
       price: Math.round(price),
       customBaseCount: baseCount ?? null,
@@ -419,14 +224,10 @@ export class PriceService implements IPriceService {
     })
   }
 
-  // Payment section:
-
   @LogAndHandle()
   @Transactional()
   async postExternalPayment(
-    _caseId: string,
-    body: UpdateCasePaymentBody,
-    _transaction?: Transaction,
+    body: PostExternalPaymentBody,
   ): Promise<ResultWrapper> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
@@ -459,10 +260,8 @@ export class PriceService implements IPriceService {
   }
 
   @LogAndHandle()
-  @Transactional()
   async getExternalPaymentStatus(
-    parameters: GetPaymentQuery,
-    transaction?: Transaction,
+    params: GetPaymentQuery,
   ): Promise<ResultWrapper<GetPaymentResponse>> {
     if (!process.env.FEE_SERVICE_CRED) {
       return ResultWrapper.err({
@@ -472,30 +271,9 @@ export class PriceService implements IPriceService {
       })
     }
 
-    const caseLookup = await this.caseModel.findByPk(parameters.caseId, {
-      attributes: ['id', 'caseNumber'],
-      include: [
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'nationalId'],
-        },
-      ],
-      transaction,
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found for payment status',
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    const debtorNationalId = caseLookup.involvedParty.nationalId
-
     const credentials = btoa(process.env.FEE_SERVICE_CRED)
     const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_FJS_PATH}/claim/${debtorNationalId}?office=${process.env.FEE_SERVICE_OFFICE_ID}&chargeCategory=${process.env.FEE_SERVICE_CHARGE_CATEGORY}&chargeBase=${caseLookup.caseNumber}`,
+      `${process.env.XROAD_FJS_PATH}/claim/${params.debtorNationalId}?office=${process.env.FEE_SERVICE_OFFICE_ID}&chargeCategory=${process.env.FEE_SERVICE_CHARGE_CATEGORY}&chargeBase=${params.chargeBase}`,
       {
         method: 'GET',
         headers: {
@@ -518,16 +296,14 @@ export class PriceService implements IPriceService {
     }
 
     if (!res.ok) {
-      this.logger.error(
-        `price.service.getExternalPaymentStatus, could not get payment<${parameters.caseId}>`,
-        {
-          status: res.status,
-          category: LOGGING_CATEGORY,
-        },
-      )
+      this.logger.error(`Could not get payment`, {
+        status: res.status,
+        chargeBase: params.chargeBase,
+        category: LOGGING_CATEGORY,
+      })
       return ResultWrapper.err({
         code: res.status,
-        message: `Payment status <${parameters.caseId}> error`,
+        message: `Payment status for charge base ${params.chargeBase} error`,
       })
     }
 

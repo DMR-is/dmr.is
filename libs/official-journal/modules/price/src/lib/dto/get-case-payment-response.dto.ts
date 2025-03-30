@@ -7,7 +7,13 @@ export class GetPaymentQuery {
     type: String,
   })
   @IsString()
-  caseId!: string
+  debtorNationalId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  chargeBase!: string
 }
 
 export class GetPaymentResponse {
