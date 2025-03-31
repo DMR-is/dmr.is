@@ -28,8 +28,19 @@ export class AdvertMainTypeModel extends Model {
   })
   override id!: string
 
-  @Column
-  title!: string
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  get title(): string {
+    const rawTitle = this.getDataValue('title')
+    if (!rawTitle) return rawTitle
+    return rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1).toLowerCase()
+  }
+
+  set title(value: string) {
+    this.setDataValue('title', value)
+  }
 
   @Column
   slug!: string
