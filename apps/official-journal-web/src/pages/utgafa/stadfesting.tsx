@@ -147,8 +147,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       showBanner: true,
       imgSrc: '/assets/banner-publish-image.svg',
       title: 'Útgáfa mála',
-      description:
-        'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+      description: 'Listi yfir mál á leið í útgáfu.',
       variant: 'small',
       contentColumnSpan: ['12/12', '12/12', '7/12'],
       imageColumnSpan: ['12/12', '12/12', '3/12'],
