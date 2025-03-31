@@ -9,7 +9,6 @@ import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import { UserModule } from '@dmr.is/official-journal/modules/user'
 import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { ApplicationModule } from '@dmr.is/shared/modules/application'
 import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
   DMRSequelizeConfigModule,
@@ -42,7 +41,6 @@ import { IOfficialJournalApplicationService } from './application/application.se
       inject: [DMRSequelizeConfigService],
     }),
     LoggingModule,
-    ApplicationModule,
     SignatureModule,
     PdfModule,
     UtilityModule,

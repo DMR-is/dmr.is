@@ -1,8 +1,4 @@
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateTypeEnums,
-  GetAdvertTemplateResponse,
-} from '@dmr.is/official-journal/modules/journal'
+import { AdvertTemplateTypeEnums } from '@dmr.is/constants'
 
 import {
   templateAuglysing,
@@ -10,9 +6,7 @@ import {
   templateReglugerd,
 } from './templates'
 
-export const getTemplate = (
-  type: AdvertTemplateTypeEnums,
-): GetAdvertTemplateResponse => {
+export const getTemplate = (type: AdvertTemplateTypeEnums) => {
   const DEFAULT = {
     html: templateAuglysing,
     type: AdvertTemplateTypeEnums.AUGLYSING,
@@ -38,7 +32,7 @@ export const getTemplate = (
   }
 }
 
-export const getTemplateDetails = (): AdvertTemplateDetails[] => {
+export const getTemplateDetails = () => {
   const enumArray = Object.values<AdvertTemplateTypeEnums>(
     AdvertTemplateTypeEnums,
   )

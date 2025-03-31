@@ -2,6 +2,7 @@ import { Op, Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { AdvertTemplateType, UserDto } from '@dmr.is/official-journal/dto'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -10,6 +11,7 @@ import {
   AdvertTypeModel,
   CaseActionEnum,
   CaseCommunicationStatusEnum,
+  CaseCommunicationStatusModel,
   CaseModel,
 } from '@dmr.is/official-journal/models'
 import {
@@ -23,7 +25,7 @@ import {
   ICommentService,
 } from '@dmr.is/official-journal/modules/comment'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { OJOIApplication } from '@dmr.is/shared/dto'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import {
   IAWSService,
@@ -31,11 +33,21 @@ import {
   S3UploadFilesResponse,
 } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import {
+  generatePaging,
+  getFastTrack,
+  getHtmlTextLength,
+  getLimitAndOffset,
+} from '@dmr.is/utils'
 
 import { HttpException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { ApplicationPriceResponse } from './dto/application-price-response.dto'
+import {
+  AdvertTemplateDetails,
+  GetAdvertTemplateResponse,
+} from './dto/get-advert-template-response.dto'
 import {
   GetApplicationAdverts,
   GetApplicationAdvertsQuery,
@@ -63,7 +75,9 @@ export class OfficialJournalApplicationService
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @Inject(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(CaseCommunicationStatusModel)
+    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
   async getApplicationCase(
@@ -93,15 +107,33 @@ export class OfficialJournalApplicationService
   @Transactional()
   async getPrice(
     applicationId: string,
-  ): Promise<ResultWrapper<CasePriceResponse>> {
-    try {
-      return await this.priceService.getFeeByApplication(applicationId)
-    } catch (error) {
+  ): Promise<ResultWrapper<ApplicationPriceResponse>> {
+    const { application }: { application: OJOIApplication } =
+      ResultWrapper.unwrap(
+        await this.applicationService.getApplication(applicationId),
+      )
+
+    const isFastTrack = getFastTrack(
+      new Date(application.answers.advert.requestedDate),
+    ).fastTrack
+
+    const { price } = ResultWrapper.unwrap(
+      await this.priceService.getPriceByDepartmentSlug({
+        slug: application.answers.advert.department.slug,
+        bodyLengthCount: getHtmlTextLength(application.answers?.advert.html),
+        isFastTrack,
+      }),
+    )
+
+    if (!price) {
       return ResultWrapper.err({
         code: 500,
-        message: `Fee calculation failed on application<${applicationId}>. ${error}`,
+        message: 'Could not get price',
       })
     }
+    return ResultWrapper.ok({
+      price: price,
+    })
   }
 
   @LogAndHandle()
@@ -133,12 +165,22 @@ export class OfficialJournalApplicationService
   async getComments(
     applicationId: string,
   ): Promise<ResultWrapper<GetComments>> {
-    const caseResponse = (
-      await this.utilityService.caseLookupByApplicationId(applicationId)
-    ).unwrap()
+    const caseLookup = await this.caseModel.findOne({
+      attributes: ['id', 'applicationId'],
+      where: {
+        applicationId,
+      },
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
 
     const comments = ResultWrapper.unwrap(
-      await this.commentService.getComments(caseResponse.id, {
+      await this.commentService.getComments(caseLookup.id, {
         action: [
           CaseActionEnum.COMMENT_APPLICATION,
           CaseActionEnum.COMMENT_EXTERNAL,
@@ -161,9 +203,19 @@ export class OfficialJournalApplicationService
     body: PostApplicationComment,
     userDto: UserDto,
   ): Promise<ResultWrapper> {
-    const caseLookup = (
-      await this.utilityService.caseLookupByApplicationId(applicationId)
-    ).unwrap()
+    const caseLookup = await this.caseModel.findOne({
+      attributes: ['id', 'applicationId'],
+      where: {
+        applicationId,
+      },
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
 
     ResultWrapper.unwrap(
       await this.commentService.createApplicationComment(caseLookup.id, {
@@ -172,10 +224,22 @@ export class OfficialJournalApplicationService
       }),
     )
 
-    await this.caseService.updateCaseCommunicationStatusByStatus(
-      caseLookup.id,
-      CaseCommunicationStatusEnum.HasAnswers,
-    )
+    const commStatus = await this.caseCommunicationStatusModel.findOne({
+      where: {
+        title: CaseCommunicationStatusEnum.HasAnswers,
+      },
+    })
+
+    if (!commStatus) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case communication status not found',
+      })
+    }
+
+    await caseLookup.update({
+      communicationStatusId: commStatus.id,
+    })
 
     return ResultWrapper.ok()
   }
@@ -231,22 +295,14 @@ export class OfficialJournalApplicationService
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     let caseId: string | null = null
-    try {
-      const caseLookup =
-        await this.utilityService.caseLookupByApplicationId(applicationId)
-
-      if (caseLookup.result.ok) {
-        caseId = caseLookup.result.value.id
-      }
-    } catch (e) {
-      // Display a warning when no case is found.
-      // This is not an error, as the case might not exist yet, and that's perfectly fine.
-      // No transactional rollback is needed.
-      this.logger.warn('Could not find case for application', {
-        category: LOGGING_CATEGORY,
-        context: LOGGING_CONTEXT,
-        error: e,
-      })
+    const caseLookup = await this.caseModel.findOne({
+      attributes: ['id', 'applicationId'],
+      where: {
+        applicationId,
+      },
+    })
+    if (caseLookup) {
+      caseId = caseLookup.id
     }
 
     const applicationAttachmentCreation =
@@ -408,43 +464,17 @@ export class OfficialJournalApplicationService
         },
       })
 
-      const application =
-        await this.applicationService.getApplication(applicationId)
+      const { application }: { application: OJOIApplication } =
+        ResultWrapper.unwrap(
+          await this.applicationService.getApplication(applicationId),
+        )
+
       // first time submitting the application so we create a case
       if (!caseLookup) {
         return await this.caseService.createCaseByApplication({
           applicationId,
         })
       }
-
-      // const { signatures } = ResultWrapper.unwrap(
-      //   await this.signatureService.getSignaturesByCaseId(
-      //     caseLookup.id,
-      //     undefined,
-      //     transaction,
-      //   ),
-      // )
-
-      // Promise.all(
-      //   signatures.map(async (signature) => {
-      //     this.signatureService.deleteSignature(signature.id, transaction)
-      //   }),
-      // )
-
-      // const signatureArray = signatureMapper(
-      //   application.answers.signatures,
-      //   application.answers.misc.signatureType,
-      //   caseLookup.id,
-      //   caseLookup.involvedPartyId,
-      // )
-      // Promise.all(
-      //   signatureArray.map(async (signature) => {
-      //     await this.signatureService.createCaseSignature(
-      //       signature,
-      //       transaction,
-      //     )
-      //   }),
-      // )
 
       ResultWrapper.unwrap(
         await this.caseService.updateCase(

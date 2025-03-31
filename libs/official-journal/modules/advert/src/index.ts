@@ -1,9 +1,5 @@
 // dto
 export { AdvertSimilar } from './lib/dto/advert-similar.dto'
-export {
-  AdvertTemplateType,
-  AdvertTemplateTypeEnums,
-} from './lib/dto/advert-types.dto'
 export { Advert, CreateAdvert } from './lib/dto/advert.dto'
 export { GetAdvertResponse } from './lib/dto/get-advert-response.dto'
 export { GetAdvertsQueryParams } from './lib/dto/get-adverts-query.dto'

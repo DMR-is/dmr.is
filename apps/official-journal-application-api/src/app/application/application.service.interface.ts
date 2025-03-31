@@ -1,28 +1,28 @@
 import { Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import {
-  GetApplicationAdverts,
-  GetApplicationAdvertsQuery,
-  PostApplicationComment,
-} from '@dmr.is/official-journal/modules/application'
+import { AdvertTemplateType, UserDto } from '@dmr.is/official-journal/dto'
 import {
   GetApplicationAttachmentsResponse,
   GetApplicationCaseResponse,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import { CasePriceResponse } from '@dmr.is/official-journal/modules/case'
 import { GetComments } from '@dmr.is/official-journal/modules/comment'
-import {
-  AdvertTemplateDetails,
-  AdvertTemplateType,
-  GetAdvertTemplateResponse,
-} from '@dmr.is/official-journal/modules/journal'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
 } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { ApplicationPriceResponse } from './dto/application-price-response.dto'
+import {
+  AdvertTemplateDetails,
+  GetAdvertTemplateResponse,
+} from './dto/get-advert-template-response.dto'
+import {
+  GetApplicationAdverts,
+  GetApplicationAdvertsQuery,
+} from './dto/get-application-advert.dto'
+import { PostApplicationComment } from './dto/post-application-comment.dto'
 
 export interface IOfficialJournalApplicationService {
   getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
@@ -33,7 +33,9 @@ export interface IOfficialJournalApplicationService {
     applicationUser: UserDto,
   ): Promise<ResultWrapper>
 
-  getPrice(applicationId: string): Promise<ResultWrapper<CasePriceResponse>>
+  getPrice(
+    applicationId: string,
+  ): Promise<ResultWrapper<ApplicationPriceResponse>>
 
   uploadAttachments(
     applicationId: string,
@@ -80,6 +82,8 @@ export interface IOfficialJournalApplicationService {
     query: GetApplicationAdvertsQuery,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAdverts>>
+
+  postApplication(applicationId: string): Promise<ResultWrapper>
 }
 
 export const IOfficialJournalApplicationService = Symbol(

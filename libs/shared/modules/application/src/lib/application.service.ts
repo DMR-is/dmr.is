@@ -31,7 +31,9 @@ export class ApplicationService implements IApplicationService {
    * @returns
    */
   @LogAndHandle()
-  async getApplication(id: string): Promise<any> {
+  async getApplication(
+    id: string,
+  ): Promise<ResultWrapper<{ application: any }>> {
     const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -52,7 +54,9 @@ export class ApplicationService implements IApplicationService {
       })
     }
 
-    return await res.json()
+    const application = await res.json()
+
+    return ResultWrapper.ok({ application })
   }
 
   /**
@@ -65,7 +69,7 @@ export class ApplicationService implements IApplicationService {
   async submitApplication(
     id: string,
     event: ApplicationEvent,
-  ): Promise<Record<string, any>> {
+  ): Promise<ResultWrapper<{ application: any }>> {
     const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
       {
@@ -82,7 +86,9 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    return await res.json()
+    const application = await res.json()
+
+    return ResultWrapper.ok({ application })
   }
 
   /**
@@ -95,7 +101,7 @@ export class ApplicationService implements IApplicationService {
   async updateApplication(
     id: string,
     answers: Record<string, any>,
-  ): Promise<Record<string, any>> {
+  ): Promise<ResultWrapper<{ application: any }>> {
     const res = await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
       {
@@ -118,6 +124,8 @@ export class ApplicationService implements IApplicationService {
       throw new HttpException('Could not update application', res.status)
     }
 
-    return await res.json()
+    const application = await res.json()
+
+    return ResultWrapper.ok({ application })
   }
 }

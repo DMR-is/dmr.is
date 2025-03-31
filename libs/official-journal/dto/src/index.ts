@@ -2,6 +2,7 @@ export { UserDto } from './lib/dto/user.dto'
 export { UserRoleDto } from './lib/dto/user-role.dto'
 export { CaseStatus } from './lib/dto/case-status.dto'
 export { Institution, InstitutionDto } from './lib/dto/institution.dto'
+export { AdvertTemplateType } from './lib/dto/advert-template-types.dto'
 
 export { userMigrate } from './lib/migrations/user.migrate'
 export { userRoleMigrate } from './lib/migrations/user-role.migrate'

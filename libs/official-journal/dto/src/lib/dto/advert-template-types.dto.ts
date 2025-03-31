@@ -1,12 +1,7 @@
 import { IsEnum } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
-
-export enum AdvertTemplateTypeEnums {
-  AUGLYSING = 'auglysing',
-  REGLUGERD = 'reglugerd',
-  GJALDSKRA = 'gjaldskra',
-}
+import { AdvertTemplateTypeEnums } from '@dmr.is/constants'
 
 export class AdvertTemplateType {
   @IsEnum(AdvertTemplateTypeEnums)

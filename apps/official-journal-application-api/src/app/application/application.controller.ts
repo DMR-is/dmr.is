@@ -1,4 +1,5 @@
 import {
+  AdvertTemplateTypeEnums,
   ALLOWED_MIME_TYPES,
   AttachmentTypeParam,
   ONE_MEGA_BYTE,
@@ -6,14 +7,26 @@ import {
 } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import {
-  IApplicationService,
   InvolvedPartyGuard,
+  TokenJwtAuthGuard,
+} from '@dmr.is/official-journal/guards'
+import {
+  GetApplicationAttachmentsResponse,
+  GetApplicationCaseResponse,
+  PostApplicationAttachmentBody,
+} from '@dmr.is/official-journal/modules/attachment'
+import { GetComments } from '@dmr.is/official-journal/modules/comment'
+import {
+  GetSignature,
   ISignatureService,
+} from '@dmr.is/official-journal/modules/signature'
+import {
+  GetInvoledPartiesByUserResponse,
   IUserService,
   RoleGuard,
-  TokenJwtAuthGuard,
-} from '@dmr.is/modules'
+} from '@dmr.is/official-journal/modules/user'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -21,24 +34,10 @@ import {
   UUIDValidationPipe,
 } from '@dmr.is/pipelines'
 import {
-  AdvertTemplateDetails,
-  AdvertTemplateTypeEnums,
-  CasePriceResponse,
-  GetAdvertTemplateResponse,
-  GetApplicationAdvertsQuery,
-  GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
-  GetApplicationResponse,
-  GetComments,
-  GetInvoledPartiesByUserResponse,
   GetPresignedUrlBody,
-  GetSignature,
-  PostApplicationAttachmentBody,
-  PostApplicationComment,
   PresignedUrlResponse,
   S3UploadFilesResponse,
-  UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -67,6 +66,16 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
+import { ApplicationPriceResponse } from './dto/application-price-response.dto'
+import {
+  AdvertTemplateDetails,
+  GetAdvertTemplateResponse,
+} from './dto/get-advert-template-response.dto'
+import { GetApplicationAdvertsQuery } from './dto/get-application-advert.dto'
+import { GetApplicationResponse } from './dto/get-application-response.dto'
+import { PostApplicationComment } from './dto/post-application-comment.dto'
+import { IOfficialJournalApplicationService } from './application.service.interface'
+
 import 'multer'
 
 @Controller({
@@ -78,8 +87,8 @@ import 'multer'
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
   constructor(
-    @Inject(IApplicationService)
-    private readonly applicationService: IApplicationService,
+    @Inject(IOfficialJournalApplicationService)
+    private readonly officialJournalApplicationService: IOfficialJournalApplicationService,
 
     @Inject(ISignatureService)
     private readonly signatureService: ISignatureService,
@@ -95,29 +104,18 @@ export class ApplicationController {
   @ApiResponse({ type: GetApplicationResponse })
   async getAdvertCopies(@Query() query: GetApplicationAdvertsQuery) {
     return ResultWrapper.unwrap(
-      await this.applicationService.getApplicationAdverts(query),
+      await this.officialJournalApplicationService.getApplicationAdverts(query),
     )
   }
 
   @Get(':id/price')
   @ApiOperation({ operationId: 'getPrice' })
-  @ApiResponse({ type: CasePriceResponse })
+  @ApiResponse({ type: ApplicationPriceResponse })
   async getPrice(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
-  ): Promise<CasePriceResponse> {
+  ): Promise<ApplicationPriceResponse> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getPrice(applicationId),
-    )
-  }
-
-  @Get(':id')
-  @ApiOperation({ operationId: 'getApplication' })
-  @ApiResponse({ type: GetApplicationResponse })
-  async getApplication(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetApplicationResponse> {
-    return ResultWrapper.unwrap(
-      await this.applicationService.getApplication(id),
+      await this.officialJournalApplicationService.getPrice(applicationId),
     )
   }
 
@@ -128,7 +126,9 @@ export class ApplicationController {
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.postApplication(applicationId),
+      await this.officialJournalApplicationService.postApplication(
+        applicationId,
+      ),
     )
   }
 
@@ -140,7 +140,7 @@ export class ApplicationController {
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ): Promise<GetComments> {
     return ResultWrapper.unwrap(
-      await this.applicationService.getComments(applicationId),
+      await this.officialJournalApplicationService.getComments(applicationId),
     )
   }
 
@@ -154,7 +154,7 @@ export class ApplicationController {
     @CurrentUser() user: UserDto,
   ): Promise<void> {
     ResultWrapper.unwrap(
-      await this.applicationService.postComment(
+      await this.officialJournalApplicationService.postComment(
         applicationId,
         commentBody,
         user,
@@ -208,7 +208,10 @@ export class ApplicationController {
     })
 
     return ResultWrapper.unwrap(
-      await this.applicationService.uploadAttachments(applicationId, files),
+      await this.officialJournalApplicationService.uploadAttachments(
+        applicationId,
+        files,
+      ),
     )
   }
 
@@ -228,7 +231,7 @@ export class ApplicationController {
     }
 
     return ResultWrapper.unwrap(
-      await this.applicationService.getPresignedUrl(key),
+      await this.officialJournalApplicationService.getPresignedUrl(key),
     )
   }
 
@@ -243,7 +246,7 @@ export class ApplicationController {
     @Body() body: PostApplicationAttachmentBody,
   ) {
     ResultWrapper.unwrap(
-      await this.applicationService.addApplicationAttachment(
+      await this.officialJournalApplicationService.addApplicationAttachment(
         applicationId,
         type,
         body,
@@ -261,7 +264,7 @@ export class ApplicationController {
     type: AttachmentTypeParam,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.getApplicationAttachments(
+      await this.officialJournalApplicationService.getApplicationAttachments(
         applicationId,
         type,
       ),
@@ -276,7 +279,7 @@ export class ApplicationController {
     @Query('key', IsStringValidationPipe) key: string,
   ) {
     ResultWrapper.unwrap(
-      await this.applicationService.deleteApplicationAttachment(
+      await this.officialJournalApplicationService.deleteApplicationAttachment(
         applicationId,
         key,
       ),
@@ -300,7 +303,9 @@ export class ApplicationController {
     @Param('id', new UUIDValidationPipe()) applicationId: string,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.getApplicationCase(applicationId),
+      await this.officialJournalApplicationService.getApplicationCase(
+        applicationId,
+      ),
     )
   }
 
@@ -309,7 +314,7 @@ export class ApplicationController {
   @ApiResponse({ type: [AdvertTemplateDetails] })
   async getApplicationAdvertTemplates() {
     return ResultWrapper.unwrap(
-      await this.applicationService.getApplicationAdvertTemplates(),
+      await this.officialJournalApplicationService.getApplicationAdvertTemplates(),
     )
   }
 
@@ -321,9 +326,11 @@ export class ApplicationController {
     @Param('advertType') advertType: AdvertTemplateTypeEnums,
   ) {
     return ResultWrapper.unwrap(
-      await this.applicationService.getApplicationAdvertTemplate({
-        type: advertType,
-      }),
+      await this.officialJournalApplicationService.getApplicationAdvertTemplate(
+        {
+          type: advertType,
+        },
+      ),
     )
   }
 
