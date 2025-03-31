@@ -1,27 +1,10 @@
 import { LoggingModule } from '@dmr.is/logging'
 import { OFFICIAL_JOURNAL_DB } from '@dmr.is/official-journal/models'
 import { AdvertTypeAdminController } from '@dmr.is/official-journal/modules/advert-type'
-import { AuthModule } from '@dmr.is/official-journal/modules/auth'
-import {
-  CategoryAdminController,
-  CategoryModule,
-} from '@dmr.is/official-journal/modules/category'
-import { CommentModule } from '@dmr.is/official-journal/modules/comment'
-import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
-import {
-  InstitutionAdminController,
-  InstitutionModule,
-} from '@dmr.is/official-journal/modules/institution'
-import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
-import { PriceModule } from '@dmr.is/official-journal/modules/price'
-import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
-import {
-  UserController,
-  UserModule,
-} from '@dmr.is/official-journal/modules/user'
-import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
+import { CategoryAdminController } from '@dmr.is/official-journal/modules/category'
+import { InstitutionAdminController } from '@dmr.is/official-journal/modules/institution'
+import { UserModule } from '@dmr.is/official-journal/modules/user'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { ApplicationModule } from '@dmr.is/shared/modules/application'
 import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
   DMRSequelizeConfigModule,
@@ -31,9 +14,6 @@ import {
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
-
-import { CaseModule } from './modules/case/case.module'
-import { StatisticsModule } from './modules/statistics/statistics.module'
 
 @Module({
   imports: [
@@ -54,24 +34,19 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    AuthModule,
-    CaseModule,
-    ApplicationModule,
-    StatisticsModule,
-    SignatureModule,
-    CategoryModule,
-    DepartmentModule,
     UserModule,
-    InstitutionModule,
-    CommentModule,
-    PdfModule,
-    PriceModule,
-    UtilityModule,
+    // CaseModule,
+    // AdvertModule,
+    // ApplicationModule,
+    // StatisticsModule,
+    // CategoryModule,
+    // DepartmentModule,
+    // InstitutionModule,
+    // PdfModule,
   ],
   controllers: [
     CategoryAdminController,
     AdvertTypeAdminController,
-    UserController,
     InstitutionAdminController,
   ],
   providers: [

@@ -27,7 +27,7 @@ import {
 
 import { IUserService } from './user.service.interface'
 
-import { TokenJwtAuthGuard, RoleGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -38,6 +38,7 @@ import {
   UserDto,
 } from './dto/user.dto'
 import { GetRolesByUserResponse } from './dto/user-role.dto'
+import { RoleGuard } from './role.guard'
 
 @Controller({
   path: 'users',

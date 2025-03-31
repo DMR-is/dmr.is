@@ -20,7 +20,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard, RoleGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 
 import { IInstitutionService } from '../institution.service.interface'
 import {
@@ -28,6 +28,8 @@ import {
   CreateInstitution,
   UpdateInstitution,
 } from '../dto/institution.dto'
+
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 
 @Controller({
   version: '1',

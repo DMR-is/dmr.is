@@ -13,7 +13,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger'
 import { UserRoleEnum } from '@dmr.is/constants'
-import { TokenJwtAuthGuard, RoleGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import { Roles } from '@dmr.is/decorators'
 import { ResultWrapper } from '@dmr.is/types'
 import { CreateMainCategoryCategories } from '../dto/create-main-category-categories.dto'
@@ -25,7 +25,7 @@ import {
 import { UpdateMainCategory } from '../dto/update-main-category.dto'
 import { ICategoryService } from '../category.service.interface'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 @Controller({
   path: 'categories',
   version: '1',

@@ -13,7 +13,6 @@ import { IPriceService } from './price.service.interface'
 
 import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 import {
-  CaseModel,
   TransactionFeeCodesModel,
   AdvertFeeTypeEnum,
 } from '@dmr.is/official-journal/models'
@@ -36,7 +35,6 @@ const LOGGING_CATEGORY = 'price-service'
 export class PriceService implements IPriceService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
     @Inject(IAuthService)
     private readonly authService: IAuthService,

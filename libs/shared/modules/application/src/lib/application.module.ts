@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common'
 
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
-import { AuthService } from '@dmr.is/official-journal/modules/auth'
+import { AuthModule } from '@dmr.is/official-journal/modules/auth'
 
 @Module({
-  imports: [AuthService],
+  imports: [AuthModule],
   controllers: [],
   providers: [
     {

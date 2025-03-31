@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Global, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { UserService } from './user.service'
@@ -10,7 +10,9 @@ import {
   UserInvolvedPartiesModel,
   AdvertInvolvedPartyModel,
 } from '@dmr.is/official-journal/models'
+import { UserController } from './user.controller'
 
+@Global()
 @Module({
   imports: [
     SequelizeModule.forFeature([
@@ -20,7 +22,7 @@ import {
       AdvertInvolvedPartyModel,
     ]),
   ],
-  controllers: [],
+  controllers: [UserController],
   providers: [
     {
       provide: IUserService,

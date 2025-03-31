@@ -1,7 +1,7 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   CaseCommunicationStatusEnum,
   CaseStatusEnum,
@@ -23,7 +23,7 @@ import {
   IPriceService,
   TransactionFeeCodesResponse,
 } from '@dmr.is/official-journal/modules/price'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { RoleGuard, UserDto } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
