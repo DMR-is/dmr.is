@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Box,
@@ -72,7 +72,7 @@ export const PriceCalculator = () => {
     [feeCodeOptions, currentCase.advertDepartment.slug],
   )
 
-  useMemo(() => {
+  useEffect(() => {
     updateAllPrices()
   }, [currentCase.html, currentCase.fastTrack])
 
