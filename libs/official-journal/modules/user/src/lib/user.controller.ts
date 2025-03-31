@@ -31,14 +31,14 @@ import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserDto,
-  UserDto,
 } from './dto/user.dto'
-import { GetRolesByUserResponse } from './dto/user-role.dto'
 import { RoleGuard } from './role.guard'
+import { UserDto } from '@dmr.is/official-journal/dto'
 
 @Controller({
   path: 'users',

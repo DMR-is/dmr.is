@@ -1,6 +1,5 @@
+import { Institution } from '@dmr.is/official-journal/dto'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { Institution } from './institution.dto'
 
 export class GetInstitutionResponse {
   @ApiProperty({

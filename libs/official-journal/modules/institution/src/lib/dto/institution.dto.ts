@@ -1,42 +1,7 @@
-import { IsOptional } from 'class-validator'
-
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
+import { Institution } from '@dmr.is/official-journal/dto'
 import { BaseEntity, Paging, PagingQuery } from '@dmr.is/shared/dto'
-
-export class Institution {
-  @ApiProperty({
-    description: 'Unique ID for the institution, GUID format.',
-    example: '00000000-0000-0000-0000-000000000000',
-    required: true,
-    nullable: false,
-    type: String,
-  })
-  readonly id!: string
-
-  @ApiProperty({
-    description: 'Title of the institution',
-    example: 'Dómsmálaráðuneytið',
-    required: true,
-    type: String,
-  })
-  readonly title!: string
-
-  @ApiProperty({
-    description: 'Slug of the institution, used in URLs and API requests.',
-    example: 'domsmalaraduneytid',
-    required: true,
-    type: String,
-  })
-  readonly slug!: string
-
-  @ApiProperty({
-    description: 'National ID of the institution',
-    example: '650376-2949',
-    required: true,
-    type: String,
-  })
-  readonly nationalId!: string
-}
+import { ApiProperty, PickType, PartialType } from '@nestjs/swagger'
+import { IsOptional } from 'class-validator'
 
 export class InstitutionDto extends BaseEntity {
   @ApiProperty({

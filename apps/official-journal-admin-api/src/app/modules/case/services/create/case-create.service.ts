@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid'
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import {
   AdditionTypeEnum,
   CaseAdditionModel,
@@ -19,7 +20,6 @@ import {
 import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
 import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import {
   BaseEntity,

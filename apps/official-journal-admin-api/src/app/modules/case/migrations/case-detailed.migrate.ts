@@ -1,8 +1,8 @@
+import { userMigrate } from '@dmr.is/official-journal/dto'
 import { CaseModel } from '@dmr.is/official-journal/models'
 import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
 import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
 import { signatureMigrate } from '@dmr.is/official-journal/modules/signature'
-import { userMigrate } from '@dmr.is/official-journal/modules/user'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { CaseDetailed } from '../dto/case.dto'

@@ -1,5 +1,4 @@
 // dto
-export { GetRolesByUserResponse, UserRoleDto } from './lib/dto/user-role.dto'
 export {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -7,11 +6,7 @@ export {
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserDto,
-  UserDto,
 } from './lib/dto/user.dto'
-
-// migrations
-export { userMigrate, userRoleMigrate } from './lib/migration/user.migrate'
 
 // controllers
 export { UserController } from './lib/user.controller'

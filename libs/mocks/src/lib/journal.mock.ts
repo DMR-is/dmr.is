@@ -1,3 +1,4 @@
+import { Institution } from '@dmr.is/official-journal/dto'
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { Advert } from '@dmr.is/official-journal/modules/advert'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
@@ -6,7 +7,6 @@ import {
   MainCategory,
 } from '@dmr.is/official-journal/modules/category'
 import { Department } from '@dmr.is/official-journal/modules/department'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
 
 const JOURNAL_DEPARTMENT_A: Department = {
   id: '3d918322-8e60-44ad-be5e-7485d0e45cdd',

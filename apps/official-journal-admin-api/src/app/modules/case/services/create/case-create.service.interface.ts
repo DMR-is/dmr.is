@@ -1,5 +1,5 @@
 import { Transaction } from 'sequelize'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 

@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import { CaseCommunicationStatusEnum } from '@dmr.is/official-journal/models'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { UpdateAdvertHtmlBody } from '../../dto/update-advert-html-body.dto'

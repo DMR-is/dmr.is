@@ -1,4 +1,4 @@
-import { InstitutionDto } from '../dto/institution.dto'
+import { InstitutionDto } from '../../../../../dto/src/lib/dto/institution.dto'
 import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
 
 export function institutionMigrate(

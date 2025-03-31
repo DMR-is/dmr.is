@@ -12,14 +12,13 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
+import { Institution, UserDto } from '@dmr.is/official-journal/dto'
 import { ApplicationAttachment } from '@dmr.is/official-journal/modules/attachment'
 import { Category } from '@dmr.is/official-journal/modules/category'
 import { CommentDto } from '@dmr.is/official-journal/modules/comment'
 import { Department } from '@dmr.is/official-journal/modules/department'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
 import { TBRTransaction } from '@dmr.is/official-journal/modules/price'
 import { Signature } from '@dmr.is/official-journal/modules/signature'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { BaseEntity, Paging } from '@dmr.is/shared/dto'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'

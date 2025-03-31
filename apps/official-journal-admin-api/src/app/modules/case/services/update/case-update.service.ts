@@ -3,6 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent, ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import {
   CaseCategoriesModel,
   CaseCommunicationStatusEnum,
@@ -12,7 +13,6 @@ import {
 } from '@dmr.is/official-journal/models'
 import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { ResultWrapper } from '@dmr.is/types'

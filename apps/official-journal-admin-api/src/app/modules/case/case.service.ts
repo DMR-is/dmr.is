@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
@@ -39,7 +40,6 @@ import {
   GetPaymentResponse,
   IPriceService,
 } from '@dmr.is/official-journal/modules/price'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { IApplicationService } from '@dmr.is/shared/modules/application'

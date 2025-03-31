@@ -1,9 +1,9 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { ResultWrapper } from '@dmr.is/types'
 

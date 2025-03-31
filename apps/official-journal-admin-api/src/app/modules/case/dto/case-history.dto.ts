@@ -1,7 +1,6 @@
+import { Institution, UserDto } from '@dmr.is/official-journal/dto'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 import { Department } from '@dmr.is/official-journal/modules/department'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 

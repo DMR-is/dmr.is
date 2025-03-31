@@ -1,14 +1,14 @@
 import { ResultWrapper } from '@dmr.is/types'
-import { GetRolesByUserResponse } from './dto/user-role.dto'
 import {
   GetUsersQuery,
-  UserDto,
   GetUsersResponse,
   GetUserResponse,
   GetInvoledPartiesByUserResponse,
   CreateUserDto,
   UpdateUserDto,
+  GetRolesByUserResponse,
 } from './dto/user.dto'
+import { UserDto } from '@dmr.is/official-journal/dto'
 
 export interface IUserService {
   getUsers(

@@ -1,70 +1,6 @@
-import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
-import { UserRoleDto } from './user-role.dto'
+import { ApiProperty, PickType, PartialType, OmitType } from '@nestjs/swagger'
+import { UserDto, Institution, UserRoleDto } from '@dmr.is/official-journal/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
-
-export class UserDto {
-  @ApiProperty({
-    type: String,
-  })
-  id!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  nationalId!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  firstName!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  lastName!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  fullName!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  email!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  displayName!: string
-
-  @ApiProperty({
-    type: [Institution],
-  })
-  involvedParties!: Institution[]
-
-  @ApiProperty({
-    type: String,
-  })
-  createdAt!: string
-
-  @ApiProperty({
-    type: String,
-  })
-  updatedAt!: string
-
-  @ApiProperty({
-    type: String,
-    nullable: true,
-  })
-  deletedAt!: string | null
-
-  @ApiProperty({
-    type: UserRoleDto,
-  })
-  role!: UserRoleDto
-}
 
 export class GetUserResponse {
   @ApiProperty({
@@ -140,4 +76,12 @@ export class GetUsersQuery extends PagingQuery {
     required: false,
   })
   role?: string
+}
+
+export class GetRolesByUserResponse {
+  @ApiProperty({
+    type: [UserRoleDto],
+    description: 'Available roles for the current user to fetch',
+  })
+  roles!: UserRoleDto[]
 }

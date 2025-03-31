@@ -9,19 +9,16 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { userMigrate, userRoleMigrate } from './migration/user.migrate'
-
 import { IUserService } from './user.service.interface'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
   GetUsersResponse,
   UpdateUserDto,
-  UserDto,
 } from './dto/user.dto'
-import { GetRolesByUserResponse } from './dto/user-role.dto'
 
 import {
   UserModel,
@@ -29,6 +26,9 @@ import {
   AdvertInvolvedPartyModel,
   UserInvolvedPartiesModel,
 } from '@dmr.is/official-journal/models'
+import { UserDto, userRoleMigrate } from '@dmr.is/official-journal/dto'
+
+import { userMigrate } from '@dmr.is/official-journal/dto'
 
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'

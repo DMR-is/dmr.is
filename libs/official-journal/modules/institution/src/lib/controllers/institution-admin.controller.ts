@@ -23,13 +23,13 @@ import {
 import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 
 import { IInstitutionService } from '../institution.service.interface'
-import {
-  GetInstitution,
-  CreateInstitution,
-  UpdateInstitution,
-} from '../dto/institution.dto'
 
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import {
+  CreateInstitution,
+  GetInstitution,
+  UpdateInstitution,
+} from '../dto/institution.dto'
 
 @Controller({
   version: '1',

@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
 import { BaseEntity } from '@dmr.is/shared/dto'
 import { AdvertPublicationNumber } from './advert-publication-number.dto'
 import { Category } from '@dmr.is/official-journal/modules/category'
 import { AdvertDocument } from './advert-document.dto'
 import { AdvertAttachment } from './advert-attachment.dto'
 import { AdvertCorrection } from './advert-correction.dto'
+import { Institution } from '@dmr.is/official-journal/dto'
 
 export class Advert {
   @ApiProperty({

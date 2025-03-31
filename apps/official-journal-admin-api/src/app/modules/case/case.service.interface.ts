@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+import { UserDto } from '@dmr.is/official-journal/dto'
 import {
   CaseCommunicationStatusEnum,
   CaseStatusEnum,
@@ -9,7 +10,6 @@ import {
   GetPaymentQuery,
   GetPaymentResponse,
 } from '@dmr.is/official-journal/modules/price'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
