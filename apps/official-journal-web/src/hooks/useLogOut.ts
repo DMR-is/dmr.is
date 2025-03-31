@@ -1,5 +1,5 @@
 import { signIn, signOut, useSession } from 'next-auth/react'
-import { identityServerId, signOutUrl } from '@dmr.is/auth'
+import { identityServerId, signOutUrl } from '@dmr.is/auth/identityProvider'
 
 export const useLogOut = () => {
   const { data: session } = useSession()

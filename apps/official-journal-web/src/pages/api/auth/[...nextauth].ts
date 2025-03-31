@@ -2,11 +2,8 @@ import { decode } from 'jsonwebtoken'
 import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
-import {
-  identityServerConfig,
-  isExpired,
-  refreshAccessToken,
-} from '@dmr.is/auth'
+import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { logger } from '@dmr.is/logging'
 
 import { UserDto, UserRoleDto } from '../../../gen/fetch'
