@@ -192,6 +192,7 @@ export enum APIRoutes {
   Category = '/api/categories/:id',
   MainCategories = '/api/mainCategories',
   MainCategory = '/api/mainCategories/:id',
+  MergeCategories = '/api/categories/merge',
   MainCategoryCategories = '/api/mainCategories/:id/categories',
   MainCategoryCategory = '/api/mainCategories/:id/categories/:cid',
   CreatInternalComment = '/api/cases/:id/comments/createInternalComment',

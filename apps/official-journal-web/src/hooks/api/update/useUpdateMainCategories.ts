@@ -14,6 +14,18 @@ type CreateCategoryOptions = SWRMutationConfiguration<
   CreateCategoryParams
 >
 
+type MergeCategoriesParams = {
+  from: string
+  to: string
+}
+
+type MergeCategoriesOptions = SWRMutationConfiguration<
+  Response,
+  Error,
+  Key,
+  MergeCategoriesParams
+>
+
 type UpdateCategoryParams = {
   id: string
   title: string
@@ -109,6 +121,7 @@ type UseUpdateMainCategoriesParams = {
   createMainCategoryCategoriesOptions?: CreateMainCategoryCategoriesOptions
   deleteMainCategoryOptions?: DeleteMainCategoryOptions
   deleteMainCategoryCategoryOptions?: DeleteMainCategoryCategoryOptions
+  mergeCategoriesOptions?: MergeCategoriesOptions
 }
 
 export const useUpdateMainCategories = ({
@@ -120,6 +133,7 @@ export const useUpdateMainCategories = ({
   createMainCategoryCategoriesOptions,
   deleteMainCategoryCategoryOptions,
   deleteMainCategoryOptions,
+  mergeCategoriesOptions,
 }: UseUpdateMainCategoriesParams = {}) => {
   const { trigger: createCategoryTrigger, isMutating: isCreatingCategory } =
     useSWRMutation<Response, Error, Key, CreateCategoryParams>(
@@ -261,6 +275,19 @@ export const useUpdateMainCategories = ({
     },
   )
 
+  const { trigger: mergeCategoryTrigger, isMutating: isMergingCategories } =
+    useSWRMutation<Response, Error, Key, MergeCategoriesParams>(
+      APIRoutes.MergeCategories,
+      (url: string, { arg }: { arg: MergeCategoriesParams }) =>
+        fetcher<Response, MergeCategoriesParams>(url, {
+          arg: { method: 'POST', body: arg },
+        }),
+      {
+        throwOnError: false,
+        ...mergeCategoriesOptions,
+      },
+    )
+
   return {
     isCreatingCategory,
     isUpdatingCategory,
@@ -270,6 +297,7 @@ export const useUpdateMainCategories = ({
     isDeletingMainCategoryCategory,
     isCreatingMainCategoryCategories,
     isUpdatingMainCategory,
+    isMergingCategories,
     createCategoryTrigger,
     updateCategoryTrigger,
     deleteCategoryTrigger,
@@ -278,5 +306,6 @@ export const useUpdateMainCategories = ({
     createMainCategoryCategoriesTrigger,
     deleteMainCategoryTrigger,
     updateMainCategoryTrigger,
+    mergeCategoryTrigger,
   }
 }
