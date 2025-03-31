@@ -33,7 +33,7 @@ export const useCommunicationChannels = ({
   deleteChannelOptions,
 }: UseCommunicationChannelsParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const { trigger: createChannel, isMutating: isCreatingChannel } =
     useSWRMutation<CaseChannel, Error, Key, CreateCommunicationChannelRequest>(

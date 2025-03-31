@@ -18,7 +18,7 @@ export const useAttachments = () => {
   const [error, setError] = useState<string | null>(null)
 
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string)
 
   const fetchAttachment = async ({
     caseId,
