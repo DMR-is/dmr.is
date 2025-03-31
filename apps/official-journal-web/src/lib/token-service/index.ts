@@ -1,7 +1,25 @@
+import { decode } from 'jsonwebtoken'
 import { JWT } from 'next-auth/jwt'
 import { logger } from '@dmr.is/logging'
 
 const LOGGING_CATEGORY = 'refreshAccessToken'
+
+const renewalSeconds = 10 // seconds
+
+export const isExpired = (
+  accessToken: string,
+  isRefreshTokenExpired: boolean,
+) => {
+  const decoded = decode(accessToken)
+
+  if (decoded && !(typeof decoded === 'string') && decoded['exp']) {
+    const expires = new Date(decoded.exp * 1000)
+    const renewalTime = new Date(expires.getTime() - renewalSeconds * 1000)
+    return new Date() > renewalTime && !isRefreshTokenExpired
+  }
+
+  return false
+}
 
 export const refreshAccessToken = async (token: JWT) => {
   try {

@@ -7,7 +7,7 @@ import { logger } from '@dmr.is/logging'
 import { UserDto, UserRoleDto } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
 import { identityServerConfig } from '../../../lib/identityProvider'
-import { refreshAccessToken } from '../../../lib/token-service'
+import { isExpired, refreshAccessToken } from '../../../lib/token-service'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -83,9 +83,7 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-      // Check if token expires in more than 10 seconds
-      const date10SecondsAgo = Date.now() - 10000
-      if (date10SecondsAgo < (token.accessTokenExpires as number)) {
+      if (!isExpired(token.accessToken, !!token.invalid)) {
         return token
       }
 
