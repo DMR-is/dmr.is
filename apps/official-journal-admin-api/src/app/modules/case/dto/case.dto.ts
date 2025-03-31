@@ -12,7 +12,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
-import { Institution, UserDto } from '@dmr.is/official-journal/dto'
+import { CaseStatus, Institution, UserDto } from '@dmr.is/official-journal/dto'
 import { ApplicationAttachment } from '@dmr.is/official-journal/modules/attachment'
 import { Category } from '@dmr.is/official-journal/modules/category'
 import { CommentDto } from '@dmr.is/official-journal/modules/comment'
@@ -27,7 +27,6 @@ import { AdvertCorrection } from './advert-correction.dto'
 import { CaseAddition } from './case-addition.dto'
 import { CaseChannel } from './case-channel.dto'
 import { CaseHistory } from './case-history.dto'
-import { CaseStatus } from './case-status.dto'
 import { CommunicationStatus } from './communication-status.dto'
 import { CaseTag } from './tag.dto'
 

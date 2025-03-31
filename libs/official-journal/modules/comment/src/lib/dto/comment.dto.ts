@@ -1,4 +1,5 @@
-import { CaseActionEnum, CaseStatusEnum } from '@dmr.is/official-journal/models'
+import { CaseStatus } from '@dmr.is/official-journal/dto'
+import { CaseActionEnum } from '@dmr.is/official-journal/models'
 import { BaseEntity } from '@dmr.is/shared/dto'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
@@ -32,10 +33,10 @@ export class CommentDto {
   action!: CaseActionEnum
 
   @ApiProperty({
-    type: CaseStatusEnum,
+    type: CaseStatus,
     description: 'The status of the case when the comment was created',
   })
-  caseStatus!: CaseStatusEnum
+  caseStatus!: CaseStatus
 
   @ApiProperty({
     type: CommentCreatorDto,

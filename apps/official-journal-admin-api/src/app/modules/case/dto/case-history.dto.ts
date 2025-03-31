@@ -1,11 +1,9 @@
 import { Institution, UserDto } from '@dmr.is/official-journal/dto'
+import { CaseStatus } from '@dmr.is/official-journal/dto'
 import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 import { Department } from '@dmr.is/official-journal/modules/department'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
-
-import { CaseStatus } from './case-status.dto'
-
 const BASE_ATTRIBUTES = ['id', 'title', 'slug'] as const
 
 class HistoryDepartment extends PickType(Department, BASE_ATTRIBUTES) {}

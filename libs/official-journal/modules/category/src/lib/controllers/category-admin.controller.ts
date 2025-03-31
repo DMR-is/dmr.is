@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Inject,
   Param,
   Post,
   Put,
@@ -34,7 +35,10 @@ import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
 @Roles(UserRoleEnum.Admin)
 export class CategoryAdminController {
-  constructor(private readonly categoryService: ICategoryService) {}
+  constructor(
+    @Inject(ICategoryService)
+    private readonly categoryService: ICategoryService,
+  ) {}
 
   @Delete('main-categories/:id')
   @ApiOperation({ operationId: 'deleteMainCategory' })

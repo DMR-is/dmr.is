@@ -6,9 +6,10 @@ import {
   IsUUID,
 } from 'class-validator'
 import { AdditionTypeEnum } from '@dmr.is/official-journal/models'
-import { BaseEntity } from '@dmr.is/shared/dto'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { BaseEntity } from '../entity/base-entity.dto'
 
 export class OJOIApplicationCommunicationChannel {
   @ApiProperty({

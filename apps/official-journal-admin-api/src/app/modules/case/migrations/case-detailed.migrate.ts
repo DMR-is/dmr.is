@@ -1,4 +1,4 @@
-import { userMigrate } from '@dmr.is/official-journal/dto'
+import { caseStatusMigrate, userMigrate } from '@dmr.is/official-journal/dto'
 import { CaseModel } from '@dmr.is/official-journal/models'
 import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
 import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
@@ -10,7 +10,6 @@ import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './case-communication-status.migrate'
 import { caseHistoryMigrate } from './case-history.migrate'
-import { caseStatusMigrate } from './case-status.migrate'
 import { caseTagMigrate } from './case-tag.migrate'
 import { caseTransactionMigrate } from './case-transaction.migrate'
 

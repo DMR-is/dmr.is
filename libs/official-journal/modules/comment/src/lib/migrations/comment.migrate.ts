@@ -6,6 +6,7 @@ import {
   CommentCreatorDto,
   CommentReceiverDto,
 } from '../dto/comment.dto'
+import { caseStatusMigrate } from '@dmr.is/official-journal/dto'
 
 export const commentMigrate = (
   model: CommentModel,
@@ -74,7 +75,7 @@ export const commentMigrate = (
   return {
     id: model.id,
     created: model.created,
-    caseStatus: model.createdCaseStatus.title,
+    caseStatus: caseStatusMigrate(model.createdCaseStatus),
     action: model.caseAction.title,
     creator: creator,
     receiver: receiver,

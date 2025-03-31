@@ -1,8 +1,20 @@
 import { LoggingModule } from '@dmr.is/logging'
 import { OFFICIAL_JOURNAL_DB } from '@dmr.is/official-journal/models'
-import { AdvertTypeAdminController } from '@dmr.is/official-journal/modules/advert-type'
-import { CategoryAdminController } from '@dmr.is/official-journal/modules/category'
-import { InstitutionAdminController } from '@dmr.is/official-journal/modules/institution'
+import { AdvertModule } from '@dmr.is/official-journal/modules/advert'
+import {
+  AdvertTypeAdminController,
+  AdvertTypeModule,
+} from '@dmr.is/official-journal/modules/advert-type'
+import {
+  CategoryAdminController,
+  CategoryModule,
+} from '@dmr.is/official-journal/modules/category'
+import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
+import {
+  InstitutionAdminController,
+  InstitutionModule,
+} from '@dmr.is/official-journal/modules/institution'
+import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
 import { UserModule } from '@dmr.is/official-journal/modules/user'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules/health'
@@ -14,6 +26,9 @@ import {
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { CaseModule } from './modules/case/case.module'
+import { StatisticsModule } from './modules/statistics/statistics.module'
 
 @Module({
   imports: [
@@ -35,14 +50,14 @@ import { SequelizeModule } from '@nestjs/sequelize'
       inject: [DMRSequelizeConfigService],
     }),
     UserModule,
-    // CaseModule,
-    // AdvertModule,
-    // ApplicationModule,
-    // StatisticsModule,
-    // CategoryModule,
-    // DepartmentModule,
-    // InstitutionModule,
-    // PdfModule,
+    CaseModule,
+    AdvertModule,
+    AdvertTypeModule,
+    StatisticsModule,
+    CategoryModule,
+    DepartmentModule,
+    InstitutionModule,
+    PdfModule,
   ],
   controllers: [
     CategoryAdminController,
