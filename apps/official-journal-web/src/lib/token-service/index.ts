@@ -54,6 +54,7 @@ export const refreshAccessToken = async (token: JWT) => {
     const newTokens = refreshedTokens as {
       access_token: string
       refresh_token?: string
+      id_token?: string
       expires_in: number
     }
 
@@ -72,6 +73,7 @@ export const refreshAccessToken = async (token: JWT) => {
       ...token,
       accessToken: newTokens.access_token,
       refreshToken: newTokens.refresh_token ?? token.refreshToken,
+      idToken: newTokens.id_token ?? token.idToken,
     }
   } catch (error) {
     logger.error('Refreshing failed', {

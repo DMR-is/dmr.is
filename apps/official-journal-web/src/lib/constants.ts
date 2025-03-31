@@ -117,7 +117,7 @@ export const fetcher = async <TData, TBody = never>(
 
   if (withAuth) {
     const session = await getSession()
-    authHeader = session ? `${session.accessToken}` : ''
+    authHeader = session ? `${session.idToken}` : ''
   }
 
   const fullUrl = arg.query ? `${url}?${arg.query.toString()}` : url
@@ -129,7 +129,6 @@ export const fetcher = async <TData, TBody = never>(
       'Content-Type': 'application/json',
       authorization: authHeader,
     },
-    credentials: 'include',
   })
 
   if (res.status === 204) {

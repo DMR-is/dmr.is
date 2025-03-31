@@ -5,8 +5,8 @@ import { getDmrClient } from './createClient'
 export class RouteHandler {
   public readonly client
 
-  constructor(token: string, req?: NextApiRequest) {
-    this.client = getDmrClient(token, req)
+  constructor(token: string) {
+    this.client = getDmrClient(token)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,14 +18,18 @@ export class RouteHandler {
 export async function handlerWrapper(
   req: NextApiRequest,
   res: NextApiResponse,
-  Class: new (token: string, req?: NextApiRequest) => RouteHandler,
+  Class: new (token: string) => RouteHandler, // Expect a constructor that takes a token
 ) {
+  // Get the token from the Authorization header
   const token = req.headers.authorization
 
   if (!token) {
     return res.status(401).end()
   }
 
-  const routeClass = new Class(token, req)
+  // Create an instance of the passed class, initializing it with the token
+  const routeClass = new Class(token)
+
+  // Call the handle method on the handler instance
   return routeClass.handler(req, res)
 }

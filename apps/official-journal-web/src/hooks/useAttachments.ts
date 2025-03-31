@@ -18,7 +18,7 @@ export const useAttachments = () => {
   const [error, setError] = useState<string | null>(null)
 
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.idToken as string)
 
   const fetchAttachment = async ({
     caseId,
@@ -98,7 +98,6 @@ export const useAttachments = () => {
       {
         method: 'PUT',
         body: JSON.stringify(body),
-        credentials: 'include',
       },
     )
 
@@ -121,7 +120,6 @@ export const useAttachments = () => {
       },
       method: 'PUT',
       body: file,
-      credentials: 'include',
     })
 
     if (!didUpload.ok) {

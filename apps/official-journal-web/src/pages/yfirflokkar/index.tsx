@@ -95,7 +95,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return loginRedirect(Routes.MainCategories)
   }
 
-  const client = getDmrClient(session.accessToken, req)
+  const client = getDmrClient(session.idToken)
 
   const mainCategoriesPromise = client.getMainCategories({
     pageSize: 1000,

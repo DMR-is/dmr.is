@@ -32,7 +32,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const isAdmin = session.user.role.slug === 'ritstjori'
 
-  const client = getDmrClient(session.accessToken, req)
+  const client = getDmrClient(session.idToken)
 
   const { roles } = await client.getRolesByUser()
 
