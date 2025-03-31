@@ -1,7 +1,9 @@
+'server only'
 import { decode } from 'jsonwebtoken'
 import { JWT } from 'next-auth/jwt'
 import { logger } from '@dmr.is/logging'
 
+import { identityServerConfig } from './identityServerConfig'
 const LOGGING_CATEGORY = 'refreshAccessToken'
 
 const renewalSeconds = 10 // seconds
@@ -30,6 +32,7 @@ export const refreshAccessToken = async (token: JWT) => {
       })
       return { ...token, error: 'RefreshTokenMissing', invalid: true }
     }
+
     const response = await fetch(
       `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/token`,
       {
@@ -38,11 +41,11 @@ export const refreshAccessToken = async (token: JWT) => {
         },
         method: 'POST',
         body: new URLSearchParams({
-          client_id: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID!,
-          client_secret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
+          client_id: identityServerConfig.clientId,
+          client_secret: identityServerConfig.clientSecret,
           grant_type: 'refresh_token',
           redirect_uri: process.env.IDENTITY_SERVER_LOGOUT_URL ?? '',
-          refresh_token: token.refreshToken,
+          refresh_token: token.refreshToken as string,
         }),
       },
     )
