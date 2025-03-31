@@ -1,4 +1,4 @@
-'server only'
+import 'server-only'
 import { decode } from 'jsonwebtoken'
 import { JWT } from 'next-auth/jwt'
 import { logger } from '@dmr.is/logging'

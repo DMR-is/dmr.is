@@ -1,4 +1,4 @@
-'server only'
+import 'server-only'
 import { identityServerId } from "./identityProvider";
 
 export const identityServerConfig = {
