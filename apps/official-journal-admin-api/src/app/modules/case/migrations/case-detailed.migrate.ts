@@ -1,4 +1,10 @@
 import { CaseModel } from '@dmr.is/official-journal/models'
+import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
+import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
+import { signatureMigrate } from '@dmr.is/official-journal/modules/signature'
+import { userMigrate } from '@dmr.is/official-journal/modules/user'
+import { baseEntityMigrate } from '@dmr.is/shared/dto'
+
 import { CaseDetailed } from '../dto/case.dto'
 import { caseAdditionMigrate } from './case-addition.migrate'
 import { caseChannelMigrate } from './case-channel.migrate'
@@ -7,17 +13,6 @@ import { caseHistoryMigrate } from './case-history.migrate'
 import { caseStatusMigrate } from './case-status.migrate'
 import { caseTagMigrate } from './case-tag.migrate'
 import { caseTransactionMigrate } from './case-transaction.migrate'
-
-import {
-  advertInvolvedPartyMigrate,
-  advertDepartmentMigrate,
-  advertCategoryMigrate,
-  advertCorrectionMigrate,
-} from '@dmr.is/official-journal/modules/journal'
-import { userMigrate } from '@dmr.is/official-journal/modules/user'
-import { signatureMigrate } from '@dmr.is/official-journal/modules/signature'
-import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
-import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
@@ -28,7 +23,12 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     caseNumber: model.caseNumber,
     status: caseStatusMigrate(model.status),
     tag: model.tag ? caseTagMigrate(model.tag) : null,
-    involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    involvedParty: {
+      id: model.involvedParty.id,
+      title: model.involvedParty.title,
+      slug: model.involvedParty.slug,
+      nationalId: model.involvedParty.nationalId,
+    },
     createdAt: model.createdAt,
     assignedTo: model.assignedUser ? userMigrate(model.assignedUser) : null,
     communicationStatus: caseCommunicationStatusMigrate(
@@ -40,7 +40,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     publishedAt: model.publishedAt,
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
-    advertDepartment: advertDepartmentMigrate(model.department),
+    advertDepartment: baseEntityMigrate(model.department),
     advertType: model.advertType,
     transaction: model.transaction
       ? caseTransactionMigrate(model.transaction)
@@ -49,7 +49,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     html: model.html,
     publicationNumber: model.publicationNumber,
     advertCategories: model.categories
-      ? (model.categories.map((c) => advertCategoryMigrate(c)) ?? [])
+      ? (model.categories.map((c) => baseEntityMigrate(c)) ?? [])
       : [],
     channels: model.channels
       ? model.channels.map((c) => caseChannelMigrate(c))
@@ -65,7 +65,16 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
       ? model.additions.map((add) => caseAdditionMigrate(add))
       : [],
     advertCorrections: model.advert?.corrections
-      ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
+      ? model.advert.corrections.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          documentHtml: item.documentHtml ?? null,
+          documentPdfUrl: item.documentPdfUrl ?? null,
+          createdDate: item.created.toISOString(),
+          updatedDate: item.updated.toISOString(),
+          advertId: item.advertId,
+        }))
       : undefined,
     history: model.history.map((h) => caseHistoryMigrate(h)),
   }

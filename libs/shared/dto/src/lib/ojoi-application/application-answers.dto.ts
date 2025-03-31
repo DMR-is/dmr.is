@@ -1,15 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationAdvert } from './application-advert.dto'
+import { OJOIApplicationAdvert } from './application-advert.dto'
 import { ApplicationMisc } from './application-misc'
-import { ApplicationSignatures } from './application-signature.dto'
+import { OJOIApplicationSignatures } from './application-signature.dto'
 
-export class ApplicationAnswers {
+export class OJOIApplicationAnswers {
   @ApiProperty({
-    type: ApplicationAdvert,
+    type: OJOIApplicationAdvert,
     description: 'Answers for the advert application',
   })
-  advert!: ApplicationAdvert
+  advert!: OJOIApplicationAdvert
 
   @ApiProperty({
     type: ApplicationMisc,
@@ -18,8 +18,8 @@ export class ApplicationAnswers {
   misc?: ApplicationMisc
 
   @ApiProperty({
-    type: ApplicationSignatures,
+    type: OJOIApplicationSignatures,
     description: 'Signature answers',
   })
-  signature!: ApplicationSignatures
+  signature!: OJOIApplicationSignatures
 }

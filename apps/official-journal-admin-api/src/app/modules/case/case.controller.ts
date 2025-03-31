@@ -1,45 +1,12 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AddCaseAdvertCorrection,
-  CaseChannel,
-  CaseCommunicationStatus,
-  CaseStatusEnum,
-  CreateCaseChannelBody,
-  CreateCaseDto,
-  CreateCaseResponseDto,
-  DepartmentEnum,
-  GetCaseResponse,
-  GetCasesQuery,
-  GetCasesReponse,
-  GetCasesWithDepartmentCount,
-  GetCasesWithDepartmentCountQuery,
-  GetCasesWithPublicationNumber,
-  GetCasesWithPublicationNumberQuery,
-  GetCasesWithStatusCount,
-  GetCasesWithStatusCountQuery,
-  GetCommunicationSatusesResponse,
-  GetNextPublicationNumberResponse,
-  GetPaymentResponse,
-  GetTagsResponse,
-  ICaseService,
-  PostCasePublishBody,
-  UpdateAdvertHtmlBody,
-  UpdateAdvertHtmlCorrection,
-  UpdateCaseDepartmentBody,
-  UpdateCasePriceBody,
-  UpdateCaseStatusBody,
-  UpdateCaseTypeBody,
-  UpdateCategoriesBody,
-  UpdateCommunicationStatusBody,
-  UpdateFasttrackBody,
-  UpdatePublishDateBody,
-  UpdateTagBody,
-  UpdateTitleBody,
-} from '@dmr.is/modules/case'
 import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
-import { TransactionFeeCodesResponse } from '@dmr.is/official-journal/modules/application'
+import {
+  CaseCommunicationStatusEnum,
+  CaseStatusEnum,
+  DepartmentEnum,
+} from '@dmr.is/official-journal/models'
 import {
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
@@ -52,13 +19,13 @@ import {
   InternalCommentBodyDto,
 } from '@dmr.is/official-journal/modules/comment'
 import {
-  DefaultSearchParams,
-  GetDepartmentsResponse,
-  IJournalService,
-} from '@dmr.is/official-journal/modules/journal'
-import { IPriceService } from '@dmr.is/official-journal/modules/price'
+  GetPaymentResponse,
+  IPriceService,
+  TransactionFeeCodesResponse,
+} from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -82,6 +49,45 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
+import { AddCaseAdvertCorrection } from './dto/add-case-advert-correction.dto'
+import {
+  GetCasesWithDepartmentCount,
+  GetCasesWithStatusCount,
+} from './dto/case.dto'
+import { CaseChannel } from './dto/case-channel.dto'
+import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
+import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
+import { GetCaseResponse } from './dto/get-case-response.dto'
+import { GetCasesQuery } from './dto/get-cases-query.dto'
+import { GetCasesReponse } from './dto/get-cases-response.dto'
+import {
+  GetCasesWithDepartmentCountQuery,
+  GetCasesWithStatusCountQuery,
+} from './dto/get-cases-with-count-query.dto'
+import {
+  GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
+} from './dto/get-cases-with-publication-number.dto'
+import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
+import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
+import { GetTagsResponse } from './dto/get-tags-response.dto'
+import { PostCasePublishBody } from './dto/post-publish-body.dto'
+import {
+  UpdateAdvertHtmlBody,
+  UpdateAdvertHtmlCorrection,
+} from './dto/update-advert-html-body.dto'
+import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
+import { UpdateCategoriesBody } from './dto/update-category-body.dto'
+import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
+import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
+import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
+import { UpdateCasePriceBody } from './dto/update-price-body.dto'
+import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
+import { UpdateTagBody } from './dto/update-tag-body.dto'
+import { UpdateTitleBody } from './dto/update-title-body.dto'
+import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
+import { ICaseService } from './case.service.interface'
+
 const LOG_CATEGORY = 'case-controller'
 
 @ApiBearerAuth()
@@ -99,8 +105,6 @@ export class CaseController {
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
 
-    @Inject(IJournalService)
-    private readonly journalService: IJournalService,
     @Inject(ICommentService) private readonly commentService: ICommentService,
     @Inject(LOGGER_PROVIDER)
     private readonly logger: Logger,
@@ -136,17 +140,6 @@ export class CaseController {
   ): Promise<GetNextPublicationNumberResponse> {
     return ResultWrapper.unwrap(
       await this.caseService.getNextCasePublicationNumber(departmentId),
-    )
-  }
-
-  @Get('departments')
-  @ApiOperation({ operationId: 'getDepartments' })
-  @ApiResponse({ status: 200, type: GetDepartmentsResponse })
-  async departments(
-    @Query() params: DefaultSearchParams,
-  ): Promise<GetDepartmentsResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.getDepartments(params),
     )
   }
 
@@ -234,7 +227,8 @@ export class CaseController {
   ): Promise<GetPaymentResponse> {
     return ResultWrapper.unwrap(
       await this.caseService.getCasePaymentStatus({
-        caseId: caseId,
+        chargeBase: caseId,
+        debtorNationalId: caseId, // TODO: FIX this
       }),
     )
   }
@@ -536,13 +530,6 @@ export class CaseController {
     ResultWrapper.unwrap(await this.caseService.publishCases(body))
   }
 
-  @Post(':id/unpublish')
-  @ApiOperation({ operationId: 'unpublish' })
-  @ApiNoContentResponse()
-  async unpublish(@Param('id', new UUIDValidationPipe()) id: string) {
-    ResultWrapper.unwrap(await this.caseService.unpublishCase(id))
-  }
-
   @Post(':id/reject')
   @ApiOperation({ operationId: 'rejectCase' })
   @ApiNoContentResponse()
@@ -586,7 +573,7 @@ export class CaseController {
     const communicationStatusUpdateResult =
       await this.caseService.updateCaseCommunicationStatusByStatus(
         id,
-        CaseCommunicationStatus.WaitingForAnswers,
+        CaseCommunicationStatusEnum.WaitingForAnswers,
       )
 
     if (!communicationStatusUpdateResult.result.ok) {

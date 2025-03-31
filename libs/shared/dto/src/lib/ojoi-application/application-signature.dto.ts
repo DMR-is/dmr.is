@@ -2,7 +2,7 @@ import { IsDateString, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-export class ApplicationSignatureMember {
+export class OJOIApplicationSignatureMember {
   @ApiProperty({
     type: String,
     description: 'Name of the member',
@@ -32,7 +32,7 @@ export class ApplicationSignatureMember {
   after?: string
 }
 
-export class ApplicationSignatureRecord {
+export class OJOIApplicationSignatureRecord {
   @ApiProperty({
     type: String,
     description: 'Institution of the signature',
@@ -55,36 +55,36 @@ export class ApplicationSignatureRecord {
   additional?: string
 
   @ApiProperty({
-    type: ApplicationSignatureMember,
+    type: OJOIApplicationSignatureMember,
     description: 'Chairman of the signature',
   })
-  chairman?: ApplicationSignatureMember
+  chairman?: OJOIApplicationSignatureMember
 
   @ApiProperty({
-    type: [ApplicationSignatureMember],
+    type: [OJOIApplicationSignatureMember],
     description: 'Members of the signature',
   })
-  members!: ApplicationSignatureMember[]
+  members!: OJOIApplicationSignatureMember[]
 }
 
-export class ApplicationSignatureRecords {
+export class OJOIApplicationSignatureRecords {
   @ApiProperty({
-    type: [ApplicationSignatureRecord],
+    type: [OJOIApplicationSignatureRecord],
     description: 'Regular signature',
   })
-  records?: ApplicationSignatureRecord[]
+  records?: OJOIApplicationSignatureRecord[]
 }
 
-export class ApplicationSignatures {
+export class OJOIApplicationSignatures {
   @ApiProperty({
-    type: ApplicationSignatureRecords,
+    type: OJOIApplicationSignatureRecords,
     description: 'Regular signature',
   })
-  regular?: ApplicationSignatureRecords
+  regular?: OJOIApplicationSignatureRecords
 
   @ApiProperty({
-    type: ApplicationSignatureRecords,
+    type: OJOIApplicationSignatureRecords,
     description: 'Committee signature',
   })
-  committee?: ApplicationSignatureRecords
+  committee?: OJOIApplicationSignatureRecords
 }

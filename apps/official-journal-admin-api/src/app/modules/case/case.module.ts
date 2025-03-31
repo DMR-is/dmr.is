@@ -1,31 +1,28 @@
-import { forwardRef, Module } from '@nestjs/common'
+import {
+  CaseAdditionModel,
+  CaseAdditionsModel,
+  CaseCategoriesModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseHistoryModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
+  CaseTransactionModel,
+  TransactionFeeCodesModel,
+} from '@dmr.is/official-journal/models'
+
+import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
-import { ICaseService } from './case.service.interface'
+
 import { CaseCreateService } from './services/create/case-create.service'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { CaseUpdateService } from './services/update/case-update.service'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
+import { ICaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
-import {
-  CaseModel,
-  CaseStatusModel,
-  CaseHistoryModel,
-  CaseTagModel,
-  CaseChannelModel,
-  CaseAdditionModel,
-  CaseTransactionModel,
-  CaseCategoriesModel,
-  CaseChannelsModel,
-  CaseAdditionsModel,
-  TransactionFeeCodesModel,
-  CaseCommunicationStatusModel,
-} from '@dmr.is/official-journal/models'
-import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
-import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
-import { AWSModule } from '@dmr.is/shared/modules/aws'
-import { JournalModule } from '@dmr.is/official-journal/modules/journal'
-import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
@@ -44,16 +41,6 @@ const API_MOCK = process.env.API_MOCK === 'true'
       TransactionFeeCodesModel,
       CaseCommunicationStatusModel,
     ]),
-    JournalModule,
-    SignatureModule,
-    CommentModule,
-    forwardRef(() => PriceModule),
-    forwardRef(() => PdfModule),
-    forwardRef(() => AWSModule),
-    forwardRef(() => AttachmentModule),
-    forwardRef(() => UtilityModule),
-    forwardRef(() => ApplicationModule),
-    forwardRef(() => JournalModule),
   ],
   providers: [
     {

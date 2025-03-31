@@ -1,11 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { OJOIApplication } from '@dmr.is/shared/dto'
 
-import { Application } from './application.dto'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetApplicationResponse {
   @ApiProperty({
-    type: Application,
+    type: OJOIApplication,
     required: true,
   })
-  readonly application!: Application
+  readonly application!: OJOIApplication
 }

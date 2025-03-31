@@ -4,42 +4,41 @@ import { v4 as uuid } from 'uuid'
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdditionTypeEnum,
+  CaseAdditionModel,
+  CaseAdditionsModel,
+  CaseCategoriesModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusEnum,
+  CaseModel,
+  CaseStatusEnum,
+  CaseTagEnum,
+} from '@dmr.is/official-journal/models'
+import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import {
+  BaseEntity,
+  OJOIApplication,
+  PostApplicationBody,
+} from '@dmr.is/shared/dto'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
-import { ICaseCreateService } from './case-create.service.interface'
-import { BaseEntity } from '@dmr.is/shared/dto'
-import {
-  CaseChannelModel,
-  CaseChannelsModel,
-  CaseModel,
-  CaseCategoriesModel,
-  CaseAdditionModel,
-  CaseAdditionsModel,
-  CaseStatusEnum,
-  CaseCommunicationStatusEnum,
-  CaseTagEnum,
-  AdditionTypeEnum,
-} from '@dmr.is/official-journal/models'
-import {
-  IApplicationService,
-  PostApplicationBody,
-  Application,
-} from '@dmr.is/official-journal/modules/application'
-
-import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
-import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
-import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import { CaseChannel } from '../../dto/case-channel.dto'
+import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
 import { CreateCaseBody } from '../../dto/create-case-body.dto'
 import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
-import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
-import { ICommentService } from '@dmr.is/official-journal/modules/comment'
+import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
+import { ICaseCreateService } from './case-create.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCreateService'
 
@@ -217,7 +216,7 @@ export class CaseCreateService implements ICaseCreateService {
   @LogAndHandle()
   @Transactional()
   private async getCreateCaseBody(
-    application: Application,
+    application: OJOIApplication,
     transaction?: Transaction,
   ): Promise<ResultWrapper<CreateCaseBodyValues>> {
     const now = new Date()
@@ -477,7 +476,7 @@ export class CaseCreateService implements ICaseCreateService {
   async createCaseByApplication(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<{ id: string }>> {
-    const { application } = (
+    const application: OJOIApplication = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
 

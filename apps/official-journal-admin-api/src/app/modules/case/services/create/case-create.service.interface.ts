@@ -1,10 +1,11 @@
 import { Transaction } from 'sequelize'
-import { ResultWrapper } from '@dmr.is/types'
-import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
+
 import { CaseChannel } from '../../dto/case-channel.dto'
-import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
+import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
 
 export interface ICaseCreateService {
   createCaseByApplication(

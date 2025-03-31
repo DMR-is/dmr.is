@@ -1,6 +1,7 @@
 import { LoggingModule } from '@dmr.is/logging'
 import { OFFICIAL_JOURNAL_DB } from '@dmr.is/official-journal/models'
 import { AdvertTypeAdminController } from '@dmr.is/official-journal/modules/advert-type'
+import { AuthModule } from '@dmr.is/official-journal/modules/auth'
 import {
   CategoryAdminController,
   CategoryModule,
@@ -53,6 +54,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    AuthModule,
     CaseModule,
     ApplicationModule,
     StatisticsModule,

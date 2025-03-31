@@ -2,7 +2,7 @@ import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
-import { AttachmentTypeParam } from '@dmr.is/constants'
+import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -28,16 +28,21 @@ import {
   SignatureModel,
   SignatureRecordModel,
 } from '@dmr.is/official-journal/models'
-import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
+import { IAdvertService } from '@dmr.is/official-journal/modules/advert'
 import {
   IAttachmentService,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import { IJournalService } from '@dmr.is/official-journal/modules/journal'
 import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
-import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+  IPriceService,
+} from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { IAWSService, PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -50,7 +55,6 @@ import {
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -69,10 +73,6 @@ import {
 import { CaseChannel } from './dto/case-channel.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
-import {
-  GetPaymentQuery,
-  GetPaymentResponse,
-} from './dto/get-case-payment-response.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import { GetCasesReponse } from './dto/get-cases-response.dto'
@@ -120,15 +120,14 @@ const LOGGING_QUERY = 'CaseServiceQueryRunner'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(forwardRef(() => IJournalService))
-    private readonly journalService: IJournalService,
+    @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @Inject(ICaseCreateService)
     private readonly createService: ICaseCreateService,
-    @Inject(forwardRef(() => IAWSService)) private readonly s3: IAWSService,
+    @Inject(IAWSService) private readonly s3: IAWSService,
 
-    @Inject(forwardRef(() => IAttachmentService))
+    @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
-    @Inject(forwardRef(() => IPdfService))
+    @Inject(IPdfService)
     private readonly pdfService: IPdfService,
 
     @Inject(ICaseUpdateService)
@@ -144,6 +143,8 @@ export class CaseService implements ICaseService {
 
     @InjectModel(AdvertCorrectionModel)
     private advertCorrectionModel: typeof AdvertCorrectionModel,
+    @Inject(IApplicationService)
+    private readonly applicationService: IApplicationService,
 
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
@@ -667,7 +668,7 @@ export class CaseService implements ICaseService {
 
     if (caseLookup?.advertId) {
       ResultWrapper.unwrap(
-        await this.journalService.updateAdvert(caseLookup.advertId, {
+        await this.advertService.updateAdvert(caseLookup.advertId, {
           documentHtml: body.advertHtml,
           ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
         }),
@@ -770,7 +771,7 @@ export class CaseService implements ICaseService {
       now,
     )
 
-    const advertCreateResult = await this.journalService.create(
+    const advertCreateResult = await this.advertService.create(
       {
         departmentId: caseToPublish.departmentId,
         typeId: caseToPublish.advertTypeId,
@@ -830,7 +831,10 @@ export class CaseService implements ICaseService {
     }
 
     if (caseToPublish.applicationId) {
-      await this.utilityService.approveApplication(caseToPublish.applicationId)
+      await this.applicationService.submitApplication(
+        caseToPublish.applicationId,
+        ApplicationEvent.Approve,
+      )
     }
     await this.s3.sendMail(message)
     return ResultWrapper.ok()
@@ -1158,15 +1162,16 @@ export class CaseService implements ICaseService {
 
     if (caseLookup.advertId) {
       ResultWrapper.unwrap(
-        await this.journalService.updateAdvert(caseLookup.advertId, {
+        await this.advertService.updateAdvert(caseLookup.advertId, {
           statusId: statusLookup.id,
         }),
       )
     }
 
     if (caseLookup.applicationId) {
-      ResultWrapper.unwrap(
-        await this.utilityService.rejectApplication(caseLookup.applicationId),
+      await this.applicationService.submitApplication(
+        caseLookup.applicationId,
+        ApplicationEvent.Reject,
       )
     }
 

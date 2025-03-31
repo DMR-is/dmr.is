@@ -1,8 +1,19 @@
 import { Transaction } from 'sequelize'
-import { ResultWrapper } from '@dmr.is/types'
-import { PostApplicationBody } from '@dmr.is/official-journal/modules/application'
+import {
+  CaseCommunicationStatusEnum,
+  CaseStatusEnum,
+  DepartmentEnum,
+} from '@dmr.is/official-journal/models'
 import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+} from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
+import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   AddCaseAdvertCorrection,
   DeleteCaseAdvertCorrection,
@@ -11,12 +22,8 @@ import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case.dto'
-import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
-import {
-  GetPaymentQuery,
-  GetPaymentResponse,
-} from './dto/get-case-payment-response.dto'
+import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import { GetCasesReponse } from './dto/get-cases-response.dto'
@@ -25,8 +32,8 @@ import {
   GetCasesWithStatusCountQuery,
 } from './dto/get-cases-with-count-query.dto'
 import {
-  GetCasesWithPublicationNumberQuery,
   GetCasesWithPublicationNumber,
+  GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
 import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
 import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
@@ -47,12 +54,6 @@ import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
 import { UpdateTagBody } from './dto/update-tag-body.dto'
 import { UpdateTitleBody } from './dto/update-title-body.dto'
 import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
-import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
-import {
-  CaseCommunicationStatusEnum,
-  CaseStatusEnum,
-  DepartmentEnum,
-} from '@dmr.is/official-journal/models'
 
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>

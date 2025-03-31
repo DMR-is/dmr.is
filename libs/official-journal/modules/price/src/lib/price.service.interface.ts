@@ -7,7 +7,7 @@ import {
   GetPaymentResponse,
 } from './dto/get-case-payment-response.dto'
 import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
-import { PriceByDepartmentResponse } from './dto/tbr-transcation.dto'
+import { PriceByDepartmentResponse } from './dto/tbr-transaction.dto'
 
 export interface IPriceService {
   getAllFeeCodes(

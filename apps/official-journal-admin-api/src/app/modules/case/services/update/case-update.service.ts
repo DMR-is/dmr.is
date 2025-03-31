@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { ApplicationStates } from '@dmr.is/constants'
+import { ApplicationEvent, ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -21,6 +21,7 @@ import { getFastTrack } from '@dmr.is/utils'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { ICasePaymentService } from '../../../payment/payment.service.interface'
 import { getNextStatus, getPreviousStatus } from '../../case.utils'
 import { UpdateAdvertHtmlBody } from '../../dto/update-advert-html-body.dto'
 import { UpdateCaseBody } from '../../dto/update-case-body.dto'
@@ -58,6 +59,9 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
+
+    @Inject(ICasePaymentService)
+    private readonly casePaymentService: ICasePaymentService,
 
     private readonly sequelize: Sequelize,
   ) {}
@@ -102,17 +106,16 @@ export class CaseUpdateService implements ICaseUpdateService {
 
       if (caseLookup.applicationId) {
         try {
-          const { application } = (
+          const application = (
             await this.applicationService.getApplication(
               caseLookup.applicationId,
             )
           ).unwrap()
 
           if (application.state === ApplicationStates.SUBMITTED) {
-            ResultWrapper.unwrap(
-              await this.utilityService.editApplication(
-                caseLookup.applicationId,
-              ),
+            await this.applicationService.submitApplication(
+              caseLookup.applicationId,
+              ApplicationEvent.Edit,
             )
           }
         } catch (error) {
@@ -357,8 +360,9 @@ export class CaseUpdateService implements ICaseUpdateService {
     const nextStatus = getNextStatus(caseLookup.status.title)
 
     if (nextStatus === CaseStatusEnum.ReadyForPublishing) {
+      // look into event emitter to decouple this
       ResultWrapper.unwrap(
-        await this.priceService.postExternalPaymentByCaseId(id, transaction),
+        await this.casePaymentService.postExternalPaymentByCaseId(id),
       )
     }
 
@@ -434,10 +438,10 @@ export class CaseUpdateService implements ICaseUpdateService {
   async updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,
-    transaction?: Transaction,
+    _transaction?: Transaction,
   ): Promise<ResultWrapper> {
     try {
-      await this.priceService.updateCasePriceByCaseId(caseId, body, transaction)
+      await this.casePaymentService.updateCasePriceByCaseId(caseId, body)
     } catch (error) {
       return ResultWrapper.err({
         code: 500,
@@ -471,17 +475,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  departmentId: body.departmentId,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                departmentId: body.departmentId,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(
@@ -521,17 +523,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  typeId: body.typeId,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                typeId: body.typeId,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(
@@ -617,17 +617,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  categories: ids,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                categories: ids,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(
@@ -672,17 +670,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  requestedDate: body.date,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                requestedDate: body.date,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(
@@ -723,17 +719,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  title: body.title,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                title: body.title,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(
@@ -796,17 +790,15 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (caseLookup.applicationId) {
       try {
-        ResultWrapper.unwrap(
-          await this.applicationService.updateApplication(
-            caseLookup.applicationId,
-            {
-              answers: {
-                advert: {
-                  html: body.advertHtml,
-                },
+        await this.applicationService.updateApplication(
+          caseLookup.applicationId,
+          {
+            answers: {
+              advert: {
+                html: body.advertHtml,
               },
             },
-          ),
+          },
         )
       } catch (error) {
         this.logger.warn(

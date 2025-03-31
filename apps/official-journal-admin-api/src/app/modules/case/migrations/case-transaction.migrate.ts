@@ -1,9 +1,9 @@
 import { CaseTransactionModel } from '@dmr.is/official-journal/models'
-import { CaseTransaction } from '../dto/case-transaction.dto'
+import { TBRTransaction } from '@dmr.is/official-journal/modules/price'
 
 export const caseTransactionMigrate = (
   model: CaseTransactionModel,
-): CaseTransaction => {
+): TBRTransaction => {
   try {
     const mapped = {
       id: model.id,

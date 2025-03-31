@@ -2,9 +2,9 @@ import { ApplicationStates } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationAnswers } from './application-answers.dto'
+import { OJOIApplicationAnswers } from './application-answers.dto'
 
-export class Application {
+export class OJOIApplication {
   @ApiProperty({
     type: String,
     example: 'a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0',
@@ -81,10 +81,10 @@ export class Application {
   applicantActors!: string[]
 
   @ApiProperty({
-    type: ApplicationAnswers,
+    type: OJOIApplicationAnswers,
     description: 'Application answers',
   })
-  answers!: ApplicationAnswers
+  answers!: OJOIApplicationAnswers
 
   @ApiProperty({
     type: Boolean,

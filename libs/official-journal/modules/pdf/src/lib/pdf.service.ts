@@ -33,6 +33,7 @@ import {
   CaseModel,
   SignatureModel,
 } from '@dmr.is/official-journal/models'
+import { OJOIApplication } from '@dmr.is/shared/dto'
 
 const LOGGING_CATEGORY = 'pdf-service'
 
@@ -59,8 +60,9 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     applicationId: string,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
-    const application =
-      await this.applicationService.getApplication(applicationId)
+    const application = (await this.applicationService.getApplication(
+      applicationId,
+    )) as OJOIApplication
 
     const { answers } = application
     const signatureType =
@@ -79,7 +81,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     if (answers.advert.additions) {
       additionHtml = answers.advert.additions
         .map(
-          (addition: { title: string; content: string }) => `
+          (addition) => `
             <section class="appendix">
               <h2 class="appendix__title">${addition.title}</h2>
               <div class="appendix__text">

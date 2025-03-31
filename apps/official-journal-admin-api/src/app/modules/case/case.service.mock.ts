@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -7,7 +6,12 @@ import {
   DepartmentEnum,
 } from '@dmr.is/official-journal/models'
 import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
+import {
+  GetPaymentQuery,
+  GetPaymentResponse,
+} from '@dmr.is/official-journal/modules/price'
 import { UserDto } from '@dmr.is/official-journal/modules/user'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -23,10 +27,6 @@ import {
 } from './dto/case.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
-import {
-  GetPaymentQuery,
-  GetPaymentResponse,
-} from './dto/get-case-payment-response.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import { GetCasesReponse } from './dto/get-cases-response.dto'

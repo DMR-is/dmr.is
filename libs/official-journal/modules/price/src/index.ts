@@ -12,6 +12,7 @@ export {
   TransactionFeeCode,
   TransactionFeeCodesResponse,
 } from './lib/dto/transaction-free-code.dto'
+export { TBRTransaction } from './lib/dto/tbr-transaction.dto'
 
 // service
 export { IPriceService } from './lib/price.service.interface'

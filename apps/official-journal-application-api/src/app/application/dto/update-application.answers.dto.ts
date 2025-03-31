@@ -1,8 +1,7 @@
 import { IsOptional } from 'class-validator'
+import { OJOIApplication } from '@dmr.is/shared/dto'
 
 import { ApiProperty } from '@nestjs/swagger'
-
-import { ApplicationCommunicationChannel } from './application-advert.dto'
 export class UpdateApplicationAdvertDto {
   @ApiProperty({
     type: String,
@@ -58,11 +57,11 @@ export class UpdateApplicationAdvertDto {
   message?: string
 
   @ApiProperty({
-    type: [ApplicationCommunicationChannel],
+    type: [OJOIApplication],
     description: 'Communication channels',
   })
   @IsOptional()
-  channels?: ApplicationCommunicationChannel[]
+  channels?: OJOIApplication[]
 }
 
 export class UpdateApplicationAnswersBody {

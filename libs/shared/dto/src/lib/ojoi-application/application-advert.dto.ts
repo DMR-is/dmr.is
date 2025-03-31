@@ -5,12 +5,12 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator'
+import { AdditionTypeEnum } from '@dmr.is/official-journal/models'
+import { BaseEntity } from '@dmr.is/shared/dto'
 
 import { ApiProperty } from '@nestjs/swagger'
-import { BaseEntity } from '@dmr.is/shared/dto'
-import { AdditionTypeEnum } from '@dmr.is/official-journal/models'
 
-export class ApplicationCommunicationChannel {
+export class OJOIApplicationCommunicationChannel {
   @ApiProperty({
     type: String,
   })
@@ -34,7 +34,7 @@ export class ApplicationCommunicationChannel {
   phone?: string
 }
 
-export class ApplicationAddition {
+export class OJOIApplicationAddition {
   @ApiProperty({
     type: String,
     description: 'Id of the addition',
@@ -71,7 +71,7 @@ export class ApplicationAddition {
 /**
  * Application advert fields, we use these fields to create a new case in the system
  */
-export class ApplicationAdvert {
+export class OJOIApplicationAdvert {
   @ApiProperty({
     type: String,
     example: 'a12c3d4e-5f67-8h90-1i23-j45k6l7m8n9o0',
@@ -125,18 +125,18 @@ export class ApplicationAdvert {
   categories!: BaseEntity[]
 
   @ApiProperty({
-    type: [ApplicationCommunicationChannel],
+    type: [OJOIApplicationCommunicationChannel],
     description: 'Communication channels',
   })
   @IsOptional()
-  channels?: ApplicationCommunicationChannel[]
+  channels?: OJOIApplicationCommunicationChannel[]
 
   @ApiProperty({
-    type: [ApplicationAddition],
+    type: [OJOIApplicationAddition],
     description: 'Additions to the advert',
   })
   @IsOptional()
-  additions?: ApplicationAddition[]
+  additions?: OJOIApplicationAddition[]
 
   @ApiProperty({
     type: String,

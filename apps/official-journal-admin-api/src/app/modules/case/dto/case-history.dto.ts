@@ -1,10 +1,11 @@
+import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { Department } from '@dmr.is/official-journal/modules/department'
+import { Institution } from '@dmr.is/official-journal/modules/institution'
+import { UserDto } from '@dmr.is/official-journal/modules/user'
+
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { CaseStatus } from './case-status.dto'
-import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
-import { Institution } from '@dmr.is/official-journal/modules/institution'
-import { Department } from '@dmr.is/official-journal/modules/journal'
-import { UserDto } from '@dmr.is/official-journal/modules/user'
 
 const BASE_ATTRIBUTES = ['id', 'title', 'slug'] as const
 
