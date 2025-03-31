@@ -29,7 +29,6 @@ async function bootstrap() {
 
   app.useGlobalPipes(ExceptionFactoryPipe())
   app.setGlobalPrefix(globalPrefix)
-  app.enableCors()
   app.enableVersioning({
     type: VersioningType.URI,
   })

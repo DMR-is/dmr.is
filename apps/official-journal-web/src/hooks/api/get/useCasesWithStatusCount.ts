@@ -18,7 +18,7 @@ export const useCasesWithStatusCount = ({
 }: UseGetCasesWithStatusCount = {}) => {
   const { data: session } = useSession()
 
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const dmrClient = getDmrClient(session?.accessToken as string)
   const castedParams: { [key: string]: unknown } = params ? params : {}
   const paramsWithoutNull = Object.keys(castedParams).reduce<{
     [key: string]: unknown

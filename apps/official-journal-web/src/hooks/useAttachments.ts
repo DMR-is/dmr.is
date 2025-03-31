@@ -98,6 +98,7 @@ export const useAttachments = () => {
       {
         method: 'PUT',
         body: JSON.stringify(body),
+        credentials: 'include',
       },
     )
 
@@ -120,6 +121,7 @@ export const useAttachments = () => {
       },
       method: 'PUT',
       body: file,
+      credentials: 'include',
     })
 
     if (!didUpload.ok) {
