@@ -1,9 +1,9 @@
-import 'server-only'
 import { decode } from 'jsonwebtoken'
 import { JWT } from 'next-auth/jwt'
 import { logger } from '@dmr.is/logging'
 
 import { identityServerConfig } from './identityServerConfig'
+
 const LOGGING_CATEGORY = 'refreshAccessToken'
 
 const renewalSeconds = 10 // seconds
