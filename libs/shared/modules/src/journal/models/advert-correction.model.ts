@@ -21,13 +21,13 @@ export class AdvertCorrectionModel extends Model {
   })
   override id!: string
 
-  @Column({ allowNull: false })
+  @Column({ allowNull: true })
   title!: string
 
   @Column({ allowNull: false })
   description!: string
 
-  @Column({ field: 'document_html' })
+  @Column({ field: 'document_html', allowNull: true })
   documentHtml!: string
 
   @Column({ field: 'document_pdf_url' })
