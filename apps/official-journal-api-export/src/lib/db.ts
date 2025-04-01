@@ -320,11 +320,6 @@ export async function getAdvertDocumentsCorrections(
         ADVERT_DOCUMENTS_CORRECTIONS_QUERY(item.documentId.toLocaleLowerCase()),
       )
       if (!documentFromDB.recordset[0]) {
-        console.log(
-          'þessi er fucked',
-          item.documentId,
-          documentFromDB.recordset[0],
-        )
         correctionsWithDocumentUrl.push(item)
       } else {
         const url = await savePDF(documentFromDB.recordset[0])
