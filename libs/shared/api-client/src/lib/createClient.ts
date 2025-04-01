@@ -1,7 +1,3 @@
-import { IncomingMessage } from 'http'
-import { NextApiRequest } from 'next'
-import { NextApiRequestCookies } from 'next/dist/server/api-utils'
-
 import { createEnhancedFetch } from './createEnhancedFetch'
 
 const getPath = () => {
@@ -23,28 +19,16 @@ type CParameters = {
   fetchApi: (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   accessToken: string
   basePath: string
-  credentials: 'include' | 'same-origin' | 'omit'
 }
 
-export const config = <Configuration> (
+export const config = <Configuration>(
   Configuration: new (config?: CParameters) => Configuration,
   token: string,
-  req?:
-    | NextApiRequest
-    | (IncomingMessage & {
-        cookies: NextApiRequestCookies
-      }),
 ) => {
   const fetchWithCookie = createEnhancedFetch()
 
   return new Configuration({
     fetchApi: async (url: RequestInfo | URL, init: RequestInit = {}) => {
-      if (typeof window === 'undefined' && req?.headers.cookie) {
-        init.headers = {
-          ...(init.headers || {}),
-          cookie: req.headers.cookie,
-        }
-      }
       const finalUrl =
         typeof url === 'string' || url instanceof URL ? url.toString() : url
 
@@ -52,7 +36,6 @@ export const config = <Configuration> (
     },
     accessToken: token,
     basePath: getPath(),
-    credentials: 'include',
   })
 }
 
@@ -62,14 +45,9 @@ export const getDmrClient = <DefaultApi, Configuration>(
   DefaultApi: new (config: Configuration) => DefaultApi,
   Configuration: new (config?: CParameters) => Configuration,
   token: string,
-  req?:
-    | NextApiRequest
-    | (IncomingMessage & {
-        cookies: NextApiRequestCookies
-      }),
 ): DefaultApi => {
   if (typeof window === 'undefined') {
-    return new DefaultApi(config(Configuration, token, req))
+    return new DefaultApi(config(Configuration, token))
   }
 
   return (dmrClient ??= new DefaultApi(config(Configuration, token)))
