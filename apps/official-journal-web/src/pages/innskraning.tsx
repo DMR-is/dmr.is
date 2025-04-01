@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
+import { identityServerId } from '@dmr.is/auth/identityProvider'
 
 import {
   Box,
@@ -14,7 +15,6 @@ import {
 
 import { LayoutProps } from '../layout/Layout'
 import { Routes } from '../lib/constants'
-import { identityServerId } from '../lib/identityProvider'
 import { messages } from '../lib/messages/caseOverview'
 
 type Props = {

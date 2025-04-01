@@ -2,12 +2,12 @@ import { decode } from 'jsonwebtoken'
 import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
+import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { logger } from '@dmr.is/logging'
 
 import { UserDto, UserRoleDto } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { identityServerConfig } from '../../../lib/identityProvider'
-import { isExpired, refreshAccessToken } from '../../../lib/token-service'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -144,8 +144,8 @@ export const authOptions: AuthOptions = {
     IdentityServer4({
       id: identityServerConfig.id,
       name: identityServerConfig.name,
-      clientId: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID ?? '',
-      clientSecret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
+      clientId: identityServerConfig.clientId,
+      clientSecret: identityServerConfig.clientSecret,
       issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {
         params: {

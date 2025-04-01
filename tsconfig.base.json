@@ -6,7 +6,9 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
+      "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
+      "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
