@@ -47,6 +47,9 @@
       "@dmr.is/official-journal/modules/auth": [
         "libs/official-journal/modules/auth/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/case": [
+        "libs/official-journal/modules/case/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/category": [
         "libs/official-journal/modules/category/src/index.ts"
       ],
