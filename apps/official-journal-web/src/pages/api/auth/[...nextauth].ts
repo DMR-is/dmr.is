@@ -21,12 +21,12 @@ const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
-async function authorize(nationalId?: string, accessToken?: string) {
-  if (!accessToken || !nationalId) {
+async function authorize(nationalId?: string, idToken?: string) {
+  if (!idToken || !nationalId) {
     return null
   }
 
-  const dmrClient = getDmrClient(accessToken)
+  const dmrClient = getDmrClient(idToken)
 
   try {
     const { user: member } = await dmrClient.getUserByNationalId({
