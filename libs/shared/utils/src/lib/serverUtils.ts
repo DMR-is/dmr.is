@@ -1,8 +1,8 @@
-import { isDefined } from 'class-validator'
+import { isDefined, isUUID } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import sanitizeHtml from 'sanitize-html'
-import { Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
@@ -257,4 +257,47 @@ export const getPublicationTemplate = (
   })
 
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} - Útgáfud.: ${formatted}</strong></p>`
+}
+
+export const nextWeekdayAfterDays = (date: Date, minDays = 1) => {
+  const result = new Date(date)
+  result.setDate(date.getDate() + minDays)
+  while (result.getDay() === 0 || result.getDay() === 6) {
+    result.setDate(result.getDate() + 1)
+  }
+  return result
+}
+
+export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
+  const whereClause = {}
+
+  if (!filters) {
+    return whereClause
+  }
+
+  const isArray = Array.isArray(filters)
+  const isId = isArray
+    ? filters.every((filter) => isUUID(filter))
+    : isUUID(filters)
+
+  if (isId) {
+    Object.assign(whereClause, {
+      id: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+    })
+
+    return whereClause
+  }
+
+  Object.assign(whereClause, {
+    [Op.or]: [
+      {
+        title: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+      },
+      {
+        slug: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+      },
+    ],
+  })
+
+  return whereClause
 }

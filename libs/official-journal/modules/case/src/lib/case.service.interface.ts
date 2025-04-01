@@ -1,19 +1,16 @@
-import { ResultWrapper } from '@dmr.is/types'
-import { GetCasesQuery } from './dto/case.dto'
+import {
+  CreateCaseDto,
+  CreateCaseResponseDto,
+  GetCaseResponse,
+  GetCasesQuery,
+  GetCasesReponse,
+} from '@dmr.is/official-journal/dto/case/case.dto'
 
 export interface ICaseService {
-  getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
-  getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>>
+  getCase(id: string): Promise<GetCaseResponse>
+  getCases(params?: GetCasesQuery): Promise<GetCasesReponse>
 
-  getCasesWithPublicationNumber(
-    department: string,
-    params: GetCasesWithPublicationNumberQuery,
-  ): Promise<ResultWrapper<GetCasesWithPublicationNumber>>
-
-  getCasesWithDepartmentCount(
-    department: string,
-    query?: GetCasesWithDepartmentCountQuery,
-  ): Promise<ResultWrapper<GetCasesWithDepartmentCount>>
+  createCase(body: CreateCaseDto): Promise<CreateCaseResponseDto>
 }
 
 export const ICaseService = Symbol('ICaseService')

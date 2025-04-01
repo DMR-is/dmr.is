@@ -26,11 +26,12 @@
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
-      "@dmr.is/official-journal/dto/*": [
-        "libs/official-journal/dto/src/lib/*"
-      ],
+      "@dmr.is/official-journal/dto/*": ["libs/official-journal/dto/src/lib/*"],
       "@dmr.is/official-journal/guards": [
         "libs/official-journal/guards/src/index.ts"
+      ],
+      "@dmr.is/official-journal/migrations/*": [
+        "libs/official-journal/migrations/src/lib/*"
       ],
       "@dmr.is/official-journal/models": [
         "libs/official-journal/models/src/index.ts"

@@ -23,7 +23,13 @@ import {
   SortingQuery,
 } from '@dmr.is/shared/dto'
 
-import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
+import {
+  ApiProperty,
+  IntersectionType,
+  OmitType,
+  PartialType,
+  PickType,
+} from '@nestjs/swagger'
 
 import { ApplicationAttachment } from '../attachments/application-attachment.dto'
 import { Category } from '../category/category.dto'
@@ -479,6 +485,13 @@ export class GetCasesReponse {
   paging!: Paging
 }
 
+export class GetCaseResponse {
+  @ApiProperty({
+    type: Case,
+  })
+  case!: Case
+}
+
 export class CreateCaseDto {
   @ApiProperty({
     type: String,
@@ -511,6 +524,47 @@ export class CreateCaseDto {
   })
   @IsString()
   subject!: string
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+  })
+  categoryIds?: string[]
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  requestedPublicationDate?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  caseStatusId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  communicationStatusId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  assignedUserId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  html?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  message?: string
 }
 
 export class CreateCaseResponseDto {
@@ -518,4 +572,16 @@ export class CreateCaseResponseDto {
     type: String,
   })
   id!: string
+}
+
+export class UpdateCaseBody extends PartialType(
+  OmitType(CreateCaseDto, ['categoryIds', 'message']),
+) {
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  fastTrack?: boolean
 }

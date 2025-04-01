@@ -3,10 +3,13 @@ import {
   BelongsToMany,
   Column,
   DataType,
+  DefaultScope,
   ForeignKey,
   HasMany,
   HasOne,
   Model,
+  Scopes,
+  Sequelize,
   Table,
 } from 'sequelize-typescript'
 
@@ -31,9 +34,182 @@ import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { AdvertModel } from '../journal/advert.model'
 import { SignatureModel } from '../signature/signature.model'
 import { UserModel } from '../user/user.model'
+import { UserRoleModel } from '../user/user-role.model'
+import { CaseActionModel } from '../comment/case-action.model'
+import { AdvertCorrectionModel } from '../journal/advert-correction.model'
+import { ApplicationAttachmentTypeModel } from '../attachment/application-attachment-type.model'
+import { SignatureRecordModel } from '../signature/signature-record.model'
+import { SignatureMemberModel } from '../signature/signature-member.model'
+import { Op } from 'sequelize'
+import { logger } from '@dmr.is/logging'
+
+const LOGGING_CONTEXT = 'CaseModel'
+
+type CaseCreateAttributes = {
+  applicationId?: string
+  year: number
+  caseNumber: string
+  departmentId: string
+  advertTypeId: string
+  tagId: string
+  statusId: string
+  involvedPartyId: string
+  communicationStatusId: string
+  advertTitle: string
+  requestedPublicationDate: string
+  fastTrack: boolean
+  createdAt: string
+  updatedAt: string
+  assignedUserId?: string | null
+  publishedAt?: string | null
+  message?: string | null
+  html?: string | null
+}
 
 @Table({ tableName: OfficialJournalModels.CASE, timestamps: false })
-export class CaseModel extends Model {
+@DefaultScope(() => ({
+  benchmark: true,
+  distinct: true,
+  attributes: [
+    'id',
+    'requestedPublicationDate',
+    'createdAt',
+    'year',
+    'advertTitle',
+    'fastTrack',
+    'publishedAt',
+    'publicationNumber',
+  ],
+  logging: (_, timing) => {
+    logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
+      context: LOGGING_CONTEXT,
+    })
+  },
+}))
+@Scopes(() => ({
+  detailed: {
+    include: [
+      CaseTagModel,
+      CaseStatusModel,
+      CaseCommunicationStatusModel,
+      AdvertDepartmentModel,
+      AdvertTypeModel,
+      AdvertCategoryModel,
+      CaseChannelModel,
+      AdvertInvolvedPartyModel,
+      CaseAdditionModel,
+      CaseTransactionModel,
+      {
+        model: AdvertModel,
+        include: [AdvertCorrectionModel],
+      },
+      {
+        model: ApplicationAttachmentModel,
+        where: { deleted: false },
+        required: false,
+        include: [ApplicationAttachmentTypeModel],
+      },
+      {
+        model: UserModel,
+        include: [
+          { model: UserRoleModel },
+          { model: AdvertInvolvedPartyModel },
+        ],
+      },
+      {
+        model: CommentModel,
+        separate: true,
+        include: [
+          {
+            model: CaseStatusModel,
+            attributes: ['id', 'title', 'slug'],
+            as: 'createdCaseStatus',
+          },
+          {
+            model: CaseActionModel,
+            attributes: ['id', 'title', 'slug'],
+          },
+          {
+            model: UserModel,
+            as: 'userCreator',
+          },
+          {
+            model: UserModel,
+            as: 'userReceiver',
+          },
+          {
+            model: AdvertInvolvedPartyModel,
+            attributes: ['id', 'title', 'slug'],
+          },
+          {
+            model: CaseStatusModel,
+            attributes: ['id', 'title', 'slug'],
+            as: 'caseStatusReceiver',
+          },
+        ],
+      },
+      {
+        model: CaseHistoryModel,
+        include: [
+          { model: CaseStatusModel, attributes: ['id', 'title', 'slug'] },
+          { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },
+          { model: AdvertTypeModel, attributes: ['id', 'title', 'slug'] },
+          {
+            model: AdvertInvolvedPartyModel,
+            attributes: ['id', 'title', 'slug'],
+          },
+          { model: UserModel },
+        ],
+      },
+      {
+        model: SignatureModel,
+        include: [
+          AdvertInvolvedPartyModel,
+          {
+            model: SignatureRecordModel,
+            as: 'records',
+            separate: true,
+            include: [
+              {
+                model: SignatureMemberModel,
+                as: 'chairman',
+              },
+              {
+                model: SignatureMemberModel,
+                as: 'members',
+                separate: true,
+                required: false,
+                include: [
+                  {
+                    model: SignatureRecordModel,
+                    required: false,
+                  },
+                ],
+                where: {
+                  [Op.or]: [
+                    // Exclude chairman using Sequelize.where
+                    Sequelize.where(
+                      Sequelize.col('SignatureMemberModel.id'),
+                      Op.ne,
+                      Sequelize.col('record.chairman_id'),
+                    ),
+                    // Include all members if chairman_id is NULL
+                    Sequelize.where(
+                      Sequelize.col('record.chairman_id'),
+                      Op.is,
+                      null,
+                    ),
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+}))
+export class CaseModel extends Model<CaseModel, CaseCreateAttributes> {
   @Column({
     type: DataType.UUID,
     primaryKey: true,

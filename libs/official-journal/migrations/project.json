@@ -1,0 +1,19 @@
+{
+  "name": "official-journal-migrations-migrations",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/official-journal/migrations/migrations/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/official-journal/migrations/migrations/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
