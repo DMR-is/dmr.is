@@ -1,4 +1,4 @@
-import { DataTable } from '@dmr.is/ui'
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useFilters } from '../../hooks/useFilters'
 import { DEFAULT_SORT_DIRECTION, SortDirection } from '../../lib/constants'
@@ -56,6 +56,8 @@ export const RitstjornTable = () => {
       }
       rows={[
         {
+          uniqueKey: '1',
+          hasLink: true,
           birting: '2021-09-01',
           skraning: '2021-09-01',
           flokkur: 'Lög',

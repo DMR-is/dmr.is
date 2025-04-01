@@ -19,12 +19,17 @@ export type DataTableRowExpandableProps = {
   children?: React.ReactNode
 }
 
+export type DataTableRowHasLinkProps = {
+  hasLink?: boolean
+}
+
 export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {
   [K in T[number]['field']]: React.ReactNode
 } & {
   columns: T
   uniqueKey?: string
-} & DataTableRowExpandableProps
+} & DataTableRowExpandableProps &
+DataTableRowHasLinkProps
 export type DataTablePagingProps = {
   page: number
   pageSize: number

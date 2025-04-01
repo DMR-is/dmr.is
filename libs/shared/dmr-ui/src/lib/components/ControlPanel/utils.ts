@@ -1,4 +1,4 @@
-import { ControlPanelRoute } from './lib/ControlPanel/ControlPanel'
+import { ControlPanelRoute } from './ControlPanel'
 
 export const flattenPaths = (
   paths: ControlPanelRoute[],

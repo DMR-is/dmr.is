@@ -8,7 +8,7 @@ import {
   CONTROL_PANEL_WIDTH,
   DMR_HEADER_HEIGHT,
   DMR_HEADER_MOBILE_HEIGHT,
-} from '../../contants'
+} from '../constants'
 
 export const controlPanel = style({
   position: 'relative',
