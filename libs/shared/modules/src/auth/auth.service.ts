@@ -172,12 +172,10 @@ export class AuthService implements IAuthService {
       this.logger.error('Failed to fetch in auth xroadFetch', {
         category: LOGGING_CATEGORY,
         context: LOGGING_CONTEXT,
-        error,
+        message: error instanceof Error ? error.message : String(error),
       })
 
-      throw new InternalServerErrorException(
-        'Failed to fetch in auth.service xroadFetch',
-      )
+      throw error
     }
   }
 }

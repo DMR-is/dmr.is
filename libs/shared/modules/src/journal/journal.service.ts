@@ -63,6 +63,7 @@ import {
   AdvertCategoriesModel,
   AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
@@ -726,6 +727,7 @@ export class JournalService implements IJournalService {
         AdvertInvolvedPartyModel,
         AdvertAttachmentsModel,
         AdvertCategoryModel,
+        AdvertCorrectionModel,
       ],
     })
 
