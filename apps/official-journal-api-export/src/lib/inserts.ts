@@ -15,7 +15,8 @@ import {
 
 export function generateCorrectionsInserts(corrections?:Array<Correction>){
   const inserts = corrections?.map((correction) => {
-    return `INSERT INTO corrections (id, text,documentUrl) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl ? `'${correction.documentUrl}'`: null});`
+    const date = correction.date ? !isNaN(correction.date.getTime()) ? correction.date.toISOString() : null : null
+    return `INSERT INTO ADVERT_CORRECTION (LEGACY_ID, DESCRIPTION,DOCUMENT_PDF_URL,CREATED,UPDATED) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl ? `'${correction.documentUrl}'`: null},${date ? `'${date}'` : null },${date ? `'${date}'` : null });`
   })
   return inserts ?? ['']
 }
