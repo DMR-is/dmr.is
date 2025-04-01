@@ -4,12 +4,22 @@ import {
   AdvertCategory,
   Category,
   CategoryDepartment,
+  Correction,
   Department,
   InvolvedParty,
   Status,
   SuperCategory,
   Type,
 } from '../types'
+
+
+export function generateCorrectionsInserts(corrections?:Array<Correction>){
+  const inserts = corrections?.map((correction) => {
+    const date = correction.date ? !isNaN(correction.date.getTime()) ? correction.date.toISOString() : null : null
+    return `INSERT INTO ADVERT_CORRECTION (LEGACY_ID, DESCRIPTION,DOCUMENT_PDF_URL,CREATED,UPDATED) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl ? `'${correction.documentUrl}'`: null},${date ? `'${date}'` : null },${date ? `'${date}'` : null });`
+  })
+  return inserts ?? ['']
+}
 
 export function generateDepartmentInserts(departments: Array<Department>) {
   const inserts = departments.map((department) => {

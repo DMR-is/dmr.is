@@ -12,9 +12,11 @@ import {
 
 import {
   AdvertCategory,
+  Correction,
   DbAdvert,
   DbAdverts,
   DbCategory,
+  DbCorrections,
   DbDepartment,
   DbInvolvedParty,
   DbStatus,
@@ -24,6 +26,8 @@ import {
 
 const DEPARTMENT_QUERY =
   'SELECT typename AS name, typeid AS id, COUNT(*) AS count FROM Adverts GROUP BY typename, typeid'
+
+const CORRECTIONS_QUERY = `select RecordID,MetadataValue from Metadata where MetadataName = 'Corrections' and MetadataValue != '<rows />'`
 
 const TYPE_QUERY = `
   SELECT
@@ -125,6 +129,23 @@ WHERE
 
 `
 
+const ADVERT_DOCUMENTS_CORRECTIONS_QUERY = (recordId: string) => `
+ SELECT TOP 1
+	Documents.RecordID,
+	Records.Name as FileName,
+	Documents.Type,
+	Records.OriginalCreationDate,
+	DocumentVersions.ContentType,
+	DocumentStreams.StreamData AS Stream,
+	DATALENGTH(DocumentStreams.StreamData) AS FileSize
+FROM Documents
+INNER JOIN DocumentVersions ON DocumentVersions.VersionID = Documents.VersionID
+INNER JOIN DocumentStreams ON DocumentStreams.StreamID = DocumentVersions.StreamID
+INNER JOIN Records ON Records.RecordID = Documents.RecordID
+INNER JOIN Metadata ON Records.RecordID = Metadata.RecordID
+WHERE
+	Records.RecordID = '${recordId}' AND Records.Deleted = 0 AND records.ismarkedfordelete = 0`
+
 export async function connect(mssqlConnectionString: string) {
   await mssql.connect(mssqlConnectionString)
 }
@@ -158,6 +179,21 @@ export async function getTypes() {
     types.push(t)
   })
   return types
+}
+
+export async function getCorrections(): Promise<DbCorrections[]> {
+  const correctionfromDb = await mssql.query(CORRECTIONS_QUERY)
+  const records = correctionfromDb.recordset as Array<any>
+  const corrections: Array<DbCorrections> = []
+
+  records.forEach((correction) => {
+    const c = {
+      id: correction.RecordID,
+      value: correction.MetadataValue,
+    }
+    corrections.push(c)
+  })
+  return corrections
 }
 
 export async function getCategories(): Promise<DbCategory[]> {
@@ -272,6 +308,32 @@ export async function getAdvertDocuments(
   return advertsWithFileUrl
 }
 
+export async function getAdvertDocumentsCorrections(
+  corrections: Array<Correction>,
+) {
+  const correctionsWithDocumentUrl: Array<Correction> = []
+  for (const item of corrections) {
+    if (!item.documentId) {
+      correctionsWithDocumentUrl.push(item)
+    } else {
+      const documentFromDB = await mssql.query(
+        ADVERT_DOCUMENTS_CORRECTIONS_QUERY(item.documentId.toLocaleLowerCase()),
+      )
+      if (!documentFromDB.recordset[0]) {
+        correctionsWithDocumentUrl.push(item)
+      } else {
+        const url = await savePDF(documentFromDB.recordset[0])
+        if (url) {
+          item.documentUrl = url
+        }
+        correctionsWithDocumentUrl.push(item)
+      }
+    }
+  }
+
+  return correctionsWithDocumentUrl
+}
+
 export async function getAdvertsCategories() {
   const advertsCategoriesFromDb = await mssql.query(ADVERTS_CATEGORIES_QUERY)
   const records = advertsCategoriesFromDb.recordset as Array<any>
@@ -300,22 +362,23 @@ export async function savePDF(document: Document) {
     throw new Error('S3 client not initialized')
   }
 
-  const bucket = process.env.ADVERTS_CDN_URL
+  const bucket = process.env.ADVERTS_BUCKET
+  const cdnUrl = process.env.ADVERTS_CDN_URL
   const key = `${document.FileName}`
   if (!bucket) {
     throw new Error('AWS_BUCKET_NAME not set')
   }
-
   try {
     const command = new HeadObjectCommand({
       Bucket: bucket,
-      Key: key,
+      Key: `adverts/${key}`,
     })
 
     const fileCheck = await client.send(command)
     //console.log(`File exists: ${key}`)
     //console.log(`https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`)
-    return `${bucket}/adverts/${key}`
+    console.log('found file in s3')
+    return `${cdnUrl}/${document.FileName}`
     //https://official-journal-application-files-bucket-dev.s3.eu-west-1.amazonaws.com/adverts/A_nr_1_2006.pdf
   } catch (error: any) {
     console.log(`File does not exist: ${key}, let upload`)
@@ -374,7 +437,7 @@ export async function savePDF(document: Document) {
         },
       }),
     )
-    return res.Location
+    return `${cdnUrl}/${document.FileName}`
   } catch (err) {
     console.log('Error uploading parts', err)
     if (uploadId) {
