@@ -23,6 +23,19 @@ export type Category = {
 }
 export type DbCategory = Omit<Category, 'slug' | 'superCategoryId'>
 
+export type DbCorrections = {
+  id: string
+  value: string
+}
+
+export type Correction = {
+  id: string
+  date?: Date | null
+  text?: string | null
+  documentId?: string | null
+  documentUrl?: string | null
+}
+
 export type SuperCategory = {
   id: string
   title: string

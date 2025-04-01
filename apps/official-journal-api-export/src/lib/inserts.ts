@@ -4,12 +4,21 @@ import {
   AdvertCategory,
   Category,
   CategoryDepartment,
+  Correction,
   Department,
   InvolvedParty,
   Status,
   SuperCategory,
   Type,
 } from '../types'
+
+
+export function generateCorrectionsInserts(corrections?:Array<Correction>){
+  const inserts = corrections?.map((correction) => {
+    return `INSERT INTO corrections (id, text,documentUrl) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl ? `'${correction.documentUrl}'`: null});`
+  })
+  return inserts ?? ['']
+}
 
 export function generateDepartmentInserts(departments: Array<Department>) {
   const inserts = departments.map((department) => {

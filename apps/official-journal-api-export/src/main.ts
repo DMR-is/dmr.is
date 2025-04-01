@@ -5,10 +5,12 @@ import { hrtime } from 'node:process'
 import {
   connect,
   getAdvertDocuments,
+  getAdvertDocumentsCorrections,
   getAdverts,
   getAdvertsCategories,
   getAdvertStatuses,
   getCategories,
+  getCorrections,
   getDepartments,
   getInvolvedParties,
   getTypes,
@@ -17,16 +19,18 @@ import { getEnv } from './lib/environment.js'
 import {
   fixAdverts,
   fixCats,
+  fixCorrections,
   fixDeps,
   fixInvolvedParties,
   fixTypes,
   mapAdvertsCategories,
-} from './lib/fixers.js'
+} from './lib/fixers'
 import {
   generateAdvertsCategoriesInserts,
   generateAdvertsInserts,
   generateAdvertStatusesInserts,
   generateCategoryInserts,
+  generateCorrectionsInserts,
   generateDepartmentInserts,
   generateInvolvedPartiesInserts,
   generateTypeInserts,
@@ -62,6 +66,24 @@ async function exec<T = unknown>(
   return result
 }
 
+async function secondMain() {
+  const env = getEnv()
+
+  await exec('connecting to db', () => connect(env.mssqlConnectionString))
+  const corrections = await exec('getCorrections', getCorrections)
+
+  const fixed = await exec('fixing corrections', () =>
+    fixCorrections(corrections),
+  )
+
+  const fixedWithUrl = await exec('getDocuments', () =>
+    getAdvertDocumentsCorrections(fixed),
+  )
+  write(
+    '08_corrections.sql',
+    generateCorrectionsInserts(fixedWithUrl).join('\n'),
+  )
+}
 async function main() {
   const env = getEnv()
 
@@ -159,5 +181,6 @@ async function main() {
   // Step 5: Dump the PDF binary data
 }
 
+//main().catch(console.error)
 // eslint-disable-next-line no-console
-main().catch(console.error)
+secondMain().catch(console.error)
