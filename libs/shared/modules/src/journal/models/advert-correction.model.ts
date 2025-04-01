@@ -22,16 +22,16 @@ export class AdvertCorrectionModel extends Model {
   override id!: string
 
   @Column({ allowNull: true })
-  title!: string
+  title?: string
 
   @Column({ allowNull: false })
   description!: string
 
   @Column({ field: 'document_html', allowNull: true })
-  documentHtml!: string
+  documentHtml?: string
 
-  @Column({ field: 'document_pdf_url' })
-  documentPdfUrl!: string
+  @Column({ field: 'document_pdf_url', allowNull: true })
+  documentPdfUrl?: string
 
   @CreatedAt
   created!: Date
