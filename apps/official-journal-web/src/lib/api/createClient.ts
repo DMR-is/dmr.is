@@ -1,7 +1,3 @@
-import { IncomingMessage } from 'http'
-import { NextApiRequest } from 'next'
-import { NextApiRequestCookies } from 'next/dist/server/api-utils'
-
 import { Configuration, DefaultApi } from '../../gen/fetch'
 import { createEnhancedFetch } from './createEnhancedFetch'
 
@@ -20,48 +16,23 @@ const getPath = () => {
   return `https://${host.join('.')}`
 }
 
-export const config = (
-  token: string,
-  req?:
-    | NextApiRequest
-    | (IncomingMessage & {
-        cookies: NextApiRequestCookies
-      }),
-) => {
-  const fetchWithCookie = createEnhancedFetch()
-
+export const config = (token: string) => {
   return new Configuration({
-    fetchApi: async (url, init = {}) => {
-      if (typeof window === 'undefined' && req?.headers.cookie) {
-        init.headers = {
-          ...(init.headers || {}),
-          cookie: req.headers.cookie,
-        }
-      }
-      const finalUrl =
-        typeof url === 'string' || url instanceof URL ? url.toString() : url
-
-      return fetchWithCookie(finalUrl, init)
-    },
+    fetchApi: createEnhancedFetch(),
     accessToken: token,
     basePath: getPath(),
-    credentials: 'include',
   })
 }
 
 let dmrClient: DefaultApi | undefined
 
-export const getDmrClient = (
-  accessToken: string,
-  req?:
-    | NextApiRequest
-    | (IncomingMessage & {
-        cookies: NextApiRequestCookies
-      }),
-) => {
+export const getDmrClient = (accessToken: string) => {
   if (typeof window === 'undefined') {
-    return new DefaultApi(config(accessToken, req))
+    // Server: always make a new dmr client
+
+    return new DefaultApi(config(accessToken))
   }
 
+  // Browser: use singleton pattern to keep the same dmr client
   return (dmrClient ??= new DefaultApi(config(accessToken)))
 }

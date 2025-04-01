@@ -53,6 +53,7 @@ export const refreshAccessToken = async (token: JWT) => {
     }
     const newTokens = refreshedTokens as {
       access_token: string
+      id_token: string
       refresh_token?: string
       expires_in: number
     }
@@ -68,9 +69,18 @@ export const refreshAccessToken = async (token: JWT) => {
       category: LOGGING_CATEGORY,
     })
 
+    if (!newTokens.access_token || !newTokens.id_token) {
+      logger.error('Access token or ID token missing', {
+        error: 'AccessTokenOrIdTokenMissing',
+        category: LOGGING_CATEGORY,
+      })
+      return { ...token, error: 'AccessTokenOrIdTokenMissing', invalid: true }
+    }
+
     return {
       ...token,
       accessToken: newTokens.access_token,
+      idToken: newTokens.id_token,
       refreshToken: newTokens.refresh_token ?? token.refreshToken,
     }
   } catch (error) {

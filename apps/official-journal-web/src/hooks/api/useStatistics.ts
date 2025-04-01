@@ -18,7 +18,7 @@ type UseStatisticsParams = {
 
 export const useStatistics = ({ departmentParams }: UseStatisticsParams) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.idToken as string)
 
   const {
     data: departmentStatistics,

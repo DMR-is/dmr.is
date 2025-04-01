@@ -27,7 +27,7 @@ export const useCase = ({
   createCaseOptions,
 }: UseCaseParams = {}) => {
   const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.accessToken as string)
+  const dmrClient = getDmrClient(session?.idToken as string)
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session && caseId ? ['getCase', session?.user, caseId] : null,

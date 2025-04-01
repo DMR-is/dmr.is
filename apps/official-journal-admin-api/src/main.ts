@@ -3,7 +3,6 @@
  * This is only a minimal backend to get started.
  */
 
-import cookieParser from 'cookie-parser'
 import { WinstonModule } from 'nest-winston'
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
@@ -31,15 +30,7 @@ async function bootstrap() {
   app.useGlobalPipes(ExceptionFactoryPipe())
   app.useGlobalFilters(new OJOIExceptionFilter())
   app.setGlobalPrefix(globalPrefix)
-  app.use(cookieParser())
-  app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'https://ritstjorn.official-journal.dev.dmr-dev.cloud',
-      'https://ritstjorn.stjornartidindi.is/',
-    ],
-    credentials: true,
-  })
+  app.enableCors()
   app.enableVersioning({
     type: VersioningType.URI,
   })

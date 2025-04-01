@@ -1,4 +1,3 @@
-import { getToken, JWT } from 'next-auth/jwt'
 import { ROLES_KEY } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -46,20 +45,10 @@ export class RoleGuard implements CanActivate {
     }
 
     try {
-      const tokenNext = (await getToken({
-        req,
-      })) as JWT
-
-      const nationalId =
-        (tokenNext?.nationalId as string) ?? req.user.nationalId
-      if (!nationalId || typeof nationalId !== 'string') {
-        this.logger.warn('Could not find nationalId in token role guard', {
-          category: LOGGING_CATEGORY,
-          context: LOGGING_CONTEXT,
-        })
-        return false
-      }
-      const userLookup = await this.userService.getUserByNationalId(nationalId)
+      // Check if user has required roles
+      const userLookup = await this.userService.getUserByNationalId(
+        req.user.nationalId,
+      )
 
       if (!userLookup.result.ok) {
         this.logger.warn('Could not find user', {
