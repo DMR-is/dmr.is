@@ -29,6 +29,9 @@
       "@dmr.is/official-journa/modules": [
         "libs/official-journal/modules/case-channel/src/index.ts"
       ],
+      "@dmr.is/official-journal/case-additions": [
+        "libs/official-journal/modules/case-addition/src/index.ts"
+      ],
       "@dmr.is/official-journal/dto/*": ["libs/official-journal/dto/src/lib/*"],
       "@dmr.is/official-journal/guards": [
         "libs/official-journal/guards/src/index.ts"
@@ -38,9 +41,6 @@
       ],
       "@dmr.is/official-journal/models": [
         "libs/official-journal/models/src/index.ts"
-      ],
-      "@dmr.is/official-journal/modules/communication-status": [
-        "libs/official-journal/modules/communication-status/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/advert": [
         "libs/official-journal/modules/advert/src/index.ts"
@@ -71,6 +71,9 @@
       ],
       "@dmr.is/official-journal/modules/comment": [
         "libs/official-journal/modules/comment/src/index.ts"
+      ],
+      "@dmr.is/official-journal/modules/communication-status": [
+        "libs/official-journal/modules/communication-status/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/department": [
         "libs/official-journal/modules/department/src/index.ts"
