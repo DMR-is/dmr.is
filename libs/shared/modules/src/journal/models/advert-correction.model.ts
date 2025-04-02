@@ -39,6 +39,12 @@ export class AdvertCorrectionModel extends Model {
   @UpdatedAt
   updated!: Date
 
+  @Column({ field: 'legacy_date', allowNull: true })
+  legacyDate?: Date
+
+  @Column({ field: 'is_legacy', allowNull: true })
+  isLegacy?: boolean
+
   @ForeignKey(() => AdvertModel)
   @Column({ type: DataType.UUID, allowNull: false, field: 'advert_id' })
   advertId!: string

@@ -13,6 +13,8 @@ export function advertCorrectionMigrate(
     documentPdfUrl: model.documentPdfUrl,
     createdDate: model.created.toISOString(),
     updatedDate: model.updated.toISOString(),
+    legacyDate: model?.legacyDate?.toISOString() ?? null,
+    isLegacy: model?.isLegacy ?? null,
     advertId: model.advertId,
   }
   return result
