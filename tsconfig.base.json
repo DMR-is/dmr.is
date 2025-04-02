@@ -39,6 +39,9 @@
       "@dmr.is/official-journal/models": [
         "libs/official-journal/models/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules": [
+        "libs/official-journal/modules/communication-status/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/advert": [
         "libs/official-journal/modules/advert/src/index.ts"
       ],

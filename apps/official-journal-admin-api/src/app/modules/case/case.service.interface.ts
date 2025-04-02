@@ -1,10 +1,6 @@
 import { Transaction } from 'sequelize'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import {
-  CaseCommunicationStatusEnum,
-  CaseStatusEnum,
-  DepartmentEnum,
-} from '@dmr.is/official-journal/models'
+import { CaseStatusEnum, DepartmentEnum } from '@dmr.is/official-journal/models'
 import { PostApplicationAttachmentBody } from '@dmr.is/official-journal/modules/attachment'
 import {
   GetPaymentQuery,
@@ -42,17 +38,6 @@ import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
-import { UpdateCaseBody } from './dto/update-case-body.dto'
-import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
-import { UpdateCategoriesBody } from './dto/update-category-body.dto'
-import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
-import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
-import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
-import { UpdateCasePriceBody } from './dto/update-price-body.dto'
-import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
-import { UpdateTagBody } from './dto/update-tag-body.dto'
-import { UpdateTitleBody } from './dto/update-title-body.dto'
-import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
 
 export interface ICaseService {
   getCase(id: string): Promise<ResultWrapper<GetCaseResponse>>
@@ -85,72 +70,13 @@ export interface ICaseService {
   ): Promise<ResultWrapper<GetCasesWithStatusCount>>
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
 
-  updateCase(
-    body: UpdateCaseBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-  updateEmployee(
-    id: string,
-    userId: string,
-    currentUser: UserDto,
-  ): Promise<ResultWrapper>
-  updateCaseStatus(
-    id: string,
-    body: UpdateCaseStatusBody,
-    currentUser: UserDto,
-  ): Promise<ResultWrapper>
-  updateCaseNextStatus(id: string, currentUser: UserDto): Promise<ResultWrapper>
-
   updateCasePreviousStatus(
     id: string,
     currentUser: UserDto,
   ): Promise<ResultWrapper>
+  updateCaseNextStatus(id: string, currentUser: UserDto): Promise<ResultWrapper>
 
   rejectCase(id: string): Promise<ResultWrapper>
-
-  updateCasePrice(
-    caseId: string,
-    body: UpdateCasePriceBody,
-  ): Promise<ResultWrapper>
-  updateCaseDepartment(
-    caseId: string,
-    body: UpdateCaseDepartmentBody,
-  ): Promise<ResultWrapper>
-  updateCaseType(
-    caseId: string,
-    body: UpdateCaseTypeBody,
-  ): Promise<ResultWrapper>
-
-  updateCaseCategories(
-    caseId: string,
-    body: UpdateCategoriesBody,
-  ): Promise<ResultWrapper>
-
-  updateCaseRequestedPublishDate(
-    caseId: string,
-    body: UpdatePublishDateBody,
-  ): Promise<ResultWrapper>
-
-  updateCaseTitle(caseId: string, body: UpdateTitleBody): Promise<ResultWrapper>
-
-  updateCaseFasttrack(
-    caseId: string,
-    body: UpdateFasttrackBody,
-  ): Promise<ResultWrapper>
-
-  updateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
-
-  updateCaseCommunicationStatus(
-    caseId: string,
-    body: UpdateCommunicationStatusBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
-  updateCaseCommunicationStatusByStatus(
-    caseId: string,
-    body: CaseCommunicationStatusEnum,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
 
   getNextCasePublicationNumber(
     departmentId: string,

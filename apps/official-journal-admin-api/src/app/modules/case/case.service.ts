@@ -6,34 +6,21 @@ import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Case } from '@dmr.is/official-journal/dto/case/case.dto'
-import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { caseMigrate } from '@dmr.is/official-journal/migrations/case/case.migrate'
-import { caseDetailedMigrate } from '@dmr.is/official-journal/migrations/case/case-detailed.migrate'
-import { caseTagMigrate } from '@dmr.is/official-journal/migrations/case/case-tag.migrate'
-import { communicationStatusMigrate } from '@dmr.is/official-journal/migrations/communication-status/communication-status.migrate'
 import {
-  AdvertCategoryModel,
   AdvertCorrectionModel,
-  AdvertDepartmentModel,
-  AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusEnum,
-  AdvertTypeModel,
-  ApplicationAttachmentModel,
-  ApplicationAttachmentTypeModel,
   CaseChannelModel,
   CaseChannelsModel,
-  CaseCommunicationStatusEnum,
   CaseCommunicationStatusModel,
   CaseHistoryModel,
   CaseModel,
   CaseStatusEnum,
   CaseTagModel,
   DepartmentEnum,
-  SignatureMemberModel,
   SignatureModel,
-  SignatureRecordModel,
 } from '@dmr.is/official-journal/models'
 import { IAdvertService } from '@dmr.is/official-journal/modules/advert'
 import {
@@ -69,17 +56,13 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import {
   AddCaseAdvertCorrection,
-  DeleteCaseAdvertCorrection,
 } from './dto/add-case-advert-correction.dto'
 import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case-with-counter.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
-import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
-import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
-import { GetCasesReponse } from './dto/get-cases-response.dto'
 import {
   GetCasesWithDepartmentCountQuery,
   GetCasesWithStatusCountQuery,
@@ -88,28 +71,14 @@ import {
   GetCasesWithPublicationNumber,
   GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
-import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
 import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
-import { GetTagsResponse } from './dto/get-tags-response.dto'
 import { PostCasePublishBody } from './dto/post-publish-body.dto'
 import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
-import { UpdateCaseBody } from './dto/update-case-body.dto'
-import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
-import { UpdateCategoriesBody } from './dto/update-category-body.dto'
-import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
-import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
-import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
-import { UpdateCasePriceBody } from './dto/update-price-body.dto'
-import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
-import { UpdateTagBody } from './dto/update-tag-body.dto'
-import { UpdateTitleBody } from './dto/update-title-body.dto'
-import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
-import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
 import { casesDetailedIncludes, casesIncludes } from './relations'
 
@@ -129,9 +98,6 @@ export class CaseService implements ICaseService {
     private readonly attachmentService: IAttachmentService,
     @Inject(IPdfService)
     private readonly pdfService: IPdfService,
-
-    @Inject(ICaseUpdateService)
-    private readonly updateService: ICaseUpdateService,
 
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
@@ -175,6 +141,21 @@ export class CaseService implements ICaseService {
     })
     await this.caseChannelModel.destroy({
       where: {
+  getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  deleteCorrection(caseId: string, body: DeleteCaseAdvertCorrection, transaction?: Transaction): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+  getCommunicationStatuses(): Promise<ResultWrapper<GetCommunicationSatusesResponse>> {
+    throw new Error('Method not implemented.')
+  }
         id: channelId,
       },
       transaction,
@@ -254,14 +235,6 @@ export class CaseService implements ICaseService {
     )
 
     return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  updateCaseFasttrack(
-    caseId: string,
-    body: UpdateFasttrackBody,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateFasttrack(caseId, body)
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {
@@ -418,50 +391,6 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  updateEmployee(
-    caseId: string,
-    userId: string,
-    currentUser: UserDto,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateEmployee(
-      caseId,
-      userId,
-      currentUser,
-      transaction,
-    )
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCase(
-    body: UpdateCaseBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCase(body, transaction)
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updateCaseStatus(
-    caseId: string,
-    body: UpdateCaseStatusBody,
-    currentUser: UserDto,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    ResultWrapper.unwrap(
-      await this.updateService.updateCaseStatus(
-        caseId,
-        body,
-        currentUser,
-        transaction,
-      ),
-    )
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
   updateCaseNextStatus(
     caseId: string,
     currentUser: UserDto,
@@ -484,101 +413,6 @@ export class CaseService implements ICaseService {
     return this.updateService.updateCasePreviousStatus(
       caseId,
       currentUser,
-      transaction,
-    )
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  updateCasePrice(
-    caseId: string,
-    body: UpdateCasePriceBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCasePrice(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseDepartment(
-    caseId: string,
-    body: UpdateCaseDepartmentBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseDepartment(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseType(
-    caseId: string,
-    body: UpdateCaseTypeBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseType(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseCategories(
-    caseId: string,
-    body: UpdateCategoriesBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseCategories(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseRequestedPublishDate(
-    caseId: string,
-    body: UpdatePublishDateBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseRequestedPublishDate(
-      caseId,
-      body,
-      transaction,
-    )
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseTitle(
-    caseId: string,
-    body: UpdateTitleBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseTitle(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseTag(
-    caseId: string,
-    body: UpdateTagBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseTag(caseId, body, transaction)
-  }
-  @LogAndHandle()
-  @Transactional()
-  updateCaseCommunicationStatus(
-    caseId: string,
-    body: UpdateCommunicationStatusBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseCommunicationStatus(
-      caseId,
-      body,
-      transaction,
-    )
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  updateCaseCommunicationStatusByStatus(
-    caseId: string,
-    body: CaseCommunicationStatusEnum,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseCommunicationStatusByStatus(
-      caseId,
-      body,
       transaction,
     )
   }
@@ -718,16 +552,6 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @LogAndHandle()
-  @Transactional()
-  createCaseChannel(
-    caseId: string,
-    body: CreateCaseChannelBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CaseChannel>> {
-    return this.createService.createCaseChannel(caseId, body, transaction)
-  }
-
   @LogAndHandle({ logArgs: false })
   private async publishCase(
     caseId: string,
@@ -842,17 +666,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
-    const tags = await this.caseTagModel.findAll()
-
-    const migrated = tags.map((tag) => caseTagMigrate(tag))
-
-    return ResultWrapper.ok({
-      tags: migrated,
-    })
-  }
-
-  @LogAndHandle()
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
     params: GetCasesWithStatusCountQuery,
@@ -940,89 +753,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
-    const caseLookup = await this.caseModel.findByPk(id, {
-      include: [
-        ...casesDetailedIncludes,
-        {
-          model: AdvertModel,
-          include: [AdvertCorrectionModel],
-        },
-        {
-          model: AdvertDepartmentModel,
-        },
-        {
-          model: AdvertTypeModel,
-        },
-        {
-          model: AdvertCategoryModel,
-        },
-        {
-          model: ApplicationAttachmentModel,
-          where: {
-            deleted: false,
-          },
-          required: false,
-          include: [ApplicationAttachmentTypeModel],
-        },
-        {
-          model: SignatureModel,
-          include: [
-            AdvertInvolvedPartyModel,
-            {
-              model: SignatureRecordModel,
-              as: 'records',
-              separate: true,
-              include: [
-                {
-                  model: SignatureMemberModel,
-                  as: 'chairman',
-                },
-                {
-                  model: SignatureMemberModel,
-                  as: 'members',
-                  separate: true,
-                  required: false,
-                  include: [
-                    {
-                      model: SignatureRecordModel,
-                      required: false,
-                    },
-                  ],
-                  where: {
-                    [Op.or]: [
-                      // Exclude chairman using Sequelize.where
-                      Sequelize.where(
-                        Sequelize.col('SignatureMemberModel.id'),
-                        Op.ne,
-                        Sequelize.col('record.chairman_id'),
-                      ),
-                      // Include all members if chairman_id is NULL
-                      Sequelize.where(
-                        Sequelize.col('record.chairman_id'),
-                        Op.is,
-                        null,
-                      ),
-                    ],
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    })
-
-    if (!caseLookup) {
-      throw new NotFoundException(`Case<${id}> not found`)
-    }
-
-    return ResultWrapper.ok({
-      case: caseDetailedMigrate(caseLookup),
-    })
-  }
-
-  @LogAndHandle()
   @Transactional()
   async postCaseCorrection(
     caseId: string,
@@ -1065,69 +795,6 @@ export class CaseService implements ICaseService {
         message: 'Failed to create correction',
       })
     }
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async deleteCorrection(
-    caseId: string,
-    body: DeleteCaseAdvertCorrection,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['advertId'],
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-      })
-    }
-
-    const { advertId } = caseLookup
-
-    if (!advertId) {
-      return ResultWrapper.err({
-        code: 409,
-        message: 'Advert id not found, case not published.',
-      })
-    }
-
-    const correctionLookup = await this.advertCorrectionModel.findOne({
-      where: {
-        id: body.correctionId,
-        advertId: advertId,
-      },
-      transaction,
-    })
-
-    if (!correctionLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Correction not found for this case',
-      })
-    }
-
-    await correctionLookup.destroy({ transaction })
-
-    return ResultWrapper.ok({
-      message: 'Correction deleted successfully',
-    })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getCases(
-    params: GetCasesQuery,
-  ): Promise<ResultWrapper<GetCasesReponse>> {
-    const cases = await this.getCasesSqlQuery(params)
-    const mapped = cases.rows.map((c) => caseMigrate(c))
-
-    return ResultWrapper.ok({
-      cases: mapped,
-      paging: generatePaging(mapped, params.page, params.pageSize, cases.count),
-    })
   }
 
   @LogAndHandle()
@@ -1292,20 +959,6 @@ export class CaseService implements ICaseService {
     }
 
     return await this.processCaseToPublish(caseIds, transaction)
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getCommunicationStatuses(): Promise<
-    ResultWrapper<GetCommunicationSatusesResponse>
-  > {
-    const statuses = (await this.caseCommunicationStatusModel.findAll()).map(
-      (s) => communicationStatusMigrate(s),
-    )
-
-    return ResultWrapper.ok({
-      statuses,
-    })
   }
 
   @LogAndHandle()
