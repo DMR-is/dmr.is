@@ -222,6 +222,7 @@ export const UsersTable = ({
                       availableInvoledParties={userInvolvedPartiesOptions}
                       user={user}
                       isAdmin={isAdmin}
+                      availableRoles={roleOptions}
                     />
                   ),
                   name: user.displayName,
