@@ -6,10 +6,11 @@ import {
   CaseChannelModel,
   CaseChannelsModel,
 } from '@dmr.is/official-journal/models'
+import { CaseChannelController } from './case-channel.controller'
 
 @Module({
   imports: [SequelizeModule.forFeature([CaseChannelModel, CaseChannelsModel])],
-  controllers: [],
+  controllers: [CaseChannelController],
   providers: [
     {
       provide: ICaseChannelService,

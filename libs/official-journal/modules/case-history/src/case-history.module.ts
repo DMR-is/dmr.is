@@ -1,11 +1,18 @@
 import { CaseHistoryModel, CaseModel } from '@dmr.is/official-journal/models'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+import { ICaseHistoryService } from './lib/case-history.service.interface'
+import { CaseHistoryService } from './lib/case-history.service'
 
 @Module({
   imports: [SequelizeModule.forFeature([CaseModel, CaseHistoryModel])],
   controllers: [],
-  providers: [],
-  exports: [],
+  providers: [
+    {
+      provide: ICaseHistoryService,
+      useClass: CaseHistoryService,
+    },
+  ],
+  exports: [ICaseHistoryService],
 })
 export class CaseHistoryModule {}

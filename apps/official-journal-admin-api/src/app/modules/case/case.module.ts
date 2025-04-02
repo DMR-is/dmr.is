@@ -9,9 +9,12 @@ import {
   TransactionFeeCodesModel,
 } from '@dmr.is/official-journal/models'
 import { AdvertModule } from '@dmr.is/official-journal/modules/advert'
+import { AdvertCorrectionModule } from '@dmr.is/official-journal/modules/advert-correction'
 import { AttachmentModule } from '@dmr.is/official-journal/modules/attachment'
+import { CaseHistoryModule } from '@dmr.is/official-journal/modules/case-history'
 import { CommentModule } from '@dmr.is/official-journal/modules/comment'
 import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
+import { PriceModule } from '@dmr.is/official-journal/modules/price'
 import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 import { ApplicationModule } from '@dmr.is/shared/modules/application'
@@ -20,9 +23,10 @@ import { AWSModule } from '@dmr.is/shared/modules/aws'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { PaymentModule } from '../payment/payment.module'
 import { CaseController } from './case.controller'
-import { CaseService } from './case.service'
-import { ICaseService } from './case.service.interface'
+import { OfficialJournalCaseService } from './case.service'
+import { IOfficialJournalCaseService } from './case.service.interface'
 import { CaseServiceMock } from './case.service.mock'
 const API_MOCK = process.env.API_MOCK === 'true'
 
@@ -38,6 +42,9 @@ const API_MOCK = process.env.API_MOCK === 'true'
       TransactionFeeCodesModel,
       AdvertModel,
     ]),
+    CaseHistoryModule,
+    PriceModule,
+    AdvertCorrectionModule,
     ApplicationModule,
     AdvertModule,
     AttachmentModule,
@@ -46,14 +53,15 @@ const API_MOCK = process.env.API_MOCK === 'true'
     UtilityModule,
     CommentModule,
     SignatureModule,
+    PaymentModule,
   ],
   controllers: [CaseController],
   providers: [
     {
-      provide: ICaseService,
-      useClass: API_MOCK ? CaseServiceMock : CaseService,
+      provide: IOfficialJournalCaseService,
+      useClass: API_MOCK ? CaseServiceMock : OfficialJournalCaseService,
     },
   ],
-  exports: [ICaseService],
+  exports: [IOfficialJournalCaseService],
 })
 export class CaseModule {}

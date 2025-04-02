@@ -1,5 +1,5 @@
-import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
+
 import { GetCasesQuery } from '../dto/get-cases-query.dto'
 
 type WhereClause = {
@@ -25,40 +25,6 @@ type WhereClause = {
     [Op.gte]?: string
     [Op.lte]?: string
   }
-}
-
-export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
-  const whereClause = {}
-
-  if (!filters) {
-    return whereClause
-  }
-
-  const isArray = Array.isArray(filters)
-  const isId = isArray
-    ? filters.every((filter) => isUUID(filter))
-    : isUUID(filters)
-
-  if (isId) {
-    Object.assign(whereClause, {
-      id: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
-    })
-
-    return whereClause
-  }
-
-  Object.assign(whereClause, {
-    [Op.or]: [
-      {
-        title: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
-      },
-      {
-        slug: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
-      },
-    ],
-  })
-
-  return whereClause
 }
 
 export const caseParameters = (params?: GetCasesQuery) => {

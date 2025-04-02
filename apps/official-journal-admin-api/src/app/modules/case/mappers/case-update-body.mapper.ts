@@ -1,6 +1,6 @@
+import { CaseModel } from '@dmr.is/official-journal/models'
 import { getFastTrack } from '@dmr.is/utils'
 
-import { CaseModel } from '@dmr.is/official-journal/models'
 import { UpdateCaseBody } from '../dto/update-case-body.dto'
 export const updateCaseBodyMapper = (
   body: UpdateCaseBody,

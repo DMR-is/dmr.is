@@ -6,10 +6,11 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { IAdvertCorrectionService } from './advert-correction.service.interface'
 import { AdvertCorrectionService } from './advert-correction.service'
+import { AdvertCorrectionController } from './advert-correction.controller'
 
 @Module({
   imports: [SequelizeModule.forFeature([CaseModel, AdvertCorrectionModel])],
-  controllers: [],
+  controllers: [AdvertCorrectionController],
   providers: [
     {
       provide: IAdvertCorrectionService,

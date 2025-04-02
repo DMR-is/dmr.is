@@ -7,11 +7,14 @@ import {
   CaseModel,
   CaseTransactionModel,
 } from '@dmr.is/official-journal/models'
-import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import {
+  GetPaymentResponse,
+  IPriceService,
+} from '@dmr.is/official-journal/modules/price'
 import { ResultWrapper } from '@dmr.is/types'
 import { getHtmlTextLength } from '@dmr.is/utils'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { UpdateCasePriceBody } from '../case/dto/update-price-body.dto'
@@ -29,6 +32,23 @@ export class CasePaymentService implements ICasePaymentService {
     @InjectModel(CaseTransactionModel)
     private readonly caseTransactionModel: typeof CaseTransactionModel,
   ) {}
+  async getExternalPaymentStatusByCaseId(
+    caseId: string,
+  ): Promise<ResultWrapper<GetPaymentResponse>> {
+    const caseLookup = await this.caseModel.findOne({
+      where: { id: caseId },
+      attributes: ['caseNumber', 'involvedPartyId'],
+    })
+
+    if (!caseLookup) {
+      throw new NotFoundException('Case not found')
+    }
+
+    return this.priceService.getExternalPaymentStatus({
+      chargeBase: caseLookup.caseNumber,
+      debtorNationalId: caseLookup.involvedPartyId,
+    })
+  }
 
   @LogAndHandle()
   @Transactional()

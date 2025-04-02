@@ -12,10 +12,12 @@ import {
   AdvertStatusEnum,
   CaseModel,
   CaseStatusEnum,
+  CaseStatusModel,
   DepartmentEnum,
   SignatureModel,
 } from '@dmr.is/official-journal/models'
 import { IAdvertService } from '@dmr.is/official-journal/modules/advert'
+import { IAdvertCorrectionService } from '@dmr.is/official-journal/modules/advert-correction'
 import {
   IAttachmentService,
   PostApplicationAttachmentBody,
@@ -37,6 +39,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -60,14 +63,16 @@ import {
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
-import { ICaseService } from './case.service.interface'
+import { IOfficialJournalCaseService } from './case.service.interface'
+import { getNextStatus, getPreviousStatus } from './case.utils'
 import { casesDetailedIncludes, casesIncludes } from './relations'
 
 const LOGGING_CATEGORY = 'case-service'
+const LOGGING_CONTEXT = 'CaseService'
 const LOGGING_QUERY = 'CaseServiceQueryRunner'
 
 @Injectable()
-export class CaseService implements ICaseService {
+export class OfficialJournalCaseService implements IOfficialJournalCaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
@@ -77,13 +82,16 @@ export class CaseService implements ICaseService {
     private readonly attachmentService: IAttachmentService,
     @Inject(IPdfService)
     private readonly pdfService: IPdfService,
-
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
 
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    @Inject(IAdvertCorrectionService)
+    private readonly advertCorrectionService: IAdvertCorrectionService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(CaseStatusModel)
+    private readonly caseStatusModel: typeof CaseStatusModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -243,30 +251,87 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  updateCaseNextStatus(
+  async updateCaseNextStatus(
     caseId: string,
-    currentUser: UserDto,
+    _currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseNextStatus(
-      caseId,
-      currentUser,
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: [''],
+      include: [
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title'],
+        },
+      ],
       transaction,
-    )
+    })
+
+    if (!caseLookup) {
+      throw new NotFoundException('Case not found')
+    }
+
+    const nextStatus = getNextStatus(caseLookup.status.title)
+
+    const statusToUpdateTo = await this.caseStatusModel.findOne({
+      where: { title: nextStatus },
+      transaction,
+    })
+
+    if (!statusToUpdateTo) {
+      this.logger.error('Could not find status to update to', {
+        category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
+        status: caseLookup.status.title,
+      })
+      throw new InternalServerErrorException()
+    }
+
+    await caseLookup.update({ statusId: statusToUpdateTo.id }, { transaction })
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
   @Transactional()
-  updateCasePreviousStatus(
+  async updateCasePreviousStatus(
     caseId: string,
-    currentUser: UserDto,
+    _currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCasePreviousStatus(
-      caseId,
-      currentUser,
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      include: [
+        {
+          model: CaseStatusModel,
+          attributes: ['id', 'title'],
+        },
+      ],
       transaction,
-    )
+    })
+
+    if (!caseLookup) {
+      throw new NotFoundException('Case not found')
+    }
+
+    const previousStatus = getPreviousStatus(caseLookup.status.title)
+
+    const statusToUpdateTo = await this.caseStatusModel.findOne({
+      where: { title: previousStatus },
+      transaction,
+    })
+
+    if (!statusToUpdateTo) {
+      this.logger.error('Could not find status to update to', {
+        category: LOGGING_CATEGORY,
+        context: LOGGING_CONTEXT,
+        status: caseLookup.status.title,
+      })
+      throw new InternalServerErrorException()
+    }
+
+    await caseLookup.update({ statusId: statusToUpdateTo.id }, { transaction })
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -320,7 +385,7 @@ export class CaseService implements ICaseService {
         { advertHtml, documentPdfUrl: pdfUrl },
         transaction,
       ),
-      this.postCaseCorrection(
+      this.advertCorrectionService.postCaseCorrection(
         caseId,
         {
           ...rest,
@@ -348,9 +413,7 @@ export class CaseService implements ICaseService {
       attributes: ['advertId'],
       transaction,
     })
-    ResultWrapper.unwrap(
-      await this.updateService.updateAdvert(caseId, body, transaction),
-    )
+    ResultWrapper.unwrap(await this.advertService.updateAdvert(caseId, body))
 
     if (caseLookup?.advertId) {
       ResultWrapper.unwrap(

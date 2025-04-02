@@ -1,7 +1,5 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
 import {
   ExternalCommentBodyDto,
   GetComment,
@@ -10,18 +8,14 @@ import {
 } from '@dmr.is/official-journal/dto/comment/comment.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
-import {
-  CaseCommunicationStatusEnum,
-  CaseStatusEnum,
-  DepartmentEnum,
-} from '@dmr.is/official-journal/models'
+import { CaseStatusEnum, DepartmentEnum } from '@dmr.is/official-journal/models'
 import {
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
+import { ICaseHistoryService } from '@dmr.is/official-journal/modules/case-history'
 import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import {
-  GetPaymentResponse,
   IPriceService,
   TransactionFeeCodesResponse,
 } from '@dmr.is/official-journal/modules/price'
@@ -51,16 +45,11 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { AddCaseAdvertCorrection } from './dto/add-case-advert-correction.dto'
+import { ICasePaymentService } from '../payment/payment.service.interface'
 import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case-with-counter.dto'
-import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
-import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
-import { GetCaseResponse } from './dto/get-case-response.dto'
-import { GetCasesQuery } from './dto/get-cases-query.dto'
-import { GetCasesReponse } from './dto/get-cases-response.dto'
 import {
   GetCasesWithDepartmentCountQuery,
   GetCasesWithStatusCountQuery,
@@ -69,27 +58,12 @@ import {
   GetCasesWithPublicationNumber,
   GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
-import { GetCommunicationSatusesResponse } from './dto/get-communication-satuses-response.dto'
-import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
-import { GetTagsResponse } from './dto/get-tags-response.dto'
 import { PostCasePublishBody } from './dto/post-publish-body.dto'
 import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
-import { UpdateCaseStatusBody } from './dto/update-case-status-body.dto'
-import { UpdateCategoriesBody } from './dto/update-category-body.dto'
-import { UpdateCommunicationStatusBody } from './dto/update-communication-status.dto'
-import { UpdateCaseDepartmentBody } from './dto/update-department-body.dto'
-import { UpdateFasttrackBody } from './dto/update-fasttrack-body.dto'
-import { UpdateCasePriceBody } from './dto/update-price-body.dto'
-import { UpdatePublishDateBody } from './dto/update-publish-date-body.dto'
-import { UpdateTagBody } from './dto/update-tag-body.dto'
-import { UpdateTitleBody } from './dto/update-title-body.dto'
-import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
-import { ICaseService } from './case.service.interface'
-
-const LOG_CATEGORY = 'case-controller'
+import { IOfficialJournalCaseService } from './case.service.interface'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
@@ -100,65 +74,18 @@ const LOG_CATEGORY = 'case-controller'
 })
 export class CaseController {
   constructor(
-    @Inject(ICaseService)
-    private readonly caseService: ICaseService,
+    @Inject(IOfficialJournalCaseService)
+    private readonly caseService: IOfficialJournalCaseService,
 
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
 
     @Inject(ICommentService) private readonly commentService: ICommentService,
-    @Inject(LOGGER_PROVIDER)
-    private readonly logger: Logger,
+    @Inject(ICasePaymentService)
+    private readonly paymentService: ICasePaymentService,
+    @Inject(ICaseHistoryService)
+    private readonly caseHistoryService: ICaseHistoryService,
   ) {}
-
-  @Post(':caseId/communication-channels')
-  @ApiOperation({ operationId: 'createCommunicationChannel' })
-  @ApiResponse({ status: 200, type: CaseChannel })
-  async createCommunicationChannel(
-    @Param('caseId', new UUIDValidationPipe()) caseId: string,
-    @Body() body: CreateCaseChannelBody,
-  ) {
-    return this.caseService.createCaseChannel(caseId, body)
-  }
-
-  @Delete(':caseId/communication-channels/:channelId')
-  @ApiOperation({ operationId: 'deleteCommunicationChannel' })
-  @ApiNoContentResponse()
-  async deleteCommunicationChannel(
-    @Param('caseId', new UUIDValidationPipe()) caseId: string,
-    @Param('channelId', new UUIDValidationPipe()) channelId: string,
-  ) {
-    ResultWrapper.unwrap(
-      await this.caseService.deleteCaseChannel(caseId, channelId),
-    )
-  }
-
-  @Get('nextPublicationNumber/:departmentId')
-  @ApiOperation({ operationId: 'getNextPublicationNumber' })
-  @ApiResponse({ status: 200, type: GetNextPublicationNumberResponse })
-  async getNextPublicationNumber(
-    @Param('departmentId', new UUIDValidationPipe()) departmentId: string,
-  ): Promise<GetNextPublicationNumberResponse> {
-    return ResultWrapper.unwrap(
-      await this.caseService.getNextCasePublicationNumber(departmentId),
-    )
-  }
-
-  @Get('communicationStatuses')
-  @ApiOperation({ operationId: 'getCommunicationStatuses' })
-  @ApiResponse({ status: 200, type: GetCommunicationSatusesResponse })
-  async communicationStatues(): Promise<GetCommunicationSatusesResponse> {
-    return ResultWrapper.unwrap(
-      await this.caseService.getCommunicationStatuses(),
-    )
-  }
-
-  @Get('tags')
-  @ApiOperation({ operationId: 'getTags' })
-  @ApiResponse({ status: 200, type: GetTagsResponse })
-  async tags(): Promise<GetTagsResponse> {
-    return ResultWrapper.unwrap(await this.caseService.getCaseTags())
-  }
 
   @Get('feeCodes')
   @ApiOperation({ operationId: 'getFeeCodes' })
@@ -210,124 +137,6 @@ export class CaseController {
     ).unwrap()
   }
 
-  @Put(':id/price')
-  @ApiOperation({ operationId: 'updatePrice' })
-  @ApiNoContentResponse()
-  async updatePrice(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCasePriceBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCasePrice(id, body))
-  }
-
-  @Get(':id/price/payment-status')
-  @ApiOperation({ operationId: 'getCasePaymentStatus' })
-  @ApiResponse({ status: 200, type: GetPaymentResponse })
-  async getCasePaymentStatus(
-    @Param('id', new UUIDValidationPipe()) caseId: string,
-  ): Promise<GetPaymentResponse> {
-    return ResultWrapper.unwrap(
-      await this.caseService.getCasePaymentStatus({
-        chargeBase: caseId,
-        debtorNationalId: caseId, // TODO: FIX this
-      }),
-    )
-  }
-
-  @Put(':id/fasttrack')
-  @ApiOperation({ operationId: 'updateFasttrack' })
-  @ApiNoContentResponse()
-  async updateFasttrack(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateFasttrackBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseFasttrack(id, body))
-  }
-
-  @Put(':id/tag')
-  @ApiOperation({ operationId: 'updateTag' })
-  @ApiNoContentResponse()
-  async updateTag(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateTagBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseTag(id, body))
-  }
-
-  @Put(':id/department')
-  @ApiOperation({ operationId: 'updateDepartment' })
-  @ApiNoContentResponse()
-  async updateDepartment(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseDepartmentBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseDepartment(id, body))
-  }
-
-  @Put(':id/type')
-  @ApiOperation({ operationId: 'updateCaseType' })
-  @ApiNoContentResponse()
-  async updateType(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseTypeBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseType(id, body))
-  }
-
-  @Put(':id/communicationStatus')
-  @ApiOperation({ operationId: 'updateCommunicationStatus' })
-  @ApiNoContentResponse()
-  async updateCommunicationStatus(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCommunicationStatusBody,
-  ) {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCaseCommunicationStatus(id, body),
-    )
-  }
-
-  @Put(':id/publishDate')
-  @ApiOperation({ operationId: 'updatePublishDate' })
-  @ApiNoContentResponse()
-  async updatePublishDate(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdatePublishDateBody,
-  ) {
-    ResultWrapper.unwrap(
-      await this.caseService.updateCaseRequestedPublishDate(id, body),
-    )
-  }
-
-  @Put(':id/title')
-  @ApiOperation({ operationId: 'updateTitle' })
-  @ApiNoContentResponse()
-  async updateTitle(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateTitleBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseTitle(id, body))
-  }
-
-  @Post(':id/correction')
-  @ApiOperation({ operationId: 'postCorrection' })
-  @ApiNoContentResponse()
-  async postCorrection(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: AddCaseAdvertCorrection,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.postCaseCorrection(id, body))
-  }
-
-  @Put(':id/categories')
-  @ApiOperation({ operationId: 'updateCategories' })
-  @ApiNoContentResponse()
-  async updateCategories(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCategoriesBody,
-  ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
-  }
-
   @Put(':id/status/next')
   @ApiOperation({ operationId: 'updateNextStatus' })
   @ApiNoContentResponse()
@@ -337,6 +146,8 @@ export class CaseController {
   ) {
     const updateResults = await this.caseService.updateCaseNextStatus(id, user)
 
+    // TODO: check if the status ready for publishing then do this
+    // await this.paymentService.postExternalPaymentByCaseId(id)
     if (!updateResults.result.ok) {
       throw new HttpException(
         updateResults.result.error.message,
@@ -344,16 +155,7 @@ export class CaseController {
       )
     }
 
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
+    this.caseHistoryService.createCaseHistory(id)
   }
 
   @Put(':id/status/previous')
@@ -375,64 +177,7 @@ export class CaseController {
       )
     }
 
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
-  }
-
-  @Put(':id/assign/:userId')
-  @ApiOperation({ operationId: 'assignEmployee' })
-  @ApiNoContentResponse()
-  async assign(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Param('userId', new UUIDValidationPipe()) userId: string,
-    @CurrentUser() user: UserDto,
-  ) {
-    ResultWrapper.unwrap(
-      await this.caseService.updateEmployee(id, userId, user),
-    )
-  }
-
-  @Put(':id/status')
-  @ApiOperation({ operationId: 'updateCaseStatus' })
-  @ApiNoContentResponse()
-  async updateStatus(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateCaseStatusBody,
-    @CurrentUser() user: UserDto,
-  ) {
-    const updateResults = await this.caseService.updateCaseStatus(
-      id,
-      body,
-      user,
-    )
-
-    if (!updateResults.result.ok) {
-      throw new HttpException(
-        updateResults.result.error.message,
-        updateResults.result.error.code,
-      )
-    }
-
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
-
-    return
+    this.caseHistoryService.createCaseHistory(id)
   }
 
   @Put(':id/update')
@@ -464,46 +209,7 @@ export class CaseController {
       )
     }
 
-    const historyResults = await this.caseService.createCaseHistory(id)
-
-    if (!historyResults.result.ok) {
-      this.logger.warn('Failed to create case history', {
-        caseId: id,
-        error: historyResults.result.error,
-        category: LOG_CATEGORY,
-        context: 'CaseController',
-      })
-    }
-
-    return
-  }
-
-  @Get(':id')
-  @ApiOperation({ operationId: 'getCase' })
-  @ApiResponse({ status: 200, type: GetCaseResponse })
-  async getCase(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetCaseResponse> {
-    return ResultWrapper.unwrap(await this.caseService.getCase(id))
-  }
-
-  @Post()
-  @ApiOperation({ operationId: 'createCase' })
-  @ApiResponse({ status: 200, type: CreateCaseResponseDto })
-  async createCase(
-    @CurrentUser() currentUser: UserDto,
-    @Body() body: CreateCaseDto,
-  ) {
-    return ResultWrapper.unwrap(
-      await this.caseService.createCase(currentUser, body),
-    )
-  }
-
-  @Get()
-  @ApiOperation({ operationId: 'getCases' })
-  @ApiResponse({ status: 200, type: GetCasesReponse })
-  async getCases(@Query() params?: GetCasesQuery): Promise<GetCasesReponse> {
-    return ResultWrapper.unwrap(await this.caseService.getCases(params))
+    this.caseHistoryService.createCaseHistory(id)
   }
 
   @Get('/department-count/:department')
@@ -571,23 +277,12 @@ export class CaseController {
     @CurrentUser() user: UserDto,
     @Body() body: ExternalCommentBodyDto,
   ): Promise<GetComment> {
-    const communicationStatusUpdateResult =
-      await this.caseService.updateCaseCommunicationStatusByStatus(
-        id,
-        CaseCommunicationStatusEnum.WaitingForAnswers,
-      )
-
-    if (!communicationStatusUpdateResult.result.ok) {
-      this.logger.warn(
-        'Failed to update communication status when creating external comment',
-        {
-          caseId: id,
-          error: communicationStatusUpdateResult.result.error,
-          category: LOG_CATEGORY,
-          context: 'CaseController',
-        },
-      )
-    }
+    //TODO: Fix
+    // const communicationStatusUpdateResult =
+    //   await this.caseService.updateCaseCommunicationStatusByStatus(
+    //     id,
+    //     CaseCommunicationStatusEnum.WaitingForAnswers,
+    //   )
 
     return ResultWrapper.unwrap(
       await this.commentService.createExternalComment(id, {

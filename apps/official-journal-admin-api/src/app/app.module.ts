@@ -1,14 +1,18 @@
 import { LoggingModule } from '@dmr.is/logging'
+import { CaseChannelModule } from '@dmr.is/official-journa/modules/case-channel'
 import { OFFICIAL_JOURNAL_DB } from '@dmr.is/official-journal/models'
 import { AdvertModule } from '@dmr.is/official-journal/modules/advert'
+import { AdvertCorrectionModule } from '@dmr.is/official-journal/modules/advert-correction'
 import {
   AdvertTypeAdminController,
   AdvertTypeModule,
 } from '@dmr.is/official-journal/modules/advert-type'
+import { CaseTagModule } from '@dmr.is/official-journal/modules/case-tag'
 import {
   CategoryAdminController,
   CategoryModule,
 } from '@dmr.is/official-journal/modules/category'
+import { CommunicationStatusModule } from '@dmr.is/official-journal/modules/communication-status'
 import { DepartmentModule } from '@dmr.is/official-journal/modules/department'
 import {
   InstitutionAdminController,
@@ -58,6 +62,10 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
     DepartmentModule,
     InstitutionModule,
     PdfModule,
+    CaseChannelModule,
+    CommunicationStatusModule,
+    CaseTagModule,
+    AdvertCorrectionModule,
   ],
   controllers: [
     CategoryAdminController,

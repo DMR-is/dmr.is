@@ -23,7 +23,7 @@ import {
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
 
-export interface ICaseService {
+export interface IOfficialJournalCaseService {
   getCasesWithPublicationNumber(
     department: DepartmentEnum,
     params: GetCasesWithPublicationNumberQuery,
@@ -75,4 +75,4 @@ export interface ICaseService {
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 }
 
-export const ICaseService = Symbol('ICaseService')
+export const IOfficialJournalCaseService = Symbol('IOfficialJournalCaseService')
