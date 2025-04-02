@@ -174,14 +174,14 @@ export class JournalController {
   @Get('/rss/:id')
   @ApiOperation({ operationId: 'getRssFeed' })
   @ApiResponse({ status: 200, type: 'application/rss+xml' })
-  async getRssFeed(@Param() param?: { id: string }) {
+  async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdverts({
-        department: param?.id.toLowerCase(),
+        department: id?.toLowerCase(),
         pageSize: 100,
       }),
     )
-    return AdvertsToRss(adverts.adverts, param?.id?.toLowerCase())
+    return AdvertsToRss(adverts.adverts, id?.toLowerCase())
   }
 
   @Get('/pdf/:id')
@@ -196,6 +196,9 @@ export class JournalController {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdvert(id.toLowerCase()),
     )
+    if (!adverts) {
+      return res.status(404)
+    }
     const url = adverts.advert.document.pdfUrl
     if (!url) {
       return res.status(404)
