@@ -38,7 +38,7 @@ import {
   UpdateUserDto,
 } from './dto/user.dto'
 import { RoleGuard } from './role.guard'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 
 @Controller({
   path: 'users',

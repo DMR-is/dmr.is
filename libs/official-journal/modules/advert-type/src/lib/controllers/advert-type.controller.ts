@@ -10,7 +10,7 @@ import { GetAdvertMainType } from '../dto/get-advert-main-type.dto'
 import { GetAdvertMainTypes } from '../dto/get-advert-main-types.dto'
 import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { GetAdvertTypes } from '../dto/get-advert-types.dto'
-
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 @Controller({ path: 'types', version: '1' })
 export class AdvertTypeController {
   constructor(
@@ -25,7 +25,9 @@ export class AdvertTypeController {
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  async getMainTypeById(@Param('id') id: string): Promise<GetAdvertMainType> {
+  async getMainTypeById(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetAdvertMainType> {
     const result = await this.advertTypeService.getMainTypeById(id)
 
     if (!result.result.ok) {
@@ -64,7 +66,9 @@ export class AdvertTypeController {
   @ApiResponse({ status: 400, type: AdvertTypeError })
   @ApiResponse({ status: 404, type: AdvertTypeError })
   @ApiResponse({ status: 500, type: AdvertTypeError })
-  async getTypeById(@Param('id') id: string): Promise<GetAdvertType> {
+  async getTypeById(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetAdvertType> {
     const result = await this.advertTypeService.getTypeById(id)
 
     if (!result.result.ok) {

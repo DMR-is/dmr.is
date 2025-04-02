@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent, ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import {
   CaseCategoriesModel,
   CaseCommunicationStatusEnum,
@@ -14,6 +14,7 @@ import {
 import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { OJOIApplication } from '@dmr.is/shared/dto'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils'
@@ -106,7 +107,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
       if (caseLookup.applicationId) {
         try {
-          const application = (
+          const { application }: { application: OJOIApplication } = (
             await this.applicationService.getApplication(
               caseLookup.applicationId,
             )
@@ -470,7 +471,6 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await caseLookup.update({
       departmentId: body.departmentId,
-      transaction,
     })
 
     if (caseLookup.applicationId) {
@@ -518,7 +518,6 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await caseLookup.update({
       advertTypeId: body.typeId,
-      transaction,
     })
 
     if (caseLookup.applicationId) {
@@ -665,7 +664,6 @@ export class CaseUpdateService implements ICaseUpdateService {
     await caseLookup.update({
       requestedPublicationDate: body.date,
       fastTrack: fastTrack,
-      transaction,
     })
 
     if (caseLookup.applicationId) {
@@ -714,7 +712,6 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await caseLookup.update({
       advertTitle: body.title,
-      transaction,
     })
 
     if (caseLookup.applicationId) {
@@ -785,7 +782,6 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await caseLookup.update({
       html: body.advertHtml,
-      transaction,
     })
 
     if (caseLookup.applicationId) {

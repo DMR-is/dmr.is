@@ -1,10 +1,6 @@
 import { ROLES_KEY } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  AdvertInvolvedPartyModel,
-  UserRoleModel,
-} from '@dmr.is/official-journal/models'
 import { UserRoleTitle } from '@dmr.is/types'
 
 import {

@@ -8,7 +8,7 @@ import {
   UpdateUserDto,
   GetRolesByUserResponse,
 } from './dto/user.dto'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 
 export interface IUserService {
   getUsers(

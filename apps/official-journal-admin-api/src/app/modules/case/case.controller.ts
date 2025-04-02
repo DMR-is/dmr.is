@@ -1,7 +1,14 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
+import {
+  ExternalCommentBodyDto,
+  GetComment,
+  GetComments,
+  InternalCommentBodyDto,
+} from '@dmr.is/official-journal/dto/comment/comment.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   CaseCommunicationStatusEnum,
@@ -12,13 +19,7 @@ import {
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import {
-  ExternalCommentBodyDto,
-  GetComment,
-  GetComments,
-  ICommentService,
-  InternalCommentBodyDto,
-} from '@dmr.is/official-journal/modules/comment'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import {
   GetPaymentResponse,
   IPriceService,
@@ -54,8 +55,7 @@ import { AddCaseAdvertCorrection } from './dto/add-case-advert-correction.dto'
 import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
-} from './dto/case.dto'
-import { CaseChannel } from './dto/case-channel.dto'
+} from './dto/case-with-counter.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'

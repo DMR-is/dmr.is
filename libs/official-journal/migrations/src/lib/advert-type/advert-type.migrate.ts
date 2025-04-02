@@ -1,6 +1,6 @@
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 import { AdvertTypeModel } from '@dmr.is/official-journal/models'
-import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
+import { AdvertType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
 
 export const advertTypeMigrate = (model: AdvertTypeModel): AdvertType => {
   return {

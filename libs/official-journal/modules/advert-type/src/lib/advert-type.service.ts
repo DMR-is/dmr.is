@@ -30,13 +30,13 @@ import { GetAdvertType } from './dto/get-advert-type.dto'
 import { GetAdvertTypes } from './dto/get-advert-types.dto'
 import { UpdateAdvertTypeBody } from './dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from './dto/update-main-advert-type.dto'
-import { advertMainTypeMigrate } from './migrations/advert-main-type.migrate'
-import { advertTypeMigrate } from './migrations/advert-type.migrate'
 import {
   AdvertTypeModel,
   AdvertMainTypeModel,
   AdvertDepartmentModel,
 } from '@dmr.is/official-journal/models'
+import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
+import { advertMainTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-main-type.migrate'
 
 const LOGGING_CATEGORY = 'advert-type-service'
 

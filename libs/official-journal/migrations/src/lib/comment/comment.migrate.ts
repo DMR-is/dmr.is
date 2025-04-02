@@ -1,12 +1,12 @@
 import { InternalServerErrorException } from '@nestjs/common'
 
 import { CaseActionEnum, CommentModel } from '@dmr.is/official-journal/models'
+import { caseStatusMigrate } from '../case-status/case-status.migrate'
 import {
-  CommentDto,
   CommentCreatorDto,
+  CommentDto,
   CommentReceiverDto,
-} from '../dto/comment.dto'
-import { caseStatusMigrate } from '@dmr.is/official-journal/dto'
+} from '@dmr.is/official-journal/dto/comment/comment.dto'
 
 export const commentMigrate = (
   model: CommentModel,

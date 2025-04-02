@@ -5,7 +5,13 @@ import { v4 as uuid } from 'uuid'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { Case } from '@dmr.is/official-journal/dto/case/case.dto'
+import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { caseMigrate } from '@dmr.is/official-journal/migrations/case/case.migrate'
+import { caseDetailedMigrate } from '@dmr.is/official-journal/migrations/case/case-detailed.migrate'
+import { caseTagMigrate } from '@dmr.is/official-journal/migrations/case/case-tag.migrate'
+import { communicationStatusMigrate } from '@dmr.is/official-journal/migrations/communication-status/communication-status.migrate'
 import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
@@ -66,11 +72,9 @@ import {
   DeleteCaseAdvertCorrection,
 } from './dto/add-case-advert-correction.dto'
 import {
-  Case,
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
-} from './dto/case.dto'
-import { CaseChannel } from './dto/case-channel.dto'
+} from './dto/case-with-counter.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
@@ -104,10 +108,6 @@ import { UpdateTagBody } from './dto/update-tag-body.dto'
 import { UpdateTitleBody } from './dto/update-title-body.dto'
 import { UpdateCaseTypeBody } from './dto/update-type-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
-import { caseMigrate } from './migrations/case.migrate'
-import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
-import { caseDetailedMigrate } from './migrations/case-detailed.migrate'
-import { caseTagMigrate } from './migrations/case-tag.migrate'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
@@ -798,21 +798,22 @@ export class CaseService implements ICaseService {
       })
     }
 
-    await caseToPublish.update(
-      {
-        publicationNumber: serial,
-        advertId: advertCreateResult.result.value.advert.id,
-        statusId: caseStatus.id,
-        publishedAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-      },
-      {
-        where: {
-          id: caseId,
-        },
-        transaction: transaction,
-      },
-    )
+    // TODO: FIX
+    // await caseToPublish.update(
+    //   {
+    //     publicationNumber: serial,
+    //     advertId: advertCreateResult.result.value.advert.id,
+    //     statusId: caseStatus.id,
+    //     publishedAt: now.toISOString(),
+    //     updatedAt: now.toISOString(),
+    //   },
+    //   {
+    //     where: {
+    //       id: caseId,
+    //     },
+    //     transaction: transaction,
+    //   },
+    // )
 
     const emails = caseToPublish?.channels?.flatMap((item) => {
       if (!item.email) {
@@ -1299,7 +1300,7 @@ export class CaseService implements ICaseService {
     ResultWrapper<GetCommunicationSatusesResponse>
   > {
     const statuses = (await this.caseCommunicationStatusModel.findAll()).map(
-      (s) => caseCommunicationStatusMigrate(s),
+      (s) => communicationStatusMigrate(s),
     )
 
     return ResultWrapper.ok({

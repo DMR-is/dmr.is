@@ -11,16 +11,16 @@ import { generatePaging } from '@dmr.is/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { institutionMigrate } from './migrations/institution.migrate'
 import { IInstitutionService } from './institution.service.interface'
 import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
+import { InstitutionQuery } from './dto/get-institutions-query.dto'
+import { GetInstitutions } from './dto/get-institutions-response.dto'
+import { GetInstitution } from './dto/get-institution-response.dto'
 import {
-  InstitutionQuery,
-  GetInstitutions,
-  GetInstitution,
   CreateInstitution,
   UpdateInstitution,
-} from './dto/institution.dto'
+} from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { institutionMigrate } from '@dmr.is/official-journal/migrations/institution/institution.migrate'
 
 const LOGGING_CATEGORY = 'institution-service'
 
@@ -54,7 +54,9 @@ export class InstitutionService implements IInstitutionService {
       order: [['title', 'ASC']],
     })
 
-    const mapped = institutions.rows.map(institutionMigrate)
+    const mapped = institutions.rows.map((institution) =>
+      institutionMigrate(institution),
+    )
     const paging = generatePaging(
       mapped,
       query.page,

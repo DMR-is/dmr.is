@@ -1,7 +1,4 @@
 import { CaseModel } from '@dmr.is/official-journal/models'
-import { attachmentMigrate } from '@dmr.is/official-journal/modules/attachment'
-import { commentMigrate } from '@dmr.is/official-journal/modules/comment'
-import { signatureMigrate } from '@dmr.is/official-journal/modules/signature'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { CaseDetailed } from '@dmr.is/official-journal/dto/case/case.dto'
@@ -13,6 +10,9 @@ import { caseChannelMigrate } from '../case-channel/case-channel.migrate'
 import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
 import { caseHistoryMigrate } from '../case-history/case-history.migrate'
 import { caseTransactionMigrate } from '../case-transaction/transaction.migrate'
+import { signatureMigrate } from '../signature/signature.migrate'
+import { commentMigrate } from '../comment/comment.migrate'
+import { attachmentMigrate } from '../attachment/attachment.migrate'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {

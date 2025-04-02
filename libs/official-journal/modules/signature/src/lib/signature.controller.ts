@@ -21,9 +21,12 @@ import {
 
 import { MemberTypeEnum } from './types'
 import { ISignatureService } from './signature.service.interface'
-import { UpdateSignatureMember } from './dto/signature-member.dto'
-import { UpdateSignatureRecord } from './dto/signature-record.dto'
-import { CreateSignature, GetSignature } from './dto/signature.dto'
+import {
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+  CreateSignature,
+} from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { GetSignature } from './dto/signature-response.dto'
 
 @Controller({
   version: '1',

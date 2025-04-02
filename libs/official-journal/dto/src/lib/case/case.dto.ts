@@ -12,8 +12,6 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
-import { CaseStatus } from '../case-status/case-status.dto'
-import { UserDto } from '../user/user.dto'
 import { Department } from '@dmr.is/official-journal/modules/department'
 import { TBRTransaction } from '@dmr.is/official-journal/modules/price'
 import {
@@ -31,17 +29,19 @@ import {
   PickType,
 } from '@nestjs/swagger'
 
+import { AdvertCorrection } from '../advert-correction/advert-correction.dto'
 import { ApplicationAttachment } from '../attachments/application-attachment.dto'
+import { CaseAddition } from '../case-addition/case-addition.dto'
+import { CaseChannel } from '../case-channel/case-channel.dto'
+import { CaseHistory } from '../case-history/case-history.dto'
+import { CaseStatus } from '../case-status/case-status.dto'
+import { CaseTag } from '../case-tag/case-tag.dto'
 import { Category } from '../category/category.dto'
 import { CommentDto } from '../comment/comment.dto'
-import { Signature } from '../signature/signature.dto'
-import { InstitutionDto } from '../institution/institution.dto'
-import { CaseTag } from '../case-tag/case-tag.dto'
 import { CommunicationStatus } from '../communication-status/communication-status.dto'
-import { CaseHistory } from '../case-history/case-history.dto'
-import { CaseChannel } from '../case-channel/case-channel.dto'
-import { CaseAddition } from '../case-addition/case-addition.dto'
-import { AdvertCorrection } from '../advert-correction/advert-correction.dto'
+import { InstitutionDto } from '../institution/institution.dto'
+import { Signature } from '../signature/signature.dto'
+import { UserDto } from '../user/user.dto'
 
 export class CasesQuery {
   @ApiProperty({

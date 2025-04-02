@@ -1,5 +1,5 @@
 import { Transaction } from 'sequelize'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { CaseCommunicationStatusEnum } from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 

@@ -1,6 +1,3 @@
-// dto
-export { AdvertMainType } from './lib/dto/advert-main-type.dto'
-export { AdvertType } from './lib/dto/advert-type.dto'
 export { AdvertTypeQuery } from './lib/dto/advert-type.query'
 export { CreateAdvertMainTypeBulk } from './lib/dto/create-advert-main-type-bulk.dto'
 export { CreateAdvertMainTypeBody } from './lib/dto/create-advert-main-type.dto'
@@ -11,10 +8,6 @@ export { GetAdvertType } from './lib/dto/get-advert-type.dto'
 export { GetAdvertTypes } from './lib/dto/get-advert-types.dto'
 export { UpdateAdvertTypeBody } from './lib/dto/update-advert-type.dto'
 export { UpdateAdvertMainType } from './lib/dto/update-main-advert-type.dto'
-
-// migrations
-export { advertMainTypeMigrate } from './lib/migrations/advert-main-type.migrate'
-export { advertTypeMigrate } from './lib/migrations/advert-type.migrate'
 
 // controllers
 export { AdvertTypeAdminController } from './lib/controllers/advert-type-admin.controller'

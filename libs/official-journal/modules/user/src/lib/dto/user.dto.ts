@@ -1,6 +1,10 @@
 import { ApiProperty, PickType, PartialType, OmitType } from '@nestjs/swagger'
-import { UserDto, Institution, UserRoleDto } from '@dmr.is/official-journal/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
+import {
+  UserDto,
+  UserRoleDto,
+} from '@dmr.is/official-journal/dto/user/user.dto'
+import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
 
 export class GetUserResponse {
   @ApiProperty({
@@ -23,9 +27,9 @@ export class GetUsersResponse {
 
 export class GetInvoledPartiesByUserResponse {
   @ApiProperty({
-    type: [Institution],
+    type: [InstitutionDto],
   })
-  involvedParties!: Institution[]
+  involvedParties!: InstitutionDto[]
 }
 
 export class CreateUserDto extends PickType(UserDto, [

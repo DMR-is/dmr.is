@@ -1,7 +1,7 @@
-import { Institution } from '@dmr.is/official-journal/dto'
+import { AdvertType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
+import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
 import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
 import { Advert } from '@dmr.is/official-journal/modules/advert'
-import { AdvertType } from '@dmr.is/official-journal/modules/advert-type'
 import {
   Category,
   MainCategory,
@@ -241,14 +241,14 @@ export const ALL_MOCK_JOURNAL_CATEGORIES = [
   MOCK_CATEGORY_REYKJAVIK,
 ]
 
-export const MOCK_INVOLVEDPARTY_USR: Institution = {
+export const MOCK_INVOLVEDPARTY_USR: InstitutionDto = {
   id: 'ad08ee8a-56c8-4360-a1f6-6a0f6122e0b6',
   title: 'Umhverfis- og skipulagssvið Reykjavíkurborgar',
   slug: 'umhverfis-og-skipulagssvid-reykjavikurborgar',
   nationalId: '1231231234',
 }
 
-const MOCK_INVOLVEDPARTY_SBR: Institution = {
+const MOCK_INVOLVEDPARTY_SBR: InstitutionDto = {
   id: 'cdbbd6ba-eac0-4e45-be08-b01063bd26c0',
   title: 'Skipulags- og byggingarsvið Reykjavíkur',
   slug: 'skipulags-og-byggingarsvid-reykjavikur',

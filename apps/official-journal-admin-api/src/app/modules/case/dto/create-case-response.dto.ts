@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { CaseDetailed } from '@dmr.is/official-journal/dto/case/case.dto'
 
-import { CaseDetailed } from './case.dto'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class CreateCaseResponse {
   @ApiProperty({

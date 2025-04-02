@@ -30,18 +30,19 @@ import {
   CaseActionEnum,
 } from '@dmr.is/official-journal/models'
 import {
-  GetComment,
-  GetCommentsQuery,
-  GetComments,
-  SubmitCommentBody,
-  AssignUserCommentBody,
-  AssignSelfCommentBody,
-  UpdateStatusCommentBody,
-  InternalCommentBody,
-  ExternalCommentBody,
   ApplicationCommentBody,
-} from './dto/comment.dto'
-import { commentMigrate } from './migrations/comment.migrate'
+  AssignSelfCommentBody,
+  AssignUserCommentBody,
+  ExternalCommentBody,
+  GetComment,
+  GetComments,
+  GetCommentsQuery,
+  InternalCommentBody,
+  SubmitCommentBody,
+  UpdateStatusCommentBody,
+} from '@dmr.is/official-journal/dto/comment/comment.dto'
+import { commentMigrate } from '@dmr.is/official-journal/migrations/comment/comment.migrate'
+
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'
 

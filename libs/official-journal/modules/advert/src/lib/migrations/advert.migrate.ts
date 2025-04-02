@@ -1,8 +1,8 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
-import { advertTypeMigrate } from '@dmr.is/official-journal/modules/advert-type'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { Advert } from '../dto/advert.dto'
+import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
   const advert: Advert = {

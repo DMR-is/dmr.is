@@ -4,7 +4,9 @@ import { v4 as uuid } from 'uuid'
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { caseChannelMigrate } from '@dmr.is/official-journal/migrations/case-channel/case-channel.migrate'
 import {
   AdditionTypeEnum,
   CaseAdditionModel,
@@ -33,11 +35,9 @@ import { getFastTrack } from '@dmr.is/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CaseChannel } from '../../dto/case-channel.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
 import { CreateCaseBody } from '../../dto/create-case-body.dto'
 import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
-import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
 import { ICaseCreateService } from './case-create.service.interface'
 
 const LOGGING_CATEGORY = 'CaseCreateService'
@@ -129,11 +129,7 @@ export class CaseCreateService implements ICaseCreateService {
       return result
     }
 
-    const caseNumberPromise = this.utilityService.getNextCaseNumber(
-      body.departmentId,
-      now.getFullYear(),
-      transaction,
-    )
+    const caseNumberPromise = this.utilityService.generateInternalCaseNumber()
 
     const statusPromise = this.utilityService.caseStatusLookup(
       CaseStatusEnum.Submitted,
@@ -178,7 +174,7 @@ export class CaseCreateService implements ICaseCreateService {
         tagId: caseTag.id,
         assignedUserId: currentUser.id,
         communicationStatusId: communicationStatus.id,
-        caseNumber: caseNumber,
+        caseNumber: caseNumber.internalCaseNumber,
         advertTypeId: body.typeId,
         advertTitle: body.subject,
         html: '<h3 class="article__title">1. gr.</h3>',
@@ -476,7 +472,7 @@ export class CaseCreateService implements ICaseCreateService {
   async createCaseByApplication(
     body: PostApplicationBody,
   ): Promise<ResultWrapper<{ id: string }>> {
-    const application: OJOIApplication = (
+    const { application }: { application: OJOIApplication } = (
       await this.applicationService.getApplication(body.applicationId)
     ).unwrap()
 

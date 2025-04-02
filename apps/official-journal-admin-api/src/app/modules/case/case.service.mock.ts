@@ -1,6 +1,6 @@
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import {
   CaseCommunicationStatusEnum,
   CaseStatusEnum,
@@ -24,7 +24,7 @@ import {
 import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
-} from './dto/case.dto'
+} from './dto/case-with-counter.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'

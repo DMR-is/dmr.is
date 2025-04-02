@@ -1,17 +1,18 @@
 import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
+
 import {
-  GetComment,
-  GetCommentsQuery,
-  GetComments,
-  SubmitCommentBody,
-  AssignUserCommentBody,
-  AssignSelfCommentBody,
-  UpdateStatusCommentBody,
-  InternalCommentBody,
-  ExternalCommentBody,
   ApplicationCommentBody,
-} from './dto/comment.dto'
+  AssignSelfCommentBody,
+  AssignUserCommentBody,
+  ExternalCommentBody,
+  GetComment,
+  GetComments,
+  GetCommentsQuery,
+  InternalCommentBody,
+  SubmitCommentBody,
+  UpdateStatusCommentBody,
+} from '@dmr.is/official-journal/dto/comment/comment.dto'
 
 export interface ICommentService {
   getCommentById(

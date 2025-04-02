@@ -1,4 +1,5 @@
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
+import { InstitutionDto } from '../institution/institution.dto'
 export class SignatureMember {
   @ApiProperty({
     type: String,
@@ -140,11 +141,11 @@ export class Signature {
   signatureDate!: string
 
   @ApiProperty({
-    type: Institution,
+    type: InstitutionDto,
     description: 'The involved party of the signature',
     required: true,
   })
-  involvedParty!: Institution
+  involvedParty!: InstitutionDto
 
   @ApiProperty({
     type: String,

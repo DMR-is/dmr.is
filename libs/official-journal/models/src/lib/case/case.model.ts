@@ -64,6 +64,7 @@ type CaseCreateAttributes = {
   publishedAt?: string | null
   message?: string | null
   html?: string | null
+  isLegacy?: boolean
 }
 
 @Table({ tableName: OfficialJournalModels.CASE, timestamps: false })

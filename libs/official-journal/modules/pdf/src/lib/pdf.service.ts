@@ -60,9 +60,10 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     applicationId: string,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
-    const application = (await this.applicationService.getApplication(
-      applicationId,
-    )) as OJOIApplication
+    const { application }: { application: OJOIApplication } =
+      ResultWrapper.unwrap(
+        await this.applicationService.getApplication(applicationId),
+      )
 
     const { answers } = application
     const signatureType =

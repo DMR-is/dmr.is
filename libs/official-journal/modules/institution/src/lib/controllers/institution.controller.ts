@@ -11,11 +11,9 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IInstitutionService } from '../institution.service.interface'
-import {
-  GetInstitution,
-  GetInstitutions,
-  InstitutionQuery,
-} from '../dto/institution.dto'
+import { GetInstitution } from '../dto/get-institution-response.dto'
+import { GetInstitutions } from '../dto/get-institutions-response.dto'
+import { InstitutionQuery } from '../dto/get-institutions-query.dto'
 
 @Controller({
   version: '1',

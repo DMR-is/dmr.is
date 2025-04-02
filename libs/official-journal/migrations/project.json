@@ -1,5 +1,5 @@
 {
-  "name": "official-journal-migrations-migrations",
+  "name": "official-journal-migrations",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/official-journal/migrations/migrations/src",
   "projectType": "library",

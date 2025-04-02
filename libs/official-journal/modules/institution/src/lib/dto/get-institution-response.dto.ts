@@ -1,11 +1,11 @@
-import { Institution } from '@dmr.is/official-journal/dto'
+import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
 import { ApiProperty } from '@nestjs/swagger'
 
-export class GetInstitutionResponse {
+export class GetInstitution {
   @ApiProperty({
-    type: Institution,
+    type: InstitutionDto,
     description: 'The institution that was found',
     required: true,
   })
-  readonly institution!: Institution | null
+  readonly institution!: InstitutionDto
 }

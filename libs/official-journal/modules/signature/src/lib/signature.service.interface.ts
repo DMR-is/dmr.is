@@ -2,9 +2,12 @@ import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { MemberTypeEnum } from './types'
-import { UpdateSignatureMember } from './dto/signature-member.dto'
-import { UpdateSignatureRecord } from './dto/signature-record.dto'
-import { CreateSignature, GetSignature } from './dto/signature.dto'
+import {
+  CreateSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { GetSignature } from './dto/signature-response.dto'
 
 export interface ISignatureService {
   createSignature(

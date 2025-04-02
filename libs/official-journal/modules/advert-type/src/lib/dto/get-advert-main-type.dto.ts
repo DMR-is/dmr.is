@@ -1,6 +1,5 @@
+import { AdvertMainType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
 import { ApiProperty } from '@nestjs/swagger'
-
-import { AdvertMainType } from './advert-main-type.dto'
 
 export class GetAdvertMainType {
   @ApiProperty({

@@ -27,9 +27,9 @@ import { IInstitutionService } from '../institution.service.interface'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import {
   CreateInstitution,
-  GetInstitution,
   UpdateInstitution,
-} from '../dto/institution.dto'
+} from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { GetInstitution } from '../dto/get-institution-response.dto'
 
 @Controller({
   version: '1',

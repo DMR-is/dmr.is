@@ -1,11 +1,7 @@
 // dto
-export { GetInstitutionResponse } from './lib/dto/get-institution-response.dto'
-export { GetInstitutionsQueryParams } from './lib/dto/get-institutions-query.dto'
-export { GetInstitutionsResponse } from './lib/dto/get-institutions-response.dto'
-export { InstitutionDto } from './lib/dto/institution.dto'
-
-// migrations
-export { institutionMigrate } from './lib/migrations/institution.migrate'
+export { GetInstitution } from './lib/dto/get-institution-response.dto'
+export { InstitutionQuery } from './lib/dto/get-institutions-query.dto'
+export { GetInstitutions } from './lib/dto/get-institutions-response.dto'
 
 // controllers
 export { InstitutionAdminController } from './lib/controllers/institution-admin.controller'

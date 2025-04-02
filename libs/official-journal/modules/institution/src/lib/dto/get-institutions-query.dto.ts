@@ -1,15 +1,9 @@
-import { Transform } from 'class-transformer'
-import {
-  IsInt,
-  IsOptional,
-  IsPositive,
-  IsString,
-  MaxLength,
-} from 'class-validator'
+import { IsOptional, IsString, MaxLength } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
+import { PagingQuery } from '@dmr.is/shared/dto'
 
-export class GetInstitutionsQueryParams {
+export class InstitutionQuery extends PagingQuery {
   @ApiProperty({
     name: 'search',
     description: 'String to search for in institutions.',
@@ -20,28 +14,4 @@ export class GetInstitutionsQueryParams {
   @IsString()
   @IsOptional()
   search?: string
-
-  @ApiProperty({
-    name: 'page',
-    description: 'Page number to return.',
-    type: Number,
-    required: false,
-  })
-  @Transform(({ value }) => Number.parseInt(value, 10))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  page?: number
-
-  @ApiProperty({
-    name: 'pageSize',
-    description: 'Page size number to return.',
-    type: Number,
-    required: false,
-  })
-  @Transform(({ value }) => Number.parseInt(value, 10))
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  pageSize?: number
 }

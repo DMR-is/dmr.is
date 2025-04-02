@@ -26,9 +26,9 @@ import {
   AdvertInvolvedPartyModel,
   UserInvolvedPartiesModel,
 } from '@dmr.is/official-journal/models'
-import { UserDto, userRoleMigrate } from '@dmr.is/official-journal/dto'
-
-import { userMigrate } from '@dmr.is/official-journal/dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { userMigrate } from '@dmr.is/official-journal/migrations/user/user.migrate'
+import { userRoleMigrate } from '@dmr.is/official-journal/migrations/user/user-role.migrate'
 
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'

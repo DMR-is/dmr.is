@@ -10,20 +10,22 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { MemberTypeEnum } from './types'
-import { signatureMigrate } from './migrations/signature.migrate'
 import { ISignatureService } from './signature.service.interface'
 import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
-import {
-  UpdateSignatureMember,
-  CreateSignatureMember,
-} from './dto/signature-member.dto'
-import { UpdateSignatureRecord } from './dto/signature-record.dto'
-import { CreateSignature, GetSignature } from './dto/signature.dto'
 import {
   SignatureModel,
   SignatureMemberModel,
   SignatureRecordModel,
 } from '@dmr.is/official-journal/models'
+
+import { signatureMigrate } from '@dmr.is/official-journal/migrations/signature/signature.migrate'
+import {
+  CreateSignature,
+  CreateSignatureMember,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { GetSignature } from './dto/signature-response.dto'
 
 const LOGGING_CONTEXT = 'SignatureService'
 const LOGGING_CATEGORY = 'signature-service'

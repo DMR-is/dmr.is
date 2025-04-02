@@ -2,11 +2,9 @@
 export { ApplicationAttachmentType } from './lib/dto/application-attachment-type.dto'
 export { ApplicationAttachment } from './lib/dto/application-attachment.dto'
 export { ApplicationAttachments } from './lib/dto/application-attachments.dto'
-export { ApplicationCase } from './lib/dto/application-case.dto'
 export { DeleteApplicationAttachmentBody } from './lib/dto/delete-application-attachment-body.dto'
 export { GetApplicationAttachmentResponse } from './lib/dto/get-application-attachment.response'
 export { GetApplicationAttachmentsResponse } from './lib/dto/get-application-attachments.response'
-export { GetApplicationCaseResponse } from './lib/dto/get-application-case.response'
 export {
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,

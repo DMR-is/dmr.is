@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { CommunicationStatus } from '@dmr.is/official-journal/dto/communication-status/communication-status.dto'
 
-import { CommunicationStatus } from './communication-status.dto'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class GetCommunicationSatusesResponse {
   @ApiProperty({

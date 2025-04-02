@@ -3,11 +3,8 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { InstitutionService } from './institution.service'
 import { IInstitutionService } from './institution.service.interface'
+import { InstitutionController } from './controllers/institution.controller'
 import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
-import { InstitutionController } from './institution.module'
-
-export { InstitutionController } from './controllers/institution.controller'
-export { InstitutionAdminController } from './controllers/institution-admin.controller'
 
 @Module({
   imports: [SequelizeModule.forFeature([AdvertInvolvedPartyModel])],

@@ -1,43 +1,27 @@
 import { CaseModel } from '@dmr.is/official-journal/models'
 import { Case } from '@dmr.is/official-journal/dto/case/case.dto'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
+import { caseTagMigrate } from './case-tag.migrate'
+import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
+import { institutionMigrate } from '../institution/institution.migrate'
+import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
+import { caseStatusMigrate } from '../case-status/case-status.migrate'
 
 export const caseMigrate = (model: CaseModel): Case => ({
   id: model.id,
-  status: {
-    id: model.status.id,
-    title: model.status.title,
-    slug: model.status.slug,
-  },
-  communicationStatus: {
-    id: model.communicationStatus.id,
-    title: model.communicationStatus.title,
-    slug: model.communicationStatus.slug,
-  },
-  involvedParty: {
-    id: model.involvedParty.id,
-    title: model.involvedParty.title,
-    slug: model.involvedParty.slug,
-    nationalId: model.involvedParty.nationalId,
-  },
-  advertDepartment: {
-    id: model.department.id,
-    title: model.department.title,
-    slug: model.department.slug,
-  },
-  advertType: {
-    id: model.advertType.id,
-    title: model.advertType.title,
-    slug: model.advertType.slug,
-  },
-  year: model.year,
-  advertTitle: model.advertTitle,
+  status: caseStatusMigrate(model.status),
+  communicationStatus: communicationStatusMigrate(model.communicationStatus),
+  involvedParty: institutionMigrate(model.involvedParty),
+  advertDepartment: baseEntityMigrate(model.department),
+  advertType: advertTypeMigrate(model.advertType),
   advertCategories: model.categories?.map((c) => baseEntityMigrate(c)) || [],
+  advertTitle: model.advertTitle,
   requestedPublicationDate: model.requestedPublicationDate,
+  year: model.year,
   publicationNumber: model.publicationNumber,
   publishedAt: model.publishedAt,
   createdAt: model.createdAt,
   fastTrack: model.fastTrack,
   assignedTo: null,
-  tag: model?.tag ? model.tag : null,
+  tag: model?.tag ? caseTagMigrate(model.tag) : null,
 })

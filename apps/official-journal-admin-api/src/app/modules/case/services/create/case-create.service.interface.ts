@@ -1,9 +1,9 @@
 import { Transaction } from 'sequelize'
-import { UserDto } from '@dmr.is/official-journal/dto'
+import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { CaseChannel } from '../../dto/case-channel.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from '../../dto/create-case.dto'
 import { CreateCaseChannelBody } from '../../dto/create-case-channel-body.dto'
 
