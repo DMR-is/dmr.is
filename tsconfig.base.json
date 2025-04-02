@@ -39,7 +39,7 @@
       "@dmr.is/official-journal/models": [
         "libs/official-journal/models/src/index.ts"
       ],
-      "@dmr.is/official-journal/modules": [
+      "@dmr.is/official-journal/modules/communication-status": [
         "libs/official-journal/modules/communication-status/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/advert": [
@@ -62,6 +62,9 @@
       ],
       "@dmr.is/official-journal/modules/case-history": [
         "libs/official-journal/modules/case-history/src/index.ts"
+      ],
+      "@dmr.is/official-journal/modules/case-tag": [
+        "libs/official-journal/modules/case-tag/src/index.ts"
       ],
       "@dmr.is/official-journal/modules/category": [
         "libs/official-journal/modules/category/src/index.ts"

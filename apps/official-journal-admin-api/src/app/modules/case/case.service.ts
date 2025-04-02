@@ -1,7 +1,6 @@
 import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { v4 as uuid } from 'uuid'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -9,16 +8,10 @@ import { Case } from '@dmr.is/official-journal/dto/case/case.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { caseMigrate } from '@dmr.is/official-journal/migrations/case/case.migrate'
 import {
-  AdvertCorrectionModel,
   AdvertModel,
   AdvertStatusEnum,
-  CaseChannelModel,
-  CaseChannelsModel,
-  CaseCommunicationStatusModel,
-  CaseHistoryModel,
   CaseModel,
   CaseStatusEnum,
-  CaseTagModel,
   DepartmentEnum,
   SignatureModel,
 } from '@dmr.is/official-journal/models'
@@ -28,13 +21,7 @@ import {
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
 import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
-import {
-  GetPaymentQuery,
-  GetPaymentResponse,
-  IPriceService,
-} from '@dmr.is/official-journal/modules/price'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
-import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { IAWSService, PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
@@ -55,13 +42,9 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import {
-  AddCaseAdvertCorrection,
-} from './dto/add-case-advert-correction.dto'
-import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case-with-counter.dto'
-import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import {
   GetCasesWithDepartmentCountQuery,
@@ -71,14 +54,12 @@ import {
   GetCasesWithPublicationNumber,
   GetCasesWithPublicationNumberQuery,
 } from './dto/get-cases-with-publication-number.dto'
-import { GetNextPublicationNumberResponse } from './dto/get-next-publication-number-response.dto'
 import { PostCasePublishBody } from './dto/post-publish-body.dto'
 import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
-import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseService } from './case.service.interface'
 import { casesDetailedIncludes, casesIncludes } from './relations'
 
@@ -90,8 +71,6 @@ export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
-    @Inject(ICaseCreateService)
-    private readonly createService: ICaseCreateService,
     @Inject(IAWSService) private readonly s3: IAWSService,
 
     @Inject(IAttachmentService)
@@ -101,140 +80,13 @@ export class CaseService implements ICaseService {
 
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(CaseTagModel)
-    private readonly caseTagModel: typeof CaseTagModel,
 
-    @InjectModel(CaseCommunicationStatusModel)
-    private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
-
-    @InjectModel(AdvertCorrectionModel)
-    private advertCorrectionModel: typeof AdvertCorrectionModel,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
-
-    @Inject(IPriceService)
-    private readonly priceService: IPriceService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @InjectModel(CaseHistoryModel)
-    private readonly caseHistoryModel: typeof CaseHistoryModel,
-    @InjectModel(CaseChannelModel)
-    private readonly caseChannelModel: typeof CaseChannelModel,
-    @InjectModel(CaseChannelsModel)
-    private readonly caseChannelsModel: typeof CaseChannelsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
-  }
-  @LogAndHandle()
-  @Transactional()
-  async deleteCaseChannel(
-    caseId: string,
-    channelId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    await this.caseChannelsModel.destroy({
-      where: {
-        caseId: caseId,
-        channelId: channelId,
-      },
-      transaction,
-    })
-    await this.caseChannelModel.destroy({
-      where: {
-  getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  getCases(params?: GetCasesQuery): Promise<ResultWrapper<GetCasesReponse>> {
-    throw new Error('Method not implemented.')
-  }
-  getCaseTags(): Promise<ResultWrapper<GetTagsResponse>> {
-    throw new Error('Method not implemented.')
-  }
-  deleteCorrection(caseId: string, body: DeleteCaseAdvertCorrection, transaction?: Transaction): Promise<ResultWrapper> {
-    throw new Error('Method not implemented.')
-  }
-  getCommunicationStatuses(): Promise<ResultWrapper<GetCommunicationSatusesResponse>> {
-    throw new Error('Method not implemented.')
-  }
-        id: channelId,
-      },
-      transaction,
-    })
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async createCase(
-    currentUser: UserDto,
-    body: CreateCaseDto,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<CreateCaseResponseDto>> {
-    const results = this.createService.createCase(
-      currentUser,
-      body,
-      transaction,
-    )
-
-    return results
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async createCaseHistory(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const now = new Date().toISOString()
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: [
-        'id',
-        'departmentId',
-        'statusId',
-        'advertTypeId',
-        'involvedPartyId',
-        'assignedUserId',
-        'advertTitle',
-        'html',
-        'requestedPublicationDate',
-      ],
-      transaction,
-    })
-
-    if (caseLookup === null) {
-      this.logger.warn(`Tried to create case history, but case is not found`, {
-        caseId,
-        category: LOGGING_CATEGORY,
-        context: 'CaseService',
-      })
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-      })
-    }
-
-    const historyId = uuid()
-    await this.caseHistoryModel.create(
-      {
-        id: historyId,
-        caseId: caseLookup.id,
-        departmentId: caseLookup.departmentId,
-        typeId: caseLookup.advertTypeId,
-        statusId: caseLookup.statusId,
-        involvedPartyId: caseLookup.involvedPartyId,
-        userId: caseLookup.assignedUserId,
-        title: caseLookup.advertTitle,
-        html: caseLookup.html,
-        requestedPublicationDate: new Date(
-          caseLookup.requestedPublicationDate,
-        ).toISOString(),
-        created: now,
-      },
-      { transaction },
-    )
-
-    return ResultWrapper.ok()
   }
 
   async getCasesSqlQuery(params: GetCasesQuery) {
@@ -735,68 +587,6 @@ export class CaseService implements ICaseService {
     })
   }
 
-  /**
-   * We do not use the transactional parameter here
-   * because we want to use multiple transactions
-   */
-  @LogAndHandle()
-  async createCaseByApplication(
-    body: PostApplicationBody,
-  ): Promise<ResultWrapper> {
-    const { id } = ResultWrapper.unwrap(
-      await this.createService.createCaseByApplication(body),
-    )
-
-    await this.createCaseHistory(id)
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async postCaseCorrection(
-    caseId: string,
-    body: AddCaseAdvertCorrection,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['advertId'],
-    })
-
-    if (!caseLookup) {
-      return ResultWrapper.err({
-        code: 404,
-        message: 'Case not found',
-      })
-    }
-
-    const { advertId } = caseLookup
-
-    if (!advertId) {
-      return ResultWrapper.err({
-        code: 409,
-        message: 'Advert id not found, case not published.',
-      })
-    }
-
-    try {
-      await this.advertCorrectionModel.create<AdvertCorrectionModel>(
-        {
-          ...body,
-          advertId: advertId,
-        },
-        { transaction: transaction },
-      )
-
-      return ResultWrapper.ok()
-    } catch (error) {
-      return ResultWrapper.err({
-        code: 400,
-        message: 'Failed to create correction',
-      })
-    }
-  }
-
   @LogAndHandle()
   @Transactional()
   async rejectCase(caseId: string): Promise<ResultWrapper> {
@@ -917,20 +707,6 @@ export class CaseService implements ICaseService {
     })
   }
 
-  @LogAndHandle()
-  @Transactional()
-  async getNextCasePublicationNumber(
-    departmentId: string,
-  ): Promise<ResultWrapper<GetNextPublicationNumberResponse>> {
-    const publicationNumber = (
-      await this.utilityService.getNextPublicationNumber(departmentId)
-    ).unwrap()
-
-    return ResultWrapper.ok({
-      publicationNumber,
-    })
-  }
-
   private async processCaseToPublish(
     ids: string[],
     transaction?: Transaction,
@@ -981,15 +757,6 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     return Promise.resolve(ResultWrapper.ok({ url: signedUrl }))
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async getCasePaymentStatus(
-    params: GetPaymentQuery,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<GetPaymentResponse>> {
-    return await this.priceService.getExternalPaymentStatus(params)
   }
 
   @LogAndHandle()
