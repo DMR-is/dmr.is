@@ -4286,6 +4286,12 @@
           },
           "documentHtml": { "type": "string" },
           "documentPdfUrl": { "type": "string" },
+          "isLegacy": { "type": "boolean" },
+          "legacyDate": {
+            "type": "string",
+            "nullable": true,
+            "example": "2024-01-01T09:00:00Z"
+          },
           "createdDate": {
             "type": "string",
             "nullable": false,

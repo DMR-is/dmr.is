@@ -38,6 +38,20 @@ export class AdvertCorrection {
   readonly documentPdfUrl?: string
 
   @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  readonly isLegacy?: boolean | null
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    example: '2024-01-01T09:00:00Z',
+  })
+  legacyDate!: string | null
+
+  @ApiProperty({
     required: true,
     nullable: false,
     type: String,
