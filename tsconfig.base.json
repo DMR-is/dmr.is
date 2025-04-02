@@ -39,6 +39,9 @@
       "@dmr.is/official-journal/modules/advert": [
         "libs/official-journal/modules/advert/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/advert-correction": [
+        "libs/official-journal/modules/advert-correction/advert-correction/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/advert-type": [
         "libs/official-journal/modules/advert-type/src/index.ts"
       ],
