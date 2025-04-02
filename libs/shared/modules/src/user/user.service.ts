@@ -238,6 +238,7 @@ export class UserService implements IUserService {
         lastName: body.lastName,
         displayName: body.displayName,
         email: body.email,
+        roleId: body.roleId,
       },
       { transaction },
     )
