@@ -1,1 +1,3 @@
-export * from './lib/official-journal-modules-advert-correction-advert-correction'
+export { IAdvertCorrectionService } from './lib/advert-correction.service.interface'
+export { AdvertCorrectionService } from './lib/advert-correction.service'
+export { AdvertCorrectionModule } from './lib/advert-correction.module'

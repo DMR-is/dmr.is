@@ -23,7 +23,6 @@ import {
   GetCasesWithStatusCount,
 } from './dto/case-with-counter.dto'
 import { CreateCaseDto, CreateCaseResponseDto } from './dto/create-case.dto'
-import { CreateCaseChannelBody } from './dto/create-case-channel-body.dto'
 import { GetCaseResponse } from './dto/get-case-response.dto'
 import { GetCasesQuery } from './dto/get-cases-query.dto'
 import { GetCasesReponse } from './dto/get-cases-response.dto'
@@ -85,13 +84,6 @@ export interface ICaseService {
     params?: GetCasesWithStatusCountQuery,
   ): Promise<ResultWrapper<GetCasesWithStatusCount>>
   getCaseTags(): Promise<ResultWrapper<GetTagsResponse>>
-
-  createCaseChannel(
-    caseId: string,
-    body: CreateCaseChannelBody,
-  ): Promise<ResultWrapper>
-
-  deleteCaseChannel(caseId: string, channelId: string): Promise<ResultWrapper>
 
   updateCase(
     body: UpdateCaseBody,
