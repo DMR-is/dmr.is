@@ -1,3 +1,4 @@
+import { Response } from 'express'
 import {
   DEFAULT_CASE_SORT_BY,
   DEFAULT_CASE_SORT_DIRECTION,
@@ -26,7 +27,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Param, Query, Res } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
@@ -173,13 +174,33 @@ export class JournalController {
   @Get('/rss/:id')
   @ApiOperation({ operationId: 'getRssFeed' })
   @ApiResponse({ status: 200, type: 'application/rss+xml' })
-  async getRssFeed(@Param('id') id: string) {
+  async getRssFeed(@Param() param?: { id: string }) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdverts({
-        department: id?.toLowerCase(),
+        department: param?.id.toLowerCase(),
         pageSize: 100,
       }),
     )
-    return AdvertsToRss(adverts.adverts, id?.toLowerCase())
+    return AdvertsToRss(adverts.adverts, param?.id?.toLowerCase())
+  }
+
+  @Get('/pdf/:id')
+  @ApiOperation({ operationId: 'getPDFFromAdvert' })
+  @ApiResponse({ status: 301, type: 'application/pdf' })
+  @ApiResponse({ status: 404, type: 'application/json' })
+  @ApiResponse({ status: 500, type: 'application/json' })
+  async getPDFFromAdvert(@Param('id') id: string, @Res() res: Response) {
+    if (!id) {
+      throw new Error('Missing id')
+    }
+    const adverts = ResultWrapper.unwrap(
+      await this.journalService.getAdvert(id.toLowerCase()),
+    )
+    const url = adverts.advert.document.pdfUrl
+    if (!url) {
+      return res.status(404)
+    }
+    //redirect to the pdf url
+    return res.redirect(301, url)
   }
 }
