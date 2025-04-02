@@ -173,35 +173,13 @@ export class JournalController {
   @Get('/rss/:id')
   @ApiOperation({ operationId: 'getRssFeed' })
   @ApiResponse({ status: 200, type: 'application/rss+xml' })
-  async getRssFeed(@Param() param?: { id: string }) {
+  async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdverts({
-        department: param?.id.toLowerCase(),
+        department: id?.toLowerCase(),
         pageSize: 100,
       }),
     )
-    return AdvertsToRss(adverts.adverts, param?.id?.toLowerCase())
-  }
-
-  @Get('/pdf/:id')
-  @ApiOperation({ operationId: 'getPDFFromAdvert' })
-  @ApiResponse({ status: 301, type: 'application/pdf' })
-  @ApiResponse({ status: 404, type: 'application/json' })
-  @ApiResponse({ status: 500, type: 'application/json' })
-  async getPDFFromAdvert(@Param() param?: { id: string }) {
-    if (!param?.id) {
-      throw new Error('Missing id')
-    }
-    const adverts = ResultWrapper.unwrap(
-      await this.journalService.getAdvert(param?.id.toLowerCase()),
-    )
-    const url = adverts.advert.document.pdfUrl
-    //redirect to the pdf url
-    return {
-      statusCode: 301,
-      headers: {
-        Location: url,
-      },
-    }
+    return AdvertsToRss(adverts.adverts, id?.toLowerCase())
   }
 }
