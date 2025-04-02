@@ -205,11 +205,6 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
-  createCaseHistory(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
-
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
 
   getCasePaymentStatus(

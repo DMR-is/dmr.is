@@ -54,6 +54,9 @@
       "@dmr.is/official-journal/modules/case": [
         "libs/official-journal/modules/case/src/index.ts"
       ],
+      "@dmr.is/official-journal/modules/case-history": [
+        "libs/official-journal/modules/case-history/src/index.ts"
+      ],
       "@dmr.is/official-journal/modules/category": [
         "libs/official-journal/modules/category/src/index.ts"
       ],
