@@ -5108,6 +5108,7 @@
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "email": { "type": "string" },
+          "roleId": { "type": "string" },
           "involvedParties": { "type": "array", "items": { "type": "string" } },
           "displayName": { "type": "string" }
         }
