@@ -18,6 +18,7 @@ import {
   InvolvedParty,
   Type,
 } from '../types'
+import { parseIcelandicDate } from './parser'
 import { slugit } from './slug'
 
 export function fixDeps(deps: Array<DbDepartment>): Promise<Array<Department>> {
@@ -181,10 +182,16 @@ export async function fixCorrections(corrections: Array<DbCorrections>) {
     const date = doc.querySelector('CorrectionDate')?.textContent
     const text = doc.querySelector('CorrectionText')?.textContent
     const documentId = doc.querySelector('CorrectionDocumentId')?.textContent
-
+    let parsedDate
+    if (date) {
+      if (date === 'test') {
+        return null
+      }
+      parsedDate = parseIcelandicDate(date.trim())
+    }
     fixed.push({
       id: item.id,
-      date: date ? new Date(date) : null,
+      date: parsedDate,
       text: text,
       documentId,
     })

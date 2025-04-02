@@ -322,10 +322,8 @@ export async function getAdvertDocumentsCorrections(
       if (!documentFromDB.recordset[0]) {
         correctionsWithDocumentUrl.push(item)
       } else {
-        const url = await savePDF(documentFromDB.recordset[0])
-        if (url) {
-          item.documentUrl = url
-        }
+        const cdnUrl = process.env.ADVERTS_CDN_URL
+        item.documentUrl = `${cdnUrl}/${documentFromDB.recordset[0].FileName}`
         correctionsWithDocumentUrl.push(item)
       }
     }

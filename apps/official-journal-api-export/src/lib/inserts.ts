@@ -1,4 +1,6 @@
 
+
+
 import {
   Advert,
   AdvertCategory,
@@ -12,11 +14,9 @@ import {
   Type,
 } from '../types'
 
-
 export function generateCorrectionsInserts(corrections?:Array<Correction>){
   const inserts = corrections?.map((correction) => {
-    const date = correction.date ? !isNaN(correction.date.getTime()) ? correction.date.toISOString() : null : null
-    return `INSERT INTO ADVERT_CORRECTION (LEGACY_ID, DESCRIPTION,DOCUMENT_PDF_URL,CREATED,UPDATED) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl ? `'${correction.documentUrl}'`: null},${date ? `'${date}'` : null },${date ? `'${date}'` : null });`
+    return `INSERT INTO ADVERT_CORRECTION (ADVERT_ID, DESCRIPTION,DOCUMENT_PDF_URL,IS_LEGACY,LEGACY_DATE) VALUES ('${correction.id}', '${correction.text}',${correction.documentUrl !== null && correction.documentUrl !== undefined ? `'${correction.documentUrl}'`: null},true,${correction.date ? `'${correction.date.toISOString()}'` :null });`
   })
   return inserts ?? ['']
 }
