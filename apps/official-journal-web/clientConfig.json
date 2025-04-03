@@ -3099,6 +3099,7 @@
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
           "email": { "type": "string" },
+          "roleId": { "type": "string" },
           "involvedParties": { "type": "array", "items": { "type": "string" } },
           "displayName": { "type": "string" }
         }
@@ -3675,6 +3676,10 @@
           },
           "imageTier": { "type": "string", "description": "Image tier code" },
           "price": { "type": "number", "description": "Advert price" },
+          "subject": {
+            "type": "string",
+            "description": "Advert subject (Viðfang)."
+          },
           "feeCodes": {
             "description": "Fee codes to get the price for",
             "type": "array",
@@ -3687,6 +3692,10 @@
           "customAdditionalDocCount": {
             "type": "number",
             "description": "How many additional documents are there"
+          },
+          "extraWorkCount": {
+            "type": "number",
+            "description": "How much extra work is there, in percentage"
           },
           "customAdditionalCharacterCount": {
             "type": "number",
@@ -4619,62 +4628,10 @@
             "description": "List of advert types",
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertType" }
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["institutions", "paging"]
-      },
-      "CreateInstitution": {
-        "type": "object",
-        "properties": {
-          "title": { "type": "string", "description": "Title of the entity" },
-          "nationalId": { "type": "string" }
-        },
-        "required": ["title", "nationalId"]
-      },
-      "UpdateInstitution": {
-        "type": "object",
-        "properties": {
-          "title": { "type": "string", "description": "Title of the entity" },
-          "nationalId": { "type": "string" }
-        }
-      },
-      "GetUsersResponse": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/UserDto" }
           },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["users", "paging"]
-      },
-      "UnauthorizedException": { "type": "object", "properties": {} },
-      "ForbiddenException": { "type": "object", "properties": {} },
-      "InternalServerErrorException": { "type": "object", "properties": {} },
-      "UpdateUserDto": {
-        "type": "object",
-        "properties": {
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string" },
-          "roleId": { "type": "string" },
-          "involvedParties": { "type": "array", "items": { "type": "string" } },
-          "displayName": { "type": "string" }
-        }
-      },
-      "GetUserResponse": {
-        "type": "object",
-        "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
-        "required": ["user"]
-      },
-      "GetRolesByUserResponse": {
-        "type": "object",
-        "properties": {
-          "roles": {
-            "description": "Available roles for the current user to fetch",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/UserRoleDto" }
+          "paging": {
+            "description": "Paging information",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
           }
         },
         "required": ["types", "paging"]

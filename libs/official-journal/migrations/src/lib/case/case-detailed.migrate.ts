@@ -14,6 +14,7 @@ import { signatureMigrate } from '../signature/signature.migrate'
 import { commentMigrate } from '../comment/comment.migrate'
 import { attachmentMigrate } from '../attachment/attachment.migrate'
 import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
+import { advertCorrectionMigrate } from '../advert-correction/advert-correction.migrate'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
@@ -64,17 +65,8 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
       ? model.additions.map((add) => caseAdditionMigrate(add))
       : [],
     advertCorrections: model.advert?.corrections
-      ? model.advert.corrections.map((item) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          documentHtml: item.documentHtml ?? null,
-          documentPdfUrl: item.documentPdfUrl ?? null,
-          createdDate: item.created.toISOString(),
-          updatedDate: item.updated.toISOString(),
-          advertId: item.advertId,
-        }))
-      : undefined,
+      ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
+      : [],
     history: model.history.map((h) => caseHistoryMigrate(h)),
   }
 }
