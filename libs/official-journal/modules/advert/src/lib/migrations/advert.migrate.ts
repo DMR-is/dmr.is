@@ -1,6 +1,7 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
+import { advertCorrectionMigrate } from '@dmr.is/official-journal/migrations/advert-correction/advert-correction.migrate'
 import { Advert } from '../dto/advert.dto'
 import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
 
@@ -41,18 +42,8 @@ export function advertMigrate(model: AdvertModel): Advert {
       name: item.name,
       url: item.url,
     })),
-    corrections: model.corrections
-      ? model.corrections.map((item) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          documentHtml: item.documentHtml ?? null,
-          documentPdfUrl: item.documentPdfUrl ?? null,
-          createdDate: item.created.toISOString(),
-          updatedDate: item.updated.toISOString(),
-          advertId: item.advertId,
-        }))
-      : undefined,
+    corrections:
+      model.corrections?.map((item) => advertCorrectionMigrate(item)) ?? [],
   }
   return advert
 }

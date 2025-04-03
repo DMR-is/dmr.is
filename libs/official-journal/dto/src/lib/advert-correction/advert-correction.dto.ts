@@ -11,7 +11,7 @@ export class AdvertCorrection {
     type: String,
     description: 'Title of the correction',
   })
-  readonly title?: string
+  readonly title!: string
 
   @ApiProperty({
     type: String,

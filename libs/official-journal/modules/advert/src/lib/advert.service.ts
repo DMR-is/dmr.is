@@ -22,12 +22,14 @@ import {
   AdvertAttachmentsModel,
   AdvertCategoriesModel,
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusEnum,
   AdvertStatusModel,
   AdvertTypeModel,
+  CaseModel,
 } from '@dmr.is/official-journal/models'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
@@ -53,6 +55,8 @@ export class AdvertService implements IAdvertService {
     private readonly advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertStatusModel)
     private readonly advertStatusModel: typeof AdvertStatusModel,
+    @InjectModel(CaseModel)
+    private readonly caseModel: typeof CaseModel,
   ) {}
 
   @LogAndHandle()
@@ -68,6 +72,7 @@ export class AdvertService implements IAdvertService {
         AdvertInvolvedPartyModel,
         AdvertAttachmentsModel,
         AdvertCategoryModel,
+        AdvertCorrectionModel,
       ],
     })
 
@@ -192,6 +197,57 @@ export class AdvertService implements IAdvertService {
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
 
+    try {
+      // Check if the search is for an internal case number
+      const isearchingForInternalCaseNumber = /^\d{11}$/.test(
+        params?.search ?? '',
+      )
+      if (isearchingForInternalCaseNumber) {
+        const found = await this.caseModel.findOne({
+          include: [
+            {
+              model: AdvertModel,
+              include: [
+                {
+                  model: AdvertTypeModel,
+                  as: 'type',
+                  include: [
+                    {
+                      model: AdvertDepartmentModel,
+                    },
+                  ],
+                },
+                AdvertDepartmentModel,
+                AdvertStatusModel,
+                AdvertInvolvedPartyModel,
+                AdvertAttachmentsModel,
+                AdvertCategoryModel,
+              ],
+            },
+          ],
+          where: {
+            caseNumber: params?.search,
+          },
+        })
+
+        if (!found?.advert) {
+          return ResultWrapper.ok({
+            adverts: [],
+            paging: generatePaging([], 1, pageSize, 1),
+          })
+        }
+
+        const migrated = advertMigrate(found.advert)
+        const paging = generatePaging([migrated], 1, pageSize, 1)
+
+        return ResultWrapper.ok({
+          adverts: [migrated],
+          paging,
+        })
+      }
+    } catch (error) {
+      // do nothing, just continue.
+    }
     const whereParams = {}
     if (params?.dateFrom) {
       Object.assign(whereParams, {

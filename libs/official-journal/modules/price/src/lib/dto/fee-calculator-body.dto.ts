@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
-import { IsString, IsOptional } from 'class-validator'
+import { IsString, IsOptional, IsNumber } from 'class-validator'
 
 export class CaseFeeCalculationBody {
   @ApiProperty({
@@ -52,4 +52,19 @@ export class CaseFeeCalculationBody {
   })
   @IsOptional()
   bodyLengthCount?: number
+
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  customBodyLengthCount?: number
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    description: 'How much extra work is there, in percentage',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => Number.parseInt(value, 10))
+  extraWorkCount?: number
 }

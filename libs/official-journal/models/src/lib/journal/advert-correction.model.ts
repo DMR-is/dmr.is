@@ -22,8 +22,8 @@ export class AdvertCorrectionModel extends Model {
   })
   override id!: string
 
-  @Column({ allowNull: true })
-  title?: string
+  @Column({ allowNull: false })
+  title!: string
 
   @Column({ allowNull: false })
   description!: string
