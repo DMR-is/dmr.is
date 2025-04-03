@@ -1,5 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import {
+  DMRSequelizeConfigModule,
+  DMRSequelizeConfigService,
+} from '@dmr.is/shared/modules/sequelize'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -10,7 +13,7 @@ import {
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
-import { HealthModule } from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/shared/modules/health'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'

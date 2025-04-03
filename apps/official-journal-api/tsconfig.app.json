@@ -8,5 +8,5 @@
     "target": "es2021"
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-  "include": ["src/**/*.ts", "../official-journal-admin-api/src/filters.ts"]
+  "include": ["src/**/*.ts", "../../libs/official-journal/modules/advert/src/lib/migrations/advert-similar.migrate.ts", "../../libs/official-journal/modules/advert/src/lib/migrations/advert.migrate.ts"]
 }

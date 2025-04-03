@@ -12,6 +12,11 @@
     "yarn.lock": true,
     "eslint-local-rules.js": true
   },
-  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "postman.settings.dotenv-detection-notification-visibility": false,
 
 }

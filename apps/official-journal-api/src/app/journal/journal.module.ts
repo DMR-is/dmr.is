@@ -1,15 +1,21 @@
-import {
-  AdvertTypeController,
-  AdvertTypeModule,
-  SharedCaseModule,
-  SharedJournalModule,
-} from '@dmr.is/modules'
+import { CaseModel } from '@dmr.is/official-journal/models'
 
 import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
 
 import { JournalController } from './journal.controller'
+import { JournalService } from './journal.service'
+import { IJournalService } from './journal.service.interface'
+
 @Module({
-  imports: [SharedJournalModule, SharedCaseModule, AdvertTypeModule],
-  controllers: [JournalController, AdvertTypeController],
+  imports: [SequelizeModule.forFeature([CaseModel])],
+  controllers: [JournalController],
+  providers: [
+    {
+      provide: IJournalService,
+      useClass: JournalService,
+    },
+  ],
+  exports: [IJournalService],
 })
 export class JournalModule {}

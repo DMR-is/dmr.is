@@ -1,4 +1,3 @@
-
 export const DEFAULT_PAGE_SIZE = 10
 
 export const DEFAULT_PAGE_NUMBER = 1
@@ -65,6 +64,12 @@ export enum AttachmentTypeParam {
 export enum AttachmentTypeEnum {
   OriginalDocument = 'Frumrit',
   AdditonalDocument = 'Fylgiskjöl',
+}
+
+export enum AdvertTemplateTypeEnums {
+  AUGLYSING = 'auglysing',
+  REGLUGERD = 'reglugerd',
+  GJALDSKRA = 'gjaldskra',
 }
 
 export const DEFAULT_PRICE = 17000

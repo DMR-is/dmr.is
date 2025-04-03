@@ -1,0 +1,19 @@
+{
+  "name": "official-journal-modules-institution",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/official-journal/modules/institution/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/official-journal/modules/institution/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

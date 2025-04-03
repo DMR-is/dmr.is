@@ -10,7 +10,7 @@ import {
 import { logger } from '@dmr.is/logging'
 import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
 
-export const LOGGING_CONTEXT = 'SequelizeExceptionFilter'
+const LOGGING_CONTEXT = 'SequelizeExceptionFilter'
 
 @Catch(BaseError)
 export class SequelizeExceptionFilter implements ExceptionFilter {
