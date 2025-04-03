@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
@@ -22,7 +21,7 @@ class MainCategoriesHandler extends RouteHandler {
           return void res.status(405).json(OJOIWebException.methodNotAllowed())
       }
     } catch (error) {
-      logger.error(`Error in MainCategoriesHandler`, {
+      this.logger.error(`Error in MainCategoriesHandler`, {
         error,
         category: LOG_CATEGORY,
       })

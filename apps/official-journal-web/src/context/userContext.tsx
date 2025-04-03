@@ -7,7 +7,7 @@ import {
   CreateUserRequest,
   DeleteUserRequest,
   GetUserResponse,
-  Institution,
+  InstitutionDto as Institution,
   Paging,
   UpdateUserRequest,
   UserDto,

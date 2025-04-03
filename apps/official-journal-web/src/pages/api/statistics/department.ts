@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { LogMethod } from '@dmr.is/decorators'
 import { isResponse } from '@dmr.is/utils/client'
 
-import { DepartmentSlugEnum } from '../../../gen/fetch'
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
 
@@ -28,7 +27,7 @@ class GetStatisticsForDepartmentHandler extends RouteHandler {
 
   @LogMethod(false)
   private async get(req: NextApiRequest, res: NextApiResponse) {
-    const slug = req.query?.slug as DepartmentSlugEnum
+    const slug = req.query?.slug as string
 
     const statistics = await this.client.getStatisticsForDepartment({
       slug: slug,

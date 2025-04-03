@@ -4,7 +4,7 @@ import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
-import { logger } from '@dmr.is/logging'
+import { getLogger } from '@dmr.is/logging'
 
 import { UserDto, UserRoleDto } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
@@ -48,10 +48,9 @@ async function authorize(nationalId?: string, idToken?: string) {
     if (error.response) {
       delete error.response
     }
-
+    const logger = getLogger(LOGGING_CATEGORY)
     logger.error('Failure authenticating', {
       error: error as Error,
-      category: LOGGING_CATEGORY,
     })
 
     return null

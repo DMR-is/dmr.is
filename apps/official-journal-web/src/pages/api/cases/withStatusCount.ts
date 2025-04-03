@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
@@ -17,7 +16,7 @@ class GetCasesWithStatusCountHandler extends RouteHandler {
 
       return void res.status(200).json(cases)
     } catch (error) {
-      logger.error(`Exception occured in GetCasesWithStatusCountHandler`, {
+      this.logger.error(`Exception occured in GetCasesWithStatusCountHandler`, {
         context: 'GetCasesWithStatusCountHandler',
         category: 'api-route',
         error: error,
