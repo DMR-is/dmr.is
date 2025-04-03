@@ -116,6 +116,9 @@ export class MockJournalService implements IJournalService {
   ): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
+  mergeCategories(from: string, to: string): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
   getInstitution(id: string): Promise<ResultWrapper<GetInstitutionResponse>> {
     throw new Error('Method not implemented.')
   }

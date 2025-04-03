@@ -4,10 +4,17 @@ import { Box, Button, Icon } from '@island.is/island-ui/core'
 
 type Props = {
   onDelete: () => void
-  title: string
+  confirmButton: string
+  confirmText: string
+  icon: React.ComponentProps<typeof Icon>['icon']
 }
 
-export const DeleteCorrections = ({ onDelete, title }: Props) => {
+export const DeleteCorrections = ({
+  onDelete,
+  confirmButton,
+  confirmText,
+  icon,
+}: Props) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const buttonRef = useRef<HTMLButtonElement | null>(null)
@@ -52,8 +59,8 @@ export const DeleteCorrections = ({ onDelete, title }: Props) => {
         }
       >
         <Box display="flex" alignItems="center" columnGap="smallGutter">
-          {confirmDelete ? `Staðfesting: '${title}' verður eytt út.` : 'Eyða'}
-          <Icon icon="trash" type="outline" size="small" />
+          {confirmDelete ? confirmText : confirmButton}
+          <Icon icon={icon} type="outline" size="small" />
         </Box>
       </Button>
     </Box>

@@ -35,12 +35,7 @@ export const ControlPanel = () => {
           href: path.pathname,
         }
       })
-    : [
-        {
-          title: 'Notendur',
-          href: '/notendur',
-        },
-      ]
+    : []
 
   return (
     <>
@@ -57,25 +52,27 @@ export const ControlPanel = () => {
                 Stjórnborð
               </Text>
             </Stack>
-            <Box
-              height="full"
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-            >
+            {isAdmin && (
               <Box
-                className={styles.controlPanelChevron({
-                  color: 'white',
-                })}
+                height="full"
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
               >
-                <Icon
-                  size="small"
-                  color="blue400"
-                  type="outline"
-                  icon={toggle ? 'chevronUp' : 'chevronDown'}
-                />
+                <Box
+                  className={styles.controlPanelChevron({
+                    color: 'white',
+                  })}
+                >
+                  <Icon
+                    size="small"
+                    color="blue400"
+                    type="outline"
+                    icon={toggle ? 'chevronUp' : 'chevronDown'}
+                  />
+                </Box>
               </Box>
-            </Box>
+            )}
           </Inline>
         </Box>
       </PopoverDisclosure>

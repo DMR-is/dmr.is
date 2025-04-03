@@ -13,6 +13,7 @@ import { Categories } from '../../components/categories/Categories'
 import { CreateCategory } from '../../components/categories/CreateCategory'
 import { CreateMainCategory } from '../../components/categories/CreateMainCategory'
 import { MainCategories } from '../../components/categories/MainCategories'
+import { MergeCategories } from '../../components/categories/MergeCategories'
 import { UpdateCategory } from '../../components/categories/UpdateCategory'
 import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
 import { Section } from '../../components/section/Section'
@@ -73,7 +74,10 @@ export default function CasePublishingOverview({
                 </Stack>
               </GridColumn>
               <GridColumn span={['12/12', '6/12']}>
-                <UpdateCategory />
+                <Stack space={4}>
+                  <UpdateCategory />
+                  <MergeCategories />
+                </Stack>
               </GridColumn>
             </GridRow>
           </Stack>

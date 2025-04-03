@@ -480,6 +480,23 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/categories/merge": {
+      "post": {
+        "operationId": "mergeCategories",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MergeCategoriesBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/categories/{id}": {
       "put": {
         "operationId": "updateCategory",
@@ -3545,6 +3562,14 @@
           }
         },
         "required": ["title"]
+      },
+      "MergeCategoriesBody": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        },
+        "required": ["from", "to"]
       },
       "UpdateCategory": {
         "type": "object",
