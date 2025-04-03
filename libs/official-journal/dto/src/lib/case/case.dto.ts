@@ -487,9 +487,9 @@ export class GetCasesReponse {
 
 export class GetCaseResponse {
   @ApiProperty({
-    type: Case,
+    type: CaseDetailed,
   })
-  case!: Case
+  case!: CaseDetailed
 }
 
 export class CreateCaseDto {

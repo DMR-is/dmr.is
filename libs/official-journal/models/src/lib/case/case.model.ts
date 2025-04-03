@@ -41,9 +41,6 @@ import { ApplicationAttachmentTypeModel } from '../attachment/application-attach
 import { SignatureRecordModel } from '../signature/signature-record.model'
 import { SignatureMemberModel } from '../signature/signature-member.model'
 import { Op } from 'sequelize'
-import { logger } from '@dmr.is/logging'
-
-const LOGGING_CONTEXT = 'CaseModel'
 
 type CaseCreateAttributes = {
   applicationId?: string

@@ -1804,6 +1804,192 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases": {
+      "post": {
+        "operationId": "createCase",
+        "summary": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCaseDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCaseResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      },
+      "get": {
+        "operationId": "getCases",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "applicationId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Id, title or slug of the statuses",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "department",
+            "required": false,
+            "in": "query",
+            "description": "Id, title or slug of the departments",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Id, title or slug of the types",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Id, title or slug of the categories",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "employeeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "fastTrack",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "institution",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fromDate",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "toDate",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "example": 1,
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "example": 10,
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "example": "sortBy",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "example": "ASC",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/api/v1/cases/{id}": {
+      "get": {
+        "operationId": "getCase",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetCaseResponse" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/advert-correction/case/{caseId}/correction": {
       "post": {
         "operationId": "postCorrection",
@@ -2551,192 +2737,6 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/cases/{id}": {
-      "get": {
-        "operationId": "getCase",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCaseResponse" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      }
-    },
-    "/api/v1/cases": {
-      "get": {
-        "operationId": "getCases",
-        "summary": "",
-        "parameters": [
-          {
-            "name": "id",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "applicationId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "year",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the statuses",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "department",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the departments",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the types",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "category",
-            "required": false,
-            "in": "query",
-            "description": "Id, title or slug of the categories",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "employeeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "published",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "fastTrack",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "boolean" }
-          },
-          {
-            "name": "institution",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fromDate",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "toDate",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "example": "sortBy",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "direction",
-            "required": false,
-            "in": "query",
-            "example": "ASC",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesReponse" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
-      },
-      "post": {
-        "operationId": "createCase",
-        "summary": "",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateCaseDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateCaseResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }]
       }
     }
   },
@@ -3640,6 +3640,645 @@
         "properties": { "key": { "type": "string" } },
         "required": ["key"]
       },
+      "CreateCaseDto": {
+        "type": "object",
+        "properties": {
+          "involvedPartyId": { "type": "string" },
+          "applicationId": { "type": "string" },
+          "departmentId": { "type": "string" },
+          "typeId": { "type": "string" },
+          "subject": { "type": "string" },
+          "categoryIds": { "type": "array", "items": { "type": "string" } },
+          "requestedPublicationDate": { "type": "string" },
+          "caseStatusId": { "type": "string" },
+          "communicationStatusId": { "type": "string" },
+          "html": { "type": "string" },
+          "message": { "type": "string" }
+        },
+        "required": ["involvedPartyId", "departmentId", "typeId", "subject"]
+      },
+      "CreateCaseResponseDto": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
+      },
+      "TBRTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "Reference to external source"
+          },
+          "imageTier": { "type": "string", "description": "Image tier code" },
+          "price": { "type": "number", "description": "Advert price" },
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "customBaseCount": {
+            "type": "number",
+            "description": "How many base units are there"
+          },
+          "customAdditionalDocCount": {
+            "type": "number",
+            "description": "How many additional documents are there"
+          },
+          "customAdditionalCharacterCount": {
+            "type": "number",
+            "description": "Custom additional character count"
+          }
+        },
+        "required": ["id", "externalReference", "imageTier"]
+      },
+      "CaseChannel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the case channel."
+          },
+          "name": {
+            "type": "string",
+            "example": "Case channel name",
+            "description": "Name of the case channel."
+          },
+          "email": {
+            "type": "string",
+            "example": "hjalp@dmr.is",
+            "description": "Email of the case channel."
+          },
+          "phone": {
+            "type": "string",
+            "example": "+354 123 4567",
+            "description": "Phone of the case channel."
+          }
+        },
+        "required": ["id", "name", "email"]
+      },
+      "SignatureMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the signature member"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name/title/w.e. of the signature member"
+          },
+          "textAbove": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text comes above the signature name"
+          },
+          "textBefore": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes before the signature name"
+          },
+          "textBelow": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes below the signature name"
+          },
+          "textAfter": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text that comes after the signature name"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "textAbove",
+          "textBefore",
+          "textBelow",
+          "textAfter"
+        ]
+      },
+      "SignatureRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "institution": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "additional": { "type": "string", "nullable": true },
+          "chairman": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/SignatureMember" }]
+          },
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SignatureMember" }
+          }
+        },
+        "required": [
+          "id",
+          "institution",
+          "signatureDate",
+          "additional",
+          "chairman",
+          "members"
+        ]
+      },
+      "Signature": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "The id of the signature" },
+          "signatureDate": {
+            "type": "string",
+            "description": "ISO datestring of the signature"
+          },
+          "involvedParty": {
+            "description": "The involved party of the signature",
+            "allOf": [{ "$ref": "#/components/schemas/InstitutionDto" }]
+          },
+          "html": { "type": "string", "description": "HTML of the signature" },
+          "created": {
+            "type": "string",
+            "description": "ISO datestring of the creation date"
+          },
+          "records": {
+            "description": "The signature record",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SignatureRecord" }
+          }
+        },
+        "required": [
+          "id",
+          "signatureDate",
+          "involvedParty",
+          "html",
+          "created",
+          "records"
+        ]
+      },
+      "ApplicationAttachmentType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id of the attachment type"
+          },
+          "title": {
+            "type": "string",
+            "enum": ["Frumrit", "Fylgiskjöl"],
+            "description": "Title of the attachment type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the attachment type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "ApplicationAttachment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Id of the attachment" },
+          "applicationId": {
+            "type": "string",
+            "description": "Id of the application"
+          },
+          "originalFileName": {
+            "type": "string",
+            "description": "Original file name"
+          },
+          "fileName": { "type": "string", "description": "File name" },
+          "fileFormat": { "type": "string", "description": "File format" },
+          "fileExtension": {
+            "type": "string",
+            "description": "File extension"
+          },
+          "fileSize": { "type": "number", "description": "File size" },
+          "fileLocation": { "type": "string", "description": "File location" },
+          "type": {
+            "description": "Attachment type",
+            "allOf": [
+              { "$ref": "#/components/schemas/ApplicationAttachmentType" }
+            ]
+          },
+          "deleted": { "type": "boolean", "description": "Deleted" }
+        },
+        "required": [
+          "id",
+          "applicationId",
+          "originalFileName",
+          "fileName",
+          "fileFormat",
+          "fileExtension",
+          "fileSize",
+          "fileLocation",
+          "type",
+          "deleted"
+        ]
+      },
+      "CaseAddition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": { "type": "string", "description": "Title of the addition" },
+          "html": { "type": "string", "description": "HTML of the addition" }
+        },
+        "required": ["id", "title", "html"]
+      },
+      "AdvertCorrection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the correction"
+          },
+          "description": {
+            "type": "string",
+            "description": "The correction description"
+          },
+          "advertId": {
+            "type": "string",
+            "description": "Id of the advert being corrected"
+          },
+          "documentHtml": { "type": "string" },
+          "documentPdfUrl": { "type": "string" },
+          "createdDate": {
+            "type": "string",
+            "nullable": false,
+            "example": "2024-01-01T09:00:00Z"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": false,
+            "example": "2024-01-20T09:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "advertId",
+          "createdDate",
+          "updatedDate"
+        ]
+      },
+      "HistoryDepartment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID for the advert department, GUID format.",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": false
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the advert department.",
+            "example": "A deild"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the advert department, used in URLs and API requests.",
+            "example": "a-deild"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": {
+            "example": "Innsent",
+            "$ref": "#/components/schemas/CaseStatusEnum"
+          },
+          "slug": {
+            "type": "string",
+            "example": "innsent",
+            "description": "Slug of the case staus"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryInstition": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Id of the entity" },
+          "title": { "type": "string", "description": "Title of the entity" },
+          "slug": { "type": "string", "description": "Slug of the entity" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "HistoryEmployee": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "displayName": { "type": "string" }
+        },
+        "required": ["id", "displayName"]
+      },
+      "CaseHistory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id of the history record."
+          },
+          "caseId": {
+            "type": "string",
+            "description": "Id of the case the history record is related to."
+          },
+          "department": {
+            "description": "Department the case was submitted to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryDepartment" }]
+          },
+          "type": {
+            "description": "Type of the advert the case is related to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryType" }]
+          },
+          "status": {
+            "description": "Status of the case.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryStatus" }]
+          },
+          "institution": {
+            "description": "Institution the case was submitted to.",
+            "allOf": [{ "$ref": "#/components/schemas/HistoryInstition" }]
+          },
+          "assignedTo": {
+            "description": "Employee the case was assigned to.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/HistoryEmployee" }]
+          },
+          "title": { "type": "string", "description": "Title of the advert" },
+          "html": { "type": "string", "description": "HTML of the advert" },
+          "requestedPublicationDate": {
+            "type": "string",
+            "description": "Requested publication date of the advert",
+            "nullable": true
+          },
+          "created": {
+            "type": "string",
+            "description": "ISO representation of the date the case was created."
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "department",
+          "type",
+          "status",
+          "institution",
+          "assignedTo",
+          "title",
+          "html",
+          "requestedPublicationDate",
+          "created"
+        ]
+      },
+      "CaseDetailed": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "advertId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the advert the case is related to.",
+            "nullable": true
+          },
+          "applicationId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Id of the submitted application, default to null on older cases."
+          },
+          "year": {
+            "type": "number",
+            "example": 2024,
+            "description": "Year the case was created."
+          },
+          "caseNumber": {
+            "type": "string",
+            "example": 190,
+            "description": "Case number (numeric string) gets generated automatically when a case is created."
+          },
+          "status": {
+            "description": "Status of the case, default to \"Innsent\"",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
+          },
+          "tag": {
+            "description": "Internal tag for the case, default to null",
+            "allOf": [{ "$ref": "#/components/schemas/CaseTag" }]
+          },
+          "involvedParty": {
+            "description": "Involved party of the case.",
+            "allOf": [{ "$ref": "#/components/schemas/InstitutionDto" }]
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Date the case was created. ISO 8601 date and time format in UTC."
+          },
+          "modifiedAt": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Date when the case was last updated. ISO 8601 date and time format in UTC."
+          },
+          "isLegacy": {
+            "type": "boolean",
+            "example": false,
+            "description": "Is legacy case."
+          },
+          "assignedTo": {
+            "description": "User the case is assigned to.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "communicationStatus": {
+            "description": "Status of communication with the applicant, default to `CaseCommunicationStatus.NotStarted`",
+            "allOf": [{ "$ref": "#/components/schemas/CommunicationStatus" }]
+          },
+          "fastTrack": {
+            "type": "boolean",
+            "example": false,
+            "description": "Requested fast track"
+          },
+          "publishedAt": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Date the case was published. ISO 8601 date and time format in UTC."
+          },
+          "requestedPublicationDate": {
+            "type": "string",
+            "example": "2024-01-01T09:00:00Z",
+            "description": "Requested advert publication date. ISO 8601 date and time format in UTC."
+          },
+          "advertTitle": {
+            "type": "string",
+            "example": "Titill á máli",
+            "description": "Advert title on case"
+          },
+          "advertDepartment": {
+            "example": "B-Deild",
+            "description": "Advert department",
+            "allOf": [{ "$ref": "#/components/schemas/Department" }]
+          },
+          "advertType": {
+            "description": "The advert type",
+            "allOf": [{ "$ref": "#/components/schemas/BaseEntity" }]
+          },
+          "advertCategories": {
+            "description": "List of advert categories.",
+            "nullable": false,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "transaction": {
+            "description": "Case fee transaction.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/TBRTransaction" }]
+          },
+          "message": {
+            "type": "string",
+            "nullable": true,
+            "example": "Additional message from sender"
+          },
+          "html": { "type": "string", "description": "The case html content." },
+          "publicationNumber": {
+            "type": "string",
+            "description": "Publication number of the case."
+          },
+          "channels": {
+            "description": "Channels for the case.",
+            "example": {
+              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "email": "dmr@dmr.is",
+              "phone": "+354 123 4567"
+            },
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseChannel" }
+          },
+          "comments": {
+            "description": "Comments on the case.",
+            "example": {
+              "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "createdAt": "2024-01-01T09:00:00Z",
+              "type": "Comment",
+              "task": {
+                "from": "Ármann",
+                "to": null,
+                "title": "gerir athugasemd",
+                "comment": "Pálína, getur þú tekið við og staðfest að upplýsingarnar séu réttar?"
+              }
+            },
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommentDto" }
+          },
+          "signature": { "$ref": "#/components/schemas/Signature" },
+          "attachments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationAttachment" }
+          },
+          "additions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseAddition" }
+          },
+          "advertCorrections": {
+            "description": "Corrections made to the related advert.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertCorrection" }
+          },
+          "history": {
+            "description": "History of the case.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseHistory" }
+          }
+        },
+        "required": [
+          "id",
+          "advertId",
+          "year",
+          "caseNumber",
+          "status",
+          "tag",
+          "involvedParty",
+          "createdAt",
+          "modifiedAt",
+          "isLegacy",
+          "assignedTo",
+          "communicationStatus",
+          "fastTrack",
+          "publishedAt",
+          "requestedPublicationDate",
+          "advertTitle",
+          "advertDepartment",
+          "advertType",
+          "advertCategories",
+          "transaction",
+          "message",
+          "html",
+          "publicationNumber",
+          "channels",
+          "comments",
+          "signature",
+          "attachments",
+          "additions",
+          "history"
+        ]
+      },
+      "GetCaseResponse": {
+        "type": "object",
+        "properties": {
+          "case": { "$ref": "#/components/schemas/CaseDetailed" }
+        },
+        "required": ["case"]
+      },
+      "GetCasesReponse": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Case" }
+          },
+          "paging": {
+            "description": "Paging info",
+            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          }
+        },
+        "required": ["cases", "paging"]
+      },
       "AddCaseAdvertCorrection": {
         "type": "object",
         "properties": {
@@ -3791,47 +4430,6 @@
           }
         },
         "required": ["name", "type", "url"]
-      },
-      "AdvertCorrection": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the correction"
-          },
-          "description": {
-            "type": "string",
-            "description": "The correction description"
-          },
-          "advertId": {
-            "type": "string",
-            "description": "Id of the advert being corrected"
-          },
-          "documentHtml": { "type": "string" },
-          "documentPdfUrl": { "type": "string" },
-          "createdDate": {
-            "type": "string",
-            "nullable": false,
-            "example": "2024-01-01T09:00:00Z"
-          },
-          "updatedDate": {
-            "type": "string",
-            "nullable": false,
-            "example": "2024-01-20T09:00:00Z"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "description",
-          "advertId",
-          "createdDate",
-          "updatedDate"
-        ]
       },
       "Advert": {
         "type": "object",
@@ -4220,32 +4818,6 @@
         },
         "required": ["name", "email"]
       },
-      "CaseChannel": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "description": "Id of the case channel."
-          },
-          "name": {
-            "type": "string",
-            "example": "Case channel name",
-            "description": "Name of the case channel."
-          },
-          "email": {
-            "type": "string",
-            "example": "hjalp@dmr.is",
-            "description": "Email of the case channel."
-          },
-          "phone": {
-            "type": "string",
-            "example": "+354 123 4567",
-            "description": "Phone of the case channel."
-          }
-        },
-        "required": ["id", "name", "email"]
-      },
       "GetCommunicationSatusesResponse": {
         "type": "object",
         "properties": {
@@ -4267,47 +4839,6 @@
           }
         },
         "required": ["tags"]
-      },
-      "GetCaseResponse": {
-        "type": "object",
-        "properties": { "case": { "$ref": "#/components/schemas/Case" } },
-        "required": ["case"]
-      },
-      "GetCasesReponse": {
-        "type": "object",
-        "properties": {
-          "cases": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Case" }
-          },
-          "paging": {
-            "description": "Paging info",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
-          }
-        },
-        "required": ["cases", "paging"]
-      },
-      "CreateCaseDto": {
-        "type": "object",
-        "properties": {
-          "involvedPartyId": { "type": "string" },
-          "applicationId": { "type": "string" },
-          "departmentId": { "type": "string" },
-          "typeId": { "type": "string" },
-          "subject": { "type": "string" },
-          "categoryIds": { "type": "array", "items": { "type": "string" } },
-          "requestedPublicationDate": { "type": "string" },
-          "caseStatusId": { "type": "string" },
-          "communicationStatusId": { "type": "string" },
-          "html": { "type": "string" },
-          "message": { "type": "string" }
-        },
-        "required": ["involvedPartyId", "departmentId", "typeId", "subject"]
-      },
-      "CreateCaseResponseDto": {
-        "type": "object",
-        "properties": { "id": { "type": "string" } },
-        "required": ["id"]
       }
     }
   }

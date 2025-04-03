@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { IUserService } from './user.service.interface'
+import { has } from 'lodash'
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -45,8 +46,13 @@ export class RoleGuard implements CanActivate {
       await this.userService.getUserByNationalId(request.user.nationalId)
     ).unwrap()
 
-    request.user = user
+    const hasAccess = requiredRoles.some((role) => user.role.title === role)
 
-    return requiredRoles.some((role) => user.role.title === role)
+    if (!hasAccess) {
+      return false
+    }
+
+    request.user = user
+    return true
   }
 }

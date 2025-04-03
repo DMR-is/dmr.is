@@ -68,7 +68,7 @@ export class CaseService implements ICaseService {
 
     const caseCount = await this.caseModel.count({
       distinct: true,
-      col: 'id',
+      col: 'CaseModel.id',
       where: {
         createdAt: {
           [Op.between]: [`${year}-${month}-${date} 00:00:00`, now],
@@ -80,6 +80,12 @@ export class CaseService implements ICaseService {
 
     const withLeadingZeros =
       count < 10 ? `00${count}` : count < 100 ? `0${count}` : count
+
+    this.logger.debug(`Generated case number ${withLeadingZeros}`, {
+      context: LOGGING_CONTEXT,
+      category: LOGGING_CATEGORY,
+      caseNumber: `${year}${month}${date}${withLeadingZeros}`,
+    })
 
     return ResultWrapper.ok({
       caseNumber: `${year}${month}${date}${withLeadingZeros}`,
@@ -107,8 +113,6 @@ export class CaseService implements ICaseService {
     })
 
     const whereClause = whereParams(params)
-
-    console.log('params.department', params?.department)
 
     const cases = await this.caseModel.findAndCountAll({
       limit,

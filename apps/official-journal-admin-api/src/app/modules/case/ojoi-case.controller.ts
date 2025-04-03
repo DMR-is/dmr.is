@@ -1,6 +1,10 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import {
+  CreateCaseDto,
+  CreateCaseResponseDto,
+} from '@dmr.is/official-journal/dto/case/case.dto'
+import {
   ExternalCommentBodyDto,
   GetComment,
   GetComments,
@@ -13,12 +17,14 @@ import {
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
+import { ICaseService } from '@dmr.is/official-journal/modules/case'
 import { ICaseHistoryService } from '@dmr.is/official-journal/modules/case-history'
 import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import {
   IPriceService,
   TransactionFeeCodesResponse,
 } from '@dmr.is/official-journal/modules/price'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
@@ -75,10 +81,13 @@ import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
 export class OfficialJournalCaseController {
   constructor(
     @Inject(IOfficialJournalCaseService)
-    private readonly caseService: IOfficialJournalCaseService,
+    private readonly ojoiCaseService: IOfficialJournalCaseService,
 
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
 
     @Inject(ICommentService) private readonly commentService: ICommentService,
     @Inject(ICasePaymentService)
@@ -108,7 +117,7 @@ export class OfficialJournalCaseController {
     @Query() params?: GetCasesWithStatusCountQuery,
   ): Promise<GetCasesWithStatusCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCasesWithStatusCount(status, params),
+      await this.ojoiCaseService.getCasesWithStatusCount(status, params),
     )
   }
 
@@ -120,7 +129,7 @@ export class OfficialJournalCaseController {
     @Param('attachmentId', new UUIDValidationPipe()) attachmentId: string,
   ): Promise<PresignedUrlResponse> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCaseAttachment(caseId, attachmentId),
+      await this.ojoiCaseService.getCaseAttachment(caseId, attachmentId),
     )
   }
 
@@ -133,7 +142,11 @@ export class OfficialJournalCaseController {
     @Body() body: PostApplicationAttachmentBody,
   ): Promise<PresignedUrlResponse> {
     return (
-      await this.caseService.overwriteCaseAttachment(caseId, attachmentId, body)
+      await this.ojoiCaseService.overwriteCaseAttachment(
+        caseId,
+        attachmentId,
+        body,
+      )
     ).unwrap()
   }
 
@@ -144,7 +157,10 @@ export class OfficialJournalCaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @CurrentUser() user: UserDto,
   ) {
-    const updateResults = await this.caseService.updateCaseNextStatus(id, user)
+    const updateResults = await this.ojoiCaseService.updateCaseNextStatus(
+      id,
+      user,
+    )
 
     // TODO: check if the status ready for publishing then do this
     // await this.paymentService.postExternalPaymentByCaseId(id)
@@ -165,7 +181,7 @@ export class OfficialJournalCaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @CurrentUser() user: UserDto,
   ) {
-    const updateResults = await this.caseService.updateCasePreviousStatus(
+    const updateResults = await this.ojoiCaseService.updateCasePreviousStatus(
       id,
       user,
     )
@@ -187,7 +203,7 @@ export class OfficialJournalCaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlCorrection,
   ) {
-    ResultWrapper.unwrap(await this.caseService.updateAdvert(id, body))
+    ResultWrapper.unwrap(await this.ojoiCaseService.updateAdvert(id, body))
   }
 
   @Put(':id/html')
@@ -197,7 +213,7 @@ export class OfficialJournalCaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ) {
-    const updatedHtmlResult = await this.caseService.updateAdvertByHtml(
+    const updatedHtmlResult = await this.ojoiCaseService.updateAdvertByHtml(
       id,
       body,
     )
@@ -226,7 +242,7 @@ export class OfficialJournalCaseController {
     @Query() query?: GetCasesWithDepartmentCountQuery,
   ): Promise<GetCasesWithDepartmentCount> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCasesWithDepartmentCount(department, query),
+      await this.ojoiCaseService.getCasesWithDepartmentCount(department, query),
     )
   }
 
@@ -234,14 +250,14 @@ export class OfficialJournalCaseController {
   @ApiOperation({ operationId: 'publish' })
   @ApiNoContentResponse()
   async publish(@Body() body: PostCasePublishBody) {
-    ResultWrapper.unwrap(await this.caseService.publishCases(body))
+    ResultWrapper.unwrap(await this.ojoiCaseService.publishCases(body))
   }
 
   @Post(':id/reject')
   @ApiOperation({ operationId: 'rejectCase' })
   @ApiNoContentResponse()
   async reject(@Param('id', new UUIDValidationPipe()) id: string) {
-    ResultWrapper.unwrap(await this.caseService.rejectCase(id))
+    ResultWrapper.unwrap(await this.ojoiCaseService.rejectCase(id))
   }
 
   @Get(':id/comments/v2')
@@ -317,7 +333,10 @@ export class OfficialJournalCaseController {
     params: GetCasesWithPublicationNumberQuery,
   ): Promise<GetCasesWithPublicationNumber> {
     return ResultWrapper.unwrap(
-      await this.caseService.getCasesWithPublicationNumber(department, params),
+      await this.ojoiCaseService.getCasesWithPublicationNumber(
+        department,
+        params,
+      ),
     )
   }
 
@@ -328,6 +347,30 @@ export class OfficialJournalCaseController {
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
-    return (await this.caseService.uploadAttachments(body.key)).unwrap()
+    return (await this.ojoiCaseService.uploadAttachments(body.key)).unwrap()
+  }
+
+  @Post()
+  @ApiOperation({ operationId: 'createCase' })
+  @ApiResponse({ status: 200, type: CreateCaseResponseDto })
+  async createCase(
+    @CurrentUser() currentUser: UserDto,
+    @Body() body: CreateCaseDto,
+  ) {
+    const createdCase = ResultWrapper.unwrap(
+      await this.caseService.createCase(body, currentUser),
+    )
+
+    await Promise.all([
+      this.signatureService.createSignature(createdCase.id, {
+        involvedPartyId: body.involvedPartyId,
+        records: [],
+      }),
+      this.commentService.createSubmitComment(createdCase.id, {
+        institutionCreatorId: body.involvedPartyId,
+      }),
+    ])
+
+    return { id: createdCase.id }
   }
 }
