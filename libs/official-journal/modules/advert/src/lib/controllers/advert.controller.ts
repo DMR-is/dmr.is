@@ -23,14 +23,14 @@ export class AdvertController {
   @Get('/rss/:id')
   @ApiOperation({ operationId: 'getRssFeed' })
   @ApiResponse({ status: 200 })
-  async getRssFeed(@Param() param?: { id: string }) {
+  async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.advertService.getAdverts({
-        department: param?.id.toLowerCase(),
+        department: id,
         pageSize: 100,
       }),
     )
-    return advertsToRss(adverts.adverts, param?.id?.toLowerCase())
+    return advertsToRss(adverts.adverts, id)
   }
 
   @Get('similar/:id')

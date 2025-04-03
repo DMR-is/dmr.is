@@ -276,13 +276,18 @@ export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
   }
 
   const isArray = Array.isArray(filters)
-  const isId = isArray
-    ? filters.every((filter) => isUUID(filter))
-    : isUUID(filters)
+
+  const filtersToUse = isArray ? filters.filter((f) => f) : [filters]
+
+  if (filtersToUse.length === 0) {
+    return whereClause
+  }
+
+  const isId = filtersToUse.every((filter) => isUUID(filter))
 
   if (isId) {
     Object.assign(whereClause, {
-      id: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+      id: isArray ? { [Op.in]: filtersToUse } : { [Op.eq]: filtersToUse },
     })
 
     return whereClause
@@ -291,10 +296,10 @@ export const matchByIdTitleOrSlug = (filters?: string | string[]) => {
   Object.assign(whereClause, {
     [Op.or]: [
       {
-        title: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+        title: { [Op.in]: filtersToUse },
       },
       {
-        slug: isArray ? { [Op.in]: filters } : { [Op.eq]: filters },
+        slug: { [Op.in]: filtersToUse },
       },
     ],
   })

@@ -25,7 +25,7 @@ import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
-import { IOfficialJournalCaseService } from './case.service.interface'
+import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock implements IOfficialJournalCaseService {

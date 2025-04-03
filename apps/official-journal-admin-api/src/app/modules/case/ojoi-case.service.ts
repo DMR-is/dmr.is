@@ -22,18 +22,13 @@ import {
   IAttachmentService,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
+import { ICaseService } from '@dmr.is/official-journal/modules/case'
 import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
 import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { IAWSService, PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
-import {
-  enumMapper,
-  generatePaging,
-  getLimitAndOffset,
-  getPublicationTemplate,
-  getS3Bucket,
-} from '@dmr.is/utils'
+import { enumMapper, getPublicationTemplate, getS3Bucket } from '@dmr.is/utils'
 
 import {
   BadRequestException,
@@ -48,7 +43,6 @@ import {
   GetCasesWithDepartmentCount,
   GetCasesWithStatusCount,
 } from './dto/case-with-counter.dto'
-import { GetCasesQuery } from './dto/get-cases-query.dto'
 import {
   GetCasesWithDepartmentCountQuery,
   GetCasesWithStatusCountQuery,
@@ -63,8 +57,8 @@ import {
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
 import { caseParameters } from './mappers/case-parameters.mapper'
-import { IOfficialJournalCaseService } from './case.service.interface'
-import { getNextStatus, getPreviousStatus } from './case.utils'
+import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
+import { getNextStatus, getPreviousStatus } from './ojoi-case.utils'
 import { casesDetailedIncludes, casesIncludes } from './relations'
 
 const LOGGING_CATEGORY = 'case-service'
@@ -75,6 +69,7 @@ const LOGGING_QUERY = 'CaseServiceQueryRunner'
 export class OfficialJournalCaseService implements IOfficialJournalCaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @Inject(IAWSService) private readonly s3: IAWSService,
 
@@ -95,49 +90,6 @@ export class OfficialJournalCaseService implements IOfficialJournalCaseService {
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
-  }
-
-  async getCasesSqlQuery(params: GetCasesQuery) {
-    const whereParams = caseParameters(params)
-    const sortKeys: { [key: string]: string } = {
-      casePublishDate: 'requestedPublicationDate',
-      caseRegistrationDate: 'createdAt',
-    }
-    const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
-    const { limit, offset } = getLimitAndOffset(params)
-
-    return this.caseModel.findAndCountAll({
-      distinct: true,
-      benchmark: true,
-      offset: offset,
-      limit: limit,
-      attributes: [
-        'id',
-        'requestedPublicationDate',
-        'createdAt',
-        'year',
-        'advertTitle',
-        'fastTrack',
-        'publishedAt',
-        'publicationNumber',
-      ],
-      where: whereParams,
-      include: casesIncludes({
-        department: params?.department,
-        type: params?.type,
-        status: params?.status,
-        institution: params?.institution,
-        category: params?.category,
-      }),
-      order: [[sortBy, params.direction]],
-      logging: (_, timing) => {
-        this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
-          context: LOGGING_QUERY,
-          category: LOGGING_CATEGORY,
-          query: 'getCasesSqlQuery',
-        })
-      },
-    })
   }
 
   async getCasesWithPublicationNumber(
@@ -485,10 +437,6 @@ export class OfficialJournalCaseService implements IOfficialJournalCaseService {
 
     const now = new Date()
 
-    const caseStatus = (
-      await this.utilityService.caseStatusLookup(CaseStatusEnum.Published)
-    ).unwrap()
-
     const serial = (
       await this.utilityService.getNextPublicationNumber(
         caseToPublish.departmentId,
@@ -622,22 +570,13 @@ export class OfficialJournalCaseService implements IOfficialJournalCaseService {
       })
     })
 
-    const casesResults = this.getCasesSqlQuery({ ...params, status: [status] })
-
     const counter = (await Promise.all(counterResults)).map((count, index) => ({
       title: statusesToBeCounted[index],
       count: count,
     }))
 
-    const cases = await casesResults
-
-    const mappedCases = cases.rows.map((c) => caseMigrate(c))
-
-    const paging = generatePaging(
-      cases.rows,
-      params?.page,
-      params?.pageSize,
-      cases.count,
+    const { cases, paging } = ResultWrapper.unwrap(
+      await this.caseService.getCases({ ...params, status: [status] }),
     )
 
     return ResultWrapper.ok({
@@ -645,7 +584,7 @@ export class OfficialJournalCaseService implements IOfficialJournalCaseService {
         status: c.title,
         count: c.count,
       })),
-      cases: mappedCases,
+      cases,
       paging,
     })
   }
@@ -738,34 +677,20 @@ export class OfficialJournalCaseService implements IOfficialJournalCaseService {
       },
     )
 
-    const casesResults = this.getCasesSqlQuery({
-      ...params,
-      department: [department],
-    })
-
-    const [cases, ...counters] = await Promise.all([
-      casesResults,
-      counterA,
-      counterB,
-      counterC,
-    ])
+    const [...counters] = await Promise.all([counterA, counterB, counterC])
 
     const counterResults = counters.map((counter, index) => ({
       department: departmentsToCount[index],
       count: counter,
     }))
 
-    const mapped = cases.rows.map((c) => caseMigrate(c))
-    const paging = generatePaging(
-      cases.rows,
-      params.page,
-      params.pageSize,
-      cases.count,
+    const { cases, paging } = ResultWrapper.unwrap(
+      await this.caseService.getCases(params),
     )
 
     return ResultWrapper.ok({
       departments: counterResults,
-      cases: mapped,
+      cases,
       paging,
     })
   }

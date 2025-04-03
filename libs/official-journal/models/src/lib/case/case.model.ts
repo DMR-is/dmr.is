@@ -57,13 +57,13 @@ type CaseCreateAttributes = {
   communicationStatusId: string
   advertTitle: string
   requestedPublicationDate: string
+  html: string
   fastTrack: boolean
   createdAt: string
   updatedAt: string
   assignedUserId?: string | null
   publishedAt?: string | null
   message?: string | null
-  html?: string | null
   isLegacy?: boolean
 }
 
@@ -81,11 +81,21 @@ type CaseCreateAttributes = {
     'publishedAt',
     'publicationNumber',
   ],
-  logging: (_, timing) => {
-    logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
-      context: LOGGING_CONTEXT,
-    })
-  },
+  include: [
+    { model: CaseStatusModel, attributes: ['id', 'title', 'slug'] },
+    {
+      model: CaseCommunicationStatusModel,
+      attributes: ['id', 'title', 'slug'],
+    },
+    {
+      model: AdvertInvolvedPartyModel,
+      attributes: ['id', 'title', 'slug', 'nationalId'],
+    },
+    { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },
+    { model: AdvertTypeModel, attributes: ['id', 'title', 'slug'] },
+    { model: AdvertCategoryModel, attributes: ['id', 'title', 'slug'] },
+    { model: CaseTagModel, attributes: ['id', 'title', 'slug'] },
+  ],
 }))
 @Scopes(() => ({
   detailed: {
@@ -94,7 +104,6 @@ type CaseCreateAttributes = {
       CaseStatusModel,
       CaseCommunicationStatusModel,
       AdvertDepartmentModel,
-      AdvertTypeModel,
       AdvertCategoryModel,
       CaseChannelModel,
       AdvertInvolvedPartyModel,
@@ -115,6 +124,16 @@ type CaseCreateAttributes = {
         include: [
           { model: UserRoleModel },
           { model: AdvertInvolvedPartyModel },
+        ],
+      },
+      {
+        model: AdvertTypeModel,
+        attributes: ['id', 'title', 'slug', 'department_id'],
+        include: [
+          {
+            attributes: ['id', 'title', 'slug'],
+            model: AdvertDepartmentModel,
+          },
         ],
       },
       {

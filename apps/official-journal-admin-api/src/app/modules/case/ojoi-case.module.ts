@@ -11,6 +11,7 @@ import {
 import { AdvertModule } from '@dmr.is/official-journal/modules/advert'
 import { AdvertCorrectionModule } from '@dmr.is/official-journal/modules/advert-correction'
 import { AttachmentModule } from '@dmr.is/official-journal/modules/attachment'
+import { CaseModule } from '@dmr.is/official-journal/modules/case'
 import { CaseHistoryModule } from '@dmr.is/official-journal/modules/case-history'
 import { CommentModule } from '@dmr.is/official-journal/modules/comment'
 import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
@@ -24,10 +25,10 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { PaymentModule } from '../payment/payment.module'
-import { CaseController } from './case.controller'
-import { OfficialJournalCaseService } from './case.service'
-import { IOfficialJournalCaseService } from './case.service.interface'
-import { CaseServiceMock } from './case.service.mock'
+import { OfficialJournalCaseController } from './ojoi-case.controller'
+import { OfficialJournalCaseService } from './ojoi-case.service'
+import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
+import { CaseServiceMock } from './ojoi-case.service.mock'
 const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
@@ -42,6 +43,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
       TransactionFeeCodesModel,
       AdvertModel,
     ]),
+    CaseModule,
     CaseHistoryModule,
     PriceModule,
     AdvertCorrectionModule,
@@ -55,7 +57,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     SignatureModule,
     PaymentModule,
   ],
-  controllers: [CaseController],
+  controllers: [OfficialJournalCaseController],
   providers: [
     {
       provide: IOfficialJournalCaseService,
@@ -64,4 +66,4 @@ const API_MOCK = process.env.API_MOCK === 'true'
   ],
   exports: [IOfficialJournalCaseService],
 })
-export class CaseModule {}
+export class OfficialJournalCaseModule {}

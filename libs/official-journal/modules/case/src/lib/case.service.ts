@@ -39,6 +39,9 @@ import {
 } from '@dmr.is/utils'
 import { whereParams } from './utils'
 import { Op } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { LogAndHandle } from '@dmr.is/decorators'
 
 const LOGGING_CONTEXT = 'CaseService'
 export const LOGGING_CATEGORY = 'case-service'
@@ -56,11 +59,16 @@ export class CaseService implements ICaseService {
     private readonly caseTagModel: typeof CaseTagModel,
   ) {}
 
-  private async generateInternalCaseNumber(): Promise<string> {
+  @LogAndHandle()
+  private async generateInternalCaseNumber(): Promise<
+    ResultWrapper<{ caseNumber: string }>
+  > {
     const now = new Date().toISOString()
     const [year, month, date] = now.split('T')[0].split('-')
 
     const caseCount = await this.caseModel.count({
+      distinct: true,
+      col: 'id',
       where: {
         createdAt: {
           [Op.between]: [`${year}-${month}-${date} 00:00:00`, now],
@@ -73,25 +81,34 @@ export class CaseService implements ICaseService {
     const withLeadingZeros =
       count < 10 ? `00${count}` : count < 100 ? `0${count}` : count
 
-    return `${year}${month}${date}${withLeadingZeros}`
+    return ResultWrapper.ok({
+      caseNumber: `${year}${month}${date}${withLeadingZeros}`,
+    })
   }
 
-  async getCase(id: string): Promise<GetCaseResponse> {
+  @LogAndHandle()
+  async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const caseLookup = await this.caseModel.scope('detailed').findByPk(id)
 
     if (!caseLookup) {
       throw new NotFoundException('Case not found')
     }
 
-    return { case: caseDetailedMigrate(caseLookup) }
+    return ResultWrapper.ok({ case: caseDetailedMigrate(caseLookup) })
   }
-  async getCases(params?: GetCasesQuery): Promise<GetCasesReponse> {
+
+  @LogAndHandle()
+  async getCases(
+    params?: GetCasesQuery,
+  ): Promise<ResultWrapper<GetCasesReponse>> {
     const { limit, offset } = getLimitAndOffset({
       page: params?.page,
       pageSize: params?.pageSize,
     })
 
     const whereClause = whereParams(params)
+
+    console.log('params.department', params?.department)
 
     const cases = await this.caseModel.findAndCountAll({
       limit,
@@ -110,7 +127,13 @@ export class CaseService implements ICaseService {
         },
         {
           model: AdvertTypeModel,
-          attributes: ['id', 'title', 'slug'],
+          attributes: ['id', 'title', 'slug', 'department_id'],
+          include: [
+            {
+              attributes: ['id', 'title', 'slug'],
+              model: AdvertDepartmentModel,
+            },
+          ],
           where: matchByIdTitleOrSlug(params?.type),
         },
         {
@@ -143,13 +166,17 @@ export class CaseService implements ICaseService {
     )
     const result = cases.rows.map((caseItem) => caseMigrate(caseItem))
 
-    return {
+    return ResultWrapper.ok({
       cases: result,
       paging,
-    }
+    })
   }
 
-  async createCase(body: CreateCaseDto): Promise<CreateCaseResponseDto> {
+  @LogAndHandle()
+  async createCase(
+    body: CreateCaseDto,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<CreateCaseResponseDto>> {
     const {
       departmentId,
       involvedPartyId,
@@ -159,7 +186,7 @@ export class CaseService implements ICaseService {
       requestedPublicationDate,
     } = body
 
-    const [status, tag, commStatus, caseNumber] = await Promise.all([
+    const [status, tag, commStatus, caseNumberResults] = await Promise.all([
       this.caseStatusModel.findOne({
         where: body.caseStatusId
           ? { id: body?.caseStatusId }
@@ -216,12 +243,17 @@ export class CaseService implements ICaseService {
       throw new BadRequestException('Case communication status not found')
     }
 
+    const { caseNumber } = ResultWrapper.unwrap(caseNumberResults)
+
     const now = new Date()
     const { fastTrack } = getFastTrack(
       body.requestedPublicationDate
         ? new Date(body.requestedPublicationDate)
         : now,
     )
+
+    const fallBackhtml =
+      '<h3 class="article__title">1. gr. </h3><p>Nýtt mál</p>'
 
     const createResults = await this.caseModel.create(
       {
@@ -240,17 +272,18 @@ export class CaseService implements ICaseService {
         communicationStatusId: commStatus.id,
         tagId: tag.id,
         fastTrack: fastTrack,
-        assignedUserId: body.assignedUserId,
-        html: body.html,
+        assignedUserId: currentUser.id,
+        html: body.html ? body.html : fallBackhtml,
         publishedAt: null,
         caseNumber: caseNumber,
+        isLegacy: false,
       },
       { returning: ['id'] },
     )
 
-    return {
+    return ResultWrapper.ok({
       id: createResults.id,
-    }
+    })
   }
 
   async updateCase(id: string, body: UpdateCaseBody): Promise<GetCaseResponse> {

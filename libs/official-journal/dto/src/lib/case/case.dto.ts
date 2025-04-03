@@ -552,12 +552,6 @@ export class CreateCaseDto {
     type: String,
     required: false,
   })
-  assignedUserId?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
   html?: string
 
   @ApiProperty({
@@ -584,4 +578,10 @@ export class UpdateCaseBody extends PartialType(
   @IsOptional()
   @IsBoolean()
   fastTrack?: boolean
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  assignedUserId?: string
 }

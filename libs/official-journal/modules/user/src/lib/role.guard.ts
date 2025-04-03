@@ -45,6 +45,8 @@ export class RoleGuard implements CanActivate {
       await this.userService.getUserByNationalId(request.user.nationalId)
     ).unwrap()
 
+    request.user = user
+
     return requiredRoles.some((role) => user.role.title === role)
   }
 }

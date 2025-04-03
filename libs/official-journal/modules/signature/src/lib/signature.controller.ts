@@ -11,8 +11,10 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common'
 import {
+  ApiBearerAuth,
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
@@ -27,11 +29,18 @@ import {
   CreateSignature,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
 import { GetSignature } from './dto/signature-response.dto'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
 
 @Controller({
   version: '1',
   path: 'signatures',
 })
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@Roles(UserRoleEnum.Admin, UserRoleEnum.Editor)
+@ApiBearerAuth()
 export class SignatureController {
   constructor(
     @Inject(ISignatureService)

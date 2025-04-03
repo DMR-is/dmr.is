@@ -7,6 +7,7 @@ import {
   AdvertTypeAdminController,
   AdvertTypeModule,
 } from '@dmr.is/official-journal/modules/advert-type'
+import { CaseModule } from '@dmr.is/official-journal/modules/case'
 import { CaseTagModule } from '@dmr.is/official-journal/modules/case-tag'
 import {
   CategoryAdminController,
@@ -31,9 +32,8 @@ import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CaseModule } from './modules/case/case.module'
+import { OfficialJournalCaseModule } from './modules/case/ojoi-case.module'
 import { StatisticsModule } from './modules/statistics/statistics.module'
-
 @Module({
   imports: [
     LoggingModule,
@@ -54,7 +54,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
       inject: [DMRSequelizeConfigService],
     }),
     UserModule,
-    CaseModule,
+    OfficialJournalCaseModule,
     AdvertModule,
     AdvertTypeModule,
     StatisticsModule,
@@ -66,6 +66,8 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
     CommunicationStatusModule,
     CaseTagModule,
     AdvertCorrectionModule,
+    OfficialJournalCaseModule,
+    CaseModule,
   ],
   controllers: [
     CategoryAdminController,

@@ -35,6 +35,7 @@ export class AdvertTypeModel extends Model {
   @Column
   slug!: string
 
+  @ForeignKey(() => AdvertDepartmentModel)
   @Column({
     type: DataType.UUIDV4,
     allowNull: false,

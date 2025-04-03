@@ -63,7 +63,7 @@ import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
 } from './dto/update-advert-html-body.dto'
-import { IOfficialJournalCaseService } from './case.service.interface'
+import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
@@ -72,7 +72,7 @@ import { IOfficialJournalCaseService } from './case.service.interface'
   version: '1',
   path: 'cases',
 })
-export class CaseController {
+export class OfficialJournalCaseController {
   constructor(
     @Inject(IOfficialJournalCaseService)
     private readonly caseService: IOfficialJournalCaseService,

@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing'
 import { ICaseCreateService } from './services/create/case-create.service.interface'
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { CaseService } from './case.service'
-import { ICaseService } from './case.service.interface'
+import { ICaseService } from './ojoi-case.service.interface'
 import {
   CaseModel,
   CaseHistoryModel,

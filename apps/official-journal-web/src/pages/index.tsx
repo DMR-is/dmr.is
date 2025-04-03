@@ -18,7 +18,7 @@ import { ImageWithText } from '../components/image-with-text/ImageWithText'
 import { Meta } from '../components/meta/Meta'
 import { Section } from '../components/section/Section'
 import { StatisticsPieCharts } from '../components/statistics/PieCharts'
-import { DepartmentSlugEnum, StatisticsOverviewQueryType } from '../gen/fetch'
+import { StatisticsOverviewQueryType } from '../gen/fetch'
 import { useStatistics } from '../hooks/api'
 import { useFormatMessage } from '../hooks/useFormatMessage'
 import { LayoutProps } from '../layout/Layout'
@@ -30,7 +30,7 @@ import { authOptions } from './api/auth/[...nextauth]'
 export default function Dashboard() {
   const { formatMessage } = useFormatMessage()
 
-  const [departmentTab, setDepartmentTab] = useState(DepartmentSlugEnum.ADeild)
+  const [departmentTab, setDepartmentTab] = useState('a-deild')
 
   const [overviewTab, setOverviewTab] = useState<StatisticsOverviewQueryType>(
     StatisticsOverviewQueryType.General,
@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   const statisticsTabs: TabType[] = [
     {
-      id: DepartmentSlugEnum.ADeild,
+      id: 'a-deild',
       label: formatMessage(messages.tabs.statistics.a),
       content: (
         <Box background="white" paddingTop={3}>
@@ -60,7 +60,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: DepartmentSlugEnum.BDeild,
+      id: 'b-deild',
       label: formatMessage(messages.tabs.statistics.b),
       content: (
         <Box background="white" paddingTop={3}>
@@ -72,7 +72,7 @@ export default function Dashboard() {
       ),
     },
     {
-      id: DepartmentSlugEnum.CDeild,
+      id: 'c-deild',
       label: formatMessage(messages.tabs.statistics.c),
       content: (
         <Box background="white" paddingTop={3}>
@@ -183,7 +183,7 @@ export default function Dashboard() {
                 <Tabs
                   label={formatMessage(messages.general.statistics)}
                   selected={departmentTab}
-                  onChange={(id) => setDepartmentTab(id as DepartmentSlugEnum)}
+                  onChange={(id) => setDepartmentTab(id)}
                   size="sm"
                   tabs={statisticsTabs}
                 />

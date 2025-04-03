@@ -13,6 +13,7 @@ import { caseTransactionMigrate } from '../case-transaction/transaction.migrate'
 import { signatureMigrate } from '../signature/signature.migrate'
 import { commentMigrate } from '../comment/comment.migrate'
 import { attachmentMigrate } from '../attachment/attachment.migrate'
+import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
 
 export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
@@ -39,7 +40,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
     advertDepartment: baseEntityMigrate(model.department),
-    advertType: model.advertType,
+    advertType: advertTypeMigrate(model.advertType),
     transaction: model.transaction
       ? caseTransactionMigrate(model.transaction)
       : undefined,
