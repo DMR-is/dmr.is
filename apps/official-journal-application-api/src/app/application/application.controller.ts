@@ -8,13 +8,10 @@ import {
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserDto } from '@dmr.is/official-journal/dto'
-import {
-  InvolvedPartyGuard,
-  TokenJwtAuthGuard,
-} from '@dmr.is/official-journal/guards'
+import { InvolvedPartyGuard } from '@dmr.is/official-journal/guards/involved-party.guard'
+import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 import {
   GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
 import { GetComments } from '@dmr.is/official-journal/modules/comment'
@@ -25,7 +22,6 @@ import {
 import {
   GetInvoledPartiesByUserResponse,
   IUserService,
-  RoleGuard,
 } from '@dmr.is/official-journal/modules/user'
 import {
   EnumValidationPipe,
@@ -33,6 +29,7 @@ import {
   IsStringValidationPipe,
   UUIDValidationPipe,
 } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import {
   GetPresignedUrlBody,
   PresignedUrlResponse,

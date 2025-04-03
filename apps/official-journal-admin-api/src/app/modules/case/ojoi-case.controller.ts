@@ -11,7 +11,7 @@ import {
   InternalCommentBodyDto,
 } from '@dmr.is/official-journal/dto/comment/comment.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 import { CaseStatusEnum, DepartmentEnum } from '@dmr.is/official-journal/models'
 import {
   PostApplicationAssetBody,
@@ -25,8 +25,8 @@ import {
   TransactionFeeCodesResponse,
 } from '@dmr.is/official-journal/modules/price'
 import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { PresignedUrlResponse } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
 

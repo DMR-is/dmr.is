@@ -15,8 +15,8 @@ import {
 } from '@nestjs/swagger'
 import { AddCaseAdvertCorrection } from './dto/advert-correction.dto'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
+import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 @Controller({

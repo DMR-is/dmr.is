@@ -21,7 +21,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { IAdvertTypeService } from '../advert-type.service.interface'
 import { AdvertTypeError } from '../advert-type-error'
 import { CreateAdvertMainTypeBulk } from '../dto/create-advert-main-type-bulk.dto'
@@ -32,7 +32,7 @@ import { GetAdvertMainType } from '../dto/get-advert-main-type.dto'
 import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { UpdateAdvertTypeBody } from '../dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from '../dto/update-main-advert-type.dto'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 
 @Controller({ path: 'types', version: '1' })
 @ApiBearerAuth()

@@ -35,8 +35,8 @@
         "libs/official-journal/modules/case-addition/src/index.ts"
       ],
       "@dmr.is/official-journal/dto/*": ["libs/official-journal/dto/src/lib/*"],
-      "@dmr.is/official-journal/guards": [
-        "libs/official-journal/guards/src/index.ts"
+      "@dmr.is/official-journal/guards/*": [
+        "libs/official-journal/guards/src/lib/*"
       ],
       "@dmr.is/official-journal/migrations/*": [
         "libs/official-journal/migrations/src/lib/*"
@@ -100,6 +100,9 @@
       ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/index.ts"],
+      "@dmr.is/shared/guards/*": [
+        "libs/shared/guards/src/lib/*"
+      ],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
