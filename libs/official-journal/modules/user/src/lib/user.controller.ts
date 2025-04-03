@@ -37,7 +37,7 @@ import {
   GetUsersResponse,
   UpdateUserDto,
 } from './dto/user.dto'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from './role-guard'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 
 @Controller({

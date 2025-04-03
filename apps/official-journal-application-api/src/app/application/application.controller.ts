@@ -9,7 +9,6 @@ import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserDto } from '@dmr.is/official-journal/dto'
 import { InvolvedPartyGuard } from '@dmr.is/official-journal/guards/involved-party.guard'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 import {
   GetApplicationAttachmentsResponse,
   PostApplicationAttachmentBody,
@@ -19,6 +18,7 @@ import {
   GetSignature,
   ISignatureService,
 } from '@dmr.is/official-journal/modules/signature'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import {
   GetInvoledPartiesByUserResponse,
   IUserService,

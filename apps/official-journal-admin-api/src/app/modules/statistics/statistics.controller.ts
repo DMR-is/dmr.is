@@ -2,7 +2,7 @@ import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { ResultWrapper } from '@dmr.is/types'
@@ -22,6 +22,7 @@ import {
   GetStatisticsOverviewResponse,
 } from './dto/statistics-overview-dto'
 import { IStatisticsService } from './statistics.service.interface'
+
 
 @ApiBearerAuth()
 @Controller({

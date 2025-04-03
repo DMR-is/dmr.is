@@ -32,7 +32,7 @@ import { GetAdvertMainType } from '../dto/get-advert-main-type.dto'
 import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { UpdateAdvertTypeBody } from '../dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from '../dto/update-main-advert-type.dto'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 
 @Controller({ path: 'types', version: '1' })
 @ApiBearerAuth()

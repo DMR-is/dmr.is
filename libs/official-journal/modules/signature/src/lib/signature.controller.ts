@@ -30,7 +30,7 @@ import {
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
 import { GetSignature } from './dto/signature-response.dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 

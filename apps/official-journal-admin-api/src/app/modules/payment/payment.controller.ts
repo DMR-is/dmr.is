@@ -1,7 +1,7 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
 import { GetPaymentResponse } from '@dmr.is/official-journal/modules/price'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { ResultWrapper } from '@dmr.is/types'

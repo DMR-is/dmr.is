@@ -17,3 +17,6 @@ export { IUserService } from './lib/user.service.interface'
 
 // module
 export { UserModule } from './lib/user.module'
+
+// role-guard
+export { RoleGuard } from './lib/role-guard'

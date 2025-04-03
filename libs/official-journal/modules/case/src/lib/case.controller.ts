@@ -18,7 +18,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 @Controller({
   path: 'cases',
   version: '1',

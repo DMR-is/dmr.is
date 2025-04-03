@@ -23,7 +23,7 @@ import {
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { IInstitutionService } from '../institution.service.interface'
 
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import {
   CreateInstitution,
   UpdateInstitution,

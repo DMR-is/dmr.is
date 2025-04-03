@@ -26,7 +26,7 @@ import {
 import { UpdateMainCategory } from '../dto/update-main-category.dto'
 import { ICategoryService } from '../category.service.interface'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { RoleGuard } from '@dmr.is/official-journal/guards/role-guard'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 @Controller({
   path: 'categories',
   version: '1',
