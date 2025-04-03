@@ -37,3 +37,17 @@ export class CreateCategory extends PickType(CreateMainCategory, [
 ] as const) {}
 
 export class UpdateCategory extends PartialType(CreateCategory) {}
+
+export class MergeCategoriesBody {
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  readonly from!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  readonly to!: string
+}

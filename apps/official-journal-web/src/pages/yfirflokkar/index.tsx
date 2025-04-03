@@ -74,10 +74,8 @@ export default function CasePublishingOverview({
                 </Stack>
               </GridColumn>
               <GridColumn span={['12/12', '6/12']}>
-                <UpdateCategory />
-              </GridColumn>
-              <GridColumn span={['6/12']}>
                 <Stack space={4}>
+                  <UpdateCategory />
                   <MergeCategories />
                 </Stack>
               </GridColumn>

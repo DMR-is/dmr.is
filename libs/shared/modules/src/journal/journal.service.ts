@@ -46,7 +46,7 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
-import { CaseModel } from '../case/models'
+import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
@@ -94,6 +94,9 @@ export class JournalService implements IJournalService {
     private advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertCategoryCategoriesModel)
     private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
+    @InjectModel(CaseCategoriesModel)
+    private caseCategoriesModel: typeof CaseCategoriesModel,
+
     @InjectModel(CaseModel)
     private caseModel: typeof CaseModel,
 
@@ -472,6 +475,129 @@ export class JournalService implements IJournalService {
     )
 
     return ResultWrapper.ok({ category: advertCategoryMigrate(category) })
+  }
+
+  @LogAndHandle()
+  async mergeCategories(
+    fromId: string,
+    toId: string,
+    transaction?: Transaction,
+  ) {
+    if (!fromId || !toId) {
+      throw new BadRequestException()
+    }
+    const fromCategory = await this.advertCategoryModel.findByPk(fromId)
+    const toCategory = await this.advertCategoryModel.findByPk(toId)
+    if (!fromCategory || !toCategory) {
+      throw new NotFoundException(
+        `Category<${fromId}> or Category<${toId}> not found`,
+      )
+    }
+
+    const advertsThatConflict = await this.advertCategoriesModel.findAll({
+      where: {
+        category_id: fromId,
+      },
+      transaction,
+    })
+    const secondAdvertThatConflict = await this.advertCategoriesModel.findAll({
+      where: {
+        category_id: toId,
+      },
+      transaction,
+    })
+
+    const advertCategoriesDelete: Array<AdvertCategoriesModel> = []
+
+    advertsThatConflict.forEach((advert) => {
+      if (
+        secondAdvertThatConflict.some(
+          (secondAdvert) => secondAdvert.advert_id === advert.advert_id,
+        )
+      ) {
+        advertCategoriesDelete.push(advert)
+      }
+    })
+
+    await Promise.all(
+      advertCategoriesDelete.map((element) => {
+        this.advertCategoriesModel.destroy({
+          where: {
+            advert_id: element.advert_id,
+            category_id: element.category_id,
+          },
+          transaction,
+        })
+      }),
+    )
+
+    const advertMigrate = await this.advertCategoriesModel.update(
+      { category_id: toId },
+      { where: { category_id: fromId }, transaction, returning: true },
+    )
+
+    if (!advertMigrate) {
+      throw new NotFoundException(`Advert category merge failed`)
+    }
+
+    const caseConflictFrom = await this.caseCategoriesModel.findAll({
+      where: {
+        category_id: fromId,
+      },
+      transaction,
+    })
+
+    const caseConflictTo = await this.caseCategoriesModel.findAll({
+      where: {
+        category_id: toId,
+      },
+      transaction,
+    })
+
+    const caseConflictDelete: Array<CaseCategoriesModel> = []
+
+    caseConflictFrom.forEach((fromCase) => {
+      if (
+        caseConflictTo.some(
+          (secondCase) => fromCase.caseId === secondCase.caseId,
+        )
+      ) {
+        caseConflictDelete.push(fromCase)
+      }
+    })
+
+    await Promise.all(
+      caseConflictDelete.map((element) => {
+        this.caseCategoriesModel.destroy({
+          where: {
+            case_case_id: element.caseId,
+            category_id: element.categoryId,
+          },
+          transaction,
+        })
+      }),
+    )
+
+    const caseMigrate = await this.caseCategoriesModel.update(
+      { category_id: toId },
+      { where: { category_id: fromId }, transaction, returning: true },
+    )
+
+    if (!caseMigrate) {
+      throw new NotFoundException(`Case Categories merge failed`)
+    }
+
+    await this.advertCategoryCategoriesModel.destroy({
+      where: { advert_category_id: fromId },
+      transaction,
+    })
+
+    await this.advertCategoryModel.destroy({
+      where: { id: fromId },
+      transaction,
+    })
+
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()

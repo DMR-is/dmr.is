@@ -44,6 +44,7 @@ import {
   GetPaymentResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
+  MergeCategoriesBody,
   PostApplicationAssetBody,
   PostApplicationAttachmentBody,
   PostCasePublishBody,
@@ -243,6 +244,15 @@ export class CaseController {
   @ApiNoContentResponse()
   async createCategory(@Body() body: CreateCategory) {
     ResultWrapper.unwrap(await this.journalService.insertCategory(body.title))
+  }
+
+  @Post('categories/merge')
+  @ApiOperation({ operationId: 'mergeCategories' })
+  @ApiNoContentResponse()
+  async mergeCategories(@Body() body: MergeCategoriesBody) {
+    ResultWrapper.unwrap(
+      await this.journalService.mergeCategories(body.from, body.to),
+    )
   }
 
   @Put('categories/:id')

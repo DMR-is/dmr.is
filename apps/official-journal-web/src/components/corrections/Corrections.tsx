@@ -50,7 +50,9 @@ export const Corrections = () => {
                         onDelete={() => {
                           setLocalCorrection(undefined)
                         }}
-                        title={c.title}
+                        confirmText={`Staðfesting: '${c.title}' verður eytt út.`}
+                        confirmButton="Eyða"
+                        icon="trash"
                       />
                     </GridColumn>
                   ) : undefined}

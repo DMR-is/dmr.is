@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { Category } from '@dmr.is/shared/dto'
 
-import { Button, Icon, Inline, Stack, toast } from '@island.is/island-ui/core'
+import { Icon, Inline, Stack, toast } from '@island.is/island-ui/core'
 
 import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
+import { DeleteCorrections } from '../corrections/DeleteButton'
 import { OJOISelect } from '../select/OJOISelect'
 
 export const MergeCategories = () => {
-  const { categoryOptions, selectedCategory } = useCategoryContext()
+  const { categoryOptions, refetchCategories } = useCategoryContext()
 
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
     null,
@@ -18,8 +19,10 @@ export const MergeCategories = () => {
   const [categoryToMerge, setCategoryToMerge] = useState<Category | null>(null)
 
   const { mergeCategoryTrigger } = useUpdateMainCategories({
-    createCategoryOptions: {
+    mergeCategoriesOptions: {
       onSuccess: () => {
+        refetchCategories()
+        setCategoryToDelete(null)
         toast.success(`Málaflokkar hafa verið sameinaðir`)
       },
       onError: () => {
@@ -34,26 +37,36 @@ export const MergeCategories = () => {
         <OJOISelect
           isClearable
           label="Veldu málaflokk til að eyða"
-          options={categoryOptions}
-          noOptionsMessage="Enginn málaflokkur fannst"
-          value={categoryOptions.find(
-            (opt) => opt.value.id === selectedCategory?.id,
+          options={categoryOptions.filter(
+            (x) => x.value.id !== categoryToMerge?.id,
           )}
+          noOptionsMessage="Enginn málaflokkur fannst"
+          value={
+            categoryOptions.find(
+              (opt) => opt.value.id === categoryToDelete?.id,
+            ) ?? { label: '', value: null }
+          }
           onChange={(opt) => {
             if (!opt) return setCategoryToDelete(null)
 
             setCategoryToDelete(opt.value)
           }}
         />
-        <Icon icon="arrowDown" size="small" color="blue400" />
+        <div style={{ justifySelf: 'center' }}>
+          <Icon icon="arrowDown" size="medium" color="blue400" />
+        </div>
         <OJOISelect
           isClearable
           label="Veldu málaflokk til að sameinast"
-          options={categoryOptions}
-          noOptionsMessage="Enginn málaflokkur fannst"
-          value={categoryOptions.find(
-            (opt) => opt.value.id === selectedCategory?.id,
+          options={categoryOptions.filter(
+            (x) => x.value.id !== categoryToDelete?.id,
           )}
+          noOptionsMessage="Enginn málaflokkur fannst"
+          value={
+            categoryOptions.find(
+              (opt) => opt.value.id === categoryToMerge?.id,
+            ) ?? { label: '', value: null }
+          }
           onChange={(opt) => {
             if (!opt) return setCategoryToMerge(null)
 
@@ -61,26 +74,27 @@ export const MergeCategories = () => {
           }}
         />
         <Inline justifyContent="flexEnd">
-          <Button
-            disabled={
-              categoryToMerge !== null &&
-              categoryToDelete !== null &&
-              categoryToDelete !== categoryToMerge
-            }
-            variant="utility"
-            icon="add"
-            iconType="outline"
-            onClick={() => {
-              if (!categoryToDelete || !categoryToMerge) return
-
-              mergeCategoryTrigger({
-                from: categoryToDelete.id,
-                to: categoryToMerge.id,
-              })
-            }}
-          >
-            Stofna málaflokk
-          </Button>
+          {categoryToMerge !== null &&
+            categoryToDelete !== null &&
+            categoryToDelete !== categoryToMerge && (
+              <DeleteCorrections
+                onDelete={() => {
+                  mergeCategoryTrigger({
+                    from: categoryToDelete.id,
+                    to: categoryToMerge.id,
+                  })
+                }}
+                confirmButton="Sameina málaflokka"
+                icon="checkmark"
+                confirmText={
+                  'Ertu viss um að þú viljir sameina málaflokkinn ' +
+                  categoryToDelete.title +
+                  ' í málaflokkinn ' +
+                  categoryToMerge.title +
+                  '?'
+                }
+              />
+            )}
         </Inline>
       </Stack>
     </ContentWrapper>
