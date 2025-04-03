@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic'
-import { Hero } from '@dmr.is/ui'
+import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 
 import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
 
