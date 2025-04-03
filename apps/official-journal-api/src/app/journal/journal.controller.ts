@@ -27,7 +27,16 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Get, Inject, Param, Query, Res } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  InternalServerErrorException,
+  NotFoundException,
+  Param,
+  Query,
+  Res,
+} from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
@@ -173,7 +182,16 @@ export class JournalController {
 
   @Get('/rss/:id')
   @ApiOperation({ operationId: 'getRssFeed' })
-  @ApiResponse({ status: 200, type: 'application/rss+xml' })
+  @ApiResponse({
+    status: 200,
+    content: {
+      'application/rss+xml': {
+        schema: {
+          type: 'string',
+        },
+      },
+    },
+  })
   async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdverts({
@@ -186,9 +204,19 @@ export class JournalController {
 
   @Get('/pdf/:id')
   @ApiOperation({ operationId: 'getPDFFromAdvert' })
-  @ApiResponse({ status: 301, type: 'application/pdf' })
-  @ApiResponse({ status: 404, type: 'application/json' })
-  @ApiResponse({ status: 500, type: 'application/json' })
+  @ApiResponse({
+    status: 301,
+    headers: {
+      Location: {
+        schema: {
+          type: 'string',
+          format: 'uri',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, type: NotFoundException })
+  @ApiResponse({ status: 500, type: InternalServerErrorException })
   async getPDFFromAdvert(@Param('id') id: string, @Res() res: Response) {
     if (!id) {
       throw new Error('Missing id')
