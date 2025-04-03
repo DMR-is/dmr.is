@@ -286,7 +286,10 @@ export class ApplicationController {
   @Get(':id/involved-parties')
   @ApiOperation({ operationId: 'getInvolvedParties' })
   @ApiResponse({ type: GetInvoledPartiesByUserResponse })
-  async getInvolvedParties(@CurrentUser() user: UserDto) {
+  async getInvolvedParties(
+    @Param('id', new UUIDValidationPipe()) _id: string,
+    @CurrentUser() user: UserDto,
+  ) {
     return ResultWrapper.unwrap(
       await this.userService.getInvolvedPartiesByUser(user),
     )

@@ -29,7 +29,7 @@ export class RoleGuard implements CanActivate {
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest()
+    const req = context.switchToHttp().getRequest()
 
     let requiredRoles = this.reflector.get<UserRoleTitle[] | undefined>(
       ROLES_KEY,
@@ -47,7 +47,7 @@ export class RoleGuard implements CanActivate {
     try {
       // Check if user has required roles
       const userLookup = await this.userService.getUserByNationalId(
-        request.user.nationalId,
+        req.user.nationalId,
       )
 
       if (!userLookup.result.ok) {
@@ -75,8 +75,8 @@ export class RoleGuard implements CanActivate {
         return false
       }
 
-      request.user = user
-      request.involvedParties = user.involvedParties.map((party) => party.id)
+      req.user = user
+      req.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
     } catch (error) {

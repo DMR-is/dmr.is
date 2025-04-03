@@ -15,6 +15,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { amountFormat, imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
+import * as styles from './Calculator.css'
 import { usePriceCalculatorState } from './calculatorContext'
 
 export const PriceCalculator = () => {
@@ -46,14 +47,18 @@ export const PriceCalculator = () => {
 
   const updateAllPrices = () => {
     setPrevPrice(currentCase.transaction?.price)
-    updatePrice({
-      imageTier: state.selectedItem?.value,
-      customBaseDocumentCount: state.customBaseDocumentCount,
-      customBodyLengthCount: state.useCustomInputBase
-        ? state.customBodyLengthCount
-        : 0,
-      customAdditionalDocCount: state.additionalDocuments,
-    })
+    if ('selectedItem' in state) {
+      updatePrice({
+        imageTier: state.selectedItem?.value,
+        customBaseDocumentCount: state.customBaseDocumentCount,
+        customBodyLengthCount: state.useCustomInputBase
+          ? state.customBodyLengthCount
+          : 0,
+        customAdditionalDocCount: state.additionalDocuments,
+        extraWorkCount: state.extraWorkCount,
+        subject: state.subject ?? undefined,
+      })
+    }
   }
 
   const unitPrice = useMemo(
@@ -131,36 +136,58 @@ export const PriceCalculator = () => {
             </Text>
           </Box>
           {currentCase.advertDepartment.slug === 'b-deild' ||
-          currentCase.advertDepartment.slug === 'a-deild' ? ( // Additional documents are only for A and B
-            <Box>
-              <OJOIInput
-                name="additionalDocuments"
-                label="Fylgiskjöl"
-                placeholder="0"
-                type="number"
-                value={state.additionalDocuments || ''}
-                onChange={(e) =>
-                  dispatch({
-                    type: 'SET_ADDITIONAL_DOCUMENTS',
-                    payload: Number(e.target.value),
-                  })
-                }
-                onBlur={updateAllPrices}
-              />
-              {state.additionalDocuments ? (
+          currentCase.advertDepartment.slug === 'a-deild' ? ( // Additional documents & Álag are only for A and B
+            <>
+              <Box>
+                <OJOIInput
+                  name="additionalDocuments"
+                  label="Fylgiskjöl"
+                  placeholder="0"
+                  type="number"
+                  value={state.additionalDocuments || ''}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_ADDITIONAL_DOCUMENTS',
+                      payload: Number(e.target.value),
+                    })
+                  }
+                  onBlur={updateAllPrices}
+                />
                 <Text variant="small" color="blue600">
                   Einingarverð:{' '}
-                  {amountFormat(
-                    feeCodeOptions.find(
-                      (feeCode) =>
-                        feeCode.feeType === 'ADDITIONAL_DOC' &&
-                        feeCode.department ===
-                          currentCase.advertDepartment.slug,
-                    )?.value ?? 0,
-                  )}
+                  {state.additionalDocuments
+                    ? amountFormat(
+                        feeCodeOptions.find(
+                          (feeCode) =>
+                            feeCode.feeType === 'ADDITIONAL_DOC' &&
+                            feeCode.department ===
+                              currentCase.advertDepartment.slug,
+                        )?.value ?? 0,
+                      )
+                    : 0}
                 </Text>
-              ) : undefined}
-            </Box>
+              </Box>
+              <Box position="relative">
+                <span className={styles.percentage}>%</span>
+                <OJOIInput
+                  name="extrawork"
+                  label="Álag"
+                  placeholder="0"
+                  type="number"
+                  value={state.extraWorkCount || ''}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_EXTRA_WORK_COUNT',
+                      payload: Number(e.target.value),
+                    })
+                  }
+                  onBlur={updateAllPrices}
+                />
+                <Text variant="small" color="blue600">
+                  % álag vegna vinnu
+                </Text>
+              </Box>
+            </>
           ) : undefined}
           {currentCase.advertDepartment.slug === 'b-deild' && (
             <Box>
@@ -183,6 +210,8 @@ export const PriceCalculator = () => {
                       ? state.customBodyLengthCount
                       : 0,
                     customAdditionalDocCount: state.additionalDocuments,
+                    extraWorkCount: state.extraWorkCount,
+                    subject: state.subject ?? undefined,
                   })
                 }}
               />
@@ -198,6 +227,29 @@ export const PriceCalculator = () => {
           )}
         </Stack>
       </Box>
+
+      <Inline alignY="center" space={[2, 4]}>
+        <Box marginBottom={3} style={{ minWidth: md ? '308px' : '254px' }}>
+          <OJOIInput
+            name="subject"
+            label="Viðfang"
+            type="text"
+            placeholder="Tilvísun"
+            maxLength={16}
+            value={state.subject || ''}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_SUBJECT',
+                payload: e.target.value,
+              })
+            }
+            onBlur={updateAllPrices}
+          />
+          <Text variant="small" color="blue600">
+            Tilvísun á reikningi
+          </Text>
+        </Box>
+      </Inline>
 
       <Inline alignY="center" space={[2, 4]}>
         <Box style={{ minWidth: md ? '308px' : '254px' }}>

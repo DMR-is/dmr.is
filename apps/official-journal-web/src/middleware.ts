@@ -18,10 +18,6 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  if (!token) {
-    return NextResponse.redirect(new URL('/innskraning', req.url))
-  }
-
   const isProtectedRoute = protectedRoutes.includes(req.nextUrl.pathname)
   if (!isProtectedRoute) {
     return NextResponse.next()

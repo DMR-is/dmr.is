@@ -103,6 +103,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 
   const employeesPromise = dmrClient.getUsers({
     role: 'ritstjori',
+    pageSize: 1000,
+    page: 1,
   })
 
   const categoriesPromise = dmrClient.getCategories({

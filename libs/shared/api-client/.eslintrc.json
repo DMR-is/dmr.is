@@ -1,0 +1,56 @@
+{
+  "extends": ["../../../.eslintrc.yml"],
+   "ignorePatterns": ["!**/*"],
+   "overrides": [
+     {
+       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+       "rules": {}
+     },
+     {
+       "files": ["*.ts", "*.tsx"],
+       "rules": {}
+     },
+     {
+       "files": ["*.js", "*.jsx"],
+       "rules": {}
+     }
+   ],
+   "reportUnusedDisableDirectives": true,
+   "rules": {
+     "simple-import-sort/imports": [
+       "error",
+       {
+         "groups": [
+           // External imports come first.
+           ["^\\w", "@(?!nestjs|island\\.is)"],
+           // Then nestjs packages.
+           ["^@nestjs"],
+           // Then island.is packages.
+           ["^@island\\.is/(?!financial-aid)"],
+           // Then financial-aid packages.
+           ["^@island\\.is/financial-aid"],
+           // Then all other imports in this order: "../", "./", "./strings", "./css"
+           [
+             "^\\.\\.(?!/?$)",
+             "^\\.\\./?$",
+             "^\\./(?=.*/)(?!/?$)",
+             "^\\.(?!/?$)",
+             "^\\./?$"
+           ]
+         ]
+       }
+     ],
+     "no-unused-vars": "off",
+         "unused-imports/no-unused-imports": "error",
+         "unused-imports/no-unused-vars": [
+             "warn",
+             {
+                 "vars": "all",
+                 "varsIgnorePattern": "^_",
+                 "args": "after-used",
+                 "argsIgnorePattern": "^_"
+             }
+         ]
+   },
+   "plugins": ["simple-import-sort","unused-imports"]
+ }

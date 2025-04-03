@@ -222,6 +222,7 @@ export const UsersTable = ({
                       availableInvoledParties={userInvolvedPartiesOptions}
                       user={user}
                       isAdmin={isAdmin}
+                      availableRoles={roleOptions}
                     />
                   ),
                   name: user.displayName,
@@ -242,8 +243,8 @@ export const UsersTable = ({
                         user.role.title === 'Ritstjóri'
                           ? 'mint'
                           : user.role.title === 'Fulltrúi'
-                          ? 'blueberry'
-                          : 'blue'
+                            ? 'blueberry'
+                            : 'blue'
                       }
                     >
                       {user.role.title}

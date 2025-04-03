@@ -25,12 +25,14 @@ type Props = {
   user: UserDto
   availableInvoledParties: { label: string; value: BaseEntity }[]
   isAdmin?: boolean
+  availableRoles: { label: string; value: BaseEntity }[]
 }
 
 export const UserDetailed = ({
   user,
   availableInvoledParties,
   isAdmin = false,
+  availableRoles,
 }: Props) => {
   const { updateUser, deleteUser } = useUserContext()
   const partiesToShow = availableInvoledParties.filter(
@@ -97,12 +99,30 @@ export const UserDetailed = ({
               />
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
-              <OJOIInput
-                disabled
-                name="user-role"
-                label="Hlutverk"
-                defaultValue={user.role.title}
-              />
+              {isAdmin ? (
+                <OJOISelect
+                  required
+                  size="sm"
+                  label="Hlutverk"
+                  backgroundColor="blue"
+                  options={availableRoles}
+                  value={availableRoles.find(
+                    (r) => r.value.id === user.role.id,
+                  )}
+                  onChange={(opt) => {
+                    if (opt?.value?.id) {
+                      onChangeHandler('roleId', opt?.value?.id)
+                    }
+                  }}
+                />
+              ) : (
+                <OJOIInput
+                  disabled
+                  name="user-role"
+                  label="Hlutverk"
+                  defaultValue={user.role.title}
+                />
+              )}
             </GridColumn>
           </GridRow>
           <GridRow rowGap={[2, 3]}>

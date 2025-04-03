@@ -99,3 +99,4 @@ apps/official-journal-api/docker-compose.yml
 apps/official-journal-api/sequelize.config.js
 docker/docker-compose.db.yml
 libs/shared/sequelize/src/lib/sequelize.config.js
+apps/official-journal-api-export/sql/*

@@ -46,6 +46,7 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
+import { CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
@@ -62,6 +63,7 @@ import {
   AdvertCategoriesModel,
   AdvertCategoryCategoriesModel,
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertMainCategoryModel,
@@ -92,6 +94,8 @@ export class JournalService implements IJournalService {
     private advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(AdvertCategoryCategoriesModel)
     private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
+    @InjectModel(CaseModel)
+    private caseModel: typeof CaseModel,
 
     @InjectModel(AdvertStatusModel)
     private advertStatusModel: typeof AdvertStatusModel,
@@ -723,6 +727,7 @@ export class JournalService implements IJournalService {
         AdvertInvolvedPartyModel,
         AdvertAttachmentsModel,
         AdvertCategoryModel,
+        AdvertCorrectionModel,
       ],
     })
 
@@ -845,6 +850,58 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
     const searchCondition = params?.search ? `%${params.search}%` : undefined
+
+    try {
+      // Check if the search is for an internal case number
+      const isearchingForInternalCaseNumber = /^\d{11}$/.test(
+        params?.search ?? '',
+      )
+      if (isearchingForInternalCaseNumber) {
+        const found = await this.caseModel.findOne({
+          include: [
+            {
+              model: AdvertModel,
+              include: [
+                {
+                  model: AdvertTypeModel,
+                  as: 'type',
+                  include: [
+                    {
+                      model: AdvertDepartmentModel,
+                    },
+                  ],
+                },
+                AdvertDepartmentModel,
+                AdvertStatusModel,
+                AdvertInvolvedPartyModel,
+                AdvertAttachmentsModel,
+                AdvertCategoryModel,
+              ],
+            },
+          ],
+          where: {
+            caseNumber: params?.search,
+          },
+        })
+
+        if (!found?.advert) {
+          return ResultWrapper.ok({
+            adverts: [],
+            paging: generatePaging([], 1, pageSize, 1),
+          })
+        }
+
+        const migrated = advertMigrate(found.advert)
+        const paging = generatePaging([migrated], 1, pageSize, 1)
+
+        return ResultWrapper.ok({
+          adverts: [migrated],
+          paging,
+        })
+      }
+    } catch (error) {
+      // do nothing, just continue.
+    }
 
     const whereParams = {}
     if (params?.dateFrom) {
