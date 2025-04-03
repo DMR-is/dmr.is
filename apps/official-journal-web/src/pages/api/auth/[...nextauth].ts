@@ -2,12 +2,12 @@ import { decode } from 'jsonwebtoken'
 import NextAuth, { AuthOptions } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
+import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { logger } from '@dmr.is/logging'
 
 import { UserDto, UserRoleDto } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { identityServerConfig } from '../../../lib/identityProvider'
-import { refreshAccessToken } from '../../../lib/token-service'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -21,12 +21,12 @@ const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
-async function authorize(nationalId?: string, accessToken?: string) {
-  if (!accessToken || !nationalId) {
+async function authorize(nationalId?: string, idToken?: string) {
+  if (!idToken || !nationalId) {
     return null
   }
 
-  const dmrClient = getDmrClient(accessToken)
+  const dmrClient = getDmrClient(idToken)
 
   try {
     const { user: member } = await dmrClient.getUserByNationalId({
@@ -77,18 +77,13 @@ export const authOptions: AuthOptions = {
           displayName: user.displayName ?? 'unknown',
           role: user.role,
           accessToken: account.access_token,
-          accessTokenExpires: account.expires_at
-            ? account.expires_at * 1000
-            : 0,
           refreshToken: account.refresh_token,
           userId: user.id,
           idToken: account.id_token,
         } as JWT
       }
 
-      // Check if token expires in more than 10 seconds
-      const date10SecondsAgo = Date.now() - 10000
-      if (date10SecondsAgo < (token.accessTokenExpires as number)) {
+      if (!isExpired(token.accessToken, !!token.invalid)) {
         return token
       }
 
@@ -149,8 +144,8 @@ export const authOptions: AuthOptions = {
     IdentityServer4({
       id: identityServerConfig.id,
       name: identityServerConfig.name,
-      clientId: process.env.ISLAND_IS_DMR_WEB_CLIENT_ID ?? '',
-      clientSecret: process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
+      clientId: identityServerConfig.clientId,
+      clientSecret: identityServerConfig.clientSecret,
       issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {
         params: {

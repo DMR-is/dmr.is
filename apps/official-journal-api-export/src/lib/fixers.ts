@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+
+import { JSDOM } from 'jsdom'
 import { v4 as uuid } from 'uuid'
 
 import {
   Advert,
   AdvertCategory,
   Category,
+  Correction,
   DbAdverts,
   DbCategory,
+  DbCorrections,
   DbDepartment,
   DbInvolvedParty,
   DbType,
@@ -14,6 +18,7 @@ import {
   InvolvedParty,
   Type,
 } from '../types'
+import { parseIcelandicDate } from './parser'
 import { slugit } from './slug'
 
 export function fixDeps(deps: Array<DbDepartment>): Promise<Array<Department>> {
@@ -165,6 +170,33 @@ export async function fixTypes(
     removedTypes,
   }
   return Promise.resolve(data)
+}
+
+export async function fixCorrections(corrections: Array<DbCorrections>) {
+  const fixed: Array<Correction> = []
+  corrections.map((item) => {
+    const doc = JSDOM.fragment(item.value)
+
+    doc.querySelector('CorrectionText')?.textContent
+
+    const date = doc.querySelector('CorrectionDate')?.textContent
+    const text = doc.querySelector('CorrectionText')?.textContent
+    const documentId = doc.querySelector('CorrectionDocumentId')?.textContent
+    let parsedDate
+    if (date) {
+      if (date === 'test') {
+        return null
+      }
+      parsedDate = parseIcelandicDate(date.trim())
+    }
+    fixed.push({
+      id: item.id,
+      date: parsedDate,
+      text: text,
+      documentId,
+    })
+  })
+  return fixed
 }
 
 export function fixCats(

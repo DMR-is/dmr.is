@@ -758,7 +758,7 @@
   "web.page.caseOverview:banner.description": [
     {
       "type": 0,
-      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+      "value": "Öll mál, bæði í vinnslu og útgefin"
     }
   ],
   "web.page.caseOverview:banner.title": [
@@ -788,7 +788,7 @@
   "web.page.caseProcessingOverview:banner.description": [
     {
       "type": 0,
-      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis"
+      "value": "Umsýsla frá innsendingu til útgáfu"
     }
   ],
   "web.page.caseProcessingOverview:banner.title": [
@@ -898,7 +898,7 @@
   "web.page.casePublishingOverview:banner.description": [
     {
       "type": 0,
-      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+      "value": "Úthlutun númera og birting mála."
     }
   ],
   "web.page.casePublishingOverview:banner.title": [
@@ -1040,10 +1040,6 @@
     }
   ],
   "web.page.caseSingle:banner.description": [
-    {
-      "type": 0,
-      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
-    }
   ],
   "web.page.caseSingle:banner.title": [
     {
@@ -1132,7 +1128,7 @@
   "web.page.dashboard:banner.description": [
     {
       "type": 0,
-      "value": "Umsýslukerfi Stjórnartíðinda, morem ipsum dolor sit amet, consectetur adipiscing elit."
+      "value": "Umsýslukerfi Stjórnartíðinda, allt frá innsendingu til útgáfu. Ásamt yfirliti yfir útgefin mál."
     }
   ],
   "web.page.dashboard:banner.title": [
@@ -1186,7 +1182,7 @@
   "web.page.dashboard:imageWithText.new.description": [
     {
       "type": 0,
-      "value": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+      "value": "Fyrir ritsjórn án þess að fara í gegnum umsóknarkerfi island.is"
     }
   ],
   "web.page.dashboard:imageWithText.new.linkText": [
@@ -1198,7 +1194,7 @@
   "web.page.dashboard:imageWithText.new.text": [
     {
       "type": 0,
-      "value": "Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+      "value": "Möguleiki er að nýskrá auglýsingar innan ritstjórnarkerfis."
     }
   ],
   "web.page.dashboard:imageWithText.new.title": [
@@ -1210,7 +1206,7 @@
   "web.page.dashboard:imageWithText.print.description": [
     {
       "type": 0,
-      "value": "Porem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+      "value": "Prenta."
     }
   ],
   "web.page.dashboard:imageWithText.print.linkText": [

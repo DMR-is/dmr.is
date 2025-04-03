@@ -202,16 +202,7 @@ export default function Dashboard() {
           linkIconType="outline"
           intro={formatMessage(messages.imageWithText.new.description)}
           text={formatMessage(messages.imageWithText.new.text)}
-        />
-        <ImageWithText
-          kicker="Stjórnartíðindi"
-          title={formatMessage(messages.imageWithText.print.title)}
-          image="/assets/image-with-text-2.svg"
-          linkText={formatMessage(messages.imageWithText.print.linkText)}
-          linkIcon="arrowForward"
-          linkIconType="outline"
-          align="rtl"
-          intro={formatMessage(messages.imageWithText.print.description)}
+          link={Routes.ProcessingOverview}
         />
       </Section>
     </>

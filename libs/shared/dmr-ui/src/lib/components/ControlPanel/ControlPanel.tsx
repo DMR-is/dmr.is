@@ -11,8 +11,8 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { findPath, flattenPaths } from '../../utils'
 import * as styles from './ControlPanel.css'
+import { findPath, flattenPaths } from './utils'
 export type ControlPanelRoute = {
   path: string
   pathName: string

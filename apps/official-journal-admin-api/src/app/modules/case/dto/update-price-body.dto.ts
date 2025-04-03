@@ -71,4 +71,5 @@ export class UpdateCasePriceBody {
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value, 10))
   customBodyLengthCount?: number
+
 }

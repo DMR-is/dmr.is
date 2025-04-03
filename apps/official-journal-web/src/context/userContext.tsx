@@ -1,4 +1,4 @@
-import { useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { createContext, useState } from 'react'
 
 import { toast } from '@island.is/island-ui/core'
@@ -56,10 +56,12 @@ type UserProviderProps = {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
+  const [page] = useQueryState('page', parseAsInteger.withDefault(1))
+  const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
   const [users, setUsers] = useState<UserDto[]>([])
   const [paging, setPaging] = useState<Paging>({
-    page: 1,
-    pageSize: 10,
+    page: page,
+    pageSize: pageSize,
     hasNextPage: false,
     hasPreviousPage: false,
     nextPage: 1,
@@ -81,8 +83,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     createUser,
   } = useUsers({
     params: {
-      page: 1,
-      pageSize: 10,
+      page: page,
+      pageSize: pageSize,
       role: role ?? undefined,
       involvedParty: institution ?? undefined,
       search: search ?? undefined,

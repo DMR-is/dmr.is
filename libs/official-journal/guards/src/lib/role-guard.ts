@@ -34,7 +34,7 @@ export class RoleGuard implements CanActivate {
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest()
+    const req = context.switchToHttp().getRequest()
 
     let requiredRoles = this.reflector.get<UserRoleTitle[] | undefined>(
       ROLES_KEY,
@@ -54,7 +54,7 @@ export class RoleGuard implements CanActivate {
       const userLookup = await this.userModel.findOne({
         include: [UserRoleModel, AdvertInvolvedPartyModel],
         where: {
-          nationalId: { [Op.eq]: request.user.nationalId },
+          nationalId: { [Op.eq]: req.user.nationalId },
         },
       })
 
@@ -82,7 +82,7 @@ export class RoleGuard implements CanActivate {
         return false
       }
 
-      request.user = {
+      req.user = {
         id: userLookup.id,
         nationalId: userLookup.nationalId,
         firstName: userLookup.firstName,
@@ -107,7 +107,7 @@ export class RoleGuard implements CanActivate {
           ? userLookup.deletedAt.toISOString()
           : null,
       }
-      request.involvedParties = user.involvedParties.map((party) => party.id)
+      req.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
     } catch (error) {

@@ -2,7 +2,7 @@ import debounce from 'lodash/debounce'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
 import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
-import { DataTable } from '@dmr.is/ui'
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import {
   Button,

@@ -26,9 +26,9 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
         DMRSequelizeConfigModule.register({
           database: process.env.DB_NAME || 'dev_db_legal_gazette',
           host: process.env.DB_HOST || 'localhost',
-          password: process.env.DB_PASSWORD || 'dev_db',
-          username: process.env.DB_USERNAME || 'dev_db',
-          port: 5434,
+          password: process.env.DB_PASS || 'dev_db',
+          username: process.env.DB_USER || 'dev_db',
+          port: Number(process.env.DB_PORT) || Number(process.env.LEGAL_GAZETTE_DB_PORT) || 5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
         }),
       ],

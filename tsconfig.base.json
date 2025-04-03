@@ -6,7 +6,9 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
+      "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
+      "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
       "@dmr.is/legal-gazette/ middleware": [
@@ -112,7 +114,8 @@
         "libs/shared/modules/sequelize/src/index.ts"
       ],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
-      "@dmr.is/ui": ["libs/shared/dmr-ui/src/index.ts"],
+      "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
+      "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
       "@island.is/auth-nest-tools/user-guard": [

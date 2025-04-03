@@ -15,7 +15,8 @@
         "main": "apps/legal-gazette-api/src/main.ts",
         "tsConfig": "apps/legal-gazette-api/tsconfig.app.json",
         "assets": ["apps/legal-gazette-api/src/assets"],
-        "webpackConfig": "apps/legal-gazette-api/webpack.config.js"
+        "webpackConfig": "apps/legal-gazette-api/webpack.config.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "development": {},
@@ -45,6 +46,16 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/legal-gazette-api/jest.config.ts"
+      }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        }
       }
     },
     "dev-services": {

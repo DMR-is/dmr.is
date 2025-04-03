@@ -1,12 +1,10 @@
-import {
-  Hero,
-  ImagePanel,
-  LinkCard,
-  PieChart,
-  Section,
-  TrackerTable,
-  Wrapper,
-} from '@dmr.is/ui'
+import { Hero } from '@dmr.is/ui/components/Hero/Hero'
+import { ImagePanel } from '@dmr.is/ui/components/ImagePanel/ImagePanel'
+import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
+import {PieChart} from '@dmr.is/ui/components/PieChart/PieChart'
+import { Section } from '@dmr.is/ui/components/Section/Section'
+import {TrackerTable} from '@dmr.is/ui/components/Tables/TrackerTable'
+import {Wrapper} from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import {
   GridColumn,

@@ -31,6 +31,13 @@ export class TBRTransaction {
   readonly price!: number | null
 
   @ApiProperty({
+    type: String,
+    description: 'Advert subject (Viðfang).',
+    required: false,
+  })
+  readonly subject!: string | null
+
+  @ApiProperty({
     type: [String],
     required: false,
     description: 'Fee codes to get the price for',
@@ -58,6 +65,13 @@ export class TBRTransaction {
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value, 10))
   readonly customAdditionalDocCount!: number | null
+
+  @ApiProperty({
+    type: Number,
+    description: 'How much extra work is there, in percentage',
+    required: false,
+  })
+  readonly extraWorkCount!: number | null
 
   @ApiProperty({
     type: Number,

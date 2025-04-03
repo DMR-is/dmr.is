@@ -2,7 +2,7 @@ import debounce from 'lodash/debounce'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
 import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
-import { DataTable } from '@dmr.is/ui'
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import {
   Button,
@@ -222,6 +222,7 @@ export const UsersTable = ({
                       availableInvoledParties={userInvolvedPartiesOptions}
                       user={user}
                       isAdmin={isAdmin}
+                      availableRoles={roleOptions}
                     />
                   ),
                   name: user.displayName,
@@ -242,8 +243,8 @@ export const UsersTable = ({
                         user.role.title === 'Ritstjóri'
                           ? 'mint'
                           : user.role.title === 'Fulltrúi'
-                          ? 'blueberry'
-                          : 'blue'
+                            ? 'blueberry'
+                            : 'blue'
                       }
                     >
                       {user.role.title}

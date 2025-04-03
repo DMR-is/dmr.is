@@ -6,7 +6,7 @@ import { EnhancedFetchAPI } from './types'
 export const createEnhancedFetch = (): EnhancedFetchAPI => {
   const builder = buildFetch(nodeFetch)
 
-  // no options for now
+  // add more middleware here if needed ...
 
   return builder.getFetch()
 }

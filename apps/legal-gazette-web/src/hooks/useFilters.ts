@@ -39,6 +39,12 @@ export const useFilters = () => {
       return setFilters(incomingParams)
     }
 
+    // If incoming params contains any keys that are not page we want to reset the page
+    // To reset page when sorting or filtering
+    if (Object.keys(incomingParams).some((key) => key !== QueryParams.PAGE)) {
+      Object.assign(incomingParams, { [QueryParams.PAGE]: DEFAULT_PAGE })
+    }
+
     Object.entries(incomingParams).forEach(([key, value]) => {
       if (typeof value === 'string' && !value) {
         Object.assign(incomingParams, { [key]: null })

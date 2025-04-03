@@ -11,7 +11,7 @@ export class AdvertCorrection {
     type: String,
     description: 'Title of the correction',
   })
-  readonly title!: string
+  readonly title?: string
 
   @ApiProperty({
     type: String,
@@ -36,6 +36,20 @@ export class AdvertCorrection {
     required: false,
   })
   readonly documentPdfUrl?: string
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  readonly isLegacy?: boolean | null
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    example: '2024-01-01T09:00:00Z',
+  })
+  legacyDate!: string | null
 
   @ApiProperty({
     required: true,

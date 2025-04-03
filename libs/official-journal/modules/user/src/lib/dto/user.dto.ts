@@ -57,7 +57,7 @@ export class CreateUserDto extends PickType(UserDto, [
 }
 
 export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ['roleId', 'nationalId'] as const),
+  OmitType(CreateUserDto, ['nationalId'] as const),
 ) {}
 
 export class GetUsersQuery extends PagingQuery {

@@ -91,7 +91,6 @@ export class PostExternalPaymentBody {
   })
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
   @IsOptional()
   extra?: PaymentExtraData[]
 

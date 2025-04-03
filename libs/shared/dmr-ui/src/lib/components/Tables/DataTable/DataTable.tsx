@@ -32,6 +32,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   }
 
   const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
+  const hasLinkRows = rows?.some((row) => !!row.hasLink)
 
   return (
     <Stack space={4}>
@@ -41,6 +42,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
             {columns.map((column, i) => (
               <DataTableColumn key={i} {...column} />
             ))}
+            {hasLinkRows && <DataTableColumn width="65px" field="" />}
             {hasExpandableRows && <DataTableColumn width="65px" field="" />}
           </T.Row>
         </T.Head>

@@ -3912,6 +3912,12 @@
           },
           "documentHtml": { "type": "string" },
           "documentPdfUrl": { "type": "string" },
+          "isLegacy": { "type": "boolean" },
+          "legacyDate": {
+            "type": "string",
+            "nullable": true,
+            "example": "2024-01-01T09:00:00Z"
+          },
           "createdDate": {
             "type": "string",
             "nullable": false,
@@ -4613,10 +4619,62 @@
             "description": "List of advert types",
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertType" }
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["institutions", "paging"]
+      },
+      "CreateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" },
+          "nationalId": { "type": "string" }
+        },
+        "required": ["title", "nationalId"]
+      },
+      "UpdateInstitution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the entity" },
+          "nationalId": { "type": "string" }
+        }
+      },
+      "GetUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserDto" }
           },
-          "paging": {
-            "description": "Paging information",
-            "allOf": [{ "$ref": "#/components/schemas/Paging" }]
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["users", "paging"]
+      },
+      "UnauthorizedException": { "type": "object", "properties": {} },
+      "ForbiddenException": { "type": "object", "properties": {} },
+      "InternalServerErrorException": { "type": "object", "properties": {} },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "roleId": { "type": "string" },
+          "involvedParties": { "type": "array", "items": { "type": "string" } },
+          "displayName": { "type": "string" }
+        }
+      },
+      "GetUserResponse": {
+        "type": "object",
+        "properties": { "user": { "$ref": "#/components/schemas/UserDto" } },
+        "required": ["user"]
+      },
+      "GetRolesByUserResponse": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "description": "Available roles for the current user to fetch",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserRoleDto" }
           }
         },
         "required": ["types", "paging"]

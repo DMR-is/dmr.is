@@ -28,6 +28,7 @@ jobs:
             official-journal-web,
             regulations-api,
             legal-gazette-web,
+            legal-gazette-api,
           ]
     name: 'Build and push images: ${{ matrix.container }}'
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -119,6 +120,7 @@ jobs:
             official-journal-web,
             regulations-api,
             legal-gazette-web,
+            legal-gazette-api,
           ]
       fail-fast: false
     name: Deploy to ${{ matrix.container }} - dev
