@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
-import { HandleApiException, LogMethod, Post } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+
+import { Post } from '@nestjs/common'
 
 import {
   handlerWrapper,

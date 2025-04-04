@@ -29,7 +29,7 @@ import {
   CreateSignature,
   GetSignature,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'

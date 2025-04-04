@@ -1,13 +1,10 @@
 import { LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import {
-  DepartmentSlugEnum,
-  StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
 
 import { NotImplementedException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
+import { StatisticsOverviewQueryType } from './dto/statistics-overview-constants.dto'
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
 
@@ -32,7 +29,7 @@ describe('StatisticsService', () => {
     ALL_MOCK_JOURNAL_DEPARTMENTS.forEach((department) => {
       it('Should return total count larger than or equal to 0', async () => {
         const results = (
-          await service.getDepartment(department.slug as DepartmentSlugEnum)
+          await service.getDepartment(department.slug as string)
         ).unwrap()
 
         expect(results.total).toBeGreaterThanOrEqual(0)

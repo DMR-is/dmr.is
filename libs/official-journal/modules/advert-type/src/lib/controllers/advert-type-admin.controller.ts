@@ -21,7 +21,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { IAdvertTypeService } from '../advert-type.service.interface'
 import { AdvertTypeError } from '../advert-type-error'
 import { CreateAdvertMainTypeBulk } from '../dto/create-advert-main-type-bulk.dto'

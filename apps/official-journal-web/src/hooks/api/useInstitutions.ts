@@ -1,11 +1,12 @@
 import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { GetInstitutionResponse, UpdateInstitution } from '@dmr.is/shared/dto'
 
 import {
   CreateInstitution,
+  GetInstitution,
   GetInstitutions,
   GetInstitutionsRequest,
+  UpdateInstitution,
 } from '../../gen/fetch'
 import { APIRoutes, fetcher } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
@@ -55,10 +56,10 @@ export const useInstitutions = ({
     trigger: createInstitutionTrigger,
     isMutating: isCreatingInstitution,
     error: createInstitutionError,
-  } = useSWRMutation<GetInstitutionResponse, Error, Key, CreateInstitution>(
+  } = useSWRMutation<GetInstitution, Error, Key, CreateInstitution>(
     APIRoutes.Institutions,
     (url: string, { arg }: { arg: CreateInstitution }) => {
-      return fetcher<GetInstitutionResponse, CreateInstitution>(url, {
+      return fetcher<GetInstitution, CreateInstitution>(url, {
         arg: { method: 'POST', body: arg },
       })
     },
@@ -74,17 +75,12 @@ export const useInstitutions = ({
     trigger: udpateInstitutionTrigger,
     isMutating: isUpdatingInstitution,
     error: updateInstitutionError,
-  } = useSWRMutation<
-    GetInstitutionResponse,
-    Error,
-    Key,
-    UpdateInstitutionParams
-  >(
+  } = useSWRMutation<GetInstitution, Error, Key, UpdateInstitutionParams>(
     APIRoutes.Institution,
     (url: string, { arg }: { arg: UpdateInstitutionParams }) => {
       const { id, ...body } = arg
-      return fetcher<GetInstitutionResponse, UpdateInstitution>(
-        url.replace(':id', arg.id),
+      return fetcher<GetInstitution, UpdateInstitution>(
+        url.replace(':id', id),
         {
           arg: { method: 'PUT', body: body },
         },

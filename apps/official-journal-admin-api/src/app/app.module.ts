@@ -20,6 +20,7 @@ import {
   InstitutionModule,
 } from '@dmr.is/official-journal/modules/institution'
 import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
+import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import {
   UserController,
   UserModule,
@@ -36,6 +37,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { OfficialJournalCaseModule } from './modules/case/ojoi-case.module'
+import { PaymentModule } from './modules/payment/payment.module'
 import { StatisticsModule } from './modules/statistics/statistics.module'
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
     AdvertCorrectionModule,
     OfficialJournalCaseModule,
     CaseModule,
+    SignatureModule,
+    PaymentModule,
   ],
   controllers: [
     CategoryAdminController,

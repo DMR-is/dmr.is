@@ -10,7 +10,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { GetComments } from '@dmr.is/official-journal/dto/comment/comment.dto'
 import { GetSignature } from '@dmr.is/official-journal/dto/signature/signature.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   GetApplicationAttachmentsResponse,
   PostApplicationAttachmentBody,
@@ -27,6 +26,7 @@ import {
   IsStringValidationPipe,
   UUIDValidationPipe,
 } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import {
   GetPresignedUrlBody,
   PresignedUrlResponse,

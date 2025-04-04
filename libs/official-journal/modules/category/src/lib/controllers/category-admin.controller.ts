@@ -14,7 +14,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger'
 import { UserRoleEnum } from '@dmr.is/constants'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { Roles } from '@dmr.is/decorators'
 import { ResultWrapper } from '@dmr.is/types'
 import { CreateMainCategoryCategories } from '../dto/create-main-category-categories.dto'

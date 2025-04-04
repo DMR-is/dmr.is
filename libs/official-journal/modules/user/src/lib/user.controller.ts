@@ -27,7 +27,7 @@ import {
 
 import { IUserService } from './user.service.interface'
 
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -37,7 +37,7 @@ import {
   GetUsersResponse,
   UpdateUserDto,
 } from './dto/user.dto'
-import { RoleGuard } from './role.guard'
+import { RoleGuard } from './role-guard'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 
 @Controller({

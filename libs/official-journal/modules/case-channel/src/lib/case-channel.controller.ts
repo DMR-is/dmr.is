@@ -14,7 +14,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
-import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { Roles } from '@dmr.is/decorators'
 import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'

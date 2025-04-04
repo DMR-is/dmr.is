@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { logger } from '@dmr.is/logging'
 
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 
@@ -15,7 +14,7 @@ class InstitutionsHandler extends RouteHandler {
           return void res.status(405).end()
       }
     } catch (error) {
-      logger.error('Error in InstitutionsHandler', {
+      this.logger.error('Error in InstitutionsHandler', {
         context: 'InstitutionsHandler',
         category: 'InstitutionsHandler',
         error: error,

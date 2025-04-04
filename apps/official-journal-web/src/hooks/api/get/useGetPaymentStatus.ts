@@ -19,9 +19,9 @@ export const useGetPaymentStatus = ({
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     session && caseId ? ['getCasePaymentStatus', session?.user, caseId] : null,
-    ([_key, _user, id]) =>
+    ([_key, _user, caseId]) =>
       swrFetcher({
-        func: () => dmrClient.getCasePaymentStatus({ id }),
+        func: () => dmrClient.getCasePaymentStatus({ caseId }),
       }),
     {
       ...options,
