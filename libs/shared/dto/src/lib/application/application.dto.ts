@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer'
 import { ApplicationStates } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -84,6 +85,7 @@ export class Application {
     type: ApplicationAnswers,
     description: 'Application answers',
   })
+  @Type(() => ApplicationAnswers)
   answers!: ApplicationAnswers
 
   @ApiProperty({

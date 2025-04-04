@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer'
 import {
   IsDateString,
   IsEnum,
@@ -109,6 +110,21 @@ export class ApplicationAdvert {
     description: 'HTML contents of the advert',
   })
   @IsString()
+  @Transform(({ value }) => {
+    const isBase64 = (str: string) => {
+      try {
+        return btoa(atob(str)) === str
+      } catch (err) {
+        return false
+      }
+    }
+
+    if (!isBase64(value)) {
+      return value
+    }
+
+    return atob(value)
+  })
   html!: string
 
   @ApiProperty({
