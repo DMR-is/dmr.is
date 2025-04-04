@@ -27,12 +27,15 @@ export const Attachments = () => {
     error,
   } = useAttachments()
 
-  const fileReUploadRef = React.useRef<HTMLInputElement>(null)
+  const fileReUploadRefs = React.useRef<{
+    [key: string]: HTMLInputElement | null
+  }>({})
   const fileUploadRef = React.useRef<HTMLInputElement>(null)
 
-  const onOpenOverwriteAttachment = () => {
-    if (fileReUploadRef.current) {
-      fileReUploadRef.current.click()
+  const onOpenOverwriteAttachment = (id: string) => {
+    const ref = fileReUploadRefs.current[id]
+    if (ref) {
+      ref.click()
     }
   }
 
@@ -143,7 +146,10 @@ export const Attachments = () => {
                     <>
                       <input
                         type="file"
-                        ref={fileReUploadRef}
+                        ref={(el) => {
+                          fileReUploadRefs.current[a.id] = el
+                        }}
+                        id={`file-re-upload-${a.id}`}
                         style={{ display: 'none' }}
                         accept={['.pdf', '.doc', '.docx'].join(',')}
                         onChange={(e) => onFileReUpload(a.id, e)}
@@ -155,7 +161,7 @@ export const Attachments = () => {
                         icon="share"
                         iconType="outline"
                         size="small"
-                        onClick={onOpenOverwriteAttachment}
+                        onClick={() => onOpenOverwriteAttachment(a.id)}
                       >
                         {formatMessage(messages.attachments.overwrite)}
                       </Button>
