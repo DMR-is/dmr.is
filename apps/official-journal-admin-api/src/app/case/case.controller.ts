@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@dmr.is/constants'
+import { AttachmentTypeParam, UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -759,6 +759,26 @@ export class CaseController {
     return ResultWrapper.unwrap(
       await this.caseService.getCasesWithPublicationNumber(department, params),
     )
+  }
+
+  @Post(':id/attachments/:type')
+  @ApiOperation({ operationId: 'addApplicationAttachment' })
+  @ApiParam({ name: 'type', enum: AttachmentTypeParam })
+  @ApiResponse({ status: 200, type: PresignedUrlResponse })
+  async addApplicationAttachment(
+    @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @Param('type', new EnumValidationPipe(AttachmentTypeParam))
+    type: AttachmentTypeParam,
+    @Body() body: PostApplicationAttachmentBody,
+  ): Promise<PresignedUrlResponse> {
+    const test = ResultWrapper.unwrap(
+      await this.caseService.addApplicationAttachment(
+        applicationId,
+        type,
+        body,
+      ),
+    )
+    return test
   }
 
   @Post(':caseId/upload-assets')

@@ -1701,6 +1701,52 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/attachments/{type}": {
+      "post": {
+        "operationId": "addApplicationAttachment",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["frumrit", "fylgiskjol", "assets"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostApplicationAttachmentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUrlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{caseId}/upload-assets": {
       "post": {
         "operationId": "uploadApplicationAttachment",
@@ -3844,7 +3890,8 @@
         "properties": {
           "url": { "type": "string" },
           "cdn": { "type": "string" },
-          "key": { "type": "string" }
+          "key": { "type": "string" },
+          "attachmentId": { "type": "string" }
         },
         "required": ["url"]
       },

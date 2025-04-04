@@ -1,5 +1,6 @@
 import debounce from 'lodash/debounce'
 import dynamic from 'next/dynamic'
+import { useSession } from 'next-auth/react'
 import { useCallback } from 'react'
 
 import {
@@ -18,6 +19,7 @@ import { useFileUploader } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
 import { messages } from '../form-steps/messages'
+import * as styles from './AdvertFields.css'
 
 const OriginalCompare = dynamic(
   () => import('../original-compare/OriginalCompare'),
@@ -31,6 +33,7 @@ type Props = {
 
 export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
+  const { data: session } = useSession()
 
   const { currentCase, refetch, canEdit } = useCaseContext()
 
@@ -51,6 +54,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const fileUploader = useFileUploader(
     currentCase.applicationId ?? 'no-application-id',
     currentCase.id,
+    session?.idToken as string,
   )
 
   return (
@@ -63,7 +67,11 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
       iconVariant="small"
     >
       <Stack space={2}>
-        <Box border="standard" borderRadius="large">
+        <Box
+          className={styles.fieldBody}
+          border="standard"
+          borderRadius="large"
+        >
           <HTMLEditor
             readonly={!canEdit}
             defaultValue={currentCase.html}

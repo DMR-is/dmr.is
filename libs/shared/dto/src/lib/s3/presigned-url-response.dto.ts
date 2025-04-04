@@ -17,4 +17,10 @@ export class PresignedUrlResponse {
     required: false,
   })
   key?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  attachmentId?: string
 }
