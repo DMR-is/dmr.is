@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AddCaseAdvertCorrection,
   CaseCommunicationStatus,
@@ -199,8 +200,14 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
+  addApplicationAttachment(
+    applicationId: string,
+    attachmentType: AttachmentTypeParam,
+    body: PostApplicationAttachmentBody,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
+
   uploadAttachments(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
-  
+
   getCasePaymentStatus(
     params: GetPaymentQuery,
     transaction?: Transaction,
