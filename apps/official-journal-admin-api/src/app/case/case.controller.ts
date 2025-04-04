@@ -771,14 +771,13 @@ export class CaseController {
     type: AttachmentTypeParam,
     @Body() body: PostApplicationAttachmentBody,
   ): Promise<PresignedUrlResponse> {
-    const test = ResultWrapper.unwrap(
+    return ResultWrapper.unwrap(
       await this.caseService.addApplicationAttachment(
         applicationId,
         type,
         body,
       ),
     )
-    return test
   }
 
   @Post(':caseId/upload-assets')
