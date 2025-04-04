@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
   IsDateString,
   IsEnum,
@@ -59,6 +59,21 @@ export class ApplicationAddition {
   })
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => {
+    const isBase64 = (str: string) => {
+      try {
+        return btoa(atob(str)) === str
+      } catch (err) {
+        return false
+      }
+    }
+
+    if (!isBase64(value)) {
+      return value
+    }
+
+    return atob(value)
+  })
   content?: string
 
   @ApiProperty({
@@ -153,6 +168,7 @@ export class ApplicationAdvert {
     description: 'Additions to the advert',
   })
   @IsOptional()
+  @Type(() => ApplicationAddition)
   additions?: ApplicationAddition[]
 
   @ApiProperty({
