@@ -1,4 +1,5 @@
 import {
+  CaseCategoriesModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -17,6 +18,7 @@ import { CaseController } from './case.controller'
       CaseStatusModel,
       CaseCommunicationStatusModel,
       CaseTagModel,
+      CaseCategoriesModel,
     ]),
   ],
   controllers: [CaseController],

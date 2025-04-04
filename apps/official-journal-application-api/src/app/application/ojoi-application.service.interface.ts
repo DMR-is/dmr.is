@@ -1,12 +1,13 @@
 import { Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import { AdvertTemplateType, UserDto } from '@dmr.is/official-journal/dto'
+import { GetApplicationCaseResponse } from '@dmr.is/official-journal/dto/application/application-case.dto'
+import { AdvertTemplateType } from '@dmr.is/official-journal/dto/application/application-template-type.dto'
+import { GetComments } from '@dmr.is/official-journal/dto/comment/comment.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import {
   GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import { GetComments } from '@dmr.is/official-journal/modules/comment'
 import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
@@ -83,7 +84,10 @@ export interface IOfficialJournalApplicationService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAdverts>>
 
-  postApplication(applicationId: string): Promise<ResultWrapper>
+  postApplication(
+    applicationId: string,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper>
 }
 
 export const IOfficialJournalApplicationService = Symbol(

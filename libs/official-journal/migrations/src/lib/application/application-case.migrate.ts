@@ -1,6 +1,9 @@
 import { CaseModel } from '@dmr.is/official-journal/models'
-import { ApplicationCase } from '@dmr.is/official-journal/modules/attachment'
+import { ApplicationCase } from '@dmr.is/official-journal/dto/application/application-case.dto'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
+import { caseStatusMigrate } from '../case-status/case-status.migrate'
+import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
+import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
 
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
   let fullHtml = `
@@ -16,12 +19,12 @@ export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
 
   return {
     department: baseEntityMigrate(model.department),
-    type: baseEntityMigrate(model.advertType),
-    status: baseEntityMigrate(model.status),
+    type: advertTypeMigrate(model.advertType),
+    status: caseStatusMigrate(model.status),
     categories: model.categories
       ? model.categories.map((c) => baseEntityMigrate(c))
       : [],
-    communicationStatus: baseEntityMigrate(model.communicationStatus),
+    communicationStatus: communicationStatusMigrate(model.communicationStatus),
     html: fullHtml,
   }
 }

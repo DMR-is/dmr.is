@@ -20,7 +20,10 @@ import {
   InstitutionModule,
 } from '@dmr.is/official-journal/modules/institution'
 import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
-import { UserModule } from '@dmr.is/official-journal/modules/user'
+import {
+  UserController,
+  UserModule,
+} from '@dmr.is/official-journal/modules/user'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
@@ -73,6 +76,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
     CategoryAdminController,
     AdvertTypeAdminController,
     InstitutionAdminController,
+    UserController,
   ],
   providers: [
     {

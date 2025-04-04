@@ -8,7 +8,7 @@ export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
   const advert: AdvertSimilar = {
     id: model.id,
     title: `${model.type.title} ${model.subject}`,
-    department: model.department ? baseEntityMigrate(model.department) : null,
+    department: baseEntityMigrate(model.department),
     subject: model.subject,
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,

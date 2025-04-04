@@ -16,8 +16,38 @@ import { AdvertDepartmentModel } from '../journal/advert-department.model'
 import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { UserModel } from '../user/user.model'
 
+interface CaseHistoryAttributes {
+  id: string
+  caseId: string
+  departmentId: string
+  typeId: string
+  statusId: string
+  involvedPartyId: string
+  userId: string | null
+  title: string
+  html: string
+  requestedPublicationDate: string | null
+  created: string
+}
+
+interface CreateCaseHistoryAttributes
+  extends Omit<CaseHistoryAttributes, 'id' | 'created'> {
+  caseId: string
+  departmentId: string
+  typeId: string
+  statusId: string
+  involvedPartyId: string
+  userId: string | null
+  title: string
+  html: string
+  requestedPublicationDate: string | null
+}
+
 @Table({ tableName: OfficialJournalModels.CASE_HISTORY, timestamps: false })
-export class CaseHistoryModel extends Model {
+export class CaseHistoryModel extends Model<
+  CaseHistoryAttributes,
+  CreateCaseHistoryAttributes
+> {
   @PrimaryKey
   @Column({
     type: DataType.UUIDV4,
@@ -119,4 +149,42 @@ export class CaseHistoryModel extends Model {
 
   @BelongsTo(() => UserModel)
   adminUser!: UserModel | null
+
+  static async createHistoryByCaseId(caseId: string): Promise<{ id: string }> {
+    const caseLookup = await CaseModel.unscoped().findByPk(caseId, {
+      attributes: [
+        'id',
+        'departmentId',
+        'advertTypeId',
+        'involvedPartyId',
+        'statusId',
+        'assignedUserId',
+        'html',
+        'advertTitle',
+        'requestedPublicationDate',
+      ],
+    })
+
+    if (!caseLookup) {
+      throw new Error(`Case with ID ${caseId} not found`)
+    }
+
+    const caseHistory = await this.create({
+      caseId: caseId,
+      departmentId: caseLookup.departmentId,
+      typeId: caseLookup.advertTypeId,
+      statusId: caseLookup.statusId,
+      involvedPartyId: caseLookup.involvedPartyId,
+      userId: caseLookup.assignedUserId,
+      title: caseLookup.advertTitle,
+      html: caseLookup.html,
+      requestedPublicationDate: caseLookup.requestedPublicationDate,
+    })
+
+    if (!caseHistory) {
+      throw new Error(`Failed to create case history for case ID ${caseId}`)
+    }
+
+    return { id: caseHistory.id }
+  }
 }

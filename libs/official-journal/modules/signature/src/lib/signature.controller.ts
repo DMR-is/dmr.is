@@ -27,8 +27,8 @@ import {
   UpdateSignatureMember,
   UpdateSignatureRecord,
   CreateSignature,
+  GetSignature,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
-import { GetSignature } from './dto/signature-response.dto'
 import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { UserRoleEnum } from '@dmr.is/constants'

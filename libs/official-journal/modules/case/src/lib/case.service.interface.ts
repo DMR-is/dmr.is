@@ -4,6 +4,8 @@ import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  UpdateCaseBody,
+  UpdateCaseCategoriesBody,
 } from '@dmr.is/official-journal/dto/case/case.dto'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -16,6 +18,16 @@ export interface ICaseService {
     body: CreateCaseDto,
     currentUser: UserDto,
   ): Promise<ResultWrapper<CreateCaseResponseDto>>
+
+  updateCase(
+    caseId: string,
+    body: UpdateCaseBody,
+  ): Promise<ResultWrapper<GetCaseResponse>>
+
+  updateCaseCategories(
+    caseId: string,
+    body: UpdateCaseCategoriesBody,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')

@@ -27,7 +27,7 @@ export class Advert {
     type: BaseEntity,
     example: 'A deild',
   })
-  readonly department!: BaseEntity | null
+  readonly department!: BaseEntity
 
   @ApiProperty({
     description: 'Type of the advert.',
@@ -35,7 +35,7 @@ export class Advert {
     required: true,
     type: AdvertType,
   })
-  readonly type!: AdvertType | null
+  readonly type!: AdvertType
 
   @ApiProperty({
     description: 'Subject of the advert, always dependant on the `type`.',
@@ -60,15 +60,14 @@ export class Advert {
     nullable: false,
     example: 'Virk',
   })
-  readonly status!: AdvertStatusEnum | null
+  readonly status!: AdvertStatusEnum
 
   @ApiProperty({
     description: 'Publication number of the advert',
     required: true,
-    nullable: true,
     type: AdvertPublicationNumber,
   })
-  readonly publicationNumber!: AdvertPublicationNumber | null
+  readonly publicationNumber!: AdvertPublicationNumber
 
   @ApiProperty({
     description:

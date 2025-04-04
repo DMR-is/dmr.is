@@ -44,4 +44,14 @@ export class CaseCommunicationStatusModel extends Model {
     allowNull: false,
   })
   slug!: string
+
+  static async findByTitle(
+    title: CaseCommunicationStatusEnum,
+  ): Promise<CaseCommunicationStatusModel | null> {
+    return this.findOne({
+      where: {
+        title,
+      },
+    })
+  }
 }

@@ -1,29 +1,21 @@
-import { Op, Transaction } from 'sequelize'
-import { AttachmentTypeParam } from '@dmr.is/constants'
+import { Transaction } from 'sequelize'
+import { AttachmentTypeParam, SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AdvertTemplateType, UserDto } from '@dmr.is/official-journal/dto'
+import { applicationCaseMigrate } from '@dmr.is/official-journal/migrations/application/application-case.migrate'
 import {
-  AdvertCategoryModel,
-  AdvertDepartmentModel,
-  AdvertMainTypeModel,
-  AdvertModel,
-  AdvertTypeModel,
   CaseActionEnum,
   CaseCommunicationStatusEnum,
   CaseCommunicationStatusModel,
+  CaseHistoryModel,
   CaseModel,
 } from '@dmr.is/official-journal/models'
 import {
   GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
   IAttachmentService,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import {
-  GetComments,
-  ICommentService,
-} from '@dmr.is/official-journal/modules/comment'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import { IPriceService } from '@dmr.is/official-journal/modules/price'
 import { OJOIApplication } from '@dmr.is/shared/dto'
 import { IApplicationService } from '@dmr.is/shared/modules/application'
@@ -33,14 +25,9 @@ import {
   S3UploadFilesResponse,
 } from '@dmr.is/shared/modules/aws'
 import { ResultWrapper } from '@dmr.is/types'
-import {
-  generatePaging,
-  getFastTrack,
-  getHtmlTextLength,
-  getLimitAndOffset,
-} from '@dmr.is/utils'
+import { getFastTrack, getHtmlTextLength } from '@dmr.is/utils'
 
-import { HttpException, Inject, Injectable } from '@nestjs/common'
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { ApplicationPriceResponse } from './dto/application-price-response.dto'
@@ -49,17 +36,22 @@ import {
   GetAdvertTemplateResponse,
 } from './dto/get-advert-template-response.dto'
 import {
+  ApplicationAdvertItem,
   GetApplicationAdverts,
   GetApplicationAdvertsQuery,
 } from './dto/get-application-advert.dto'
 import { PostApplicationComment } from './dto/post-application-comment.dto'
-import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
-import { applicationCaseMigrate } from './migrations/application-case.migrate'
-import { IOfficialJournalApplicationService } from './application.service.interface'
+import { IOfficialJournalApplicationService } from './ojoi-application.service.interface'
 import { getTemplate, getTemplateDetails } from './utils'
-
 const LOGGING_CATEGORY = 'official-journal-application-api-application-service'
 const LOGGING_CONTEXT = 'OfficialJournalApplicationApiApplicationService'
+import { GetApplicationCaseResponse } from '@dmr.is/official-journal/dto/application/application-case.dto'
+import { AdvertTemplateType } from '@dmr.is/official-journal/dto/application/application-template-type.dto'
+import { GetComments } from '@dmr.is/official-journal/dto/comment/comment.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { IAdvertService } from '@dmr.is/official-journal/modules/advert'
+import { ICaseService } from '@dmr.is/official-journal/modules/case'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
 
 @Injectable()
 export class OfficialJournalApplicationService
@@ -74,12 +66,80 @@ export class OfficialJournalApplicationService
     @Inject(IAWSService) private readonly s3Service: IAWSService,
     @Inject(IAttachmentService)
     private readonly attachmentService: IAttachmentService,
-    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ISignatureService)
+    private readonly signatureService: ISignatureService,
+    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @InjectModel(CaseHistoryModel)
+    private readonly casehistoryModel: typeof CaseHistoryModel,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseCommunicationStatusModel)
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
-    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
+  private async createApplicationCase(
+    application: OJOIApplication,
+    currentUser: UserDto,
+  ): Promise<ResultWrapper> {
+    const caseCreateResults = ResultWrapper.unwrap(
+      await this.caseService.createCase(
+        {
+          applicationId: application.id,
+          departmentId: application.answers.advert.department.id,
+          involvedPartyId: application.answers.advert.involvedPartyId,
+          subject: application.answers.advert.title,
+          typeId: application.answers.advert.type.id,
+          requestedPublicationDate: application.answers.advert.requestedDate,
+          message: application.answers.advert.message,
+          html: application.answers.advert.html,
+        },
+        currentUser,
+      ),
+    )
+
+    const signatureToUse =
+      application.answers.misc?.signatureType || SignatureType.Committee
+
+    const records = application.answers.signature[signatureToUse]?.records ?? []
+
+    await Promise.all([
+      this.signatureService.createSignature(caseCreateResults.id, {
+        involvedPartyId: application.answers.advert.involvedPartyId,
+        records: records.map((record) => ({
+          institution: record.institution,
+          signatureDate: record.signatureDate,
+          additional: record.additional,
+          chairman: record.chairman
+            ? {
+                name: record.chairman.name,
+                textAbove: record.chairman.above ?? null,
+                textAfter: record.chairman.after ?? null,
+                textBelow: record.chairman.below ?? null,
+                textBefore: null,
+              }
+            : undefined,
+          members: record.members.map((member) => ({
+            name: member.name,
+            textAbove: member.above ?? null,
+            textAfter: member.after ?? null,
+            textBelow: member.below ?? null,
+            textBefore: null,
+          })),
+        })),
+      }),
+
+      this.commentService.createSubmitComment(caseCreateResults.id, {
+        institutionCreatorId: application.answers.advert.involvedPartyId,
+      }),
+
+      this.casehistoryModel.createHistoryByCaseId(caseCreateResults.id),
+    ])
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async getApplicationCase(
     applicationId: string,
   ): Promise<ResultWrapper<GetApplicationCaseResponse>> {
@@ -370,73 +430,29 @@ export class OfficialJournalApplicationService
     query: GetApplicationAdvertsQuery,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAdverts>> {
-    const { limit, offset } = getLimitAndOffset({
-      page: query?.page,
-      pageSize: query?.pageSize,
-    })
-
-    const whereClause = {}
-
-    if (query?.search) {
-      Object.assign(whereClause, {
-        [Op.or]: [
-          {
-            subject: {
-              [Op.iLike]: `%${query.search}%`,
-            },
-          },
-        ],
-      })
-    }
-
-    const adverts = await this.advertModel.findAndCountAll({
-      distinct: true,
-      limit,
-      offset,
-      attributes: [
-        'id',
-        'subject',
-        'documentHtml',
-        'publicationYear',
-        'serialNumber',
-      ],
-      where: whereClause,
-      include: [
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-        {
-          model: AdvertTypeModel,
-          attributes: ['id', 'title', 'slug'],
-          include: [
-            {
-              model: AdvertMainTypeModel,
-              attributes: ['id', 'title', 'slug'],
-              required: false,
-            },
-          ],
-        },
-        {
-          model: AdvertCategoryModel,
-          attributes: ['id', 'title', 'slug'],
-        },
-      ],
-      order: [
-        ['publicationYear', 'DESC'],
-        ['serialNumber', 'DESC'],
-      ],
-      transaction,
-    })
-
-    const migrated = adverts.rows.map((advert) =>
-      applicationAdvertMigrate(advert),
+    const { adverts, paging } = ResultWrapper.unwrap(
+      await this.advertService.getAdverts({
+        search: query.search,
+        page: query.page,
+        pageSize: query.pageSize,
+      }),
     )
 
-    const paging = generatePaging(migrated, offset + 1, limit, adverts.count)
+    const applicationAdverts: ApplicationAdvertItem[] = adverts.map(
+      (advert) => ({
+        id: advert.id,
+        title: advert.title,
+        type: advert.type,
+        department: advert.department,
+        involvedParty: advert.involvedParty,
+        categories: advert.categories,
+        html: advert.document.html ?? '', // Provide a fallback empty string if html is null
+        mainType: null,
+      }),
+    )
 
     return ResultWrapper.ok({
-      adverts: migrated,
+      adverts: applicationAdverts,
       paging,
     })
   }
@@ -454,87 +470,80 @@ export class OfficialJournalApplicationService
   @Transactional()
   async postApplication(
     applicationId: string,
+    currentUser: UserDto,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     ResultWrapper
-    try {
-      const caseLookup = await this.caseModel.findOne({
-        where: {
-          applicationId,
+    const caseLookup = await this.caseModel.findOne({
+      attributes: ['id', 'applicationId'],
+      where: {
+        applicationId,
+      },
+    })
+
+    const { application }: { application: OJOIApplication } =
+      ResultWrapper.unwrap(
+        await this.applicationService.getApplication(applicationId),
+      )
+
+    // if users unexpectedly has his involved party removed we need to check here
+    const canPost = currentUser.involvedParties.some(
+      (ip) => ip.id === application.answers.advert.involvedPartyId,
+    )
+
+    if (!canPost) {
+      this.logger.warn(
+        `User tried to post application from the application system for an institution that he does not have access to`,
+        {
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+          userId: currentUser.id,
+          applicationId: application.id,
+          userInvolvedParties: currentUser.involvedParties,
+          involvedPartyId: application.answers.advert.involvedPartyId,
         },
-      })
-
-      const { application }: { application: OJOIApplication } =
-        ResultWrapper.unwrap(
-          await this.applicationService.getApplication(applicationId),
-        )
-
-      // first time submitting the application so we create a case
-      if (!caseLookup) {
-        return await this.caseService.createCaseByApplication({
-          applicationId,
-        })
-      }
-
-      ResultWrapper.unwrap(
-        await this.caseService.updateCase(
-          {
-            caseId: caseLookup.id,
-            applicationId: applicationId,
-            advertTitle: application.answers.advert.title,
-            departmentId: application.answers.advert.department.id,
-            advertTypeId: application.answers.advert.type.id,
-            requestedPublicationDate: application.answers.advert.requestedDate,
-            message: application.answers.advert.message,
-            categoryIds: application.answers.advert.categories.map((c) => c.id),
-          },
-          transaction,
-        ),
       )
+      throw new ForbiddenException()
+    }
 
-      const commStatus = ResultWrapper.unwrap(
-        await this.utilityService.caseCommunicationStatusLookup(
-          CaseCommunicationStatusEnum.HasAnswers,
-          transaction,
-        ),
-      )
-
+    // No case exists for the application, create a new one
+    if (!caseLookup) {
       ResultWrapper.unwrap(
-        await this.caseService.updateCaseCommunicationStatus(
-          caseLookup.id,
-          {
-            statusId: commStatus.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.commentService.createSubmitComment(
-          caseLookup.id,
-          {
-            institutionCreatorId: caseLookup.involvedParty.id,
-          },
-          transaction,
-        ),
-      )
-
-      ResultWrapper.unwrap(
-        await this.caseService.createCaseHistory(caseLookup.id, transaction),
+        await this.createApplicationCase(application, currentUser),
       )
 
       return ResultWrapper.ok()
-    } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === 404) {
-        return await this.caseService.createCaseByApplication({
-          applicationId,
-        })
-      }
     }
 
-    return ResultWrapper.err({
-      code: 500,
-      message: 'Could not post application',
-    })
+    // Case exists so we update
+    const commStatusTest = await this.caseCommunicationStatusModel.findByTitle(
+      CaseCommunicationStatusEnum.HasAnswers,
+    )
+
+    ResultWrapper.unwrap(
+      await this.caseService.updateCase(caseLookup.id, {
+        subject: application.answers.advert.title,
+        departmentId: application.answers.advert.department.id,
+        typeId: application.answers.advert.type.id,
+        requestedPublicationDate: application.answers.advert.requestedDate,
+        html: application.answers.advert.html,
+        categoryIds: application.answers.advert.categories.map((cat) => cat.id),
+        communicationStatusId: commStatusTest?.id,
+      }),
+    )
+
+    ResultWrapper.unwrap(
+      await this.commentService.createSubmitComment(
+        caseLookup.id,
+        {
+          institutionCreatorId: caseLookup.involvedParty.id,
+        },
+        transaction,
+      ),
+    )
+
+    await this.casehistoryModel.createHistoryByCaseId(caseLookup.id)
+
+    return ResultWrapper.ok()
   }
 }

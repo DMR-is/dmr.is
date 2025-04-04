@@ -10,7 +10,7 @@ export function advertMigrate(model: AdvertModel): Advert {
     id: model.id,
     title: `${model.type.title} ${model.subject}`,
     department: baseEntityMigrate(model.department),
-    type: model.type ? advertTypeMigrate(model.type) : null,
+    type: advertTypeMigrate(model.type),
     subject: model.subject,
     status: model.status.title,
     publicationNumber: {

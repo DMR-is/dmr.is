@@ -12,6 +12,7 @@ import {
   CreateCaseDto,
   CreateCaseResponseDto,
   UpdateCaseBody,
+  UpdateCaseCategoriesBody,
 } from '@dmr.is/official-journal/dto/case/case.dto'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { caseDetailedMigrate } from '@dmr.is/official-journal/migrations/case/case-detailed.migrate'
@@ -22,6 +23,7 @@ import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertTypeModel,
+  CaseCategoriesModel,
   CaseCommunicationStatusEnum,
   CaseCommunicationStatusModel,
   CaseModel,
@@ -57,6 +59,8 @@ export class CaseService implements ICaseService {
     private readonly caseCommunicationStatusModel: typeof CaseCommunicationStatusModel,
     @InjectModel(CaseTagModel)
     private readonly caseTagModel: typeof CaseTagModel,
+    @InjectModel(CaseCategoriesModel)
+    private readonly caseCategoriesModel: typeof CaseCategoriesModel,
   ) {}
 
   @LogAndHandle()
@@ -276,7 +280,7 @@ export class CaseService implements ICaseService {
         communicationStatusId: commStatus.id,
         tagId: tag.id,
         fastTrack: fastTrack,
-        assignedUserId: currentUser.id,
+        assignedUserId: body.assignedUserId,
         html: body.html ? body.html : fallBackhtml,
         publishedAt: null,
         caseNumber: caseNumber,
@@ -290,7 +294,10 @@ export class CaseService implements ICaseService {
     })
   }
 
-  async updateCase(id: string, body: UpdateCaseBody): Promise<GetCaseResponse> {
+  async updateCase(
+    id: string,
+    body: UpdateCaseBody,
+  ): Promise<ResultWrapper<GetCaseResponse>> {
     const caseLookup = await this.caseModel.scope('detailed').findByPk(id)
 
     if (!caseLookup) {
@@ -332,8 +339,32 @@ export class CaseService implements ICaseService {
 
     const migratedCase = caseDetailedMigrate(caseLookup)
 
-    return {
+    return ResultWrapper.ok({
       case: migratedCase,
+    })
+  }
+
+  async updateCaseCategories(
+    caseId: string,
+    body: UpdateCaseCategoriesBody,
+  ): Promise<ResultWrapper> {
+    if (!body?.categoryIds) {
+      return ResultWrapper.ok()
     }
+
+    await this.caseCategoriesModel.destroy({
+      where: {
+        caseId: caseId,
+      },
+    })
+
+    await this.caseCategoriesModel.bulkCreate(
+      body.categoryIds.map((categoryId) => ({
+        caseId: caseId,
+        categoryId: categoryId,
+      })),
+    )
+
+    return ResultWrapper.ok()
   }
 }

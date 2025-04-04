@@ -10,7 +10,6 @@ import {
   UserInvolvedPartiesModel,
   AdvertInvolvedPartyModel,
 } from '@dmr.is/official-journal/models'
-import { UserController } from './user.controller'
 
 @Global()
 @Module({
@@ -22,7 +21,7 @@ import { UserController } from './user.controller'
       AdvertInvolvedPartyModel,
     ]),
   ],
-  controllers: [UserController],
+  controllers: [],
   providers: [
     {
       provide: IUserService,

@@ -64,7 +64,6 @@ export class CaseHistoryService {
         requestedPublicationDate: new Date(
           caseLookup.requestedPublicationDate,
         ).toISOString(),
-        created: now,
       },
       { transaction },
     )

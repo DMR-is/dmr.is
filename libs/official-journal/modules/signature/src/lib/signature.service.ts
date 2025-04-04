@@ -22,10 +22,10 @@ import { signatureMigrate } from '@dmr.is/official-journal/migrations/signature/
 import {
   CreateSignature,
   CreateSignatureMember,
+  GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
-import { GetSignature } from './dto/signature-response.dto'
 
 const LOGGING_CONTEXT = 'SignatureService'
 const LOGGING_CATEGORY = 'signature-service'

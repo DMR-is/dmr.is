@@ -7,21 +7,15 @@ import {
 } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserDto } from '@dmr.is/official-journal/dto'
-import {
-  InvolvedPartyGuard,
-  TokenJwtAuthGuard,
-} from '@dmr.is/official-journal/guards'
+import { GetComments } from '@dmr.is/official-journal/dto/comment/comment.dto'
+import { GetSignature } from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { TokenJwtAuthGuard } from '@dmr.is/official-journal/guards'
 import {
   GetApplicationAttachmentsResponse,
-  GetApplicationCaseResponse,
   PostApplicationAttachmentBody,
 } from '@dmr.is/official-journal/modules/attachment'
-import { GetComments } from '@dmr.is/official-journal/modules/comment'
-import {
-  GetSignature,
-  ISignatureService,
-} from '@dmr.is/official-journal/modules/signature'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
 import {
   GetInvoledPartiesByUserResponse,
   IUserService,
@@ -74,7 +68,8 @@ import {
 import { GetApplicationAdvertsQuery } from './dto/get-application-advert.dto'
 import { GetApplicationResponse } from './dto/get-application-response.dto'
 import { PostApplicationComment } from './dto/post-application-comment.dto'
-import { IOfficialJournalApplicationService } from './application.service.interface'
+import { InvolvedPartyGuard } from './involved-party.guard'
+import { IOfficialJournalApplicationService } from './ojoi-application.service.interface'
 
 import 'multer'
 
@@ -85,7 +80,7 @@ import 'multer'
 @UseGuards(TokenJwtAuthGuard, RoleGuard)
 @ApiBearerAuth()
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
-export class ApplicationController {
+export class OfficialJournalApplicationController {
   constructor(
     @Inject(IOfficialJournalApplicationService)
     private readonly officialJournalApplicationService: IOfficialJournalApplicationService,
@@ -124,10 +119,12 @@ export class ApplicationController {
   @ApiResponse({ status: 200 })
   async postApplication(
     @Param('id', new UUIDValidationPipe()) applicationId: string,
+    @CurrentUser() currentUser: UserDto,
   ) {
     return ResultWrapper.unwrap(
       await this.officialJournalApplicationService.postApplication(
         applicationId,
+        currentUser,
       ),
     )
   }
@@ -300,7 +297,7 @@ export class ApplicationController {
 
   @Get(':id/case')
   @ApiOperation({ operationId: 'getApplicationCase' })
-  @ApiResponse({ type: GetApplicationCaseResponse })
+  @ApiResponse({ type: GetApplicationResponse })
   @UseGuards(InvolvedPartyGuard)
   async getApplicationCase(
     @Param('id', new UUIDValidationPipe()) applicationId: string,

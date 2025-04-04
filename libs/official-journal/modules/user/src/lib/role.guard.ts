@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { IUserService } from './user.service.interface'
-import { has } from 'lodash'
 
 @Injectable()
 export class RoleGuard implements CanActivate {

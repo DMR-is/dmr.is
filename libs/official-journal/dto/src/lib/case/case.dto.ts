@@ -559,6 +559,14 @@ export class CreateCaseDto {
     required: false,
   })
   message?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  assignedUserId?: string
 }
 
 export class CreateCaseResponseDto {
@@ -584,4 +592,17 @@ export class UpdateCaseBody extends PartialType(
     required: false,
   })
   assignedUserId?: string
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  categoryIds?: string[]
 }
+
+export class UpdateCaseCategoriesBody extends PickType(UpdateCaseBody, [
+  'categoryIds',
+] as const) {}

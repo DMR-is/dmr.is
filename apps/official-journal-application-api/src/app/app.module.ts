@@ -4,10 +4,7 @@ import {
   AdvertTypeController,
   AdvertTypeModule,
 } from '@dmr.is/official-journal/modules/advert-type'
-import { PdfModule } from '@dmr.is/official-journal/modules/pdf'
-import { SignatureModule } from '@dmr.is/official-journal/modules/signature'
 import { UserModule } from '@dmr.is/official-journal/modules/user'
-import { UtilityModule } from '@dmr.is/official-journal/modules/utility'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules/health'
 import {
@@ -19,12 +16,11 @@ import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { ApplicationController } from './application/application.controller'
-import { OfficialJournalApplicationService } from './application/application.service'
-import { IOfficialJournalApplicationService } from './application/application.service.interface'
+import { OJOIApplicationModule } from './application/ojoi-application.module'
 
 @Module({
   imports: [
+    LoggingModule,
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -40,23 +36,16 @@ import { IOfficialJournalApplicationService } from './application/application.se
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    LoggingModule,
-    SignatureModule,
-    PdfModule,
-    UtilityModule,
-    AdvertTypeModule,
     UserModule,
+    AdvertTypeModule,
+    OJOIApplicationModule,
     HealthModule,
   ],
-  controllers: [ApplicationController, AdvertTypeController],
+  controllers: [AdvertTypeController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
-    },
-    {
-      provide: IOfficialJournalApplicationService,
-      useClass: OfficialJournalApplicationService,
     },
   ],
 })

@@ -4,10 +4,10 @@ import { ResultWrapper } from '@dmr.is/types'
 import { MemberTypeEnum } from './types'
 import {
   CreateSignature,
+  GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
-import { GetSignature } from './dto/signature-response.dto'
 
 export interface ISignatureService {
   createSignature(

@@ -182,3 +182,10 @@ export class CreateSignature {
   })
   records!: CreateSignatureRecord[]
 }
+
+export class GetSignature {
+  @ApiProperty({
+    type: Signature,
+  })
+  signature!: Signature
+}
