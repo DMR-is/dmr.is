@@ -44,6 +44,11 @@ import { Op } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { LogAndHandle } from '@dmr.is/decorators'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
+import {
+  OJOIApplicationAddition,
+  OJOIUpdateApplicationAnswers,
+} from '@dmr.is/shared/dto'
 
 const LOGGING_CONTEXT = 'CaseService'
 export const LOGGING_CATEGORY = 'case-service'
@@ -52,6 +57,8 @@ export const LOGGING_CATEGORY = 'case-service'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IApplicationService)
+    private readonly applicationService: IApplicationService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseStatusModel)
     private readonly caseStatusModel: typeof CaseStatusModel,
@@ -62,6 +69,27 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseCategoriesModel)
     private readonly caseCategoriesModel: typeof CaseCategoriesModel,
   ) {}
+
+  @LogAndHandle()
+  private async updateApplication(
+    applicationId: string,
+    answers: OJOIUpdateApplicationAnswers,
+  ): Promise<void> {
+    try {
+      await this.applicationService.updateApplication(applicationId, answers)
+      this.logger.debug('Application successfully updated', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        applicationId,
+      })
+    } catch (error) {
+      this.logger.error(`Error updating application`, {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        error,
+      })
+    }
+  }
 
   @LogAndHandle()
   private async generateInternalCaseNumber(): Promise<
@@ -289,6 +317,14 @@ export class CaseService implements ICaseService {
       { returning: ['id'] },
     )
 
+    this.logger.debug(`User successfully created case`, {
+      context: LOGGING_CONTEXT,
+      category: LOGGING_CATEGORY,
+      caseId: createResults.id,
+      caseNumber: caseNumber,
+      userId: currentUser.id,
+    })
+
     return ResultWrapper.ok({
       id: createResults.id,
     })
@@ -338,6 +374,41 @@ export class CaseService implements ICaseService {
     })
 
     const migratedCase = caseDetailedMigrate(caseLookup)
+
+    // if the case has an applicationId, we need to update the application
+    if (migratedCase.applicationId) {
+      this.updateApplication(migratedCase.applicationId, {
+        advert: {
+          additions: migratedCase.additions.map((addition) => ({
+            id: addition.id,
+            title: addition.title,
+            content: addition.html,
+            type: 'html',
+          })) as OJOIApplicationAddition[],
+          categories: migratedCase.advertCategories.map((category) => ({
+            id: category.id,
+            title: category.title,
+            slug: category.slug,
+          })),
+          channels: migratedCase.channels.map((channel) => ({
+            id: channel.id,
+            email: channel.email,
+            name: channel.name,
+            phone: channel.phone,
+          })),
+          department: {
+            id: migratedCase.advertDepartment.id,
+            title: migratedCase.advertDepartment.title,
+            slug: migratedCase.advertDepartment.slug,
+          },
+          html: migratedCase.html,
+          involvedPartyId: migratedCase.involvedParty.id,
+          requestedDate: migratedCase.requestedPublicationDate,
+          title: migratedCase.advertTitle,
+          type: migratedCase.advertType,
+        },
+      })
+    }
 
     return ResultWrapper.ok({
       case: migratedCase,

@@ -10,7 +10,10 @@ export {
   OJOIApplicationAdvert,
   OJOIApplicationCommunicationChannel,
 } from './lib/ojoi-application/application-advert.dto'
-export { OJOIApplicationAnswers } from './lib/ojoi-application/application-answers.dto'
+export {
+  OJOIApplicationAnswers,
+  OJOIUpdateApplicationAnswers,
+} from './lib/ojoi-application/application-answers.dto'
 export { ApplicationMisc } from './lib/ojoi-application/application-misc'
 export {
   OJOIApplicationSignatureMember,

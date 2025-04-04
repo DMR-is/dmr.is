@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger'
 import { PaymentExpenses } from './payment.dto'
@@ -40,6 +46,7 @@ export class TBRTransaction {
   @ApiProperty({
     type: [String],
     required: false,
+    nullable: true,
     description: 'Fee codes to get the price for',
   })
   @IsOptional()

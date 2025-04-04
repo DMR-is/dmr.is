@@ -7,7 +7,10 @@ import {
   AdvertTypeAdminController,
   AdvertTypeModule,
 } from '@dmr.is/official-journal/modules/advert-type'
-import { CaseModule } from '@dmr.is/official-journal/modules/case'
+import {
+  CaseController,
+  CaseModule,
+} from '@dmr.is/official-journal/modules/case'
 import { CaseTagModule } from '@dmr.is/official-journal/modules/case-tag'
 import {
   CategoryAdminController,
@@ -80,6 +83,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module'
     CategoryAdminController,
     AdvertTypeAdminController,
     InstitutionAdminController,
+    CaseController,
     UserController,
   ],
   providers: [

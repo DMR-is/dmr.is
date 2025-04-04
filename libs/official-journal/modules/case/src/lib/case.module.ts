@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { ICaseService } from './case.service.interface'
 import { CaseService } from './case.service'
-import { CaseController } from './case.controller'
+import { ApplicationModule } from '@dmr.is/shared/modules/application'
 
 @Module({
   imports: [
@@ -20,8 +20,9 @@ import { CaseController } from './case.controller'
       CaseTagModel,
       CaseCategoriesModel,
     ]),
+    ApplicationModule,
   ],
-  controllers: [CaseController],
+  controllers: [],
   providers: [
     {
       provide: ICaseService,

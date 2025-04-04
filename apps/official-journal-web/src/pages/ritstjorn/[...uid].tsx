@@ -97,34 +97,32 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
     },
   }
 
-  const casePromise = dmrClient.getCase({ id: caseId })
-
-  const departmentsPromise = dmrClient.getDepartments({})
-
-  const employeesPromise = dmrClient.getUsers({
-    role: 'ritstjori',
-    pageSize: 1000,
-    page: 1,
-  })
-
-  const categoriesPromise = dmrClient.getCategories({
-    page: 1,
-    pageSize: 1000,
-  })
-
-  const tagPromises = dmrClient.getTags()
-
-  const feeCodePromise = dmrClient.getFeeCodes()
-
   try {
-    const [caseResponse, departments, users, categories, tags, feeCodes] =
+    const feeCodePromise = dmrClient.getFeeCodes()
+    const feeCodes = await feeCodePromise
+    const casePromise = dmrClient.getCase({ id: caseId })
+
+    const departmentsPromise = dmrClient.getDepartments({})
+
+    const employeesPromise = dmrClient.getUsers({
+      role: 'ritstjori',
+      pageSize: 1000,
+      page: 1,
+    })
+
+    const categoriesPromise = dmrClient.getCategories({
+      page: 1,
+      pageSize: 1000,
+    })
+
+    const tagPromises = dmrClient.getTags()
+    const [caseResponse, departments, users, categories, tags] =
       await Promise.all([
         casePromise,
         departmentsPromise,
         employeesPromise,
         categoriesPromise,
         tagPromises,
-        feeCodePromise,
       ])
 
     const types = await dmrClient.getTypes({
