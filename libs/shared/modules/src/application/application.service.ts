@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
@@ -148,7 +149,9 @@ export class ApplicationService implements IApplicationService {
       })
     }
 
-    const application: Application = await res.json()
+    const raw = await res.json()
+
+    const application = plainToInstance(Application, raw)
 
     return ResultWrapper.ok({
       application,
