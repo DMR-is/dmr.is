@@ -1,10 +1,16 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": [],
-  "files": [],
-  "references": [],
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true
-  }
+    "module": "commonjs"
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

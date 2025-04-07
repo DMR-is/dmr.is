@@ -7,7 +7,7 @@
   "targets": {
     "typecheck": {
       "options": {
-        "commands": ["tsc -p tsconfig.json --noEmit"]
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"]
       }
     },
     "lint": {

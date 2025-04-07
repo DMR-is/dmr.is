@@ -1,16 +1,11 @@
- 
+
 export default {
-  preset: './jest.preset.js',
-  rootDir: '../..',
-  roots: [__dirname],
+  displayName: 'dmr-logging',
+  preset: '../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]sx?$': [
-      'ts-jest',
-      { tsconfig: `${__dirname}/tsconfig.spec.json` },
-    ],
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  coverageDirectory: '<rootDir>/coverage/libs/logging',
+  coverageDirectory: '../../coverage/libs/logging',
   globals: {},
-  displayName: 'logging',
 }
