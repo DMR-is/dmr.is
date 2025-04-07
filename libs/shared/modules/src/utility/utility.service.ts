@@ -435,7 +435,15 @@ export class UtilityService implements IUtilityService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<CaseModel>> {
     const found = await this.caseModel.findByPk(caseId, {
-      include: casesDetailedIncludes,
+      include: [
+        ...casesDetailedIncludes,
+        {
+          model: SignatureModel,
+        },
+        {
+          model: CaseAdditionModel,
+        },
+      ],
       transaction,
     })
 
