@@ -4,6 +4,11 @@
   "sourceRoot": "libs/apm/src",
   "projectType": "library",
   "targets": {
+    "typecheck": {
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"]
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

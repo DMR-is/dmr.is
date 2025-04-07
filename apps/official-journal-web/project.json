@@ -5,11 +5,8 @@
   "projectType": "application",
   "targets": {
     "typecheck": {
-      "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsc -p tsconfig.json --noEmit"],
-        "cwd": "apps/official-journal-web",
-        "forwardAllArgs": false
+        "commands": ["tsc -p tsconfig.json --noEmit"]
       }
     },
     "build": {

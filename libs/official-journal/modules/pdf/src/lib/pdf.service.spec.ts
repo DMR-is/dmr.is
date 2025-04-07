@@ -1,28 +1,42 @@
+import { LoggingModule } from '@dmr.is/logging'
+import { CaseModel } from '@dmr.is/official-journal/models'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
+
+import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { IUtilityService } from '../utility/utility.service.interface'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
 
 describe('PdfService', () => {
   let service: IPdfService
+  let applicationService: IApplicationService
+  let caseModel: CaseModel
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
-      imports: [],
+      imports: [LoggingModule],
       providers: [
         {
           provide: IPdfService,
           useClass: PdfService,
         },
         {
-          provide: IUtilityService,
-          useValue: () => ({}),
+          provide: getModelToken(CaseModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IApplicationService,
+          useClass: jest.fn(() => ({
+            getApplication: () => ({}),
+          })),
         },
       ],
     }).compile()
 
+    applicationService = app.get<IApplicationService>(IApplicationService)
     service = app.get<IPdfService>(IPdfService)
+    caseModel = app.get<CaseModel>(getModelToken(CaseModel))
   })
 
   describe('Should exists', () => {

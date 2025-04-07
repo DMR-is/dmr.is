@@ -4,6 +4,7 @@
   "sourceRoot": "apps/official-journal-admin-api/src",
   "projectType": "application",
   "targets": {
+    "typecheck": {},
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],

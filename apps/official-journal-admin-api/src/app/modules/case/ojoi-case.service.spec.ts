@@ -1,6 +1,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
+import { LoggingModule } from '@dmr.is/logging'
 import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
@@ -179,6 +180,7 @@ describe('CaseService', () => {
           })),
         },
       ],
+      imports: [LoggingModule],
     }).compile()
 
     caseService = app.get<ICaseService>(ICaseService)

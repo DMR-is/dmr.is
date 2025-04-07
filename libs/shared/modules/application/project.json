@@ -4,6 +4,11 @@
   "sourceRoot": "libs/shared/modules/application/src",
   "projectType": "library",
   "targets": {
+    "typecheck": {
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"]
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

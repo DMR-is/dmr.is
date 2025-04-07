@@ -6,7 +6,7 @@ import {
 import { NextBuildBuilderOptions } from '@nx/next'
 
 import { runCommandProcess } from '../../utils/command'
-import { OpenNextBuildExecutorSchema } from './schema'
+import { OpenNextBuildExecutorSchema } from './schema.json'
 
 export default async function openNextBuildExecutor(
   options: OpenNextBuildExecutorSchema,

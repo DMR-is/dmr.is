@@ -1,6 +1,6 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
-import { HealthModule } from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/shared/modules/health'
 
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'

@@ -1,12 +1,12 @@
 /* eslint-disable */
 export default {
-  displayName: 'official-journal-modules-advert-correction-advert-correction',
-  preset: '../../../../../jest.preset.js',
+  displayName: 'official-journal-modules-advert-correction',
+  preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory:
-    '../../../../../coverage/libs/official-journal/modules/advert-correction/advert-correction',
+    '../../../../coverage/libs/official-journal/modules/advert-correction',
 }

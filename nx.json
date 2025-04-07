@@ -7,6 +7,7 @@
       "runner": "nx/tasks-runners/default",
       "options": {
         "cacheableOperations": [
+          "typeheck",
           "build",
           "lint",
           "test",
@@ -90,6 +91,15 @@
   },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
+    "typecheck": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]

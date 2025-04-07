@@ -1,6 +1,6 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
-import { HealthModule } from '@dmr.is/modules'
+import { HealthModule } from '@dmr.is/shared/modules/health'
 
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -9,7 +9,7 @@ import { Test } from '@nestjs/testing'
 const FILE_NAME = 'client-config.json'
 const TMP_DIR = 'tmp/swagger'
 
-const genereteFromSchema = () => {
+const generateFromSchema = () => {
   return new Promise((resolve, reject) => {
     exec(
       `yarn openapi-generator generate -g typescript-fetch -o ${TMP_DIR}/gen/fetch -i ${TMP_DIR}/${FILE_NAME} --additional-properties=typescriptThreePlus=true`,

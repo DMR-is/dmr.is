@@ -4,6 +4,7 @@
   "sourceRoot": "apps/regulations-api/src",
   "projectType": "application",
   "targets": {
+    "typecheck": {},
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],

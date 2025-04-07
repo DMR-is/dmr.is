@@ -4,6 +4,11 @@
   "sourceRoot": "apps/legal-gazette-web",
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"]
+      }
+    },
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],

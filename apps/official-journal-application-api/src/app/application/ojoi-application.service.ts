@@ -521,15 +521,21 @@ export class OfficialJournalApplicationService
     )
 
     ResultWrapper.unwrap(
-      await this.caseService.updateCase(caseLookup.id, {
-        subject: application.answers.advert.title,
-        departmentId: application.answers.advert.department.id,
-        typeId: application.answers.advert.type.id,
-        requestedPublicationDate: application.answers.advert.requestedDate,
-        html: application.answers.advert.html,
-        categoryIds: application.answers.advert.categories.map((cat) => cat.id),
-        communicationStatusId: commStatusTest?.id,
-      }),
+      await this.caseService.updateCase(
+        caseLookup.id,
+        {
+          subject: application.answers.advert.title,
+          departmentId: application.answers.advert.department.id,
+          typeId: application.answers.advert.type.id,
+          requestedPublicationDate: application.answers.advert.requestedDate,
+          html: application.answers.advert.html,
+          categoryIds: application.answers.advert.categories.map(
+            (cat) => cat.id,
+          ),
+          communicationStatusId: commStatusTest?.id,
+        },
+        currentUser,
+      ),
     )
 
     ResultWrapper.unwrap(
