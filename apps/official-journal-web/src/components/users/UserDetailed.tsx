@@ -1,6 +1,5 @@
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
-import { UpdateUserDto } from '@dmr.is/shared/dto'
 
 import {
   Box,
@@ -15,7 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { BaseEntity, UserDto } from '../../gen/fetch'
+import { BaseEntity, UpdateUserDto, UserDto } from '../../gen/fetch'
 import { useUserContext } from '../../hooks/useUserContext'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'

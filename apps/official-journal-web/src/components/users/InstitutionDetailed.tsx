@@ -12,14 +12,14 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { Institution, UpdateInstitution } from '../../gen/fetch'
+import { InstitutionDto, UpdateInstitution } from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'
 import { useUserContext } from '../../hooks/useUserContext'
 import { OJOIInput } from '../select/OJOIInput'
 
 type Props = {
-  institution: Institution
-  onSuccess?: (institution?: Institution) => void
+  institution: InstitutionDto
+  onSuccess?: (institution?: InstitutionDto) => void
 }
 
 export const InstitutionDetailed = ({ institution, onSuccess }: Props) => {

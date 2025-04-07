@@ -12,12 +12,12 @@ import {
 
 import {
   CreateInstitution as CreateInstitutionDto,
-  Institution,
+  InstitutionDto,
 } from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'
 
 type Props = {
-  onSuccess?: (institution?: Institution) => void
+  onSuccess?: (institution?: InstitutionDto) => void
 }
 
 export const CreateInstitution = ({ onSuccess }: Props) => {

@@ -601,6 +601,14 @@ export class UpdateCaseBody extends PartialType(
   @IsArray()
   @IsUUID(undefined, { each: true })
   categoryIds?: string[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  tagId?: string
 }
 
 export class UpdateCaseCategoriesBody extends PickType(UpdateCaseBody, [

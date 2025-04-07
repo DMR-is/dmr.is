@@ -5,6 +5,7 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from '@dmr.is/official-journal/models'
+import { CommentModule } from '@dmr.is/official-journal/modules/comment'
 import { ApplicationModule } from '@dmr.is/shared/modules/application'
 
 import { Module } from '@nestjs/common'
@@ -22,6 +23,7 @@ import { ICaseService } from './case.service.interface'
       CaseTagModel,
       CaseCategoriesModel,
     ]),
+    CommentModule,
     ApplicationModule,
   ],
   controllers: [],

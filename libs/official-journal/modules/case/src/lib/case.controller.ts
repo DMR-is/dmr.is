@@ -1,20 +1,24 @@
 import { UserRoleEnum } from '@dmr.is/constants'
-import { Roles } from '@dmr.is/decorators'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
 import {
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
+  UpdateCaseBody,
 } from '@dmr.is/official-journal/dto/case/case.dto'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
+  Body,
   Controller,
   Get,
   Inject,
   Param,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
@@ -40,6 +44,17 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
   ): Promise<GetCaseResponse> {
     return ResultWrapper.unwrap(await this.caseService.getCase(id))
+  }
+
+  @Put(':id')
+  @ApiOperation({ operationId: 'updateCase' })
+  @ApiResponse({ status: 200, type: GetCaseResponse })
+  async updateCase(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseBody,
+    @CurrentUser() user: UserDto,
+  ): Promise<GetCaseResponse> {
+    return ResultWrapper.unwrap(await this.caseService.updateCase(id, body, user))
   }
 
   @Get()

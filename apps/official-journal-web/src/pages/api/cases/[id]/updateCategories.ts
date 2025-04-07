@@ -27,9 +27,9 @@ class UpdateCategoryHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateCategories({
+    await this.client.updateCase({
       id: id,
-      updateCategoriesBody: {
+      updateCaseBody: {
         categoryIds: parsed.data.categoryIds,
       },
     })

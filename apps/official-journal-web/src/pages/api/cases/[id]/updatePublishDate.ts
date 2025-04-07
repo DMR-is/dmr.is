@@ -27,10 +27,10 @@ class UpdatePublishDateHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updatePublishDate({
+    await this.client.updateCase({
       id: id,
-      updatePublishDateBody: {
-        date: parsed.data.date,
+      updateCaseBody: {
+        requestedPublicationDate: parsed.data.date,
       },
     })
 

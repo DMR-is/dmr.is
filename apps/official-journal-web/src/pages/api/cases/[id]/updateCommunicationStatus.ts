@@ -27,10 +27,10 @@ class UpdateCommunicationStatus extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateCommunicationStatus({
+    await this.client.updateCase({
       id: id,
-      updateCommunicationStatusBody: {
-        statusId: parsed.data.statusId,
+      updateCaseBody: {
+        communicationStatusId: parsed.data.statusId,
       },
     })
 

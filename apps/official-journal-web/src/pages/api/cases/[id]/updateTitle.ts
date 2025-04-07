@@ -24,10 +24,10 @@ class UpdateTitleHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateTitle({
+    await this.client.updateCase({
       id,
-      updateTitleBody: {
-        title: parsed.data.title,
+      updateCaseBody: {
+        subject: parsed.data.title,
       },
     })
 

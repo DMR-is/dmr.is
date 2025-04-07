@@ -24,10 +24,10 @@ class UpdateFasttrackHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateFasttrack({
+    await this.client.updateCase({
       id: id,
-      updateFasttrackBody: {
-        fasttrack: parsed.data.fastTrack,
+      updateCaseBody: {
+        fastTrack: parsed.data.fastTrack,
       },
     })
     return res.status(204).end()

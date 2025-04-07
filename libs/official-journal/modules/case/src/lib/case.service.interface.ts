@@ -22,6 +22,7 @@ export interface ICaseService {
   updateCase(
     caseId: string,
     body: UpdateCaseBody,
+    currentUser: UserDto,
   ): Promise<ResultWrapper<GetCaseResponse>>
 
   updateCaseCategories(

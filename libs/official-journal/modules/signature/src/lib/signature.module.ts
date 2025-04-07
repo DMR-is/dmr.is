@@ -7,6 +7,7 @@ import {
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { SignatureController } from './signature.controller'
 import { SignatureService } from './signature.service'
 import { ISignatureService } from './signature.service.interface'
 
@@ -18,7 +19,7 @@ import { ISignatureService } from './signature.service.interface'
       SignatureMemberModel,
     ]),
   ],
-  controllers: [],
+  controllers: [SignatureController],
   providers: [
     {
       provide: ISignatureService,

@@ -6,9 +6,10 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Param, Put, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
+import { UpdateCasePriceBody } from '../case/dto/update-price-body.dto'
 import { ICasePaymentService } from './payment.service.interface'
 @Controller({
   path: 'payment',
@@ -33,4 +34,15 @@ export class PaymentController {
       await this.paymentService.getExternalPaymentStatusByCaseId(caseId),
     )
   }
+  @Put(':caseId/payment')
+  @ApiOperation({ operationId: 'updateCasePayment' })
+  @ApiResponse({ status: 204, description: 'No content' })
+  async updateCasePayment(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: UpdateCasePriceBody,
+  ): Promise<void> {
+    await this.paymentService.updateCasePriceByCaseId(caseId, body)
+  }
+
+
 }

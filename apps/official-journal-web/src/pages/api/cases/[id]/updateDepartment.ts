@@ -27,9 +27,9 @@ class UpdateDepartmentHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateDepartment({
+    await this.client.updateCase({
       id: id,
-      updateCaseDepartmentBody: {
+      updateCaseBody: {
         departmentId: parsed.data.departmentId,
       },
     })

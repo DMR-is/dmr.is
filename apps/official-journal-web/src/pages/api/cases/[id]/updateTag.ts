@@ -27,9 +27,9 @@ class UpdateTagHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.updateTag({
+    await this.client.updateCase({
       id: id,
-      updateTagBody: {
+      updateCaseBody: {
         tagId: parsed.data.tagId,
       },
     })

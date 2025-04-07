@@ -27,9 +27,11 @@ class UpdateEmployeeHandler extends RouteHandler {
       return res.status(400).end()
     }
 
-    await this.client.assignEmployee({
+    await this.client.updateCase({
       id: id,
-      userId: parsed.data.userId,
+      updateCaseBody: {
+        assignedUserId: parsed.data.userId,
+      },
     })
 
     return res.status(204).end()

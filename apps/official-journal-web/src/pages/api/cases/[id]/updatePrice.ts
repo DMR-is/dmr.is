@@ -26,8 +26,8 @@ class UpdatePriceHandler extends RouteHandler {
     }
     const body: z.infer<typeof updatePriceBody> = req.body
 
-    await this.client.updatePrice({
-      id: id,
+    await this.client.updateCasePayment({
+      caseId: id,
       updateCasePriceBody: body,
     })
 

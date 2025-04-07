@@ -20,9 +20,9 @@ class UpdateTypeHandler extends RouteHandler {
       return void res.status(400).json(OJOIWebException.badRequest())
     }
 
-    await this.client.updateCaseType({
+    await this.client.updateCase({
       id: id,
-      updateCaseTypeBody: {
+      updateCaseBody: {
         typeId: check.data.typeId,
       },
     })

@@ -7,6 +7,7 @@ import { PriceModule } from '@dmr.is/official-journal/modules/price'
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { PaymentController } from './payment.controller'
 import { CasePaymentService } from './payment.service'
 import { ICasePaymentService } from './payment.service.interface'
 
@@ -15,7 +16,7 @@ import { ICasePaymentService } from './payment.service.interface'
     SequelizeModule.forFeature([CaseModel, CaseTransactionModel]),
     PriceModule,
   ],
-  controllers: [],
+  controllers: [PaymentController],
   providers: [
     {
       provide: ICasePaymentService,

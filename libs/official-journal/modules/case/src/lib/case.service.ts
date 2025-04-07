@@ -27,6 +27,7 @@ import {
   CaseTagEnum,
   CaseTagModel,
 } from '@dmr.is/official-journal/models'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
 import {
   OJOIApplicationAddition,
   OJOIUpdateApplicationAnswers,
@@ -61,6 +62,8 @@ export class CaseService implements ICaseService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    @Inject(ICommentService)
+    private readonly commentService: ICommentService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseStatusModel)
     private readonly caseStatusModel: typeof CaseStatusModel,
@@ -335,6 +338,7 @@ export class CaseService implements ICaseService {
   async updateCase(
     id: string,
     body: UpdateCaseBody,
+    currentUser: UserDto,
   ): Promise<ResultWrapper<GetCaseResponse>> {
     const caseLookup = await this.caseModel.scope('detailed').findByPk(id)
 
@@ -353,14 +357,30 @@ export class CaseService implements ICaseService {
       requestedPublicationDate,
       html,
       assignedUserId,
+      tagId,
       fastTrack,
     } = body
+
+    // If we are updating assigneUser we need to create a comment
+    if (assignedUserId) {
+      if (assignedUserId !== caseLookup.assignedUserId) {
+        await this.commentService.createAssignUserComment(id, {
+          adminUserCreatorId: currentUser.id,
+          adminUserReceiverId: assignedUserId,
+        })
+      } else {
+        await this.commentService.createAssignSelfComment(id, {
+          adminUserCreatorId: currentUser.id,
+        })
+      }
+    }
 
     await caseLookup.update({
       applicationId: applicationId,
       involvedPartyId: involvedPartyId,
       departmentId: departmentId,
       advertTitle: subject,
+      tagId: tagId,
       advertTypeId: typeId,
       statusId: caseStatusId,
       communicationStatusId: communicationStatusId,

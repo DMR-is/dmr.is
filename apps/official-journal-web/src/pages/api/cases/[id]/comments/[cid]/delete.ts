@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
-import { Delete, HandleApiException, LogMethod } from '@dmr.is/decorators'
+import { HandleApiException, LogMethod } from '@dmr.is/decorators'
+
+import { Delete } from '@nestjs/common'
 
 import {
   handlerWrapper,
