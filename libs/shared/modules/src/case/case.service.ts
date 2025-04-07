@@ -1598,6 +1598,46 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
     const signedUrl = (await this.s3.getPresignedUrl(key)).unwrap()
 
-    return Promise.resolve(ResultWrapper.ok({ url: signedUrl.url }))
+    return Promise.resolve(
+      ResultWrapper.ok({
+        url: signedUrl.url,
+        cdn: process.env.ADVERTS_CDN_URL,
+      }),
+    )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async addApplicationAttachment(
+    applicationId: string,
+    type: AttachmentTypeParam,
+    body: PostApplicationAttachmentBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    const applicationAttachmentCreation = ResultWrapper.unwrap(
+      await this.attachmentService.createAttachment({
+        params: {
+          applicationId: applicationId,
+          attachmentType: type,
+          body: body,
+        },
+        transaction,
+      }),
+    )
+
+    await this.attachmentService.createCaseAttachment(
+      applicationId,
+      applicationAttachmentCreation.id,
+      transaction,
+    )
+
+    const signedUrl = (
+      await this.s3.getPresignedUrl(body.fileLocation)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      url: signedUrl.url,
+      attachmentId: applicationAttachmentCreation.id,
+    })
   }
 }

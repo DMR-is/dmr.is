@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { toast } from '@island.is/island-ui/core'
 
+import { AddApplicationAttachmentTypeEnum } from '../gen/fetch'
 import { getDmrClient } from '../lib/api/createClient'
 import { ADDITIONAL_DOCUMENTS } from '../lib/constants'
 import { overrideAttachmentSchema } from '../lib/types'
@@ -11,6 +12,11 @@ import { overrideAttachmentSchema } from '../lib/types'
 type FetchAttachmentParams = {
   caseId: string
   attachmentId: string
+}
+
+type UploadAttachmentParams = {
+  caseId: string
+  file: File
 }
 
 export const useAttachments = () => {
@@ -25,6 +31,57 @@ export const useAttachments = () => {
     attachmentId,
   }: FetchAttachmentParams) => {
     return await dmrClient.getCaseAttachment({ caseId, attachmentId })
+  }
+
+  const uploadAttachment = async ({ caseId, file }: UploadAttachmentParams) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const fileExtension = file.name.split('.').pop()
+
+      if (!fileExtension) {
+        throw new Error('File extension not found')
+      }
+
+      const key = `applications/${caseId}/${ADDITIONAL_DOCUMENTS}/${file.name}`
+
+      const res = await dmrClient.addApplicationAttachment({
+        postApplicationAttachmentBody: {
+          fileExtension: fileExtension,
+          fileFormat: file.type,
+          fileLocation: key,
+          fileName: file.name,
+          fileSize: file.size,
+          originalFileName: file.name,
+        },
+        id: caseId,
+        type: ADDITIONAL_DOCUMENTS as AddApplicationAttachmentTypeEnum,
+      })
+
+      const didUpload = await fetch(res.url, {
+        headers: {
+          'Content-Type': file.type,
+          'Content-Length': file.size.toString(),
+        },
+        method: 'PUT',
+        body: file,
+      })
+
+      if (!didUpload.ok) {
+        setError(`Ekki tókst að hlaða upp skjali í gagnageymslu S3`)
+        setLoading(false)
+        return
+      }
+
+      setLoading(false)
+    } catch (error) {
+      setLoading(false)
+      setError('Ekki tókst að hlaða upp skjali í gagnageymslu')
+      toast.error('Ekki tókst að hlaða upp skjali í gagnageymslu', {
+        toastId: 'uploadAttachmentError',
+      })
+    }
   }
 
   const downloadAttachment = async ({
@@ -92,23 +149,12 @@ export const useAttachments = () => {
       originalFileName: file.name,
     }
 
-    // here we create a database record for the attachment and get a signed url for the override
-    const response = await fetch(
-      `/api/cases/${caseId}/attachments/${attachmentId}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(body),
-      },
-    )
-
-    if (!response.ok) {
-      setError(`Ekki tókst vista skjal í gagnageymslu`)
-      setLoading(false)
-      return
-    }
-
-    const json = await response.json()
-    const { url } = json
+    const response = await dmrClient.overwriteCaseAttachment({
+      caseId: caseId,
+      attachmentId: attachmentId,
+      postApplicationAttachmentBody: body,
+    })
+    const { url } = response
 
     if (!url) return
 
@@ -137,6 +183,7 @@ export const useAttachments = () => {
     loading,
     downloadAttachment,
     overwriteAttachment,
+    uploadAttachment,
     error,
   }
 }

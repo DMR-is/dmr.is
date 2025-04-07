@@ -19,35 +19,67 @@ export const Attachments = () => {
   const { formatMessage } = useFormatMessage()
   const { currentCase, refetch, canEdit } = useCaseContext()
 
-  const { loading, downloadAttachment, overwriteAttachment, error } =
-    useAttachments()
+  const {
+    loading,
+    downloadAttachment,
+    overwriteAttachment,
+    uploadAttachment,
+    error,
+  } = useAttachments()
 
+  const fileReUploadRefs = React.useRef<{
+    [key: string]: HTMLInputElement | null
+  }>({})
   const fileUploadRef = React.useRef<HTMLInputElement>(null)
 
-  const onOpenOverwriteAttachment = () => {
+  const onOpenOverwriteAttachment = (id: string) => {
+    const ref = fileReUploadRefs.current[id]
+    if (ref) {
+      ref.click()
+    }
+  }
+
+  const onOpenUploadAttachment = () => {
     if (fileUploadRef.current) {
       fileUploadRef.current.click()
     }
   }
 
-  const onFileUpload = async (
-    attachmentId: string,
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
 
     if (!file) {
       return
     }
 
-    if (!currentCase.applicationId) {
+    await uploadAttachment({
+      caseId: currentCase.id,
+      file,
+    })
+    refetch()
+  }
+
+  const onFileReUpload = async (
+    attachmentId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+
+    // If there is no applicationId, we use the case id as a fallback
+    const tempApplicationId = currentCase?.applicationId ?? currentCase.id
+
+    if (!file) {
+      return
+    }
+
+    if (!tempApplicationId) {
       return
     }
 
     overwriteAttachment({
       attachmentId,
       caseId: currentCase.id,
-      applicationId: currentCase?.applicationId,
+      applicationId: tempApplicationId,
       file,
       onSuccess: () => {
         refetch()
@@ -114,10 +146,14 @@ export const Attachments = () => {
                     <>
                       <input
                         type="file"
-                        ref={fileUploadRef}
+                        ref={(el) => {
+                          fileReUploadRefs.current[a.id] = el
+                        }}
+                        id={`file-re-upload-${a.id}`}
                         style={{ display: 'none' }}
                         accept={['.pdf', '.doc', '.docx'].join(',')}
-                        onChange={(e) => onFileUpload(a.id, e)}
+                        onChange={(e) => onFileReUpload(a.id, e)}
+                        name="file-re-upload"
                       />
                       <Button
                         disabled={!canEdit}
@@ -125,7 +161,7 @@ export const Attachments = () => {
                         icon="share"
                         iconType="outline"
                         size="small"
-                        onClick={onOpenOverwriteAttachment}
+                        onClick={() => onOpenOverwriteAttachment(a.id)}
                       >
                         {formatMessage(messages.attachments.overwrite)}
                       </Button>
@@ -154,6 +190,26 @@ export const Attachments = () => {
             )
           })}
         </Stack>
+      </Box>
+      <Box marginTop={2}>
+        <input
+          type="file"
+          ref={fileUploadRef}
+          name="file-upload"
+          style={{ display: 'none' }}
+          accept={['.pdf', '.doc', '.docx'].join(',')}
+          onChange={onFileUpload}
+        />
+        <Button
+          disabled={!canEdit}
+          variant="text"
+          icon="share"
+          iconType="outline"
+          size="small"
+          onClick={onOpenUploadAttachment}
+        >
+          Hlaða upp fylgiskjali
+        </Button>
       </Box>
     </Box>
   )

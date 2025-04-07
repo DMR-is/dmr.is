@@ -17,6 +17,7 @@ import {
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
 } from '../gen/fetch'
+import { getDmrClient } from '../lib/api/createClient'
 import { DOCUMENT_ASSETS } from '../lib/constants'
 import { OJOIWebException, Routes } from './constants'
 
@@ -574,11 +575,16 @@ export const getNextStatus = (
   }
 }
 
-export function useFileUploader(applicationId: string, caseId: string) {
+export function useFileUploader(
+  applicationId: string,
+  caseId: string,
+  idToken: string,
+) {
   const fileUploader =
     (): EditorFileUploader => async (blobInfo, success, failure, progress) => {
       const file = blobInfo.blob() as File
       const key = `${DOCUMENT_ASSETS}/${applicationId}/${file.name}`
+      const dmrClient = getDmrClient(idToken as string)
 
       const fileExtension = file.name.split('.').pop()
 
@@ -588,21 +594,13 @@ export function useFileUploader(applicationId: string, caseId: string) {
       }
 
       try {
-        const response = await fetch(`/api/cases/${caseId}/uploadAssets`, {
-          method: 'POST',
-          body: JSON.stringify({
+        const response = await dmrClient.uploadApplicationAttachment({
+          caseId: caseId,
+          postApplicationAssetBody: {
             key,
-            caseId,
-          }),
+          },
         })
-
-        if (!response.ok) {
-          failure(`Ekki tókst búa til s3 lykil`)
-          return
-        }
-
-        const json = await response.json()
-        const { url, cdn } = json
+        const { cdn, url } = response
 
         if (!url) {
           failure(`Ekki tókst að vista skjal í gagnageymslu: slóð ekki í svari`)
