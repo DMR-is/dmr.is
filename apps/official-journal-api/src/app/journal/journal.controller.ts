@@ -30,6 +30,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import {
   Controller,
   Get,
+  Header,
   Inject,
   InternalServerErrorException,
   NotFoundException,
@@ -192,6 +193,7 @@ export class JournalController {
       },
     },
   })
+  @Header('Content-Type', 'text/rss+xml')
   async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdverts({

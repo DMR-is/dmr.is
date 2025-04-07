@@ -799,7 +799,7 @@ export class CaseUpdateService implements ICaseUpdateService {
             {
               answers: {
                 advert: {
-                  html: body.advertHtml,
+                  html: btoa(body.advertHtml),
                 },
               },
             },
