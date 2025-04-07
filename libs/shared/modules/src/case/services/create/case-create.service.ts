@@ -215,8 +215,9 @@ export class CaseCreateService implements ICaseCreateService {
     )
 
     try {
-      await this.priceService.postExternalPaymentByCaseId(
+      await this.priceService.updateCasePriceByCaseId(
         createResults.id,
+        {},
         transaction,
       )
     } catch (error) {
