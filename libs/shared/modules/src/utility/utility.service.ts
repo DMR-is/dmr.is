@@ -13,6 +13,10 @@ import { InjectModel } from '@nestjs/sequelize'
 import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import {
+  ApplicationAttachmentModel,
+  ApplicationAttachmentTypeModel,
+} from '../attachments/models'
+import {
   CaseAdditionModel,
   CaseCommunicationStatusModel,
   CaseModel,
@@ -23,12 +27,15 @@ import { CaseCategoriesModel } from '../case/models/case-categories.model'
 import { casesDetailedIncludes } from '../case/relations'
 import {
   AdvertCategoryModel,
+  AdvertCorrectionModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertModel,
   AdvertStatusModel,
 } from '../journal/models'
 import { SignatureModel } from '../signature/models/signature.model'
+import { SignatureMemberModel } from '../signature/models/signature-member.model'
+import { SignatureRecordModel } from '../signature/models/signature-record.model'
 import { IUtilityService } from './utility.service.interface'
 
 export class UtilityService implements IUtilityService {
@@ -438,10 +445,54 @@ export class UtilityService implements IUtilityService {
       include: [
         ...casesDetailedIncludes,
         {
-          model: SignatureModel,
+          model: AdvertModel,
+          include: [AdvertCorrectionModel],
         },
         {
-          model: CaseAdditionModel,
+          model: AdvertDepartmentModel,
+        },
+        {
+          model: AdvertTypeModel,
+        },
+        {
+          model: AdvertCategoryModel,
+        },
+        {
+          model: ApplicationAttachmentModel,
+          where: {
+            deleted: false,
+          },
+          required: false,
+          include: [ApplicationAttachmentTypeModel],
+        },
+        {
+          model: SignatureModel,
+          include: [
+            AdvertInvolvedPartyModel,
+            {
+              model: SignatureRecordModel,
+              as: 'records',
+              separate: true,
+              include: [
+                {
+                  model: SignatureMemberModel,
+                  as: 'chairman',
+                },
+                {
+                  model: SignatureMemberModel,
+                  as: 'members',
+                  separate: true,
+                  required: false,
+                  include: [
+                    {
+                      model: SignatureRecordModel,
+                      required: false,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
       ],
       transaction,
