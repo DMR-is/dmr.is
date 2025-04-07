@@ -26,7 +26,6 @@ export const Attachments = () => {
     uploadAttachment,
     error,
   } = useAttachments()
-
   const fileReUploadRefs = React.useRef<{
     [key: string]: HTMLInputElement | null
   }>({})
@@ -89,10 +88,32 @@ export const Attachments = () => {
 
   if (currentCase.attachments.length === 0) {
     return (
-      <AlertMessage
-        type="warning"
-        title={formatMessage(messages.attachments.noAttachments)}
-      />
+      <>
+        <AlertMessage
+          type="warning"
+          title={formatMessage(messages.attachments.noAttachments)}
+        />
+        <Box marginTop={2}>
+          <input
+            type="file"
+            ref={fileUploadRef}
+            name="file-upload"
+            style={{ display: 'none' }}
+            accept={['.pdf', '.doc', '.docx'].join(',')}
+            onChange={onFileUpload}
+          />
+          <Button
+            disabled={!canEdit}
+            variant="text"
+            icon="share"
+            iconType="outline"
+            size="small"
+            onClick={onOpenUploadAttachment}
+          >
+            Hlaða upp fylgiskjali
+          </Button>
+        </Box>
+      </>
     )
   }
 
