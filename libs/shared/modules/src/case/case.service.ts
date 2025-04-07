@@ -948,7 +948,7 @@ export class CaseService implements ICaseService {
         publicationDate: now.toISOString(),
         signatureDate: caseToPublish.signature.signatureDate,
         content: caseToPublish.html + signatureHtml + publicationHtml,
-        pdfUrl: pdfFileName,
+        pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
       },
       transaction,
     )
