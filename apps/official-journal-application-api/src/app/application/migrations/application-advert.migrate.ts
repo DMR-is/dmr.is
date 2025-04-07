@@ -1,4 +1,5 @@
 import { AdvertModel } from '@dmr.is/official-journal/models'
+
 import { ApplicationAdvertItem } from '../dto/get-application-advert.dto'
 
 export const applicationAdvertMigrate = (

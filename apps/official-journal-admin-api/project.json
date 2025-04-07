@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "target": "node",
@@ -16,9 +14,7 @@
         "outputPath": "apps/official-journal-admin-api/dist",
         "main": "apps/official-journal-admin-api/src/main.ts",
         "tsConfig": "apps/official-journal-admin-api/tsconfig.app.json",
-        "assets": [
-          "apps/official-journal-admin-api/src/assets"
-        ],
+        "assets": ["apps/official-journal-admin-api/src/assets"],
         "webpackConfig": "apps/official-journal-admin-api/webpack.config.js",
         "generatePackageJson": true
       },
@@ -44,24 +40,18 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/official-journal-admin-api/jest.config.ts"
       }
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "engine": "docker",
         "metadata": {

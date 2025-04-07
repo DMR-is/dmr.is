@@ -1,39 +1,44 @@
+/* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
+import {
+  AdvertCategoryModel,
+  AdvertCorrectionModel,
+  AdvertDepartmentModel,
+  AdvertModel,
+  CaseCategoriesModel,
+  CaseChannelModel,
+  CaseChannelsModel,
+  CaseCommunicationStatusModel,
+  CaseHistoryModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
+} from '@dmr.is/official-journal/models'
+import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
+import {
+  CaseService,
+  ICaseService,
+} from '@dmr.is/official-journal/modules/case'
+import { ICommentService } from '@dmr.is/official-journal/modules/comment'
+import { IPdfService } from '@dmr.is/official-journal/modules/pdf'
+import { IPriceService } from '@dmr.is/official-journal/modules/price'
+import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { IUtilityService } from '@dmr.is/official-journal/modules/utility'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
+import { IAWSService } from '@dmr.is/shared/modules/aws'
+
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { ICaseCreateService } from './services/create/case-create.service.interface'
-import { ICaseUpdateService } from './services/update/case-update.service.interface'
-import { CaseService } from './case.service'
-import { ICaseService } from './ojoi-case.service.interface'
-import {
-  CaseModel,
-  CaseHistoryModel,
-  AdvertModel,
-  CaseCategoriesModel,
-  AdvertCategoryModel,
-  CaseChannelModel,
-  CaseChannelsModel,
-  CaseStatusModel,
-  CaseTagModel,
-  CaseCommunicationStatusModel,
-  AdvertDepartmentModel,
-  AdvertCorrectionModel,
-} from '@dmr.is/official-journal/models'
-import {
-  IApplicationService,
-  PostApplicationBody,
-} from '@dmr.is/official-journal/modules/application'
-import { IAttachmentService } from '@dmr.is/official-journal/modules/attachment'
-import { IJournalService } from '@dmr.is/official-journal/modules/journal'
-import { ISignatureService } from '@dmr.is/official-journal/modules/signature'
+import { IOfficialJournalCaseService } from './ojoi-case.service.interface'
 
 describe('CaseService', () => {
   let caseService: ICaseService
-  let commentService: ICommentServiceV2
+  let commentService: ICommentService
   let applicationService: IApplicationService
-  let journalService: IJournalService
+  let journalService: IOfficialJournalCaseService
   let signatureService: ISignatureService
   let attachmentService: IAttachmentService
   let s3Service: IAWSService
@@ -45,8 +50,6 @@ describe('CaseService', () => {
   let caseCategoriesModel: CaseCategoriesModel
   let caseChannelModel: CaseChannelModel
   let caseChannelsModel: CaseChannelsModel
-  let caseCreateService: ICaseCreateService
-  let caseUpdateService: ICaseUpdateService
   let priceService: IPriceService
   let pdfService: IPdfService
   let sequelize: Sequelize
@@ -59,7 +62,7 @@ describe('CaseService', () => {
           useClass: CaseService,
         },
         {
-          provide: ICommentServiceV2,
+          provide: ICommentService,
           useClass: jest.fn(() => ({
             create: () => ({}),
           })),
@@ -78,24 +81,13 @@ describe('CaseService', () => {
           provide: IUtilityService,
           useClass: jest.fn(() => ({})),
         },
-        {
-          provide: IJournalService,
-          useClass: jest.fn(() => ({})),
-        },
+
         {
           provide: IAttachmentService,
           useClass: jest.fn(() => ({})),
         },
         {
           provide: IAWSService,
-          useClass: jest.fn(() => ({})),
-        },
-        {
-          provide: ICaseCreateService,
-          useClass: jest.fn(() => ({})),
-        },
-        {
-          provide: ICaseUpdateService,
           useClass: jest.fn(() => ({})),
         },
         {
@@ -169,10 +161,6 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
-          provide: getModelToken(CasePublishedAdvertsModel),
-          useClass: jest.fn(() => ({})),
-        },
-        {
           provide: getModelToken(AdvertCorrectionModel),
           useClass: jest.fn(() => ({})),
         },
@@ -194,14 +182,12 @@ describe('CaseService', () => {
     }).compile()
 
     caseService = app.get<ICaseService>(ICaseService)
-    commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
+    commentService = app.get<ICommentService>(ICommentService)
     applicationService = app.get<IApplicationService>(IApplicationService)
-    journalService = app.get<IJournalService>(IJournalService)
+
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
     signatureService = app.get<ISignatureService>(ISignatureService)
     s3Service = app.get<IAWSService>(IAWSService)
-    caseCreateService = app.get<ICaseCreateService>(ICaseCreateService)
-    caseUpdateService = app.get<ICaseUpdateService>(ICaseUpdateService)
     advertModel = app.get<AdvertModel>(getModelToken(AdvertModel))
     caseModel = app.get<CaseModel>(getModelToken(CaseModel))
     caseCategoriesModel = app.get<CaseCategoriesModel>(
