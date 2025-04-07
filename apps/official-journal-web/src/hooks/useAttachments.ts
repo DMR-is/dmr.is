@@ -92,7 +92,7 @@ export const useAttachments = () => {
     setError(null)
     const response = await fetchAttachment({ caseId, attachmentId })
 
-    const { url } = response
+    const { url, key } = response
 
     fetch(url)
       .then((response) => {
@@ -105,9 +105,10 @@ export const useAttachments = () => {
         return response.blob()
       })
       .then((blob) => {
+        const fileName = key?.split('/').pop() || 'downloaded.pdf'
         const link = document.createElement('a')
         link.href = window.URL.createObjectURL(blob)
-        link.download = 'downloaded.pdf'
+        link.download = fileName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)

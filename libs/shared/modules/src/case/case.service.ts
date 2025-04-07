@@ -1520,11 +1520,13 @@ export class CaseService implements ICaseService {
       )
     ).unwrap()
 
-    const signedUrl = (
-      await this.s3.getObject(attachment.fileLocation)
-    ).unwrap()
+    const fileLocation = decodeURIComponent(attachment.fileLocation)
 
-    return Promise.resolve(ResultWrapper.ok({ url: signedUrl }))
+    const signedUrl = (await this.s3.getObject(fileLocation)).unwrap()
+
+    return Promise.resolve(
+      ResultWrapper.ok({ url: signedUrl, key: fileLocation }),
+    )
   }
 
   @LogAndHandle()
