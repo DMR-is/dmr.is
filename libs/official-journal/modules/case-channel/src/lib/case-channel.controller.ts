@@ -1,12 +1,19 @@
 import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
+import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
-  UseGuards,
-  Controller,
-  Post,
   Body,
+  Controller,
   Delete,
-  Param,
   Inject,
+  Param,
+  Post,
+  UseGuards,
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
@@ -14,14 +21,9 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
-import { Roles } from '@dmr.is/decorators'
-import { CaseChannel } from '@dmr.is/official-journal/dto/case-channel/case-channel.dto'
-import { ResultWrapper } from '@dmr.is/types'
+
 import { CreateCaseChannelBody } from './dto/case-channel.dto'
 import { ICaseChannelService } from './case-channel.service.interface'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, RoleGuard)

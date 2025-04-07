@@ -1,14 +1,14 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
 import {
   BaseError,
-  TimeoutError,
-  ValidationError,
   ForeignKeyConstraintError,
+  TimeoutError,
   UniqueConstraintError,
+  ValidationError,
 } from 'sequelize'
-
-import { logger } from '@dmr.is/logging'
 import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
+import { logger } from '@dmr.is/logging'
+
+import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
 
 const LOGGING_CONTEXT = 'SequelizeExceptionFilter'
 

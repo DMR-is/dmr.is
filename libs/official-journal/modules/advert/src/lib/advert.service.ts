@@ -1,23 +1,8 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
-import { IAdvertService } from './advert.service.interface'
-import { ResultWrapper } from '@dmr.is/types'
 import { Op, Sequelize, Transaction } from 'sequelize'
-import { CreateAdvert } from './dto/advert.dto'
-import { GetAdvertResponse } from './dto/get-advert-response.dto'
-import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
-import {
-  GetAdvertsResponse,
-  GetSimilarAdvertsResponse,
-} from './dto/get-adverts-responses.dto'
-import { UpdateAdvertBody } from './dto/update-advert-body.dto'
+import { v4 as uuid } from 'uuid'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { InjectModel } from '@nestjs/sequelize'
 import {
   AdvertAttachmentsModel,
   AdvertCategoriesModel,
@@ -31,17 +16,34 @@ import {
   AdvertTypeModel,
   CaseModel,
 } from '@dmr.is/official-journal/models'
-import { LogAndHandle } from '@dmr.is/decorators'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
-import { advertMigrate } from './migrations/advert.migrate'
-import { v4 as uuid } from 'uuid'
 
-import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
-import { removeSubjectFromHtml } from './utils'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
+
+import { CreateAdvert } from './dto/advert.dto'
+import { GetAdvertResponse } from './dto/get-advert-response.dto'
+import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'
+import {
+  GetAdvertsResponse,
+  GetSimilarAdvertsResponse,
+} from './dto/get-adverts-responses.dto'
+import { UpdateAdvertBody } from './dto/update-advert-body.dto'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { advertMigrate } from './migrations/advert.migrate'
+import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { IAdvertService } from './advert.service.interface'
+import { removeSubjectFromHtml } from './utils'
 
 const LOGGING_CATEGORY = 'advert-service'
 const LOGGING_CONTEXT = 'AdvertService'

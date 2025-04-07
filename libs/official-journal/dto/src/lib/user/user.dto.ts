@@ -1,6 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { BaseEntity } from '@dmr.is/shared/dto'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { InstitutionDto } from '../institution/institution.dto'
 
 export class UserRoleDto extends BaseEntity<UserRoleEnum> {}

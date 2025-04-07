@@ -1,6 +1,7 @@
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
-import { BaseEntity } from '@dmr.is/shared/dto'
 import { IsArray, IsString, IsUUID } from 'class-validator'
+import { BaseEntity } from '@dmr.is/shared/dto'
+
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 export class CategoryMainCategory extends BaseEntity {
   @ApiProperty({

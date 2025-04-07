@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
+
 import { AdvertTypeQuery } from './dto/advert-type.query'
 import { CreateAdvertMainTypeBody } from './dto/create-advert-main-type.dto'
 import { CreateAdvertTypeBody } from './dto/create-advert-type.dto'

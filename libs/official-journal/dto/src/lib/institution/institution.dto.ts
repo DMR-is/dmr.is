@@ -1,4 +1,5 @@
 import { BaseEntity } from '@dmr.is/shared/dto'
+
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 export class InstitutionDto extends BaseEntity {

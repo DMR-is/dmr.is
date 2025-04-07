@@ -1,9 +1,11 @@
 import { AdvertDepartmentModel } from '@dmr.is/official-journal/models'
-import { SequelizeModule } from '@nestjs/sequelize'
+
 import { Module } from '@nestjs/common'
-import { IDepartmentService } from './department.service.interface'
-import { DepartmentService } from './department.service'
+import { SequelizeModule } from '@nestjs/sequelize'
+
 import { DepartmentController } from './department.controller'
+import { DepartmentService } from './department.service'
+import { IDepartmentService } from './department.service.interface'
 
 @Module({
   imports: [SequelizeModule.forFeature([AdvertDepartmentModel])],

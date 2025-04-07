@@ -3,24 +3,24 @@ import { Sequelize } from 'sequelize-typescript'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
-
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
-import { attachmentMigrate } from './migrations/attachment.migration'
-import {
-  CreateAttachmentParams,
-  IAttachmentService,
-} from './attachment.service.interface'
 import {
   ApplicationAttachmentModel,
   ApplicationAttachmentsModel,
   ApplicationAttachmentTypeModel,
   CaseAttachmentsModel,
 } from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { GetApplicationAttachmentResponse } from './dto/get-application-attachment.response'
 import { GetApplicationAttachmentsResponse } from './dto/get-application-attachments.response'
+import { attachmentMigrate } from './migrations/attachment.migration'
+import {
+  CreateAttachmentParams,
+  IAttachmentService,
+} from './attachment.service.interface'
 
 @Injectable()
 export class AttachmentService implements IAttachmentService {

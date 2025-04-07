@@ -3,13 +3,21 @@ import { Sequelize } from 'sequelize-typescript'
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
+import { userMigrate } from '@dmr.is/official-journal/migrations/user/user.migrate'
+import { userRoleMigrate } from '@dmr.is/official-journal/migrations/user/user-role.migrate'
+import {
+  AdvertInvolvedPartyModel,
+  UserInvolvedPartiesModel,
+  UserModel,
+  UserRoleModel,
+} from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IUserService } from './user.service.interface'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -19,16 +27,7 @@ import {
   GetUsersResponse,
   UpdateUserDto,
 } from './dto/user.dto'
-
-import {
-  UserModel,
-  UserRoleModel,
-  AdvertInvolvedPartyModel,
-  UserInvolvedPartiesModel,
-} from '@dmr.is/official-journal/models'
-import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import { userMigrate } from '@dmr.is/official-journal/migrations/user/user.migrate'
-import { userRoleMigrate } from '@dmr.is/official-journal/migrations/user/user-role.migrate'
+import { IUserService } from './user.service.interface'
 
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'

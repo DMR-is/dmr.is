@@ -1,8 +1,9 @@
-import { CaseModel } from '@dmr.is/official-journal/models'
 import { ApplicationCase } from '@dmr.is/official-journal/dto/application/application-case.dto'
+import { CaseModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
-import { caseStatusMigrate } from '../case-status/case-status.migrate'
+
 import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
+import { caseStatusMigrate } from '../case-status/case-status.migrate'
 import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
 
 export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {

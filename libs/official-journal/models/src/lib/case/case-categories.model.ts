@@ -8,9 +8,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseModel } from './case.model'
 import { OfficialJournalModels } from '../constants'
 import { AdvertCategoryModel } from '../journal/advert-category.model'
+import { CaseModel } from './case.model'
 
 @Table({ tableName: OfficialJournalModels.CASE_CATEGORIES, timestamps: false })
 export class CaseCategoriesModel extends Model {

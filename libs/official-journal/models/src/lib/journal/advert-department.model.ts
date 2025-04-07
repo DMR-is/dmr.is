@@ -1,8 +1,8 @@
 import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript'
 
-import { OfficialJournalModels } from '../constants'
 import { AdvertMainTypeModel } from '../advert-type/advert-main-type.model'
 import { CaseModel } from '../case/case.model'
+import { OfficialJournalModels } from '../constants'
 
 export enum DepartmentEnum {
   A = 'A deild',

@@ -6,6 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 import { UserRoleEnum } from '@dmr.is/constants'
+
 import { OfficialJournalModels } from '../constants'
 
 @Table({ tableName: OfficialJournalModels.USER_ROLE, timestamps: false })

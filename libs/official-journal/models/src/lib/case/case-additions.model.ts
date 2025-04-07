@@ -9,9 +9,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { OfficialJournalModels } from '../constants'
 import { CaseModel } from './case.model'
 import { CaseAdditionModel } from './case-addition.model'
-import { OfficialJournalModels } from '../constants'
 
 @Table({ tableName: OfficialJournalModels.CASE_ADDITIONS, timestamps: false })
 @DefaultScope(() => ({

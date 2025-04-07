@@ -1,14 +1,15 @@
+import { AdvertType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
+import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
+import { Category } from '@dmr.is/official-journal/modules/category'
+import { BaseEntity } from '@dmr.is/shared/dto'
+
 import { ApiProperty } from '@nestjs/swagger'
 
-import { AdvertStatusEnum } from '@dmr.is/official-journal/models'
-import { BaseEntity } from '@dmr.is/shared/dto'
-import { AdvertPublicationNumber } from './advert-publication-number.dto'
-import { Category } from '@dmr.is/official-journal/modules/category'
-import { AdvertDocument } from './advert-document.dto'
 import { AdvertAttachment } from './advert-attachment.dto'
 import { AdvertCorrection } from './advert-correction.dto'
-import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
-import { AdvertType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
+import { AdvertDocument } from './advert-document.dto'
+import { AdvertPublicationNumber } from './advert-publication-number.dto'
 
 export class Advert {
   @ApiProperty({

@@ -1,12 +1,12 @@
-import {
-  SignatureMemberModel,
-  SignatureRecordModel,
-  AdvertInvolvedPartyModel,
-} from '@dmr.is/official-journal/models'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { Includeable, Op, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import {
+  AdvertInvolvedPartyModel,
+  SignatureMemberModel,
+  SignatureRecordModel,
+} from '@dmr.is/official-journal/models'
 
 const memberTemplate = (member: SignatureMemberModel) => {
   const styleObject = {

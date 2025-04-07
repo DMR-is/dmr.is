@@ -1,10 +1,11 @@
+import { Transaction } from 'sequelize'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CaseHistoryModel, CaseModel } from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { Transaction } from 'sequelize'
 
 const LOGGING_CATEGORY = 'case-history-service'
 const LOGGING_CONTEXT = 'CaseHistoryService'

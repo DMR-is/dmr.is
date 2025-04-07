@@ -8,11 +8,11 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import { OfficialJournalModels } from '../constants'
 import { AdvertModel } from './advert.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryCategoriesModel } from './advert-category-categories.model'
 import { AdvertMainCategoryModel } from './advert-main-category.model'
-import { OfficialJournalModels } from '../constants'
 
 @Table({ tableName: OfficialJournalModels.CATEGORY, timestamps: false })
 export class AdvertCategoryModel extends Model {

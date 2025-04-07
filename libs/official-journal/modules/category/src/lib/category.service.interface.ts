@@ -1,6 +1,7 @@
+import { Transaction } from 'sequelize'
 import { DefaultSearchParams } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { Transaction } from 'sequelize'
+
 import {
   CreateMainCategory,
   UpdateCategory,

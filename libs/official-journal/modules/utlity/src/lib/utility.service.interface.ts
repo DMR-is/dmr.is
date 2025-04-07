@@ -1,15 +1,14 @@
 import { Transaction } from 'sequelize'
-
-import { ResultWrapper } from '@dmr.is/types'
 import {
-  AdvertStatusModel,
-  AdvertDepartmentModel,
-  AdvertTypeModel,
   AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
+  CaseCommunicationStatusModel,
   CaseStatusModel,
   CaseTagModel,
-  CaseCommunicationStatusModel,
 } from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface IUtilityService {
   advertStatusLookup(status: string): Promise<ResultWrapper<AdvertStatusModel>>

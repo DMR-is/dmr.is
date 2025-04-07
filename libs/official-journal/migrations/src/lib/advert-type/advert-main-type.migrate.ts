@@ -1,7 +1,7 @@
+import { AdvertMainType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
 import { AdvertMainTypeModel } from '@dmr.is/official-journal/models'
 
 import { advertTypeMigrate } from './advert-type.migrate'
-import { AdvertMainType } from '@dmr.is/official-journal/dto/advert-type/advert-type.dto'
 
 export const advertMainTypeMigrate = (
   model: AdvertMainTypeModel,

@@ -5,11 +5,13 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from '@dmr.is/official-journal/models'
+import { ApplicationModule } from '@dmr.is/shared/modules/application'
+
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
-import { ICaseService } from './case.service.interface'
+
 import { CaseService } from './case.service'
-import { ApplicationModule } from '@dmr.is/shared/modules/application'
+import { ICaseService } from './case.service.interface'
 
 @Module({
   imports: [

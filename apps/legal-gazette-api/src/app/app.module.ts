@@ -1,22 +1,23 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import {
-  DMRSequelizeConfigModule,
-  DMRSequelizeConfigService,
-} from '@dmr.is/shared/modules/sequelize'
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { SequelizeModule } from '@nestjs/sequelize'
-import { LoggingModule } from '@dmr.is/logging'
+import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
+import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
+import { LoggingModule } from '@dmr.is/logging'
+import { CLSMiddleware } from '@dmr.is/middleware'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules/health'
-import { CLSMiddleware } from '@dmr.is/middleware'
-import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
-import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
+import {
+  DMRSequelizeConfigModule,
+  DMRSequelizeConfigService,
+} from '@dmr.is/shared/modules/sequelize'
+
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { SequelizeModule } from '@nestjs/sequelize'
 
 @Module({
   imports: [

@@ -9,8 +9,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { SignatureRecordModel } from './signature-record.model'
 import { OfficialJournalModels } from '../constants'
+import { SignatureRecordModel } from './signature-record.model'
 @DefaultScope(() => ({
   order: [['created', 'ASC']],
 }))

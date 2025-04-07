@@ -3,9 +3,9 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { IPdfService } from './pdf.service.interface'
 import { GetPdfUrlResponse } from './dto/get-case-pdf-response.dto'
-import { GetPdfRespone, GetPdfBody } from './dto/get-pdf-response.dto'
+import { GetPdfBody,GetPdfRespone } from './dto/get-pdf-response.dto'
+import { IPdfService } from './pdf.service.interface'
 
 @Controller({
   path: 'pdf',

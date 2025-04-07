@@ -1,9 +1,10 @@
 import { CaseHistory } from '@dmr.is/official-journal/dto/case-history/case-history.dto'
 import { CaseHistoryModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
-import { institutionMigrate } from '../institution/institution.migrate'
+
 import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
 import { caseStatusMigrate } from '../case-status/case-status.migrate'
+import { institutionMigrate } from '../institution/institution.migrate'
 
 export const caseHistoryMigrate = (model: CaseHistoryModel): CaseHistory => {
   return {

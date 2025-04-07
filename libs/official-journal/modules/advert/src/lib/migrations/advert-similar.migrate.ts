@@ -1,8 +1,8 @@
+import { institutionMigrate } from '@dmr.is/official-journal/migrations/institution/institution.migrate'
 import { AdvertModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
 import { AdvertSimilar } from '../dto/advert-similar.dto'
-import { institutionMigrate } from '@dmr.is/official-journal/migrations/institution/institution.migrate'
 
 export function advertSimilarMigrate(model: AdvertModel): AdvertSimilar {
   const advert: AdvertSimilar = {

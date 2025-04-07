@@ -8,15 +8,15 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdvertTypeModel } from '../advert-type/advert-type.model'
+import { AdvertAttachmentsModel } from '../attachment/advert-attachments.model'
+import { OfficialJournalModels } from '../constants'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'
 import { AdvertCorrectionModel } from './advert-correction.model'
 import { AdvertDepartmentModel } from './advert-department.model'
-import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { AdvertStatusModel } from './advert-status.model'
-import { OfficialJournalModels } from '../constants'
-import { AdvertTypeModel } from '../advert-type/advert-type.model'
-import { AdvertAttachmentsModel } from '../attachment/advert-attachments.model'
 
 @Table({ tableName: OfficialJournalModels.ADVERT, timestamps: false })
 export class AdvertModel extends Model {

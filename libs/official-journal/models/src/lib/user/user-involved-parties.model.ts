@@ -8,10 +8,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { UserModel } from './user.model'
-
 import { OfficialJournalModels } from '../constants'
 import { AdvertInvolvedPartyModel } from '../institution/institution.model'
+import { UserModel } from './user.model'
 
 @Table({
   tableName: OfficialJournalModels.USER_INVOLVED_PARTIES,

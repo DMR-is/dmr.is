@@ -1,13 +1,14 @@
 import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
-import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
-import { PostExternalPaymentBody } from './dto/payment.dto'
+
+import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
 import {
   GetPaymentQuery,
   GetPaymentResponse,
 } from './dto/get-case-payment-response.dto'
-import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
+import { PostExternalPaymentBody } from './dto/payment.dto'
 import { PriceByDepartmentResponse } from './dto/tbr-transaction.dto'
+import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
 
 export interface IPriceService {
   getAllFeeCodes(

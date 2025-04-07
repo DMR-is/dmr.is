@@ -3,11 +3,13 @@ import {
   AdvertCategoryModel,
   AdvertMainCategoryModel,
 } from '@dmr.is/official-journal/models'
+
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
 import { CategoryController } from './controllers/category.controller'
-import { ICategoryService } from './category.service.interface'
 import { CategoryService } from './category.service'
+import { ICategoryService } from './category.service.interface'
 
 @Module({
   imports: [

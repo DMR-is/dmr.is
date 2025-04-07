@@ -1,3 +1,15 @@
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
+import {
+  GetCaseResponse,
+  GetCasesQuery,
+  GetCasesReponse,
+} from '@dmr.is/official-journal/dto/case/case.dto'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   Controller,
   Get,
@@ -6,19 +18,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ICaseService } from './case.service.interface'
-import { Roles } from '@dmr.is/decorators'
-import {
-  GetCaseResponse,
-  GetCasesReponse,
-  GetCasesQuery,
-} from '@dmr.is/official-journal/dto/case/case.dto'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { ResultWrapper } from '@dmr.is/types'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
-import { UserRoleEnum } from '@dmr.is/constants'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+
+import { ICaseService } from './case.service.interface'
 @Controller({
   path: 'cases',
   version: '1',

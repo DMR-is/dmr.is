@@ -9,12 +9,12 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseActionModel } from './case-action.model'
-import { OfficialJournalModels } from '../constants'
-import { CaseStatusModel } from '../case/case-status.model'
 import { CaseModel } from '../case/case.model'
+import { CaseStatusModel } from '../case/case-status.model'
+import { OfficialJournalModels } from '../constants'
 import { AdvertInvolvedPartyModel } from '../institution/institution.model'
 import { UserModel } from '../user/user.model'
+import { CaseActionModel } from './case-action.model'
 
 @DefaultScope(() => ({
   order: [['created_at', 'ASC']],

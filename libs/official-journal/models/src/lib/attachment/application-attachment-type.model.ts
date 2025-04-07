@@ -5,6 +5,7 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
+
 import { OfficialJournalModels } from '../constants'
 
 @Table({

@@ -1,5 +1,6 @@
 import { Signature } from '@dmr.is/official-journal/dto/signature/signature.dto'
 import { SignatureModel } from '@dmr.is/official-journal/models'
+
 import { institutionMigrate } from '../institution/institution.migrate'
 import { signatureRecordMigrate } from './signature.record.migrate'
 

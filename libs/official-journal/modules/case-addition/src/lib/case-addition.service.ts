@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common'
-import { ICaseAdditionService } from './case-addition.service.interface'
-import { ResultWrapper } from '@dmr.is/types'
 import { Transaction } from 'sequelize'
-import { InjectModel } from '@nestjs/sequelize'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import {
   AdditionTypeEnum,
   CaseAdditionModel,
   CaseAdditionsModel,
 } from '@dmr.is/official-journal/models'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { ResultWrapper } from '@dmr.is/types'
+
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { ICaseAdditionService } from './case-addition.service.interface'
 
 @Injectable()
 export class CaseAdditionService implements ICaseAdditionService {

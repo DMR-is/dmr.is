@@ -1,3 +1,10 @@
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   Body,
   Controller,
@@ -13,20 +20,15 @@ import {
   ApiNoContentResponse,
   ApiOperation,
 } from '@nestjs/swagger'
-import { UserRoleEnum } from '@dmr.is/constants'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { Roles } from '@dmr.is/decorators'
-import { ResultWrapper } from '@dmr.is/types'
-import { CreateMainCategoryCategories } from '../dto/create-main-category-categories.dto'
+
+import { ICategoryService } from '../category.service.interface'
 import {
-  CreateMainCategory,
   CreateCategory,
+  CreateMainCategory,
   UpdateCategory,
 } from '../dto/create-main-category.dto'
+import { CreateMainCategoryCategories } from '../dto/create-main-category-categories.dto'
 import { UpdateMainCategory } from '../dto/update-main-category.dto'
-import { ICategoryService } from '../category.service.interface'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 @Controller({
   path: 'categories',
   version: '1',

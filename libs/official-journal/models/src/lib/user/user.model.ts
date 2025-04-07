@@ -13,10 +13,10 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { UserInvolvedPartiesModel } from './user-involved-parties.model'
-import { UserRoleModel } from './user-role.model'
 import { OfficialJournalModels } from '../constants'
 import { AdvertInvolvedPartyModel } from '../institution/institution.model'
+import { UserInvolvedPartiesModel } from './user-involved-parties.model'
+import { UserRoleModel } from './user-role.model'
 
 @DefaultScope(() => ({
   include: [UserRoleModel, AdvertInvolvedPartyModel],

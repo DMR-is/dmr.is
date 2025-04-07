@@ -1,4 +1,5 @@
 import { AdvertCategoryModel } from '@dmr.is/official-journal/models'
+
 import { Category } from '../dto/category.dto'
 
 export function advertCategoryMigrate(model: AdvertCategoryModel): Category {

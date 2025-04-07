@@ -1,4 +1,5 @@
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
+
 import { InstitutionDto } from '../institution/institution.dto'
 export class SignatureMember {
   @ApiProperty({

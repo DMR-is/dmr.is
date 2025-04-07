@@ -1,13 +1,27 @@
+import { Op, Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import slugify from 'slugify'
+import { v4 as uuid } from 'uuid'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdvertCategoryCategoriesModel,
+  AdvertCategoryModel,
+  AdvertMainCategoryModel,
+} from '@dmr.is/official-journal/models'
+import { DefaultSearchParams } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
+import { generatePaging } from '@dmr.is/utils'
+
 import {
   BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { ICategoryService } from './category.service.interface'
-import { DefaultSearchParams } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-import { Op, Transaction } from 'sequelize'
+import { InjectModel } from '@nestjs/sequelize'
+
 import {
   CreateMainCategory,
   UpdateCategory,
@@ -17,21 +31,9 @@ import { GetCategoryResponse } from './dto/get-category-responses.dto'
 import { GetMainCategoriesResponse } from './dto/get-main-categories-response.dto'
 import { GetMainCategoryResponse } from './dto/get-main-category-response.dto'
 import { UpdateMainCategory } from './dto/update-main-category.dto'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { v4 as uuid } from 'uuid'
-import { generatePaging } from '@dmr.is/utils'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import {
-  AdvertMainCategoryModel,
-  AdvertCategoryModel,
-  AdvertCategoryCategoriesModel,
-} from '@dmr.is/official-journal/models'
-import slugify from 'slugify'
 import { advertCategoryMigrate } from './migrations/advert-category.migrate'
 import { advertMainCategoryMigrate } from './migrations/advert-main-category.migrate'
-import { InjectModel } from '@nestjs/sequelize'
-import { Sequelize } from 'sequelize-typescript'
+import { ICategoryService } from './category.service.interface'
 
 const LOGGING_CONTEXT = 'CategoryService'
 const LOGGING_CATEGORY = 'category-service'

@@ -2,23 +2,23 @@ import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertModel,
+  AdvertStatusModel,
+  AdvertTypeModel,
+  CaseCommunicationStatusModel,
+  CaseModel,
+  CaseStatusModel,
+  CaseTagModel,
+} from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { IUtilityService } from './utility.service.interface'
 
-import {
-  AdvertModel,
-  CaseModel,
-  AdvertDepartmentModel,
-  AdvertTypeModel,
-  AdvertCategoryModel,
-  CaseStatusModel,
-  CaseTagModel,
-  CaseCommunicationStatusModel,
-  AdvertStatusModel,
-} from '@dmr.is/official-journal/models'
+import { IUtilityService } from './utility.service.interface'
 
 export class UtilityService implements IUtilityService {
   constructor(

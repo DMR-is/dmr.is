@@ -1,13 +1,12 @@
+import { WinstonModule } from 'nest-winston'
+import { apmInit } from '@dmr.is/apm'
+import { logger } from '@dmr.is/logging'
+
 import { Logger, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-
-import { AppModule } from './app/app.module'
-import { WinstonModule } from 'nest-winston'
-
-import { logger } from '@dmr.is/logging'
 import { SwaggerModule } from '@nestjs/swagger'
 
-import { apmInit } from '@dmr.is/apm'
+import { AppModule } from './app/app.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {

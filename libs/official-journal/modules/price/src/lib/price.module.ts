@@ -1,14 +1,15 @@
-import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
-
-import { PriceService } from './price.service'
-import { IPriceService } from './price.service.interface'
-import { AuthModule } from '@dmr.is/official-journal/modules/auth'
 import {
   AdvertDepartmentModel,
   CaseTransactionModel,
   TransactionFeeCodesModel,
 } from '@dmr.is/official-journal/models'
+import { AuthModule } from '@dmr.is/official-journal/modules/auth'
+
+import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
+import { PriceService } from './price.service'
+import { IPriceService } from './price.service.interface'
 
 @Module({
   imports: [

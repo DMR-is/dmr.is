@@ -1,5 +1,5 @@
-import { GetCasesQuery } from '@dmr.is/official-journal/dto/case/case.dto'
 import { Op, WhereOptions } from 'sequelize'
+import { GetCasesQuery } from '@dmr.is/official-journal/dto/case/case.dto'
 
 export const whereParams = (params?: GetCasesQuery) => {
   const whereClause: WhereOptions = {}

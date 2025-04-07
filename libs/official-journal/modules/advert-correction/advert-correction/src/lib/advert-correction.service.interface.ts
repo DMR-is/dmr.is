@@ -1,7 +1,7 @@
-import { AddCaseAdvertCorrection } from './dto/advert-correction.dto'
-
 import { Transaction } from 'sequelize'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { AddCaseAdvertCorrection } from './dto/advert-correction.dto'
 
 export interface IAdvertCorrectionService {
   postCaseCorrection(

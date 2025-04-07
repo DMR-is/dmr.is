@@ -1,7 +1,7 @@
 import { BelongsTo, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { ApplicationAttachmentTypeModel } from './application-attachment-type.model'
 import { OfficialJournalModels } from '../constants'
+import { ApplicationAttachmentTypeModel } from './application-attachment-type.model'
 
 @Table({
   tableName: OfficialJournalModels.APPLICATION_ATTACHMENT,

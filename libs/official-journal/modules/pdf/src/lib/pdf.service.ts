@@ -7,6 +7,14 @@ import {
 } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  AdvertTypeModel,
+  CaseAdditionModel,
+  CaseModel,
+  SignatureModel,
+} from '@dmr.is/official-journal/models'
+import { OJOIApplication } from '@dmr.is/shared/dto'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
 import { ResultWrapper } from '@dmr.is/types'
 import { retryAsync } from '@dmr.is/utils'
 
@@ -16,24 +24,16 @@ import {
   NotFoundException,
   OnModuleDestroy,
 } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { pdfCss } from './lib/pdf.css'
-import { IPdfService } from './pdf.service.interface'
 import { advertPdfTemplate } from './lib/pdf-advert-template'
 import { getBrowser } from './lib/puppetBrowser'
+import { IPdfService } from './pdf.service.interface'
 import { applicationSignatureTemplate } from './pdf.utils'
-import { IApplicationService } from '@dmr.is/shared/modules/application'
-import { InjectModel } from '@nestjs/sequelize'
-import {
-  AdvertTypeModel,
-  CaseAdditionModel,
-  CaseModel,
-  SignatureModel,
-} from '@dmr.is/official-journal/models'
-import { OJOIApplication } from '@dmr.is/shared/dto'
 
 const LOGGING_CATEGORY = 'pdf-service'
 

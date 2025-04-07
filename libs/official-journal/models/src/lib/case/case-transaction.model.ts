@@ -6,8 +6,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseModel } from './case.model'
 import { OfficialJournalModels } from '../constants'
+import { CaseModel } from './case.model'
 
 @Table({ tableName: OfficialJournalModels.CASE_TRANSACTION, timestamps: false })
 export class CaseTransactionModel extends Model {

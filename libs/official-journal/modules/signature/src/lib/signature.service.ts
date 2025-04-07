@@ -3,22 +3,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { ResultWrapper } from '@dmr.is/types'
-
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
-import { MemberTypeEnum } from './types'
-import { ISignatureService } from './signature.service.interface'
-import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
-import {
-  SignatureModel,
-  SignatureMemberModel,
-  SignatureRecordModel,
-} from '@dmr.is/official-journal/models'
-
-import { signatureMigrate } from '@dmr.is/official-journal/migrations/signature/signature.migrate'
 import {
   CreateSignature,
   CreateSignatureMember,
@@ -26,6 +10,20 @@ import {
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { signatureMigrate } from '@dmr.is/official-journal/migrations/signature/signature.migrate'
+import {
+  SignatureMemberModel,
+  SignatureModel,
+  SignatureRecordModel,
+} from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { ISignatureService } from './signature.service.interface'
+import { MemberTypeEnum } from './types'
+import { SIGNATURE_INCLUDES, signatureTemplate } from './utils'
 
 const LOGGING_CONTEXT = 'SignatureService'
 const LOGGING_CATEGORY = 'signature-service'

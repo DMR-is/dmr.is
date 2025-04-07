@@ -1,5 +1,5 @@
-import { ResultWrapper } from '@dmr.is/types'
 import { Transaction } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICaseAdditionService {
   createCaseAddition(

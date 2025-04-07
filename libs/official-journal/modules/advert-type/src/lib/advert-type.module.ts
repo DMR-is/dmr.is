@@ -1,15 +1,15 @@
-import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
-
-import { AdvertTypeService } from './advert-type.service'
-import { IAdvertTypeService } from './advert-type.service.interface'
-
 import {
   AdvertDepartmentModel,
   AdvertMainTypeModel,
   AdvertTypeModel,
 } from '@dmr.is/official-journal/models'
+
+import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
 import { AdvertTypeController } from './controllers/advert-type.controller'
+import { AdvertTypeService } from './advert-type.service'
+import { IAdvertTypeService } from './advert-type.service.interface'
 
 @Module({
   imports: [

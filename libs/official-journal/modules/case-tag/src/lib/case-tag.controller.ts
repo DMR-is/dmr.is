@@ -1,8 +1,10 @@
-import { Controller, Get, Inject } from '@nestjs/common'
-import { GetTagsResponse } from './dto/case-tag.dto'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
-import { ICaseTagService } from './case-tag.service.interface'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { Controller, Get, Inject } from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
+import { GetTagsResponse } from './dto/case-tag.dto'
+import { ICaseTagService } from './case-tag.service.interface'
 
 @Controller({
   path: 'tags',

@@ -6,6 +6,7 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
+
 import { OfficialJournalModels } from '../constants'
 
 @Table({ tableName: OfficialJournalModels.INSTITUTION, timestamps: false })

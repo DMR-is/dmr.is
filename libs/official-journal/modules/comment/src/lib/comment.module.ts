@@ -1,14 +1,16 @@
-import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
-import { CommentService } from './comment.service'
-import { ICommentService } from './comment.service.interface'
 import {
+  CaseActionModel,
   CaseModel,
   CommentModel,
   CommentsModel,
-  CaseActionModel,
 } from '@dmr.is/official-journal/models'
 import { AWSModule } from '@dmr.is/shared/modules/aws'
+
+import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
+import { CommentService } from './comment.service'
+import { ICommentService } from './comment.service.interface'
 
 @Module({
   imports: [

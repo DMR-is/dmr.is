@@ -1,7 +1,8 @@
 import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { UserModel } from '@dmr.is/official-journal/models'
-import { userRoleMigrate } from './user-role.migrate'
+
 import { institutionMigrate } from '../institution/institution.migrate'
+import { userRoleMigrate } from './user-role.migrate'
 
 export const userMigrate = (model: UserModel): UserDto => {
   return {

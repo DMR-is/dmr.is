@@ -10,9 +10,9 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { AdvertTypeModel } from './advert-type.model'
 import { OfficialJournalModels } from '../constants'
 import { AdvertDepartmentModel } from '../journal/advert-department.model'
+import { AdvertTypeModel } from './advert-type.model'
 
 @Table({ tableName: OfficialJournalModels.ADVERT_MAIN_TYPE, timestamps: true })
 @DefaultScope(() => ({

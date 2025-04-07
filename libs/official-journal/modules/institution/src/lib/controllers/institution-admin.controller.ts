@@ -1,6 +1,12 @@
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  CreateInstitution,
+  UpdateInstitution,
+} from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 
 import {
   Body,
@@ -20,15 +26,8 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { IInstitutionService } from '../institution.service.interface'
-
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
-import {
-  CreateInstitution,
-  UpdateInstitution,
-} from '@dmr.is/official-journal/dto/institution/institution.dto'
 import { GetInstitution } from '../dto/get-institution-response.dto'
+import { IInstitutionService } from '../institution.service.interface'
 
 @Controller({
   version: '1',

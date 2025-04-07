@@ -8,9 +8,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CommentModel } from './comment.model'
-import { OfficialJournalModels } from '../constants'
 import { CaseModel } from '../case/case.model'
+import { OfficialJournalModels } from '../constants'
+import { CommentModel } from './comment.model'
 
 @Table({ tableName: OfficialJournalModels.COMMENTS, timestamps: false })
 export class CommentsModel extends Model {

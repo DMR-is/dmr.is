@@ -2,6 +2,7 @@
 import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -12,7 +13,6 @@ import {
 } from '@nestjs/common'
 
 import { IApplicationService } from './application.service.interface'
-import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 
 const LOGGING_CATEGORY = 'application-service'
 const LOGGING_CONTEXT = 'ApplicationService'

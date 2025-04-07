@@ -4,23 +4,22 @@ import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
+import {
+  CreateInstitution,
+  UpdateInstitution,
+} from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { institutionMigrate } from '@dmr.is/official-journal/migrations/institution/institution.migrate'
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IInstitutionService } from './institution.service.interface'
-import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
+import { GetInstitution } from './dto/get-institution-response.dto'
 import { InstitutionQuery } from './dto/get-institutions-query.dto'
 import { GetInstitutions } from './dto/get-institutions-response.dto'
-import { GetInstitution } from './dto/get-institution-response.dto'
-import {
-  CreateInstitution,
-  UpdateInstitution,
-} from '@dmr.is/official-journal/dto/institution/institution.dto'
-import { institutionMigrate } from '@dmr.is/official-journal/migrations/institution/institution.migrate'
+import { IInstitutionService } from './institution.service.interface'
 
 const LOGGING_CATEGORY = 'institution-service'
 

@@ -1,8 +1,10 @@
+import { ResultWrapper } from '@dmr.is/types'
+
 import { Controller, Get, Inject } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import { GetCommunicationSatusesResponse } from './dto/communication-status.dto'
 import { ICommunicationStatusService } from './communication-status.service.interface'
-import { ResultWrapper } from '@dmr.is/types'
 @Controller({
   path: 'communication-statuses',
   version: '1',

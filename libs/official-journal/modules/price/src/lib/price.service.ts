@@ -2,29 +2,27 @@ import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
+import {
+  AdvertFeeTypeEnum,
+  TransactionFeeCodesModel,
+} from '@dmr.is/official-journal/models'
+import { IAuthService } from '@dmr.is/official-journal/modules/auth'
 import { ResultWrapper } from '@dmr.is/types'
 import { MAX_CHARACTER_HTML } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IPriceService } from './price.service.interface'
-
-import { IAuthService } from '@dmr.is/official-journal/modules/auth'
-import {
-  TransactionFeeCodesModel,
-  AdvertFeeTypeEnum,
-} from '@dmr.is/official-journal/models'
-import { transactionFeeCodeMigrate } from './migrations/transaction-fee-code.migrate'
-import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
+import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
 import {
   GetPaymentQuery,
   GetPaymentResponse,
 } from './dto/get-case-payment-response.dto'
 import { PaymentExpenses, PostExternalPaymentBody } from './dto/payment.dto'
-import { CaseFeeCalculationBody } from './dto/fee-calculator-body.dto'
 import { PriceByDepartmentResponse } from './dto/tbr-transaction.dto'
+import { TransactionFeeCodesResponse } from './dto/transaction-free-code.dto'
+import { transactionFeeCodeMigrate } from './migrations/transaction-fee-code.migrate'
+import { IPriceService } from './price.service.interface'
 
 const LOGGING_CATEGORY = 'price-service'
 /**

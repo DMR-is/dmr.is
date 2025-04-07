@@ -1,4 +1,5 @@
 import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 export class GetInstitution {

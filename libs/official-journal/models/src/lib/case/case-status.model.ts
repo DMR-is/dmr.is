@@ -7,8 +7,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseModel } from './case.model'
 import { OfficialJournalModels } from '../constants'
+import { CaseModel } from './case.model'
 
 export enum CaseStatusEnum {
   Submitted = 'Innsent',

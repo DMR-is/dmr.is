@@ -9,8 +9,8 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
-import { AdvertModel } from './advert.model'
 import { OfficialJournalModels } from '../constants'
+import { AdvertModel } from './advert.model'
 
 @Table({ tableName: OfficialJournalModels.ADVERT_CORRECTION })
 export class AdvertCorrectionModel extends Model {

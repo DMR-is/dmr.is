@@ -1,5 +1,6 @@
-import { ResultWrapper } from '@dmr.is/types'
 import { Transaction } from 'sequelize'
+import { ResultWrapper } from '@dmr.is/types'
+
 import { CreateAdvert } from './dto/advert.dto'
 import { GetAdvertResponse } from './dto/get-advert-response.dto'
 import { GetAdvertsQueryParams } from './dto/get-adverts-query.dto'

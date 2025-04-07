@@ -1,4 +1,5 @@
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
@@ -10,7 +11,6 @@ import { GetAdvertMainType } from '../dto/get-advert-main-type.dto'
 import { GetAdvertMainTypes } from '../dto/get-advert-main-types.dto'
 import { GetAdvertType } from '../dto/get-advert-type.dto'
 import { GetAdvertTypes } from '../dto/get-advert-types.dto'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
 @Controller({ path: 'types', version: '1' })
 export class AdvertTypeController {
   constructor(

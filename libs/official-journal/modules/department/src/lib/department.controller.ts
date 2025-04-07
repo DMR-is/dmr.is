@@ -1,7 +1,9 @@
-import { ResultWrapper } from '@dmr.is/types'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { ResultWrapper } from '@dmr.is/types'
+
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import { GetDepartmentResponse } from './dto/get-department-response.dto'
 import { GetDepartmentsQueryParams } from './dto/get-departments-query.dto'
 import { GetDepartmentsResponse } from './dto/get-departments-response.dto'

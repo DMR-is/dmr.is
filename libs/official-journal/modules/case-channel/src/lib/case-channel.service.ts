@@ -1,14 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { ICaseChannelService } from './case-channel.service.interface'
-import { ResultWrapper } from '@dmr.is/types'
-import { CreateCaseChannelBody } from './dto/case-channel.dto'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { caseChannelMigrate } from '@dmr.is/official-journal/migrations/case-channel/case-channel.migrate'
 import {
   CaseChannelModel,
   CaseChannelsModel,
 } from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
+
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { caseChannelMigrate } from '@dmr.is/official-journal/migrations/case-channel/case-channel.migrate'
+
+import { CreateCaseChannelBody } from './dto/case-channel.dto'
+import { ICaseChannelService } from './case-channel.service.interface'
 
 const LOGGING_CONTEXT = 'CaseChannelService'
 const LOGGING_CATEGORY = 'case-channel-service'

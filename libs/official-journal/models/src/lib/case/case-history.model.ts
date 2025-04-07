@@ -8,13 +8,13 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdvertTypeModel } from '../advert-type/advert-type.model'
+import { OfficialJournalModels } from '../constants'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
+import { AdvertDepartmentModel } from '../journal/advert-department.model'
+import { UserModel } from '../user/user.model'
 import { CaseModel } from './case.model'
 import { CaseStatusModel } from './case-status.model'
-import { OfficialJournalModels } from '../constants'
-import { AdvertTypeModel } from '../advert-type/advert-type.model'
-import { AdvertDepartmentModel } from '../journal/advert-department.model'
-import { AdvertInvolvedPartyModel } from '../institution/institution.model'
-import { UserModel } from '../user/user.model'
 
 interface CaseHistoryAttributes {
   id: string

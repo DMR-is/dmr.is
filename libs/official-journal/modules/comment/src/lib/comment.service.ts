@@ -4,31 +4,6 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
-
-import { IAWSService } from '@dmr.is/shared/modules/aws'
-
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
-import { ICommentService } from './comment.service.interface'
-import {
-  CommentModel,
-  CaseActionModel,
-  CommentsModel,
-  CaseModel,
-  CaseStatusModel,
-  UserModel,
-  AdvertInvolvedPartyModel,
-  CaseChannelModel,
-  AdvertTypeModel,
-  CaseActionEnum,
-} from '@dmr.is/official-journal/models'
 import {
   ApplicationCommentBody,
   AssignSelfCommentBody,
@@ -42,6 +17,30 @@ import {
   UpdateStatusCommentBody,
 } from '@dmr.is/official-journal/dto/comment/comment.dto'
 import { commentMigrate } from '@dmr.is/official-journal/migrations/comment/comment.migrate'
+import {
+  AdvertInvolvedPartyModel,
+  AdvertTypeModel,
+  CaseActionEnum,
+  CaseActionModel,
+  CaseChannelModel,
+  CaseModel,
+  CaseStatusModel,
+  CommentModel,
+  CommentsModel,
+  UserModel,
+} from '@dmr.is/official-journal/models'
+import { IAWSService } from '@dmr.is/shared/modules/aws'
+import { ResultWrapper } from '@dmr.is/types'
+
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { ICommentService } from './comment.service.interface'
 
 const LOGGING_CONTEXT = 'CommentServiceV2'
 const LOGGING_CATEGORY = 'comment-service-v2'

@@ -1,10 +1,11 @@
+import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
+
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { InstitutionController } from './controllers/institution.controller'
 import { InstitutionService } from './institution.service'
 import { IInstitutionService } from './institution.service.interface'
-import { InstitutionController } from './controllers/institution.controller'
-import { AdvertInvolvedPartyModel } from '@dmr.is/official-journal/models'
 
 @Module({
   imports: [SequelizeModule.forFeature([AdvertInvolvedPartyModel])],

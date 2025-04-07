@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { OfficialJournalModels } from '../constants'
 
 export enum AdditionTypeEnum {

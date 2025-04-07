@@ -1,4 +1,5 @@
 import { TransactionFeeCodesModel } from '@dmr.is/official-journal/models'
+
 import { TransactionFeeCode } from '../dto/transaction-free-code.dto'
 
 export function transactionFeeCodeMigrate(

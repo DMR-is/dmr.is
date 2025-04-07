@@ -1,11 +1,12 @@
-import { CaseModel } from '@dmr.is/official-journal/models'
 import { Case } from '@dmr.is/official-journal/dto/case/case.dto'
+import { CaseModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
+
 import { advertTypeMigrate } from '../advert-type/advert-type.migrate'
-import { institutionMigrate } from '../institution/institution.migrate'
-import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
 import { caseStatusMigrate } from '../case-status/case-status.migrate'
 import { caseTagMigrate } from '../case-tag/case-tag.migrate'
+import { communicationStatusMigrate } from '../communication-status/communication-status.migrate'
+import { institutionMigrate } from '../institution/institution.migrate'
 
 export const caseMigrate = (model: CaseModel): Case => ({
   id: model.id,

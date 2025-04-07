@@ -1,4 +1,5 @@
 import { ResultWrapper } from '@dmr.is/types'
+
 import { GetCommunicationSatusesResponse } from './dto/communication-status.dto'
 
 export interface ICommunicationStatusService {

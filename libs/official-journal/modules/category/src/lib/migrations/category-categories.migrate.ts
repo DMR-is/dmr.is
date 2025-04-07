@@ -1,4 +1,5 @@
 import { AdvertCategoryCategoriesModel } from '@dmr.is/official-journal/models'
+
 import { MainCategory } from '../dto/main-category.dto'
 
 export const categoryCategoriesMigrate = (

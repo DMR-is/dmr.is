@@ -25,9 +25,9 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { IAWSService } from './aws.service.interface'
 import { PresignedUrlResponse } from './dto/presigned-url-response.dto'
 import { S3UploadFileResponse } from './dto/upload-file-respone.dto'
+import { IAWSService } from './aws.service.interface'
 
 const LOGGING_CATEGORY = 's3-service'
 

@@ -1,23 +1,18 @@
+import { Op } from 'sequelize'
+import { LogAndHandle } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { ICaseService } from './case.service.interface'
-import {
-  GetCasesQuery,
-  GetCaseResponse,
-  GetCasesReponse,
   CreateCaseDto,
   CreateCaseResponseDto,
+  GetCaseResponse,
+  GetCasesQuery,
+  GetCasesReponse,
   UpdateCaseBody,
   UpdateCaseCategoriesBody,
 } from '@dmr.is/official-journal/dto/case/case.dto'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { caseDetailedMigrate } from '@dmr.is/official-journal/migrations/case/case-detailed.migrate'
+import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
 import { caseMigrate } from '@dmr.is/official-journal/migrations/case/case.migrate'
-import { InjectModel } from '@nestjs/sequelize'
+import { caseDetailedMigrate } from '@dmr.is/official-journal/migrations/case/case-detailed.migrate'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
@@ -33,22 +28,29 @@ import {
   CaseTagModel,
 } from '@dmr.is/official-journal/models'
 import {
+  OJOIApplicationAddition,
+  OJOIUpdateApplicationAnswers,
+} from '@dmr.is/shared/dto'
+import { IApplicationService } from '@dmr.is/shared/modules/application'
+import { ResultWrapper } from '@dmr.is/types'
+import {
   generatePaging,
   getFastTrack,
   getLimitAndOffset,
   matchByIdTitleOrSlug,
   nextWeekdayAfterDays,
 } from '@dmr.is/utils'
-import { whereParams } from './utils'
-import { Op } from 'sequelize'
-import { ResultWrapper } from '@dmr.is/types'
-import { UserDto } from '@dmr.is/official-journal/dto/user/user.dto'
-import { LogAndHandle } from '@dmr.is/decorators'
-import { IApplicationService } from '@dmr.is/shared/modules/application'
+
 import {
-  OJOIApplicationAddition,
-  OJOIUpdateApplicationAnswers,
-} from '@dmr.is/shared/dto'
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { ICaseService } from './case.service.interface'
+import { whereParams } from './utils'
 
 const LOGGING_CONTEXT = 'CaseService'
 export const LOGGING_CATEGORY = 'case-service'

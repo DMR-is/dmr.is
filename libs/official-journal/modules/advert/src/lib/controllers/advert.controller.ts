@@ -1,15 +1,17 @@
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { ResultWrapper } from '@dmr.is/types'
+
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import { IAdvertService } from '../advert.service.interface'
-import { advertsToRss } from '../utils'
 import { GetAdvertResponse } from '../dto/get-advert-response.dto'
 import { GetAdvertsQueryParams } from '../dto/get-adverts-query.dto'
 import {
-  GetSimilarAdvertsResponse,
   GetAdvertsResponse,
+  GetSimilarAdvertsResponse,
 } from '../dto/get-adverts-responses.dto'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { advertsToRss } from '../utils'
 
 @Controller({
   path: 'adverts',

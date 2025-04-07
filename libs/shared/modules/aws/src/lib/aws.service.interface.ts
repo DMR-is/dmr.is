@@ -1,6 +1,5 @@
 import { SentMessageInfo } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
-
 import { ResultWrapper } from '@dmr.is/types'
 
 import { PresignedUrlResponse } from './dto/presigned-url-response.dto'

@@ -1,11 +1,12 @@
-import { ResultWrapper } from '@dmr.is/types'
 import {
   CreateInstitution,
   UpdateInstitution,
 } from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { ResultWrapper } from '@dmr.is/types'
+
 import { GetInstitution } from './dto/get-institution-response.dto'
-import { GetInstitutions } from './dto/get-institutions-response.dto'
 import { InstitutionQuery } from './dto/get-institutions-query.dto'
+import { GetInstitutions } from './dto/get-institutions-response.dto'
 
 export interface IInstitutionService {
   getInstitutions(

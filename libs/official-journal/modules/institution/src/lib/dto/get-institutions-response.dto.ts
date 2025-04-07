@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger'
-
-import { Paging } from '@dmr.is/shared/dto'
 import { InstitutionDto } from '@dmr.is/official-journal/dto/institution/institution.dto'
+import { Paging } from '@dmr.is/shared/dto'
+
+import { ApiProperty } from '@nestjs/swagger'
 export class GetInstitutions {
   @ApiProperty({
     description: 'List of involved parties',

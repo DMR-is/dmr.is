@@ -1,4 +1,5 @@
 import { BaseEntity } from '@dmr.is/shared/dto'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 export class AdvertType {

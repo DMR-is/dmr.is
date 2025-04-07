@@ -1,5 +1,14 @@
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
+import {
+  CreateSignature,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/official-journal/dto/signature/signature.dto'
+import { RoleGuard } from '@dmr.is/official-journal/modules/user'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
-
+import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
 import { ResultWrapper } from '@dmr.is/types'
 
 import {
@@ -21,18 +30,8 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { MemberTypeEnum } from './types'
 import { ISignatureService } from './signature.service.interface'
-import {
-  UpdateSignatureMember,
-  UpdateSignatureRecord,
-  CreateSignature,
-  GetSignature,
-} from '@dmr.is/official-journal/dto/signature/signature.dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/guards/token-auth.guard'
-import { RoleGuard } from '@dmr.is/official-journal/modules/user'
-import { UserRoleEnum } from '@dmr.is/constants'
-import { Roles } from '@dmr.is/decorators'
+import { MemberTypeEnum } from './types'
 
 @Controller({
   version: '1',

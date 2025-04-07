@@ -10,9 +10,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { OfficialJournalModels } from '../constants'
 import { SignatureModel } from './signature.model'
 import { SignatureMemberModel } from './signature-member.model'
-import { OfficialJournalModels } from '../constants'
 @DefaultScope(() => ({
   order: [['date', 'ASC']],
 }))

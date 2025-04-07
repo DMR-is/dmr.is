@@ -1,7 +1,8 @@
 import { Transaction } from 'sequelize'
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import { ResultWrapper } from '@dmr.is/types'
 import { ApplicationAttachmentTypeModel } from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
+
 import { GetApplicationAttachmentResponse } from './dto/get-application-attachment.response'
 import { GetApplicationAttachmentsResponse } from './dto/get-application-attachments.response'
 import { PostApplicationAttachmentBody } from './dto/post-application-attachment.body'

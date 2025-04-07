@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common'
-import { IAdvertCorrectionService } from './advert-correction.service.interface'
-import { ResultWrapper } from '@dmr.is/types'
 import { Transaction } from 'sequelize'
-import { AddCaseAdvertCorrection } from './dto/advert-correction.dto'
-import { InjectModel } from '@nestjs/sequelize'
 import { AdvertCorrectionModel } from '@dmr.is/official-journal/models'
+import { ResultWrapper } from '@dmr.is/types'
+
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { AddCaseAdvertCorrection } from './dto/advert-correction.dto'
+import { IAdvertCorrectionService } from './advert-correction.service.interface'
 
 @Injectable()
 export class AdvertCorrectionService implements IAdvertCorrectionService {

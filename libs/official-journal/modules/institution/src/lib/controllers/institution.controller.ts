@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { IInstitutionService } from '../institution.service.interface'
 import { GetInstitution } from '../dto/get-institution-response.dto'
-import { GetInstitutions } from '../dto/get-institutions-response.dto'
 import { InstitutionQuery } from '../dto/get-institutions-query.dto'
+import { GetInstitutions } from '../dto/get-institutions-response.dto'
+import { IInstitutionService } from '../institution.service.interface'
 
 @Controller({
   version: '1',

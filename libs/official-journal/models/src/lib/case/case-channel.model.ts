@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { OfficialJournalModels } from '../constants'
 
 @Table({ tableName: OfficialJournalModels.CASE_CHANNEL, timestamps: false })

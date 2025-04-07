@@ -1,9 +1,10 @@
 import { ApiProperty, PickType } from '@nestjs/swagger'
+
+import { AdvertType } from '../advert-type/advert-type.dto'
 import { CaseStatus } from '../case-status/case-status.dto'
+import { Department } from '../department/department.dto'
 import { InstitutionDto } from '../institution/institution.dto'
 import { UserDto } from '../user/user.dto'
-import { Department } from '../department/department.dto'
-import { AdvertType } from '../advert-type/advert-type.dto'
 const BASE_ATTRIBUTES = ['id', 'title', 'slug'] as const
 
 class HistoryDepartment extends PickType(Department, BASE_ATTRIBUTES) {}

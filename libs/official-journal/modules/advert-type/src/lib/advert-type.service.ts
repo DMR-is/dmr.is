@@ -10,17 +10,19 @@ import { v4 as uuid } from 'uuid'
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { advertMainTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-main-type.migrate'
+import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
+import {
+  AdvertDepartmentModel,
+  AdvertMainTypeModel,
+  AdvertTypeModel,
+} from '@dmr.is/official-journal/models'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { IAdvertTypeService } from './advert-type.service.interface'
-import {
-  getAdvertTypeDepartmentWhereParams,
-  getAdvertTypeWhereParams,
-} from './utils'
 import { AdvertTypeQuery } from './dto/advert-type.query'
 import { CreateAdvertMainTypeBody } from './dto/create-advert-main-type.dto'
 import { CreateAdvertTypeBody } from './dto/create-advert-type.dto'
@@ -30,13 +32,11 @@ import { GetAdvertType } from './dto/get-advert-type.dto'
 import { GetAdvertTypes } from './dto/get-advert-types.dto'
 import { UpdateAdvertTypeBody } from './dto/update-advert-type.dto'
 import { UpdateAdvertMainType } from './dto/update-main-advert-type.dto'
+import { IAdvertTypeService } from './advert-type.service.interface'
 import {
-  AdvertTypeModel,
-  AdvertMainTypeModel,
-  AdvertDepartmentModel,
-} from '@dmr.is/official-journal/models'
-import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
-import { advertMainTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-main-type.migrate'
+  getAdvertTypeDepartmentWhereParams,
+  getAdvertTypeWhereParams,
+} from './utils'
 
 const LOGGING_CATEGORY = 'advert-type-service'
 

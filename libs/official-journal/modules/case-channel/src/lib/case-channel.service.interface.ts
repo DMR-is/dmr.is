@@ -1,4 +1,5 @@
 import { ResultWrapper } from '@dmr.is/types'
+
 import { CreateCaseChannelBody } from './dto/case-channel.dto'
 
 export interface ICaseChannelService {

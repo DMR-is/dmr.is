@@ -1,25 +1,27 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { IDepartmentService } from './department.service.interface'
-import { baseEntityMigrate, DefaultSearchParams } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-import { GetDepartmentResponse } from './dto/get-department-response.dto'
-import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
+import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
+import { LogAndHandle } from '@dmr.is/decorators'
 import {
   AdvertDepartmentModel,
   AdvertMainTypeModel,
   AdvertTypeModel,
 } from '@dmr.is/official-journal/models'
-import { DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
-import { Op } from 'sequelize'
-import { Department } from './dto/department.dto'
+import { baseEntityMigrate, DefaultSearchParams } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
-import { LogAndHandle } from '@dmr.is/decorators'
-import { Sequelize } from 'sequelize-typescript'
+
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+
+import { Department } from './dto/department.dto'
+import { GetDepartmentResponse } from './dto/get-department-response.dto'
+import { GetDepartmentsResponse } from './dto/get-departments-response.dto'
+import { IDepartmentService } from './department.service.interface'
 
 @Injectable()
 export class DepartmentService implements IDepartmentService {

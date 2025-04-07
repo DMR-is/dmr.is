@@ -7,9 +7,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { OfficialJournalModels } from '../constants'
 import { AdvertCategoryModel } from './advert-category.model'
 import { AdvertMainCategoryModel } from './advert-main-category.model'
-import { OfficialJournalModels } from '../constants'
 
 @Table({
   tableName: OfficialJournalModels.MAIN_CATEGORY_CATEGORIES,

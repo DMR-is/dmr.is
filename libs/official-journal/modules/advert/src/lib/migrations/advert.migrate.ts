@@ -1,9 +1,9 @@
+import { advertCorrectionMigrate } from '@dmr.is/official-journal/migrations/advert-correction/advert-correction.migrate'
+import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
 import { AdvertModel } from '@dmr.is/official-journal/models'
 import { baseEntityMigrate } from '@dmr.is/shared/dto'
 
-import { advertCorrectionMigrate } from '@dmr.is/official-journal/migrations/advert-correction/advert-correction.migrate'
 import { Advert } from '../dto/advert.dto'
-import { advertTypeMigrate } from '@dmr.is/official-journal/migrations/advert-type/advert-type.migrate'
 
 export function advertMigrate(model: AdvertModel): Advert {
   const advert: Advert = {

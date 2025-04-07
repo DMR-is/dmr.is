@@ -1,7 +1,7 @@
 import { IsOptional, IsString, MaxLength } from 'class-validator'
+import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { ApiProperty } from '@nestjs/swagger'
-import { PagingQuery } from '@dmr.is/shared/dto'
 
 export class InstitutionQuery extends PagingQuery {
   @ApiProperty({

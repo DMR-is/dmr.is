@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import {
   BelongsTo,
   BelongsToMany,
@@ -13,6 +14,23 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdvertTypeModel } from '../advert-type/advert-type.model'
+import { ApplicationAttachmentModel } from '../attachment/application-attachment.model'
+import { ApplicationAttachmentTypeModel } from '../attachment/application-attachment-type.model'
+import { CaseAttachmentsModel } from '../attachment/case-attachments.model'
+import { CaseActionModel } from '../comment/case-action.model'
+import { CommentModel } from '../comment/comment.model'
+import { OfficialJournalModels } from '../constants'
+import { AdvertInvolvedPartyModel } from '../institution/institution.model'
+import { AdvertModel } from '../journal/advert.model'
+import { AdvertCategoryModel } from '../journal/advert-category.model'
+import { AdvertCorrectionModel } from '../journal/advert-correction.model'
+import { AdvertDepartmentModel } from '../journal/advert-department.model'
+import { SignatureModel } from '../signature/signature.model'
+import { SignatureMemberModel } from '../signature/signature-member.model'
+import { SignatureRecordModel } from '../signature/signature-record.model'
+import { UserModel } from '../user/user.model'
+import { UserRoleModel } from '../user/user-role.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
@@ -23,24 +41,6 @@ import { CaseHistoryModel } from './case-history.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
 import { CaseTransactionModel } from './case-transaction.model'
-import { OfficialJournalModels } from '../constants'
-import { AdvertTypeModel } from '../advert-type/advert-type.model'
-import { ApplicationAttachmentModel } from '../attachment/application-attachment.model'
-import { CaseAttachmentsModel } from '../attachment/case-attachments.model'
-import { CommentModel } from '../comment/comment.model'
-import { AdvertCategoryModel } from '../journal/advert-category.model'
-import { AdvertDepartmentModel } from '../journal/advert-department.model'
-import { AdvertInvolvedPartyModel } from '../institution/institution.model'
-import { AdvertModel } from '../journal/advert.model'
-import { SignatureModel } from '../signature/signature.model'
-import { UserModel } from '../user/user.model'
-import { UserRoleModel } from '../user/user-role.model'
-import { CaseActionModel } from '../comment/case-action.model'
-import { AdvertCorrectionModel } from '../journal/advert-correction.model'
-import { ApplicationAttachmentTypeModel } from '../attachment/application-attachment-type.model'
-import { SignatureRecordModel } from '../signature/signature-record.model'
-import { SignatureMemberModel } from '../signature/signature-member.model'
-import { Op } from 'sequelize'
 
 type CaseCreateAttributes = {
   applicationId?: string
