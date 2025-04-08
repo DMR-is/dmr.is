@@ -168,6 +168,9 @@ export class UtilityService implements IUtilityService {
         publicationDate: {
           [Op.gte]: janFirst,
         },
+        publicationYear: {
+          [Op.eq]: year,
+        },
       },
       transaction,
     })
