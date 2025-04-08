@@ -47,8 +47,8 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
       membersCount === 1
         ? '1fr'
         : membersCount === 3
-        ? '1fr 1fr 1fr'
-        : '1fr 1fr',
+          ? '1fr 1fr 1fr'
+          : '1fr 1fr',
   }
 
   const formattedDate = format(
@@ -68,7 +68,7 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
   const membersMarkup =
     members.map((member) => memberTemplate(member)).join('') ?? ''
 
-  const additionalMarkup = `<p style="margin-top: 1.5em;" align="right" text-a><em>${record.additional}</em></p>`
+  const additionalMarkup = `<p style="margin-top: 1.5em;" align="right" class="additional-signature-member"><em>${record.additional}</em></p>`
 
   return `
       <div class="signature" style="margin-bottom: 1.5em;">
@@ -81,8 +81,8 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
         </p>
         ${chairmanMarkup}
         <div style="display: ${styleObject.display}; grid-template-columns: ${
-    styleObject.gridTemplateColumns
-  };" class="signature__content">
+          styleObject.gridTemplateColumns
+        };" class="signature__content">
         ${membersMarkup}
         </div>
         ${record.additional ? additionalMarkup : ''}

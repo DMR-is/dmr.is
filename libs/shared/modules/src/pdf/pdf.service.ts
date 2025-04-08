@@ -113,6 +113,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   @LogAndHandle({ logArgs: false })
   private async generatePdfFromHtml(
     htmlContent: string,
+    header?: string,
   ): Promise<ResultWrapper<Buffer>> {
     try {
       return retryAsync(
@@ -130,9 +131,29 @@ export class PdfService implements OnModuleDestroy, IPdfService {
             content: pdfCss,
           })
 
-          const pdf = await page.pdf()
-          await page.close()
-          return ResultWrapper.ok(pdf)
+          if (header) {
+            const pdf = await page.pdf({
+              headerTemplate: `
+              <div style="font-size:14px; 
+                          width:100%; 
+                          padding:10px 100px; 
+                          margin:0 auto; 
+                          display:flex; 
+                          justify-content:space-between;
+                          align-items:center;">
+                ${header}
+              </div>
+            `,
+              footerTemplate: '<div></div>',
+              displayHeaderFooter: true,
+            })
+            await page.close()
+            return ResultWrapper.ok(pdf)
+          } else {
+            const pdf = await page.pdf()
+            await page.close()
+            return ResultWrapper.ok(pdf)
+          }
         },
         PDF_RETRY_ATTEMPTS,
         PDF_RETRY_DELAY,
@@ -172,9 +193,18 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         )
         .join(''),
       signature: activeCase.signature.html,
+      subSignature:
+        activeCase.publishedAt && activeCase.advertDepartment.title
+          ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${activeCase.publishedAt}</div>`
+          : undefined,
     })
 
-    const pdfResults = await this.generatePdfFromHtml(markup)
+    const header =
+      activeCase.publicationNumber && activeCase.publishedAt
+        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${activeCase.publishedAt}</span>`
+        : undefined
+
+    const pdfResults = await this.generatePdfFromHtml(markup, header)
 
     if (!pdfResults.result.ok) {
       this.logger.error(`Failed to generate PDF`, {
