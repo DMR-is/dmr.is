@@ -464,16 +464,25 @@ export const pdfCss = `
     border-top: 0.25pt solid black;
   }
     
-  .additional-signature-member {
-    margin-top: 1em;
-    padding-top: 1em;
+  .additional_member_wrapper {
+    margin-top: 1.5em;
+    text-align: right;
   }
-    
-  .additional-signature-member::before {
+
+  .additional_signature_member {
+    display: inline-block;
+    text-align: right;
+    position: relative;
+    padding-top: 0.5em;
+  }
+
+  .additional_signature_member::before {
     content: "";
-    display: block;
-    width: 45px;
-    margin: 0 auto 1em auto;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
     border-top: 0.25pt solid black;
   }
 
