@@ -201,7 +201,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const header =
       activeCase.publicationNumber && activeCase.publishedAt
-        ? `<span>${activeCase.publicationNumber ? `Nr. ${activeCase.publicationNumber}` : ''} </span><span>${activeCase.publishedAt ?? ''}</span>`
+        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${activeCase.publishedAt}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)

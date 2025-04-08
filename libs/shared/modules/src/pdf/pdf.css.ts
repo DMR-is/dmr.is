@@ -422,6 +422,10 @@ export const pdfCss = `
 
   /* ======================================================================= */
 
+  .regulation__meta {
+    display: none;
+  }
+
   .regulation__name {
     position: running(regName);
     font-size: var(--font-size--name);
