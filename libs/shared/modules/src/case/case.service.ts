@@ -1,3 +1,5 @@
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
 import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -848,8 +850,14 @@ export class CaseService implements ICaseService {
   private async createPdfAndUpload(
     caseId: string,
     fileName: string,
+    publishedAt?: string,
+    serial?: number,
   ): Promise<ResultWrapper> {
-    const advertPdf = await this.pdfService.generatePdfByCaseId(caseId)
+    const advertPdf = await this.pdfService.generatePdfByCaseId(
+      caseId,
+      publishedAt,
+      serial,
+    )
 
     if (!advertPdf.result.ok) {
       this.logger.warn('Failed to get pdf for case', {
@@ -924,13 +932,17 @@ export class CaseService implements ICaseService {
     ).unwrap()
 
     const signatureHtml = caseToPublish.signature.html
-
     const departmentPrefix = caseToPublish.department.slug
       .replace('-deild', '')
       .toUpperCase()
     const pdfFileName = `${departmentPrefix}_nr_${serial}_${caseToPublish.year}.pdf`
 
-    await this.createPdfAndUpload(caseId, pdfFileName)
+    await this.createPdfAndUpload(
+      caseId,
+      pdfFileName,
+      format(now, 'd. MMMM yyyy', { locale: is }),
+      serial,
+    )
 
     const publicationHtml = getPublicationTemplate(
       caseToPublish.department.title,
