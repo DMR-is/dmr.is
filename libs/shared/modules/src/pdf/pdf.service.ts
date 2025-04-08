@@ -1,3 +1,5 @@
+import format from 'date-fns/format'
+import parseISO from 'date-fns/parseISO'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
 import {
@@ -134,11 +136,11 @@ export class PdfService implements OnModuleDestroy, IPdfService {
           if (header) {
             const pdf = await page.pdf({
               headerTemplate: `
-              <div style="font-size:14px; 
-                          width:100%; 
-                          padding:10px 100px; 
-                          margin:0 auto; 
-                          display:flex; 
+              <div style="font-size:14px;
+                          width:100%;
+                          padding:10px 100px;
+                          margin:0 auto;
+                          display:flex;
                           justify-content:space-between;
                           align-items:center;">
                 ${header}
@@ -172,10 +174,19 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   }
 
   @LogAndHandle()
-  async generatePdfByCaseId(caseId: string): Promise<ResultWrapper<Buffer>> {
+  async generatePdfByCaseId(
+    caseId: string,
+    publishedAt?: string,
+    serial?: number,
+  ): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const activeCase = caseDetailedMigrate(caseLookup)
-
+    if (!activeCase.publishedAt && publishedAt) {
+      activeCase.publishedAt = publishedAt
+    }
+    if (!activeCase.publicationNumber && serial) {
+      activeCase.publicationNumber = serial.toString()
+    }
     const markup = advertPdfTemplate({
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
@@ -200,8 +211,8 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     })
 
     const header =
-      activeCase.publicationNumber && activeCase.publishedAt
-        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${activeCase.publishedAt}</span>`
+      activeCase.publicationNumber && activeCase.signature.signatureDate
+        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(activeCase.signature.signatureDate), 'd. MMMM yyyy')}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)
