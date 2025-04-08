@@ -515,7 +515,7 @@ export const pdfCss = `
 
   /* ======================================================================= */
 
-  .signature__content, .signature__member {
+  .hidden {
     display: none;
   }
 

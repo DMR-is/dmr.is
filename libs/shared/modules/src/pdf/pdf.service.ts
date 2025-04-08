@@ -46,9 +46,8 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     applicationId: string,
     showDate = true,
   ): Promise<ResultWrapper<Buffer>> {
-    const applicationLookup = await this.utilityService.applicationLookup(
-      applicationId,
-    )
+    const applicationLookup =
+      await this.utilityService.applicationLookup(applicationId)
 
     if (!applicationLookup.result.ok) {
       this.logger.error(
@@ -99,6 +98,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       content: cleanupSingleEditorOutput(answers.advert.html as HTMLText),
       additions: additionHtml,
       signature: signatureHtml,
+      hiddenSignature: true,
     })
 
     if (!showDate) {
