@@ -5,6 +5,7 @@ type AdvertTemplateProps = {
   signature?: string
   additions?: string
   hiddenSignature?: boolean
+  subSignature?: string
 }
 
 export const advertPdfTemplate = ({
@@ -14,6 +15,7 @@ export const advertPdfTemplate = ({
   additions,
   signature,
   hiddenSignature,
+  subSignature,
 }: AdvertTemplateProps) => {
   return `
     <div class="regulation__prefix">${type?.toUpperCase()}</div>
@@ -22,6 +24,7 @@ export const advertPdfTemplate = ({
       ${content}
       <section class="regulation__signature${hiddenSignature ? ' hidden' : ''}">
         ${signature}
+        ${subSignature ?? ''}
       </section>
     </div>
     <div class="appendixes">

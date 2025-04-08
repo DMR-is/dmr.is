@@ -422,9 +422,6 @@ export const pdfCss = `
 
   /* ======================================================================= */
 
-  .regulation__meta {
-    display: none;
-  }
   .regulation__name {
     position: running(regName);
     font-size: var(--font-size--name);
@@ -446,6 +443,34 @@ export const pdfCss = `
   }
   .regulation__status small.affecting {
     font-size: 0.75em;
+  }
+
+  .sub_signature {
+    margin-top: 2em;
+    padding-top: 2em;
+    font-size: var(--font-size--name);
+    text-align: center;    
+  }
+    
+  .sub_signature::before {
+    content: "";
+    display: block;
+    width: 100px;
+    margin: 0 auto 1em auto;
+    border-top: 0.25pt solid black;
+  }
+    
+  .additional-signature-member {
+    margin-top: 1em;
+    padding-top: 1em;
+  }
+    
+  .additional-signature-member::before {
+    content: "";
+    display: block;
+    width: 45px;
+    margin: 0 auto 1em auto;
+    border-top: 0.25pt solid black;
   }
 
   .regulation__footer {
