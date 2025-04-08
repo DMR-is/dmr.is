@@ -215,11 +215,7 @@ export class CaseCreateService implements ICaseCreateService {
     )
 
     try {
-      await this.priceService.updateCasePriceByCaseId(
-        createResults.id,
-        {},
-        transaction,
-      )
+      await this.priceService.updateCasePriceByCaseId(createResults.id, {})
     } catch (error) {
       // noop
       this.logger.error(
