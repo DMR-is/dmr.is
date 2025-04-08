@@ -1,9 +1,7 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-} from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { GridColumn } from '@island.is/island-ui/core/Grid/GridColumn/GridColumn'
+import { GridContainer } from '@island.is/island-ui/core/Grid/GridContainer/GridContainer'
+import { GridRow } from '@island.is/island-ui/core/Grid/GridRow/GridRow'
 
 import { CallToAction } from '../CallToAction/CallToAction'
 import { Image, ImageProps } from '../Image/Image'

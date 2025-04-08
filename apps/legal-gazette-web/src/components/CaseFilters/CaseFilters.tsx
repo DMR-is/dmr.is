@@ -2,7 +2,9 @@ import debounce from 'lodash/debounce'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
 
-import { Inline, Input, Stack } from '@island.is/island-ui/core'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { Input} from '@island.is/island-ui/core/Input/Input'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
 
 import { useFilters } from '../../hooks/useFilters'
 import { QueryFilterValue } from '../../lib/types'

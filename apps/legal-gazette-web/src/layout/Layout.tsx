@@ -1,10 +1,12 @@
 import Head from 'next/head'
 import { IntlProvider } from 'react-intl'
-import { Provider } from 'reakit'
+import { Provider } from 'reakit/Provider'
 import { Header } from '@dmr.is/ui/components/Header/Header'
-import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
 
-import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
+import { Footer } from '@island.is/island-ui/core/Footer/Footer'
+import { Page } from '@island.is/island-ui/core/Page/Page'
+import { PageLoader } from '@island.is/island-ui/core/PageLoader'
+import { ToastContainer } from '@island.is/island-ui/core/Toast/Toast'
 
 import { Routes } from '../lib/constants'
 

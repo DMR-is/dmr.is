@@ -1,4 +1,4 @@
-import { Table as T } from '@island.is/island-ui/core'
+import { Table as T } from '@island.is/island-ui/core/Table'
 
 import { DataTableCellProps } from './types'
 

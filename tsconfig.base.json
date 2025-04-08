@@ -124,6 +124,12 @@
       "@island.is/auth-nest-tools/user-guard": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/ids-user.guard.ts"
       ],
+      "@island.is/island-ui/core/hooks/*": [
+        "submodules/island.is/libs/island-ui/core/src/hooks/*"
+      ],
+      "@island.is/island-ui/core/*": [
+        "submodules/island.is/libs/island-ui/core/src/lib/*"
+      ],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],

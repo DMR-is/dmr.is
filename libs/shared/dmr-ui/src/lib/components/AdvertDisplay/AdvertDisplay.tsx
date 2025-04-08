@@ -1,4 +1,5 @@
-import { Box, Text } from '@island.is/island-ui/core'
+import {Box } from '@island.is/island-ui/core/Box/Box'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 import * as styles from './AdvertDisplay.css'
 

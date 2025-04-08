@@ -1,14 +1,12 @@
-import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
+import { Popover, PopoverDisclosure, usePopoverState } from 'reakit/Popover'
 
-import {
-  Accordion,
-  AccordionItem,
-  Box,
-  Button,
-  Checkbox,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Accordion } from '@island.is/island-ui/core/Accordion/Accordion'
+import { AccordionItem } from '@island.is/island-ui/core/Accordion/AccordionItem/AccordionItem'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { Button } from '@island.is/island-ui/core/Button/Button'
+import { Checkbox } from '@island.is/island-ui/core/Checkbox/Checkbox'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
 
 import { useFilters } from '../../hooks/useFilters'
 import { QueryParams } from '../../lib/constants'

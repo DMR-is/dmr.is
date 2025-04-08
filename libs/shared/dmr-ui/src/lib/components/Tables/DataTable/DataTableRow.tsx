@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import AnimateHeight from 'react-animate-height'
 
-import { Box, Icon, LinkV2, Text } from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { Icon } from '@island.is/island-ui/core/IconRC/Icon'
+import { LinkV2 } from '@island.is/island-ui/core/Link/LinkV2'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 import useBreakpoints from '../../../hooks/useBreakpoints'
 import * as styles from './DataTable.css'
@@ -26,7 +29,9 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         onMouseOver={() => hasLink && setHovered(true)}
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
-        className={styles.dataTableRow({ expandable: !!isExpandable || hasLink })}
+        className={styles.dataTableRow({
+          expandable: !!isExpandable || hasLink,
+        })}
         onClick={() => isExpandable && setExpanded(!expanded)}
       >
         {columns.map((column) => {

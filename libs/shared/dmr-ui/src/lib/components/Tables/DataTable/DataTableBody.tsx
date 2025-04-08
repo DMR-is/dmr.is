@@ -1,4 +1,5 @@
-import { Table as T, Text } from '@island.is/island-ui/core'
+import {Table as T} from '@island.is/island-ui/core/Table'
+import { Text} from '@island.is/island-ui/core/Text/Text'
 
 import * as styles from './DataTable.css'
 import { DataTableRow } from './DataTableRow'

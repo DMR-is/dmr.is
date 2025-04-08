@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic'
-import { MessageDescriptor } from 'react-intl'
+import { type MessageDescriptor } from 'react-intl'
 
 import {
   Box,

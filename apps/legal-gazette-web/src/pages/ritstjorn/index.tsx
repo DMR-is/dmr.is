@@ -1,7 +1,9 @@
 import dynamic from 'next/dynamic'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import { GridColumn } from '@island.is/island-ui/core/Grid/GridColumn/GridColumn'
+import { GridContainer } from '@island.is/island-ui/core/Grid/GridContainer/GridContainer'
+import { GridRow } from '@island.is/island-ui/core/Grid/GridRow/GridRow'
 
 import { Route, Routes } from '../../lib/constants'
 import { MOCK_FILTERS } from '../../lib/mocks'

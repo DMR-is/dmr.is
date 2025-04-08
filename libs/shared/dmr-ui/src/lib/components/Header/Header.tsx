@@ -1,12 +1,12 @@
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hidden,
-  Inline,
-  Logo,
-  useBreakpoint,
-} from '@island.is/island-ui/core'
+
+
+import { GridColumn } from '@island.is/island-ui/core/Grid/GridColumn/GridColumn'
+import { GridContainer } from '@island.is/island-ui/core/Grid/GridContainer/GridContainer'
+import { GridRow } from '@island.is/island-ui/core/Grid/GridRow/GridRow'
+import { Hidden } from '@island.is/island-ui/core/Hidden/Hidden'
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { Logo } from '@island.is/island-ui/core/Logo/Logo'
 
 import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
 import * as styles from './Header.css'

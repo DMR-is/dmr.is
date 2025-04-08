@@ -1,4 +1,6 @@
-import { ArrowLink, Stack, Text } from '@island.is/island-ui/core'
+import { ArrowLink } from '@island.is/island-ui/core/Link/ArrowLink/ArrowLink'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 export type CallToActionProps = {
   title?: string

@@ -1,4 +1,8 @@
-import { Box, Icon, Inline, Table as T, Text } from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { Icon } from '@island.is/island-ui/core/IconRC/Icon'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { Table as T } from '@island.is/island-ui/core/Table'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 import * as styles from './DataTable.css'
 import { DataTableColumnProps } from './types'

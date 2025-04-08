@@ -1,12 +1,12 @@
 import {
   Box,
-  Breadcrumbs,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+} from '@island.is/island-ui/core/Box/Box'
+import { Breadcrumbs } from '@island.is/island-ui/core/Breadcrumbs/Breadcrumbs'
+import { GridColumn } from '@island.is/island-ui/core/Grid/GridColumn/GridColumn'
+import { GridContainer } from '@island.is/island-ui/core/Grid/GridContainer/GridContainer'
+import { GridRow } from '@island.is/island-ui/core/Grid/GridRow/GridRow'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 import { ImageProps } from '../Image/Image'
 

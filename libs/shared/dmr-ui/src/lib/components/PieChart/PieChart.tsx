@@ -1,15 +1,13 @@
 import dynamic from 'next/dynamic'
 import { Pie } from 'recharts'
 
-import {
-  Box,
-  Inline,
-  ResponsiveSpace,
-  SkeletonLoader,
-  Stack,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { ResponsiveSpace } from '@island.is/island-ui/core/Box/useBoxStyles'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { SkeletonLoader } from '@island.is/island-ui/core/SkeletonLoader/SkeletonLoader'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
+import { Table as T } from '@island.is/island-ui/core/Table'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 import { theme } from '@island.is/island-ui/theme'
 
 export type PieChartItem = {

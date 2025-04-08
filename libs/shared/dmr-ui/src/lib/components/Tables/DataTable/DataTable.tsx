@@ -1,9 +1,7 @@
-import {
-  Pagination,
-  SkeletonLoader,
-  Stack,
-  Table as T,
-} from '@island.is/island-ui/core'
+import { Pagination } from '@island.is/island-ui/core/Pagination/Pagination'
+import { SkeletonLoader } from '@island.is/island-ui/core/SkeletonLoader/SkeletonLoader'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
+import { Table as T } from '@island.is/island-ui/core/Table'
 
 import { DataTableBody } from './DataTableBody'
 import { DataTableColumn } from './DataTableColumn'

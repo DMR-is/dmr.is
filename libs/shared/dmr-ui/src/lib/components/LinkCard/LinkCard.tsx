@@ -1,13 +1,11 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hyphen,
-  LinkV2,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { GridColumn } from '@island.is/island-ui/core/Grid/GridColumn/GridColumn'
+import { GridContainer } from '@island.is/island-ui/core/Grid/GridContainer/GridContainer'
+import { GridRow } from '@island.is/island-ui/core/Grid/GridRow/GridRow'
+import Hyphen from '@island.is/island-ui/core/Hyphen/Hyphen'
+import { LinkV2 } from '@island.is/island-ui/core/Link/LinkV2'
+import { Stack } from '@island.is/island-ui/core/Stack/Stack'
+import { Text } from '@island.is/island-ui/core/Text/Text'
 
 import { Image, ImageProps } from '../Image/Image'
 export type LinkCardProps = {

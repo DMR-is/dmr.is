@@ -1,4 +1,8 @@
-import { Box, Button, Icon, Inline, Tag } from '@island.is/island-ui/core'
+import { Box } from '@island.is/island-ui/core/Box/Box'
+import { Button } from '@island.is/island-ui/core/Button/Button'
+import { Icon } from '@island.is/island-ui/core/IconRC/Icon'
+import { Inline } from '@island.is/island-ui/core/Inline/Inline'
+import { Tag } from '@island.is/island-ui/core/Tag/Tag'
 
 type ActiveFilterItem = {
   label: string

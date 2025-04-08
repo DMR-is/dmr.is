@@ -9,7 +9,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { Department, GetAdvertMainType } from '../../gen/fetch'
+import { type Department, type GetAdvertMainType } from '../../gen/fetch'
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
 import { OJOISelect } from '../select/OJOISelect'
 
