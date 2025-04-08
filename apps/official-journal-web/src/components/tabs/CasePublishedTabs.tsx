@@ -51,7 +51,11 @@ export const CasePublishedTabs = () => {
         borderRadius="standard"
       />
     ) : (
-      <CaseTableOverview cases={caseOverview.cases} isLoading={isValidating} />
+      <CaseTableOverview
+        cases={caseOverview.cases}
+        isLoading={isValidating}
+        paging={caseOverview.paging}
+      />
     ),
   }))
 
