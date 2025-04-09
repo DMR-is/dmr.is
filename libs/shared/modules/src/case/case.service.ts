@@ -948,6 +948,12 @@ export class CaseService implements ICaseService {
       caseToPublish.department.title,
       now,
     )
+    const signatureRecords = caseToPublish.signature.records
+    const newest = signatureRecords
+      .map((item) => item.signatureDate)
+      .sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime()
+      })[0]
 
     const advertCreateResult = await this.journalService.create(
       {
@@ -958,7 +964,7 @@ export class CaseService implements ICaseService {
         serial: serial,
         categories: caseToPublish.categories?.map((c) => c.id) ?? [],
         publicationDate: now.toISOString(),
-        signatureDate: caseToPublish.signature.signatureDate,
+        signatureDate: newest,
         content: caseToPublish.html + signatureHtml + publicationHtml,
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
       },
