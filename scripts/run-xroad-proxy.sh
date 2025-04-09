@@ -3,7 +3,6 @@
 set -euo pipefail
 
 PROFILE_ARG=${AWS_PROFILE:+--profile ${AWS_PROFILE}}
-PROFILE_ARG=${PROFILE_ARG:-"--profile dmr-dev"}
 
 export INSTANCE_ID=$(aws ec2 describe-instances ${PROFILE_ARG} --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
 
