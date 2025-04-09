@@ -137,6 +137,10 @@ export const pdfCss = `
     margin-bottom: var(--paragraph-space);
   }
 
+  p {
+    margin-bottom: 1em;
+  }
+
   p,
   li {
     page-break-inside: avoid;
@@ -450,8 +454,6 @@ export const pdfCss = `
   }
 
   .sub_signature {
-    margin-top: 2em;
-    padding-top: 2em;
     font-size: var(--font-size--name);
     text-align: center;    
   }
@@ -460,12 +462,12 @@ export const pdfCss = `
     content: "";
     display: block;
     width: 100px;
-    margin: 0 auto 1em auto;
+    margin: 0 auto 2em auto;
     border-top: 0.25pt solid black;
   }
     
   .additional_member_wrapper {
-    margin-top: 1.5em;
+    margin-top: 0.5em;
     text-align: right;
   }
 
@@ -510,11 +512,12 @@ export const pdfCss = `
     font-size: 1em;
     line-height: 1.1;
     margin-top: 0;
+    padding-top: 1em;
     font-weight: var(--font-weight--bold);
     text-align: center;
     width: 70%;
     margin: 0 auto;
-    margin-bottom: 1.5em;
+    margin-bottom: 2em;
   }
 
   .regulation__text > p:not([align]) {
@@ -549,6 +552,10 @@ export const pdfCss = `
     margin-top: 2em;
     page-break-inside: avoid;
     page-break-before: avoid;
+  }
+
+  .regulgation__signature p, .regulation__signature span {
+    text-indent: 0em !important; /* Avoid puppeteer indent manipulation */
   }
 
   /* ======================================================================= */

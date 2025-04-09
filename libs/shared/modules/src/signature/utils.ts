@@ -68,7 +68,7 @@ export const signatureTemplate = (record: SignatureRecordModel) => {
   const membersMarkup =
     members.map((member) => memberTemplate(member)).join('') ?? ''
 
-  const additionalMarkup = `<div class="additional_member_wrapper"><p style="margin-top: 1.5em;" align="right" class="additional_signature_member"><em>${record.additional}</em></p></div>`
+  const additionalMarkup = `<div class="additional_member_wrapper"><p align="right" class="additional_signature_member"><em>${record.additional}</em></p></div>`
 
   return `
       <div class="signature" style="margin-bottom: 1.5em;">
