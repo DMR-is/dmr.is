@@ -1,6 +1,7 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import parseISO from 'date-fns/parseISO'
+import type { Page } from 'puppeteer'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
 import {
@@ -135,6 +136,18 @@ export class PdfService implements OnModuleDestroy, IPdfService {
           })
 
           if (header) {
+            await (page as Page).evaluate(() => {
+              const paragraphs = document.querySelectorAll('p')
+
+              paragraphs.forEach((p) => {
+                const parts = p.innerHTML.split('<br>')
+                const wrappedParts = parts.map(
+                  (text) =>
+                    `<span style="text-indent: 2em; display: inline-block;">${text.trim()}</span>`,
+                )
+                p.innerHTML = wrappedParts.join('<br>')
+              })
+            })
             const pdf = await page.pdf({
               headerTemplate: `
               <div style="font-size:14px;
@@ -143,7 +156,6 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                           margin:0 auto;
                           display:flex;
                           justify-content:space-between;
-                          font-family: 'Times New Roman';
                           align-items:center;">
                 ${header}
               </div>
