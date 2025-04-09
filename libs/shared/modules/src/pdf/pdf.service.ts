@@ -1,4 +1,8 @@
 import format from 'date-fns/format'
+<<<<<<< HEAD
+=======
+import is from 'date-fns/locale/is'
+>>>>>>> main
 import parseISO from 'date-fns/parseISO'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
@@ -142,6 +146,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                           margin:0 auto;
                           display:flex;
                           justify-content:space-between;
+                          font-family: 'Times New Roman';
                           align-items:center;">
                 ${header}
               </div>
@@ -212,7 +217,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(activeCase.signature.signatureDate), 'd. MMMM yyyy')}</span>`
+        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(activeCase.signature.signatureDate), 'd. MMMM yyyy', { locale: is })}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)

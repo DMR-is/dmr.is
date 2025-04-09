@@ -12,6 +12,7 @@ import {
 
 import { AdvertDepartmentModel } from '../../journal/models'
 import { AdvertMainTypeModel } from './advert-main-type.model'
+import { allCapsTitle } from './stringUtils'
 
 @Table({ tableName: 'advert_type', timestamps: true })
 @DefaultScope(() => ({
@@ -28,8 +29,17 @@ export class AdvertTypeModel extends Model {
   })
   override id!: string
 
-  @Column
-  title!: string
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  get title(): string {
+    return allCapsTitle(this.getDataValue('title'))
+  }
+
+  set title(value: string) {
+    this.setDataValue('title', value)
+  }
 
   @Column
   slug!: string
