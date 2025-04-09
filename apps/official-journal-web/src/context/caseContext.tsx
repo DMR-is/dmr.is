@@ -20,7 +20,7 @@ import { useCase, useSignature } from '../hooks/api'
 import { getDmrClient } from '../lib/api/createClient'
 import { OJOIWebException, swrFetcher } from '../lib/constants'
 import { SearchParams } from '../lib/types'
-import { createOptions } from '../lib/utils'
+import { createOptions, createOptionsWithCapitalize } from '../lib/utils'
 
 type CaseState = {
   currentCase: CaseDetailed
@@ -190,7 +190,7 @@ export const CaseProvider = ({
     cb()
   }
 
-  const typeOptions = createOptions(advertTypes ? advertTypes.types : types)
+  const typeOptions = createOptionsWithCapitalize(advertTypes ? advertTypes.types : types)
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
 

@@ -291,6 +291,13 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
   ]
 }
 
+export const createOptionsWithCapitalize = <T extends BaseEntity>(arr: T[]) => {
+  return arr.map((item) => ({
+    label: item.title.charAt(0).toUpperCase() + item.title.slice(1).toLowerCase(),
+    value: item.id,
+  }))
+}
+
 export const createOptions = <T extends BaseEntity>(arr: T[]) => {
   return arr.map((item) => ({
     label: item.title,
