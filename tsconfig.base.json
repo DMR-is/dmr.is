@@ -127,6 +127,9 @@
       "@island.is/island-ui/core/hooks/*": [
         "submodules/island.is/libs/island-ui/core/src/hooks/*"
       ],
+      "@island.is/island-ui/core/utils/*": [
+        "submodules/island.is/libs/island-ui/core/src/utils/*"
+      ],
       "@island.is/island-ui/core/*": [
         "submodules/island.is/libs/island-ui/core/src/lib/*"
       ],

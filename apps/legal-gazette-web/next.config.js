@@ -18,6 +18,7 @@ const nextConfig = {
       config.plugins.push(
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
+          generateStatsFile: true,
           reportFilename: isServer
             ? '../analyze/server.html'
             : './analyze/client.html',
