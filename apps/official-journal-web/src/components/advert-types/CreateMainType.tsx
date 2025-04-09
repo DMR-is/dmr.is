@@ -75,8 +75,8 @@ export const CreateMainType = ({ onSuccess }: Props) => {
           if (!opt) {
             setState({
               department: null,
-              title: state.title,
-              slug: slugify(state.title, { lower: true }),
+              title: '',
+              slug: '',
             })
           } else {
             setState({
@@ -91,6 +91,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
       />
       <Input
         size="sm"
+        disabled={!state.department}
         backgroundColor="blue"
         name="create-main-type-title"
         label="Heiti yfirflokks"

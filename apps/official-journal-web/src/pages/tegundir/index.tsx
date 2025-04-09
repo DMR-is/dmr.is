@@ -119,6 +119,7 @@ export default function AdvertTypesPage() {
                     key={selectedMainType?.id}
                     isLoading={isLoadingMainTypes}
                     noOptionsMessage={noOptMainType}
+                    isDisabled={!selectedDepartment}
                     isClearable
                     label="Yfirflokkur"
                     options={mainTypeOptions}
@@ -134,6 +135,7 @@ export default function AdvertTypesPage() {
                     key={selectedType?.id}
                     isLoading={isLoadingTypes}
                     noOptionsMessage={noOptType}
+                    isDisabled={!selectedMainType}
                     isClearable
                     label="Tegund"
                     options={typeOptions}

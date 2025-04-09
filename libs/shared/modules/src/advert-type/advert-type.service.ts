@@ -272,6 +272,8 @@ export class AdvertTypeService implements IAdvertTypeService {
         body.departmentId,
       )
 
+      const mainType = await this.advertMainTypeModel.findByPk(body.mainTypeId)
+
       if (!department) {
         this.logger.warn(`Advert department not found`, {
           category: LOGGING_CATEGORY,
@@ -283,7 +285,19 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      const slug = slugify(`${department.slug}-${body.title}`, { lower: true })
+
+      if (!mainType) {
+        this.logger.warn(`Advert main type not found`, {
+          category: LOGGING_CATEGORY,
+        })
+
+        return ResultWrapper.err({
+          code: 400,
+          message: `Yfiflokkur með einkenni ${body.mainTypeId} er ekki til`,
+        })
+      }
+
+      const slug = slugify(`${mainType.slug}-${body.title}`, { lower: true })
 
       const createBody = {
         id: id,
@@ -461,10 +475,6 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       if (body.mainTypeId) {
         Object.assign(updateBody, { mainTypeId: body.mainTypeId })
-      }
-
-      if (body.mainTypeId === null) {
-        Object.assign(updateBody, { mainTypeId: null })
       }
 
       if (slug !== type.slug) {

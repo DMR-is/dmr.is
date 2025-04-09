@@ -57,13 +57,13 @@ export class AdvertTypeModel extends Model {
   @ForeignKey(() => AdvertMainTypeModel)
   @Column({
     type: DataType.UUIDV4,
-    allowNull: true,
+    allowNull: false,
     field: 'main_type_id',
   })
-  mainTypeId?: string
+  mainTypeId!: string
 
   @BelongsTo(() => AdvertMainTypeModel)
-  mainType?: AdvertMainTypeModel
+  mainType!: AdvertMainTypeModel
 
   @CreatedAt
   created!: Date

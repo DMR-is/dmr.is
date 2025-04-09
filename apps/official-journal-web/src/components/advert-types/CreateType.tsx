@@ -17,27 +17,38 @@ type Props = {
 }
 
 export const CreateType = ({ refetch }: Props) => {
-  const { departments } = useDepartments()
-  const { createType, createTypeError, isCreatingType } = useAdvertTypes({
-    onCreateTypeSuccess: ({ type }) => {
-      toast.success(`Tegund ${type.title} stofnuð`)
-      refetch && refetch()
-      setState({
-        departmentId: '',
-        title: '',
-      })
-    },
+  const [state, setState] = useState({
+    mainTypeId: '',
+    departmentId: '',
+    title: '',
   })
+
+  const { departments } = useDepartments()
+  const { createType, createTypeError, isCreatingType, mainTypes } =
+    useAdvertTypes({
+      mainTypesParams: {
+        department: state.departmentId,
+      },
+      onCreateTypeSuccess: ({ type }) => {
+        toast.success(`Tegund ${type.title} stofnuð`)
+        refetch && refetch()
+        setState({
+          mainTypeId: '',
+          departmentId: '',
+          title: '',
+        })
+      },
+    })
 
   const departmentOptions = departments?.map((dep) => ({
     label: dep.title,
     value: dep,
   }))
 
-  const [state, setState] = useState({
-    departmentId: '',
-    title: '',
-  })
+  const mainTypeOptions = mainTypes?.map((main) => ({
+    label: main.title,
+    value: main,
+  }))
 
   const isDisabled = !state.departmentId || !state.title
 
@@ -58,18 +69,45 @@ export const CreateType = ({ refetch }: Props) => {
         value={departmentOptions?.find(
           (dep) => state.departmentId === dep.value.id,
         )}
-        onChange={(option) =>
+        onChange={(option) => {
+          if (!option) {
+            setState({
+              ...state,
+              departmentId: '',
+              mainTypeId: '',
+            })
+          } else {
+            setState({
+              ...state,
+              departmentId: option.value.id,
+            })
+          }
+        }}
+      />
+      <OJOISelect
+        isClearable
+        label="Veldu yfirflokk tegundar"
+        options={mainTypeOptions}
+        isDisabled={!state.departmentId}
+        placeholder="Veldu yfirflokk"
+        value={
+          mainTypeOptions?.find(
+            (maintype) => state.mainTypeId === maintype.value.id,
+          ) ?? null
+        }
+        onChange={(option) => {
           setState({
             ...state,
-            departmentId: option?.value.id ?? '',
+            mainTypeId: option?.value.id ?? '',
           })
-        }
+        }}
       />
       <Input
         name="create-type-title"
         size="sm"
         backgroundColor="blue"
         placeholder='T.d. "Reglur"'
+        disabled={!state.mainTypeId}
         label="Heiti tegundar"
         value={state.title}
         onChange={(e) =>

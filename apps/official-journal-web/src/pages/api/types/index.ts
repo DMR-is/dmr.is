@@ -68,7 +68,7 @@ class TypesHandler extends RouteHandler {
     const type = await this.client.createType({
       createAdvertTypeBody: {
         departmentId: req.body.departmentId,
-        mainTypeId: req.body?.mainTypeId,
+        mainTypeId: req.body.mainTypeId,
         title: req.body.title,
       },
     })
