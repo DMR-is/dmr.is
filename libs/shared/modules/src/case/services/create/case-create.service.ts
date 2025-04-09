@@ -30,6 +30,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
+import { IPriceService } from '../../../price/price.service.interface'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
@@ -104,6 +105,9 @@ export class CaseCreateService implements ICaseCreateService {
 
     @InjectModel(CaseCategoriesModel)
     private readonly caseCategoriesModel: typeof CaseCategoriesModel,
+
+    @Inject(IPriceService)
+    private readonly priceService: IPriceService,
 
     @InjectModel(CaseAdditionModel)
     private readonly caseAdditionModel: typeof CaseAdditionModel,
@@ -209,6 +213,20 @@ export class CaseCreateService implements ICaseCreateService {
       },
       transaction,
     )
+
+    try {
+      await this.priceService.updateCasePriceByCaseId(createResults.id, {})
+    } catch (error) {
+      // noop
+      this.logger.error(
+        `Failed to post external payment for case<${createResults.id}>`,
+        {
+          error,
+          category: LOGGING_CATEGORY,
+          caseId: createResults.id,
+        },
+      )
+    }
 
     return ResultWrapper.ok({ id: createResults.id })
   }
