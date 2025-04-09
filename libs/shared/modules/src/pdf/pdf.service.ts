@@ -1,8 +1,5 @@
 import format from 'date-fns/format'
-<<<<<<< HEAD
-=======
 import is from 'date-fns/locale/is'
->>>>>>> main
 import parseISO from 'date-fns/parseISO'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
