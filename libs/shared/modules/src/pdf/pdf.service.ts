@@ -223,10 +223,16 @@ export class PdfService implements OnModuleDestroy, IPdfService {
           ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${activeCase.publishedAt}</div>`
           : undefined,
     })
+    const signatureRecords = activeCase.signature.records
+    const newest = signatureRecords
+      .map((item) => item.signatureDate)
+      .sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime()
+      })[0]
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(activeCase.signature.signatureDate), 'd. MMMM yyyy', { locale: is })}</span>`
+        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(newest), 'd. MMMM yyyy', { locale: is })}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)
