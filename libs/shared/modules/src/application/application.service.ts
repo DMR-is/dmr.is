@@ -300,6 +300,16 @@ export class ApplicationService implements IApplicationService {
         ),
       )
 
+      ResultWrapper.unwrap(
+        await this.caseService.updateAdvertByHtml(
+          caseLookup.id,
+          {
+            advertHtml: application.answers.advert.html,
+          },
+          transaction,
+        ),
+      )
+
       const commStatus = ResultWrapper.unwrap(
         await this.utilityService.caseCommunicationStatusLookup(
           CaseCommunicationStatus.HasAnswers,
