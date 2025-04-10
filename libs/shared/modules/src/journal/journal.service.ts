@@ -25,6 +25,7 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
+  S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
@@ -46,6 +47,7 @@ import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
+import { IAWSService } from '../aws/aws.service.interface'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
@@ -96,6 +98,8 @@ export class JournalService implements IJournalService {
     private advertCategoryCategoriesModel: typeof AdvertCategoryCategoriesModel,
     @InjectModel(CaseCategoriesModel)
     private caseCategoriesModel: typeof CaseCategoriesModel,
+    @Inject(IAWSService)
+    private readonly s3Service: IAWSService,
 
     @InjectModel(CaseModel)
     private caseModel: typeof CaseModel,
@@ -1137,6 +1141,25 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({
       adverts: mapped,
       paging,
+    })
+  }
+
+  @LogAndHandle()
+  async uploadAdvertPDF(
+    advertId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    const advert = ResultWrapper.unwrap(await this.getAdvert(advertId)).advert
+    //create advert url from
+    const key = `adverts/${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
+    const uploadedFile = (
+      await this.s3Service.replaceAdvertPdf(key, file)
+    ).unwrap()
+
+    return ResultWrapper.ok({
+      ...uploadedFile,
+      url: uploadedFile.url,
+      file: uploadedFile,
     })
   }
 }

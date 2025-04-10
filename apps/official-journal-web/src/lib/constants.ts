@@ -39,6 +39,8 @@ export enum Routes {
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
   UserManagement = '/notendur',
+  ReplacePdf = '/yfirskrifa-pdf',
+  ReplacePdfAdvert = '/yfirskrifa-pdf/:advertId',
 }
 
 export enum PageTitles {
@@ -77,6 +79,7 @@ export const PagePaths: Array<Path> = [
     order: 6,
   },
   { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
+  { pathname: Routes.ReplacePdf, title: 'Yfirskrifa PDF', order: 8 },
 ]
 
 export const DEPARTMENT_A = 'A deild'
@@ -206,6 +209,9 @@ export enum APIRoutes {
   UpdateCaseType = '/api/cases/:id/updateType',
   GetStatisticsForDepartment = '/api/statistics/department',
   GetStatisticsOverview = '/api/statistics/overview',
+  Adverts = '/api/cases/advert',
+  Advert = '/api/cases/advert/:id',
+  UpdateAdvertPDF = '/api/cases/advert/:id/updatePdf',
 }
 
 export class OJOIWebException extends Error {

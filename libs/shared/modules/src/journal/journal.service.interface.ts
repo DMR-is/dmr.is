@@ -19,6 +19,7 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
+  S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
@@ -104,7 +105,10 @@ export interface IJournalService {
   getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
-
+  uploadAdvertPDF(
+    advertId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>>
   // TODO Testing logging process only, remove later
   error(): void
 }
