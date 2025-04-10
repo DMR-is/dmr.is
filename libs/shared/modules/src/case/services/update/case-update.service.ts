@@ -799,7 +799,7 @@ export class CaseUpdateService implements ICaseUpdateService {
             {
               answers: {
                 advert: {
-                  html: btoa(body.advertHtml),
+                  html: Buffer.from(body.advertHtml).toString('base64'),
                 },
               },
             },
