@@ -150,7 +150,6 @@ export interface ICaseService {
     caseId: string,
     title: string,
     content: string,
-    order?: string,
   ): Promise<ResultWrapper>
 
   deleteCaseAddition(additionId: string, caseId: string): Promise<ResultWrapper>

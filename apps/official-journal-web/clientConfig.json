@@ -4140,14 +4140,9 @@
             "type": "string",
             "description": "Advert appendix HTML"
           },
-          "title": { "type": "string", "description": "Advert appendix title" },
-          "order": {
-            "type": "string",
-            "description": "Advert appendix title",
-            "nullable": true
-          }
+          "title": { "type": "string", "description": "Advert appendix title" }
         },
-        "required": ["content", "title", "order"]
+        "required": ["content", "title"]
       },
       "UpdateAdvertAppendixBody": {
         "type": "object",

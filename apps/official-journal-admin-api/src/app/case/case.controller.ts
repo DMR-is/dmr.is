@@ -619,7 +619,6 @@ export class CaseController {
         caseId,
         body.title,
         body.content,
-        body.order,
       ),
     )
   }

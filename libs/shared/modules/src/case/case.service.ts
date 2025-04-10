@@ -719,14 +719,12 @@ export class CaseService implements ICaseService {
     caseId: string,
     title: string,
     content: string,
-    order: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     return this.createService.createCaseAddition(
       caseId,
       title,
       content,
-      order ? parseInt(order) : undefined,
       transaction,
     )
   }

@@ -17,7 +17,6 @@ import { getDmrClient } from '../../lib/api/createClient'
 import { useFileUploader } from '../../lib/utils'
 import { HTMLEditor } from '../editor/Editor'
 import { OJOIInput } from '../select/OJOIInput'
-// import * as styles from './AdvertFields.css'
 
 type Props = {
   toggle: boolean
@@ -153,7 +152,7 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                           order: addition.order - 1,
                         })
                       }
-                    ></Button>
+                    />
                     <Box marginX={1} />
                     <Button
                       variant="ghost"
@@ -170,7 +169,7 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                           order: addition.order + 1,
                         })
                       }
-                    ></Button>
+                    />
                   </Box>
                 </Box>
               </Stack>
@@ -190,9 +189,6 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                   createAdvertAppendixBody: {
                     content: '',
                     title: `Viðauki ${currentCase.additions ? currentCase.additions.length + 1 : ''}`,
-                    order: currentCase.additions
-                      ? (currentCase.additions.length + 1).toString()
-                      : String(0),
                   },
                 })
                 .then(() => {

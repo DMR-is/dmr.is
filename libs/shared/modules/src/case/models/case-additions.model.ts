@@ -12,7 +12,10 @@ import {
 import { CaseModel } from './case.model'
 import { CaseAdditionModel } from './case-addition.model'
 
-@Table({ tableName: 'case_additions', timestamps: false })
+@Table({
+  tableName: 'case_additions',
+  timestamps: false,
+})
 @DefaultScope(() => ({
   attributes: {
     exclude: ['created', 'updated'],
@@ -39,9 +42,8 @@ export class CaseAdditionsModel extends Model {
 
   @Column({
     type: DataType.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'order',
-    defaultValue: 0,
   })
   order!: number
 

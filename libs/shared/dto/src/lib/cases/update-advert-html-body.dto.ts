@@ -75,12 +75,4 @@ export class CreateAdvertAppendixBody {
     description: 'Advert appendix title',
   })
   title!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Advert appendix title',
-    nullable: true,
-  })
-  @IsOptional()
-  order?: string
 }

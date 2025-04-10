@@ -638,7 +638,6 @@ export class CaseCreateService implements ICaseCreateService {
     caseId: string,
     title: string,
     content: string,
-    order?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const additionId = uuid()
@@ -656,11 +655,19 @@ export class CaseCreateService implements ICaseCreateService {
         },
       )
 
+      const highestOrder: number | null = await this.caseAdditionsModel.max(
+        'order',
+        {
+          where: { caseId },
+          transaction,
+        },
+      )
+
       await this.caseAdditionsModel.create(
         {
           caseId,
           additionId,
-          order: order ?? 0,
+          order: highestOrder === null ? 0 : highestOrder + 1,
         },
         {
           transaction,
