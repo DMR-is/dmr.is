@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-PROFILE_ARG=${AWS_PROFILE:+--profile ${AWS_PROFILE}}
+export INSTANCE_ID=$(aws ec2 describe-instances  --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
 
-export INSTANCE_ID=$(aws ec2 describe-instances ${PROFILE_ARG} --filters "Name=tag:Name,Values=dev-bastion" "Name=instance-state-name,Values=running" | jq -r '.Reservations[].Instances[].InstanceId')
-
-aws ssm start-session ${PROFILE_ARG} --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8000"],"localPortNumber":["8000"]}'
+aws ssm start-session  --target $INSTANCE_ID --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8000"],"localPortNumber":["8000"]}'

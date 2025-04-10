@@ -27,8 +27,13 @@ export const advertPdfTemplate = ({
         ${subSignature ?? ''}
       </section>
     </div>
+    ${
+      additions
+        ? `
     <div class="appendixes">
       ${additions}
-    </div>
+    </div>`
+        : ''
+    }
   `
 }

@@ -961,7 +961,54 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const caseToPublish = await this.caseModel.findByPk(caseId, {
-      include: [...casesDetailedIncludes, { model: SignatureModel }],
+      include: [
+        ...casesDetailedIncludes,
+        {
+          model: SignatureModel,
+          include: [
+            AdvertInvolvedPartyModel,
+            {
+              model: SignatureRecordModel,
+              as: 'records',
+              separate: true,
+              include: [
+                {
+                  model: SignatureMemberModel,
+                  as: 'chairman',
+                },
+                {
+                  model: SignatureMemberModel,
+                  as: 'members',
+                  separate: true,
+                  required: false,
+                  include: [
+                    {
+                      model: SignatureRecordModel,
+                      required: false,
+                    },
+                  ],
+                  where: {
+                    [Op.or]: [
+                      // Exclude chairman using Sequelize.where
+                      Sequelize.where(
+                        Sequelize.col('SignatureMemberModel.id'),
+                        Op.ne,
+                        Sequelize.col('record.chairman_id'),
+                      ),
+                      // Include all members if chairman_id is NULL
+                      Sequelize.where(
+                        Sequelize.col('record.chairman_id'),
+                        Op.is,
+                        null,
+                      ),
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
     })
 
     if (!caseToPublish) {

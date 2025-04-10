@@ -72,7 +72,7 @@ export class ApplicationAddition {
       return value
     }
 
-    return atob(value)
+    return Buffer.from(value, 'base64').toString('utf-8')
   })
   content?: string
 
@@ -138,7 +138,7 @@ export class ApplicationAdvert {
       return value
     }
 
-    return atob(value)
+    return Buffer.from(value, 'base64').toString('utf-8')
   })
   html!: string
 
