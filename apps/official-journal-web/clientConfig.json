@@ -1180,6 +1180,80 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/html/appendix": {
+      "post": {
+        "operationId": "createAdvertAppendix",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertAppendixBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "put": {
+        "operationId": "updateAdvertAppendix",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvertAppendixBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      },
+      "delete": {
+        "operationId": "deleteAdvertAppendix",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAdvertAppendixBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -4059,6 +4133,57 @@
         },
         "required": ["advertHtml"]
       },
+      "CreateAdvertAppendixBody": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Advert appendix HTML"
+          },
+          "title": { "type": "string", "description": "Advert appendix title" },
+          "order": {
+            "type": "string",
+            "description": "Advert appendix title",
+            "nullable": true
+          }
+        },
+        "required": ["content", "title", "order"]
+      },
+      "UpdateAdvertAppendixBody": {
+        "type": "object",
+        "properties": {
+          "additionId": {
+            "type": "string",
+            "description": "Advert appendix ID"
+          },
+          "content": {
+            "type": "string",
+            "description": "Advert appendix HTML",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Advert appendix title",
+            "nullable": true
+          },
+          "order": {
+            "type": "string",
+            "description": "Advert appendix order",
+            "nullable": true
+          }
+        },
+        "required": ["additionId", "content", "title", "order"]
+      },
+      "DeleteAdvertAppendixBody": {
+        "type": "object",
+        "properties": {
+          "additionId": {
+            "type": "string",
+            "description": "Advert appendix ID"
+          }
+        },
+        "required": ["additionId"]
+      },
       "CaseTransaction": {
         "type": "object",
         "properties": {
@@ -4333,9 +4458,14 @@
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
           },
           "title": { "type": "string", "description": "Title of the addition" },
-          "html": { "type": "string", "description": "HTML of the addition" }
+          "html": { "type": "string", "description": "HTML of the addition" },
+          "order": {
+            "type": "number",
+            "description": "HTML of the addition",
+            "default": 0
+          }
         },
-        "required": ["id", "title", "html"]
+        "required": ["id", "title", "html", "order"]
       },
       "AdvertCorrection": {
         "type": "object",

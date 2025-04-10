@@ -638,6 +638,7 @@ export class CaseCreateService implements ICaseCreateService {
     caseId: string,
     title: string,
     content: string,
+    order?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
     const additionId = uuid()
@@ -659,6 +660,7 @@ export class CaseCreateService implements ICaseCreateService {
         {
           caseId,
           additionId,
+          order: order ?? 0,
         },
         {
           transaction,

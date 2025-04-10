@@ -37,6 +37,14 @@ export class CaseAdditionsModel extends Model {
   })
   additionId!: string
 
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    field: 'order',
+    defaultValue: 0,
+  })
+  order!: number
+
   @BelongsTo(() => CaseModel)
   case!: CaseModel
 

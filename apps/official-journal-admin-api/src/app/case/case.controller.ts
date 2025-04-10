@@ -15,6 +15,7 @@ import {
   CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  CreateAdvertAppendixBody,
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
@@ -22,6 +23,7 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
+  DeleteAdvertAppendixBody,
   DepartmentEnum,
   ExternalCommentBodyDto,
   GetCaseResponse,
@@ -50,6 +52,7 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   TransactionFeeCodesResponse,
+  UpdateAdvertAppendixBody,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
@@ -602,6 +605,53 @@ export class CaseController {
     }
 
     return
+  }
+
+  @Post(':id/html/appendix')
+  @ApiOperation({ operationId: 'createAdvertAppendix' })
+  @ApiNoContentResponse()
+  async createAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateAdvertAppendixBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.createCaseAddition(
+        caseId,
+        body.title,
+        body.content,
+        body.order,
+      ),
+    )
+  }
+
+  @Put(':id/html/appendix')
+  @ApiOperation({ operationId: 'updateAdvertAppendix' })
+  @ApiNoContentResponse()
+  async updateAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertAppendixBody,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.caseService.updateCaseAddition(
+        body.additionId,
+        id,
+        body.title,
+        body.content,
+        body.order,
+      ),
+    )
+  }
+
+  @Delete(':id/html/appendix')
+  @ApiOperation({ operationId: 'deleteAdvertAppendix' })
+  @ApiNoContentResponse()
+  async deleteAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+    @Body() body: DeleteAdvertAppendixBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteCaseAddition(body.additionId, caseId),
+    )
   }
 
   @Get(':id')

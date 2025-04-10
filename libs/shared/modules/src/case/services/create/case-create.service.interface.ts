@@ -37,6 +37,7 @@ export interface ICaseCreateService {
     caseId: string,
     title: string,
     content: string,
+    order?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 }

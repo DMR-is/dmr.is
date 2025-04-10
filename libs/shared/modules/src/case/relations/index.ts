@@ -30,7 +30,12 @@ export const casesDetailedIncludes = [
   AdvertCategoryModel,
   CaseChannelModel,
   AdvertInvolvedPartyModel,
-  CaseAdditionModel,
+  {
+    model: CaseAdditionModel,
+    through: {
+      attributes: ['order'],
+    },
+  },
   {
     model: UserModel,
     include: [{ model: UserRoleModel }, { model: AdvertInvolvedPartyModel }],

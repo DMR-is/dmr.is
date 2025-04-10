@@ -92,6 +92,21 @@ export interface ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 
+  updateCaseAddition(
+    additionId: string,
+    caseId: string,
+    title?: string,
+    content?: string,
+    newOrder?: number,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  deleteCaseAddition(
+    additionId: string,
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   updateCaseCommunicationStatus(
     caseId: string,
     body: UpdateCommunicationStatusBody,

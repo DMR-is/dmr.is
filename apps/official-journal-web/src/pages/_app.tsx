@@ -41,7 +41,7 @@ export default function App({
   return (
     <SessionProvider
       session={session}
-      refetchInterval={5 * 60}
+      refetchInterval={3 * 60}
       basePath="/api/auth"
     >
       <Layout {...layout}>

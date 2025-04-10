@@ -17,7 +17,6 @@ import {
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
 import {
-  CaseAdditionModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -420,9 +419,6 @@ export class UtilityService implements IUtilityService {
         ...casesDetailedIncludes,
         {
           model: SignatureModel,
-        },
-        {
-          model: CaseAdditionModel,
         },
       ],
 
