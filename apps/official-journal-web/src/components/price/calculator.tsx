@@ -73,6 +73,21 @@ export const PriceCalculator = () => {
   )
 
   useEffect(() => {
+    if (!currentCase.transaction?.price) {
+      updatePrice({
+        imageTier: state.selectedItem?.value,
+        customBaseDocumentCount: state.customBaseDocumentCount,
+        customBodyLengthCount: state.useCustomInputBase
+          ? state.customBodyLengthCount
+          : 0,
+        customAdditionalDocCount: state.additionalDocuments,
+        extraWorkCount: state.extraWorkCount,
+        subject: state.subject ?? undefined,
+      })
+    }
+  }, [])
+
+  useEffect(() => {
     updateAllPrices()
   }, [currentCase.html, currentCase.fastTrack])
 
