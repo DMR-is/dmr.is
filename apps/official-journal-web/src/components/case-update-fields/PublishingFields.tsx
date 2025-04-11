@@ -1,4 +1,5 @@
 import addYears from 'date-fns/addYears'
+import subYears from 'date-fns/subYears'
 
 import {
   AccordionItem,
@@ -32,6 +33,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     useCaseContext()
 
   const createdAt = new Date(currentCase.createdAt)
+  const minDate = subYears(createdAt, 5)
   const maxEndDate = addYears(createdAt, 5)
 
   const { md } = useBreakpoint()
@@ -102,9 +104,9 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               locale="is"
               size="sm"
               backgroundColor="blue"
-              minDate={createdAt}
+              minDate={minDate}
               maxDate={maxEndDate}
-              excludeDates={getExcludedDates(createdAt, maxEndDate)}
+              excludeDates={getExcludedDates(minDate, maxEndDate)}
               placeholderText="Dagsetning birtingar"
               selected={new Date(currentCase.requestedPublicationDate)}
               label={formatMessage(messages.grunnvinnsla.publicationDate)}
