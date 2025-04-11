@@ -34,6 +34,9 @@ export const updateCaseBodyMapper = (
   if (body.message !== undefined) {
     updateData.message = body.message
   }
+  if (body.advertHtml !== undefined) {
+    updateData.html = body.advertHtml
+  }
 
   return updateData
 }
