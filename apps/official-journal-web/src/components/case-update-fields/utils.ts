@@ -44,11 +44,11 @@ const isWeekday = (date: Date) => {
   return isWorkday(date)
 }
 
-const addWeekdays = (date: Date, days: number) => {
+const addWorkDays = (date: Date, days: number) => {
   let result = new Date(date)
   while (days > 0) {
     result = addDays(result, 1)
-    if (isWeekday(result)) {
+    if (isWorkday(result)) {
       days--
     }
   }
@@ -93,7 +93,7 @@ const getDateString = (date: Date) => {
 // Get default date, but push it to the next workday if it is a weekend or holiday
 export const getDefaultDate = (requestedDate?: string) => {
   if (!requestedDate) {
-    const date = getNextWorkday(addWeekdays(new Date(), MINIMUM_WEEKDAYS))
+    const date = getNextWorkday(addWorkDays(new Date(), MINIMUM_WEEKDAYS))
     return getDateString(date)
   }
   const date = new Date(requestedDate)
