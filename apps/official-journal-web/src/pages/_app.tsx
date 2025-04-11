@@ -41,7 +41,7 @@ export default function App({
   return (
     <SessionProvider
       session={session}
-      refetchInterval={2 * 60}
+      refetchInterval={1 * 60}
       refetchOnWindowFocus={true}
       basePath="/api/auth"
     >

@@ -185,6 +185,17 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.priceService.getAllFeeCodes())
   }
 
+  @Post(':caseId/external-payment')
+  @ApiOperation({ operationId: 'postExternalPaymentByCaseId' })
+  @ApiNoContentResponse()
+  async postExternalPaymentByCaseId(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.priceService.postExternalPaymentByCaseId(caseId),
+    )
+  }
+
   @Get('categories')
   @ApiOperation({ operationId: 'getCategories' })
   @ApiResponse({ status: 200, type: GetCategoriesResponse })

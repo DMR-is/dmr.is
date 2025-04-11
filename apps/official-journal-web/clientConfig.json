@@ -296,6 +296,22 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{caseId}/external-payment": {
+      "post": {
+        "operationId": "postExternalPaymentByCaseId",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/categories": {
       "get": {
         "operationId": "getCategories",
