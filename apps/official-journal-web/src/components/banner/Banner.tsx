@@ -37,6 +37,7 @@ type Props = {
   enableCategories?: boolean
   enableDepartments?: boolean
   enableTypes?: boolean
+  enableSearch?: boolean
 }
 
 const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
@@ -44,7 +45,7 @@ const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
   loading: () => (
     <Inline space={2}>
       <Input
-        placeholder="Leita eftir málsefni"
+        placeholder="Leita eftir málsnafni"
         disabled
         loading
         size="sm"
@@ -71,10 +72,12 @@ export const Banner = ({
   enableCategories = false,
   enableDepartments = false,
   enableTypes = false,
+  enableSearch = false,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const showFilters = enableCategories || enableDepartments || enableTypes
+  const showFilters =
+    enableCategories || enableDepartments || enableTypes || enableSearch
 
   return (
     <Section className={styles.bannerSection}>
@@ -115,6 +118,7 @@ export const Banner = ({
                     enableCategories={enableCategories}
                     enableDepartments={enableDepartments}
                     enableTypes={enableTypes}
+                    enableSearch={enableSearch}
                   />
                 )}
               </GridColumn>

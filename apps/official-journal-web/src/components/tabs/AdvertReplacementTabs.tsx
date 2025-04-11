@@ -1,47 +1,49 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
+import { useEffect } from 'react'
 
 import { Stack, Text } from '@island.is/island-ui/core'
 
-import { DepartmentEnum } from '../../gen/fetch'
 import { useAdverts } from '../../hooks/api/get/useAdverts'
 import { useSearchParams } from '../../hooks/useSearchParams'
 import AdvertPDFTable from '../tables/AdvertPDFTable'
-import { Tabs } from './Tabs'
 
 export const AdvertReplacementTabs = () => {
   const [searchParams] = useSearchParams()
-  const { department: _department, status: _status } = searchParams
+  const { status: _status, search, page, pageSize, ...rest } = searchParams
 
-  const [department, setDepartment] = useQueryState(
-    'department',
-    parseAsStringEnum<DepartmentEnum>(
-      Object.values(DepartmentEnum),
-    ).withDefault(DepartmentEnum.ADeild),
-  )
+  const {
+    data,
+    isLoading: isLoading,
+    mutate,
+  } = useAdverts({
+    params: {
+      page: page ?? 1,
+      pageSize: pageSize ?? 20,
+      search: search ?? '',
+    },
+  })
 
-  const { data: adverts, isLoading: isLoading } = useAdverts({})
-  console.log(isLoading)
-  const departmentFiltered = adverts?.adverts?.filter(
-    (x) => x.department.id === department,
-  )
-  const tabs = departmentFiltered?.map((advert) => ({
-    id: advert.id,
-    label: `${advert.department.title} (${departmentFiltered.length})`,
-    content: (
-      <Stack space={[2, 2, 3]}>
-        <Text variant="h5">{`Útgefnar auglýsingar í ${department}:`}</Text>
-        <AdvertPDFTable adverts={departmentFiltered} isLoading={isLoading} />
-      </Stack>
-    ),
-  }))
+  useEffect(() => {
+    async function refetch() {
+      await mutate()
+    }
+    refetch()
+  }, [search, page])
 
   return (
-    <Tabs
-      tabs={tabs ?? []}
-      selectedTab={department}
-      onTabChange={(id) => setDepartment(id as DepartmentEnum)}
-      label={'Deildir'}
-    />
+    <Stack space={[2, 2, 3]}>
+      {search && (
+        <AdvertPDFTable
+          adverts={data?.adverts}
+          isLoading={isLoading}
+          paging={data?.paging}
+        />
+      )}
+      {!search && (
+        <Text variant="h5">
+          {`Leitaðu eftir nafni eða skráningarnúmeri auglýsingar til að sjá útgefnar auglýsingar`}
+        </Text>
+      )}
+    </Stack>
   )
 }
 

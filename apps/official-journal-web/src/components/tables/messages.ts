@@ -199,5 +199,34 @@ export const messages = {
         },
       }),
     },
+    advert: {
+      columns: defineMessages({
+        title: {
+          id: 'web.components.tables:advert.columns.title',
+          defaultMessage: 'Heiti',
+          description: 'Title column',
+        },
+        publicationNumber: {
+          id: 'web.components.tables:advert.columns.publicationNumber',
+          defaultMessage: 'Birtingarnúmer',
+          description: 'Title column',
+        },
+        file: {
+          id: 'web.components.tables:advert.columns.file',
+          defaultMessage: 'Skjal',
+          description: 'Title column',
+        },
+        seeFile: {
+          id: 'web.components.tables:advert.columns.file',
+          defaultMessage: 'Sækja skjal',
+          description: 'Title column',
+        },
+        change: {
+          id: 'web.components.tables:advert.columns.change',
+          defaultMessage: 'Yfirskrifa PDF',
+          description: 'Title column',
+        },
+      }),
+    },
   },
 }

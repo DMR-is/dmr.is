@@ -1,35 +1,32 @@
+import { useSession } from 'next-auth/react'
 import useSWR, { SWRConfiguration } from 'swr'
-import { GetAdvertsQuery } from '@dmr.is/shared/dto'
 
-import { GetAdvertsResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
-import { generateParams } from '../../../lib/utils'
+import { GetAdvertsRequest, GetAdvertsResponse } from '../../../gen/fetch'
+import { getDmrClient } from '../../../lib/api/createClient'
+import { swrFetcher } from '../../../lib/constants'
 
 type SWRCasesOptions = SWRConfiguration<GetAdvertsResponse, Error>
 
 type UseAdvertsParams = {
   shouldFetch?: boolean
   options?: SWRCasesOptions
-  params?: GetAdvertsQuery
+  params: GetAdvertsRequest
 }
 
-export const useAdverts = ({ options, params }: UseAdvertsParams = {}) => {
-  const { data, error, isLoading, mutate, isValidating } = useSWR<
-    GetAdvertsResponse,
-    Error
-  >(
-    [APIRoutes.Adverts, params],
-    ([url, params]: [url: string, params: GetAdvertsQuery]) =>
-      fetcher(url, {
-        arg: {
-          withAuth: true,
-          method: 'GET',
-          query: generateParams(params),
-        },
+export const useAdverts = ({ options, params }: UseAdvertsParams) => {
+  const { data: session } = useSession()
+  const dmrClient = getDmrClient(session?.idToken as string)
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    session ? ['getAdverts', session?.user] : null,
+    ([_key, _user]) =>
+      swrFetcher({
+        func: () => dmrClient.getAdverts(params),
       }),
-    options,
+    {
+      ...options,
+    },
   )
-  console.log(data, error)
   return {
     data,
     error,

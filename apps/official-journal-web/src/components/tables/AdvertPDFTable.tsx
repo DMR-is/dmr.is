@@ -1,7 +1,8 @@
-import { Text } from '@island.is/island-ui/core'
+import { Box, Icon, Text } from '@island.is/island-ui/core'
 
-import { Advert } from '../../gen/fetch'
+import { Advert, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import CaseTable, { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
@@ -9,33 +10,35 @@ import { messages } from './messages'
 type Props = {
   adverts?: Advert[]
   isLoading?: boolean
+  paging?: Paging
 }
 
-export const AdvertPDFTable = ({ adverts, isLoading }: Props) => {
+export const AdvertPDFTable = ({ adverts, isLoading, paging }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: CaseTableHeadCellProps[] = [
     {
-      name: 'caseLabels',
+      name: 'advertPublicationNumber',
       sortable: false,
-      size: 'tiny',
+      size: 'small',
+      children: formatMessage(messages.tables.advert.columns.publicationNumber),
     },
     {
-      name: 'casePublishDate',
+      name: 'advertTitle',
       sortable: false,
       size: 'tiny',
-      children: formatMessage(messages.tables.ready.columns.title),
+      children: formatMessage(messages.tables.advert.columns.title),
+    },
+
+    {
+      name: 'advertFile',
+      sortable: false,
+      size: 'default',
     },
     {
-      name: 'caseTitle',
+      name: 'advertFile',
       sortable: false,
-      children: formatMessage(messages.tables.ready.columns.publicationDate),
-    },
-    {
-      name: 'caseInstitution',
-      sortable: false,
-      size: 'tiny',
-      children: formatMessage(messages.tables.ready.columns.institution),
+      size: 'default',
     },
   ]
 
@@ -44,6 +47,15 @@ export const AdvertPDFTable = ({ adverts, isLoading }: Props) => {
       return {
         case: advert,
         cells: [
+          {
+            sortingKey: 'advertPublicationNumber',
+            sortingValue: advert.publicationNumber?.full,
+            children: (
+              <Text truncate variant="medium">
+                {advert.publicationNumber?.full}
+              </Text>
+            ),
+          },
           {
             sortingKey: 'advertTitle',
             sortingValue: advert.title,
@@ -56,45 +68,44 @@ export const AdvertPDFTable = ({ adverts, isLoading }: Props) => {
             ),
           },
           {
-            sortingKey: 'advertPublicationNumber',
-            sortingValue: advert.publicationNumber?.full,
-            children: (
-              <div className={styles.titleTableCell}>
-                <Text truncate variant="medium">
-                  {advert.publicationNumber?.full}
-                </Text>
-              </div>
-            ),
-          },
-          {
-            sortingKey: 'advertSubject',
+            sortingKey: 'advertpdf',
             sortingValue: advert.subject,
             children: (
-              <div className={styles.titleTableCell}>
-                <Text truncate variant="medium">
-                  {advert.subject}
+              <Box
+                component={'a'}
+                href={advert.document.pdfUrl ?? '#'}
+                target="_blank"
+              >
+                <Text variant="eyebrow" color={'blue400'}>
+                  {formatMessage(messages.tables.advert.columns.seeFile)}{' '}
+                  <Icon
+                    icon="arrowForward"
+                    color="blue400"
+                    className={styles.seeMoreTableCellLinkIcon}
+                  />
                 </Text>
-              </div>
-            ),
-          },
-          /*  {
-            sortingKey: 'casePublishDate',
-            sortingValue: _case.requestedPublicationDate,
-            children: (
-              <Text variant="medium">
-                {_case.requestedPublicationDate
-                  ? formatDate(_case.requestedPublicationDate)
-                  : null}
-              </Text>
+              </Box>
             ),
           },
           {
+            sortingKey: 'advertpdf',
+            sortingValue: advert.subject,
             children: (
-              <Text whiteSpace="nowrap" variant="medium">
-                {_case.involvedParty.title}
-              </Text>
+              <Box
+                component={'a'}
+                href={Routes.ReplacePdfAdvert.replace(':advertId', advert.id)}
+              >
+                <Text variant="eyebrow" color={'blue400'}>
+                  {formatMessage(messages.tables.advert.columns.change)}{' '}
+                  <Icon
+                    icon="arrowForward"
+                    color="blue400"
+                    className={styles.seeMoreTableCellLinkIcon}
+                  />
+                </Text>
+              </Box>
             ),
-          },*/
+          },
         ],
       }
     }) ?? []
@@ -103,8 +114,10 @@ export const AdvertPDFTable = ({ adverts, isLoading }: Props) => {
     <CaseTable
       loading={isLoading}
       columns={columns}
+      renderLink={false}
       rows={advertTableColumns}
       defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+      paging={paging}
     />
   )
 }

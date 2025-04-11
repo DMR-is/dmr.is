@@ -1,5 +1,5 @@
 import {
-  ALLOWED_MIME_TYPES,
+  ALLOWED_PDF_MIME_TYPES,
   AttachmentTypeParam,
   ONE_MEGA_BYTE,
   UserRoleEnum,
@@ -95,7 +95,7 @@ import {
   Post,
   Put,
   Query,
-  UploadedFiles,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
@@ -625,6 +625,68 @@ export class CaseController {
     return
   }
 
+  @Get('advert')
+  @ApiOperation({ operationId: 'getAdverts' })
+  @ApiResponse({ status: 200, type: GetAdvertsResponse })
+  async getAdverts(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetAdvertsResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
+  }
+  @Get('advert/:id')
+  @ApiOperation({ operationId: 'getAdvert' })
+  @ApiResponse({ status: 200, type: GetAdvertResponse })
+  async getAdvert(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetAdvertResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
+  }
+
+  @Put('advert/:id/pdf-replacement')
+  @Post(':id/upload')
+  @ApiOperation({ operationId: 'AdvertPDFReplacement' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Handles uploading attachments for an application.',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          description: 'The attachment',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, type: S3UploadFilesResponse })
+  @UseInterceptors(FilesInterceptor('file'))
+  async uploadAdvertPdfReplacement(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 20,
+            message: `File size exceeds the limit of 20MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_PDF_MIME_TYPES,
+            maxNumberOfFiles: 1,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<S3UploadFileResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.uploadAdvertPDF(advertId, file),
+    )
+  }
+
   @Get(':id')
   @ApiOperation({ operationId: 'getCase' })
   @ApiResponse({ status: 200, type: GetCaseResponse })
@@ -809,67 +871,5 @@ export class CaseController {
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()
-  }
-
-  @Get('/advert')
-  @ApiOperation({ operationId: 'getAdverts' })
-  @ApiResponse({ status: 200, type: GetAdvertsResponse })
-  async getAdverts(
-    @Query() params?: GetAdvertsQueryParams,
-  ): Promise<GetAdvertsResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
-  }
-  @Get('/advert/:id')
-  @ApiOperation({ operationId: 'getAdvert' })
-  @ApiResponse({ status: 200, type: GetAdvertResponse })
-  async getAdvert(
-    @Param('id', new UUIDValidationPipe()) id: string,
-  ): Promise<GetAdvertResponse> {
-    return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
-  }
-
-  @Put('/advert/:id/pdf-replacement')
-  @Post(':id/upload')
-  @ApiOperation({ operationId: 'AdvertPDFReplacement' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Handles uploading attachments for an application.',
-    required: true,
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          description: 'The attachment',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 200, type: S3UploadFilesResponse })
-  @UseInterceptors(FilesInterceptor('file'))
-  async uploadAdvertPdfReplacement(
-    @Param('id', new UUIDValidationPipe()) advertId: string,
-    @UploadedFiles(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: ONE_MEGA_BYTE * 20,
-            message: `File size exceeds the limit of 20MB.`,
-          }),
-          new FileTypeValidationPipe({
-            mimetype: ALLOWED_MIME_TYPES,
-            maxNumberOfFiles: 10,
-          }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
-  ): Promise<S3UploadFileResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.uploadAdvertPDF(advertId, file),
-    )
   }
 }
