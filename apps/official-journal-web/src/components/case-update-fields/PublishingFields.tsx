@@ -1,3 +1,5 @@
+import addYears from 'date-fns/addYears'
+
 import {
   AccordionItem,
   Checkbox,
@@ -16,6 +18,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { PriceCalculator } from '../price/calculator'
+import { getExcludedDates } from './utils'
 
 type Props = {
   toggle: boolean
@@ -27,6 +30,9 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
 
   const { currentCase, refetch, canEdit, handleOptimisticUpdate } =
     useCaseContext()
+
+  const createdAt = new Date(currentCase.createdAt)
+  const maxEndDate = addYears(createdAt, 5)
 
   const { md } = useBreakpoint()
 
@@ -81,7 +87,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
             disabled
             size="sm"
             backgroundColor="blue"
-            selected={new Date(currentCase.createdAt)}
+            selected={createdAt}
             label={formatMessage(messages.grunnvinnsla.createdDate)}
             placeholderText=""
           />
@@ -96,6 +102,9 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               locale="is"
               size="sm"
               backgroundColor="blue"
+              minDate={createdAt}
+              maxDate={maxEndDate}
+              excludeDates={getExcludedDates(createdAt, maxEndDate)}
               placeholderText="Dagsetning birtingar"
               selected={new Date(currentCase.requestedPublicationDate)}
               label={formatMessage(messages.grunnvinnsla.publicationDate)}
