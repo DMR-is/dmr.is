@@ -9,6 +9,7 @@ import { MockJournalService } from './journal.service.mock'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
 
+import { AwsModule } from '../aws/aws'
 import caseModels from '../case/models'
 import { models as advertModels } from './models'
 
@@ -16,6 +17,7 @@ import { models as advertModels } from './models'
   imports: [
     SequelizeModule.forFeature([...caseModels, ...advertModels]),
     LoggingModule,
+    AwsModule,
   ],
   controllers: [],
   providers: [

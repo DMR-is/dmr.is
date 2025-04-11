@@ -1,4 +1,9 @@
-import { AttachmentTypeParam, UserRoleEnum } from '@dmr.is/constants'
+import {
+  ALLOWED_MIME_TYPES,
+  AttachmentTypeParam,
+  ONE_MEGA_BYTE,
+  UserRoleEnum,
+} from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -9,7 +14,11 @@ import {
   RoleGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules'
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import {
+  EnumValidationPipe,
+  FileTypeValidationPipe,
+  UUIDValidationPipe,
+} from '@dmr.is/pipelines'
 import {
   AddCaseAdvertCorrection,
   CaseChannel,
@@ -24,6 +33,9 @@ import {
   DefaultSearchParams,
   DepartmentEnum,
   ExternalCommentBodyDto,
+  GetAdvertResponse,
+  GetAdvertsQueryParams,
+  GetAdvertsResponse,
   GetCaseResponse,
   GetCasesQuery,
   GetCasesReponse,
@@ -49,6 +61,8 @@ import {
   PostApplicationAttachmentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  S3UploadFileResponse,
+  S3UploadFilesResponse,
   TransactionFeeCodesResponse,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
@@ -75,14 +89,21 @@ import {
   Get,
   HttpException,
   Inject,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Post,
   Put,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
@@ -788,5 +809,67 @@ export class CaseController {
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()
+  }
+
+  @Get('/advert')
+  @ApiOperation({ operationId: 'getAdverts' })
+  @ApiResponse({ status: 200, type: GetAdvertsResponse })
+  async getAdverts(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetAdvertsResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
+  }
+  @Get('/advert/:id')
+  @ApiOperation({ operationId: 'getAdvert' })
+  @ApiResponse({ status: 200, type: GetAdvertResponse })
+  async getAdvert(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<GetAdvertResponse> {
+    return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
+  }
+
+  @Put('/advert/:id/pdf-replacement')
+  @Post(':id/upload')
+  @ApiOperation({ operationId: 'AdvertPDFReplacement' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Handles uploading attachments for an application.',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          description: 'The attachment',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, type: S3UploadFilesResponse })
+  @UseInterceptors(FilesInterceptor('file'))
+  async uploadAdvertPdfReplacement(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 20,
+            message: `File size exceeds the limit of 20MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_MIME_TYPES,
+            maxNumberOfFiles: 10,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<S3UploadFileResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.uploadAdvertPDF(advertId, file),
+    )
   }
 }

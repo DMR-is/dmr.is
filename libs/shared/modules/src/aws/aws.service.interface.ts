@@ -37,6 +37,10 @@ export interface IAWSService {
   ): Promise<ResultWrapper<string>>
 
   sendMail(message: Mail.Options): Promise<SentMessageInfo>
+  replaceAdvertPdf(
+    key: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>>
 }
 
 export const IAWSService = Symbol('IAWSService')

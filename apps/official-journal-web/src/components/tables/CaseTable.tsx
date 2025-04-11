@@ -16,7 +16,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { Case, Paging } from '../../gen/fetch'
+import { Advert, Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import * as styles from './CaseTable.css'
@@ -40,7 +40,7 @@ export type CaseTableCellProps = {
 }
 
 export type CaseTableRowProps = {
-  case: Case
+  case: Case | Advert
   cells: CaseTableCellProps[]
 }
 

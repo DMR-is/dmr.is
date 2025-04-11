@@ -35,6 +35,7 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
+  S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
@@ -136,6 +137,12 @@ export class MockJournalService implements IJournalService {
     advertId: string,
     limit = 10,
   ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  uploadAdvertPDF(
+    advertId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>> {
     throw new Error('Method not implemented.')
   }
 
