@@ -7,5 +7,6 @@ export const caseAdditionMigrate = (model: CaseAdditionModel): CaseAddition => {
     id: model.id,
     title: model.title,
     html: model.content,
+    order: model.CaseAdditionsModel?.order ?? 0,
   }
 }

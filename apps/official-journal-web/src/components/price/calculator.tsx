@@ -160,6 +160,7 @@ export const PriceCalculator = () => {
                   placeholder="0"
                   type="number"
                   value={state.additionalDocuments || ''}
+                  disabled={!canEdit}
                   onChange={(e) =>
                     dispatch({
                       type: 'SET_ADDITIONAL_DOCUMENTS',
@@ -189,6 +190,7 @@ export const PriceCalculator = () => {
                   label="Álag"
                   placeholder="0"
                   type="number"
+                  disabled={!canEdit}
                   value={state.extraWorkCount || ''}
                   onChange={(e) =>
                     dispatch({
@@ -259,6 +261,7 @@ export const PriceCalculator = () => {
               })
             }
             onBlur={updateAllPrices}
+            disabled={!canEdit}
           />
           <Text variant="small" color="blue600">
             Tilvísun á reikningi

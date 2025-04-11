@@ -138,6 +138,22 @@ export interface ICaseService {
 
   updateCaseTag(caseId: string, body: UpdateTagBody): Promise<ResultWrapper>
 
+  updateCaseAddition(
+    additionId: string,
+    caseId: string,
+    title?: string,
+    content?: string,
+    newOrder?: string,
+  ): Promise<ResultWrapper>
+
+  createCaseAddition(
+    caseId: string,
+    title: string,
+    content: string,
+  ): Promise<ResultWrapper>
+
+  deleteCaseAddition(additionId: string, caseId: string): Promise<ResultWrapper>
+
   updateCaseCommunicationStatus(
     caseId: string,
     body: UpdateCommunicationStatusBody,
