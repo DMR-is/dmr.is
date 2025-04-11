@@ -5,11 +5,11 @@ import { Button, Drawer, Stack, Text, toast } from '@island.is/island-ui/core'
 
 import { CreateCaseDto } from '../../gen/fetch'
 import {
-  useAdvertTypes,
   useCase,
   useDepartments,
   useInstitutions,
 } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { Routes } from '../../lib/constants'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
@@ -23,6 +23,8 @@ export const CreateCase = () => {
     typeId: '',
     subject: '',
   })
+
+  const [mainTypeId, setMainTypeId] = useState<string | undefined>(undefined)
 
   const canCreate =
     createState.involvedPartyId &&
@@ -52,8 +54,8 @@ export const CreateCase = () => {
 
   const { departments, isLoading: isLoadingDepartments } = useDepartments()
 
-  const { types, isLoadingTypes } = useAdvertTypes({
-    typesParams: {
+  const { mainTypes, isLoadingMainTypes } = useMainTypes({
+    mainTypesParams: {
       page: 1,
       pageSize: 500,
       department: createState.departmentId,
@@ -70,10 +72,18 @@ export const CreateCase = () => {
     value: department.id,
   }))
 
-  const typeOptions = types?.map((type) => ({
+  const mainTypeOptions = mainTypes?.map((type) => ({
     label: type.title,
     value: type.id,
   }))
+
+
+  const typeOptions = mainTypes
+    ?.find((mt) => mt.id === mainTypeId)
+    ?.types?.map((type) => ({
+      label: type.title,
+      value: type.id,
+    }))
 
   const handleChange = (key: keyof CreateCaseDto, value: string | string[]) => {
     setCreateState({
@@ -132,8 +142,20 @@ export const CreateCase = () => {
 
         <OJOISelect
           required
+          isDisabled={!createState.departmentId}
+          placeholder="Veldu yfirtegund auglýsingar"
+          isValidating={isLoadingMainTypes}
+          label="Yfirtegund auglýsingar"
+          width="half"
+          options={mainTypeOptions}
+          onChange={(opt) => setMainTypeId(opt ? opt.value : '')}
+        />
+
+        <OJOISelect
+          required
+          isDisabled={!mainTypeId}
           placeholder="Veldu tegund auglýsingar"
-          isValidating={isLoadingTypes}
+          isValidating={isLoadingMainTypes}
           label="Tegund auglýsingar"
           width="half"
           options={typeOptions}

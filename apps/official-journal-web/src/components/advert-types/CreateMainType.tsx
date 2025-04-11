@@ -10,7 +10,8 @@ import {
 } from '@island.is/island-ui/core'
 
 import { Department, GetAdvertMainType } from '../../gen/fetch'
-import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { useDepartments } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { OJOISelect } from '../select/OJOISelect'
 
 type CreateMainTypeState = {
@@ -27,7 +28,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
   const { departments } = useDepartments()
 
   const { createMainType, createMainTypeError, isCreatingMainType } =
-    useAdvertTypes({
+    useMainTypes({
       onCreateMainTypeSuccess: (data) => {
         onSuccess && onSuccess(data)
 
