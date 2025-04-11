@@ -224,15 +224,16 @@ export class PdfService implements OnModuleDestroy, IPdfService {
           : undefined,
     })
     const signatureRecords = activeCase.signature.records
-    const newest = signatureRecords
-      .map((item) => item.signatureDate)
-      .sort((a, b) => {
-        return new Date(b).getTime() - new Date(a).getTime()
-      })[0]
+    const newest =
+      signatureRecords
+        .map((item) => item.signatureDate)
+        .sort((a, b) => {
+          return new Date(b).getTime() - new Date(a).getTime()
+        })[0] ?? activeCase.signature.signatureDate
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span>Nr. ${activeCase.publicationNumber}</span><span>${format(parseISO(newest), 'd. MMMM yyyy', { locale: is })}</span>`
+        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${format(parseISO(newest), 'd. MMMM yyyy', { locale: is })}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)

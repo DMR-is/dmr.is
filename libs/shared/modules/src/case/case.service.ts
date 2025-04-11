@@ -798,8 +798,11 @@ export class CaseService implements ICaseService {
     }
 
     const now = new Date().toISOString()
+    const keyFallback = `${caseId}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
 
-    const docUrl = activeCase?.advert?.documentPdfUrl || `${caseId}_${now}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
+    const docUrl = activeCase?.advert?.documentPdfUrl ?? keyFallback
+    const docName =
+      activeCase?.advert?.documentPdfUrl.split('/').pop() ?? keyFallback
 
     if (!activeCase?.advert?.documentPdfUrl) {
       this.logger.error(
@@ -814,8 +817,9 @@ export class CaseService implements ICaseService {
     }
 
     const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
+    const pdfName = docName.replace('.pdf', `_${now}.pdf`)
 
-    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfUrl))
+    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfName))
     const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
       this.updateAdvertByHtml(
         caseId,
