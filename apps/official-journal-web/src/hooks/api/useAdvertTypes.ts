@@ -20,7 +20,7 @@ type AdvertTypeIdParam = {
 
 type CreateAdvertTypeParams = {
   departmentId: string
-  mainTypeId?: string
+  mainTypeId: string
   title: string
 }
 
