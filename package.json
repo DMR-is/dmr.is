@@ -172,6 +172,7 @@
     "fastify-plugin": "~4.5.0",
     "file-type": "^16.5.3",
     "framer-motion": "^11.0.26",
+    "fridagar": "^4.2.2",
     "hypher": "^0.2.5",
     "js-base64": "2.5.2",
     "jsonwebtoken": "^9.0.2",
