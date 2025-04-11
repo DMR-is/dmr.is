@@ -39,7 +39,10 @@ export const config = <Configuration>(
   })
 }
 
-let dmrClient
+let dmrClient: {
+  client: unknown
+  token: string
+}
 
 export const getDmrClient = <DefaultApi, Configuration>(
   DefaultApi: new (config: Configuration) => DefaultApi,
@@ -49,6 +52,13 @@ export const getDmrClient = <DefaultApi, Configuration>(
   if (typeof window === 'undefined') {
     return new DefaultApi(config(Configuration, token))
   }
+  if (dmrClient && dmrClient.token === token) {
+    return dmrClient.client as DefaultApi
+  }
+  dmrClient = {
+    client: new DefaultApi(config(Configuration, token)),
+    token,
+  }
 
-  return (dmrClient ??= new DefaultApi(config(Configuration, token)))
+  return dmrClient.client as DefaultApi
 }
