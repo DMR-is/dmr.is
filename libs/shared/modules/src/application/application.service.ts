@@ -295,6 +295,7 @@ export class ApplicationService implements IApplicationService {
             requestedPublicationDate: application.answers.advert.requestedDate,
             message: application.answers.advert.message,
             categoryIds: application.answers.advert.categories.map((c) => c.id),
+            advertHtml: application.answers.advert.html,
           },
           transaction,
         ),
