@@ -1,12 +1,15 @@
+import router from 'next/router'
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 
 import { toast } from '@island.is/island-ui/core'
 
 import { getDmrClient } from '../../../lib/api/createClient'
+import { Routes } from '../../../lib/constants'
 type UploadAdvertPDFParams = {
   advertId: string
   file: File
+  advertName?: string
 }
 
 export const useUpdateAdvertPDF = () => {
@@ -16,7 +19,11 @@ export const useUpdateAdvertPDF = () => {
   const { data: session } = useSession()
   const dmrClient = getDmrClient(session?.idToken as string)
 
-  const uploadPDF = async ({ advertId, file }: UploadAdvertPDFParams) => {
+  const uploadPDF = async ({
+    advertId,
+    file,
+    advertName,
+  }: UploadAdvertPDFParams) => {
     setLoading(true)
     setError(null)
 
@@ -27,33 +34,28 @@ export const useUpdateAdvertPDF = () => {
         throw new Error('File extension not found')
       }
 
-      const res = await dmrClient.AdvertPDFReplacement({
-        file,
-        id: advertId,
-      })
-
-      const didUpload = await fetch(res.url, {
-        headers: {
-          'Content-Type': file.type,
-          'Content-Length': file.size.toString(),
-        },
-        method: 'PUT',
-        body: file,
-      })
-
-      if (!didUpload.ok) {
-        setError(`Ekki tókst að hlaða upp skjali í gagnageymslu S3`)
-        setLoading(false)
-        return
-      }
-
-      setLoading(false)
+      await dmrClient
+        .advertPDFReplacement({
+          id: advertId,
+          file: file,
+        })
+        .then(() => {
+          toast.success('Skjali hlaðið upp í gagnageymslu S3', {
+            toastId: 'uploadAttachment',
+          })
+          setLoading(false)
+          router.push(`${Routes.ReplacePdf}?search=${advertName}`)
+        })
+        .catch((error) => {
+          setError(`Ekki tókst að hlaða upp skjali í gagnageymslu S3`)
+          setLoading(false)
+          toast.error('Ekki tókst að hlaða upp skjali í gagnageymslu', {
+            toastId: 'uploadAttachment',
+          })
+        })
     } catch (error) {
+      setError(`Ekki tókst að hlaða upp skjali`)
       setLoading(false)
-      setError('Ekki tókst að hlaða upp skjali í gagnageymslu')
-      toast.error('Ekki tókst að hlaða upp skjali í gagnageymslu', {
-        toastId: 'uploadAttachmentError',
-      })
     }
   }
 

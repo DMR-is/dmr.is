@@ -1304,8 +1304,8 @@
       }
     },
     "/api/v1/cases/advert/{id}/pdf-replacement": {
-      "put": {
-        "operationId": "AdvertPDFReplacement",
+      "post": {
+        "operationId": "advertPDFReplacement",
         "summary": "",
         "parameters": [
           {
@@ -1317,33 +1317,24 @@
         ],
         "requestBody": {
           "required": true,
-          "description": "Handles uploading attachments for an application.",
+          "description": "Handles uploading a PDF attachment for an application.",
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "file": {
-                    "description": "The attachment",
-                    "items": { "type": "string", "format": "binary" }
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The PDF file to upload"
                   }
-                }
+                },
+                "required": ["file"]
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/S3UploadFilesResponse"
-                }
-              }
-            }
-          }
-        },
+        "responses": { "204": { "description": "" } },
         "security": [{ "bearer": [] }]
       }
     },
@@ -4680,35 +4671,6 @@
           }
         },
         "required": ["advert"]
-      },
-      "S3UploadFileResponse": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL of the uploaded file."
-          },
-          "filename": {
-            "type": "string",
-            "description": "Filename of the uploaded file."
-          },
-          "size": {
-            "type": "number",
-            "description": "The size of the uploaded file."
-          }
-        },
-        "required": ["url", "filename", "size"]
-      },
-      "S3UploadFilesResponse": {
-        "type": "object",
-        "properties": {
-          "files": {
-            "description": "The uploaded files.",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/S3UploadFileResponse" }
-          }
-        },
-        "required": ["files"]
       },
       "CreateAdvertAppendixBody": {
         "type": "object",

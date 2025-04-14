@@ -64,7 +64,6 @@ import {
   PostCasePublishBody,
   PresignedUrlResponse,
   S3UploadFileResponse,
-  S3UploadFilesResponse,
   TransactionFeeCodesResponse,
   UpdateAdvertAppendixBody,
   UpdateAdvertHtmlBody,
@@ -102,7 +101,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
-import { FilesInterceptor } from '@nestjs/platform-express'
+import { FileInterceptor } from '@nestjs/platform-express'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -656,28 +655,26 @@ export class CaseController {
     return ResultWrapper.unwrap(await this.journalService.getAdvert(id))
   }
 
-  @Put('advert/:id/pdf-replacement')
-  @Post(':id/upload')
-  @ApiOperation({ operationId: 'AdvertPDFReplacement' })
+  @Post('advert/:id/pdf-replacement')
+  @ApiOperation({ operationId: 'advertPDFReplacement' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Handles uploading attachments for an application.',
+    description: 'Handles uploading a PDF attachment for an application.',
     required: true,
     schema: {
       type: 'object',
       properties: {
         file: {
-          description: 'The attachment',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
+          type: 'string',
+          format: 'binary',
+          description: 'The PDF file to upload',
         },
       },
+      required: ['file'],
     },
   })
-  @ApiResponse({ status: 200, type: S3UploadFilesResponse })
-  @UseInterceptors(FilesInterceptor('file'))
+  @ApiNoContentResponse()
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAdvertPdfReplacement(
     @Param('id', new UUIDValidationPipe()) advertId: string,
     @UploadedFile(

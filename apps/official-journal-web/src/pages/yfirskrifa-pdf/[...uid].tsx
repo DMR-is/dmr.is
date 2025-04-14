@@ -3,19 +3,20 @@ import { getServerSession } from 'next-auth'
 import React from 'react'
 
 import {
+  Box,
   Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Text,
 } from '@island.is/island-ui/core'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
 import { Advert } from '../../gen/fetch'
-import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useUpdateAdvertPDF } from '../../hooks/api/update/useUpdateAdvertPDF'
 import { LayoutProps } from '../../layout/Layout'
 import { getDmrClient } from '../../lib/api/createClient'
-import { messages } from '../../lib/messages/casePublishOverview'
 import { loginRedirect } from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
 
@@ -24,8 +25,9 @@ type Props = {
 }
 
 export default function AdvertPdfReplacement({ advert }: Props) {
-  const { formatMessage } = useFormatMessage()
   const fileUploadRef = React.useRef<HTMLInputElement>(null)
+
+  const { uploadPDF } = useUpdateAdvertPDF()
   const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
 
@@ -33,19 +35,22 @@ export default function AdvertPdfReplacement({ advert }: Props) {
       return
     }
 
-    await uploadAttachment({
-      caseId: currentCase.id,
+    await uploadPDF({
+      advertId: advert.id,
       file,
+      advertName: advert.publicationNumber?.full,
     })
-    refetch()
   }
+
+  const onOpenUploadAttachment = () => {
+    if (fileUploadRef.current) {
+      fileUploadRef.current.click()
+    }
+  }
+
   return (
     <>
-      <Meta
-        title={`${formatMessage(
-          messages.breadcrumbs.casePublishing,
-        )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
-      />
+      <Meta title="Yfirskrifa PDF" />
       <Section paddingTop="content">
         <GridContainer>
           <GridRow>
@@ -53,6 +58,10 @@ export default function AdvertPdfReplacement({ advert }: Props) {
               span={['12/12', '12/12', '12/12', '10/12']}
               offset={['0', '0', '0', '1/12']}
             >
+              <Box marginBottom={2}>
+                <Text variant="h4">{advert.publicationNumber?.full ?? ''}</Text>
+                <Text variant="h5">{advert.title}</Text>
+              </Box>
               <input
                 type="file"
                 ref={fileUploadRef}
@@ -62,14 +71,13 @@ export default function AdvertPdfReplacement({ advert }: Props) {
                 onChange={onFileUpload}
               />
               <Button
-                disabled={!canEdit}
                 variant="text"
                 icon="share"
                 iconType="outline"
                 size="small"
                 onClick={onOpenUploadAttachment}
               >
-                Hlaða upp fylgiskjali
+                Hlaða upp PDF
               </Button>
             </GridColumn>
           </GridRow>
@@ -91,14 +99,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     return loginRedirect(resolvedUrl)
   }
   const client = getDmrClient(session?.idToken as string)
-  const advert = await client.getAdvert({ id: params?.uid as string })
+  const advertRes = await client.getAdvert({ id: params?.uid as string })
 
   const layout: LayoutProps = {
     bannerProps: {
       showBanner: true,
       imgSrc: '/assets/banner-publish-image.svg',
-      title: messages.banner.title,
-      description: messages.banner.description,
+      title: 'Yfirskrifa PDF',
+      description: `Hlaða upp PDF skjali fyrir auglýsingu`,
       variant: 'small',
       contentColumnSpan: ['12/12', '12/12', '7/12'],
       imageColumnSpan: ['12/12', '12/12', '3/12'],
@@ -108,5 +116,6 @@ export const getServerSideProps: GetServerSideProps = async ({
       enableSearch: false,
     },
   }
-  return { props: { advert, layout } }
+
+  return { props: { advert: advertRes.advert, layout } }
 }
