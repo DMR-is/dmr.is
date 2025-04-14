@@ -10,7 +10,8 @@ import {
 } from '@island.is/island-ui/core'
 
 import { Department, GetAdvertMainType } from '../../gen/fetch'
-import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { useDepartments } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { OJOISelect } from '../select/OJOISelect'
 
 type CreateMainTypeState = {
@@ -27,7 +28,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
   const { departments } = useDepartments()
 
   const { createMainType, createMainTypeError, isCreatingMainType } =
-    useAdvertTypes({
+    useMainTypes({
       onCreateMainTypeSuccess: (data) => {
         onSuccess && onSuccess(data)
 
@@ -75,8 +76,8 @@ export const CreateMainType = ({ onSuccess }: Props) => {
           if (!opt) {
             setState({
               department: null,
-              title: state.title,
-              slug: slugify(state.title, { lower: true }),
+              title: '',
+              slug: '',
             })
           } else {
             setState({
@@ -91,6 +92,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
       />
       <Input
         size="sm"
+        disabled={!state.department}
         backgroundColor="blue"
         name="create-main-type-title"
         label="Heiti yfirflokks"

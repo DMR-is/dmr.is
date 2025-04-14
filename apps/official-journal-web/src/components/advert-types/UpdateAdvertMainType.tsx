@@ -3,14 +3,10 @@ import slugify from 'slugify'
 
 import {
   AlertMessage,
-  Box,
   Button,
-  Icon,
   Inline,
   Input,
-  Select,
   Stack,
-  Tag,
   Text,
   toast,
 } from '@island.is/island-ui/core'
@@ -38,9 +34,7 @@ export const UpdateAdvertMainType = ({
   }, [mainType])
 
   const {
-    types,
     refetchTypes,
-    updateType,
     updateMainType,
     deleteMainType,
     mainType: currentMainType,
@@ -77,12 +71,12 @@ export const UpdateAdvertMainType = ({
 
   const mainTypeTypes = currentMainType
     ? currentMainType?.types.map((type) => type)
-    : mainType?.types.map((type) => type) ?? []
+    : (mainType?.types.map((type) => type) ?? [])
 
-  const typeOptions = types?.map((type) => ({
-    label: type.title,
-    value: type,
-  }))
+  // const typeOptions = types?.map((type) => ({
+  //   label: type.title,
+  //   value: type,
+  // }))
 
   const [updateState, setUpdateState] = useState({
     title: mainType?.title ?? '',
@@ -163,7 +157,7 @@ export const UpdateAdvertMainType = ({
         <Text variant="h5">Engin tegund í þessum yfirflokk</Text>
       ) : (
         <>
-          <Text variant="h5">{`Tegundir tengdar við ${
+          {/* <Text variant="h5">{`Tegundir tengdar við ${
             currentMainType?.title ?? mainType.title
           }`}</Text>
           <Inline space={[2, 2, 3]} flexWrap="wrap">
@@ -183,10 +177,10 @@ export const UpdateAdvertMainType = ({
                 </Box>
               </Tag>
             ))}
-          </Inline>
+          </Inline> */}
         </>
       )}
-      <Select
+      {/* <Select
         isClearable
         size="sm"
         backgroundColor="blue"
@@ -202,7 +196,7 @@ export const UpdateAdvertMainType = ({
             })
           }
         }}
-      />
+      /> */}
     </Stack>
   )
 }
