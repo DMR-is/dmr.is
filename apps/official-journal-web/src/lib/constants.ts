@@ -137,7 +137,11 @@ export const fetcher = async <TData, TBody = never>(
 
   if (!res.ok) {
     const err = await res.json()
-    throw new Error(err.message)
+    const error = new OJOIWebException(err.message)
+    error.status = res.status
+    error.name = err.name
+
+    throw error
   }
 
   return res.json()

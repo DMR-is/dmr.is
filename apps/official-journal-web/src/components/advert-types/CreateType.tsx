@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
 import {
-  AlertMessage,
   Button,
   Inline,
   Input,
@@ -24,13 +23,13 @@ export const CreateType = ({ refetch }: Props) => {
   })
 
   const { departments } = useDepartments()
-  const { createType, createTypeError, isCreatingType, mainTypes } =
+  const { createType, isCreatingType, mainTypes } =
     useAdvertTypes({
       mainTypesParams: {
         department: state.departmentId,
       },
       onCreateTypeSuccess: ({ type }) => {
-        toast.success(`Tegund ${type.title} stofnuð`)
+        toast.success(`Yfirheiti ${type.title} stofnað`)
         refetch && refetch()
         setState({
           mainTypeId: '',
@@ -54,13 +53,6 @@ export const CreateType = ({ refetch }: Props) => {
 
   return (
     <Stack space={[2, 2, 3]}>
-      {createTypeError && (
-        <AlertMessage
-          type={createTypeError.type}
-          title={createTypeError.name}
-          message={createTypeError.message}
-        />
-      )}
       <OJOISelect
         isClearable
         label="Veldu deild tegundar"
@@ -86,10 +78,10 @@ export const CreateType = ({ refetch }: Props) => {
       />
       <OJOISelect
         isClearable
-        label="Veldu yfirflokk tegundar"
+        label="Veldu tegund"
         options={mainTypeOptions}
         isDisabled={!state.departmentId}
-        placeholder="Veldu yfirflokk"
+        placeholder="Veldu tegund"
         value={
           mainTypeOptions?.find(
             (maintype) => state.mainTypeId === maintype.value.id,
@@ -108,7 +100,7 @@ export const CreateType = ({ refetch }: Props) => {
         backgroundColor="blue"
         placeholder='T.d. "Reglur"'
         disabled={!state.mainTypeId}
-        label="Heiti tegundar"
+        label="Yfirheiti"
         value={state.title}
         onChange={(e) =>
           setState({
@@ -127,7 +119,7 @@ export const CreateType = ({ refetch }: Props) => {
           icon="add"
           iconType="outline"
         >
-          Stofna tegund
+          Stofna yfirheiti
         </Button>
       </Inline>
     </Stack>

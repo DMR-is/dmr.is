@@ -68,7 +68,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
         name="create-main-type-department"
         label="Veldu deild"
         options={departmentOptions}
-        placeholder="Veldu deild yfirflokks"
+        placeholder="Veldu deild tegundar"
         value={departmentOptions?.find(
           (dep) => state?.department?.id === dep.value.id,
         )}
@@ -95,7 +95,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
         disabled={!state.department}
         backgroundColor="blue"
         name="create-main-type-title"
-        label="Heiti yfirflokks"
+        label="Heiti tegundar"
         placeholder='T.d. "Lög" eða "Reglugerðir"'
         value={state.title}
         onChange={(e) => {
@@ -118,7 +118,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
         size="sm"
         backgroundColor="blue"
         readOnly
-        label="Slóð yfirflokks"
+        label="Slóð tegundar"
         value={state.slug}
       />
       <Inline space={[2, 2, 3]} justifyContent="flexEnd">
@@ -138,7 +138,7 @@ export const CreateMainType = ({ onSuccess }: Props) => {
           variant="ghost"
           icon="add"
         >
-          Stofna yfirflokk
+          Stofna tegund
         </Button>
       </Inline>
     </Stack>

@@ -110,7 +110,7 @@ export const useMainTypes = ({
     {
       throwOnError: false,
       onSuccess: (data) => {
-        toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
+        toast.success(`Tegund ${data.mainType.title} stofnuð`)
         onCreateMainTypeSuccess && onCreateMainTypeSuccess(data)
       },
     },

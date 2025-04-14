@@ -162,7 +162,7 @@ export const useAdvertTypes = ({
     {
       throwOnError: false,
       onSuccess: (data) => {
-        toast.success(`Yfirflokkur ${data.mainType.title} stofnaður`)
+        toast.success(`Tegund ${data.mainType.title} stofnuð`)
         onCreateMainTypeSuccess && onCreateMainTypeSuccess(data)
       },
     },
@@ -188,6 +188,9 @@ export const useAdvertTypes = ({
       }),
     {
       throwOnError: false,
+      onError: (error) => {
+        toast.error(`Ekki tókst að stofna flokk ${error}`)
+      },
       onSuccess: (data) => {
         onCreateTypeSuccess && onCreateTypeSuccess(data)
       },

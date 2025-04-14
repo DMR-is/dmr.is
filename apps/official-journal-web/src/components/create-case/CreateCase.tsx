@@ -4,11 +4,7 @@ import { useState } from 'react'
 import { Button, Drawer, Stack, Text, toast } from '@island.is/island-ui/core'
 
 import { CreateCaseDto } from '../../gen/fetch'
-import {
-  useCase,
-  useDepartments,
-  useInstitutions,
-} from '../../hooks/api'
+import { useCase, useDepartments, useInstitutions } from '../../hooks/api'
 import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { Routes } from '../../lib/constants'
 import { OJOIInput } from '../select/OJOIInput'
@@ -77,7 +73,6 @@ export const CreateCase = () => {
     value: type.id,
   }))
 
-
   const typeOptions = mainTypes
     ?.find((mt) => mt.id === mainTypeId)
     ?.types?.map((type) => ({
@@ -143,9 +138,9 @@ export const CreateCase = () => {
         <OJOISelect
           required
           isDisabled={!createState.departmentId}
-          placeholder="Veldu yfirtegund auglýsingar"
+          placeholder="Veldu tegund auglýsingar"
           isValidating={isLoadingMainTypes}
-          label="Yfirtegund auglýsingar"
+          label="Tegund auglýsingar"
           width="half"
           options={mainTypeOptions}
           onChange={(opt) => setMainTypeId(opt ? opt.value : '')}
@@ -154,9 +149,9 @@ export const CreateCase = () => {
         <OJOISelect
           required
           isDisabled={!mainTypeId}
-          placeholder="Veldu tegund auglýsingar"
+          placeholder="Veldu yfirheiti auglýsingar"
           isValidating={isLoadingMainTypes}
-          label="Tegund auglýsingar"
+          label="Yfirheiti auglýsingar"
           width="half"
           options={typeOptions}
           onChange={(opt) => handleChange('typeId', opt ? opt.value : '')}
@@ -164,7 +159,6 @@ export const CreateCase = () => {
 
         <OJOIInput
           label="Heiti auglýsingar"
-          required
           rows={4}
           name="create-case-subject"
           textarea

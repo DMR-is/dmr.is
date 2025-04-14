@@ -49,19 +49,19 @@ export const UpdateAdvertMainType = ({
     },
     mainTypeId: mainType?.id,
     onUpdateMainTypeSuccess: ({ mainType }) => {
-      toast.success(`Yfirflokkur ${mainType.title} uppfærður`)
+      toast.success(`Tegund ${mainType.title} uppfærður`)
       refetchMainType()
       refetchTypes()
       refetch && refetch()
     },
     onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Tegund ${type.title} uppfærð`)
+      toast.success(`Yfirheiti ${type.title} uppfært`)
       refetchMainType()
       refetchTypes()
       refetch && refetch()
     },
     onDeleteMainTypeSuccess: () => {
-      toast.success(`Yfirflokkur ${mainType?.title} eytt`)
+      toast.success(`Tegund ${mainType?.title} eytt`)
       refetchMainType()
       refetchTypes()
       onDeleteSuccess && onDeleteSuccess()
@@ -86,8 +86,8 @@ export const UpdateAdvertMainType = ({
     return (
       <AlertMessage
         type="info"
-        title="Enginn yfirflokkur valinn"
-        message="Veldu yfirflokk til þess að uppfæra eða breyta"
+        title="Enginn tegund valinn"
+        message="Veldu tegund til þess að uppfæra eða breyta"
       />
     )
   }
@@ -117,7 +117,7 @@ export const UpdateAdvertMainType = ({
           })
         }
         size="sm"
-        label="Heiti yfirflokks"
+        label="Heiti tegundar"
         backgroundColor="blue"
       />
       <Input
@@ -127,7 +127,7 @@ export const UpdateAdvertMainType = ({
           lower: true,
         })}
         size="sm"
-        label="Slóð yfirflokks"
+        label="Slóð tegundar"
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
@@ -139,7 +139,7 @@ export const UpdateAdvertMainType = ({
           iconType="outline"
           onClick={() => deleteMainType({ id: mainType.id })}
         >
-          Eyða yfirflokk
+          Eyða tegund
         </Button>
         <Button
           size="small"
@@ -154,7 +154,7 @@ export const UpdateAdvertMainType = ({
         </Button>
       </Inline>
       {mainTypeTypes.length === 0 ? (
-        <Text variant="h5">Engin tegund í þessum yfirflokk</Text>
+        <Text variant="h5">Ekkert yfirheiti í þessari tegund</Text>
       ) : (
         <>
           {/* <Text variant="h5">{`Tegundir tengdar við ${

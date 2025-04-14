@@ -65,15 +65,24 @@ class TypesHandler extends RouteHandler {
 
   @LogMethod(false)
   private async create(req: NextApiRequest, res: NextApiResponse) {
-    const type = await this.client.createType({
-      createAdvertTypeBody: {
-        departmentId: req.body.departmentId,
-        mainTypeId: req.body.mainTypeId,
-        title: req.body.title,
-      },
-    })
+    try {
+      const type = await this.client.createType({
+        createAdvertTypeBody: {
+          departmentId: req.body.departmentId,
+          mainTypeId: req.body.mainTypeId,
+          title: req.body.title,
+        },
+      })
 
-    return res.status(201).json(type)
+      return res.status(201).json(type)
+    } catch (error) {
+      if (isResponse(error)) {
+        const parsed = await error.json()
+
+        return res.status(error.status).json(parsed)
+      }
+      return res.status(500).json(OJOIWebException.serverError())
+    }
   }
 }
 
