@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+import parseISO from 'date-fns/parseISO'
 import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
@@ -414,6 +415,16 @@ export const retryAsync = async <T>(
   }
 
   throw new Error('Retry attempts exceeded')
+}
+
+export const normalizeDate = (date: unknown): string => {
+  if (typeof date === 'string') return date
+  if (date instanceof Date) return date.toISOString()
+  return ''
+}
+
+export const formatAndNormalize = (date: string) => {
+  return format(parseISO(normalizeDate(date)), 'd. MMMM yyyy', { locale: is })
 }
 
 export const getTemplate = (
