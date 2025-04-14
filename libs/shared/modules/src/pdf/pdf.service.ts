@@ -1,6 +1,3 @@
-import format from 'date-fns/format'
-import is from 'date-fns/locale/is'
-import parseISO from 'date-fns/parseISO'
 import type { Page } from 'puppeteer'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
@@ -12,7 +9,12 @@ import {
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-import { applicationSignatureTemplate, retryAsync } from '@dmr.is/utils'
+import {
+  applicationSignatureTemplate,
+  formatAndNormalize,
+  normalizeDate,
+  retryAsync,
+} from '@dmr.is/utils'
 
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
@@ -220,20 +222,24 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       signature: activeCase.signature.html,
       subSignature:
         activeCase.publishedAt && activeCase.advertDepartment.title
-          ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${activeCase.publishedAt}</div>`
+          ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAndNormalize(activeCase.publishedAt)}</div>`
           : undefined,
     })
+
     const signatureRecords = activeCase.signature.records
-    const newest =
+    const signatureDate =
       signatureRecords
         .map((item) => item.signatureDate)
         .sort((a, b) => {
           return new Date(b).getTime() - new Date(a).getTime()
         })[0] ?? activeCase.signature.signatureDate
 
+    const newest =
+      normalizeDate(signatureDate) ?? activeCase.signature.signatureDate
+
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${format(parseISO(newest), 'd. MMMM yyyy', { locale: is })}</span>`
+        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${formatAndNormalize(newest)}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)
