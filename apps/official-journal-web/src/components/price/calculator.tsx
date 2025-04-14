@@ -322,6 +322,7 @@ export const PriceCalculator = () => {
                     variant="ghost"
                     size="small"
                     icon="arrowForward"
+                    disabled={!canEdit}
                     type="button"
                     onClick={async () => {
                       await dmrClient.postExternalPaymentByCaseId({
