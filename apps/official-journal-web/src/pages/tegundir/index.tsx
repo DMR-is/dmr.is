@@ -138,7 +138,7 @@ export default function AdvertTypesPage() {
               <ContentWrapper title="Búa til nýjan tegund">
                 <CreateMainType onSuccess={refetch} />
               </ContentWrapper>
-              <ContentWrapper title="Búa til nýja yfirheiti">
+              <ContentWrapper title="Búa til nýtt yfirheiti">
                 <CreateType refetch={refetch} />
               </ContentWrapper>
             </Stack>

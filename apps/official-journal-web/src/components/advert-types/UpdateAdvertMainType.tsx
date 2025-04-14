@@ -14,6 +14,7 @@ import {
 
 import { AdvertMainType } from '../../gen/fetch'
 import { useAdvertTypes } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 
 type Props = {
   mainType?: AdvertMainType | null
@@ -35,30 +36,18 @@ export const UpdateAdvertMainType = ({
   }, [mainType])
 
   const {
-    types,
-    refetchTypes,
-    updateType,
     updateMainType,
     deleteMainType,
     mainType: currentMainType,
     refetchMainType,
-    updateTypeError,
-    deleteTypeError,
-  } = useAdvertTypes({
-    typesParams: {
+  } = useMainTypes({
+    mainTypesParams: {
       department: mainType?.department.id,
       pageSize: 1000,
-      unassigned: true,
     },
     mainTypeId: mainType?.id,
     onUpdateMainTypeSuccess: ({ mainType }) => {
       toast.success(`Tegund ${mainType.title} uppfærður`)
-      refetchMainType()
-      refetchTypes()
-      refetch && refetch()
-    },
-    onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Yfirheiti ${type.title} uppfært`)
       refetchMainType()
       refetchTypes()
       refetch && refetch()
@@ -70,6 +59,27 @@ export const UpdateAdvertMainType = ({
       onDeleteSuccess && onDeleteSuccess()
       refetch && refetch()
     },
+  })
+
+  const {
+    types,
+    refetchTypes,
+    updateType,
+    updateTypeError,
+    deleteTypeError,
+  } = useAdvertTypes({
+    typesParams: {
+      department: mainType?.department.id,
+      pageSize: 1000,
+      unassigned: true,
+    },
+    onUpdateTypeSuccess: ({ type }) => {
+      toast.success(`Yfirheiti ${type.title} uppfært`)
+      refetchMainType()
+      refetchTypes()
+      refetch && refetch()
+    },
+
   })
 
   const mainTypeTypes = currentMainType

@@ -3,14 +3,7 @@ import useSWRMutation from 'swr/mutation'
 
 import { toast } from '@island.is/island-ui/core'
 
-import {
-  GetAdvertMainType,
-  GetAdvertMainTypes,
-  GetAdvertType,
-  GetAdvertTypes,
-  GetMainTypesRequest,
-  GetTypesRequest,
-} from '../../gen/fetch'
+import { GetAdvertType, GetAdvertTypes, GetTypesRequest } from '../../gen/fetch'
 import { APIRoutes, fetcher, OJOIWebException } from '../../lib/constants'
 import { generateParams } from '../../lib/utils'
 
@@ -39,35 +32,20 @@ type TypesParams = Partial<
   Record<keyof GetTypesRequest, string | number | boolean | undefined>
 >
 
-type MainTypeParams = Partial<
-  Record<keyof GetMainTypesRequest, string | number | undefined>
->
-
-type UpdateMainTypeParams = Omit<UpdateTypeParams, 'mainTypeId'>
 
 type UseAdvertTypesParams = {
   typesParams?: Partial<TypesParams>
-  mainTypesParams?: Partial<MainTypeParams>
   typeId?: string
-  mainTypeId?: string
   onCreateTypeSuccess?: (data: GetAdvertType) => void
-  onCreateMainTypeSuccess?: (data: GetAdvertMainType) => void
   onUpdateTypeSuccess?: (data: GetAdvertType) => void
-  onUpdateMainTypeSuccess?: (datA: GetAdvertMainType) => void
   onDeleteTypeSuccess?: () => void
-  onDeleteMainTypeSuccess?: () => void
 }
 
 export const useAdvertTypes = ({
   typesParams,
-  mainTypesParams,
   typeId,
-  mainTypeId,
-  onCreateMainTypeSuccess,
   onCreateTypeSuccess,
-  onUpdateMainTypeSuccess,
   onUpdateTypeSuccess,
-  onDeleteMainTypeSuccess,
   onDeleteTypeSuccess,
 }: UseAdvertTypesParams = {}) => {
   const {
@@ -79,25 +57,6 @@ export const useAdvertTypes = ({
   } = useSWR<GetAdvertTypes, OJOIWebException>(
     [APIRoutes.Types, typesParams],
     ([url, qsp]: [string, TypesParams]) => {
-      return fetcher(url, {
-        arg: { method: 'GET', query: generateParams(qsp) },
-      })
-    },
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-      refreshInterval: 0,
-    },
-  )
-
-  const {
-    data: mainTypesData,
-    isLoading: isLoadingMainTypes,
-    error: mainTypesError,
-    mutate: mutateMainTypes,
-  } = useSWR<GetAdvertMainTypes, OJOIWebException>(
-    [APIRoutes.MainTypes, mainTypesParams],
-    ([url, qsp]: [string, Record<string, string>]) => {
       return fetcher(url, {
         arg: { method: 'GET', query: generateParams(qsp) },
       })
@@ -122,49 +81,6 @@ export const useAdvertTypes = ({
       revalidateOnFocus: false,
       revalidateIfStale: false,
       refreshInterval: 0,
-    },
-  )
-
-  const {
-    data: mainTypeData,
-    isLoading: isLoadingMainType,
-    error: mainTypeError,
-    mutate: mutateMainType,
-  } = useSWR<GetAdvertMainType, OJOIWebException>(
-    mainTypeId ? [APIRoutes.MainType, mainTypeId] : null,
-    ([url, id]: [string, string]) =>
-      fetcher(url.replace(':id', id), { arg: { method: 'GET' } }),
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-      refreshInterval: 0,
-    },
-  )
-
-  const {
-    trigger: createMainTypeTrigger,
-    isMutating: isCreatingMainType,
-    error: createMainTypeError,
-  } = useSWRMutation<
-    GetAdvertMainType,
-    OJOIWebException,
-    Key,
-    CreateAdvertMainTypeParams
-  >(
-    APIRoutes.MainTypes,
-    async (url: string, { arg }: { arg: CreateAdvertMainTypeParams }) =>
-      fetcher<GetAdvertMainType, CreateAdvertMainTypeParams>(url, {
-        arg: {
-          body: arg,
-          method: 'POST',
-        },
-      }),
-    {
-      throwOnError: false,
-      onSuccess: (data) => {
-        toast.success(`Tegund ${data.mainType.title} stofnuð`)
-        onCreateMainTypeSuccess && onCreateMainTypeSuccess(data)
-      },
     },
   )
 
@@ -198,35 +114,6 @@ export const useAdvertTypes = ({
   )
 
   const {
-    trigger: updateMainTypeTrigger,
-    isMutating: isUpdatingMainType,
-    error: updateMainTypeError,
-  } = useSWRMutation<
-    GetAdvertMainType,
-    OJOIWebException,
-    Key,
-    UpdateMainTypeParams
-  >(
-    APIRoutes.MainType,
-    async (url: string, { arg }: { arg: UpdateMainTypeParams }) =>
-      fetcher<GetAdvertMainType, UpdateMainTypeParams>(
-        url.replace(':id', arg.id),
-        {
-          arg: {
-            method: 'PUT',
-            body: arg,
-          },
-        },
-      ),
-    {
-      throwOnError: false,
-      onSuccess: (data) => {
-        onUpdateMainTypeSuccess && onUpdateMainTypeSuccess(data)
-      },
-    },
-  )
-
-  const {
     trigger: updateTypeTrigger,
     isMutating: isUpdatingType,
     error: updateTypeError,
@@ -249,24 +136,6 @@ export const useAdvertTypes = ({
   )
 
   const {
-    trigger: deleteMainTypeTrigger,
-    isMutating: isDeletingMainType,
-    error: deleteMainTypeError,
-  } = useSWRMutation<Response, OJOIWebException, Key, AdvertTypeIdParam>(
-    APIRoutes.MainType,
-    (url: string, { arg }: { arg: { id: string } }) =>
-      fetcher<Response>(url.replace(':id', arg.id), {
-        arg: { method: 'DELETE' },
-      }),
-    {
-      throwOnError: false,
-      onSuccess: () => {
-        onDeleteMainTypeSuccess && onDeleteMainTypeSuccess()
-      },
-    },
-  )
-
-  const {
     trigger: deleteTypeTrigger,
     isMutating: isDeletingType,
     error: deleteTypeError,
@@ -284,24 +153,12 @@ export const useAdvertTypes = ({
     },
   )
 
-  const createMainType = (params: CreateAdvertMainTypeParams) => {
-    createMainTypeTrigger(params)
-  }
-
   const createType = (params: CreateAdvertTypeParams) => {
     createTypeTrigger(params)
   }
 
-  const updateMainType = (params: UpdateTypeParams) => {
-    updateMainTypeTrigger(params)
-  }
-
   const updateType = (params: UpdateTypeParams) => {
     updateTypeTrigger(params)
-  }
-
-  const deleteMainType = (params: AdvertTypeIdParam) => {
-    deleteMainTypeTrigger(params)
   }
 
   const deleteType = (params: AdvertTypeIdParam) => {
@@ -314,35 +171,18 @@ export const useAdvertTypes = ({
     typeError,
     isValidatingTypes,
     refetchType: mutateType,
-    mainType: mainTypeData?.mainType,
-    isLoadingMainType,
-    mainTypeError,
-    refetchMainType: mutateMainType,
     types: typesData?.types,
     isLoadingTypes,
     typesError,
     refetchTypes: mutateTypes,
-    mainTypes: mainTypesData?.mainTypes,
-    isLoadingMainTypes,
-    mainTypesError,
-    refetchMainTypes: mutateMainTypes,
-    isCreatingMainType,
     isCreatingType,
-    isUpdatingMainType,
     isUpdatingType,
-    isDeletingMainType,
     isDeletingType,
     createType,
-    createMainType,
     updateType,
-    updateMainType,
     deleteType,
-    deleteMainType,
-    createMainTypeError,
     createTypeError,
-    updateMainTypeError,
     updateTypeError,
-    deleteMainTypeError,
     deleteTypeError,
   }
 }

@@ -1,14 +1,9 @@
 import { useState } from 'react'
 
-import {
-  Button,
-  Inline,
-  Input,
-  Stack,
-  toast,
-} from '@island.is/island-ui/core'
+import { Button, Inline, Input, Stack, toast } from '@island.is/island-ui/core'
 
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
@@ -23,21 +18,24 @@ export const CreateType = ({ refetch }: Props) => {
   })
 
   const { departments } = useDepartments()
-  const { createType, isCreatingType, mainTypes } =
-    useAdvertTypes({
-      mainTypesParams: {
-        department: state.departmentId,
-      },
-      onCreateTypeSuccess: ({ type }) => {
-        toast.success(`Yfirheiti ${type.title} stofnað`)
-        refetch && refetch()
-        setState({
-          mainTypeId: '',
-          departmentId: '',
-          title: '',
-        })
-      },
-    })
+
+  const { mainTypes } = useMainTypes({
+    mainTypesParams: {
+      department: state.departmentId,
+    },
+  })
+
+  const { createType, isCreatingType } = useAdvertTypes({
+    onCreateTypeSuccess: ({ type }) => {
+      toast.success(`Yfirheiti ${type.title} stofnað`)
+      refetch && refetch()
+      setState({
+        mainTypeId: '',
+        departmentId: '',
+        title: '',
+      })
+    },
+  })
 
   const departmentOptions = departments?.map((dep) => ({
     label: dep.title,
@@ -49,11 +47,12 @@ export const CreateType = ({ refetch }: Props) => {
     value: main,
   }))
 
-  const isDisabled = !state.departmentId || !state.title
+  const isDisabled = !state.departmentId || !state.title || !state.mainTypeId
 
   return (
     <Stack space={[2, 2, 3]}>
       <OJOISelect
+        key={state.departmentId}
         isClearable
         label="Veldu deild tegundar"
         options={departmentOptions}
