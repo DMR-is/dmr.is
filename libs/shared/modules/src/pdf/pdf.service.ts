@@ -11,8 +11,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   applicationSignatureTemplate,
-  formatAndNormalize,
-  normalizeDate,
+  formatAnyDate,
   retryAsync,
 } from '@dmr.is/utils'
 
@@ -222,7 +221,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       signature: activeCase.signature.html,
       subSignature:
         activeCase.publishedAt && activeCase.advertDepartment.title
-          ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAndNormalize(activeCase.publishedAt)}</div>`
+          ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAnyDate(activeCase.publishedAt)}</div>`
           : undefined,
     })
 
@@ -234,12 +233,11 @@ export class PdfService implements OnModuleDestroy, IPdfService {
           return new Date(b).getTime() - new Date(a).getTime()
         })[0] ?? activeCase.signature.signatureDate
 
-    const newest =
-      normalizeDate(signatureDate) ?? activeCase.signature.signatureDate
+    const newest = signatureDate ?? activeCase.signature.signatureDate
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${formatAndNormalize(newest)}</span>`
+        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${formatAnyDate(newest)}</span>`
         : undefined
 
     const pdfResults = await this.generatePdfFromHtml(markup, header)
