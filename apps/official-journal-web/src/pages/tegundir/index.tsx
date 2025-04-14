@@ -17,7 +17,8 @@ import { ContentWrapper } from '../../components/content-wrapper/ContentWrapper'
 import { Section } from '../../components/section/Section'
 import { OJOISelect } from '../../components/select/OJOISelect'
 import { AdvertMainType, AdvertType, Department } from '../../gen/fetch'
-import { useAdvertTypes, useDepartments } from '../../hooks/api'
+import { useDepartments } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { LayoutProps } from '../../layout/Layout'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
@@ -40,19 +41,7 @@ export default function AdvertTypesPage() {
     },
   })
 
-  const {
-    types,
-    isLoadingTypes,
-    mainTypes,
-    isLoadingMainTypes,
-    refetchMainTypes,
-    refetchTypes,
-  } = useAdvertTypes({
-    typesParams: {
-      department: selectedDepartment?.id,
-      mainType: selectedMainType?.id,
-      pageSize: 1000,
-    },
+  const { refetchMainTypes, mainTypes, isLoadingMainTypes } = useMainTypes({
     mainTypesParams: {
       department: selectedDepartment?.id,
       pageSize: 1000,
@@ -61,7 +50,6 @@ export default function AdvertTypesPage() {
 
   const refetch = () => {
     refetchMainTypes()
-    refetchTypes()
   }
 
   const departmentOptions =
@@ -77,18 +65,18 @@ export default function AdvertTypesPage() {
     })) ?? []
 
   const typeOptions =
-    types?.map((type) => ({
+    selectedMainType?.types?.map((type) => ({
       label: type.title,
       value: type,
     })) ?? []
 
   const noOptMainType = selectedDepartment
-    ? `Engin yfirflokkur til fyrir ${selectedDepartment.title}`
-    : `Engin yfirflokkur til`
-
-  const noOptType = selectedDepartment
     ? `Engin tegund til fyrir ${selectedDepartment.title}`
     : `Engin tegund til`
+
+  const noOptType = selectedDepartment
+    ? `Ekkert yfirheiti til fyrir ${selectedMainType?.title}`
+    : `Ekkert yfirheiti til`
 
   return (
     <Section>
@@ -119,10 +107,11 @@ export default function AdvertTypesPage() {
                     key={selectedMainType?.id}
                     isLoading={isLoadingMainTypes}
                     noOptionsMessage={noOptMainType}
+                    isDisabled={!selectedDepartment}
                     isClearable
-                    label="Yfirflokkur"
+                    label="Tegund"
                     options={mainTypeOptions}
-                    placeholder="Veldu yfirflokk"
+                    placeholder="Veldu tegund"
                     value={mainTypeOptions?.find(
                       (mainType) => selectedMainType?.id === mainType.value.id,
                     )}
@@ -132,12 +121,13 @@ export default function AdvertTypesPage() {
                   />
                   <OJOISelect
                     key={selectedType?.id}
-                    isLoading={isLoadingTypes}
+                    isLoading={isLoadingMainTypes}
                     noOptionsMessage={noOptType}
+                    isDisabled={!selectedMainType}
                     isClearable
-                    label="Tegund"
+                    label="Yfirheiti"
                     options={typeOptions}
-                    placeholder="Veldu tegund"
+                    placeholder="Veldu yfirheiti"
                     value={typeOptions?.find(
                       (type) => selectedType?.id === type.value.id,
                     )}
@@ -145,17 +135,17 @@ export default function AdvertTypesPage() {
                   />
                 </Stack>
               </ContentWrapper>
-              <ContentWrapper title="Búa til nýjan yfirflokk">
+              <ContentWrapper title="Búa til nýja tegund">
                 <CreateMainType onSuccess={refetch} />
               </ContentWrapper>
-              <ContentWrapper title="Búa til nýja tegund">
+              <ContentWrapper title="Búa til nýtt yfirheiti">
                 <CreateType refetch={refetch} />
               </ContentWrapper>
             </Stack>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '6/12']}>
             <Stack space={[2, 2, 3]}>
-              <ContentWrapper title="Breyta yfirflokk">
+              <ContentWrapper title="Breyta tegund">
                 <Stack space={[2, 2, 3]}>
                   <UpdateAdvertMainType
                     refetch={refetch}
@@ -164,7 +154,7 @@ export default function AdvertTypesPage() {
                   />
                 </Stack>
               </ContentWrapper>
-              <ContentWrapper title="Breyta tegund">
+              <ContentWrapper title="Breyta yfirheiti">
                 <UpdateAdvertType
                   type={selectedType}
                   refetch={refetch}

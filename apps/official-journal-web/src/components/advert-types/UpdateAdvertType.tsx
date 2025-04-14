@@ -56,8 +56,8 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
     return (
       <AlertMessage
         type="info"
-        title="Engin tegund valin"
-        message="Veldu tegund til að uppfæra hana"
+        title="Ekkert yfirheiti valið"
+        message="Veldu yfirheiti til að uppfæra"
       />
     )
   }
@@ -82,7 +82,7 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
         name="update-type-title"
         size="sm"
         backgroundColor="blue"
-        label="Heiti tegundar"
+        label="Heiti"
         value={state.title}
         onChange={(e) => setState({ title: e.target.value })}
       />
@@ -90,9 +90,9 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
         name="update-type-slug"
         size="sm"
         backgroundColor="blue"
-        label="Slóð tegundar"
+        label="Slóð yfirheitis"
         readOnly
-        value={slugify(`${type.department.slug}-${type.title}`, {
+        value={slugify(`${type.slug}`, {
           lower: true,
         })}
         onChange={(e) => setState({ title: e.target.value })}
@@ -107,7 +107,7 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
           iconType="outline"
           onClick={() => deleteType({ id: type.id })}
         >
-          Eyða tegund
+          Eyða yfirheiti
         </Button>
         <Button
           loading={isUpdatingType}
