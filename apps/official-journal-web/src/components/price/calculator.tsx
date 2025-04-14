@@ -1,7 +1,9 @@
+import { useSession } from 'next-auth/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import {
   Box,
+  Button,
   Checkbox,
   Inline,
   Stack,
@@ -12,18 +14,28 @@ import {
 
 import { useGetPaymentStatus, useUpdatePrice } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { getDmrClient } from '../../lib/api/createClient'
 import { amountFormat, imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './Calculator.css'
 import { usePriceCalculatorState } from './calculatorContext'
+import { PriceCalculatorStatusBox } from './StatusBox'
 
 export const PriceCalculator = () => {
-  const { currentCase, refetch, canEdit, feeCodeOptions } = useCaseContext()
+  const {
+    currentCase,
+    refetch,
+    canEdit,
+    feeCodeOptions,
+    isPublishedOrRejected,
+  } = useCaseContext()
   const { md } = useBreakpoint()
+  const { data: session } = useSession()
   const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id })
   const { state, dispatch } = usePriceCalculatorState(currentCase)
   const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
+  const dmrClient = getDmrClient(session?.idToken as string)
 
   const { trigger: updatePrice, isMutating: isPriceLoading } = useUpdatePrice({
     caseId: currentCase.id,
@@ -71,6 +83,21 @@ export const PriceCalculator = () => {
       )?.value,
     [feeCodeOptions, currentCase.advertDepartment.slug],
   )
+
+  useEffect(() => {
+    if (!currentCase.transaction?.price) {
+      updatePrice({
+        imageTier: state.selectedItem?.value,
+        customBaseDocumentCount: state.customBaseDocumentCount,
+        customBodyLengthCount: state.useCustomInputBase
+          ? state.customBodyLengthCount
+          : 0,
+        customAdditionalDocCount: state.additionalDocuments,
+        extraWorkCount: state.extraWorkCount,
+        subject: state.subject ?? undefined,
+      })
+    }
+  }, [])
 
   useEffect(() => {
     updateAllPrices()
@@ -145,6 +172,7 @@ export const PriceCalculator = () => {
                   placeholder="0"
                   type="number"
                   value={state.additionalDocuments || ''}
+                  disabled={!canEdit}
                   onChange={(e) =>
                     dispatch({
                       type: 'SET_ADDITIONAL_DOCUMENTS',
@@ -174,6 +202,7 @@ export const PriceCalculator = () => {
                   label="Álag"
                   placeholder="0"
                   type="number"
+                  disabled={!canEdit}
                   value={state.extraWorkCount || ''}
                   onChange={(e) =>
                     dispatch({
@@ -244,6 +273,7 @@ export const PriceCalculator = () => {
               })
             }
             onBlur={updateAllPrices}
+            disabled={!canEdit}
           />
           <Text variant="small" color="blue600">
             Tilvísun á reikningi
@@ -263,20 +293,57 @@ export const PriceCalculator = () => {
             onBlur={updateAllPrices}
           />
         </Box>
-        <Inline alignY="center" space={1}>
-          <Checkbox
-            checked={paymentData?.paid}
-            disabled
-            label="Búið er að greiða"
-          />
-        </Inline>
+        {isPublishedOrRejected ? (
+          <Inline alignY="center" space={1}>
+            <PriceCalculatorStatusBox
+              text={
+                paymentData?.paid ? 'Búið er að greiða' : 'Ekki búið að greiða'
+              }
+              success={!!paymentData?.paid}
+            />
+          </Inline>
+        ) : undefined}
       </Inline>
       <Box marginTop={2}>
-        <Text>
-          {paymentData?.created
-            ? 'Auglýsing hefur verið send til TBR'
-            : 'Auglýsing verður send til TBR við staðfestingu á útgáfu.'}
-        </Text>
+        {isPublishedOrRejected ? (
+          <Box>
+            {paymentData?.created ? (
+              <PriceCalculatorStatusBox
+                text="Auglýsing hefur verið send til TBR"
+                success
+              />
+            ) : (
+              <>
+                <Inline alignY="center" space={[2, 4]}>
+                  <Box style={{ minWidth: md ? '308px' : '254px' }}>
+                    <Text>Auglýsing hefur ekki verið send til TBR.</Text>
+                  </Box>
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    icon="arrowForward"
+                    disabled={!canEdit}
+                    type="button"
+                    onClick={async () => {
+                      await dmrClient.postExternalPaymentByCaseId({
+                        caseId: currentCase.id,
+                      })
+                    }}
+                  >
+                    Senda til TBR
+                  </Button>
+                </Inline>
+              </>
+            )}
+          </Box>
+        ) : paymentData?.created ? (
+          <PriceCalculatorStatusBox
+            text="Auglýsing hefur verið send til TBR"
+            success
+          />
+        ) : (
+          <Text>Auglýsing verður send til TBR við staðfestingu á útgáfu.</Text>
+        )}
       </Box>
     </>
   )

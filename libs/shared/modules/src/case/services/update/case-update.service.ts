@@ -1,9 +1,10 @@
-import { Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AdditionType,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UpdateAdvertHtmlBody,
@@ -32,7 +33,13 @@ import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
-import { CaseCategoriesModel, CaseModel, CaseStatusModel } from '../../models'
+import {
+  CaseAdditionModel,
+  CaseAdditionsModel,
+  CaseCategoriesModel,
+  CaseModel,
+  CaseStatusModel,
+} from '../../models'
 import { ICaseUpdateService } from './case-update.service.interface'
 
 const LOGGING_CATEGORY = 'case-update-service'
@@ -49,6 +56,10 @@ export class CaseUpdateService implements ICaseUpdateService {
     private readonly commentService: ICommentServiceV2,
 
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(CaseAdditionModel)
+    private readonly caseAdditionModel: typeof CaseAdditionModel,
+    @InjectModel(CaseAdditionsModel)
+    private readonly caseAdditionsModel: typeof CaseAdditionsModel,
 
     @InjectModel(CaseCategoriesModel)
     private readonly caseCategoriesModel: typeof CaseCategoriesModel,
@@ -772,6 +783,175 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  async updateCaseAddition(
+    additionId: string,
+    caseId: string,
+    title?: string,
+    content?: string,
+    newOrder?: number,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    try {
+      const updateFields: Partial<{
+        title: string
+        content: string
+        type: AdditionType
+      }> = {}
+
+      if (title != null) updateFields.title = title
+      if (content != null) updateFields.content = content
+
+      const hasContentUpdates = Object.keys(updateFields).length > 0
+
+      if (hasContentUpdates) {
+        updateFields.type = AdditionType.Html
+
+        await this.caseAdditionModel.update(updateFields, {
+          where: { id: additionId },
+          transaction,
+        })
+      }
+
+      if (newOrder !== undefined && caseId) {
+        const targetRow = await this.caseAdditionsModel.findOne({
+          where: {
+            additionId,
+            caseId: caseId,
+          },
+          transaction,
+        })
+
+        if (!targetRow) {
+          return ResultWrapper.err({
+            code: 404,
+            message: 'Addition not found in this case',
+          })
+        }
+
+        const currentOrder = targetRow.order ?? 0
+
+        if (newOrder < currentOrder) {
+          await this.caseAdditionsModel.increment('order', {
+            by: 1,
+            where: {
+              caseId: caseId,
+              order: {
+                [Op.gte]: newOrder,
+                [Op.lt]: currentOrder,
+              },
+            },
+            transaction,
+          })
+        } else if (newOrder > currentOrder) {
+          await this.caseAdditionsModel.decrement('order', {
+            by: 1,
+            where: {
+              caseId: caseId,
+              order: {
+                [Op.gt]: currentOrder,
+                [Op.lte]: newOrder,
+              },
+            },
+            transaction,
+          })
+        }
+
+        await this.caseAdditionsModel.update(
+          { order: newOrder },
+          {
+            where: {
+              caseId: caseId,
+              additionId,
+            },
+            transaction,
+          },
+        )
+      }
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(`Failed to update addition for <${additionId}>`, {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update addition',
+      })
+    }
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteCaseAddition(
+    additionId: string,
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    try {
+      const targetRow = await this.caseAdditionsModel.findOne({
+        where: {
+          additionId,
+          caseId,
+        },
+        transaction,
+      })
+
+      if (!targetRow) {
+        return ResultWrapper.err({
+          code: 404,
+          message: 'Addition not found in this case',
+        })
+      }
+
+      const removedOrder = targetRow.order ?? 0
+
+      await this.caseAdditionsModel.destroy({
+        where: {
+          additionId,
+          caseId,
+        },
+        transaction,
+      })
+
+      await this.caseAdditionsModel.decrement('order', {
+        by: 1,
+        where: {
+          caseId,
+          order: {
+            [Op.gt]: removedOrder,
+          },
+        },
+        transaction,
+      })
+
+      await this.caseAdditionModel.destroy({
+        where: {
+          id: additionId,
+        },
+        transaction,
+      })
+
+      return ResultWrapper.ok()
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete addition <${additionId}> from case <${caseId}>`,
+        {
+          category: LOGGING_CATEGORY,
+          error,
+        },
+      )
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to delete addition',
+      })
+    }
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async updateAdvert(
     caseId: string,
     body: UpdateAdvertHtmlBody,
@@ -799,7 +979,7 @@ export class CaseUpdateService implements ICaseUpdateService {
             {
               answers: {
                 advert: {
-                  html: btoa(body.advertHtml),
+                  html: Buffer.from(body.advertHtml).toString('base64'),
                 },
               },
             },

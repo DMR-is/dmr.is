@@ -14331,6 +14331,7 @@ __metadata:
     fastify-plugin: "npm:~4.5.0"
     file-type: "npm:^16.5.3"
     framer-motion: "npm:^11.0.26"
+    fridagar: "npm:^4.2.2"
     hypher: "npm:^0.2.5"
     jest: "npm:^29.4.1"
     jest-environment-jsdom: "npm:^29.4.1"
@@ -16670,6 +16671,13 @@ __metadata:
   version: 0.5.2
   resolution: "fresh@npm:0.5.2"
   checksum: c6d27f3ed86cc5b601404822f31c900dd165ba63fff8152a3ef714e2012e7535027063bc67ded4cb5b3a49fa596495d46cacd9f47d6328459cf570f08b7d9e5a
+  languageName: node
+  linkType: hard
+
+"fridagar@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "fridagar@npm:4.2.2"
+  checksum: cbcdddfa70cdcb1f34207a6799404cc51c682aaa8700dc50c1b1c54f49aa1d2c7a83d1f731342324020685dc0c2637c0bbc76d78b593c638541b5d3302aea5bb
   languageName: node
   linkType: hard
 

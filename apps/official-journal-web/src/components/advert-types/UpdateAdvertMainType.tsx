@@ -3,20 +3,18 @@ import slugify from 'slugify'
 
 import {
   AlertMessage,
-  Box,
   Button,
-  Icon,
   Inline,
   Input,
   Select,
   Stack,
-  Tag,
   Text,
   toast,
 } from '@island.is/island-ui/core'
 
 import { AdvertMainType } from '../../gen/fetch'
 import { useAdvertTypes } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 
 type Props = {
   mainType?: AdvertMainType | null
@@ -38,13 +36,35 @@ export const UpdateAdvertMainType = ({
   }, [mainType])
 
   const {
-    types,
-    refetchTypes,
-    updateType,
     updateMainType,
     deleteMainType,
     mainType: currentMainType,
     refetchMainType,
+  } = useMainTypes({
+    mainTypesParams: {
+      department: mainType?.department.id,
+      pageSize: 1000,
+    },
+    mainTypeId: mainType?.id,
+    onUpdateMainTypeSuccess: ({ mainType }) => {
+      toast.success(`Tegund ${mainType.title} uppfærður`)
+      refetchMainType()
+      refetchTypes()
+      refetch && refetch()
+    },
+    onDeleteMainTypeSuccess: () => {
+      toast.success(`Tegund ${mainType?.title} eytt`)
+      refetchMainType()
+      refetchTypes()
+      onDeleteSuccess && onDeleteSuccess()
+      refetch && refetch()
+    },
+  })
+
+  const {
+    types,
+    refetchTypes,
+    updateType,
     updateTypeError,
     deleteTypeError,
   } = useAdvertTypes({
@@ -53,31 +73,18 @@ export const UpdateAdvertMainType = ({
       pageSize: 1000,
       unassigned: true,
     },
-    mainTypeId: mainType?.id,
-    onUpdateMainTypeSuccess: ({ mainType }) => {
-      toast.success(`Yfirflokkur ${mainType.title} uppfærður`)
-      refetchMainType()
-      refetchTypes()
-      refetch && refetch()
-    },
     onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Tegund ${type.title} uppfærð`)
+      toast.success(`Yfirheiti ${type.title} uppfært`)
       refetchMainType()
       refetchTypes()
       refetch && refetch()
     },
-    onDeleteMainTypeSuccess: () => {
-      toast.success(`Yfirflokkur ${mainType?.title} eytt`)
-      refetchMainType()
-      refetchTypes()
-      onDeleteSuccess && onDeleteSuccess()
-      refetch && refetch()
-    },
+
   })
 
   const mainTypeTypes = currentMainType
     ? currentMainType?.types.map((type) => type)
-    : mainType?.types.map((type) => type) ?? []
+    : (mainType?.types.map((type) => type) ?? [])
 
   const typeOptions = types?.map((type) => ({
     label: type.title,
@@ -92,8 +99,8 @@ export const UpdateAdvertMainType = ({
     return (
       <AlertMessage
         type="info"
-        title="Enginn yfirflokkur valinn"
-        message="Veldu yfirflokk til þess að uppfæra eða breyta"
+        title="Enginn tegund valinn"
+        message="Veldu tegund til þess að uppfæra eða breyta"
       />
     )
   }
@@ -123,7 +130,7 @@ export const UpdateAdvertMainType = ({
           })
         }
         size="sm"
-        label="Heiti yfirflokks"
+        label="Heiti tegundar"
         backgroundColor="blue"
       />
       <Input
@@ -133,7 +140,7 @@ export const UpdateAdvertMainType = ({
           lower: true,
         })}
         size="sm"
-        label="Slóð yfirflokks"
+        label="Slóð tegundar"
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
@@ -145,7 +152,7 @@ export const UpdateAdvertMainType = ({
           iconType="outline"
           onClick={() => deleteMainType({ id: mainType.id })}
         >
-          Eyða yfirflokk
+          Eyða tegund
         </Button>
         <Button
           size="small"
@@ -160,10 +167,10 @@ export const UpdateAdvertMainType = ({
         </Button>
       </Inline>
       {mainTypeTypes.length === 0 ? (
-        <Text variant="h5">Engin tegund í þessum yfirflokk</Text>
+        <Text variant="h5">Ekkert yfirheiti í þessari tegund</Text>
       ) : (
         <>
-          <Text variant="h5">{`Tegundir tengdar við ${
+          {/* <Text variant="h5">{`Tegundir tengdar við ${
             currentMainType?.title ?? mainType.title
           }`}</Text>
           <Inline space={[2, 2, 3]} flexWrap="wrap">
@@ -183,7 +190,7 @@ export const UpdateAdvertMainType = ({
                 </Box>
               </Tag>
             ))}
-          </Inline>
+          </Inline> */}
         </>
       )}
       <Select

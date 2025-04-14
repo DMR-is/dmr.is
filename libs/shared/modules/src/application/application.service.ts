@@ -295,10 +295,21 @@ export class ApplicationService implements IApplicationService {
             requestedPublicationDate: application.answers.advert.requestedDate,
             message: application.answers.advert.message,
             categoryIds: application.answers.advert.categories.map((c) => c.id),
+            advertHtml: application.answers.advert.html,
           },
           transaction,
         ),
       )
+
+      // ResultWrapper.unwrap(
+      //   await this.caseService.updateAdvertByHtml(
+      //     caseLookup.id,
+      //     {
+      //       advertHtml: application.answers.advert.html,
+      //     },
+      //     transaction,
+      //   ),
+      // )
 
       const commStatus = ResultWrapper.unwrap(
         await this.utilityService.caseCommunicationStatusLookup(

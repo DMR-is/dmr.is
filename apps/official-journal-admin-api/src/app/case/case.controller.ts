@@ -24,6 +24,7 @@ import {
   CaseChannel,
   CaseCommunicationStatus,
   CaseStatusEnum,
+  CreateAdvertAppendixBody,
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
@@ -31,6 +32,7 @@ import {
   CreateMainCategory,
   CreateMainCategoryCategories,
   DefaultSearchParams,
+  DeleteAdvertAppendixBody,
   DepartmentEnum,
   ExternalCommentBodyDto,
   GetAdvertResponse,
@@ -64,6 +66,7 @@ import {
   S3UploadFileResponse,
   S3UploadFilesResponse,
   TransactionFeeCodesResponse,
+  UpdateAdvertAppendixBody,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
@@ -201,6 +204,17 @@ export class CaseController {
   @ApiResponse({ status: 200, type: TransactionFeeCodesResponse })
   async feeCodes(): Promise<TransactionFeeCodesResponse> {
     return ResultWrapper.unwrap(await this.priceService.getAllFeeCodes())
+  }
+
+  @Post(':caseId/external-payment')
+  @ApiOperation({ operationId: 'postExternalPaymentByCaseId' })
+  @ApiNoContentResponse()
+  async postExternalPaymentByCaseId(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.priceService.postExternalPaymentByCaseId(caseId),
+    )
   }
 
   @Get('categories')
@@ -684,6 +698,52 @@ export class CaseController {
   ): Promise<S3UploadFileResponse> {
     return ResultWrapper.unwrap(
       await this.journalService.uploadAdvertPDF(advertId, file),
+    )
+  }
+
+  @Post(':id/html/appendix')
+  @ApiOperation({ operationId: 'createAdvertAppendix' })
+  @ApiNoContentResponse()
+  async createAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateAdvertAppendixBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.createCaseAddition(
+        caseId,
+        body.title,
+        body.content,
+      ),
+    )
+  }
+
+  @Put(':id/html/appendix')
+  @ApiOperation({ operationId: 'updateAdvertAppendix' })
+  @ApiNoContentResponse()
+  async updateAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateAdvertAppendixBody,
+  ) {
+    return ResultWrapper.unwrap(
+      await this.caseService.updateCaseAddition(
+        body.additionId,
+        id,
+        body.title,
+        body.content,
+        body.order,
+      ),
+    )
+  }
+
+  @Delete(':id/html/appendix')
+  @ApiOperation({ operationId: 'deleteAdvertAppendix' })
+  @ApiNoContentResponse()
+  async deleteAdvertAppendix(
+    @Param('id', new UUIDValidationPipe()) caseId: string,
+    @Body() body: DeleteAdvertAppendixBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteCaseAddition(body.additionId, caseId),
     )
   }
 

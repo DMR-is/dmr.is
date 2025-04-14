@@ -416,6 +416,27 @@ export const retryAsync = async <T>(
   throw new Error('Retry attempts exceeded')
 }
 
+export const formatAnyDate = (date: unknown): string => {
+  let parsedDate: Date | null = null
+
+  if (date instanceof Date) {
+    parsedDate = date
+  } else if (typeof date === 'string') {
+    // Handle ISO strings or date-like strings
+    const d = new Date(date)
+    parsedDate = isNaN(d.getTime()) ? null : d
+  } else if (typeof date === 'number') {
+    // Assume it's a timestamp
+    parsedDate = new Date(date)
+  }
+
+  if (!parsedDate || isNaN(parsedDate.getTime())) {
+    return '' // or 'Invalid date' or a fallback message
+  }
+
+  return format(parsedDate, 'd. MMMM yyyy', { locale: is })
+}
+
 export const getTemplate = (
   type: AdvertTemplateTypeEnums,
 ): GetAdvertTemplateResponse => {

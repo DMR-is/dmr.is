@@ -154,7 +154,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       })
       return ResultWrapper.err({
         code: 404,
-        message: `Tegund fannst ekki`,
+        message: `Yfirheiti fannst ekki`,
       })
     }
 
@@ -182,7 +182,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       })
       return ResultWrapper.err({
         code: 404,
-        message: `Yfirflokkur fannst ekki`,
+        message: `Tegund fannst ekki`,
       })
     }
 
@@ -208,7 +208,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
         return ResultWrapper.err({
           code: 404,
-          message: `Deild yfirflokks fannst ekki`,
+          message: `Deild tegundar fannst ekki`,
         })
       }
 
@@ -230,7 +230,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       if (!mapped.result.ok) {
         return ResultWrapper.err({
           code: 500,
-          message: 'Ekki tóskt að búa til yfirflokk',
+          message: 'Ekki tóskt að búa til tegund',
         })
       }
 
@@ -244,7 +244,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 400,
-          message: 'Yfirflokkur með þessu heiti er þegar til',
+          message: 'Tegund með þessu heiti er þegar til',
         })
       }
 
@@ -255,7 +255,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að búa til yfirflokk',
+        message: 'Ekki tókst að búa til tegund',
       })
     }
   }
@@ -272,6 +272,8 @@ export class AdvertTypeService implements IAdvertTypeService {
         body.departmentId,
       )
 
+      const mainType = await this.advertMainTypeModel.findByPk(body.mainTypeId)
+
       if (!department) {
         this.logger.warn(`Advert department not found`, {
           category: LOGGING_CATEGORY,
@@ -283,7 +285,19 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-      const slug = slugify(`${department.slug}-${body.title}`, { lower: true })
+
+      if (!mainType) {
+        this.logger.warn(`Advert main type not found`, {
+          category: LOGGING_CATEGORY,
+        })
+
+        return ResultWrapper.err({
+          code: 400,
+          message: `Tegund með einkenni ${body.mainTypeId} er ekki til`,
+        })
+      }
+
+      const slug = slugify(`${mainType.slug}-${body.title}`, { lower: true })
 
       const createBody = {
         id: id,
@@ -315,7 +329,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Ekki tókst að búa til tegund`,
+          message: `Ekki tókst að búa til yfirheiti`,
         })
       }
 
@@ -333,7 +347,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 400,
-          message: 'Tegund með þessu heiti er þegar til',
+          message: 'Yfirheiti með þessu heiti er þegar til',
         })
       }
 
@@ -344,7 +358,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að búa til tegund',
+        message: 'Ekki tókst að búa til yfirheiti',
       })
     }
   }
@@ -375,7 +389,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Yfirflokkur fannst ekki`,
+          message: `Tegund fannst ekki`,
         })
       }
 
@@ -399,7 +413,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       if (!mapped.result.ok) {
         return ResultWrapper.err({
           code: 500,
-          message: 'Ekki tókst að uppfæra yfirflokk',
+          message: 'Ekki tókst að uppfæra tegund',
         })
       }
 
@@ -408,7 +422,7 @@ export class AdvertTypeService implements IAdvertTypeService {
       if (error instanceof ValidationError) {
         return ResultWrapper.err({
           code: 400,
-          message: 'Yfirflokkur með þessu heiti er þegar til',
+          message: 'Tegund með þessu heiti er þegar til',
         })
       }
 
@@ -420,7 +434,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að uppfæra yfirflokk',
+        message: 'Ekki tókst að uppfæra tegund',
       })
     }
   }
@@ -433,7 +447,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const transaction = await this.sequelize.transaction()
     try {
       const type = await this.advertTypeModel.findByPk(id, {
-        include: [AdvertDepartmentModel],
+        include: [AdvertDepartmentModel, AdvertMainTypeModel],
         transaction,
       })
 
@@ -444,13 +458,14 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Tegund fannst ekki`,
+          message: `Yfirheiti fannst ekki`,
         })
       }
 
+      const mainTypeSlug = type.mainType?.slug
       const departmentSlug = type.department.slug
       const slug = body.title
-        ? slugify(`${departmentSlug}-${body.title}`, { lower: true })
+        ? slugify(`${mainTypeSlug ?? departmentSlug}-${body.title}`, { lower: true })
         : type.slug
 
       const updateBody = {}
@@ -461,10 +476,6 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       if (body.mainTypeId) {
         Object.assign(updateBody, { mainTypeId: body.mainTypeId })
-      }
-
-      if (body.mainTypeId === null) {
-        Object.assign(updateBody, { mainTypeId: null })
       }
 
       if (slug !== type.slug) {
@@ -489,7 +500,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 400,
-          message: 'Tegund með þessu heiti er þegar til',
+          message: 'Yfirheiti með þessu heiti er þegar til',
         })
       }
 
@@ -500,7 +511,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að uppfæra tegund',
+        message: 'Ekki tókst að uppfæra yfirheiti',
       })
     }
   }
@@ -518,7 +529,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Yfirflokkur fannst ekki`,
+          message: `Tegund fannst ekki`,
         })
       }
 
@@ -547,7 +558,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 400,
-          message: 'Yfirflokkur er í notkun',
+          message: 'Tegund er í notkun',
         })
       }
 
@@ -558,7 +569,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að eyða yfirflokk',
+        message: 'Ekki tókst að eyða tegund',
       })
     }
   }
@@ -576,7 +587,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 404,
-          message: `Tegund fannst ekki`,
+          message: `Yfirheiti fannst ekki`,
         })
       }
 
@@ -594,7 +605,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
         return ResultWrapper.err({
           code: 400,
-          message: 'Tegund er í notkun',
+          message: 'Yfirheiti er í notkun',
         })
       }
 
@@ -605,7 +616,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
       return ResultWrapper.err({
         code: 500,
-        message: 'Ekki tókst að eyða tegund',
+        message: 'Ekki tókst að eyða yfirheiti',
       })
     }
   }

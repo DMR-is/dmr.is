@@ -655,10 +655,19 @@ export class CaseCreateService implements ICaseCreateService {
         },
       )
 
+      const highestOrder: number | null = await this.caseAdditionsModel.max(
+        'order',
+        {
+          where: { caseId },
+          transaction,
+        },
+      )
+
       await this.caseAdditionsModel.create(
         {
           caseId,
           additionId,
+          order: highestOrder === null ? 0 : highestOrder + 1,
         },
         {
           transaction,

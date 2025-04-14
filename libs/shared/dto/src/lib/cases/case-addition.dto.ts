@@ -18,4 +18,11 @@ export class CaseAddition {
     description: 'HTML of the addition',
   })
   html!: string
+
+  @ApiProperty({
+    type: Number,
+    description: 'HTML of the addition',
+    default: 0,
+  })
+  order!: number
 }

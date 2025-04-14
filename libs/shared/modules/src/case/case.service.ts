@@ -100,6 +100,8 @@ import { ICaseCreateService } from './services/create/case-create.service.interf
 import { ICaseUpdateService } from './services/update/case-update.service.interface'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseAdditionModel,
+  CaseAdditionsModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
@@ -690,6 +692,57 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseTag(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  updateCaseAddition(
+    additionId: string,
+    caseId: string,
+    title?: string,
+    content?: string,
+    newOrder?: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateCaseAddition(
+      additionId,
+      caseId,
+      title,
+      content,
+      newOrder ? parseInt(newOrder) : undefined,
+      transaction,
+    )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  createCaseAddition(
+    caseId: string,
+    title: string,
+    content: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.createService.createCaseAddition(
+      caseId,
+      title,
+      content,
+      transaction,
+    )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  deleteCaseAddition(
+    additionId: string,
+    caseId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.deleteCaseAddition(
+      additionId,
+      caseId,
+      transaction,
+    )
+  }
+
   @LogAndHandle()
   @Transactional()
   updateCaseCommunicationStatus(
@@ -745,8 +798,11 @@ export class CaseService implements ICaseService {
     }
 
     const now = new Date().toISOString()
+    const keyFallback = `${caseId}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
 
-    const docUrl = activeCase?.advert?.documentPdfUrl || `${caseId}_${now}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
+    const docUrl = activeCase?.advert?.documentPdfUrl ?? keyFallback
+    const docName =
+      activeCase?.advert?.documentPdfUrl.split('/').pop() ?? keyFallback
 
     if (!activeCase?.advert?.documentPdfUrl) {
       this.logger.error(
@@ -761,8 +817,9 @@ export class CaseService implements ICaseService {
     }
 
     const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
+    const pdfName = docName.replace('.pdf', `_${now}.pdf`)
 
-    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfUrl))
+    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfName))
     const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
       this.updateAdvertByHtml(
         caseId,
@@ -1237,6 +1294,14 @@ export class CaseService implements ICaseService {
             },
           ],
         },
+      ],
+      order: [
+        [
+          { model: CaseAdditionModel, as: 'additions' },
+          CaseAdditionsModel,
+          'order',
+          'ASC',
+        ],
       ],
     })
 

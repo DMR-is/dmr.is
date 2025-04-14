@@ -64,6 +64,15 @@ export class UpdateCaseBody {
   readonly message?: string
 
   @ApiProperty({
+    type: String,
+    description: 'Base64 encoded html',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  readonly advertHtml?: string
+
+  @ApiProperty({
     type: [String],
     required: false,
     nullable: true,

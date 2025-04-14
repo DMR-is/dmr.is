@@ -14,6 +14,7 @@ import { useToggle } from '../../hooks/useToggle'
 import { AdvertPreview } from '../advert-display/AdvertPreview'
 import { IconButton } from '../icon-button/IconButton'
 import { AdvertFields } from './AdvertFields'
+import { AppendixFields } from './AppendixFields'
 import { AttachmentFields } from './AttachmentsFields'
 import { CaseCorrectionFields } from './CaseCorrectionField'
 import { CommentFields } from './CommentFields'
@@ -35,6 +36,7 @@ export const CaseFields = () => {
   const commentToggle = useToggle(false)
   const correctionToggle = useToggle(false)
   const communicationChannelsToggle = useToggle(false)
+  const appendixToggle = useToggle(false)
 
   const toggles = [
     commonToggle,
@@ -46,6 +48,7 @@ export const CaseFields = () => {
     commentToggle,
     correctionToggle,
     communicationChannelsToggle,
+    appendixToggle,
   ]
 
   const expandAll = () => {
@@ -112,6 +115,10 @@ export const CaseFields = () => {
               <SignatureFields
                 toggle={signatureToggle.toggle}
                 onToggle={signatureToggle.onToggle}
+              />
+              <AppendixFields
+                toggle={appendixToggle.toggle}
+                onToggle={appendixToggle.onToggle}
               />
               <AttachmentFields
                 toggle={attachmentToggle.toggle}
