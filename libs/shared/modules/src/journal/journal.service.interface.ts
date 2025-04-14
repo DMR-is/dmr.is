@@ -26,6 +26,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import 'multer'
+
 export interface IJournalService {
   getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>>
   getAdverts(

@@ -646,6 +646,7 @@ export class CaseController {
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
   }
+
   @Get('advert/:id')
   @ApiOperation({ operationId: 'getAdvert' })
   @ApiResponse({ status: 200, type: GetAdvertResponse })
