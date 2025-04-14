@@ -154,13 +154,16 @@ export default function AdvertTypesPage() {
                   />
                 </Stack>
               </ContentWrapper>
-              <ContentWrapper title="Breyta yfirheiti">
-                <UpdateAdvertType
-                  type={selectedType}
-                  refetch={refetch}
-                  onDeleteSuccess={() => setSelectedType(null)}
-                />
-              </ContentWrapper>
+              {!!selectedMainType && (
+                <ContentWrapper title="Breyta yfirheiti">
+                  <UpdateAdvertType
+                    mainType={selectedMainType}
+                    type={selectedType}
+                    refetch={refetch}
+                    onDeleteSuccess={() => setSelectedType(null)}
+                  />
+                </ContentWrapper>
+              )}
             </Stack>
           </GridColumn>
         </GridRow>

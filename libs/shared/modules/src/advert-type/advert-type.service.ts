@@ -447,7 +447,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const transaction = await this.sequelize.transaction()
     try {
       const type = await this.advertTypeModel.findByPk(id, {
-        include: [AdvertDepartmentModel],
+        include: [AdvertDepartmentModel, AdvertMainTypeModel],
         transaction,
       })
 
@@ -462,9 +462,10 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
+      const mainTypeSlug = type.mainType?.slug
       const departmentSlug = type.department.slug
       const slug = body.title
-        ? slugify(`${departmentSlug}-${body.title}`, { lower: true })
+        ? slugify(`${mainTypeSlug ?? departmentSlug}-${body.title}`, { lower: true })
         : type.slug
 
       const updateBody = {}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import slugify from 'slugify'
+import { AdvertMainType } from '@dmr.is/shared/dto'
 
 import {
   AlertMessage,
@@ -14,12 +15,18 @@ import { AdvertType } from '../../gen/fetch'
 import { useAdvertTypes } from '../../hooks/api'
 
 type Props = {
+  mainType: AdvertMainType
   type: AdvertType | null
   refetch?: () => void
   onDeleteSuccess?: () => void
 }
 
-export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
+export const UpdateAdvertType = ({
+  mainType,
+  type,
+  refetch,
+  onDeleteSuccess,
+}: Props) => {
   useEffect(() => {
     if (type) {
       setState({
@@ -41,11 +48,11 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
     deleteTypeError,
   } = useAdvertTypes({
     onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Tegund ${type.title} uppfærð`)
+      toast.success(`Yfirheiti ${type.title} uppfærð`)
       refetch && refetch()
     },
     onDeleteTypeSuccess: () => {
-      toast.success(`Tegund ${type?.title} eytt`)
+      toast.success(`Yfirheiti ${type?.title} eytt`)
       setState({ title: '' })
       refetch && refetch()
       onDeleteSuccess && onDeleteSuccess()
@@ -92,7 +99,7 @@ export const UpdateAdvertType = ({ type, refetch, onDeleteSuccess }: Props) => {
         backgroundColor="blue"
         label="Slóð yfirheitis"
         readOnly
-        value={slugify(`${type.slug}`, {
+        value={slugify(`${mainType.slug}-${state.title}`, {
           lower: true,
         })}
         onChange={(e) => setState({ title: e.target.value })}
