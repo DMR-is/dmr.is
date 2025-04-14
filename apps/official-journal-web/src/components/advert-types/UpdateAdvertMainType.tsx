@@ -6,6 +6,7 @@ import {
   Button,
   Inline,
   Input,
+  Select,
   Stack,
   Text,
   toast,
@@ -34,7 +35,9 @@ export const UpdateAdvertMainType = ({
   }, [mainType])
 
   const {
+    types,
     refetchTypes,
+    updateType,
     updateMainType,
     deleteMainType,
     mainType: currentMainType,
@@ -73,10 +76,10 @@ export const UpdateAdvertMainType = ({
     ? currentMainType?.types.map((type) => type)
     : (mainType?.types.map((type) => type) ?? [])
 
-  // const typeOptions = types?.map((type) => ({
-  //   label: type.title,
-  //   value: type,
-  // }))
+  const typeOptions = types?.map((type) => ({
+    label: type.title,
+    value: type,
+  }))
 
   const [updateState, setUpdateState] = useState({
     title: mainType?.title ?? '',
@@ -180,7 +183,7 @@ export const UpdateAdvertMainType = ({
           </Inline> */}
         </>
       )}
-      {/* <Select
+      <Select
         isClearable
         size="sm"
         backgroundColor="blue"
@@ -196,7 +199,7 @@ export const UpdateAdvertMainType = ({
             })
           }
         }}
-      /> */}
+      />
     </Stack>
   )
 }
