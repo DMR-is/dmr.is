@@ -3,11 +3,14 @@ import slugify from 'slugify'
 
 import {
   AlertMessage,
+  Box,
   Button,
+  Icon,
   Inline,
   Input,
   Select,
   Stack,
+  Tag,
   Text,
   toast,
 } from '@island.is/island-ui/core'
@@ -35,6 +38,7 @@ export const UpdateAdvertMainType = ({
     }
   }, [mainType])
 
+
   const {
     updateMainType,
     deleteMainType,
@@ -61,26 +65,20 @@ export const UpdateAdvertMainType = ({
     },
   })
 
-  const {
-    types,
-    refetchTypes,
-    updateType,
-    updateTypeError,
-    deleteTypeError,
-  } = useAdvertTypes({
-    typesParams: {
-      department: mainType?.department.id,
-      pageSize: 1000,
-      unassigned: true,
-    },
-    onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Yfirheiti ${type.title} uppfært`)
-      refetchMainType()
-      refetchTypes()
-      refetch && refetch()
-    },
-
-  })
+  const { types, refetchTypes, updateType, updateTypeError, deleteTypeError } =
+    useAdvertTypes({
+      typesParams: {
+        department: mainType?.department.id,
+        pageSize: 1000,
+        unassigned: true,
+      },
+      onUpdateTypeSuccess: ({ type }) => {
+        toast.success(`Yfirheiti ${type.title} uppfært`)
+        refetchMainType()
+        refetchTypes()
+        refetch && refetch()
+      },
+    })
 
   const mainTypeTypes = currentMainType
     ? currentMainType?.types.map((type) => type)
@@ -94,6 +92,9 @@ export const UpdateAdvertMainType = ({
   const [updateState, setUpdateState] = useState({
     title: mainType?.title ?? '',
   })
+
+  const hasEditedTitle = mainType?.title !== updateState.title
+
 
   if (!mainType) {
     return (
@@ -136,11 +137,11 @@ export const UpdateAdvertMainType = ({
       <Input
         readOnly
         name="update-main-type-slug"
-        value={slugify(`${mainType.department.title}-${updateState.title}`, {
+        value={hasEditedTitle ? slugify(`${mainType.department.title}-${updateState.title}`, {
           lower: true,
-        })}
+        }) : mainType.slug}
         size="sm"
-        label="Slóð tegundar"
+        label={!hasEditedTitle ? "Slóð tegundar": "Uppfærð slóð tegundar"}
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
@@ -170,7 +171,7 @@ export const UpdateAdvertMainType = ({
         <Text variant="h5">Ekkert yfirheiti í þessari tegund</Text>
       ) : (
         <>
-          {/* <Text variant="h5">{`Tegundir tengdar við ${
+          <Text variant="h5">{`Tegundir tengdar við ${
             currentMainType?.title ?? mainType.title
           }`}</Text>
           <Inline space={[2, 2, 3]} flexWrap="wrap">
@@ -190,7 +191,7 @@ export const UpdateAdvertMainType = ({
                 </Box>
               </Tag>
             ))}
-          </Inline> */}
+          </Inline>
         </>
       )}
       <Select

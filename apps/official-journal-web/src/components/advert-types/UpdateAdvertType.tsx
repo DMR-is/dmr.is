@@ -39,6 +39,8 @@ export const UpdateAdvertType = ({
     title: type?.title ?? '',
   })
 
+  const hasEditedTitle = state.title !== type?.title
+
   const {
     updateType,
     isUpdatingType,
@@ -97,11 +99,11 @@ export const UpdateAdvertType = ({
         name="update-type-slug"
         size="sm"
         backgroundColor="blue"
-        label="Slóð yfirheitis"
+        label={!hasEditedTitle ? "Slóð yfirheitis" : "Uppfært slóð yfirheitis"}
         readOnly
-        value={slugify(`${mainType.slug}-${state.title}`, {
+        value={hasEditedTitle ? slugify(`${mainType.slug}-${state.title}`, {
           lower: true,
-        })}
+        }): type.slug}
         onChange={(e) => setState({ title: e.target.value })}
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
