@@ -3,11 +3,14 @@ import slugify from 'slugify'
 
 import {
   AlertMessage,
+  Box,
   Button,
+  Icon,
   Inline,
   Input,
   Select,
   Stack,
+  Tag,
   Text,
   toast,
 } from '@island.is/island-ui/core'
@@ -61,26 +64,20 @@ export const UpdateAdvertMainType = ({
     },
   })
 
-  const {
-    types,
-    refetchTypes,
-    updateType,
-    updateTypeError,
-    deleteTypeError,
-  } = useAdvertTypes({
-    typesParams: {
-      department: mainType?.department.id,
-      pageSize: 1000,
-      unassigned: true,
-    },
-    onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Yfirheiti ${type.title} uppfært`)
-      refetchMainType()
-      refetchTypes()
-      refetch && refetch()
-    },
-
-  })
+  const { types, refetchTypes, updateType, updateTypeError, deleteTypeError } =
+    useAdvertTypes({
+      typesParams: {
+        department: mainType?.department.id,
+        pageSize: 1000,
+        unassigned: true,
+      },
+      onUpdateTypeSuccess: ({ type }) => {
+        toast.success(`Yfirheiti ${type.title} uppfært`)
+        refetchMainType()
+        refetchTypes()
+        refetch && refetch()
+      },
+    })
 
   const mainTypeTypes = currentMainType
     ? currentMainType?.types.map((type) => type)
@@ -170,7 +167,7 @@ export const UpdateAdvertMainType = ({
         <Text variant="h5">Ekkert yfirheiti í þessari tegund</Text>
       ) : (
         <>
-          {/* <Text variant="h5">{`Tegundir tengdar við ${
+          <Text variant="h5">{`Tegundir tengdar við ${
             currentMainType?.title ?? mainType.title
           }`}</Text>
           <Inline space={[2, 2, 3]} flexWrap="wrap">
@@ -190,7 +187,7 @@ export const UpdateAdvertMainType = ({
                 </Box>
               </Tag>
             ))}
-          </Inline> */}
+          </Inline>
         </>
       )}
       <Select
