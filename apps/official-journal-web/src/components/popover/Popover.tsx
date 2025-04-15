@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, cloneElement } from 'react'
+import { cloneElement } from 'react'
 import {
   Popover as ReaPopover,
   PopoverDisclosure,
@@ -25,9 +25,7 @@ export const Popover = ({
   return (
     <>
       <PopoverDisclosure {...popover} {...disclosure.props}>
-        {(referenceProps: ButtonHTMLAttributes<HTMLButtonElement>) =>
-          cloneElement(disclosure, referenceProps)
-        }
+        {(referenceProps) => cloneElement(disclosure, referenceProps)}
       </PopoverDisclosure>
       <ReaPopover className={styles.popover} {...popover} aria-label={label}>
         {children}
