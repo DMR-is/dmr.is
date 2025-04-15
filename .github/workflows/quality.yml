@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - main
+permissions:
+  actions: read
+  contents: read
 
 concurrency:
   # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
@@ -71,6 +74,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20.10.0'
@@ -127,6 +132,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20.10.0'
