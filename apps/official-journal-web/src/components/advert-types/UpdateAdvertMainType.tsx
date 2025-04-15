@@ -197,10 +197,10 @@ export const UpdateAdvertMainType = ({
         isClearable
         size="sm"
         backgroundColor="blue"
-        label="Tegundir"
+        label="Yfirheiti"
         options={typeOptions}
-        placeholder="Bæta tegund við yfirflokk"
-        noOptionsMessage={`Engin tegund í ${mainType.department.title}`}
+        placeholder="Bæta yfirheiti við tegund"
+        noOptionsMessage={`Ekkert yfirheiti í ${mainType.department.title}`}
         onChange={(opt) => {
           if (opt) {
             updateType({
