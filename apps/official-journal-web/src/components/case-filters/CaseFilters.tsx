@@ -5,6 +5,7 @@ import {
   parseAsString,
   useQueryState,
 } from 'next-usequerystate'
+import { ChangeEvent, useCallback } from 'react'
 
 import {
   Box,
@@ -29,6 +30,7 @@ type Props = {
   enableCategories: boolean
   enableDepartments: boolean
   enableTypes: boolean
+  enableSearch?: boolean
 }
 
 export const CaseFilters = ({
@@ -38,7 +40,7 @@ export const CaseFilters = ({
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const [search, setSearch] = useQueryState('search')
+  const [search, setSearch] = useQueryState('search', parseAsString)
   const [departments, setDepartments] = useQueryState(
     'department',
     parseAsArrayOf(parseAsString, ','),
@@ -67,6 +69,15 @@ export const CaseFilters = ({
     enableTypes && setTypes([])
   }
 
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    e.persist()
+    const value = e.target.value
+    setSearch(value)
+  }
+
+  const debouncedHandleChange = useCallback(debounce(handleChange, 500), [])
   const showFilters = enableCategories || enableDepartments || enableTypes
 
   return (
@@ -78,7 +89,7 @@ export const CaseFilters = ({
           backgroundColor="blue"
           name="filter"
           defaultValue={search ?? undefined}
-          onChange={(e) => debounce(() => setSearch(e.target.value), 500)}
+          onChange={debouncedHandleChange}
           placeholder={formatMessage(messages.general.searchPlaceholder)}
         />
         {showFilters && (

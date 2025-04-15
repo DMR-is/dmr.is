@@ -19,11 +19,14 @@ import {
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
   Institution,
+  S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
+
+import 'multer'
 
 export interface IJournalService {
   getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>>
@@ -104,7 +107,10 @@ export interface IJournalService {
   getSignatures(
     params?: GetAdvertSignatureQuery,
   ): Promise<ResultWrapper<GetAdvertSignatureResponse>>
-
+  uploadAdvertPDF(
+    advertId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>>
   // TODO Testing logging process only, remove later
   error(): void
 }

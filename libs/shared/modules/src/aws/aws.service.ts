@@ -225,6 +225,26 @@ export class AWSService implements IAWSService {
   }
 
   /**
+   * Uploads a file to the S3 bucket.
+   * @param bucket The bucket to upload to.
+   * @param key The key to upload the file to.
+   * @param file The file to upload.
+   */
+  @LogAndHandle()
+  async replaceAdvertPdf(
+    key: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    const bucket = getS3Bucket()
+    const uploadResult = await this.uploadFile(bucket, key, file)
+
+    return ResultWrapper.ok({
+      ...uploadResult.unwrap(),
+      filename: key,
+    })
+  }
+
+  /**
    * Generates a presigned URL for a file in the S3 bucket.
    * Used in the application system to upload attachments.
    * @param key The key of the object to generate a presigned URL for.

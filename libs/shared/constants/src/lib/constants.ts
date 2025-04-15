@@ -1,4 +1,3 @@
-
 export const DEFAULT_PAGE_SIZE = 10
 
 export const DEFAULT_PAGE_NUMBER = 1
@@ -19,6 +18,7 @@ export const PDF_RETRY_DELAY = 5000
 export const APPLICATION_FILES_BUCKET =
   'official-journal-application-files-bucket-dev'
 
+export const ALLOWED_PDF_MIME_TYPES = ['application/pdf']
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'application/msword',
