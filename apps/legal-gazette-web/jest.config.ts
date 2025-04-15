@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'legal-gazette-web',
   preset: '../../jest.preset.js',
