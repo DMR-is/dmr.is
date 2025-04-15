@@ -88,8 +88,10 @@ jobs:
           path: node_modules
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Linting
-        run: yarn run nx affected -t lint --base=main --head=HEAD
+        run: yarn run nx affected -t lint
 
   formatting:
     needs:
@@ -142,8 +144,10 @@ jobs:
           path: node_modules
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Run tests
-        run: yarn run nx affected -t test --base=main --head=HEAD
+        run: yarn run nx affected -t test
 
   build:
     needs:
