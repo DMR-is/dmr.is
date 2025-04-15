@@ -89,7 +89,7 @@ jobs:
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
       - name: Linting
-        uses: masagroup/nrwl-nx-action@v3
+        uses: mansagroup/nrwl-nx-action@v3
         with:
           targets: lint
 
