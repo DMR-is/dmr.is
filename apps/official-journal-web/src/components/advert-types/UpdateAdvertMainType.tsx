@@ -38,6 +38,7 @@ export const UpdateAdvertMainType = ({
     }
   }, [mainType])
 
+
   const {
     updateMainType,
     deleteMainType,
@@ -92,6 +93,9 @@ export const UpdateAdvertMainType = ({
     title: mainType?.title ?? '',
   })
 
+  const hasEditedTitle = mainType?.title !== updateState.title
+
+
   if (!mainType) {
     return (
       <AlertMessage
@@ -133,11 +137,11 @@ export const UpdateAdvertMainType = ({
       <Input
         readOnly
         name="update-main-type-slug"
-        value={slugify(`${mainType.department.title}-${updateState.title}`, {
+        value={hasEditedTitle ? slugify(`${mainType.department.title}-${updateState.title}`, {
           lower: true,
-        })}
+        }) : mainType.slug}
         size="sm"
-        label="Slóð tegundar"
+        label={!hasEditedTitle ? "Slóð tegundar": "Uppfærð slóð tegundar"}
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
