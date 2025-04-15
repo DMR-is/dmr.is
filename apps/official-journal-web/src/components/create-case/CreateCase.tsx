@@ -25,8 +25,7 @@ export const CreateCase = () => {
   const canCreate =
     createState.involvedPartyId &&
     createState.departmentId &&
-    createState.typeId &&
-    createState.subject
+    createState.typeId
 
   const { createCase, isCreatingCase } = useCase({
     createCaseOptions: {
