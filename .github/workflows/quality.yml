@@ -71,6 +71,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20.10.0'
@@ -88,8 +90,10 @@ jobs:
           path: node_modules
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Linting
-        run: yarn run nx run-many -t lint
+        run: yarn run nx affected -t lint
 
   formatting:
     needs:
@@ -125,6 +129,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20.10.0'
@@ -142,8 +148,10 @@ jobs:
           path: node_modules
           key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
 
+      - uses: nrwl/nx-set-shas@v4
+
       - name: Run tests
-        run: yarn run nx run-many -t test
+        run: yarn run nx affected -t test
 
   build:
     needs:

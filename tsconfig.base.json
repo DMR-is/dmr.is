@@ -40,9 +40,6 @@
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
-      "@island.is/auth-nest-tools/user-guard": [
-        "submodules/island.is/libs/auth-nest-tools/src/lib/ids-user.guard.ts"
-      ],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],
@@ -54,9 +51,6 @@
       ],
       "@island.is/island-ui/vanilla-extract-utils": [
         "submodules/island.is/libs/island-ui/vanilla-extract-utils/src/index.ts"
-      ],
-      "@island.is/next-ids-auth/utils": [
-        "submodules/island.is/libs/next-ids-auth/src/lib/utils.ts"
       ],
       "@island.is/regulations/styling": [
         "submodules/island.is/libs/regulations/src/lib/styling.ts"
