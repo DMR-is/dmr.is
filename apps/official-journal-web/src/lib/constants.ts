@@ -79,7 +79,11 @@ export const PagePaths: Array<Path> = [
     order: 6,
   },
   { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
-  { pathname: Routes.ReplacePdf, title: 'Yfirskrifa PDF', order: 8 },
+  {
+    pathname: Routes.ReplacePdf,
+    title: 'Yfirskrifa PDF eða meginmál',
+    order: 8,
+  },
 ]
 
 export const DEPARTMENT_A = 'A deild'

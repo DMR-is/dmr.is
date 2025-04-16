@@ -223,7 +223,7 @@ export const messages = {
         },
         change: {
           id: 'web.components.tables:advert.columns.change',
-          defaultMessage: 'Yfirskrifa PDF',
+          defaultMessage: 'Yfirskrifa PDF eða meginmál',
           description: 'Title column',
         },
       }),

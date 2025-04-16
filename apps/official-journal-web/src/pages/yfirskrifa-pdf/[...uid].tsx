@@ -65,7 +65,7 @@ export default function AdvertPdfReplacement({ advert }: Props) {
 
   return (
     <>
-      <Meta title="Yfirskrifa PDF" />
+      <Meta title="Yfirskrifa PDF eða meginmál" />
       <Section paddingTop="content">
         <GridContainer>
           <GridRow>
@@ -171,6 +171,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
   const client = getDmrClient(session?.idToken as string)
   const advertRes = await client.getAdvert({ id: params?.uid as string })
+  const advert = JSON.parse(JSON.stringify(advertRes.advert))
 
   const layout: LayoutProps = {
     bannerProps: {
@@ -188,5 +189,5 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   }
 
-  return { props: { advert: advertRes.advert, layout } }
+  return { props: { advert, layout } }
 }
