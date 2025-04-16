@@ -103,9 +103,9 @@ export interface ICaseService {
     currentUser: UserDto,
   ): Promise<ResultWrapper>
 
-  rejectCase(id: string): Promise<ResultWrapper>
+  rejectCase(id: string, transaction?: Transaction): Promise<ResultWrapper>
 
-  unpublishCase(id: string): Promise<ResultWrapper>
+  unpublishCase(id: string, transaction?: Transaction): Promise<ResultWrapper>
   updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,
@@ -199,8 +199,14 @@ export interface ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>>
 
-  updateAdvertByHtml(
+  updateCaseByHtml(
     caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updatePublicAdvertByHtml(
+    advertId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>

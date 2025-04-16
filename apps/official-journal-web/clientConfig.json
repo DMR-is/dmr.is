@@ -1196,6 +1196,30 @@
         "security": [{ "bearer": [] }]
       }
     },
+    "/api/v1/cases/{id}/html/advert": {
+      "put": {
+        "operationId": "updatePublicAdvertHtml",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertHtmlBody" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }]
+      }
+    },
     "/api/v1/cases/advert": {
       "get": {
         "operationId": "getAdverts",
@@ -4286,8 +4310,7 @@
       "UpdateAdvertHtmlBody": {
         "type": "object",
         "properties": {
-          "advertHtml": { "type": "string", "description": "Advert HTML" },
-          "documentPdfUrl": { "type": "string", "nullable": true }
+          "advertHtml": { "type": "string", "description": "Advert HTML" }
         },
         "required": ["advertHtml"]
       },

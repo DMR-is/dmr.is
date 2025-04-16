@@ -10,14 +10,6 @@ export class UpdateAdvertHtmlBody {
     description: 'Advert HTML',
   })
   advertHtml!: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  readonly documentPdfUrl?: string
 }
 export class UpdateAdvertAppendixBody {
   @ApiProperty({
@@ -59,7 +51,7 @@ export class DeleteAdvertAppendixBody {
 }
 
 export class UpdateAdvertHtmlCorrection extends IntersectionType(
-  OmitType(UpdateAdvertHtmlBody, ['documentPdfUrl']),
+  UpdateAdvertHtmlBody,
   OmitType(AddCaseAdvertCorrection, ['documentHtml', 'documentPdfUrl']),
 ) {}
 
