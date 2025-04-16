@@ -206,7 +206,7 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
 
   updatePublicAdvertByHtml(
-    caseId: string,
+    advertId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
