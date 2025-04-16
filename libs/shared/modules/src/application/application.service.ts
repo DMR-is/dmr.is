@@ -302,7 +302,7 @@ export class ApplicationService implements IApplicationService {
       )
 
       // ResultWrapper.unwrap(
-      //   await this.caseService.updateAdvertByHtml(
+      //   await this.caseService.updateCaseByHtml(
       //     caseLookup.id,
       //     {
       //       advertHtml: application.answers.advert.html,
