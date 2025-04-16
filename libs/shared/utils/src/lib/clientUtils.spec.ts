@@ -45,6 +45,9 @@ describe('clientUtils', () => {
       expect(sortAlphabetically('ár', 'as')).toBeGreaterThan(0) // 'as' comes before 'ár' in Icelandic
       expect(sortAlphabetically('ás', 'at')).toBeGreaterThan(0)
       expect(sortAlphabetically('át', 'au')).toBeGreaterThan(0)
+      expect(sortAlphabetically('ás', 'ba')).toBeLessThan(0)
+      expect(sortAlphabetically('Ísafjörður', 'Jökulsárlón')).toBeLessThan(0)
+      expect(sortAlphabetically('Ísafjörður', 'Hafnarfjörður')).toBeGreaterThan(0)
     })
   })
 })
