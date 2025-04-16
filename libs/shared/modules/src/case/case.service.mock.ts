@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
