@@ -3,7 +3,7 @@
     {
       "name": "island.is",
       "sha": "b93ab4b",
-      "sparseCheckoutPaths": ["libs/shared", "libs/island-ui", "libs/regulations", "!project.json"]
+      "sparseCheckoutPaths": ["libs/shared"]
     }
   ]
 }
