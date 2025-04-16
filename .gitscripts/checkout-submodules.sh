@@ -22,13 +22,10 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
   # Enable sparse-checkout
   git -C "${SUBMODULE_PATH}" config core.sparseCheckout true
 
-  # Get the actual Git repository path
-  GIT_DIR=$(git -C "${SUBMODULE_PATH}" rev-parse --git-dir)
-
   # Apply new sparse-checkout paths
-  mkdir -p "${GIT_DIR}/info"
-  echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' > "${GIT_DIR}/info/sparse-checkout"
-
+  echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' | while read -r path; do
+    git -C "${SUBMODULE_PATH}" config --add core.sparseCheckoutPath "${path}"
+  done
   # Refresh working directory quietly
   git -C "${SUBMODULE_PATH}" read-tree -mu --quiet HEAD
 
