@@ -50,6 +50,11 @@ export const messages = {
           defaultMessage: 'Heiti',
           description: 'Title column',
         },
+        employee: {
+          id: 'web.components.tables:submitted.columns.employee',
+          defaultMessage: 'Starfs.',
+          description: 'Employee column',
+        },
       }),
     },
     inProgress: {

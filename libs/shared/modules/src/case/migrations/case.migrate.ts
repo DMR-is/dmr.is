@@ -2,6 +2,7 @@ import { Case } from '@dmr.is/shared/dto'
 
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations'
+import { userMigrate } from '../../user/migration/user.migrate'
 import { CaseModel } from '../models'
 
 export const caseMigrate = (model: CaseModel): Case => ({
@@ -36,6 +37,6 @@ export const caseMigrate = (model: CaseModel): Case => ({
   publishedAt: model.publishedAt,
   createdAt: model.createdAt,
   fastTrack: model.fastTrack,
-  assignedTo: null,
+  assignedTo: model.assignedUser ? userMigrate(model.assignedUser) : null,
   tag: model?.tag ? model.tag : null,
 })
