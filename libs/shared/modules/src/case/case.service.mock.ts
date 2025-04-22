@@ -77,7 +77,7 @@ export class CaseServiceMock {
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }
-  updateCaseByHtml(
+  updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
