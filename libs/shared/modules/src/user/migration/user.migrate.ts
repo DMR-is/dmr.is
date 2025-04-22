@@ -1,4 +1,4 @@
-import { UserDto, UserRoleDto } from '@dmr.is/shared/dto'
+import { GetMyUserInfoResponse, UserDto, UserRoleDto } from '@dmr.is/shared/dto'
 
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { UserModel } from '../models/user.model'
@@ -28,5 +28,15 @@ export const userMigrate = (model: UserModel): UserDto => {
     createdAt: model.createdAt.toISOString(),
     updatedAt: model.updatedAt.toISOString(),
     deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+  }
+}
+
+export const getMyUserInfoMigrate = (
+  model: UserModel,
+): GetMyUserInfoResponse => {
+  return {
+    firstName: model.firstName,
+    lastName: model.lastName,
+    email: model.email,
   }
 }

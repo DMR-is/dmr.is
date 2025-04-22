@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
+  GetMyUserInfoResponse,
   GetRolesByUserResponse,
   GetUserResponse,
   GetUsersQuery,
@@ -21,7 +22,11 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import { AdvertInvolvedPartyModel } from '../journal/models'
-import { userMigrate, userRoleMigrate } from './migration/user.migrate'
+import {
+  getMyUserInfoMigrate,
+  userMigrate,
+  userRoleMigrate,
+} from './migration/user.migrate'
 import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
@@ -385,6 +390,26 @@ export class UserService implements IUserService {
     return ResultWrapper.ok({
       involvedParties: migrated,
     })
+  }
+
+  @LogAndHandle()
+  async getMyUserInfo(
+    currentUser: UserDto,
+  ): Promise<ResultWrapper<GetMyUserInfoResponse>> {
+    const user = await this.userModel.findByPk(currentUser.id, {
+      attributes: ['firstName', 'lastName', 'email'],
+    })
+
+    if (!user) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'User not found',
+      })
+    }
+
+    const migrated = getMyUserInfoMigrate(user)
+
+    return ResultWrapper.ok(migrated)
   }
 
   @LogAndHandle()
