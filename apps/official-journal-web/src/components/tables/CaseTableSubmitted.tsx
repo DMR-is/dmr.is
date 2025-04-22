@@ -113,6 +113,11 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
       sortable: false,
       children: formatMessage(messages.tables.submitted.columns.title),
     },
+    {
+      name: 'caseEmployee',
+      sortable: false,
+      children: formatMessage(messages.tables.submitted.columns.employee),
+    },
   ]
 
   // const newRows = cases?.map((row) => {
@@ -191,6 +196,11 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
               </Text>
             </div>
           ),
+        },
+        {
+          sortingKey: 'caseEmployee',
+          sortingValue: row.assignedTo?.displayName,
+          children: <Text truncate variant="medium">{row.assignedTo?.displayName}</Text>,
         },
       ],
     }
