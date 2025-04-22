@@ -74,6 +74,12 @@ export class GetUserResponse {
   user!: UserDto
 }
 
+export class GetMyUserInfoResponse extends PickType(UserDto, [
+  'firstName',
+  'lastName',
+  'email',
+] as const) {}
+
 export class GetUsersResponse {
   @ApiProperty({
     type: [UserDto],
