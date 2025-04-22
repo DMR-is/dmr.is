@@ -33,14 +33,14 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
           const children = row[column.field as keyof typeof row]
           return <DataTableCell key={column.field}>{children}</DataTableCell>
         })}
-        {hasLink && (
+        {hasLink && row.href && (
           <td align="center" className={styles.linkTableCell}>
             <Box
               className={styles.seeMoreTableCellLink({
                 visible: hovered,
               })}
               component={LinkV2}
-              href="#"
+              href={row.href}
             >
               <Box className={styles.seeMoreTableCellLinkText}>
                 <Text variant="eyebrow" color={'blue400'}>

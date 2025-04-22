@@ -1,5 +1,11 @@
 import dynamic from 'next/dynamic'
 
+// import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+// import {
+//   DEFAULT_SORT_DIRECTION,
+//   SortDirection,
+// } from '@dmr.is/ui/hooks/constants'
+// import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 import { SkeletonLoader, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -22,6 +28,56 @@ export const CaseTableInProgress = ({
   isLoading,
 }: TableProps) => {
   const { formatMessage } = useFormatMessage()
+  // const { params, setParams } = useFilters()
+
+  // const handleSort = (field: string) => {
+  //   const isSameField = params.sortBy === field
+
+  //   if (isSameField) {
+  //     return setParams({
+  //       direction:
+  //         params.direction === SortDirection.ASC
+  //           ? SortDirection.DESC
+  //           : SortDirection.ASC,
+  //     })
+  //   }
+
+  //   setParams({
+  //     sortBy: field,
+  //     direction: DEFAULT_SORT_DIRECTION,
+  //   })
+  // }
+
+  // const newColumns = [
+  //   {
+  //     field: 'casePublishDate',
+  //     children: formatMessage(messages.tables.inProgress.columns.publishDate),
+  //     onSort: handleSort,
+  //     sortBy: params.sortBy ?? undefined,
+  //     direction: params.direction,
+  //   },
+  //   {
+  //     field: 'caseDepartment',
+  //     children: formatMessage(messages.tables.inProgress.columns.department),
+  //     onSort: handleSort,
+  //     sortBy: params.sortBy ?? undefined,
+  //     direction: params.direction,
+  //   },
+  //   {
+  //     field: 'caseTitle',
+  //     children: formatMessage(messages.tables.inProgress.columns.title),
+  //     onSort: handleSort,
+  //     sortBy: params.sortBy ?? undefined,
+  //     direction: params.direction,
+  //   },
+  //   {
+  //     field: 'caseEmployee',
+  //     children: formatMessage(messages.tables.inProgress.columns.employee),
+  //     onSort: handleSort,
+  //     sortBy: params.sortBy ?? undefined,
+  //     direction: params.direction,
+  //   },
+  // ]
 
   const columns: CaseTableHeadCellProps[] = [
     {
@@ -53,6 +109,33 @@ export const CaseTableInProgress = ({
       children: formatMessage(messages.tables.inProgress.columns.employee),
     },
   ]
+
+  // const newRows = cases?.map((row) => {
+  //   return {
+  //     uniqueKey: row.id,
+  //     hasLink: true,
+  //     casePublishDate: (
+  //       <Text variant="medium">{formatDate(row.requestedPublicationDate)}</Text>
+  //     ),
+  //     caseDepartment: (
+  //       <Text truncate variant="medium">
+  //         {row.advertDepartment.title}
+  //       </Text>
+  //     ),
+  //     caseTitle: (
+  //       <div className={styles.titleTableCell} title={row.advertTitle}>
+  //         <Text truncate variant="medium">
+  //           {row.advertType.title} {row.advertTitle}
+  //         </Text>
+  //       </div>
+  //     ),
+  //     caseEmployee: (
+  //       <Text truncate variant="medium">
+  //         {row.assignedTo?.displayName}
+  //       </Text>
+  //     ),
+  //   }
+  // })
 
   const rows = cases?.map((row) => ({
     case: row,
@@ -106,6 +189,14 @@ export const CaseTableInProgress = ({
     ],
   }))
 
+  // return (
+  //   <DataTable
+  //     columns={newColumns}
+  //     rows={newRows}
+  //     paging={paging}
+  //     loading={isLoading}
+  //   />
+  // )
   return (
     <CaseTable
       loading={isLoading}

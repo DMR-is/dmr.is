@@ -21,6 +21,7 @@ export type DataTableRowExpandableProps = {
 
 export type DataTableRowHasLinkProps = {
   hasLink?: boolean
+  href?: string
 }
 
 export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {

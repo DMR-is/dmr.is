@@ -96,6 +96,10 @@ type CaseIncludeFilters = {
 }
 export const casesIncludes = (params: CaseIncludeFilters): Includeable[] => [
   {
+    model: UserModel,
+    include: [{ model: UserRoleModel }, { model: AdvertInvolvedPartyModel }],
+  },
+  {
     model: CaseStatusModel,
     attributes: ['id', 'title', 'slug'],
     where: matchByIdTitleOrSlug(params?.status),
