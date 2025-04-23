@@ -100,6 +100,13 @@ export class ApplicationController {
     )
   }
 
+  @Get('/my-user-info')
+  @ApiOperation({ operationId: 'getMyUserInfo' })
+  @ApiResponse({ type: GetMyUserInfoResponse })
+  async getMyUserInfo(@CurrentUser() user: UserDto) {
+    return ResultWrapper.unwrap(await this.userService.getMyUserInfo(user))
+  }
+
   @Get(':id/price')
   @ApiOperation({ operationId: 'getPrice' })
   @ApiResponse({ type: CasePriceResponse })
@@ -294,13 +301,6 @@ export class ApplicationController {
     return ResultWrapper.unwrap(
       await this.userService.getInvolvedPartiesByUser(user),
     )
-  }
-
-  @Get('my-user-info')
-  @ApiOperation({ operationId: 'getMyUserInfo' })
-  @ApiResponse({ type: GetMyUserInfoResponse })
-  async getMyUserInfo(@CurrentUser() user: UserDto) {
-    return ResultWrapper.unwrap(await this.userService.getMyUserInfo(user))
   }
 
   @Get(':id/case')
