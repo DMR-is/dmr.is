@@ -107,6 +107,7 @@ import {
   CaseCommunicationStatusModel,
   CaseHistoryModel,
   CaseModel,
+  CasePublishedAdvertsModel,
   CaseStatusModel,
   CaseTagModel,
 } from './models'
@@ -149,6 +150,8 @@ export class CaseService implements ICaseService {
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
 
+    @InjectModel(CasePublishedAdvertsModel)
+    private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
@@ -419,17 +422,18 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async unpublishCase(
-    id: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  async unpublishCase(id: string): Promise<ResultWrapper> {
     const caseStatus = (
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Unpublished)
     ).unwrap()
 
-    const advertPromise = await this.caseModel.findByPk(id, {
-      attributes: ['id', 'advert_id'],
-      transaction,
+    // TODO: Remove PUBLISHED_CASE_ADVERTS table
+    // Then remove all casePublishedAdvertsModel references
+    // Use advertId from case directly instead.
+    const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: id,
+      },
     })
 
     const updateCasePromise = this.caseModel.update(
@@ -444,9 +448,12 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const [_, advertRes] = await Promise.all([updateCasePromise, advertPromise])
+    const [_, hasAdvert] = await Promise.all([
+      updateCasePromise,
+      hasAdvertPromise,
+    ])
 
-    if (!advertRes?.dataValues?.advert_id) {
+    if (!hasAdvert) {
       return ResultWrapper.ok()
     }
 
@@ -467,7 +474,7 @@ export class CaseService implements ICaseService {
     }
 
     const updateResult = await this.journalService.updateAdvert(
-      advertRes.dataValues.advert_id,
+      hasAdvert.advertId,
       {
         statusId: statusLookup.result.value.id,
       },
@@ -530,16 +537,16 @@ export class CaseService implements ICaseService {
       return ResultWrapper.ok()
     }
 
-    const casePublishedAdvert = await this.caseModel.findByPk(caseId, {
-      attributes: ['id', 'advert_id'],
-      transaction,
+    const casePublishedAdvert = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: caseId,
+      },
     })
 
-    if (!casePublishedAdvert?.dataValues?.advert_id) {
+    if (!casePublishedAdvert) {
       return ResultWrapper.ok()
     }
 
-    const advertId = casePublishedAdvert?.dataValues?.advert_id
     const statusLookup = await this.utilityService.advertStatusLookup(
       AdvertStatus.Revoked,
     )
@@ -549,7 +556,7 @@ export class CaseService implements ICaseService {
         `Failed to get advert status, when unpublishing case<${caseId}>`,
         {
           caseId: caseId,
-          advertId: advertId,
+          advertId: casePublishedAdvert.advertId,
           advertStatus: AdvertStatus.Revoked,
           error: statusLookup.result.error,
           category: LOGGING_CATEGORY,
@@ -563,7 +570,7 @@ export class CaseService implements ICaseService {
     }
 
     const updatedAdvertStatusResult = await this.journalService.updateAdvert(
-      advertId,
+      casePublishedAdvert.advertId,
       {
         statusId: statusLookup.result.value.id,
       },
@@ -574,7 +581,7 @@ export class CaseService implements ICaseService {
         `Failed to update advert status<${AdvertStatus.Revoked}, when unpublishing case<${caseId}>`,
         {
           caseId: caseId,
-          advertId: advertId,
+          advertId: casePublishedAdvert.advertId,
           advertStatus: AdvertStatus.Revoked,
           error: updatedAdvertStatusResult.result.error,
           category: LOGGING_CATEGORY,
@@ -814,7 +821,11 @@ export class CaseService implements ICaseService {
 
     ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfName))
     const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
-      this.updateCaseByHtml(caseId, { advertHtml }, transaction),
+      this.updateAdvertByHtml(
+        caseId,
+        { advertHtml, documentPdfUrl: pdfUrl },
+        transaction,
+      ),
       this.postCaseCorrection(
         caseId,
         {
@@ -834,36 +845,18 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  private async getCaseByAdvertId(
-    advertId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper<{ caseId: string | undefined }>> {
-    const found = await this.caseModel.findOne({
-      attributes: ['id', 'advert_id'],
-      where: {
-        advertId: advertId,
-      },
-      transaction,
-    })
-
-    if (!found?.id) {
-      this.logger.error(`Case not found by advert Id<${advertId}>`, {
-        category: LOGGING_CATEGORY,
-      })
-    }
-
-    return ResultWrapper.ok({ caseId: found?.id })
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updateCaseByHtml(
+  async updateAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const [updatedCaseResult] = await Promise.all([
+    const [updatedCaseResult, hasAdvertResult] = await Promise.all([
       this.updateService.updateAdvert(caseId, body, transaction),
+      this.casePublishedAdvertsModel.findOne({
+        where: {
+          caseId: caseId,
+        },
+      }),
     ])
 
     if (!updatedCaseResult.result.ok) {
@@ -878,36 +871,24 @@ export class CaseService implements ICaseService {
       })
     }
 
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  async updatePublicAdvertByHtml(
-    advertId: string,
-    body: UpdateAdvertHtmlBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const { caseId } = (
-      await this.getCaseByAdvertId(advertId, transaction)
-    ).unwrap()
-
-    if (caseId) {
-      // Update case and application HTML if that exists:
-      await this.updateCaseByHtml(caseId, body, transaction)
+    if (!hasAdvertResult) {
+      return ResultWrapper.ok()
     }
 
-    // Update public Advert HTML
-    const updateResult = await this.journalService.updateAdvert(advertId, {
-      documentHtml: body.advertHtml,
-    })
+    const updateResult = await this.journalService.updateAdvert(
+      hasAdvertResult.advertId,
+      {
+        documentHtml: body.advertHtml,
+        ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
+      },
+    )
 
     if (!updateResult.result.ok) {
       this.logger.error(
-        `Failed to update advert<${advertId}> HTML, in case<${caseId}>`,
+        `Failed to update advert<${hasAdvertResult.advertId}>, when updating case<${caseId}.html`,
         {
           caseId: caseId,
-          advertId: advertId,
+          advertId: hasAdvertResult.advertId,
           error: updateResult.result.error,
           category: LOGGING_CATEGORY,
         },
@@ -1443,10 +1424,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async rejectCase(
-    caseId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  async rejectCase(caseId: string): Promise<ResultWrapper> {
     const caseStatus = (
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Rejected)
     ).unwrap()
@@ -1460,9 +1438,10 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const hasAdvert = this.caseModel.findByPk(caseId, {
-      attributes: ['id', 'advert_id'],
-      transaction,
+    const hasAdvertPromise = await this.casePublishedAdvertsModel.findOne({
+      where: {
+        caseId: caseId,
+      },
     })
 
     const updateCasePromise = this.caseModel.update(
@@ -1476,15 +1455,14 @@ export class CaseService implements ICaseService {
       },
     )
 
-    const [_, casePublishedAdvert] = await Promise.all([
+    const [_, hasAdvert] = await Promise.all([
       updateCasePromise,
-      hasAdvert,
+      hasAdvertPromise,
     ])
 
-    if (!casePublishedAdvert?.dataValues?.advert_id) {
+    if (!hasAdvert) {
       return ResultWrapper.ok()
     }
-    const advertId = casePublishedAdvert?.dataValues?.advert_id
 
     const statusLookup = await this.utilityService.advertStatusLookup(
       AdvertStatus.Rejected,
@@ -1502,9 +1480,12 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const updateResult = await this.journalService.updateAdvert(advertId, {
-      statusId: statusLookup.result.value.id,
-    })
+    const updateResult = await this.journalService.updateAdvert(
+      hasAdvert.advertId,
+      {
+        statusId: statusLookup.result.value.id,
+      },
+    )
 
     if (!updateResult.result.ok) {
       this.logger.error('Failed to update advert status', {

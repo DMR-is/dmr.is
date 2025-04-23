@@ -612,7 +612,10 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateAdvertHtmlBody,
   ) {
-    const updatedHtmlResult = await this.caseService.updateCaseByHtml(id, body)
+    const updatedHtmlResult = await this.caseService.updateAdvertByHtml(
+      id,
+      body,
+    )
 
     if (!updatedHtmlResult.result.ok) {
       throw new HttpException(
@@ -633,18 +636,6 @@ export class CaseController {
     }
 
     return
-  }
-
-  @Put(':id/html/advert')
-  @ApiOperation({ operationId: 'updatePublicAdvertHtml' })
-  @ApiNoContentResponse()
-  async updatePublicAdvertHtml(
-    @Param('id', new UUIDValidationPipe()) id: string,
-    @Body() body: UpdateAdvertHtmlBody,
-  ) {
-    ResultWrapper.unwrap(
-      await this.caseService.updatePublicAdvertByHtml(id, body),
-    )
   }
 
   @Get('advert')
