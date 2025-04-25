@@ -24,7 +24,7 @@ export const IconButton = (props: Props) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 'circle',
+    borderRadius: 'full',
     background: props?.background || 'blue100',
     component: 'button',
     padding: 'smallGutter',
