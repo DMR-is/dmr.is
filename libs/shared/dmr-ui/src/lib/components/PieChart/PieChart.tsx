@@ -33,7 +33,7 @@ const RechartsPieChart = dynamic(
     loading: () => (
       <Box display="flex" justifyContent="center">
         <SkeletonLoader
-          borderRadius="circle"
+          borderRadius="full"
           height={DEFAULT_PIE_DIMENSION}
           width={DEFAULT_PIE_DIMENSION}
         />
@@ -81,7 +81,7 @@ export const PieChart = ({
                 <Inline space={1} alignY="center">
                   <Box
                     background={item.color}
-                    borderRadius="circle"
+                    borderRadius="full"
                     style={{ width: 12, height: 12 }}
                   />
                   <Text variant="small" fontWeight="medium">
@@ -114,7 +114,7 @@ export const PieChart = ({
               <Inline space={1} alignY="center">
                 <Box
                   background="roseTinted400"
-                  borderRadius="circle"
+                  borderRadius="full"
                   style={{ width: 12, height: 12 }}
                 />
                 <Text variant="small" fontWeight="medium">
