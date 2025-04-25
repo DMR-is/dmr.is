@@ -8,7 +8,7 @@ export const statisticsEmpty = style({
   alignItems: 'center',
   justifyContent: 'center',
 
-  borderRadius: theme.border.radius.xl,
+  borderRadius: theme.border.radius.lg,
   border: `1px solid ${theme.color.blue200}`,
   paddingBlock: theme.spacing[8],
   paddingInline: theme.spacing[3],

@@ -5,7 +5,7 @@ import { theme } from '@island.is/island-ui/theme'
 const spacing = theme.spacing[1] / 2
 
 export const tooltipStyle = style({
-  borderRadius: theme.border.radius.xl,
+  borderRadius: theme.border.radius.lg,
   background: theme.color.dark400,
   paddingInline: spacing * 2,
   paddingBlock: spacing,
