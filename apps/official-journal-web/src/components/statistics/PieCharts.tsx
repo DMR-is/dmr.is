@@ -59,7 +59,7 @@ export const StatisticsPieCharts = ({ data, loading }: Props) => {
           borderRadius="standard"
         />
         <Inline align="center">
-          <SkeletonLoader borderRadius="circle" height={184} width={184} />
+          <SkeletonLoader borderRadius="full" height={184} width={184} />
         </Inline>
         <SkeletonLoader
           height={30}
