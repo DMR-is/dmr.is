@@ -1,5 +1,4 @@
 import {
-  parseAsInteger,
   parseAsStringEnum,
   useQueryState,
 } from 'next-usequerystate'
@@ -8,6 +7,7 @@ import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import { useCasesWithDepartmentCount } from '../../hooks/api'
+import { useSearchParams } from '../../hooks/useSearchParams'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
@@ -19,9 +19,8 @@ export const CasePublishedTabs = () => {
     ),
   )
 
-  const [page] = useQueryState('page', parseAsInteger)
-  const [pageSize] = useQueryState('pageSize', parseAsInteger)
-  const [search] = useQueryState('search')
+  const [searchParams] = useSearchParams()
+  const { status: _status, department: _department, ...params } = searchParams
 
   const statuses = [
     CaseStatusEnum.ÚTgefið,
@@ -34,9 +33,7 @@ export const CasePublishedTabs = () => {
       params: {
         department: department,
         status: statuses,
-        page,
-        pageSize,
-        search,
+        ...params,
       },
     })
 
