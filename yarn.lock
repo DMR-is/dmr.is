@@ -11937,6 +11937,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"beygla@npm:1.5.2":
+  version: 1.5.2
+  resolution: "beygla@npm:1.5.2"
+  checksum: 6f825118efe60a344b2ae1da83fbd15bfee154c47dd4bc6d550ff39055e4d5a2f31bdcf3f4691cec04b8bee4c80ec7399c59cc94eab5dcefb96c9527e4efc4d1
+  languageName: node
+  linkType: hard
+
 "bidi-js@npm:^1.0.2":
   version: 1.0.3
   resolution: "bidi-js@npm:1.0.3"
@@ -14300,6 +14307,7 @@ __metadata:
     agentkeepalive: "npm:^4.2.1"
     axios: "npm:^1.7.2"
     babel-jest: "npm:^29.4.1"
+    beygla: "npm:1.5.2"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.1"
     classnames: "npm:^2.5.1"
