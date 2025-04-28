@@ -1,3 +1,4 @@
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import type { Page } from 'puppeteer'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
@@ -8,10 +9,12 @@ import {
 } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ApplicationAttachment } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   applicationSignatureTemplate,
   formatAnyDate,
+  handlePdfAdditions,
   retryAsync,
 } from '@dmr.is/utils'
 
@@ -20,6 +23,7 @@ import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
+import { IAWSService } from '../aws/aws.service.interface'
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
@@ -37,6 +41,8 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   constructor(
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
+    @Inject(IAWSService)
+    private readonly awsService: IAWSService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -84,15 +90,17 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     if (answers.advert.additions) {
       additionHtml = answers.advert.additions
-        .map(
-          (addition) => `
+        .map((addition) =>
+          cleanupSingleEditorOutput(addition.content as HTMLText)
+            ? `
             <section class="appendix">
               <h2 class="appendix__title">${addition.title}</h2>
               <div class="appendix__text">
                 ${cleanupSingleEditorOutput(addition.content as HTMLText)}
               </div>
             </section>
-          `,
+          `
+            : '',
         )
         .join('')
     }
@@ -115,10 +123,143 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     return ResultWrapper.ok(pdf)
   }
 
+  @LogAndHandle()
+  private async getAllCaseAttachments(
+    attachments: ApplicationAttachment[],
+  ): Promise<string[]> {
+    try {
+      const urls = await Promise.all(
+        attachments.map(async (attachment) => {
+          try {
+            const fileLocation = attachment.fileLocation
+            const signedUrl = (
+              await this.awsService.getObject(fileLocation)
+            ).unwrap()
+            return signedUrl
+          } catch (error) {
+            this.logger.error(`Failed to get signed URL for attachment`, {
+              category: LOGGING_CATEGORY,
+              attachment,
+              error,
+            })
+            throw error // rethrow to fail Promise.all
+          }
+        }),
+      )
+      return urls
+    } catch {
+      // Individual errors already logged above
+      return []
+    }
+  }
+
+  @LogAndHandle({ logArgs: false })
+  private async mergePdfs(
+    mainPdfBuffer: Buffer,
+    accompanyingPdfUrls?: string[],
+    header?: { dateText?: string; documentNumber?: string },
+    footer?: string,
+  ): Promise<Buffer> {
+    async function fetchPdfFromUrl(url: string): Promise<Uint8Array> {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`Failed to fetch PDF from ${url}`)
+      return new Uint8Array(await res.arrayBuffer())
+    }
+
+    const mergedPdf = await PDFDocument.create()
+
+    const mainDoc = await PDFDocument.load(mainPdfBuffer)
+    const mainPages = await mergedPdf.copyPages(
+      mainDoc,
+      mainDoc.getPageIndices(),
+    )
+    mainPages.forEach((page) => mergedPdf.addPage(page))
+
+    if (accompanyingPdfUrls && accompanyingPdfUrls.length > 0) {
+      for (const url of accompanyingPdfUrls) {
+        const pdfBytes = await fetchPdfFromUrl(url)
+        const doc = await PDFDocument.load(pdfBytes)
+        const pages = await mergedPdf.copyPages(doc, doc.getPageIndices())
+        pages.forEach((page) => mergedPdf.addPage(page))
+      }
+    }
+
+    const pages = mergedPdf.getPages()
+
+    if (header?.dateText && header?.documentNumber) {
+      const { dateText, documentNumber } = header
+
+      const font = await mergedPdf.embedFont(StandardFonts.TimesRoman)
+      const fontSize = 11
+      const margin = 75
+      const topOffset = 40
+      const textColor = rgb(0.02, 0.02, 0.02)
+
+      const lastPageIndex = pages.length - 1
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i]
+        const { width, height } = page.getSize()
+
+        page.drawText(documentNumber, {
+          x: margin,
+          y: height - topOffset,
+          size: fontSize,
+          font,
+          color: textColor,
+        })
+
+        const dateWidth = font.widthOfTextAtSize(dateText, fontSize)
+        page.drawText(dateText, {
+          x: width - margin - dateWidth,
+          y: height - topOffset,
+          size: fontSize,
+          font,
+          color: textColor,
+        })
+
+        if (i === lastPageIndex && footer) {
+          const footerFontSize = 10
+          const footerText = footer
+
+          const lineWidth = 60
+          const lineX = (width - lineWidth) / 2
+          const lineY = 80
+
+          page.drawLine({
+            start: { x: lineX, y: lineY },
+            end: { x: lineX + lineWidth, y: lineY },
+            thickness: 1,
+            color: textColor,
+          })
+
+          const footerTextWidth = font.widthOfTextAtSize(
+            footerText,
+            footerFontSize,
+          )
+          const footerTextX = (width - footerTextWidth) / 2
+          const footerTextY = lineY - 20
+
+          page.drawText(footerText, {
+            x: footerTextX,
+            y: footerTextY,
+            size: footerFontSize,
+            font,
+            color: textColor,
+          })
+        }
+      }
+    }
+
+    return Buffer.from(await mergedPdf.save())
+  }
+
   @LogAndHandle({ logArgs: false })
   private async generatePdfFromHtml(
     htmlContent: string,
-    header?: string,
+    caseAttachmentUrls?: string[],
+    header?: { dateText: string; documentNumber: string },
+    footer?: string,
   ): Promise<ResultWrapper<Buffer>> {
     try {
       return retryAsync(
@@ -150,22 +291,23 @@ export class PdfService implements OnModuleDestroy, IPdfService {
               })
             })
             const pdf = await page.pdf({
-              headerTemplate: `
-              <div style="font-size:14px;
-                          width:100%;
-                          padding:10px 100px;
-                          margin:0 auto;
-                          display:flex;
-                          justify-content:space-between;
-                          align-items:center;">
-                ${header}
-              </div>
-            `,
-              footerTemplate: '<div></div>',
-              displayHeaderFooter: true,
+              margin: {
+                top: '60px',
+                bottom: '40px',
+                left: '40px',
+                right: '40px',
+              },
             })
             await page.close()
-            return ResultWrapper.ok(pdf)
+
+            const mergedPdf = await this.mergePdfs(
+              pdf,
+              caseAttachmentUrls,
+              header,
+              footer,
+            )
+            await this.browser?.close()
+            return ResultWrapper.ok(mergedPdf)
           } else {
             const pdf = await page.pdf()
             await page.close()
@@ -202,25 +344,17 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     if (!activeCase.publicationNumber && serial) {
       activeCase.publicationNumber = serial.toString()
     }
+    const hasAdditions =
+      activeCase.attachments.length > 0 || activeCase.additions.length > 0
     const markup = advertPdfTemplate({
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
       content: cleanupSingleEditorOutput(activeCase.html as HTMLText),
-      additions: activeCase.additions
-        .map(
-          (addition) => `
-        <section class="appendix">
-          <h2 class="appendix__title">${addition.title}</h2>
-          <div class="appendix__text">
-            ${cleanupSingleEditorOutput(addition.html as HTMLText)}
-          </div>
-        </section>
-      `,
-        )
-        .join(''),
+      additions: handlePdfAdditions(activeCase.additions),
       signature: activeCase.signature.html,
-      subSignature:
-        activeCase.publishedAt && activeCase.advertDepartment.title
+      subSignature: hasAdditions
+        ? ''
+        : activeCase.publishedAt && activeCase.advertDepartment.title
           ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAnyDate(activeCase.publishedAt)}</div>`
           : undefined,
     })
@@ -237,10 +371,22 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${formatAnyDate(newest)}</span>`
+        ? {
+            dateText: formatAnyDate(newest),
+            documentNumber: `Nr. ${activeCase.publicationNumber}`,
+          }
         : undefined
-
-    const pdfResults = await this.generatePdfFromHtml(markup, header)
+    const caseAttachmentsUrls = await this.getAllCaseAttachments(
+      activeCase.attachments,
+    )
+    const pdfResults = await this.generatePdfFromHtml(
+      markup,
+      caseAttachmentsUrls,
+      header,
+      hasAdditions
+        ? `${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAnyDate(activeCase.publishedAt)}`
+        : undefined,
+    )
 
     if (!pdfResults.result.ok) {
       this.logger.error(`Failed to generate PDF`, {

@@ -24,6 +24,7 @@ import {
   AdvertTemplateTypeEnums,
   ApplicationSignatureMember,
   ApplicationSignatureRecord,
+  CaseAddition,
   CaseCommentDirectionEnum,
   CaseCommentSourceEnum,
   CaseStatusEnum,
@@ -36,6 +37,9 @@ import {
   HttpException,
   MaxFileSizeValidator,
 } from '@nestjs/common'
+
+import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
+import { HTMLText } from '@island.is/regulations-tools/types'
 
 import {
   templateAuglysing,
@@ -435,6 +439,26 @@ export const formatAnyDate = (date: unknown): string => {
   }
 
   return format(parsedDate, 'd. MMMM yyyy', { locale: is })
+}
+
+export const handlePdfAdditions = (additionArray: CaseAddition[]) => {
+  return additionArray
+    .sort((a, b) => {
+      return a.order - b.order
+    })
+    .map((addition) =>
+      cleanupSingleEditorOutput(addition.html as HTMLText)
+        ? `
+          <section class="appendix">
+            <h2 class="appendix__title">${addition.title}</h2>
+            <div class="appendix__text">
+              ${cleanupSingleEditorOutput(addition.html as HTMLText)}
+            </div>
+          </section>
+        `
+        : '',
+    )
+    .join('')
 }
 
 export const getTemplate = (
