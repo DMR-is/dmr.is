@@ -192,7 +192,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       const font = await mergedPdf.embedFont(StandardFonts.TimesRoman)
       const fontSize = 11
       const margin = 75
-      const topOffset = 40
+      const topOffset = 80
       const textColor = rgb(0.02, 0.02, 0.02)
 
       const lastPageIndex = pages.length - 1
@@ -290,14 +290,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                 p.innerHTML = wrappedParts.join('<br>')
               })
             })
-            const pdf = await page.pdf({
-              margin: {
-                top: '60px',
-                bottom: '40px',
-                left: '40px',
-                right: '40px',
-              },
-            })
+            const pdf = await page.pdf()
             await page.close()
 
             const mergedPdf = await this.mergePdfs(
