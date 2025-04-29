@@ -1052,6 +1052,12 @@ export class CaseService implements ICaseService {
       caseToPublish.department.title,
       now,
     )
+
+    const additionsOrAttachmentInfoHtml =
+      (caseToPublish.additions && caseToPublish.additions.length > 0) ||
+      (caseToPublish.attachments && caseToPublish.attachments.length > 0)
+        ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI<br>(sjá PDF-skjal)</p>`
+        : ''
     const signatureRecords = caseToPublish.signature.records
     const newest = signatureRecords
       .map((item) => item.signatureDate)
@@ -1069,7 +1075,11 @@ export class CaseService implements ICaseService {
         categories: caseToPublish.categories?.map((c) => c.id) ?? [],
         publicationDate: now.toISOString(),
         signatureDate: newest,
-        content: caseToPublish.html + signatureHtml + publicationHtml,
+        content:
+          caseToPublish.html +
+          signatureHtml +
+          additionsOrAttachmentInfoHtml +
+          publicationHtml,
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
       },
       transaction,

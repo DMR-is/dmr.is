@@ -69,7 +69,7 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
       id="AppendixFields"
       expanded={toggle}
       onToggle={onToggle}
-      label="Viðaukar"
+      label="Viðaukar/fylgiskjöl"
       labelVariant="h5"
       iconVariant="small"
     >

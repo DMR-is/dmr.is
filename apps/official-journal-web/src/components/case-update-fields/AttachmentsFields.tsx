@@ -17,7 +17,7 @@ export const AttachmentFields = ({ toggle, onToggle }: Props) => {
       id="attachments"
       expanded={toggle}
       onToggle={onToggle}
-      label={formatMessage(messages.grunnvinnsla.attachments)}
+      label={formatMessage(messages.grunnvinnsla.attachmentFiles)}
       labelVariant="h5"
       iconVariant="small"
     >

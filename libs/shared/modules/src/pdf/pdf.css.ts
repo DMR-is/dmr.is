@@ -85,7 +85,7 @@ export const pdfCss = `
 
   @page {
     size: A4;
-    margin: 2cm calc(2cm - 0.33em); /* --table-padding--h */
+    margin: 4cm calc(2cm - 0.33em); /* --table-padding--h */
     margin-bottom: 1.5cm;
 
     @top-left {
@@ -247,7 +247,6 @@ export const pdfCss = `
     border-spacing: 0;
     max-width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
     word-wrap: break-word;
   }
 
@@ -260,7 +259,6 @@ export const pdfCss = `
     width: auto;
     border: var(--table-border);
     page-break-inside: avoid;
-    font-size: 8pt;
   }
 
   tr:not(:first-child) > th,

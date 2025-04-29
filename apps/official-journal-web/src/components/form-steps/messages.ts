@@ -67,6 +67,11 @@ export const messages = {
       defaultMessage: 'Fylgiskjöl',
       description: '',
     },
+    attachmentFiles: {
+      id: 'web.components.steps.grunnvinnsla:attachmentFiles',
+      defaultMessage: 'Fylgigögn',
+      description: '',
+    },
     message: {
       id: 'web.components.steps.grunnvinnsla:message',
       defaultMessage: 'Skilaboð til ritstjóra',
