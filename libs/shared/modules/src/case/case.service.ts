@@ -1053,7 +1053,7 @@ export class CaseService implements ICaseService {
       now,
     )
 
-    const addtionsOrAttahmentInfoHtml =
+    const additionsOrAttachmentInfoHtml =
       (caseToPublish.additions && caseToPublish.additions.length > 0) ||
       (caseToPublish.attachments && caseToPublish.attachments.length > 0)
         ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI</br>(sjá PDF-skjal)</p>`
@@ -1078,7 +1078,7 @@ export class CaseService implements ICaseService {
         content:
           caseToPublish.html +
           signatureHtml +
-          addtionsOrAttahmentInfoHtml +
+          additionsOrAttachmentInfoHtml +
           publicationHtml,
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
       },

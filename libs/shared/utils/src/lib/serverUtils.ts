@@ -446,18 +446,19 @@ export const handlePdfAdditions = (additionArray: CaseAddition[]) => {
     .sort((a, b) => {
       return a.order - b.order
     })
-    .map((addition) =>
-      cleanupSingleEditorOutput(addition.html as HTMLText)
+    .map((addition) => {
+      const cleanHtml = cleanupSingleEditorOutput(addition.html as HTMLText)
+      return cleanHtml
         ? `
-          <section class="appendix">
-            <h2 class="appendix__title">${addition.title}</h2>
-            <div class="appendix__text">
-              ${cleanupSingleEditorOutput(addition.html as HTMLText)}
-            </div>
-          </section>
-        `
-        : '',
-    )
+        <section class="appendix">
+          <h2 class="appendix__title">${addition.title}</h2>
+          <div class="appendix__text">
+            ${cleanHtml}
+          </div>
+        </section>
+      `
+        : ''
+    })
     .join('')
 }
 
