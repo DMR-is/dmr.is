@@ -1056,7 +1056,7 @@ export class CaseService implements ICaseService {
     const additionsOrAttachmentInfoHtml =
       (caseToPublish.additions && caseToPublish.additions.length > 0) ||
       (caseToPublish.attachments && caseToPublish.attachments.length > 0)
-        ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI</br>(sjá PDF-skjal)</p>`
+        ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI<br>(sjá PDF-skjal)</p>`
         : ''
     const signatureRecords = caseToPublish.signature.records
     const newest = signatureRecords
