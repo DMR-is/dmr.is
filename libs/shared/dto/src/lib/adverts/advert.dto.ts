@@ -229,4 +229,11 @@ export class CreateAdvert {
     required: true,
   })
   categories!: string[]
+
+  @ApiProperty({
+    type: String,
+    description: 'UUID of the advert',
+    required: false,
+  })
+  advertId?: string
 }

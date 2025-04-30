@@ -21,6 +21,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
   return {
     id: model.id,
     advertId: model.advertId,
+    proposedAdvertId: model?.proposedAdvertId,
     applicationId: model?.applicationId,
     year: model.year,
     caseNumber: model.caseNumber,

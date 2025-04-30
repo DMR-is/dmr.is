@@ -116,7 +116,12 @@ export class JournalService implements IJournalService {
     model: CreateAdvert,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertResponse>> {
-    const id = uuid()
+    let id
+    if (model.advertId) {
+      id = model.advertId
+    } else {
+      id = uuid()
+    }
 
     const status = await this.advertStatusModel.findOne({
       where: { title: { [Op.eq]: AdvertStatus.Published } },

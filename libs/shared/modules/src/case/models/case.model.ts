@@ -180,6 +180,13 @@ export class CaseModel extends Model {
   html!: string
 
   @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'proposed_advert_id',
+  })
+  proposedAdvertId?: string
+
+  @Column({
     type: DataType.TEXT,
     field: 'publication_number',
   })
