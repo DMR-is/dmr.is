@@ -5161,6 +5161,12 @@
             "description": "Id of the advert the case is related to.",
             "nullable": true
           },
+          "proposedAdvertId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "Propsed ID of the advert. Before advert is published.",
+            "nullable": true
+          },
           "applicationId": {
             "type": "string",
             "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -5311,6 +5317,7 @@
         "required": [
           "id",
           "advertId",
+          "proposedAdvertId",
           "year",
           "caseNumber",
           "status",

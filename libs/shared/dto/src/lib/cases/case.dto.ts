@@ -55,6 +55,16 @@ export class CaseDetailed {
   @ApiProperty({
     type: String,
     example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+    description: 'Propsed ID of the advert. Before advert is published.',
+    nullable: true,
+  })
+  @IsString()
+  @IsUUID()
+  proposedAdvertId?: string
+
+  @ApiProperty({
+    type: String,
+    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
     description:
       'Id of the submitted application, default to null on older cases.',
     required: false,
@@ -200,7 +210,7 @@ export class CaseDetailed {
   })
   readonly advertCategories!: Category[]
 
-    @ApiProperty({
+  @ApiProperty({
     description: 'Case fee transaction.',
     required: true,
     type: CaseTransaction,

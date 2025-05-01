@@ -8,8 +8,6 @@ export const MINIMUM_WEEKDAYS = 10
 type IsHolidayMap = Record<string, true | undefined>
 const holidayCache: Record<number, IsHolidayMap | undefined> = {}
 
-
-
 const getHolidayMap = (year: number): IsHolidayMap => {
   let yearHolidays = holidayCache[year]
   if (!yearHolidays) {

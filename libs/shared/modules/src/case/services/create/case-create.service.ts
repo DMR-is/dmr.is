@@ -191,6 +191,7 @@ export class CaseCreateService implements ICaseCreateService {
         updatedAt: nowIso,
         isLegacy: false,
         fastTrack: false,
+        proposedAdvertId: uuid(),
       },
       {
         transaction: transaction,
@@ -394,6 +395,7 @@ export class CaseCreateService implements ICaseCreateService {
         isLegacy: false,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
+        proposedAdvertId: uuid(),
       },
       categories: application.answers.advert.categories,
       channels: channels,

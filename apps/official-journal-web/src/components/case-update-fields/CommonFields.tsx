@@ -37,6 +37,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     typeOptions,
     isValidatingTypes,
     canEdit,
+    isPublishedOrRejected,
   } = useCaseContext()
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
@@ -112,6 +113,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
         )
       : null
 
+  const advertDisplayId = currentCase.proposedAdvertId ?? currentCase.advertId
   return (
     <AccordionItem
       id="commonFields"
@@ -126,12 +128,41 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           name="applicationId"
           readOnly
           label="Auðkenni umsóknar"
+          size="sm"
+          width="half"
           value={
             currentCase.applicationId
               ? currentCase.applicationId
               : 'Engin umsókn'
           }
+          copyOptions={
+            currentCase.applicationId
+              ? {
+                  toCopy: currentCase.applicationId,
+                  label: 'Auðkenni umsóknar afritað',
+                }
+              : undefined
+          }
+        />
+        <OJOIInput
+          name="applicationId"
+          readOnly
+          label={
+            isPublishedOrRejected
+              ? 'Auðkenni auglýsingar'
+              : 'Verðandi auðkenni auglýsingar'
+          }
+          size="sm"
           width="half"
+          value={advertDisplayId ?? 'Engin auglýsing á máli'}
+          copyOptions={
+            advertDisplayId
+              ? {
+                  toCopy: `${advertDisplayId}`,
+                  label: 'Auðkenni auglýsingar afritað',
+                }
+              : undefined
+          }
         />
         <OJOIInput
           disabled

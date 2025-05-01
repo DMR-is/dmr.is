@@ -1081,6 +1081,7 @@ export class CaseService implements ICaseService {
           additionsOrAttachmentInfoHtml +
           publicationHtml,
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
+        advertId: caseToPublish.proposedAdvertId,
       },
       transaction,
     )
