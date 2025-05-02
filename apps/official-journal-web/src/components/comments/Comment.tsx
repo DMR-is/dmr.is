@@ -34,7 +34,7 @@ export const Comment = ({ comment }: Props) => {
       <Box className={styles.content}>{commentNode}</Box>
       <Box className={styles.date}>
         <Text capitalizeFirstLetter whiteSpace="nowrap">
-          {convertDateToDaysAgo(comment.created)}
+          {convertDateToDaysAgo(comment.created, true)}
         </Text>
       </Box>
       {showFooter && (

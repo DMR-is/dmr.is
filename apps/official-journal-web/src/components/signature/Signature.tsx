@@ -140,7 +140,7 @@ export const SignatureRecord = ({ record }: Props) => {
       <ContentWrapper
         titleVariant="h5"
         titleAs="h5"
-        title="Stofnun og dagsetning"
+        title="Undirskriftarstaður/Stofnun og dagsetning"
       >
         <Columns space={2}>
           <Column>
@@ -148,7 +148,7 @@ export const SignatureRecord = ({ record }: Props) => {
               disabled={!canEdit}
               isValidating={isUpdatingSignatureRecord}
               defaultValue={record.institution}
-              label="Stofnun"
+              label="Staður eða stofnun (þgf.)"
               name="institution"
               onChange={(e) =>
                 handleRecordChange('institution', e.target.value)
