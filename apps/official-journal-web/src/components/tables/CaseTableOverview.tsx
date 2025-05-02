@@ -1,6 +1,5 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { Tag, Text } from '@island.is/island-ui/core'
 
@@ -18,8 +17,6 @@ export const CaseTableOverview = ({
 }: PublishedTableProps) => {
   const { formatMessage } = useFormatMessage()
 
-  const { params } = useFilters()
-
   const columns: DataTableColumnProps[] = [
     {
       field: 'casePublishDate',
@@ -29,7 +26,7 @@ export const CaseTableOverview = ({
     },
     {
       field: 'caseStatus',
-      sortable: false,
+      sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.status),
     },

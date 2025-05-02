@@ -1,8 +1,9 @@
+import dynamic from 'next/dynamic'
+
 import { SkeletonLoader, Stack, Table as T } from '@island.is/island-ui/core'
 
 import { DataTableBody } from './DataTableBody'
 import { DataTableColumn } from './DataTableColumn'
-import { DataTablePagination } from './DataTablePagination'
 import {
   DataTableColumnProps,
   DataTableProps,
@@ -26,6 +27,12 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
       />
     )
   }
+
+  const DataTablePagination = dynamic(
+    () =>
+      import('./DataTablePagination').then((mod) => mod.DataTablePagination),
+    { ssr: false },
+  )
 
   const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
   const hasLinkRows = rows?.some((row) => !!row.hasLink)

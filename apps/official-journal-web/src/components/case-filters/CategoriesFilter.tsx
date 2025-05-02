@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -10,9 +11,11 @@ import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const CategoriesFilter = () => {
   const { formatMessage } = useFormatMessage()
+  const { params, setParams } = useFilters()
   const [search, setSearch] = useState('')
+
   const { data, error, isLoading } = useCategories({
-    params: { page: 1, pageSize: 1000, search },
+    params: { page: 1, pageSize: 1000, search: params.search },
     options: {
       keepPreviousData: true,
       refreshInterval: 0,
@@ -32,10 +35,11 @@ export const CategoriesFilter = () => {
   return (
     <FilterGroup
       label="Flokkur"
-      queryKey="category"
       options={data?.categories ?? []}
       search={search}
       setSearch={setSearch}
+      filters={params.category}
+      setFilters={(p) => setParams({ category: p })}
       loading={isLoading}
       searchPlaceholder={formatMessage(generalMessages.searchByCategory)}
     />
