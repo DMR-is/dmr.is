@@ -1,5 +1,7 @@
 import { Box, Icon, Inline, Table as T, Text } from '@island.is/island-ui/core'
 
+import { DEFAULT_SORT_DIRECTION, SortDirection } from '../../../hooks/constants'
+import { useFilters } from '../../../hooks/useFilters'
 import * as styles from './DataTable.css'
 import { DataTableColumnProps } from './types'
 
@@ -9,18 +11,53 @@ export const DataTableColumn = ({
   width,
   align = 'left',
   children,
-  onSort,
-  direction = 'asc',
-  sortBy,
+  size,
+  sortable = false,
 }: DataTableColumnProps) => {
+  const { params, setParams } = useFilters()
+  const handleSort = (field: string) => {
+    const isSameField = params.sortBy === field
+
+    if (isSameField) {
+      return setParams({
+        direction:
+          params.direction === SortDirection.ASC
+            ? SortDirection.DESC
+            : SortDirection.ASC,
+      })
+    }
+
+    setParams({
+      sortBy: field,
+      direction: DEFAULT_SORT_DIRECTION,
+    })
+  }
+
+  const Wrapper = sortable ? 'button' : 'div'
+
+  const order = params.sortBy === field ? params.direction : undefined
+
+  const tinyTableCellStyles: React.CSSProperties = {
+    minWidth: 0,
+    maxWidth: 'none',
+    whiteSpace: 'nowrap',
+    width: 0,
+  }
+
+  const smallTableCellStyles: React.CSSProperties = {
+    minWidth: 0,
+    maxWidth: 'none',
+    whiteSpace: 'nowrap',
+    width: '130px',
+  }
+
   const inlineStyles = {
     minWidth: width ? width : '100px',
     width: width ? width : 'auto',
+
+    ...(size === 'tiny' && tinyTableCellStyles),
+    ...(size === 'small' && smallTableCellStyles),
   }
-
-  const Wrapper = onSort ? 'button' : 'div'
-
-  const order = sortBy === field ? direction : undefined
 
   return (
     <T.HeadData
@@ -33,7 +70,7 @@ export const DataTableColumn = ({
         textAlign: align,
       }}
     >
-      <Wrapper onClick={() => onSort && onSort(field)}>
+      <Wrapper onClick={() => sortable && handleSort(field)}>
         <Inline space={1} flexWrap="nowrap" alignY="center">
           {typeof children === 'string' ? (
             <Text variant="medium" fontWeight="semiBold">
@@ -42,7 +79,7 @@ export const DataTableColumn = ({
           ) : (
             children
           )}
-          {onSort && (
+          {sortable && (
             <Box
               className={styles.dataTableHeadCellChevron({
                 order: order,

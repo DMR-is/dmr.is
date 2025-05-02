@@ -3,9 +3,10 @@ export type DataTableColumnProps = {
   fluid?: boolean
   width?: string
   align?: 'left' | 'right' | 'center'
+  size?: 'tiny' | 'small' | 'default'
   children?: React.ReactNode
   sortBy?: string
-  onSort?: (field: string) => void
+  sortable?: boolean
   direction?: 'asc' | 'desc'
 }
 
@@ -30,19 +31,22 @@ export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {
   columns: T
   uniqueKey?: string
 } & DataTableRowExpandableProps &
-DataTableRowHasLinkProps
+  DataTableRowHasLinkProps
 export type DataTablePagingProps = {
   page: number
   pageSize: number
   totalItems: number
   totalPages: number
-  onPaginate?: (page: number) => void
 }
 
 export type DataTableBodyProps<T extends readonly DataTableColumnProps[]> = {
   columns: T
   rows?: Array<DataTableRowProps<T>>
   noDataMessage?: string
+}
+
+export type DataTablePaginationProps = {
+  paging: DataTablePagingProps
 }
 
 export type DataTableProps<T extends readonly DataTableColumnProps[]> = {

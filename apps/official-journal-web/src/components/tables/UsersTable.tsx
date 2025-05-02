@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
-import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import {
@@ -146,37 +145,6 @@ export const UsersTable = ({
               }}
             />
           </GridColumn>
-          <GridColumn span={['12/12', '6/12', '3/12']}>
-            <OJOISelect
-              label="Fjöldi niðurstaðna"
-              placeholder="Velja fjölda niðurstaðna"
-              onChange={(opt) => {
-                if (!opt) return
-                setPageSize(opt.value)
-              }}
-              defaultValue={PAGE_SIZE_OPTIONS.find(
-                (opt) => opt.value === pageSize,
-              )}
-              options={[
-                {
-                  label: '10',
-                  value: 10,
-                },
-                {
-                  label: '20',
-                  value: 20,
-                },
-                {
-                  label: '50',
-                  value: 50,
-                },
-                {
-                  label: '100',
-                  value: 100,
-                },
-              ]}
-            />
-          </GridColumn>
         </GridRow>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '12/12']}>
@@ -259,9 +227,6 @@ export const UsersTable = ({
                 pageSize,
                 totalItems: paging?.totalItems || 0,
                 totalPages: paging?.totalPages || 0,
-                onPaginate: (page) => {
-                  setPage(page)
-                },
               }}
             />
           </GridColumn>

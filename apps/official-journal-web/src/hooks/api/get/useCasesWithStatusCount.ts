@@ -8,6 +8,7 @@ import {
 import { getDmrClient } from '../../../lib/api/createClient'
 import { swrFetcher } from '../../../lib/constants'
 import { NullableExcept } from '../../../lib/types'
+import { getParamsWithoutNullOrEmpty } from '../../../lib/utils'
 
 type UseGetCasesWithStatusCount = {
   params?: NullableExcept<GetCasesWithStatusCountRequest, 'status'>
@@ -20,14 +21,7 @@ export const useCasesWithStatusCount = ({
 
   const dmrClient = getDmrClient(session?.idToken as string)
   const castedParams: { [key: string]: unknown } = params ? params : {}
-  const paramsWithoutNull = Object.keys(castedParams).reduce<{
-    [key: string]: unknown
-  }>((acc, key) => {
-    if (castedParams[key] !== null) {
-      acc[key] = castedParams[key]
-    }
-    return acc
-  }, {})
+  const paramsWithoutNull = getParamsWithoutNullOrEmpty(castedParams)
 
   const { data, error, isLoading, isValidating, mutate } =
     useSWR<GetCasesWithStatusCount>(

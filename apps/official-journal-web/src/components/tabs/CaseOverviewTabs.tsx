@@ -1,11 +1,11 @@
 import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import { useCasesWithStatusCount } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useSearchParams } from '../../hooks/useSearchParams'
 import { messages } from '../../lib/messages/caseProcessingOverview'
 import { CaseTableInProgress } from '../tables/CaseTableInProgress'
 import { CaseTableInReview } from '../tables/CaseTableInReview'
@@ -14,9 +14,7 @@ import { Tabs } from './Tabs'
 
 export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
-
-  const [searchParams] = useSearchParams()
-  const { status: _status, ...params } = searchParams
+  const { params } = useFilters()
 
   const [status, setStatus] = useQueryState(
     'status',
@@ -25,19 +23,18 @@ export const CaseOverviewTabs = () => {
     ).withDefault(CaseStatusEnum.Innsent),
   )
 
-  const { cases, statuses, paging, isLoading, isValidating } =
-    useCasesWithStatusCount({
-      params: {
-        status: status,
-        statuses: [
-          CaseStatusEnum.Innsent,
-          CaseStatusEnum.Grunnvinnsla,
-          CaseStatusEnum.Yfirlestur,
-          CaseStatusEnum.Tilbúið,
-        ],
-        ...params,
-      },
-    })
+  const { cases, statuses, paging, isLoading } = useCasesWithStatusCount({
+    params: {
+      statuses: [
+        CaseStatusEnum.Innsent,
+        CaseStatusEnum.Grunnvinnsla,
+        CaseStatusEnum.Yfirlestur,
+        CaseStatusEnum.Tilbúið,
+      ],
+      ...params,
+      status: status,
+    },
+  })
 
   const loading = isLoading
 
@@ -111,11 +108,7 @@ export const CaseOverviewTabs = () => {
               space={2}
             />
           ) : (
-            <CaseTableSubmitted
-              isLoading={isValidating}
-              cases={cases}
-              paging={paging}
-            />
+            <CaseTableSubmitted cases={cases} paging={paging} />
           )
           break
         case CaseStatusEnum.Grunnvinnsla:
@@ -131,11 +124,7 @@ export const CaseOverviewTabs = () => {
               space={2}
             />
           ) : (
-            <CaseTableInProgress
-              isLoading={isValidating}
-              cases={cases}
-              paging={paging}
-            />
+            <CaseTableInProgress cases={cases} paging={paging} />
           )
           break
         case CaseStatusEnum.Yfirlestur:
@@ -151,11 +140,7 @@ export const CaseOverviewTabs = () => {
               space={2}
             />
           ) : (
-            <CaseTableInReview
-              isLoading={isValidating}
-              cases={cases}
-              paging={paging}
-            />
+            <CaseTableInReview cases={cases} paging={paging} />
           )
           break
         case CaseStatusEnum.Tilbúið:
@@ -171,11 +156,7 @@ export const CaseOverviewTabs = () => {
               space={2}
             />
           ) : (
-            <CaseTableInProgress
-              isLoading={isValidating}
-              cases={cases}
-              paging={paging}
-            />
+            <CaseTableInProgress cases={cases} paging={paging} />
           )
           break
       }

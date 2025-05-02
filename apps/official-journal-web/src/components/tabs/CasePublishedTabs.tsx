@@ -1,13 +1,10 @@
-import {
-  parseAsStringEnum,
-  useQueryState,
-} from 'next-usequerystate'
+import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import { useCasesWithDepartmentCount } from '../../hooks/api'
-import { useSearchParams } from '../../hooks/useSearchParams'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
@@ -18,9 +15,7 @@ export const CasePublishedTabs = () => {
       DepartmentEnum.ADeild,
     ),
   )
-
-  const [searchParams] = useSearchParams()
-  const { status: _status, department: _department, ...params } = searchParams
+  const { params } = useFilters()
 
   const statuses = [
     CaseStatusEnum.ÚTgefið,
@@ -32,8 +27,8 @@ export const CasePublishedTabs = () => {
     useCasesWithDepartmentCount({
       params: {
         department: department,
-        status: statuses,
         ...params,
+        status: statuses,
       },
     })
 

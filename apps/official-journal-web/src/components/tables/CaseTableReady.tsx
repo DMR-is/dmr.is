@@ -1,10 +1,13 @@
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
+
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
-import CaseTable, { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 
@@ -28,9 +31,9 @@ export const CaseTableReady = ({
   const allChecked =
     selectedCaseIds.length > 0 && selectedCaseIds.length === cases?.length
 
-  const columns: CaseTableHeadCellProps[] = [
+  const columns: DataTableColumnProps[] = [
     {
-      name: 'select',
+      field: 'select',
       sortable: false,
       size: 'tiny',
       children: (
@@ -42,94 +45,73 @@ export const CaseTableReady = ({
       ),
     },
     {
-      name: 'caseLabels',
+      field: 'caseLabels',
       sortable: false,
       size: 'tiny',
     },
     {
-      name: 'casePublishDate',
+      field: 'casePublishDate',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.title),
     },
     {
-      name: 'caseTitle',
+      field: 'caseTitle',
       sortable: false,
       children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
-      name: 'caseInstitution',
+      field: 'caseInstitution',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.institution),
     },
   ]
 
-  const caseTableColumns =
-    cases?.map((_case) => {
+  const rows =
+    cases?.map((row) => {
       return {
-        case: _case,
-        cells: [
-          {
-            children: (
-              <Checkbox
-                id={_case.id}
-                name={`case-checkbox-${_case.id}`}
-                onChange={(e) => toggle(_case, e.target.checked)}
-                checked={selectedCaseIds.some((id) => id === _case.id)}
-                value={_case.id}
-              />
-            ),
-          },
-          {
-            children: (
-              <CaseToolTips
-                fastTrack={_case.fastTrack}
-                status={_case.communicationStatus.title}
-              />
-            ),
-          },
-          {
-            sortingKey: 'caseAdvertType',
-            sortingValue: _case.advertType.title,
-            children: (
-              <div className={styles.titleTableCell}>
-                <Text truncate variant="medium">
-                  {_case.advertType.title} {_case.advertTitle}
-                </Text>
-              </div>
-            ),
-          },
-          {
-            sortingKey: 'casePublishDate',
-            sortingValue: _case.requestedPublicationDate,
-            children: (
-              <Text variant="medium">
-                {_case.requestedPublicationDate
-                  ? formatDate(_case.requestedPublicationDate)
-                  : null}
-              </Text>
-            ),
-          },
-          {
-            children: (
-              <Text whiteSpace="nowrap" variant="medium">
-                {_case.involvedParty.title}
-              </Text>
-            ),
-          },
-        ],
+        uniqueKey: row.id,
+        hasLink: true,
+        href: Routes.ProccessingDetail.replace(':caseId', row.id),
+        select: (
+          <Checkbox
+            id={row.id}
+            name={`case-checkbox-${row.id}`}
+            onChange={(e) => toggle(row, e.target.checked)}
+            checked={selectedCaseIds.some((id) => id === row.id)}
+            value={row.id}
+          />
+        ),
+        caseLabels: (
+          <CaseToolTips
+            fastTrack={row.fastTrack}
+            status={row.communicationStatus.title}
+          />
+        ),
+        caseAdvertType: (
+          <div className={styles.titleTableCell}>
+            <Text truncate variant="medium">
+              {row.advertType.title} {row.advertTitle}
+            </Text>
+          </div>
+        ),
+        casePublishDate: (
+          <Text variant="medium">
+            {row.requestedPublicationDate
+              ? formatDate(row.requestedPublicationDate)
+              : null}
+          </Text>
+        ),
+        caseInstitution: (
+          <Text whiteSpace="nowrap" variant="medium">
+            {row.involvedParty.title}
+          </Text>
+        ),
       }
     }) ?? []
 
-  return (
-    <CaseTable
-      loading={isLoading}
-      columns={columns}
-      rows={caseTableColumns}
-      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
-    />
-  )
+  return <DataTable loading={isLoading} columns={columns} rows={rows} />
 }
 
 export default CaseTableReady
