@@ -291,7 +291,6 @@ export class PdfService implements OnModuleDestroy, IPdfService {
               })
             })
             const pdf = await page.pdf()
-            await page.close()
 
             const mergedPdf = await this.mergePdfs(
               pdf,
@@ -299,7 +298,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
               header,
               footer,
             )
-            await this.browser?.close()
+            await page.close()
             return ResultWrapper.ok(mergedPdf)
           } else {
             const pdf = await page.pdf()
