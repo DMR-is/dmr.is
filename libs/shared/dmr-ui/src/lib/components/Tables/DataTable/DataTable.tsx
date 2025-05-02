@@ -1,12 +1,8 @@
-import {
-  Pagination,
-  SkeletonLoader,
-  Stack,
-  Table as T,
-} from '@island.is/island-ui/core'
+import { SkeletonLoader, Stack, Table as T } from '@island.is/island-ui/core'
 
 import { DataTableBody } from './DataTableBody'
 import { DataTableColumn } from './DataTableColumn'
+import { DataTablePagination } from './DataTablePagination'
 import {
   DataTableColumnProps,
   DataTableProps,
@@ -51,22 +47,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
           columns={columns}
         />
       </T.Table>
-      {paging && (
-        <Pagination
-          page={paging.page}
-          itemsPerPage={paging.pageSize}
-          totalItems={paging.totalItems}
-          totalPages={paging.totalPages}
-          renderLink={(page, className, children) => (
-            <button
-              className={className}
-              onClick={() => paging.onPaginate && paging.onPaginate(page)}
-            >
-              {children}
-            </button>
-          )}
-        />
-      )}
+      {paging && <DataTablePagination paging={paging} />}
     </Stack>
   )
 }

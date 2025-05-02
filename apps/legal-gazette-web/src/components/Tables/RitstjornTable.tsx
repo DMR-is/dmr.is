@@ -1,29 +1,10 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useFilters } from '../../hooks/useFilters'
-import { DEFAULT_SORT_DIRECTION, SortDirection } from '../../lib/constants'
 
 // TODO add accept proper data
 export const RitstjornTable = () => {
-  const { params, setParams } = useFilters()
-
-  const handleSort = (field: string) => {
-    const isSameField = params.sortBy === field
-
-    if (isSameField) {
-      return setParams({
-        direction:
-          params.direction === SortDirection.ASC
-            ? SortDirection.DESC
-            : SortDirection.ASC,
-      })
-    }
-
-    setParams({
-      sortBy: field,
-      direction: DEFAULT_SORT_DIRECTION,
-    })
-  }
+  const { params } = useFilters()
 
   return (
     <DataTable
@@ -32,16 +13,12 @@ export const RitstjornTable = () => {
           {
             field: 'birting',
             children: 'Birting',
-            onSort: handleSort,
-            sortBy: params.sortBy ?? undefined,
-            direction: params.direction,
+            sortable: true,
           },
           {
             field: 'skraning',
             children: 'Skráning',
-            onSort: handleSort,
-            sortBy: params.sortBy ?? undefined,
-            direction: params.direction,
+            sortable: true,
           },
           {
             field: 'flokkur',
@@ -69,7 +46,6 @@ export const RitstjornTable = () => {
         pageSize: 10,
         totalItems: 73,
         totalPages: 8,
-        onPaginate: (page) => setParams({ page }),
       }}
     />
   )

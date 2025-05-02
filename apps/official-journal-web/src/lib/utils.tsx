@@ -294,7 +294,8 @@ export const generateSteps = (activeCase: CaseDetailed): StepsType[] => {
 
 export const createOptionsWithCapitalize = <T extends BaseEntity>(arr: T[]) => {
   return arr.map((item) => ({
-    label: item.title.charAt(0).toUpperCase() + item.title.slice(1).toLowerCase(),
+    label:
+      item.title.charAt(0).toUpperCase() + item.title.slice(1).toLowerCase(),
     value: item.id,
   }))
 }
@@ -320,6 +321,23 @@ export const deleteUndefined = <T,>(
     })
   }
   return obj as T
+}
+
+export const getParamsWithoutNullOrEmpty = (
+  params: Record<string, unknown>,
+): Record<string, unknown> => {
+  return Object.keys(params).reduce<{
+    [key: string]: unknown
+  }>((acc, key) => {
+    if (
+      params[key] !== null &&
+      params[key] !== undefined &&
+      (Array.isArray(params[key]) ? params[key].length > 0 : true)
+    ) {
+      acc[key] = params[key]
+    }
+    return acc
+  }, {})
 }
 
 export const getOverviewStatusColor = (status: string) => {

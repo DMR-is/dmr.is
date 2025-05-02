@@ -11,10 +11,10 @@ export const dataTableHeadCellChevron = recipe({
   },
   variants: {
     order: {
-      asc: {
+      desc: {
         transform: 'rotate(0deg)',
       },
-      desc: {
+      asc: {
         transform: 'rotate(-180deg)',
       },
     },

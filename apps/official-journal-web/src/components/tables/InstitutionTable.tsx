@@ -1,8 +1,8 @@
 import debounce from 'lodash/debounce'
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { useQueryState } from 'next-usequerystate'
 import { useCallback, useState } from 'react'
-import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import {
   Button,
@@ -17,24 +17,19 @@ import { useInstitutions } from '../../hooks/api'
 import { useToggle } from '../../hooks/useToggle'
 import { useUserContext } from '../../hooks/useUserContext'
 import { OJOIInput } from '../select/OJOIInput'
-import { OJOISelect } from '../select/OJOISelect'
 import { CreateInstitution } from '../users/CreateInstitution'
 import { InstitutionDetailed } from '../users/InstitutionDetailed'
 
 export const InstitutionTable = () => {
   const [search, setSearch] = useQueryState('leit-stofnun')
   const [localSearch, setLocalSearch] = useState(search ?? '')
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
-  const [pageSize, setPageSize] = useQueryState(
-    'pageSize',
-    parseAsInteger.withDefault(10),
-  )
+  const { params } = useFilters()
 
   const { institutions, getInstitutions } = useInstitutions({
     searchParams: {
       search: search ?? undefined,
-      page: page,
-      pageSize: pageSize,
+      page: params.page,
+      pageSize: params.pageSize,
     },
     config: {
       keepPreviousData: true,
@@ -107,22 +102,6 @@ export const InstitutionTable = () => {
               value={localSearch}
             />
           </GridColumn>
-          <GridColumn span={['4/12']}>
-            <OJOISelect
-              name="institution-page-size"
-              label="Fjöldi niðurstaðna"
-              placeholder="Sláðu inn leitarorð"
-              defaultValue={PAGE_SIZE_OPTIONS.find(
-                (opt) => opt.value === pageSize,
-              )}
-              options={PAGE_SIZE_OPTIONS}
-              onChange={(opt) => {
-                if (!opt) return
-                setPage(1)
-                setPageSize(opt.value)
-              }}
-            />
-          </GridColumn>
         </GridRow>
         <GridRow>
           <GridColumn span={'12/12'}>
@@ -156,9 +135,7 @@ export const InstitutionTable = () => {
                 ),
               }))}
               paging={
-                institutions.paging
-                  ? { ...institutions.paging, onPaginate: setPage }
-                  : undefined
+                institutions.paging ? { ...institutions.paging } : undefined
               }
             />
           </GridColumn>

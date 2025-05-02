@@ -1,19 +1,15 @@
-import dynamic from 'next/dynamic'
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable/DataTable'
+import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { SkeletonLoader, Tag, Text } from '@island.is/island-ui/core'
+import { Tag, Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { formatDate, getOverviewStatusColor } from '../../lib/utils'
-import { CaseTableHeadCellProps } from './CaseTable'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { PublishedTableProps } from './types'
-
-const CaseTable = dynamic(() => import('./CaseTable'), {
-  loading: () => (
-    <SkeletonLoader repeat={3} height={44} space={2} borderRadius="standard" />
-  ),
-})
 
 export const CaseTableOverview = ({
   cases,
@@ -22,21 +18,23 @@ export const CaseTableOverview = ({
 }: PublishedTableProps) => {
   const { formatMessage } = useFormatMessage()
 
-  const columns: CaseTableHeadCellProps[] = [
+  const { params } = useFilters()
+
+  const columns: DataTableColumnProps[] = [
     {
-      name: 'casePublishDate',
+      field: 'casePublishDate',
       sortable: true,
-      size: 'tiny',
+
       children: formatMessage(messages.tables.overview.columns.publishDate),
     },
     {
-      name: 'caseStatus',
+      field: 'caseStatus',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.status),
     },
     {
-      name: 'publicationNumber',
+      field: 'publicationNumber',
       sortable: false,
       size: 'tiny',
       children: formatMessage(
@@ -44,72 +42,59 @@ export const CaseTableOverview = ({
       ),
     },
     {
-      name: 'caseTitle',
+      field: 'caseTitle',
       sortable: false,
       children: formatMessage(messages.tables.overview.columns.title),
     },
     {
-      name: 'caseInstitution',
+      field: 'caseInstitution',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.overview.columns.institution),
     },
   ]
 
-  const rows = cases?.map((row) => ({
-    case: row,
-    cells: [
-      {
-        sortingKey: 'casePublishDate',
-        sortingValue: row.requestedPublicationDate,
-        children: (
-          <Text variant="medium">
-            {formatDate(row.publishedAt || row.requestedPublicationDate)}
+  const rows = cases?.map((row) => {
+    return {
+      href: Routes.ProccessingDetail.replace(':caseId', row.id),
+      uniqueKey: row.id,
+      hasLink: true,
+      casePublishDate: (
+        <Text variant="medium">{formatDate(row.publishedAt)}</Text>
+      ),
+      caseStatus: (
+        <Tag variant={getOverviewStatusColor(row.status.title)}>
+          {row.status.title}
+        </Tag>
+      ),
+      publicationNumber: (
+        <Text variant="medium">
+          {row.publicationNumber}/{row.year}
+        </Text>
+      ),
+      caseTitle: (
+        <div className={styles.titleTableCell}>
+          <Text truncate variant="medium">
+            {row.advertType.title} {row.advertTitle}
           </Text>
-        ),
-      },
-      {
-        children: (
-          <Tag variant={getOverviewStatusColor(row.status.title)}>
-            {row.status.title}
-          </Tag>
-        ),
-      },
-      {
-        children: (
-          <Text variant="medium">
-            {row.publicationNumber}/{row.year}
+        </div>
+      ),
+      caseInstitution: (
+        <div className={styles.typeTableCell}>
+          <Text truncate variant="medium">
+            {row.involvedParty.title}
           </Text>
-        ),
-      },
-      {
-        children: (
-          <div className={styles.titleTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title} {row.advertTitle}
-            </Text>
-          </div>
-        ),
-      },
-      {
-        children: (
-          <div className={styles.typeTableCell}>
-            <Text truncate variant="medium">
-              {row.involvedParty.title}
-            </Text>
-          </div>
-        ),
-      },
-    ],
-  }))
+        </div>
+      ),
+    }
+  })
 
   return (
-    <CaseTable
+    <DataTable
       loading={isLoading}
       columns={columns}
       rows={rows}
       paging={paging}
-      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
     />
   )
 }
