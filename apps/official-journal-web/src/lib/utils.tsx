@@ -16,6 +16,7 @@ import {
   GetCasesRequest,
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
+  Signature,
 } from '../gen/fetch'
 import { getDmrClient } from '../lib/api/createClient'
 import { DOCUMENT_ASSETS } from '../lib/constants'
@@ -130,7 +131,10 @@ export const imageTiers = [
   },
 ]
 
-export const convertDateToDaysAgo = (dateIso: string): string => {
+export const convertDateToDaysAgo = (
+  dateIso: string,
+  showDates?: boolean,
+): string => {
   try {
     const date = new Date(dateIso)
 
@@ -144,6 +148,10 @@ export const convertDateToDaysAgo = (dateIso: string): string => {
 
     if (diffDays === 1) {
       return 'í gær'
+    }
+
+    if (showDates) {
+      return formatDate(date)
     }
 
     return `f. ${diffDays} ${getIcelandicDative(diffDays)}`
@@ -670,4 +678,22 @@ export const amountFormat = (value?: number | string | null): string => {
     return ''
   }
   return typeof inputValue === 'number' ? numberFormat(inputValue) + ' kr.' : ''
+}
+
+export const getMostRecentSignature = (
+  signature: Signature,
+  formatted?: boolean,
+): string => {
+  const signatureDate =
+    signature.records
+      .map((item) => item.signatureDate)
+      .sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime()
+      })[0] ?? signature.signatureDate
+
+  if (formatted) {
+    return formatDate(signatureDate)
+  }
+
+  return signatureDate
 }
