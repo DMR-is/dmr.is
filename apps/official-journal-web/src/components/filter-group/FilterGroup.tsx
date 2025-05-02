@@ -1,10 +1,4 @@
-import {
-  parseAsArrayOf,
-  parseAsInteger,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate'
-import { Dispatch, SetStateAction, useId, useState } from 'react'
+import { useId, useState } from 'react'
 
 import {
   Box,
@@ -23,42 +17,39 @@ import { messages } from './messages'
 
 type Props = {
   label: string
-  queryKey: string
   loading?: boolean
-  options: { title: string}[]
+  options: { title: string }[]
+  filters: string[] | null
+  setFilters: (f: string[] | null) => void
   search?: string
   searchPlaceholder?: string
-  setSearch?: Dispatch<SetStateAction<string>>
+  setSearch?: (search: string) => void
   startExpanded?: boolean
 }
 
 export const FilterGroup = ({
-  queryKey,
   label,
   options,
   search,
   searchPlaceholder,
+  filters,
+  setFilters,
   setSearch,
   loading,
   startExpanded = false,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
-  const [_, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const localId = useId()
 
   const [toggle, setToggle] = useState(startExpanded)
 
-  const [filters, setFilters] = useQueryState(
-    queryKey,
-    parseAsArrayOf(parseAsString, ','),
-  )
-
-  const nonDuplicateOptions = options?.flatMap((type, index) => {
-    return options.findIndex(t => t.title === type.title) === index
-      ? [{ label: type.title, value: type.title }]
-      : []
-  }) ?? []
+  const nonDuplicateOptions =
+    options?.flatMap((type, index) => {
+      return options.findIndex((t) => t.title === type.title) === index
+        ? [{ label: type.title, value: type.title }]
+        : []
+    }) ?? []
 
   return (
     <Box className={styles.filterExpandButtonWrapper}>
@@ -116,7 +107,6 @@ export const FilterGroup = ({
                     ...(filters || []).filter((f) => f !== filter.value),
                   ])
                 }
-                setPage(1)
               }}
               name={filter.label}
               key={index}
@@ -131,7 +121,9 @@ export const FilterGroup = ({
             icon="reload"
             as="button"
             iconType="outline"
-            onClick={() => setFilters([])}
+            onClick={() => {
+              setFilters([])
+            }}
           >
             {formatMessage(messages.general.clearFilter)}
           </Button>

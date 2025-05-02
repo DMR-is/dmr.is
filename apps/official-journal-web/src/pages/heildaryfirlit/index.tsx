@@ -11,6 +11,7 @@ import {
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
+import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { DEPARTMENTS, Routes } from '../../lib/constants'
@@ -88,6 +89,11 @@ export const getServerSideProps: GetServerSideProps = async ({
         showBanner: true,
         enableCategories: true,
         enableDepartments: false,
+        statuses: [
+          CaseStatusEnum.ÚTgefið,
+          CaseStatusEnum.TekiðÚrBirtingu,
+          CaseStatusEnum.BirtinguHafnað,
+        ],
         enableTypes: true,
         imgSrc: '/assets/banner-publish-image.svg',
         title: messages.banner.title,

@@ -30,6 +30,7 @@ export const useFilters = () => {
     [QueryParams.DIRECTION]: parseAsStringEnum<SortDirection>(
       Object.values(SortDirection),
     ).withDefault(DEFAULT_SORT_DIRECTION),
+    [QueryParams.DEPARTMENT]: parseAsArrayOf(parseAsString).withDefault([]),
   })
 
   const setParams = (...params: Parameters<typeof setFilters>) => {
@@ -57,17 +58,34 @@ export const useFilters = () => {
     setFilters(incomingParams)
   }
 
-  const activeFilters = Object.entries(filters).reduce((acc, [key, value]) => {
-    if (!FILTERS_TO_SHOW.includes(key as QueryParams)) {
+  const resetFilters = () => {
+    setParams({
+      [QueryParams.SEARCH]: '',
+      [QueryParams.STATUS]: [],
+      [QueryParams.TYPE]: [],
+      [QueryParams.CATEGORY]: [],
+      [QueryParams.PUBLICATION]: [],
+      [QueryParams.SORT_BY]: null,
+      [QueryParams.DIRECTION]: DEFAULT_SORT_DIRECTION,
+      [QueryParams.DEPARTMENT]: [],
+    })
+  }
+
+  const activeFilters = Object.entries(filters).reduce(
+    (acc, [key, value]) => {
+      if (!FILTERS_TO_SHOW.includes(key as QueryParams)) {
+        return acc
+      }
+      acc.push([key as QueryParams, value as string[]])
       return acc
-    }
-    acc.push([key as QueryParams, value as string[]])
-    return acc
-  }, [] as [QueryParams, string[]][])
+    },
+    [] as [QueryParams, string[]][],
+  )
 
   return {
     params: filters,
     activeFilters,
     setParams,
+    resetFilters,
   }
 }

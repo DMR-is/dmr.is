@@ -1,3 +1,5 @@
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
+
 import { AlertMessage } from '@island.is/island-ui/core'
 
 import { useDepartments } from '../../hooks/api'
@@ -6,6 +8,8 @@ import { messages as errorMessages } from '../../lib/messages/errors'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const DepartmentsFilter = () => {
+    const { params, setParams } = useFilters()
+
   const { formatMessage } = useFormatMessage()
   const { departments, error, isLoading } = useDepartments({
     options: {
@@ -27,7 +31,8 @@ export const DepartmentsFilter = () => {
   return (
     <FilterGroup
       label="Deild"
-      queryKey="department"
+      filters={params.department}
+      setFilters={(p) => setParams({ department: p })}
       options={departments ?? []}
       loading={isLoading}
     />

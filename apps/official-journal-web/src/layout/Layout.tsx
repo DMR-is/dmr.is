@@ -33,6 +33,7 @@ export const Layout = ({
     enableCategories: false,
     enableDepartments: false,
     enableTypes: false,
+    statuses: [],
   },
 }: LayoutProps) => {
   const preloadedFonts = [
@@ -100,6 +101,7 @@ export const Layout = ({
                   imageColumnSpan={bannerProps.imageColumnSpan}
                   enableCategories={bannerProps.enableCategories}
                   enableDepartments={bannerProps.enableDepartments}
+                  statuses={bannerProps.statuses}
                   enableTypes={bannerProps.enableTypes}
                   enableSearch={bannerProps.enableSearch}
                 />

@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import useSWR from 'swr'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
@@ -15,6 +16,8 @@ import { FilterGroup } from '../filter-group/FilterGroup'
 export const TypesFilter = () => {
   const { formatMessage } = useFormatMessage()
   const [search, setSearch] = useState('')
+
+  const { params, setParams } = useFilters()
 
   const { data: session } = useSession()
   const dmrClient = getDmrClient(session?.idToken as string)
@@ -56,7 +59,8 @@ export const TypesFilter = () => {
       setSearch={setSearch}
       options={data?.types ?? []}
       label="Tegund"
-      queryKey="type"
+      filters={params.type}
+      setFilters={(p) => setParams({ type: p })}
       loading={isLoadingTypes}
       searchPlaceholder={formatMessage(generalMessages.searchByType)}
     />

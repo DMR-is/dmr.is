@@ -1,4 +1,3 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
@@ -9,26 +8,27 @@ import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
 export const CasePublishedTabs = () => {
-  const [department, setDepartment] = useQueryState(
-    'department',
-    parseAsStringEnum(Object.values(DepartmentEnum)).withDefault(
-      DepartmentEnum.ADeild,
-    ),
-  )
-  const { params } = useFilters()
+  const {
+    setParams,
+    params: { department, ...params },
+  } = useFilters()
 
-  const statuses = [
+  const allowedStatuses = [
     CaseStatusEnum.ÚTgefið,
     CaseStatusEnum.TekiðÚrBirtingu,
     CaseStatusEnum.BirtinguHafnað,
   ]
 
+  const statuses = allowedStatuses.filter((status) =>
+    params.status?.includes(status),
+  )
+
   const { caseOverview, isLoading, isValidating, error } =
     useCasesWithDepartmentCount({
       params: {
-        department: department,
+        department: department[0] as DepartmentEnum,
         ...params,
-        status: statuses,
+        status: statuses.length > 0 ? statuses : allowedStatuses,
       },
     })
 
@@ -53,9 +53,9 @@ export const CasePublishedTabs = () => {
 
   return (
     <Tabs
-      onTabChange={(id) => setDepartment(id as DepartmentEnum)}
+      onTabChange={(id) => setParams({ department: [id] })}
       tabs={tabs || []}
-      selectedTab={department ?? DepartmentEnum.ADeild}
+      selectedTab={department[0] ?? DepartmentEnum.ADeild}
       label="Heildaryfirlit"
     />
   )

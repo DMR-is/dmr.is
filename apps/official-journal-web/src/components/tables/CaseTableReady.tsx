@@ -53,12 +53,12 @@ export const CaseTableReady = ({
       field: 'casePublishDate',
       sortable: false,
       size: 'tiny',
-      children: formatMessage(messages.tables.ready.columns.title),
+      children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
       field: 'caseTitle',
       sortable: false,
-      children: formatMessage(messages.tables.ready.columns.publicationDate),
+      children: formatMessage(messages.tables.ready.columns.title),
     },
     {
       field: 'caseInstitution',
@@ -89,13 +89,6 @@ export const CaseTableReady = ({
             status={row.communicationStatus.title}
           />
         ),
-        caseAdvertType: (
-          <div className={styles.titleTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title} {row.advertTitle}
-            </Text>
-          </div>
-        ),
         casePublishDate: (
           <Text variant="medium">
             {row.requestedPublicationDate
@@ -103,6 +96,14 @@ export const CaseTableReady = ({
               : null}
           </Text>
         ),
+        caseTitle: (
+          <div className={styles.titleTableCell}>
+            <Text truncate variant="medium">
+              {row.advertType.title} {row.advertTitle}
+            </Text>
+          </div>
+        ),
+
         caseInstitution: (
           <Text whiteSpace="nowrap" variant="medium">
             {row.involvedParty.title}
