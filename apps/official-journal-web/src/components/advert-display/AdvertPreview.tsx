@@ -18,7 +18,7 @@ type Props = {
 }
 export const AdvertPreview = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
-  const { html: signatureHtml, records } = currentCase.signature
+  const { html: signatureHtml } = currentCase.signature
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
