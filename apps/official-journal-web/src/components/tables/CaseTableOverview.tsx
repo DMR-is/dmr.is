@@ -68,7 +68,9 @@ export const CaseTableOverview = ({
       ),
       publicationNumber: (
         <Text variant="medium">
-          {row.publicationNumber}/{row.year}
+          {row.publicationNumber
+            ? `${row.publicationNumber}/${row.year}`
+            : 'N/A'}
         </Text>
       ),
       caseTitle: (

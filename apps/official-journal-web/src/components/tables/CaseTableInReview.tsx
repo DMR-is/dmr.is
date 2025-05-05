@@ -22,7 +22,7 @@ export const CaseTableInReview = ({ cases, paging }: TableProps) => {
       size: 'tiny',
     },
     {
-      field: 'casePublishDate',
+      field: 'caseRequestPublishDate',
       sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.inReview.columns.publishDate),
@@ -62,7 +62,7 @@ export const CaseTableInReview = ({ cases, paging }: TableProps) => {
         status={row.communicationStatus.title}
       />
     ),
-    casePublishDate: (
+    caseRequestPublishDate: (
       <Text variant="medium">{formatDate(row.requestedPublicationDate)}</Text>
     ),
     caseDepartment: (

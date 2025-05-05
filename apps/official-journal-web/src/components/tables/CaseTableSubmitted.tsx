@@ -17,7 +17,7 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
   const columns: DataTableColumnProps[] = [
     { field: 'caseLabels', sortable: false, size: 'tiny' },
     {
-      field: 'casePublishDate',
+      field: 'caseRequestPublishDate',
       sortable: true,
       size: 'tiny',
       children: formatMessage(
@@ -61,7 +61,7 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
           status={row.communicationStatus.title}
         />
       ),
-      casePublishDate: (
+      caseRequestPublishDate: (
         <Text variant="medium">{formatDate(row.requestedPublicationDate)}</Text>
       ),
       caseRegistrationDate: (

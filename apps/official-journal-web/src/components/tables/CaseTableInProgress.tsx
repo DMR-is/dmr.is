@@ -22,7 +22,7 @@ export const CaseTableInProgress = ({ cases, paging }: TableProps) => {
       size: 'tiny',
     },
     {
-      field: 'casePublishDate',
+      field: 'caseRequestPublishDate',
       sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.publishDate),
@@ -63,7 +63,7 @@ export const CaseTableInProgress = ({ cases, paging }: TableProps) => {
           status={row.communicationStatus.title}
         />
       ),
-      casePublishDate: (
+      caseRequestPublishDate: (
         <Text variant="medium">{formatDate(row.requestedPublicationDate)}</Text>
       ),
       caseDepartment: (
