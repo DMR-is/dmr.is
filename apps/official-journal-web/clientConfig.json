@@ -4048,7 +4048,8 @@
           "publishedAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
-            "description": "Date the case was published. ISO 8601 date and time format in UTC."
+            "description": "Date the case was published. ISO 8601 date and time format in UTC.",
+            "nullable": true
           },
           "requestedPublicationDate": {
             "type": "string",
@@ -5226,7 +5227,8 @@
           "publishedAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
-            "description": "Date the case was published. ISO 8601 date and time format in UTC."
+            "description": "Date the case was published. ISO 8601 date and time format in UTC.",
+            "nullable": true
           },
           "requestedPublicationDate": {
             "type": "string",

@@ -57,7 +57,9 @@ export const CaseTableOverview = ({
       uniqueKey: row.id,
       hasLink: true,
       casePublishDate: (
-        <Text variant="medium">{formatDate(row.publishedAt)}</Text>
+        <Text variant="medium">
+          {row.publishedAt ? formatDate(row.publishedAt) : 'N/A'}
+        </Text>
       ),
       caseStatus: (
         <Tag variant={getOverviewStatusColor(row.status.title)}>
