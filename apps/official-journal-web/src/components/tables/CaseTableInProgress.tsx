@@ -6,6 +6,7 @@ import { Text } from '@island.is/island-ui/core'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
+import { CaseTag } from '../case-tag/CaseTag'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
@@ -47,6 +48,12 @@ export const CaseTableInProgress = ({
       size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.employee),
     },
+    {
+      field: 'caseTag',
+      sortable: false,
+      size: 'tiny',
+      children: formatMessage(messages.tables.inReview.columns.tags),
+    },
   ]
 
   const rows = cases?.map((row) => {
@@ -80,6 +87,7 @@ export const CaseTableInProgress = ({
           {row.assignedTo?.displayName}
         </Text>
       ),
+      caseTag: <CaseTag tag={row.tag?.title} />,
     }
   })
 
