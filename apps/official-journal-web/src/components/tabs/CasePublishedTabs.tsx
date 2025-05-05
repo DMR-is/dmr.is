@@ -1,7 +1,5 @@
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { SkeletonLoader } from '@island.is/island-ui/core'
-
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import { useCasesWithDepartmentCount } from '../../hooks/api'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
@@ -35,17 +33,9 @@ export const CasePublishedTabs = () => {
   const tabs = caseOverview?.departments.map((counter) => ({
     id: counter.department,
     label: `${counter.department} (${counter.count})`,
-    content: isLoading ? (
-      <SkeletonLoader
-        repeat={3}
-        height={44}
-        space={2}
-        borderRadius="standard"
-      />
-    ) : (
+    content: (
       <CaseTableOverview
         cases={caseOverview.cases}
-        isLoading={isValidating}
         paging={caseOverview.paging}
       />
     ),
