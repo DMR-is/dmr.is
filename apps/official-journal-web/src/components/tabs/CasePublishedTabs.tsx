@@ -21,14 +21,13 @@ export const CasePublishedTabs = () => {
     params.status?.includes(status),
   )
 
-  const { caseOverview, isLoading, isValidating, error } =
-    useCasesWithDepartmentCount({
-      params: {
-        department: department[0] as DepartmentEnum,
-        ...params,
-        status: statuses.length > 0 ? statuses : allowedStatuses,
-      },
-    })
+  const { caseOverview } = useCasesWithDepartmentCount({
+    params: {
+      department: department[0] as DepartmentEnum,
+      ...params,
+      status: statuses.length > 0 ? statuses : allowedStatuses,
+    },
+  })
 
   const tabs = caseOverview?.departments.map((counter) => ({
     id: counter.department,

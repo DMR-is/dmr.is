@@ -1,7 +1,7 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import Mail from 'nodemailer/lib/mailer'
-import { Op, Transaction } from 'sequelize'
+import { Op, OrderItem, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
@@ -270,10 +270,11 @@ export class CaseService implements ICaseService {
 
   async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
-    const sortKeys: { [key: string]: string } = {
-      casePublishDate: 'requestedPublicationDate',
-      caseRegistrationDate: 'createdAt',
-      caseStatus: 'CaseModel.status.slug',
+    const sortKeys: { [key: string]: OrderItem } = {
+      caseRequestPublishDate: ['requestedPublicationDate', params.direction],
+      casePublishDate: ['publishedAt', params.direction],
+      caseRegistrationDate: ['createdAt', params.direction],
+      caseStatus: ['statusId', params.direction],
     }
     const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
     const { limit, offset } = getLimitAndOffset(params)
@@ -292,6 +293,7 @@ export class CaseService implements ICaseService {
         'fastTrack',
         'publishedAt',
         'publicationNumber',
+        'statusId',
       ],
       where: whereParams,
       include: casesIncludes({
@@ -301,7 +303,7 @@ export class CaseService implements ICaseService {
         institution: params?.institution,
         category: params?.category,
       }),
-      order: [[sortBy, params.direction]],
+      order: [sortBy],
       logging: (_, timing) => {
         this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
           context: LOGGING_QUERY,

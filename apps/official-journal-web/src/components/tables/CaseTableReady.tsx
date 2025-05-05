@@ -50,7 +50,7 @@ export const CaseTableReady = ({
       size: 'tiny',
     },
     {
-      field: 'casePublishDate',
+      field: 'caseRequestPublishDate',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.publicationDate),
@@ -89,7 +89,7 @@ export const CaseTableReady = ({
             status={row.communicationStatus.title}
           />
         ),
-        casePublishDate: (
+        caseRequestPublishDate: (
           <Text variant="medium">
             {row.requestedPublicationDate
               ? formatDate(row.requestedPublicationDate)
