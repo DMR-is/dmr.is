@@ -167,6 +167,7 @@ export class CaseDetailed {
     example: '2024-01-01T09:00:00Z',
     description:
       'Date the case was published. ISO 8601 date and time format in UTC.',
+    nullable: true,
   })
   @IsDateString()
   publishedAt!: string | null
