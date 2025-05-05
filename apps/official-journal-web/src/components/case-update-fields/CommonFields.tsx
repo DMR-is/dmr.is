@@ -1,11 +1,11 @@
 import debounce from 'lodash/debounce'
+import { toast } from '@dmr.is/ui/utils/toast'
 
 import {
   AccordionItem,
   AlertMessage,
   Inline,
   Stack,
-  toast,
 } from '@island.is/island-ui/core'
 
 import {
