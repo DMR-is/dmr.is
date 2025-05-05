@@ -35,17 +35,9 @@ export const CasePublishedTabs = () => {
   const tabs = caseOverview?.departments.map((counter) => ({
     id: counter.department,
     label: `${counter.department} (${counter.count})`,
-    content: isLoading ? (
-      <SkeletonLoader
-        repeat={3}
-        height={44}
-        space={2}
-        borderRadius="standard"
-      />
-    ) : (
+    content: (
       <CaseTableOverview
         cases={caseOverview.cases}
-        isLoading={isValidating}
         paging={caseOverview.paging}
       />
     ),

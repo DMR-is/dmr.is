@@ -23,7 +23,7 @@ export const CaseOverviewTabs = () => {
     ).withDefault(CaseStatusEnum.Innsent),
   )
 
-  const { cases, statuses, paging, isLoading } = useCasesWithStatusCount({
+  const { cases, statuses, paging } = useCasesWithStatusCount({
     params: {
       statuses: [
         CaseStatusEnum.Innsent,
@@ -35,8 +35,6 @@ export const CaseOverviewTabs = () => {
       status: status,
     },
   })
-
-  const loading = isLoading
 
   const loadingTabs = [
     {
@@ -100,64 +98,28 @@ export const CaseOverviewTabs = () => {
           label = formatMessage(messages.tabs.submitted, {
             count: status.count,
           })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableSubmitted cases={cases} paging={paging} />
-          )
+          TabComponent = <CaseTableSubmitted cases={cases} paging={paging} />
           break
         case CaseStatusEnum.Grunnvinnsla:
           order = 2
           label = formatMessage(messages.tabs.inProgress, {
             count: status.count,
           })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInProgress cases={cases} paging={paging} />
-          )
+          TabComponent = <CaseTableInProgress cases={cases} paging={paging} />
           break
         case CaseStatusEnum.Yfirlestur:
           order = 3
           label = formatMessage(messages.tabs.inReview, {
             count: status.count,
           })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInReview cases={cases} paging={paging} />
-          )
+          TabComponent = <CaseTableInReview cases={cases} paging={paging} />
           break
         case CaseStatusEnum.Tilbúið:
           order = 4
           label = formatMessage(messages.tabs.ready, {
             count: status.count,
           })
-          TabComponent = loading ? (
-            <SkeletonLoader
-              repeat={3}
-              height={44}
-              borderRadius="standard"
-              space={2}
-            />
-          ) : (
-            <CaseTableInProgress cases={cases} paging={paging} />
-          )
+          TabComponent = <CaseTableInProgress cases={cases} paging={paging} />
           break
       }
 

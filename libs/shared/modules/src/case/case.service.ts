@@ -273,6 +273,7 @@ export class CaseService implements ICaseService {
     const sortKeys: { [key: string]: string } = {
       casePublishDate: 'requestedPublicationDate',
       caseRegistrationDate: 'createdAt',
+      caseStatus: 'CaseModel.status.slug',
     }
     const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
     const { limit, offset } = getLimitAndOffset(params)

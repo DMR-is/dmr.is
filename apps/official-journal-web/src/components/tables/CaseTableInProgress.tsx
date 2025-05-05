@@ -12,11 +12,7 @@ import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { TableProps } from './types'
 
-export const CaseTableInProgress = ({
-  cases,
-  paging,
-  isLoading,
-}: TableProps) => {
+export const CaseTableInProgress = ({ cases, paging }: TableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: DataTableColumnProps[] = [
@@ -91,12 +87,5 @@ export const CaseTableInProgress = ({
     }
   })
 
-  return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      paging={paging}
-      loading={isLoading}
-    />
-  )
+  return <DataTable columns={columns} rows={rows} paging={paging} />
 }
