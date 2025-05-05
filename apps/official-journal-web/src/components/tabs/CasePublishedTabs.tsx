@@ -1,7 +1,5 @@
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { SkeletonLoader } from '@island.is/island-ui/core'
-
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import { useCasesWithDepartmentCount } from '../../hooks/api'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
