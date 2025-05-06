@@ -903,6 +903,7 @@ export class JournalService implements IJournalService {
     advertId: string,
     limit = 5,
   ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
+    // TODO: We might not need the models here, and only get the ids
     const originalAdvert = await this.advertModel.findByPk(advertId, {
       include: [
         { model: AdvertDepartmentModel, as: 'department' },
