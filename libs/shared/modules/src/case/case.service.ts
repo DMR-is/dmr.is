@@ -93,6 +93,8 @@ import { SignatureRecordModel } from '../signature/models/signature-record.model
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
+import { caseAdditionMigrate } from './migrations/case-addition.migrate'
+import { caseChannelMigrate } from './migrations/case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
 import { caseDetailedMigrate } from './migrations/case-detailed.migrate'
 import { caseTagMigrate } from './migrations/case-tag.migrate'
@@ -159,6 +161,8 @@ export class CaseService implements ICaseService {
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
     private readonly caseChannelsModel: typeof CaseChannelsModel,
+    @InjectModel(CaseAdditionsModel)
+    private readonly caseAdditionsModel: typeof CaseAdditionsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -1239,12 +1243,33 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+    const channels = await this.caseChannelsModel.findAll({
+      include: [CaseChannelModel],
+      where: {
+        caseId: id,
+      },
+    })
+
+    const caseChannels = channels.map((c) => c.caseChannel)
+
+    const additions = await this.caseAdditionsModel.findAll({
+      where: {
+        caseId: id,
+      },
+      include: [
+        {
+          model: CaseAdditionModel,
+        },
+      ],
+      order: [['order', 'ASC']],
+    })
+
     const caseLookup = await this.caseModel.findByPk(id, {
       include: [
         ...casesDetailedIncludes,
         {
           model: AdvertModel,
-          include: [AdvertCorrectionModel],
+          include: [{ model: AdvertCorrectionModel, separate: true }],
         },
         {
           model: AdvertDepartmentModel,
@@ -1309,22 +1334,28 @@ export class CaseService implements ICaseService {
           ],
         },
       ],
-      order: [
-        [
-          { model: CaseAdditionModel, as: 'additions' },
-          CaseAdditionsModel,
-          'order',
-          'ASC',
-        ],
-      ],
     })
 
     if (!caseLookup) {
       throw new NotFoundException(`Case<${id}> not found`)
     }
 
+    const caseAdditions = additions.map((a) => {
+      return a.caseAddition
+    }) as CaseAdditionModel[]
+
+    const returnableCase = {
+      ...caseDetailedMigrate(caseLookup),
+      channels: caseChannels
+        ? caseChannels.map((c) => caseChannelMigrate(c))
+        : [],
+      additions: caseAdditions
+        ? caseAdditions.map((add) => caseAdditionMigrate(add))
+        : [],
+    }
+
     return ResultWrapper.ok({
-      case: caseDetailedMigrate(caseLookup),
+      case: returnableCase,
     })
   }
 

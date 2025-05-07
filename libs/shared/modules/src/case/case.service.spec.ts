@@ -27,6 +27,7 @@ import { ICaseUpdateService } from './services/update/case-update.service.interf
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseAdditionsModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
@@ -187,6 +188,10 @@ describe('CaseService', () => {
         },
         {
           provide: getModelToken(CaseHistoryModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: getModelToken(CaseAdditionsModel),
           useClass: jest.fn(() => ({})),
         },
         {
