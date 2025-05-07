@@ -45,7 +45,6 @@ export const casesDetailedIncludes = [
   },
   {
     model: CommentModel,
-    separate: true,
     include: [
       {
         model: CaseStatusModel,
@@ -58,11 +57,14 @@ export const casesDetailedIncludes = [
       },
       {
         model: UserModel,
+        raw: true,
         as: 'userCreator',
       },
       {
         model: UserModel,
+        raw: true,
         as: 'userReceiver',
+        attributes: ['id', 'displayName'],
       },
       {
         model: AdvertInvolvedPartyModel,
