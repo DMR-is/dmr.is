@@ -11620,14 +11620,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.8.4":
-  version: 1.8.4
-  resolution: "axios@npm:1.8.4"
+"axios@npm:^1.6.0":
+  version: 1.7.2
+  resolution: "axios@npm:1.7.2"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 450993c2ba975ffccaf0d480b68839a3b2435a5469a71fa2fb0b8a55cdb2c2ae47e609360b9c1e2b2534b73dfd69e2733a1cf9f8215bee0bcd729b72f801b0ce
+  checksum: cbd47ce380fe045313364e740bb03b936420b8b5558c7ea36a4563db1258c658f05e40feb5ddd41f6633fdd96d37ac2a76f884dad599c5b0224b4c451b3fa7ae
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.8":
+  version: 1.9.0
+  resolution: "axios@npm:1.9.0"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 9371a56886c2e43e4ff5647b5c2c3c046ed0a3d13482ef1d0135b994a628c41fbad459796f101c655e62f0c161d03883454474d2e435b2e021b1924d9f24994c
   languageName: node
   linkType: hard
 
@@ -14271,7 +14282,7 @@ __metadata:
     "@vanilla-extract/recipes": "npm:^0.4.0"
     "@vanilla-extract/webpack-plugin": "npm:^2.1.10"
     agentkeepalive: "npm:^4.2.1"
-    axios: "npm:^1.8.4"
+    axios: "npm:^1.8"
     babel-jest: "npm:^29.4.1"
     beygla: "npm:1.5.2"
     class-transformer: "npm:^0.5.1"
@@ -14322,7 +14333,7 @@ __metadata:
     mssql: "npm:^10.0.2"
     multer-s3-transform: "npm:^2.10.3"
     nest-winston: "npm:^1.9.4"
-    next: "npm:^14.2.3"
+    next: "npm:^14"
     next-auth: "npm:^4.24.8"
     next-usequerystate: "npm:1.20.0"
     node-fetch: "npm:2.6.7"
@@ -20866,7 +20877,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:^14.2.3":
+"next@npm:^14":
   version: 14.2.28
   resolution: "next@npm:14.2.28"
   dependencies:
