@@ -131,7 +131,10 @@ export class PdfService implements OnModuleDestroy, IPdfService {
       const urls = await Promise.all(
         attachments.map(async (attachment) => {
           try {
-            const fileLocation = attachment.fileLocation
+            const fileLocationDecoded = decodeURIComponent(
+              attachment.fileLocation,
+            )
+            const fileLocation = fileLocationDecoded
             const signedUrl = (
               await this.awsService.getObject(fileLocation)
             ).unwrap()
