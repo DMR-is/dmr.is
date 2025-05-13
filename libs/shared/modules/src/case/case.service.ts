@@ -3,6 +3,7 @@ import is from 'date-fns/locale/is'
 import Mail from 'nodemailer/lib/mailer'
 import { Op, OrderItem, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
@@ -1722,9 +1723,20 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
     // fetch the presigned url for the new attachment
+    const fileKey = incomingAttachment.fileLocation?.split('/')
+    const filePath = fileKey?.slice(0, fileKey.length - 1).join('/')
+    const fileName = fileKey?.slice(fileKey.length - 1).join('/')
+    const slugFileName = slugify(fileName ?? 'document.pdf', { lower: true })
+
+    const sluggedBody = {
+      ...incomingAttachment,
+      fileLocation: `${filePath}/${slugFileName}`,
+      originalFileName: fileName,
+      fileName: slugFileName,
+    }
 
     const signedUrl = (
-      await this.s3.getPresignedUrl(incomingAttachment.fileLocation)
+      await this.s3.getPresignedUrl(sluggedBody.fileLocation)
     ).unwrap()
 
     // fetch the old attachment
@@ -1758,7 +1770,7 @@ export class CaseService implements ICaseService {
           caseId,
           applicationId: attachment.applicationId,
           attachmentType: attachmentType,
-          body: incomingAttachment,
+          body: sluggedBody,
         },
         transaction,
       }),
@@ -1791,12 +1803,24 @@ export class CaseService implements ICaseService {
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    const fileKey = body.fileLocation?.split('/')
+    const filePath = fileKey?.slice(0, fileKey.length - 1).join('/')
+    const fileName = fileKey?.slice(fileKey.length - 1).join('/')
+    const slugFileName = slugify(fileName ?? 'document.pdf', { lower: true })
+
+    const sluggedBody = {
+      ...body,
+      fileLocation: `${filePath}/${slugFileName}`,
+      originalFileName: fileName,
+      fileName: slugFileName,
+    }
+
     const applicationAttachmentCreation = ResultWrapper.unwrap(
       await this.attachmentService.createAttachment({
         params: {
           applicationId: applicationId,
           attachmentType: type,
-          body: body,
+          body: sluggedBody,
         },
         transaction,
       }),
@@ -1809,7 +1833,7 @@ export class CaseService implements ICaseService {
     )
 
     const signedUrl = (
-      await this.s3.getPresignedUrl(body.fileLocation)
+      await this.s3.getPresignedUrl(sluggedBody.fileLocation)
     ).unwrap()
 
     return ResultWrapper.ok({
