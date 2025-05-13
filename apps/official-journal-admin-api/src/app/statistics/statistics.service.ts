@@ -1,6 +1,7 @@
+import { Cache } from 'cache-manager'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import { LogAndHandle } from '@dmr.is/decorators'
+import { Cacheable, LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertDepartmentModel,
@@ -21,6 +22,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -39,11 +41,14 @@ export class StatisticsService implements IStatisticsService {
   ]
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private readonly sequelize: Sequelize,
   ) {}
 
   @LogAndHandle()
+  @Cacheable()
   async getDepartment(
     slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
@@ -97,6 +102,7 @@ export class StatisticsService implements IStatisticsService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getOverview(
     type: StatisticsOverviewQueryType,
     userId?: string,
@@ -128,6 +134,7 @@ export class StatisticsService implements IStatisticsService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getOverviewForDashboard(
     userId: string,
   ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {

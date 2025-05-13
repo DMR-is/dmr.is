@@ -41,6 +41,8 @@
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
+      "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],
+      "@dmr.is/utils/cache.provider": ["libs/shared/utils/src/lib/cache.provider.ts"],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],
@@ -64,6 +66,9 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
+      ],
+      "@island.is/cache": [
+        "submodules/island.is/libs/cache/src/index.ts"
       ]
     },
     "sourceMap": true,

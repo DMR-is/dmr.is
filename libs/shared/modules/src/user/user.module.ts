@@ -1,4 +1,5 @@
 import { LoggingModule } from '@dmr.is/logging'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -15,6 +16,7 @@ export { UserController } from './user.controller'
 
 @Module({
   imports: [
+    createRedisCacheOptions('ojoi-user'),
     SequelizeModule.forFeature([
       UserModel,
       UserRoleModel,

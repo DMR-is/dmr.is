@@ -286,6 +286,7 @@ export class ApplicationService implements IApplicationService {
 
       ResultWrapper.unwrap(
         await this.caseService.updateCase(
+          caseLookup.id,
           {
             caseId: caseLookup.id,
             applicationId: applicationId,

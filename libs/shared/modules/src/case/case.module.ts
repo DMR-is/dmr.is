@@ -1,4 +1,5 @@
 import { LoggingModule } from '@dmr.is/logging'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -44,6 +45,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
+    createRedisCacheOptions('shared-case'),
     SequelizeModule.forFeature([
       ...caseModels,
       ...advertModels,

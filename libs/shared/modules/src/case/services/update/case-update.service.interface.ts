@@ -19,6 +19,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICaseUpdateService {
   updateCase(
+    caseId: string,
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
