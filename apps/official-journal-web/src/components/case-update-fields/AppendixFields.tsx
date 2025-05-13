@@ -17,6 +17,7 @@ import { getDmrClient } from '../../lib/api/createClient'
 import { useFileUploader } from '../../lib/utils'
 import { HTMLEditor } from '../editor/Editor'
 import { OJOIInput } from '../select/OJOIInput'
+import * as styles from './AdvertFields.css'
 
 type Props = {
   toggle: boolean
@@ -85,6 +86,7 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
           return (
             <Box
               key={addition.id}
+              className={styles.fieldBody}
               border="standard"
               borderRadius="standard"
               padding={2}
