@@ -1,8 +1,9 @@
+import { Cache } from 'cache-manager'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
@@ -33,6 +34,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   Inject,
@@ -72,14 +74,14 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from './models'
-
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
 export class JournalService implements IJournalService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
 
@@ -803,6 +805,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
@@ -980,6 +983,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {

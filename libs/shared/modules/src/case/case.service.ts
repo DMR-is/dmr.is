@@ -1,3 +1,4 @@
+import { Cache } from 'cache-manager'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import Mail from 'nodemailer/lib/mailer'
@@ -6,7 +7,7 @@ import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
@@ -62,6 +63,7 @@ import {
   getS3Bucket,
 } from '@dmr.is/utils'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   forwardRef,
@@ -123,6 +125,8 @@ const LOGGING_QUERY = 'CaseServiceQueryRunner'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @Inject(forwardRef(() => IJournalService))
     private readonly journalService: IJournalService,
     @Inject(ICaseCreateService)
@@ -204,6 +208,11 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
+    const keys = await this.cacheManager?.store.keys()
+    const keysWithCases = keys?.filter((key) => key.includes('cases-'))
+    keysWithCases?.forEach(async (key) => {
+      await this.cacheManager?.store.del(key)
+    })
 
     return results
   }
@@ -521,10 +530,11 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   @Transactional()
   updateCase(
+    caseId: string,
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCase(body, transaction)
+    return this.updateService.updateCase(caseId, body, transaction)
   }
   @LogAndHandle()
   @Transactional()
@@ -1156,6 +1166,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
     params: GetCasesWithStatusCountQuery,
@@ -1169,7 +1180,6 @@ export class CaseService implements ICaseService {
       CaseStatusEnum.Unpublished,
       CaseStatusEnum.Rejected,
     ]
-
     const whereParams = caseParameters(params)
 
     const counterResults = statusesToBeCounted.map((statusToBeCounted) => {
@@ -1215,14 +1225,16 @@ export class CaseService implements ICaseService {
       cases.count,
     )
 
-    return ResultWrapper.ok({
+    const results = {
       statuses: counter.map((c) => ({
         status: c.title,
         count: c.count,
       })),
       cases: mappedCases,
       paging,
-    })
+    }
+
+    return ResultWrapper.ok(results)
   }
 
   /**
@@ -1242,6 +1254,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
+  @Cacheable()
   @LogAndHandle()
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const channels = await this.caseChannelsModel.findAll({
@@ -1456,6 +1469,7 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
+  @Cacheable()
   async getCases(
     params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
@@ -1553,6 +1567,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCasesWithDepartmentCount(
     department: DepartmentEnum,
     params: GetCasesWithDepartmentCountQuery,

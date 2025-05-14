@@ -3,6 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -205,6 +206,14 @@ describe('CaseService', () => {
             error: jest.fn(),
             warn: jest.fn(),
             debug: jest.fn(),
+          })),
+        },
+        {
+          provide: CACHE_MANAGER,
+          useClass: jest.fn(() => ({
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
           })),
         },
         {

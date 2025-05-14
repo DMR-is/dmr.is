@@ -83,6 +83,7 @@ export interface ICaseService {
   deleteCaseChannel(caseId: string, channelId: string): Promise<ResultWrapper>
 
   updateCase(
+    caseId: string,
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
