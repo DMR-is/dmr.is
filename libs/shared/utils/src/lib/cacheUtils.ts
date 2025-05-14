@@ -7,7 +7,16 @@ import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
 const host = process.env.REDIS_HOST || 'localhost'
 const port = process.env.REDIS_PORT || 6379
 
-export const createRedisCacheOptions = (storeKey: string) => {
+enum StoreKeyMapper {
+  case = 'case',
+  ojoiUser = 'ojoi-user',
+  ojoiJournal = 'ojoi-journal',
+  ojoiStatistics = 'ojoi-statistics',
+}
+
+export const createRedisCacheOptions = (
+  storeKey: keyof typeof StoreKeyMapper,
+) => {
   if (process.env.ENABLE_REDIS !== 'true') {
     return CacheModule.register({
       ttl: 0,

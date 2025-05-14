@@ -15,7 +15,6 @@ import {
   UserController,
   UserModule,
 } from '@dmr.is/modules'
-import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { Module } from '@nestjs/common'
 
@@ -23,7 +22,6 @@ import { CaseController } from './case.controller'
 
 @Module({
   imports: [
-    createRedisCacheOptions('ojoi-case'),
     LoggingModule,
     SharedCaseModule,
     SharedJournalModule,

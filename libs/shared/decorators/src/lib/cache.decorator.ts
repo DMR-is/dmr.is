@@ -23,22 +23,18 @@ export const Cacheable = () => {
 
       const cachedData = await cache.get(cacheKey)
       if (cachedData) {
-        // Check TTL and refresh if less than 1 minute
+        // Only refresh cache if TTL is less than threshold
         const ttl = await cache.store.ttl(cacheKey)
         if (ttl < REFRESH_THRESHOLD) {
-          const result = await originalMethod.apply(this, args)
-          await cache.set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
-          return result
+          setTimeout(async () => {
+            const result = await originalMethod.apply(this, args)
+            cache
+              .set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
+              .catch(() => {
+                // Ignore cache update errors
+              })
+          }, 0)
         }
-        // Return cached data immediately and update cache asynchronously
-        setTimeout(async () => {
-          const result = await originalMethod.apply(this, args)
-          cache
-            .set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
-            .catch(() => {
-              // Ignore cache update errors
-            })
-        }, 0)
         return ResultWrapper.ok(cachedData)
       }
 
@@ -76,9 +72,10 @@ export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
 
       // Delete all cache entries containing the ID
       const keys = await cache.store.keys(cachePattern)
-      const optionalKeys = await cache.store.keys(`*${optionalParams.join('*')}*`)
+      const optionalKeys = await cache.store.keys(
+        `*${optionalParams.join('*')}*`,
+      )
       const allKeys = [...keys, ...optionalKeys]
-      console.log('allKeys', allKeys)
       await cache.store.mdel(...allKeys)
 
       return result
