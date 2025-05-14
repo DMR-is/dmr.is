@@ -1,4 +1,3 @@
-import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
 import {
   ArgumentsHost,
   BadRequestException,
@@ -11,6 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
+import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
 import { logger } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'HttpExceptionFilter'

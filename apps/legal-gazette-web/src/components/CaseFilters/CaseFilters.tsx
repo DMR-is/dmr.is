@@ -1,5 +1,6 @@
 import debounce from 'lodash/debounce'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+
 import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
 
 import { Inline, Input, Stack } from '@island.is/island-ui/core'

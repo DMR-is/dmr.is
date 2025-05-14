@@ -1,6 +1,8 @@
 import { GetServerSideProps } from 'next'
 import { signIn } from 'next-auth/react'
+
 import { useState } from 'react'
+
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 
 import {

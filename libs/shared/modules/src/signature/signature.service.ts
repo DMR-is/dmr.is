@@ -1,6 +1,10 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -11,9 +15,6 @@ import {
   UpdateSignatureRecord,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { MemberTypeEnum } from './lib/types'
 import { signatureMigrate } from './migrations/signature.migrate'

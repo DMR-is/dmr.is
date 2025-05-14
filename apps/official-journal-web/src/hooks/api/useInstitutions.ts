@@ -1,5 +1,6 @@
 import useSWR, { Key, SWRConfiguration } from 'swr'
 import useSWRMutation from 'swr/mutation'
+
 import { GetInstitutionResponse, UpdateInstitution } from '@dmr.is/shared/dto'
 
 import {

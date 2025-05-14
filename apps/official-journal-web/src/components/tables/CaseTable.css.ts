@@ -1,7 +1,7 @@
+import { theme } from '@island.is/island-ui/theme'
+
 import { style } from '@vanilla-extract/css'
 import { recipe } from '@vanilla-extract/recipes'
-
-import { theme } from '@island.is/island-ui/theme'
 
 export const fixedCellWrapper = style({
   position: 'absolute',

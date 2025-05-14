@@ -7,9 +7,10 @@ import {
   IsUUID,
   ValidateIf,
 } from 'class-validator'
-import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 
 export class AdvertTypeQuery {
   @ApiProperty({

@@ -1,8 +1,3 @@
-import { ROLES_KEY } from '@dmr.is/constants'
-import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { UserRoleTitle } from '@dmr.is/types'
-
 import {
   CanActivate,
   ExecutionContext,
@@ -11,6 +6,11 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+
+import { ROLES_KEY } from '@dmr.is/constants'
+import { LogMethod } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { UserRoleTitle } from '@dmr.is/types'
 
 import { IUserService } from '../user/user.service.interface'
 

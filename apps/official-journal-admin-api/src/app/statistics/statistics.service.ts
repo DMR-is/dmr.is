@@ -1,6 +1,11 @@
 import { Cache } from 'cache-manager'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { Cacheable, LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -22,12 +27,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
 import { IStatisticsService } from './statistics.service.interface'
-
 const LOGGING_CATEGORY = 'statistics-service'
 const LOGGING_CONTEXT = 'StatisticsQueryRunner'
 

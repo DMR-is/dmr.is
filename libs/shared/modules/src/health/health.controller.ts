@@ -1,7 +1,7 @@
-import { LogMethod } from '@dmr.is/decorators'
-
 import { Controller, Get } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
+
+import { LogMethod } from '@dmr.is/decorators'
 
 @Controller({
   version: '1',

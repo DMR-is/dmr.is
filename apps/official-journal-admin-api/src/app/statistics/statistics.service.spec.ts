@@ -1,12 +1,12 @@
+import { NotImplementedException } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+
 import { LoggingModule } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
 import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
-
-import { NotImplementedException } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
 
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'

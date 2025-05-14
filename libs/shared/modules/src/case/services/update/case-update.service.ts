@@ -1,6 +1,11 @@
 import { Cache } from 'cache-manager'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { ApplicationStates } from '@dmr.is/constants'
 import { CacheEvict, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -25,10 +30,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils'
-
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'

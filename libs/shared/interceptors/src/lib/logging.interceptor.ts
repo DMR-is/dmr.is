@@ -1,6 +1,5 @@
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
-import { logger } from '@dmr.is/logging'
 
 import {
   CallHandler,
@@ -9,6 +8,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+
+import { logger } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'LoggingInterceptor'
 

@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
   GetApplicationAttachmentResponse,

@@ -1,6 +1,6 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { AwsModule } from '../aws/aws'
 import { UtilityModule } from '../utility/utility.module'

@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+
 import { z } from 'zod'
+
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 
 import {

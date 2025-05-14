@@ -6,6 +6,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { AdditionType } from '@dmr.is/shared/dto'
 
 import { CaseModel } from './case.model'

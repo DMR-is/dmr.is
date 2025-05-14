@@ -1,6 +1,7 @@
-import cn from 'classnames'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+
+import cn from 'classnames'
 import { useEffect } from 'react'
 
 import {

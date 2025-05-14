@@ -1,12 +1,3 @@
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
-import {
-  CreateSignature,
-  GetSignature,
-  UpdateSignatureMember,
-  UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-
 import {
   Body,
   Controller,
@@ -23,6 +14,15 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
+
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import {
+  CreateSignature,
+  GetSignature,
+  UpdateSignatureMember,
+  UpdateSignatureRecord,
+} from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { MemberTypeEnum } from './lib/types'
 import { ISignatureService } from './signature.service.interface'

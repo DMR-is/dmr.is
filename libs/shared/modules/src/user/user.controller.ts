@@ -1,18 +1,3 @@
-import { UserRoleEnum } from '@dmr.is/constants'
-import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateUserDto,
-  GetInvoledPartiesByUserResponse,
-  GetRolesByUserResponse,
-  GetUserResponse,
-  GetUsersQuery,
-  GetUsersResponse,
-  UpdateUserDto,
-  UserDto,
-} from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-
 import {
   Body,
   Controller,
@@ -34,6 +19,21 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
+
+import { UserRoleEnum } from '@dmr.is/constants'
+import { CurrentUser, Roles } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  CreateUserDto,
+  GetInvoledPartiesByUserResponse,
+  GetRolesByUserResponse,
+  GetUserResponse,
+  GetUsersQuery,
+  GetUsersResponse,
+  UpdateUserDto,
+  UserDto,
+} from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../guards'
 import { IUserService } from './user.service.interface'

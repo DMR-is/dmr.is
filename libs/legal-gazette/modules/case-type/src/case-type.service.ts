@@ -1,5 +1,10 @@
+import slugify from 'slugify'
+
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { ICaseTypeService } from './case-type.service.interface'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import {
   CreateCaseTypeDto,
   GetCaseTypeDto,
@@ -7,10 +12,8 @@ import {
   GetCaseTypesDto,
   UpdateCaseTypeDto,
 } from './dto/case-type.dto'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { InjectModel } from '@nestjs/sequelize'
 import { CaseTypeModel } from './models/case-type.model'
-import slugify from 'slugify'
+import { ICaseTypeService } from './case-type.service.interface'
 
 const LOGGING_CONTEXT = 'CaseTypeService'
 

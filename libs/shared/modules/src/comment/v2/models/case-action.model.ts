@@ -5,6 +5,7 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
+
 import { CaseActionEnum } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_action', timestamps: false })

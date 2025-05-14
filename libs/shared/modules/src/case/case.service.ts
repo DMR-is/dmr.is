@@ -6,6 +6,17 @@ import { Op, OrderItem, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -62,16 +73,6 @@ import {
   getPublicationTemplate,
   getS3Bucket,
 } from '@dmr.is/utils'
-
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

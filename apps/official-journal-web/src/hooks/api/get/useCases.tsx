@@ -1,4 +1,5 @@
 import useSWR, { SWRConfiguration } from 'swr'
+
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
 import { GetCasesReponse } from '../../../gen/fetch'

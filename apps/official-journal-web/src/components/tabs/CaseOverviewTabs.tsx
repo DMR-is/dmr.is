@@ -1,4 +1,5 @@
 import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
+
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'

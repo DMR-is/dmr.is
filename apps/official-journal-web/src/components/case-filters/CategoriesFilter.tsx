@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { AlertMessage } from '@island.is/island-ui/core'

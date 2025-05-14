@@ -1,9 +1,9 @@
-import { globalStyle, style } from '@vanilla-extract/css'
-
 import {
   regulationContentStyling,
   regulationTitleStyling,
 } from '@island.is/regulations/styling'
+
+import { globalStyle, style } from '@vanilla-extract/css'
 
 export const bodyText = style({})
 regulationContentStyling(bodyText)

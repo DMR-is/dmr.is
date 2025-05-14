@@ -1,7 +1,5 @@
 import * as jwt from 'jsonwebtoken'
 import jwksRsa from 'jwks-rsa'
-import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
   CanActivate,
@@ -10,6 +8,9 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common'
+
+import { LogMethod } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()
 export class TokenJwtAuthGuard implements CanActivate {

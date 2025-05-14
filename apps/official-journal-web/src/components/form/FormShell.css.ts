@@ -1,7 +1,7 @@
-import { style } from '@vanilla-extract/css'
-
 import { theme } from '@island.is/island-ui/theme'
 import { escapeGrid } from '@island.is/island-ui/utils'
+
+import { style } from '@vanilla-extract/css'
 
 const headerHeight = 112
 

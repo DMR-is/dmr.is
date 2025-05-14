@@ -8,15 +8,17 @@ import {
   Post,
   Put,
 } from '@nestjs/common'
-import { ICaseTypeService } from './case-type.service.interface'
 import { ApiTags } from '@nestjs/swagger'
+
+import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+
 import {
   CreateCaseTypeDto,
   GetCaseTypeDto,
   GetCaseTypesDto,
   UpdateCaseTypeDto,
 } from './dto/case-type.dto'
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { ICaseTypeService } from './case-type.service.interface'
 
 @Controller({ path: 'types', version: '1' })
 @ApiTags('Case Types')

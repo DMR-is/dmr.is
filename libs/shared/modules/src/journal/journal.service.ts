@@ -3,6 +3,18 @@ import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  NotImplementedException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -33,17 +45,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
-
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  NotImplementedException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'

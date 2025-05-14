@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { ILegalGazetteApplicationService } from './application.service.interface'
+
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { SubmitApplicationDto } from './dto/application.dto'
+import { ILegalGazetteApplicationService } from './application.service.interface'
 
 @Injectable()
 export class LegalGazetteApplicationService

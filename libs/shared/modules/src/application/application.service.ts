@@ -1,6 +1,18 @@
 import { plainToInstance } from 'class-transformer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import {
+  BadRequestException,
+  forwardRef,
+  HttpException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -32,17 +44,6 @@ import {
   getTemplate,
   getTemplateDetails,
 } from '@dmr.is/utils'
-
-import {
-  BadRequestException,
-  forwardRef,
-  HttpException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

@@ -1,20 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { Exclude, Expose, Transform, Type } from 'class-transformer'
-
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBase64,
   IsDateString,
+  IsEmail,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
   MinLength,
-  IsEmail,
-  IsOptional,
-  IsArray,
   ValidateNested,
-  ArrayMinSize,
-  ArrayMaxSize,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 export class CommunicationChannelDto {
   @ApiProperty({ type: String })

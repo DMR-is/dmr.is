@@ -1,6 +1,6 @@
-import { createContainer, style } from '@vanilla-extract/css'
-
 import { theme } from '@island.is/island-ui/theme'
+
+import { createContainer, style } from '@vanilla-extract/css'
 
 const cardContainer = createContainer()
 

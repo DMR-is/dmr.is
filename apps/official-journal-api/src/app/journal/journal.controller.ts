@@ -1,4 +1,18 @@
 import { Response } from 'express'
+
+import {
+  Controller,
+  Get,
+  Header,
+  Inject,
+  InternalServerErrorException,
+  NotFoundException,
+  Param,
+  Query,
+  Res,
+} from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import {
   DEFAULT_CASE_SORT_BY,
   DEFAULT_CASE_SORT_DIRECTION,
@@ -26,19 +40,6 @@ import {
   GetSimilarAdvertsResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  Controller,
-  Get,
-  Header,
-  Inject,
-  InternalServerErrorException,
-  NotFoundException,
-  Param,
-  Query,
-  Res,
-} from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
 

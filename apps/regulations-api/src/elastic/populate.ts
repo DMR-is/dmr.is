@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { performance } from 'perf_hooks'
-import { Client } from '@opensearch-project/opensearch'
 
 import {
   ensureNameSlug,
@@ -12,6 +11,8 @@ import { getAllRegulations, RegulationListItemFull } from '../db/Regulations'
 import { ISODate, RegName } from '../routes/types'
 import { loadData, storeData } from '../utils/misc'
 import { getSettingsTemplate, mappingTemplate } from './template'
+
+import { Client } from '@opensearch-project/opensearch'
 
 const INDEX_NAME = 'regulations'
 

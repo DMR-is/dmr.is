@@ -4,13 +4,14 @@
  */
 
 import { WinstonModule } from 'nest-winston'
-import { apmInit } from '@dmr.is/apm'
-import { logger } from '@dmr.is/logging'
-import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
 import { VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
+
+import { apmInit } from '@dmr.is/apm'
+import { logger } from '@dmr.is/logging'
+import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 
 import { AppModule } from './app/app.module'
 import { OJOIExceptionFilter } from './exceptionFilter'

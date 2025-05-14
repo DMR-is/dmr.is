@@ -1,7 +1,7 @@
+import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
+
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { CanActivate, ExecutionContext, Inject } from '@nestjs/common'
 
 import { IUtilityService } from '../utility/utility.service.interface'
 

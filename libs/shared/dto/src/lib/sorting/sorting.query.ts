@@ -1,11 +1,12 @@
 import { Expose, Transform } from 'class-transformer'
 import { IsOptional } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import {
   DEFAULT_CASE_SORT_BY,
   DEFAULT_CASE_SORT_DIRECTION,
 } from '@dmr.is/constants'
-
-import { ApiProperty } from '@nestjs/swagger'
 
 export class SortingQuery {
   @ApiProperty({

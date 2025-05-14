@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+
 import { LogMethod } from '@dmr.is/decorators'
 import { isResponse } from '@dmr.is/utils/client'
 

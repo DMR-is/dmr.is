@@ -1,6 +1,9 @@
 import type { Page } from 'puppeteer'
 import { Browser } from 'puppeteer'
 import { Browser as CoreBrowser } from 'puppeteer-core'
+
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
+
 import {
   PDF_RETRY_ATTEMPTS,
   PDF_RETRY_DELAY,
@@ -15,8 +18,6 @@ import {
   handlePdfAdditions,
   retryAsync,
 } from '@dmr.is/utils'
-
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'

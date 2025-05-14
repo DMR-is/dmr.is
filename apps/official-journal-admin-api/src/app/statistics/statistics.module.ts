@@ -1,9 +1,9 @@
+import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
 import { LoggingModule } from '@dmr.is/logging'
 import { CaseModel, UserModule } from '@dmr.is/modules'
 import { createRedisCacheOptions } from '@dmr.is/utils/cache'
-
-import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
 import { StatisticsController } from './statistics.controller'
 import { StatisticsService } from './statistics.service'
