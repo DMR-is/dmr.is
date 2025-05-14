@@ -28,6 +28,7 @@ import { IApplicationService } from '../application/application.service.interfac
 import { IAuthService } from '../auth/auth.service.interface'
 import { TransactionFeeCodeMigrate } from '../case/migrations/transaction-fee-codes.migrate'
 import {
+  CaseAdditionModel,
   CaseModel,
   CaseTransactionModel,
   TransactionFeeCodesModel,
@@ -95,10 +96,20 @@ export class PriceService implements IPriceService {
           .fastTrack
       : false
 
+    const additionsHtmlContentCount =
+      application.answers.advert.additions &&
+      application.answers.advert.additions.length > 0
+        ? application.answers.advert.additions
+            .map((item) => getHtmlTextLength(item?.content ?? ''))
+            .reduce((acc, curr) => acc + curr, 0)
+        : 0
+
     const transactionPrice = await this.getPriceByDepartmentSlug(
       {
         slug: application.answers.advert.department.slug,
-        bodyLengthCount: getHtmlTextLength(application.answers?.advert.html),
+        bodyLengthCount:
+          getHtmlTextLength(application.answers?.advert.html) +
+          additionsHtmlContentCount,
         isFastTrack,
       },
       transaction,
@@ -135,6 +146,10 @@ export class PriceService implements IPriceService {
           model: AdvertDepartmentModel,
           attributes: ['id', 'slug'],
         },
+        {
+          model: CaseAdditionModel,
+          attributes: ['id', 'content'],
+        },
       ],
       transaction,
     })
@@ -155,6 +170,13 @@ export class PriceService implements IPriceService {
       })
     }
 
+    const additionsHtmlContentCount =
+      caseLookup.additions && caseLookup.additions.length > 0
+        ? caseLookup.additions
+            .map((item) => getHtmlTextLength(item?.content ?? ''))
+            .reduce((acc, curr) => acc + curr, 0)
+        : 0
+
     const caseFeeCalculation = await this.getPriceByDepartmentSlug(
       {
         slug: caseLookup.department.slug,
@@ -163,7 +185,7 @@ export class PriceService implements IPriceService {
         baseDocumentCount: caseLookup.transaction.customBaseCount ?? 0,
         bodyLengthCount:
           caseLookup.transaction.customAdditionalCharacterCount ??
-          getHtmlTextLength(caseLookup.html),
+          getHtmlTextLength(caseLookup.html) + additionsHtmlContentCount,
         additionalDocCount:
           caseLookup.transaction.customAdditionalDocCount ?? 0,
       },
@@ -214,6 +236,10 @@ export class PriceService implements IPriceService {
           model: AdvertDepartmentModel,
           attributes: ['id', 'slug'],
         },
+        {
+          model: CaseAdditionModel,
+          attributes: ['id', 'content'],
+        },
       ],
       transaction,
     })
@@ -226,8 +252,16 @@ export class PriceService implements IPriceService {
       })
     }
 
+    const additionsHtmlContentCount =
+      caseLookup.additions && caseLookup.additions.length > 0
+        ? caseLookup.additions
+            .map((item) => getHtmlTextLength(item?.content ?? ''))
+            .reduce((acc, curr) => acc + curr, 0)
+        : 0
+
     const characterLength =
-      body.customBodyLengthCount || getHtmlTextLength(caseLookup.html)
+      body.customBodyLengthCount ||
+      getHtmlTextLength(caseLookup.html) + additionsHtmlContentCount
 
     const caseFeeCalculation = await this.getPriceByDepartmentSlug(
       {
