@@ -1,0 +1,23 @@
+import { Body, Controller, Inject, Post } from '@nestjs/common'
+import { ILegalGazetteApplicationService } from './application.service.interface'
+import { SubmitApplicationDto } from './dto/application.dto'
+import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { ApiTags } from '@nestjs/swagger'
+
+@Controller({
+  path: 'applications',
+  version: '1',
+})
+@ApiTags('Legal Gazette Applications')
+export class LegalGazetteApplicationController {
+  constructor(
+    @Inject(ILegalGazetteApplicationService)
+    private readonly applicationService: ILegalGazetteApplicationService,
+  ) {}
+
+  @Post()
+  @LGResponse({ operationId: 'submitApplication', status: 201 })
+  async submitApplication(@Body() body: SubmitApplicationDto): Promise<void> {
+    return this.applicationService.submitApplication(body)
+  }
+}

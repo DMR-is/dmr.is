@@ -29,7 +29,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: now,
     }
 
-    logger.error(`${exception.name} - ${exception.message}`, {
+    const exceptionResponse = exception.getResponse()
+
+    if (typeof exceptionResponse === 'string') {
+      err.message = exceptionResponse
+    }
+
+    if (
+      typeof exceptionResponse === 'object' &&
+      'message' in exceptionResponse
+    ) {
+      const details = Array.isArray(exceptionResponse.message)
+        ? exceptionResponse.message
+        : [exceptionResponse.message]
+
+      err.details = details
+    }
+
+    logger.warn(`${exception.name} - ${exception.message}`, {
       context: LOGGING_CONTEXT,
       exception,
     })
@@ -54,6 +71,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         err.statusCode = 400
         err.name = ApiErrorName.BadRequest
         err.message = 'Bad request.'
+
         break
       case InternalServerErrorException:
         err.statusCode = 500
