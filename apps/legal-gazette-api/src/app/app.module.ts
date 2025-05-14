@@ -14,6 +14,7 @@ import { HealthModule } from '@dmr.is/modules'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
+import { LegalGazetteApplicationModule } from '../modules/application/application.module'
 
 @Module({
   imports: [
@@ -25,7 +26,10 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
           host: process.env.DB_HOST || 'localhost',
           password: process.env.DB_PASS || 'dev_db',
           username: process.env.DB_USER || 'dev_db',
-          port: Number(process.env.DB_PORT) || Number(process.env.LEGAL_GAZETTE_DB_PORT) || 5434,
+          port:
+            Number(process.env.DB_PORT) ||
+            Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
+            5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
         }),
       ],
@@ -34,6 +38,7 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
       inject: [DMRSequelizeConfigService],
     }),
     CaseTypeModule,
+    LegalGazetteApplicationModule,
     HealthModule,
   ],
   controllers: [],

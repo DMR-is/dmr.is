@@ -38,8 +38,8 @@ export class ApiErrorDto {
   message?: string
 
   @ApiProperty({
-    type: String,
+    type: [String],
     required: false,
   })
-  details?: string
+  details?: string[]
 }

@@ -26,7 +26,7 @@
     "run-pg-proxy": "./scripts/run-pg-proxy.sh",
     "license-audit": "license-checker --failOn 'GPL; AGPL; UNLICENSED' --summary",
     "openapi-generator": "openapi-generator generate -g typescript-fetch --additional-properties=typescriptThreePlus=true,enumPropertyNamingReplaceSpecialCharacters=true,allowUnicodeIdentifiers=true",
-    "openapi-generator:test": "openapi-generator generate -g typescript-fetch -i tmp/swagger/client-config.json -o tmp/swagger/gen/fetch  --additional-properties=typescriptThreePlus=true,enumPropertyNamingReplaceSpecialCharacters=true,allowUnicodeIdentifiers=true",
+    "openapi-generator:test": "openapi-generator generate -g typescript-fetch -i tmp/swagger/clientConfig.json -o tmp/swagger/gen/fetch  --additional-properties=typescriptThreePlus=true,enumPropertyNamingReplaceSpecialCharacters=true,allowUnicodeIdentifiers=true",
     "codegen": "node scripts/codegen.js",
     "compile-strings:is": "formatjs compile ./apps/official-journal-web/src/i18n/strings/is.json --ast --out-file ./apps/official-journal-web/src/i18n/strings/is-compiled.json",
     "compile-strings": "concurrently \"pnpm:compile-strings:*\"",

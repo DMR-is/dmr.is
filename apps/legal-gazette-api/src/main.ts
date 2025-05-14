@@ -1,4 +1,4 @@
-import { Logger, VersioningType } from '@nestjs/common'
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app/app.module'
@@ -19,6 +19,13 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
   app.setGlobalPrefix(globalPrefix)
   app.enableCors()
   app.enableVersioning({
