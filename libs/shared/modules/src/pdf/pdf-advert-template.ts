@@ -17,6 +17,7 @@ export const advertPdfTemplate = ({
   hiddenSignature,
   subSignature,
 }: AdvertTemplateProps) => {
+  const publishSignature = subSignature ?? ''
   return `
     <div class="regulation__prefix">${type?.toUpperCase()}</div>
     <h1 class="regulation__title">${title}</h1>
@@ -24,7 +25,7 @@ export const advertPdfTemplate = ({
       ${content}
       <section class="regulation__signature${hiddenSignature ? ' hidden' : ''}">
         ${signature}
-        ${subSignature ?? ''}
+        ${!additions ? publishSignature : ''}
       </section>
     </div>
     ${
@@ -32,6 +33,9 @@ export const advertPdfTemplate = ({
         ? `
     <div class="appendixes">
       ${additions}
+      <section class="regulation__signature${hiddenSignature ? ' hidden' : ''}">
+        ${publishSignature}
+      </section>
     </div>`
         : ''
     }

@@ -17,6 +17,7 @@ import {
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
 import {
+  CaseAdditionModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
@@ -455,6 +456,9 @@ export class UtilityService implements IUtilityService {
         },
         {
           model: AdvertCategoryModel,
+        },
+        {
+          model: CaseAdditionModel,
         },
         {
           model: ApplicationAttachmentModel,
