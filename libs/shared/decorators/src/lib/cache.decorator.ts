@@ -1,9 +1,12 @@
 import { Cache } from 'cache-manager'
 import { ResultWrapper } from '@dmr.is/types'
 
+const REFRESH_THRESHOLD = 1000 * 60 // 1 minute in milliseconds
+const CACHE_TTL = 5000 * 60 // 5 minutes in milliseconds
+
 export const Cacheable = () => {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
@@ -11,7 +14,7 @@ export const Cacheable = () => {
       return descriptor
     }
     const originalMethod = descriptor.value
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       if ('cacheManager' in this === false) {
         throw new Error('cacheManager instance is required')
       }
@@ -20,11 +23,18 @@ export const Cacheable = () => {
 
       const cachedData = await cache.get(cacheKey)
       if (cachedData) {
+        // Check TTL and refresh if less than 1 minute
+        const ttl = await cache.store.ttl(cacheKey)
+        if (ttl < REFRESH_THRESHOLD) {
+          const result = await originalMethod.apply(this, args)
+          await cache.set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
+          return result
+        }
         // Return cached data immediately and update cache asynchronously
         setTimeout(async () => {
           const result = await originalMethod.apply(this, args)
           cache
-            .set(cacheKey, ResultWrapper.unwrap(result), 5000 * 60)
+            .set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
             .catch(() => {
               // Ignore cache update errors
             })
@@ -33,7 +43,7 @@ export const Cacheable = () => {
       }
 
       const result = await originalMethod.apply(this, args)
-      cache.set(cacheKey, ResultWrapper.unwrap(result), 5000 * 60) // 5 minutes in milliseconds
+      cache.set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
       return result
     }
     return descriptor
@@ -42,7 +52,7 @@ export const Cacheable = () => {
 
 export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
@@ -51,7 +61,7 @@ export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
     }
     const originalMethod = descriptor.value
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       if ('cacheManager' in this === false) {
         throw new Error('cacheManager instance is required')
       }
@@ -67,8 +77,9 @@ export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
       // Delete all cache entries containing the ID
       const keys = await cache.store.keys(cachePattern)
       const optionalKeys = await cache.store.keys(`*${optionalParams.join('*')}*`)
-      await Promise.all(keys.map((key) => cache.del(key)))
-      await Promise.all(optionalKeys.map((key) => cache.del(key)))
+      const allKeys = [...keys, ...optionalKeys]
+      console.log('allKeys', allKeys)
+      await cache.store.mdel(...allKeys)
 
       return result
     }

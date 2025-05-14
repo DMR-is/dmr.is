@@ -21,7 +21,7 @@ export const createRedisCacheOptions = (storeKey: string) => {
         name: storeKey,
         nodes: [{ host: host, port: port }],
       })
-      return { store: store, ttl: 5 }
+      return { store: store }
     },
   }
   return CacheModule.registerAsync(options)
