@@ -1,6 +1,6 @@
 import { Cache } from 'cache-manager'
+import { getLogger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-
 const REFRESH_THRESHOLD = 1000 * 60 // 1 minute in milliseconds
 const CACHE_TTL = 5000 * 60 // 5 minutes in milliseconds
 
@@ -30,8 +30,13 @@ export const Cacheable = () => {
             const result = await originalMethod.apply(this, args)
             cache
               .set(cacheKey, ResultWrapper.unwrap(result), CACHE_TTL)
-              .catch(() => {
+              .catch((error) => {
                 // Ignore cache update errors
+                const logger = getLogger('cache.decorator')
+                logger.error('Failed to update cache', {
+                  cacheKey,
+                  error,
+                })
               })
           }, 0)
         }
@@ -61,6 +66,13 @@ export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
       if ('cacheManager' in this === false) {
         throw new Error('cacheManager instance is required')
       }
+
+      const logger = getLogger('cache.decorator')
+      logger.info('Evicting cache', {
+        cacheKey: propertyKey,
+        idParamIndex,
+        optionalParams,
+      })
 
       const cache = this.cacheManager as Cache
       const id = args[idParamIndex]

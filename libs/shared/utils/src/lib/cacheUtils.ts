@@ -1,9 +1,9 @@
 /* eslint-disable local-rules/no-async-module-init */
 import { Cache } from 'cache-manager'
 import { redisStore } from 'cache-manager-ioredis-yet'
+import { getLogger } from '@dmr.is/logging'
 
 import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
-
 const host = process.env.REDIS_HOST || 'localhost'
 const port = process.env.REDIS_PORT || 6379
 
@@ -14,12 +14,18 @@ export type StoreKeyMapper =
   | 'ojoi-statistics'
 
 export const createRedisCacheOptions = (storeKey: StoreKeyMapper) => {
+  const logger = getLogger('cacheUtils')
   if (process.env.ENABLE_REDIS !== 'true') {
+    logger.info('Redis is disabled')
     return CacheModule.register({
       ttl: 0,
       max: 0,
     })
   }
+  logger.info('Initializing Redis cache', {
+    host,
+    port,
+  })
   const options: CacheModuleAsyncOptions = {
     isGlobal: true,
     useFactory: async () => {
