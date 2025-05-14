@@ -1,4 +1,4 @@
-import { logger } from '@dmr.is/logging'
+import { getLogger } from '@dmr.is/logging'
 
 import { HandlerDecorator } from '../types'
 
@@ -7,6 +7,7 @@ export const handleAPIException: HandlerDecorator =
     try {
       await handler(req, res)
     } catch (error) {
+      const logger = getLogger('handleApiException')
       const { method, url, query } = req
       logger.error(`Exception occurred, ${method}: ${url}`, {
         category: 'api',
