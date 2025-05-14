@@ -34,3 +34,9 @@ export const logger = createLogger({
   exceptionHandlers: logTransports,
   rejectionHandlers: logTransports,
 } as LoggerOptions)
+
+export const getLogger = (category: string) => {
+  return logger.child({
+    category: category,
+  })
+}

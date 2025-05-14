@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { z } from 'zod'
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'
@@ -28,7 +27,7 @@ class PublishCasesHandler extends RouteHandler {
       })
       return res.status(204).end()
     } catch (error) {
-      logger.warn('Failed to publish cases', {
+      this.logger.warn('Failed to publish cases', {
         context: 'PublishCasesHandler',
         error,
       })
