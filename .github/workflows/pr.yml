@@ -12,18 +12,10 @@ on:
       - synchronize
 
 jobs:
- steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.10.0'
-
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Yarn install
-        run: yarn install
+  pr-lint:
+    name: 🧹 Lint PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.DMR_ACCOUNT_PAT }}
