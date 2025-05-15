@@ -13240,23 +13240,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cosmiconfig@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "cosmiconfig@npm:9.0.0"
-  dependencies:
-    env-paths: "npm:^2.2.1"
-    import-fresh: "npm:^3.3.0"
-    js-yaml: "npm:^4.1.0"
-    parse-json: "npm:^5.2.0"
-  peerDependencies:
-    typescript: ">=4.9.5"
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  checksum: 1c1703be4f02a250b1d6ca3267e408ce16abfe8364193891afc94c2d5c060b69611fdc8d97af74b7e6d5d1aac0ab2fb94d6b079573146bc2d756c2484ce5f0ee
-  languageName: node
-  linkType: hard
-
 "create-jest@npm:^29.7.0":
   version: 29.7.0
   resolution: "create-jest@npm:29.7.0"
@@ -14390,7 +14373,7 @@ __metadata:
     pagedjs-cli: "npm:^0.4.3"
     pg: "npm:^8.13.3"
     prettier: "npm:^3.5.3"
-    puppeteer: "npm:^22.8.1"
+    puppeteer: "npm:^20.9.0"
     puppeteer-core: "npm:^22.8.0"
     react: "npm:^18.3.1"
     react-animate-height: "npm:^3.1.2"
@@ -14829,7 +14812,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"env-paths@npm:^2.2.0, env-paths@npm:^2.2.1":
+"env-paths@npm:^2.2.0":
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 285325677bf00e30845e330eec32894f5105529db97496ee3f598478e50f008c5352a41a30e5e72ec9de8a542b5a570b85699cd63bd2bc646dbcb9f311d83bc4
@@ -23304,7 +23287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"puppeteer-core@npm:22.15.0, puppeteer-core@npm:^22.8.0":
+"puppeteer-core@npm:^22.8.0":
   version: 22.15.0
   resolution: "puppeteer-core@npm:22.15.0"
   dependencies:
@@ -23325,20 +23308,6 @@ __metadata:
     cosmiconfig: "npm:8.2.0"
     puppeteer-core: "npm:20.9.0"
   checksum: 64598fc81e7acf61d781c8c344012dadb973d59cbd4bdde701ee9a1dd5e5ad6fc80f8eb3c368ffba327fce26fa62e9a5660ada8b5a1e18d97792006774a6d627
-  languageName: node
-  linkType: hard
-
-"puppeteer@npm:^22.8.1":
-  version: 22.15.0
-  resolution: "puppeteer@npm:22.15.0"
-  dependencies:
-    "@puppeteer/browsers": "npm:2.3.0"
-    cosmiconfig: "npm:^9.0.0"
-    devtools-protocol: "npm:0.0.1312386"
-    puppeteer-core: "npm:22.15.0"
-  bin:
-    puppeteer: lib/esm/puppeteer/node/cli.js
-  checksum: c31ec024dd7722c32a681c3e2ae23751021abb3f4c39fbdd895859327e855ae2b89e5682fcdb789de7412314701d882bd37e8545e45cf0a97cd5df06449987b9
   languageName: node
   linkType: hard
 
