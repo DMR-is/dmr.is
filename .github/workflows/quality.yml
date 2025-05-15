@@ -1,8 +1,5 @@
 name: Monorepo pipeline - quality
 
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
-
 on:
   pull_request:
   workflow_dispatch:
@@ -17,81 +14,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    env:
-      CHUNK_SIZE: 7
-    outputs:
-      # TEST_CHUNKS: ${{ steps.test_projects.outputs.CHUNKS }}
-      # LINT_CHUNKS: ${{ steps.lint_projects.outputs.CHUNKS }}
-      # UNAFFECTED: ${{ steps.unaffected.outputs.UNAFFECTED }}
-      # BUILD_CHUNKS: ${{ steps.build_projects.outputs.CHUNKS }}
-      # BUILD_MAP: ${{ steps.build_map.outputs.BUILD_MAP }}
-      node-modules-hash: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.10.0'
-
-      - name: Check node version
-        run: |
-          node -v
-          ls -l `which node`
-
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Calculate cache key for node_modules
-        id: calculate_node_modules_hash
-        run: |
-          PACKAGE_JSON_HASH=$(cat package.json | jq '{resolutions,dependencies,devDependencies}' | sha1sum -t | cut -f1 -d" ")
-          echo "PACKAGE_JSON_HASH: $PACKAGE_JSON_HASH"
-          export NODE_MODULES_HASH=${{ runner.os }}-${{ hashFiles('yarn.lock') }}-$PACKAGE_JSON_HASH
-          echo "NODE_MODULES_HASH: $NODE_MODULES_HASH"
-          echo "node-modules-hash=$NODE_MODULES_HASH" >> $GITHUB_OUTPUT
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
-
-      - name: Building NodeJS dependencies
-        if: steps.node-modules.outputs.cache-hit != 'true'
-        run: yarn install --immutable
-
   linting:
-    needs:
-      - prepare
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.10.0'
 
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        continue-on-error: true
-        uses: actions/cache@v4
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          path: node_modules
-          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
+          node-version: 20.x
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -99,95 +36,57 @@ jobs:
         run: yarn run nx affected -t lint
 
   formatting:
-    needs:
-      - prepare
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: '20.10.0'
+          fetch-depth: 0
 
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        continue-on-error: true
-        uses: actions/cache@v4
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          path: node_modules
-          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
+          node-version: 20.x
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
 
       - name: Check formatting
         run: yarn nx format:write --all
 
   testing:
-    needs:
-      - prepare
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.10.0'
+          node-version: 20.x
 
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        continue-on-error: true
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
-
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
       - uses: nrwl/nx-set-shas@v4
 
       - name: Run tests
         run: yarn run nx affected -t test
 
   build:
-    needs:
-      - prepare
-    strategy:
-      matrix:
-        project: [official-journal-web]
     runs-on: ubuntu-latest
-    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
-      - uses: actions/setup-node@v4
+          fetch-depth: 0
+
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.10.0'
+          node-version: 20.x
 
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        continue-on-error: true
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ needs.prepare.outputs.node-modules-hash }}-yarn
-
-      - name: Yarn install
-        run: yarn install --immutable
-
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+  
       - name: Codegen application
         run: yarn nx run ${{matrix.project}}:codegen
 
