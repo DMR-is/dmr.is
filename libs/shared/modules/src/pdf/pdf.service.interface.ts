@@ -3,7 +3,7 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface IPdfService {
   generatePdfByCaseId(
     caseId: string,
-    publishedAt?: string,
+    publishedAt?: string | Date,
     serial?: number,
   ): Promise<ResultWrapper<Buffer>>
 
