@@ -86,7 +86,7 @@ jobs:
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
-  
+
       - name: Codegen application
         run: yarn nx run ${{matrix.project}}:codegen
 
