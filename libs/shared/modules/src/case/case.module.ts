@@ -1,8 +1,8 @@
-import { LoggingModule } from '@dmr.is/logging'
-import { createRedisCacheOptions } from '@dmr.is/utils/cache'
-
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { LoggingModule } from '@dmr.is/logging'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { ApplicationModule } from '../application/application.module'
 import { AttachmentsModule } from '../attachments/attachments.module'

@@ -1,14 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mssql from 'mssql'
-import {
-  AbortMultipartUploadCommand,
-  CompleteMultipartUploadCommand,
-  CreateMultipartUploadCommand,
-  HeadObjectCommand,
-  S3Client,
-  UploadPartCommand,
-} from '@aws-sdk/client-s3'
 
 import {
   AdvertCategory,
@@ -23,6 +15,15 @@ import {
   DbType,
   Document,
 } from '../types'
+
+import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
+  HeadObjectCommand,
+  S3Client,
+  UploadPartCommand,
+} from '@aws-sdk/client-s3'
 
 const DEPARTMENT_QUERY =
   'SELECT typename AS name, typeid AS id, COUNT(*) AS count FROM Adverts GROUP BY typename, typeid'

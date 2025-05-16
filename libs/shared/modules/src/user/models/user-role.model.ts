@@ -5,6 +5,7 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
+
 import { UserRoleEnum } from '@dmr.is/constants'
 
 @Table({ tableName: 'user_role', timestamps: false })

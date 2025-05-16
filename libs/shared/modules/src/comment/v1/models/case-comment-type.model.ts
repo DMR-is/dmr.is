@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { CaseCommentTypeTitleEnum } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_comment_type', timestamps: false })

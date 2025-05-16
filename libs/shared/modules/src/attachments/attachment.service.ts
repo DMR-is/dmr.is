@@ -1,5 +1,9 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -8,9 +12,6 @@ import {
   GetApplicationAttachmentsResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { attachmentMigrate } from './migrations/attachment.migration'
 import {

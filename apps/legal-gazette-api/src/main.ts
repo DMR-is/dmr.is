@@ -1,13 +1,13 @@
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
-import { NestFactory } from '@nestjs/core'
-
-import { AppModule } from './app/app.module'
 import { WinstonModule } from 'nest-winston'
 
-import { logger } from '@dmr.is/logging'
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 
 import { apmInit } from '@dmr.is/apm'
+import { logger } from '@dmr.is/logging'
+
+import { AppModule } from './app/app.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {

@@ -1,4 +1,5 @@
 import { useSession } from 'next-auth/react'
+
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetAdvertsRequest, GetAdvertsResponse } from '../../../gen/fetch'

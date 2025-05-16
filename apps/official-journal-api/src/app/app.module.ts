@@ -1,10 +1,10 @@
-import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { HealthModule } from '@dmr.is/modules'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { HealthModule } from '@dmr.is/modules'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { JournalModule } from './journal/journal.module'
 

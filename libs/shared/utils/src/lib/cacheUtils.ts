@@ -1,9 +1,10 @@
 /* eslint-disable local-rules/no-async-module-init */
 import { Cache } from 'cache-manager'
 import { redisStore } from 'cache-manager-ioredis-yet'
-import { getLogger } from '@dmr.is/logging'
 
 import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
+
+import { getLogger } from '@dmr.is/logging'
 const host = process.env.REDIS_HOST || 'localhost'
 const port = process.env.REDIS_PORT || 6379
 

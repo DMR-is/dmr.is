@@ -2,6 +2,7 @@ import get from 'lodash/get'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+
 import { logger } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'Transactional'

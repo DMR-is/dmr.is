@@ -1,7 +1,7 @@
 import { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 
-import { logger } from '@dmr.is/logging'
 import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
+import { logger } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'GlobalExceptionFilter'
 

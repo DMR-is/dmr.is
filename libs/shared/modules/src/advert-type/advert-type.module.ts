@@ -1,7 +1,7 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { AdvertTypeService } from './advert-type.service'
 import { IAdvertTypeService } from './advert-type.service.interface'

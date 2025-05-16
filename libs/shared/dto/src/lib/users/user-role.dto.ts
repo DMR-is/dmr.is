@@ -1,6 +1,6 @@
-import { UserRoleEnum } from '@dmr.is/constants'
-
 import { ApiProperty } from '@nestjs/swagger'
+
+import { UserRoleEnum } from '@dmr.is/constants'
 
 import { BaseEntity } from '../entity'
 

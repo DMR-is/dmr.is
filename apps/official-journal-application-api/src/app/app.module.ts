@@ -1,3 +1,12 @@
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common'
+import { APP_INTERCEPTOR } from '@nestjs/core'
+import { SequelizeModule } from '@nestjs/sequelize'
+
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
@@ -11,15 +20,6 @@ import {
   UtilityModule,
 } from '@dmr.is/modules'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common'
-import { APP_INTERCEPTOR } from '@nestjs/core'
-import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationController } from './application/application.controller'
 

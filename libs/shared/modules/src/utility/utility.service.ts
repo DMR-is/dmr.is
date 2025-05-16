@@ -1,14 +1,15 @@
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { Inject, NotFoundException } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import { GetApplicationResponse } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
-
-import { Inject, NotFoundException } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'

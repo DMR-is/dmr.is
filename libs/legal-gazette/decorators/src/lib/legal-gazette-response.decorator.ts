@@ -1,10 +1,11 @@
-import { ApiErrorDto } from '@dmr.is/legal-gazette/dto'
 import { applyDecorators } from '@nestjs/common'
 import {
   ApiNoContentResponse,
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
+
+import { ApiErrorDto } from '@dmr.is/legal-gazette/dto'
 
 type LGResponseParams = {
   operationId: string

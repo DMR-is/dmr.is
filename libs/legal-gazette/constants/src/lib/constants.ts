@@ -1,8 +1,9 @@
+import { Order } from 'sequelize'
+
 import {
   BaseEntityAttributes,
   BaseEntityAttributesDetailed,
 } from '@dmr.is/shared/models/base'
-import { Order } from 'sequelize'
 
 export const LEGAL_GAZETTE_NAMESPACE = 'legal-gazette'
 

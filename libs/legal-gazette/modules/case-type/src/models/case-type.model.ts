@@ -1,4 +1,5 @@
 import { DefaultScope, Index, Scopes, Table } from 'sequelize-typescript'
+
 import {
   BASE_ENTITY_ATTRIBUTES,
   BASE_ENTITY_ATTRIBUTES_DETAILED,

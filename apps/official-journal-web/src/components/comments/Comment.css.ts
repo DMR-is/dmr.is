@@ -1,6 +1,6 @@
-import { style } from '@vanilla-extract/css'
-
 import { theme } from '@island.is/island-ui/theme'
+
+import { style } from '@vanilla-extract/css'
 
 export const commentWrapper = style({
   borderBottom: `${theme.border.width.standard}px solid ${theme.color.blue200}`,

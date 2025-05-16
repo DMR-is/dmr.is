@@ -1,6 +1,9 @@
 /* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Transaction } from 'sequelize'
+
+import { Inject } from '@nestjs/common'
+
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
@@ -43,8 +46,6 @@ import {
   UpdateTitleBody,
 } from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
-
-import { Inject } from '@nestjs/common'
 
 // export class CaseServiceMock implements ICaseService {
 export class CaseServiceMock {

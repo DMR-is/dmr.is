@@ -1,7 +1,7 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { JournalService } from './journal.service'
 import { IJournalService } from './journal.service.interface'

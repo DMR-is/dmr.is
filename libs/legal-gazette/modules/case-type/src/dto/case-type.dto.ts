@@ -1,5 +1,6 @@
-import { BaseEntityDetailDto, BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
+
+import { BaseEntityDetailDto, BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
 export class CaseTypeDto extends BaseEntityDto {}
 

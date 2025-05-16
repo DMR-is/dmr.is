@@ -1,12 +1,3 @@
-import { UserRoleEnum } from '@dmr.is/constants'
-import { Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  CreateInstitution,
-  GetInstitution,
-  UpdateInstitution,
-} from '@dmr.is/shared/dto'
-
 import {
   Body,
   Controller,
@@ -24,6 +15,15 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
+
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  CreateInstitution,
+  GetInstitution,
+  UpdateInstitution,
+} from '@dmr.is/shared/dto'
 
 import { RoleGuard, TokenJwtAuthGuard } from '../../guards'
 import { IInstitutionService } from '../institution.service.interface'

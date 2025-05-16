@@ -1,7 +1,3 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
-import { Conditions } from '@aws-sdk/s3-presigned-post/dist-types/types';
-
 import {
   AWS_BUCKET_NAME,
   AWS_PRESIGNED_POST_EXPIRES,
@@ -9,6 +5,10 @@ import {
   MEDIA_BUCKET_FOLDER,
 } from '../constants';
 import { ensureFileScopeToken } from './misc';
+
+import { S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { Conditions } from '@aws-sdk/s3-presigned-post/dist-types/types';
 
 export type S3PresignedPost = {
   url: string;

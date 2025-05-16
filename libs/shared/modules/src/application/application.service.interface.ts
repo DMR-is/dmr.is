@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize'
+
 import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
 import {
   AdvertTemplateDetails,

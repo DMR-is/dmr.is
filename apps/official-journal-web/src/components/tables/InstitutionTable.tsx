@@ -1,6 +1,8 @@
-import debounce from 'lodash/debounce'
 import { useQueryState } from 'next-usequerystate'
+
+import debounce from 'lodash/debounce'
 import { useCallback, useState } from 'react'
+
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 

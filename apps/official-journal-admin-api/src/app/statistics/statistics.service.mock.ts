@@ -1,3 +1,10 @@
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common'
+
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
@@ -10,13 +17,6 @@ import {
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common'
 
 import { IStatisticsService } from './statistics.service.interface'
 

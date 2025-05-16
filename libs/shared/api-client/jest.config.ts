@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 export default {
   displayName: 'api-client',
   preset: '../../../jest.preset.js',

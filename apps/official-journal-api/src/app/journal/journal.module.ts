@@ -1,11 +1,11 @@
+import { Module } from '@nestjs/common'
+
 import {
   AdvertTypeController,
   AdvertTypeModule,
   SharedCaseModule,
   SharedJournalModule,
 } from '@dmr.is/modules'
-
-import { Module } from '@nestjs/common'
 
 import { JournalController } from './journal.controller'
 @Module({
