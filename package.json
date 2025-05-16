@@ -92,7 +92,7 @@
     "concurrently": "^8.2.2",
     "create-sst": "^2.40.7",
     "csstype": "^2.6.13",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.24.2",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.3",
     "eslint-config-prettier": "^9.1.0",
@@ -163,7 +163,7 @@
     "cls-hooked": "^4.2.2",
     "date-fns": "^2.29.3",
     "dd-trace": "^5.2.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "~16.3.1",
     "downshift": "^5.4.3",
     "elastic-builder": "^2.26.0",
     "fastify": "4.29.0",
@@ -175,7 +175,6 @@
     "framer-motion": "^11.0.26",
     "fridagar": "^4.2.2",
     "hypher": "^0.2.5",
-    "ioredis": "^5.6.1",
     "js-base64": "2.5.2",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
@@ -208,7 +207,7 @@
     "react-select": "^5.7.3",
     "react-toastify": "^6.0.8",
     "react-top-loading-bar": "^2.3.1",
-    "react-use": "^15.3.3",
+    "react-use": "17.6.0",
     "reakit": "^1.3.11",
     "recharts": "^2.12.7",
     "reflect-metadata": "^0.1.13",
@@ -231,7 +230,6 @@
   "resolutions": {
     "node-fetch": "2.6.7",
     "lodash": "4.17.21",
-    "tar-fs": "3.0.8",
-    "axios": "1.8.4"
+    "tar-fs": "3.0.8"
   }
 }
