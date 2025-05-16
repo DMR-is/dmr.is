@@ -5,6 +5,7 @@ import {
   Scopes,
   Table,
 } from 'sequelize-typescript'
+
 import {
   BASE_ENTITY_ATTRIBUTES,
   BASE_ENTITY_ATTRIBUTES_DETAILED,
@@ -12,6 +13,7 @@ import {
   LegalGazetteModels,
 } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
+
 import { CaseCategoryModel } from '../case-category/case-category.model'
 
 @Table({

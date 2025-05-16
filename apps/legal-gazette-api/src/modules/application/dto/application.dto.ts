@@ -90,6 +90,5 @@ export class SubmitApplicationDto {
   @Type(() => String)
   @ArrayMinSize(0)
   @ArrayMaxSize(3)
-  @ValidateNested({ each: true })
   publishingDates!: string[]
 }
