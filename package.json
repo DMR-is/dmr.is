@@ -112,7 +112,6 @@
     "nodemon": "^2.0.20",
     "nx": "^17.2.5",
     "open-next": "^2.3.7",
-    "pagedjs-cli": "^0.4.3",
     "prettier": "^3.5.3",
     "react-refresh": "^0.10.0",
     "sass": "1.62.1",
