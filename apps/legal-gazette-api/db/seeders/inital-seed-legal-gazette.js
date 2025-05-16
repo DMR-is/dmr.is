@@ -10,7 +10,7 @@ module.exports = {
     console.log(cwd())
 
     const caseTypeSeed = await readFile(
-      '../../libs/legal-gazette/modules/case-type/src/seed/case-type.seed.sql',
+      './src/modules/case-type/case-type.seed.sql',
       'utf8',
     )
 

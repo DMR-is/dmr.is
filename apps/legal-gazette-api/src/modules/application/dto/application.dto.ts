@@ -24,7 +24,7 @@ export class CommunicationChannelDto {
   @MaxLength(255)
   email!: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
