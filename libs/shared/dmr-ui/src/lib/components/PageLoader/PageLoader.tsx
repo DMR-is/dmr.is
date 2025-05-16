@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+
 import { useEffect, useRef } from 'react'
 import { LoadingBarRef } from 'react-top-loading-bar'
 

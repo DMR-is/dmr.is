@@ -1,4 +1,5 @@
 import { Cache } from 'cache-manager'
+
 import { getLogger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 const REFRESH_THRESHOLD = 1000 * 60 // 1 minute in milliseconds

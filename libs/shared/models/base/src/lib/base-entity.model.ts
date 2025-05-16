@@ -1,4 +1,5 @@
 import { Column, DataType } from 'sequelize-typescript'
+
 import { BaseModel, BaseModelWithAttributes } from './base.model'
 
 type BaseEntityModelCreateAttributes = {

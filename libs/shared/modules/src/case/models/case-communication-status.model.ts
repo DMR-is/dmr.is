@@ -5,6 +5,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { CaseCommunicationStatus } from '@dmr.is/shared/dto'
 
 @Table({ tableName: 'case_communication_status', timestamps: false })

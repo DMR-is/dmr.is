@@ -1,6 +1,3 @@
-import { style } from '@vanilla-extract/css'
-import { recipe } from '@vanilla-extract/recipes'
-
 import { theme } from '@island.is/island-ui/theme'
 
 import {
@@ -9,6 +6,9 @@ import {
   DMR_HEADER_HEIGHT,
   DMR_HEADER_MOBILE_HEIGHT,
 } from '../constants'
+
+import { style } from '@vanilla-extract/css'
+import { recipe } from '@vanilla-extract/recipes'
 
 export const controlPanel = style({
   position: 'relative',

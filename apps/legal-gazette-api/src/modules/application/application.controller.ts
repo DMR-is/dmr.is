@@ -1,8 +1,10 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common'
-import { ILegalGazetteApplicationService } from './application.service.interface'
-import { SubmitApplicationDto } from './dto/application.dto'
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { ApiTags } from '@nestjs/swagger'
+
+import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+
+import { SubmitApplicationDto } from './dto/application.dto'
+import { ILegalGazetteApplicationService } from './application.service.interface'
 
 @Controller({
   path: 'applications',

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
 import { logger } from '@dmr.is/logging'
 

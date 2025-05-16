@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
+
 import { LegalGazetteApplicationController } from './application.controller'
 import { LegalGazetteApplicationService } from './application.service'
-import { SequelizeModule } from '@nestjs/sequelize'
 import { ILegalGazetteApplicationService } from './application.service.interface'
 
 @Module({

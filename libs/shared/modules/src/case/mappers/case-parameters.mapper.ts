@@ -1,5 +1,6 @@
 import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
+
 import { GetCasesQuery } from '@dmr.is/shared/dto'
 
 type WhereClause = {

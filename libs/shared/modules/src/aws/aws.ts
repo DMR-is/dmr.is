@@ -1,6 +1,6 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { AWSService } from './aws.service'
 import { IAWSService } from './aws.service.interface'

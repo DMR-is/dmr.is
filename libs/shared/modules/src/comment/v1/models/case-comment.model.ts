@@ -6,6 +6,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript'
+
 import { CaseCommentSourceEnum } from '@dmr.is/shared/dto'
 
 import { CaseModel, CaseStatusModel } from '../../../case/models'

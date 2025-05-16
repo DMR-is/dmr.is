@@ -1,12 +1,12 @@
+import { runCommandProcess } from '../../utils/command'
+import { OpenNextBuildExecutorSchema } from './schema'
+
 import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit'
 import { NextBuildBuilderOptions } from '@nx/next'
-
-import { OpenNextBuildExecutorSchema } from './schema'
-import { runCommandProcess } from '../../utils/command'
 
 export default async function openNextBuildExecutor(
   options: OpenNextBuildExecutorSchema,

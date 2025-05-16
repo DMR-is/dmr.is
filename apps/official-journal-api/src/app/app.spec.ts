@@ -1,10 +1,11 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
-import { HealthModule } from '@dmr.is/modules'
 
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
+
+import { HealthModule } from '@dmr.is/modules'
 
 const TMP_DIR = 'tmp/swagger'
 

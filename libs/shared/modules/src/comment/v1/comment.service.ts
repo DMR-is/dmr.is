@@ -1,5 +1,14 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -9,14 +18,6 @@ import {
   PostCaseCommentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../application/application.service.interface'
 import { IUtilityService } from '../../utility/utility.module'

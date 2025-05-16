@@ -1,4 +1,30 @@
 import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiNoContentResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger'
+
+import {
   ALLOWED_MIME_TYPES,
   AttachmentTypeParam,
   ONE_MEGA_BYTE,
@@ -41,32 +67,6 @@ import {
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Inject,
-  MaxFileSizeValidator,
-  Param,
-  ParseFilePipe,
-  Post,
-  Query,
-  UploadedFiles,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common'
-import { FilesInterceptor } from '@nestjs/platform-express'
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiNoContentResponse,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-} from '@nestjs/swagger'
 
 import 'multer'
 

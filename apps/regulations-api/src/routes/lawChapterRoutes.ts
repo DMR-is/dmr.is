@@ -1,11 +1,12 @@
 /* eslint-disable no-console */
 import { FastifyPluginCallback } from 'fastify';
-import { DAY, SECOND } from '@hugsmidjan/qj/time';
 
 import { getLawChapterList, getLawChapterTree } from '../db/LawChapter';
 import { get, set } from '../utils/cache';
 import { cacheControl, QStr } from '../utils/misc';
 import { LawChapter, LawChapterSlug, LawChapterTree } from './types';
+
+import { DAY, SECOND } from '@hugsmidjan/qj/time';
 
 const LAWCHAPTER_TTL = 24;
 const LAWCHAPTER_REDIS_TTL = 1 * (DAY / SECOND);

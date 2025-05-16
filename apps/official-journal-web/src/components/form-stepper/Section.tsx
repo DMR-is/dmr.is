@@ -1,7 +1,6 @@
 import cn from 'classnames'
 import { FC, useEffect, useRef, useState } from 'react'
 import { useWindowSize } from 'react-use'
-import useComponentSize from '@rehooks/component-size'
 
 import { Box, Text } from '@island.is/island-ui/core'
 import { theme as islandUITheme } from '@island.is/island-ui/theme'
@@ -10,6 +9,8 @@ import { SectionNumber } from './SectionNumber/SectionNumber'
 import { SubSections } from './SubSectionsV2/SubSectionsV2'
 import * as styles from './Section.css'
 import * as types from './types'
+
+import useComponentSize from '@rehooks/component-size'
 
 export const Section: FC<
   React.PropsWithChildren<{

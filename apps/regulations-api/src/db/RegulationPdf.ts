@@ -5,8 +5,6 @@ import fs from 'fs'
 import { readFile, unlink, writeFile } from 'fs/promises'
 import fetch from 'node-fetch'
 import path from 'path'
-import arrayToObject from '@hugsmidjan/qj/arrayToObject'
-import { SECOND } from '@hugsmidjan/qj/time'
 
 import { cleanTitle } from '@island.is/regulations-tools/cleanTitle'
 import { cleanupAllEditorOutputs } from '@island.is/regulations-tools/cleanupEditorOutput'
@@ -41,6 +39,9 @@ import {
 } from '../routes/types'
 import { formatDate as fmt } from '../utils/misc'
 import { fetchModifiedDate, getRegulation } from './Regulation'
+
+import arrayToObject from '@hugsmidjan/qj/arrayToObject'
+import { SECOND } from '@hugsmidjan/qj/time'
 
 export type InputRegulation = Pick<
   Regulation,

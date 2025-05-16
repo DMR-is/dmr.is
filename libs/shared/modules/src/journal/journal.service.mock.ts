@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
@@ -41,8 +43,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils'
-
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import { IJournalService } from './journal.service.interface'
 

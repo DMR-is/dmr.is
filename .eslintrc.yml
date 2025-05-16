@@ -4,6 +4,8 @@ ignorePatterns:
 plugins:
   - '@nx'
   - eslint-plugin-local-rules
+  - simple-import-sort
+  - unused-imports
 overrides:
   - files:
       - '*.ts'
@@ -41,6 +43,29 @@ overrides:
     extends:
       - 'plugin:@nx/typescript'
     rules:
+      'simple-import-sort/imports':
+        - error
+        - groups:
+            # Next.js imports come first.
+          - ["^next"]
+            # External imports come second.
+          - ["^\\w", "@(?!nestjs|island\\.is|@dmr\\.is|)"]
+            # Then nestjs packages.
+          - ["^@nestjs"]
+            # Then dmr.is packages.
+          - ["^@dmr\\.is"]
+            # Then island.is packages.
+          - ["^@island\\.is/(?!financial-aid)"]
+            # // Then financial-aid packages.
+          - ["@island\\.is/financial-aid"]
+            # Then all other imports in this order: "../", "./", "./strings", "./css"
+          - [
+              "^\\.\\.(?!/?$)",
+              "^\\.\\./?$",
+              "^\\./(?=.*/)(?!/?$)",
+              "^\\.(?!/?$)",
+              "^\\./?$"
+            ]
       '@typescript-eslint/no-extra-semi': 'off'
       '@typescript-eslint/explicit-member-accessibility': 'off'
       '@typescript-eslint/explicit-function-return-type': 'off'

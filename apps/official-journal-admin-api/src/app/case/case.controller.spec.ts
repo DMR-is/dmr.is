@@ -1,4 +1,7 @@
 import { Sequelize } from 'sequelize-typescript'
+
+import { Test } from '@nestjs/testing'
+
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { JOURNAL_DEPARTMENT_B } from '@dmr.is/mocks'
@@ -18,8 +21,6 @@ import {
   UserDto,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Test } from '@nestjs/testing'
 
 import { CaseController } from './case.controller'
 

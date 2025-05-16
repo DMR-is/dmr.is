@@ -1,4 +1,5 @@
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
+
 import { createContext, useState } from 'react'
 
 import { toast } from '@island.is/island-ui/core'

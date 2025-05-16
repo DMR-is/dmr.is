@@ -1,3 +1,6 @@
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   GetPdfBody,
@@ -5,9 +8,6 @@ import {
   GetPdfUrlResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IUtilityService } from '../utility/utility.service.interface'
 import { IPdfService } from './pdf.service.interface'

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { PostApplicationBody } from '@dmr.is/shared/dto'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
+
+import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

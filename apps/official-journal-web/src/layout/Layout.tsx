@@ -1,4 +1,5 @@
 import Head from 'next/head'
+
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'

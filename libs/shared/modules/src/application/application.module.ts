@@ -1,7 +1,7 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'

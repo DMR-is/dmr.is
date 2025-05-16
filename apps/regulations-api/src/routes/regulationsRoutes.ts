@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { FastifyPluginCallback } from 'fastify';
-import { DAY, SECOND } from '@hugsmidjan/qj/time';
 
 import {
   IntPositive,
@@ -22,6 +21,8 @@ import {
 } from '../db/Regulations';
 import { get, set } from '../utils/cache';
 import { cacheControl, loadData, QStr, storeData } from '../utils/misc';
+
+import { DAY, SECOND } from '@hugsmidjan/qj/time';
 
 const NEWEST_TTL = 0.5;
 const NEWEST_REDIS_TTL = NEWEST_TTL * 60 * 60;

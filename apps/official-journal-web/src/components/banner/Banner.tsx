@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic'
+
 import { MessageDescriptor } from 'react-intl'
 
 import {

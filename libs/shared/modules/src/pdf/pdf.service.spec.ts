@@ -1,6 +1,6 @@
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-
 import { Test } from '@nestjs/testing'
+
+import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 
 import { IAWSService } from '../aws/aws.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
