@@ -10,13 +10,13 @@
   "engines": {
     "npm": "please-use-yarn",
     "node": "20.15.0",
-    "yarn": "4.1"
+    "yarn": "4.7"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/DMR-is/dmr.is.git"
   },
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.7.0",
   "scripts": {
     "nx": "nx",
     "start": "nx serve",
@@ -112,7 +112,6 @@
     "nodemon": "^2.0.20",
     "nx": "^17.2.5",
     "open-next": "^2.3.7",
-    "pagedjs-cli": "^0.4.3",
     "prettier": "^3.5.3",
     "react-refresh": "^0.10.0",
     "sass": "1.62.1",
