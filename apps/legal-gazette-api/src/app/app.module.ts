@@ -5,7 +5,6 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
-import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { HealthModule } from '@dmr.is/modules'
@@ -17,6 +16,7 @@ import {
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { LegalGazetteApplicationModule } from '../modules/application/application.module'
+import { CaseTypeModule } from '../modules/case-type/case-type.module'
 
 @Module({
   imports: [
