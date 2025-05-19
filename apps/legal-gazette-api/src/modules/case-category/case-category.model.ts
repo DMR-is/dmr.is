@@ -37,6 +37,11 @@ import { CaseTypeModel } from '../case-type/case-type.model'
     ],
     order: BASE_ENTITY_ORDER_ASC,
   },
+  byType: (slug?: string) => {
+    return {
+      include: [{ model: CaseTypeModel, where: slug ? { slug } : {} }],
+    }
+  },
 }))
 export class CaseCategoryModel extends BaseEntityModel {
   @ForeignKey(() => CaseTypeModel)

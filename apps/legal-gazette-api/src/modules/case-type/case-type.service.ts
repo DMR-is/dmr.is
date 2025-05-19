@@ -1,13 +1,12 @@
 import slugify from 'slugify'
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import {
   baseEntityDetailedMigrate,
   baseEntityMigrate,
 } from '@dmr.is/legal-gazette/dto'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
   CreateCaseTypeDto,
@@ -19,18 +18,11 @@ import {
 import { CaseTypeModel } from './case-type.model'
 import { ICaseTypeService } from './case-type.service.interface'
 
-const LOGGING_CONTEXT = 'CaseTypeService'
-
 @Injectable()
 export class CaseTypeService implements ICaseTypeService {
   constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseTypeModel) private caseTypeModel: typeof CaseTypeModel,
-  ) {
-    this.logger.info('CaseTypeService instantiated', {
-      context: LOGGING_CONTEXT,
-    })
-  }
+  ) {}
 
   async createCaseType(body: CreateCaseTypeDto): Promise<GetCaseTypeDto> {
     const newType = await this.caseTypeModel.create(
@@ -42,11 +34,7 @@ export class CaseTypeService implements ICaseTypeService {
     )
 
     return {
-      type: {
-        id: newType.id,
-        title: newType.title,
-        slug: newType.slug,
-      },
+      type: baseEntityMigrate(newType),
     }
   }
 

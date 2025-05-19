@@ -1,13 +1,17 @@
-import { Controller, Get, Inject } from '@nestjs/common'
+import { Controller, Get, Inject, Query } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 
+import { LegalGazetteApiTags } from '@dmr.is/legal-gazette/constants'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import {
-  GetCaseCategoriesDetailedDto,
-  GetCaseCategoriesDto,
+  GetCategoriesDetailedDto,
+  GetCategoriesDto,
+  GetCategoriesQueryDto,
 } from './dto/case-category.dto'
 import { ICaseCategoryService } from './case-category.service.interface'
 
+@ApiTags(LegalGazetteApiTags.ADMIN_API)
 @Controller({
   path: 'categories',
   version: '1',
@@ -19,20 +23,21 @@ export class CaseCategoryController {
   ) {}
 
   @Get()
+  @ApiTags(LegalGazetteApiTags.APPLICATION_API)
   @LGResponse({
     operationId: 'getCategories',
-    type: GetCaseCategoriesDto,
+    type: GetCategoriesDto,
   })
-  getCategories() {
-    return this.categoryService.getCategories()
+  getCategories(@Query() query: GetCategoriesQueryDto) {
+    return this.categoryService.getCategories(query)
   }
 
   @Get('detailed')
   @LGResponse({
     operationId: 'getCategoriesDetailed',
-    type: GetCaseCategoriesDetailedDto,
+    type: GetCategoriesDetailedDto,
   })
-  getCategoriesDetailed() {
-    return this.categoryService.getCategoriesDetailed()
+  getCategoriesDetailed(@Query() query: GetCategoriesQueryDto) {
+    return this.categoryService.getCategoriesDetailed(query)
   }
 }
