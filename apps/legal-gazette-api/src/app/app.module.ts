@@ -17,6 +17,7 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { LegalGazetteApplicationModule } from '../modules/application/application.module'
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
+import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CaseTypeModel } from '../modules/case-type/case-type.model'
 import { CaseTypeModule } from '../modules/case-type/case-type.module'
 
@@ -36,6 +37,7 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
             5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
           models: [CaseTypeModel, CaseCategoryModel],
+          debugLog: true,
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>
@@ -43,6 +45,7 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
       inject: [DMRSequelizeConfigService],
     }),
     CaseTypeModule,
+    CaseCategoryModule,
     LegalGazetteApplicationModule,
     HealthModule,
   ],

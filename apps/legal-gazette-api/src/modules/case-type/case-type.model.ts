@@ -18,7 +18,7 @@ import { CaseCategoryModel } from '../case-category/case-category.model'
   order: BASE_ENTITY_ORDER_ASC,
 }))
 @Scopes(() => ({
-  full: {
+  detailed: {
     attributes: BASE_ENTITY_ATTRIBUTES_DETAILED,
     order: BASE_ENTITY_ORDER_ASC,
   },

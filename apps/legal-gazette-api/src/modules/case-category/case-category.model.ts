@@ -22,12 +22,19 @@ import { CaseTypeModel } from '../case-type/case-type.model'
   tableName: LegalGazetteModels.CASE_CATEGORY,
 })
 @DefaultScope(() => ({
-  attributes: BASE_ENTITY_ATTRIBUTES,
+  attributes: [...BASE_ENTITY_ATTRIBUTES, 'typeId'],
+  include: [{ model: CaseTypeModel }],
   order: BASE_ENTITY_ORDER_ASC,
 }))
 @Scopes(() => ({
-  full: {
-    attributes: BASE_ENTITY_ATTRIBUTES_DETAILED,
+  detailed: {
+    attributes: [...BASE_ENTITY_ATTRIBUTES_DETAILED, 'typeId'],
+    include: [
+      {
+        model: CaseTypeModel,
+        attributes: BASE_ENTITY_ATTRIBUTES_DETAILED,
+      },
+    ],
     order: BASE_ENTITY_ORDER_ASC,
   },
 }))
