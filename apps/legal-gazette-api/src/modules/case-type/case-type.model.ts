@@ -1,10 +1,4 @@
-import {
-  DefaultScope,
-  HasMany,
-  Index,
-  Scopes,
-  Table,
-} from 'sequelize-typescript'
+import { DefaultScope, HasMany, Scopes, Table } from 'sequelize-typescript'
 
 import {
   BASE_ENTITY_ATTRIBUTES,
@@ -29,10 +23,6 @@ import { CaseCategoryModel } from '../case-category/case-category.model'
     order: BASE_ENTITY_ORDER_ASC,
   },
 }))
-@Index({
-  name: 'case_type_slug_unique',
-  unique: true,
-})
 export class CaseTypeModel extends BaseEntityModel {
   @HasMany(() => CaseCategoryModel)
   categories!: CaseCategoryModel[]

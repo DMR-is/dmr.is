@@ -4,7 +4,6 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
-  Index,
   Scopes,
   Table,
 } from 'sequelize-typescript'
@@ -32,10 +31,6 @@ import { CaseTypeModel } from '../case-type/case-type.model'
     order: BASE_ENTITY_ORDER_ASC,
   },
 }))
-@Index({
-  name: 'case_category_slug_unique',
-  unique: true,
-})
 export class CaseCategoryModel extends BaseEntityModel {
   @ForeignKey(() => CaseTypeModel)
   @Column({ type: DataType.UUID, field: 'case_type_id' })

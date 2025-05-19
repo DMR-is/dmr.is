@@ -8,7 +8,6 @@ import {
   Post,
   Put,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
@@ -21,7 +20,6 @@ import {
 import { ICaseTypeService } from './case-type.service.interface'
 
 @Controller({ path: 'types', version: '1' })
-@ApiTags('Case Types')
 export class CaseTypeController {
   constructor(
     @Inject(ICaseTypeService)

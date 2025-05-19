@@ -16,6 +16,8 @@ import {
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { LegalGazetteApplicationModule } from '../modules/application/application.module'
+import { CaseCategoryModel } from '../modules/case-category/case-category.model'
+import { CaseTypeModel } from '../modules/case-type/case-type.model'
 import { CaseTypeModule } from '../modules/case-type/case-type.module'
 
 @Module({
@@ -33,6 +35,7 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
+          models: [CaseTypeModel, CaseCategoryModel],
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>

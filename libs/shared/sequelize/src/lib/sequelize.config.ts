@@ -7,6 +7,7 @@ export const DMRSequelizeConfigSchema = z.object({
   host: z.string(),
   port: z.number().optional(),
   clsNamespace: z.string().optional(),
+  models: z.array(z.any()).optional(),
 })
 
 export interface DMRSequelizeConfig

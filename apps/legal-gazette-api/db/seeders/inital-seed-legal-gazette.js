@@ -39,10 +39,6 @@ module.exports = {
 
         DELETE FROM CASE_TYPE;
 
-        DELETE FROM BASE_ENTITY_TABLE;
-
-        DELETE FROM BASE_TABLE;
-
       COMMIT;
     `)
   },
