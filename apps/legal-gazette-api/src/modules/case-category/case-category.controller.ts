@@ -11,7 +11,6 @@ import {
 } from './dto/case-category.dto'
 import { ICaseCategoryService } from './case-category.service.interface'
 
-@ApiTags(LegalGazetteApiTags.ADMIN_API)
 @Controller({
   path: 'categories',
   version: '1',
