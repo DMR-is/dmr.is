@@ -10,7 +10,12 @@ module.exports = {
     console.log(cwd())
 
     const caseTypeSeed = await readFile(
-      '../../libs/legal-gazette/modules/case-type/src/seed/case-type.seed.sql',
+      './src/modules/case-type/case-type.seed.sql',
+      'utf8',
+    )
+
+    const caseCategories = await readFile(
+      './src/modules/case-category/case-category.seed.sql',
       'utf8',
     )
 
@@ -18,6 +23,7 @@ module.exports = {
       BEGIN;
 
         ${caseTypeSeed}
+        ${caseCategories}
 
       COMMIT;
       `
@@ -28,11 +34,11 @@ module.exports = {
   async down(queryInterface) {
     return await queryInterface.sequelize.query(`
       BEGIN;
+
+        DELETE FROM CASE_CATEGORY;
+
         DELETE FROM CASE_TYPE;
 
-        DELETE FROM BASE_ENTITY_TABLE;
-
-        DELETE FROM BASE_TABLE;
       COMMIT;
     `)
   },

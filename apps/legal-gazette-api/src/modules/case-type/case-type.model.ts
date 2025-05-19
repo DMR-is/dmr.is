@@ -1,4 +1,4 @@
-import { DefaultScope, Index, Scopes, Table } from 'sequelize-typescript'
+import { DefaultScope, HasMany, Scopes, Table } from 'sequelize-typescript'
 
 import {
   BASE_ENTITY_ATTRIBUTES,
@@ -8,6 +8,8 @@ import {
 } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
 
+import { CaseCategoryModel } from '../case-category/case-category.model'
+
 @Table({
   tableName: LegalGazetteModels.CASE_TYPE,
 })
@@ -16,13 +18,12 @@ import { BaseEntityModel } from '@dmr.is/shared/models/base'
   order: BASE_ENTITY_ORDER_ASC,
 }))
 @Scopes(() => ({
-  full: {
+  detailed: {
     attributes: BASE_ENTITY_ATTRIBUTES_DETAILED,
     order: BASE_ENTITY_ORDER_ASC,
   },
 }))
-@Index({
-  name: 'case_type_slug_unique',
-  unique: true,
-})
-export class CaseTypeModel extends BaseEntityModel {}
+export class CaseTypeModel extends BaseEntityModel {
+  @HasMany(() => CaseCategoryModel)
+  categories!: CaseCategoryModel[]
+}

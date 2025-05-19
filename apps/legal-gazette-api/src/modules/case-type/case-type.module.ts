@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CaseTypeModel } from './models/case-type.model'
 import { CaseTypeController } from './case-type.controller'
+import { CaseTypeModel } from './case-type.model'
 import { CaseTypeService } from './case-type.service'
 import { ICaseTypeService } from './case-type.service.interface'
 

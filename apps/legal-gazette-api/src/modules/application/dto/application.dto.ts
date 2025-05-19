@@ -24,7 +24,7 @@ export class CommunicationChannelDto {
   @MaxLength(255)
   email!: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, nullable: true })
   @IsOptional()
   @IsString()
   @MinLength(1)
@@ -90,6 +90,5 @@ export class SubmitApplicationDto {
   @Type(() => String)
   @ArrayMinSize(0)
   @ArrayMaxSize(3)
-  @ValidateNested({ each: true })
   publishingDates!: string[]
 }

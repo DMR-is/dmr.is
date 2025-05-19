@@ -1,9 +1,12 @@
 import slugify from 'slugify'
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  baseEntityDetailedMigrate,
+  baseEntityMigrate,
+} from '@dmr.is/legal-gazette/dto'
 
 import {
   CreateCaseTypeDto,
@@ -12,21 +15,14 @@ import {
   GetCaseTypesDto,
   UpdateCaseTypeDto,
 } from './dto/case-type.dto'
-import { CaseTypeModel } from './models/case-type.model'
+import { CaseTypeModel } from './case-type.model'
 import { ICaseTypeService } from './case-type.service.interface'
-
-const LOGGING_CONTEXT = 'CaseTypeService'
 
 @Injectable()
 export class CaseTypeService implements ICaseTypeService {
   constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseTypeModel) private caseTypeModel: typeof CaseTypeModel,
-  ) {
-    this.logger.info('CaseTypeService instantiated', {
-      context: LOGGING_CONTEXT,
-    })
-  }
+  ) {}
 
   async createCaseType(body: CreateCaseTypeDto): Promise<GetCaseTypeDto> {
     const newType = await this.caseTypeModel.create(
@@ -38,11 +34,7 @@ export class CaseTypeService implements ICaseTypeService {
     )
 
     return {
-      type: {
-        id: newType.id,
-        title: newType.title,
-        slug: newType.slug,
-      },
+      type: baseEntityMigrate(newType),
     }
   }
 
@@ -50,28 +42,15 @@ export class CaseTypeService implements ICaseTypeService {
     const caseTypes = await this.caseTypeModel.findAll()
 
     return {
-      types: caseTypes.map((caseType) => ({
-        id: caseType.id,
-        title: caseType.title,
-        slug: caseType.slug,
-      })),
+      types: caseTypes.map((caseType) => baseEntityMigrate(caseType)),
     }
   }
 
   async getCaseTypesDetailed(): Promise<GetCaseTypesDetailedDto> {
-    const caseTypes = await this.caseTypeModel.scope('full').findAll()
+    const caseTypes = await this.caseTypeModel.scope('detailed').findAll()
 
     return {
-      types: caseTypes.map((caseType) => ({
-        id: caseType.id,
-        title: caseType.title,
-        slug: caseType.slug,
-        createdAt: caseType.createdAt.toISOString(),
-        updatedAt: caseType.updatedAt.toISOString(),
-        deletedAt: caseType?.deletedAt
-          ? caseType.deletedAt.toISOString()
-          : null,
-      })),
+      types: caseTypes.map((caseType) => baseEntityDetailedMigrate(caseType)),
     }
   }
 
@@ -87,11 +66,7 @@ export class CaseTypeService implements ICaseTypeService {
 
     if (!body.title) {
       return {
-        type: {
-          id: found.id,
-          title: found.title,
-          slug: found.slug,
-        },
+        type: baseEntityMigrate(found),
       }
     }
 
@@ -106,12 +81,10 @@ export class CaseTypeService implements ICaseTypeService {
       },
     )
 
+    const theType = updatedType[1][0]
+
     return {
-      type: {
-        id: updatedType[1][0].id,
-        title: updatedType[1][0].title,
-        slug: updatedType[1][0].slug,
-      },
+      type: baseEntityMigrate(theType),
     }
   }
   async deleteCaseType(id: string): Promise<GetCaseTypeDto> {
@@ -124,11 +97,7 @@ export class CaseTypeService implements ICaseTypeService {
     await this.caseTypeModel.destroy({ where: { id } })
 
     return {
-      type: {
-        id: found.id,
-        title: found.title,
-        slug: found.slug,
-      },
+      type: baseEntityMigrate(found),
     }
   }
 }
