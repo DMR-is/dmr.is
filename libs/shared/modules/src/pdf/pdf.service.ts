@@ -148,7 +148,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                 const parts = p.innerHTML.split('<br>')
                 const wrappedParts = parts.map(
                   (text) =>
-                    `<span style="text-indent: 2em; display: inline-block;">${text.trim()}</span>`,
+                    `<span style="text-indent: 2em; display: block; max-width: 100%;">${text.trim()}</span>`,
                 )
                 p.innerHTML = wrappedParts.join('<br>')
               })
