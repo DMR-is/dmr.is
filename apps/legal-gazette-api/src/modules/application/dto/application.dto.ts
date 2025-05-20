@@ -57,6 +57,10 @@ export class SubmitApplicationDto {
   applicationId!: string
 
   @ApiProperty({ type: String })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({ type: String })
   @IsString()
   @MinLength(1)
   @MaxLength(255)
