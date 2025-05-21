@@ -14,8 +14,13 @@ module.exports = {
       'utf8',
     )
 
-    const caseCategories = await readFile(
+    const caseCategoriesSeed = await readFile(
       './src/modules/case-category/case-category.seed.sql',
+      'utf8',
+    )
+
+    const caseStatusSeed = await readFile(
+      './src/modules/case-status/case-status.seed.sql',
       'utf8',
     )
 
@@ -23,7 +28,8 @@ module.exports = {
       BEGIN;
 
         ${caseTypeSeed}
-        ${caseCategories}
+        ${caseCategoriesSeed}
+        ${caseStatusSeed}
 
       COMMIT;
       `

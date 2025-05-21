@@ -30,8 +30,19 @@ module.exports = {
       CASE_TYPE_ID UUID NOT NULL REFERENCES CASE_TYPE(ID) ON DELETE CASCADE
     );
 
+    CREATE TABLE CASE_STATUS (
+      ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      DELETED_AT TIMESTAMPTZ,
+
+      TITLE TEXT NOT NULL,
+      SLUG TEXT NOT NULL UNIQUE
+    );
+
     CREATE INDEX idx_case_type_title_asc ON CASE_TYPE (TITLE ASC);
     CREATE INDEX idx_case_category_title_asc ON CASE_CATEGORY (TITLE ASC);
+    CREATE INDEX idx_case_status_title_asc ON CASE_STATUS (TITLE ASC);
 
 
     COMMIT;
@@ -44,12 +55,12 @@ module.exports = {
     BEGIN;
 
     DROP INDEX idx_case_category_title_asc;
-
     DROP INDEX idx_case_type_title_asc;
+    DROP INDEX idx_case_status_title_asc;
 
-    DROP INDEX CASE_TYPE_SLUG_UNIQUE;
-
+    DROP TABLE CASE_CATEGORY;
     DROP TABLE CASE_TYPE;
+    DROP TABLE CASE_STATUS;
 
     COMMIT;
 
