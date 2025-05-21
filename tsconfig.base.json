@@ -42,7 +42,6 @@
         "libs/shared/utils/src/lib/cache.provider.ts"
       ],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
-      "@island.is/cache": ["submodules/island.is/libs/cache/src/index.ts"],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
       ],
