@@ -1132,13 +1132,16 @@ export class CaseService implements ICaseService {
       return [item.email]
     })
 
+    const publicationNumber =
+      advertCreateResult?.result.value.advert.publicationNumber?.full ?? ''
+
     const message: Mail.Options = {
       from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
       to: emails?.join(','),
       replyTo: 'noreply@stjornartidindi.is',
-      subject: `Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
-      text: `Mál ${caseToPublish?.caseNumber} hefur verið útgefið`,
-      html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
+      subject: `Mál ${publicationNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
+      text: `Mál ${publicationNumber} hefur verið útgefið`,
+      html: `<h2>Mál hefur verið útgefið:</h2><h3>${publicationNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle}</h3><p><a href="https://island.is/stjornartidindi/nr/${advertCreateResult?.result.value.advert?.id}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
     if (caseToPublish.applicationId) {
