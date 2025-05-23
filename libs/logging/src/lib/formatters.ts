@@ -6,9 +6,6 @@ import { maskNationalId } from './maskNationalId'
 const messageSymbol = MESSAGE as unknown as string
 
 export const maskNationalIdFormatter = format((info) => {
-  const message = info[messageSymbol]
-  if (typeof message === 'string') {
-    info[messageSymbol] = maskNationalId(message)
-  }
+  info[messageSymbol] = maskNationalId(info[messageSymbol])
   return info
 })
