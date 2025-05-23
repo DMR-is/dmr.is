@@ -38,6 +38,7 @@ export const useCasesWithDepartmentCount = ({
 
   return {
     caseOverview: data,
+    paging: data?.paging,
     error,
     isLoading,
     isValidating,
