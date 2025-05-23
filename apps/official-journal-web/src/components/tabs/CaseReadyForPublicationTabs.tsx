@@ -26,7 +26,7 @@ export const ReadyForPublicationTabs = () => {
     ).withDefault(DepartmentEnum.ADeild),
   )
 
-  const { caseOverview, isLoading } = useCasesWithDepartmentCount({
+  const { caseOverview, isLoading, paging } = useCasesWithDepartmentCount({
     params: {
       department: department,
       status: [CaseStatusEnum.Tilbúið],
@@ -61,6 +61,7 @@ export const ReadyForPublicationTabs = () => {
         <CaseTableReady
           cases={caseOverview.cases}
           selectedCaseIds={selectedCases.map((c) => c.id)}
+          paging={paging}
           toggleAll={() =>
             allSelected
               ? setSelectedCases([])

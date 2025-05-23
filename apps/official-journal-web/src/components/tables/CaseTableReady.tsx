@@ -3,7 +3,7 @@ import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/typ
 
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
@@ -15,6 +15,7 @@ type Props = {
   cases?: Case[]
   selectedCaseIds: string[]
   isLoading?: boolean
+  paging?: Paging
   toggleAll: () => void
   toggle: (_case: Case, checked: boolean) => void
 }
@@ -22,6 +23,7 @@ type Props = {
 export const CaseTableReady = ({
   cases,
   selectedCaseIds,
+  paging,
   toggle,
   toggleAll,
   isLoading,
@@ -112,7 +114,14 @@ export const CaseTableReady = ({
       }
     }) ?? []
 
-  return <DataTable loading={isLoading} columns={columns} rows={rows} />
+  return (
+    <DataTable
+      paging={paging}
+      loading={isLoading}
+      columns={columns}
+      rows={rows}
+    />
+  )
 }
 
 export default CaseTableReady
