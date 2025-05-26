@@ -19,6 +19,7 @@ import { LegalGazetteApplicationModule } from '../modules/application/applicatio
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CaseStatusModel } from '../modules/case-status/case-status.model'
+import { CaseStatusModule } from '../modules/case-status/case-status.module'
 import { CaseTypeModel } from '../modules/case-type/case-type.model'
 import { CaseTypeModule } from '../modules/case-type/case-type.module'
 
@@ -47,6 +48,7 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
     }),
     CaseTypeModule,
     CaseCategoryModule,
+    CaseStatusModule,
     LegalGazetteApplicationModule,
     HealthModule,
   ],
