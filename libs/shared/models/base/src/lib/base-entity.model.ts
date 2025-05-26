@@ -1,7 +1,7 @@
 import { Column, DataType } from 'sequelize-typescript'
 
 import { BaseModel, BaseModelWithAttributes } from './base.model'
-import { BaseTableScopes } from './decorators'
+import { BaseEntityModelTable } from './decorators'
 
 type BaseEntityModelCreateAttributes = {
   title: string
@@ -18,7 +18,7 @@ export type BaseEntityAttributes = Pick<
 
 export type BaseEntityAttributesDetailed = BaseEntityModelAttributes
 
-@BaseTableScopes()
+@BaseEntityModelTable()
 export class BaseEntityModel extends BaseModel<
   BaseEntityModelAttributes,
   BaseEntityModelCreateAttributes

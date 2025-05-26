@@ -5,7 +5,6 @@ import {
   DefaultScope,
   ForeignKey,
   Scopes,
-  Table,
 } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
@@ -14,13 +13,11 @@ import {
   BASE_ENTITY_ATTRIBUTES_DETAILED,
   BASE_ENTITY_ORDER_ASC,
   BaseEntityModel,
+  BaseEntityTable,
 } from '@dmr.is/shared/models/base'
 
 import { CaseTypeModel } from '../case-type/case-type.model'
 
-@Table({
-  tableName: LegalGazetteModels.CASE_CATEGORY,
-})
 @DefaultScope(() => ({
   attributes: [...BASE_ENTITY_ATTRIBUTES, 'typeId'],
   include: [{ model: CaseTypeModel }],

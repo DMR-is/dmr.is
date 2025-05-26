@@ -9,6 +9,11 @@ export enum LegalGazetteModels {
   CASE_TYPE = 'case_type',
   CASE_CATEGORY = 'case_category',
   CASE_STATUS = 'case_status',
+  CASES = 'cases',
+  CASE_PUBLICATION_DATES = 'case_publication_dates',
+  COMMUNICATION_CHANNEL = 'communication_channel',
+  COMMON_CASE = 'common_case',
+  ADVERT = 'advert',
 }
 
 export enum LegalGazetteApplicationTypes {

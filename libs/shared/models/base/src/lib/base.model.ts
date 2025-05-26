@@ -20,7 +20,7 @@ type BaseModelAttributes = {
 export type BaseModelWithAttributes<T> = T & BaseModelAttributes
 
 export class BaseModel<
-  ModelAttributes extends BaseModelAttributes,
+  ModelAttributes,
   ModelCreateAttributes extends BaseModelCreateAttributes,
 > extends Model<
   BaseModelWithAttributes<ModelAttributes>,
