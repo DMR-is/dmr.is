@@ -8,13 +8,13 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import {
   BASE_ENTITY_ATTRIBUTES,
   BASE_ENTITY_ATTRIBUTES_DETAILED,
   BASE_ENTITY_ORDER_ASC,
-  LegalGazetteModels,
-} from '@dmr.is/legal-gazette/constants'
-import { BaseEntityModel } from '@dmr.is/shared/models/base'
+  BaseEntityModel,
+} from '@dmr.is/shared/models/base'
 
 import { CaseTypeModel } from '../case-type/case-type.model'
 

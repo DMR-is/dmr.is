@@ -104,7 +104,7 @@ interface MigrationProps {
 
 export const migrate = <R = Record<string, any>>({
   model,
-  defaultMigration,
+  defaultMigration = baseEntityMigrate,
   additionalProps,
 }: MigrationProps): R => {
   const additional: Record<string, any> = {}
