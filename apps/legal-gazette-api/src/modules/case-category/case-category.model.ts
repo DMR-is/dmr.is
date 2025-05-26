@@ -18,6 +18,9 @@ import {
 
 import { CaseTypeModel } from '../case-type/case-type.model'
 
+@BaseEntityTable({
+  tableName: LegalGazetteModels.CASE_CATEGORY,
+})
 @DefaultScope(() => ({
   attributes: [...BASE_ENTITY_ATTRIBUTES, 'typeId'],
   include: [{ model: CaseTypeModel }],

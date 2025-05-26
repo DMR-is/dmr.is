@@ -8,7 +8,7 @@ type CasePublicationDateAttributes = {
   version: number
 }
 
-type CasePublicationDateCreateAttributes = {
+export type CasePublicationDateCreateAttributes = {
   caseId: string
   scheduledAt: Date
   publishedAt?: Date | null

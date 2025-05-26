@@ -18,7 +18,7 @@ type CommunicationChannelAttributes = {
   phone: string | null
 }
 
-type CommunicationChannelCreateAttributes = {
+export type CommunicationChannelCreateAttributes = {
   email: string
   caseId: string
   name?: string | null
