@@ -1,6 +1,6 @@
 import { Model } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
 export class BaseEntityDto {
   @ApiProperty({
@@ -25,7 +25,7 @@ export class BaseEntityDto {
   slug!: string
 }
 
-export class BaseEntityDetailedDto extends BaseEntityDto {
+export class DetailedDto {
   @ApiProperty({
     type: String,
     description: 'ISO representation of the creation date',
@@ -49,6 +49,11 @@ export class BaseEntityDetailedDto extends BaseEntityDto {
   })
   readonly deletedAt!: string | null
 }
+
+export class BaseEntityDetailedDto extends IntersectionType(
+  BaseEntityDto,
+  DetailedDto,
+) {}
 
 export const baseEntityMigrate = <T extends Model>(model: T): BaseEntityDto => {
   return {

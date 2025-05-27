@@ -18,7 +18,6 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
-import { CasePublicationDateModel } from '../modules/case-publication-dates/case-publication-dates.model'
 import { CaseStatusModel } from '../modules/case-status/case-status.model'
 import { CaseStatusModule } from '../modules/case-status/case-status.module'
 import { CaseTypeModel } from '../modules/case-type/case-type.model'
@@ -26,6 +25,7 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
 import { CaseModule } from '../modules/cases/case.module'
 import { CaseModel } from '../modules/cases/cases.model'
 import { CommonApplicationModule } from '../modules/common-application/common-application.module'
+import { CommonCaseModel } from '../modules/common-case/common-case.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 @Module({
   imports: [
@@ -49,9 +49,9 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
             CaseTypeModel,
             CaseCategoryModel,
             CaseStatusModel,
-            CasePublicationDateModel,
             CommunicationChannelModel,
             CaseModel,
+            CommonCaseModel,
           ],
         }),
       ],
