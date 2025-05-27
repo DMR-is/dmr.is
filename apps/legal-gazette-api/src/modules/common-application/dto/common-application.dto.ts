@@ -1,4 +1,4 @@
-import { Exclude, Expose, Transform, Type } from 'class-transformer'
+import { Expose, Transform, Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,

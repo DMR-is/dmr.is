@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { EventEmitterModule } from '@nestjs/event-emitter'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -15,7 +16,6 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
-import { LegalGazetteApplicationModule } from '../modules/application/application.module'
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CasePublicationDateModel } from '../modules/case-publication-dates/case-publication-dates.model'
@@ -25,11 +25,12 @@ import { CaseTypeModel } from '../modules/case-type/case-type.model'
 import { CaseTypeModule } from '../modules/case-type/case-type.module'
 import { CaseModule } from '../modules/cases/case.module'
 import { CaseModel } from '../modules/cases/cases.model'
+import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
-
 @Module({
   imports: [
     LoggingModule,
+    EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -62,7 +63,7 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
     CaseCategoryModule,
     CaseStatusModule,
     CaseModule,
-    LegalGazetteApplicationModule,
+    CommonApplicationModule,
     HealthModule,
   ],
   controllers: [],
