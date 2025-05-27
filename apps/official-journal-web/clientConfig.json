@@ -3993,12 +3993,45 @@
           "role"
         ]
       },
-      "BaseEntity": {
+      "CaseDetailAdvertMainType": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Id of the entity" },
-          "title": { "type": "string", "description": "Title of the entity" },
-          "slug": { "type": "string", "description": "Slug of the entity" }
+          "id": {
+            "type": "string",
+            "description": "The id of the main advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the main advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the main advert type"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "CaseDetailAdvertType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the advert type"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the advert type"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The slug of the advert type"
+          },
+          "mainType": {
+            "description": "The main type of the advert type",
+            "allOf": [
+              { "$ref": "#/components/schemas/CaseDetailAdvertMainType" }
+            ]
+          }
         },
         "required": ["id", "title", "slug"]
       },
@@ -4068,7 +4101,7 @@
           },
           "advertType": {
             "description": "The advert type",
-            "allOf": [{ "$ref": "#/components/schemas/BaseEntity" }]
+            "allOf": [{ "$ref": "#/components/schemas/CaseDetailAdvertType" }]
           },
           "advertCategories": {
             "description": "List of advert categories.",
@@ -5247,7 +5280,7 @@
           },
           "advertType": {
             "description": "The advert type",
-            "allOf": [{ "$ref": "#/components/schemas/BaseEntity" }]
+            "allOf": [{ "$ref": "#/components/schemas/CaseDetailAdvertType" }]
           },
           "advertCategories": {
             "description": "List of advert categories.",

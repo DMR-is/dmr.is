@@ -72,7 +72,7 @@ import {
   getS3Bucket,
 } from '@dmr.is/utils'
 
-import { AdvertTypeModel } from '../advert-type/models'
+import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
   ApplicationAttachmentModel,
@@ -1287,6 +1287,9 @@ export class CaseService implements ICaseService {
         },
         {
           model: AdvertTypeModel,
+          include: [
+            { model: AdvertMainTypeModel, attributes: ['id', 'title', 'slug'] },
+          ],
         },
         {
           model: AdvertCategoryModel,

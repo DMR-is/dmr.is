@@ -245,6 +245,10 @@
     "defaultMessage": "Alls",
     "description": "Total label for the dashboard"
   },
+  "web.components.steps.grunnvinnsla:attachmentFiles": {
+    "defaultMessage": "Fylgigögn",
+    "description": ""
+  },
   "web.components.steps.grunnvinnsla:attachments": {
     "defaultMessage": "Fylgiskjöl",
     "description": ""
@@ -277,6 +281,10 @@
     "defaultMessage": "Sendandi",
     "description": ""
   },
+  "web.components.steps.grunnvinnsla:mainType": {
+    "defaultMessage": "Tegund",
+    "description": ""
+  },
   "web.components.steps.grunnvinnsla:message": {
     "defaultMessage": "Skilaboð til ritstjóra",
     "description": ""
@@ -298,7 +306,7 @@
     "description": ""
   },
   "web.components.steps.grunnvinnsla:type": {
-    "defaultMessage": "Tegund",
+    "defaultMessage": "Yfirheiti",
     "description": ""
   },
   "web.components.steps.leidretting:errorFetching": {
@@ -336,6 +344,26 @@
   "web.components.steps.yfirlestur:tag": {
     "defaultMessage": "Merking",
     "description": ""
+  },
+  "web.components.tables:advert.columns.change": {
+    "defaultMessage": "Yfirskrifa PDF",
+    "description": "Title column"
+  },
+  "web.components.tables:advert.columns.file": {
+    "defaultMessage": "Skjal",
+    "description": "Title column"
+  },
+  "web.components.tables:advert.columns.getFile": {
+    "defaultMessage": "Sækja skjal",
+    "description": "Title column"
+  },
+  "web.components.tables:advert.columns.publicationNumber": {
+    "defaultMessage": "Birtingarnúmer",
+    "description": "Title column"
+  },
+  "web.components.tables:advert.columns.title": {
+    "defaultMessage": "Heiti",
+    "description": "Title column"
   },
   "web.components.tables:emptyTable": {
     "defaultMessage": "Engin mál finnast, líklega þarf að breyta síun.",
@@ -453,6 +481,10 @@
     "defaultMessage": "Deild",
     "description": "Department column"
   },
+  "web.components.tables:submitted.columns.employee": {
+    "defaultMessage": "Starfs.",
+    "description": "Employee column"
+  },
   "web.components.tables:submitted.columns.publicationDate": {
     "defaultMessage": "Birting",
     "description": "Publication date column"
@@ -487,6 +519,10 @@
   },
   "web.general:searchByDepartment": {
     "defaultMessage": "Finna deild",
+    "description": "Search placeholder for case filters"
+  },
+  "web.general:searchByStatus": {
+    "defaultMessage": "Finna stöðu",
     "description": "Search placeholder for case filters"
   },
   "web.general:searchByType": {

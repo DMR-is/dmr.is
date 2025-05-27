@@ -16,7 +16,7 @@ import {
   Tag,
 } from '@island.is/island-ui/core'
 
-import { BaseEntity } from '../../gen/fetch'
+import { UserRoleDto } from '../../gen/fetch'
 import { useToggle } from '../../hooks/useToggle'
 import { useUserContext } from '../../hooks/useUserContext'
 import { formatDate } from '../../lib/utils'
@@ -27,7 +27,7 @@ import { UserDetailed } from '../users/UserDetailed'
 
 type UsersTableProps = {
   isAdmin?: boolean
-  roleOptions: { label: string; value: BaseEntity }[]
+  roleOptions: { label: string; value: UserRoleDto }[]
 }
 
 export const UsersTable = ({
