@@ -696,7 +696,7 @@
     "description": ""
   },
   "web.page.caseSingle:banner.description": {
-    "defaultMessage": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+    "defaultMessage": "",
     "description": "Banner description for the caseSingle"
   },
   "web.page.caseSingle:banner.title": {

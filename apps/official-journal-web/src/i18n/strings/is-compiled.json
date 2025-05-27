@@ -1094,10 +1094,6 @@
     }
   ],
   "web.page.caseSingle:banner.description": [
-    {
-      "type": 0,
-      "value": "Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
-    }
   ],
   "web.page.caseSingle:banner.title": [
     {
