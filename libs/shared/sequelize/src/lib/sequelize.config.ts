@@ -9,6 +9,7 @@ export const DMRSequelizeConfigSchema = z.object({
   clsNamespace: z.string().optional(),
   models: z.array(z.any()).optional(),
   debugLog: z.boolean().optional(),
+  autoLoadModels: z.boolean().optional(),
 })
 
 export interface DMRSequelizeConfig

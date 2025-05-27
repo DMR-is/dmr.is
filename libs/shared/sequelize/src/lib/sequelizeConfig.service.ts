@@ -34,7 +34,7 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       ...config,
       ...getOptions(),
       dialect: 'postgres',
-      autoLoadModels: true,
+      autoLoadModels: config.autoLoadModels ?? true,
       logging: config.debugLog
         ? (sql: string) => {
             const query = sql.split(':')[1]

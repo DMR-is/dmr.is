@@ -8,7 +8,6 @@ import {
   BaseEntityDto,
   migrate,
 } from '@dmr.is/legal-gazette/dto'
-import { CaseStatusModel } from '@dmr.is/modules'
 
 import {
   GetCasesStatusDetailedDto,
@@ -16,6 +15,7 @@ import {
   GetCaseStatusDto,
   GetCaseStatusesDto,
 } from './dto/case-status.dto'
+import { CaseStatusModel } from './case-status.model'
 
 @Controller({
   path: 'statuses',

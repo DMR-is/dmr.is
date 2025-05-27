@@ -1,3 +1,5 @@
+export const CASE_STATUS_SUBMITTED_ID = 'cd3bf301-52a1-493e-8c80-a391c310c840'
+
 export enum LegalGazetteApiTags {
   APPLICATION_API = 'Legal Gazette Applications',
   ADMIN_API = 'Legal Gazette Admin',

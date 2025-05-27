@@ -8,7 +8,10 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import {
+  CASE_STATUS_SUBMITTED_ID,
+  LegalGazetteModels,
+} from '@dmr.is/legal-gazette/constants'
 import {
   BASE_ENTITY_ATTRIBUTES,
   BaseModel,
@@ -170,9 +173,10 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     type: DataType.UUID,
     allowNull: false,
     field: 'case_status_id',
+    defaultValue: CASE_STATUS_SUBMITTED_ID,
   })
   @ForeignKey(() => CaseStatusModel)
-  caseStatusId!: string
+  statusId!: string
 
   @Column({
     type: DataType.TEXT,
