@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce'
+import { useState } from 'react'
 
 import { toast } from '@dmr.is/ui/utils/toast'
 
@@ -10,11 +11,13 @@ import {
 } from '@island.is/island-ui/core'
 
 import {
+  useAdvertTypes,
   useUpdateCategories,
   useUpdateDepartment,
   useUpdateTitle,
   useUpdateType,
 } from '../../hooks/api'
+import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
@@ -35,11 +38,38 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     refetch,
     departmentOptions,
     categoryOptions,
-    typeOptions,
-    isValidatingTypes,
     canEdit,
     isPublishedOrRejected,
   } = useCaseContext()
+  const [mainTypeId, setMainTypeId] = useState<string | undefined>(
+    currentCase.advertType?.mainType?.id,
+  )
+
+  const { mainTypes, isLoadingMainTypes } = useMainTypes({
+    mainTypesParams: {
+      page: 1,
+      pageSize: 500,
+      department: currentCase.advertDepartment.id,
+    },
+  })
+
+  const { types, isLoadingTypes } = useAdvertTypes({
+    typesParams: {
+      page: 1,
+      pageSize: 500,
+      department: currentCase.advertDepartment.id,
+      mainType: mainTypeId,
+    },
+  })
+  const mainTypeOptions = mainTypes?.map((type) => ({
+    label: type.title,
+    value: type.id,
+  }))
+
+  const typeOptions = types?.map((type) => ({
+    label: type.title,
+    value: type.id,
+  }))
 
   const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
     useUpdateDepartment({
@@ -193,9 +223,20 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           }}
         />
         <OJOISelect
-          isDisabled={!canEdit}
+          isDisabled={!canEdit || !currentCase.advertDepartment.id}
           width="half"
-          isLoading={isValidatingTypes}
+          isValidating={isLoadingMainTypes}
+          label={formatMessage(messages.grunnvinnsla.mainType)}
+          options={mainTypeOptions}
+          value={mainTypeOptions?.find(
+            (t) => t.value === currentCase.advertType?.mainType?.id,
+          )}
+          onChange={(opt) => setMainTypeId(opt ? opt.value : '')}
+        />
+        <OJOISelect
+          isDisabled={!canEdit || !mainTypeId}
+          width="half"
+          isLoading={isLoadingTypes}
           isValidating={isUpdatingType}
           label={formatMessage(messages.grunnvinnsla.type)}
           options={typeOptions}
