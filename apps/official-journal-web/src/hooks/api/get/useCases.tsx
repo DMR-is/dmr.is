@@ -4,7 +4,7 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCasesReponse, GetCasesRequest } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { APIRoutes, swrFetcher } from '../../../lib/constants'
+import { swrFetcher } from '../../../lib/constants'
 import { NullableExcept } from '../../../lib/types'
 import { getParamsWithoutNullOrEmpty } from '../../../lib/utils'
 
@@ -26,8 +26,12 @@ export const useCases = ({ options, params }: UseCasesParams = {}) => {
     GetCasesReponse,
     Error
   >(
-    session ? [APIRoutes.GetCases, paramsWithoutNull] : null,
-    ([_key, params]: [key: unknown, params: GetCasesRequest]) =>
+    session ? ['getCases', session.user, paramsWithoutNull] : null,
+    ([_key, _user, params]: [
+      _key: unknown,
+      _user: unknown,
+      params: GetCasesRequest,
+    ]) =>
       swrFetcher({
         func: () => dmrClient.getCases(params),
       }),
