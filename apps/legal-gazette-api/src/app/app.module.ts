@@ -16,6 +16,7 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
+import { AdvertModel } from '../modules/advert/advert.model'
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CaseStatusModel } from '../modules/case-status/case-status.model'
@@ -52,6 +53,7 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
             CommunicationChannelModel,
             CaseModel,
             CommonCaseModel,
+            AdvertModel,
           ],
         }),
       ],

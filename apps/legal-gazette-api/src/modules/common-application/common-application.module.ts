@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CaseModel } from '../cases/cases.model'
 import { CommonApplicationController } from './common-application.controller'
 import { CommonApplicationService } from './common-application.service'
 import { ICommonApplicationService } from './common-application.service.interface'
 
 @Module({
-  imports: [SequelizeModule.forFeature([])],
+  imports: [SequelizeModule.forFeature([CaseModel])],
   controllers: [CommonApplicationController],
   providers: [
     {

@@ -20,7 +20,7 @@ type CommunicationChannelAttributes = {
 
 export type CommunicationChannelCreateAttributes = {
   email: string
-  caseId: string
+  caseId?: string
   name?: string | null
   phone?: string | null
 }

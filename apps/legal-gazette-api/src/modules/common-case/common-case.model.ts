@@ -6,13 +6,12 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 type CommonCaseAttributes = {
   caption: string
-  html: string
   signatureName: string
   signatureLocation: string
   signatureDate: Date
 }
 
-type CommonCaseCreationAttributes = CommonCaseAttributes
+export type CommonCaseCreationAttributes = CommonCaseAttributes
 
 @BaseTable({ tableName: LegalGazetteModels.COMMON_CASE })
 @DefaultScope(() => ({
@@ -35,13 +34,6 @@ export class CommonCaseModel extends BaseModel<
     field: 'caption',
   })
   caption!: string
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-    field: 'html',
-  })
-  html!: string
 
   @Column({
     type: DataType.STRING,

@@ -19,7 +19,7 @@ export class CaseService implements ICaseService {
     const randomCaseNumber = Math.floor(Math.random() * 1000000)
 
     const model = await this.caseModel.create(
-      { ...body, caseNumber: randomCaseNumber },
+      { ...body },
       {
         include: [CommunicationChannelModel],
       },

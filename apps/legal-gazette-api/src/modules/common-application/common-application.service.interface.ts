@@ -1,7 +1,7 @@
-import { SubmitApplicationDto } from './dto/common-application.dto'
+import { SubmitCommonApplicationDto } from './dto/common-application.dto'
 
 export interface ICommonApplicationService {
-  submitApplication(body: SubmitApplicationDto): Promise<void>
+  submitApplication(body: SubmitCommonApplicationDto): Promise<void>
 }
 
 export const ICommonApplicationService = Symbol('ICommonApplicationService')

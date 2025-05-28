@@ -29,6 +29,13 @@ export class CommunicationChannelDto {
   @IsString()
   @MinLength(1)
   @MaxLength(255)
+  name?: string
+
+  @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   phone?: string
 }
 
@@ -51,7 +58,7 @@ export class SignatureDto {
   date!: string
 }
 
-export class SubmitApplicationDto {
+export class SubmitCommonApplicationDto {
   @ApiProperty({ type: String })
   @IsUUID()
   applicationId!: string
@@ -79,6 +86,7 @@ export class SubmitApplicationDto {
 
   @ApiProperty({ type: SignatureDto })
   @Type(() => SignatureDto)
+  @ValidateNested()
   signature!: SignatureDto
 
   @ApiProperty({ type: [CommunicationChannelDto] })

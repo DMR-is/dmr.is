@@ -21,13 +21,17 @@ import {
   BaseTable,
 } from '@dmr.is/shared/models/base'
 
+import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CaseCategoryModel } from '../case-category/case-category.model'
 import {
   CaseStatusModel,
   CaseStatusSlug,
 } from '../case-status/case-status.model'
 import { CaseTypeModel } from '../case-type/case-type.model'
-import { CommonCaseModel } from '../common-case/common-case.model'
+import {
+  CommonCaseCreationAttributes,
+  CommonCaseModel,
+} from '../common-case/common-case.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -38,17 +42,22 @@ type CaseAttributes = {
   categoryId: string
   caseStatusId: string
   caseNumber: string
+  type: CaseTypeModel
+  category: CaseCategoryModel
+  status: CaseStatusModel
   communicationChannels: CommunicationChannelModel[]
-  type: typeof CaseTypeModel
-  category: typeof CaseCategoryModel
-  status: typeof CaseStatusModel
+  commonCase?: CommonCaseModel
+  adverts?: AdvertModel[]
 }
 
 type CaseCreateAttributes = {
   typeId: string
   categoryId: string
-  caseNumber: string
+  applicationId?: string
+  caseId?: string
   communicationChannels?: CommunicationChannelCreateAttributes[]
+  adverts?: AdvertCreateAttributes[]
+  commonCase?: CommonCaseCreationAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.CASES })
@@ -123,6 +132,14 @@ type CaseCreateAttributes = {
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
     type: DataType.UUID,
+    allowNull: true,
+    field: 'application_id',
+    defaultValue: null,
+  })
+  applicationId?: string
+
+  @Column({
+    type: DataType.UUID,
     allowNull: false,
     field: 'case_type_id',
   })
@@ -150,6 +167,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     type: DataType.TEXT,
     allowNull: false,
     field: 'case_number',
+    defaultValue: ''.padEnd(10, '0'), // Placeholder for case number
   })
   caseNumber!: string
 
@@ -164,6 +182,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   @HasMany(() => CommunicationChannelModel)
   communicationChannels!: CommunicationChannelModel[]
+
+  @HasMany(() => AdvertModel, 'caseId')
+  adverts?: AdvertModel[]
 
   @HasOne(() => CommonCaseModel, 'id')
   commonCase?: CommonCaseModel

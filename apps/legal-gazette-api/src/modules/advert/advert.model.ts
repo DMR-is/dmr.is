@@ -1,17 +1,27 @@
 import { Op } from 'sequelize'
-import { BeforeCreate, Column, DataType } from 'sequelize-typescript'
+import {
+  BeforeCreate,
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import { CaseModel } from '@dmr.is/modules'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 type AdvertAttributes = {
+  caseId: string
   publicationNumber: string
   publishedAt: Date | null
   html: string
 }
 
-type AdvertCreateAttributes = {
+export type AdvertCreateAttributes = {
   html: string
+  scheduledAt: Date
+  caseId?: string
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
@@ -19,6 +29,14 @@ export class AdvertModel extends BaseModel<
   AdvertAttributes,
   AdvertCreateAttributes
 > {
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'case_id',
+  })
+  @ForeignKey(() => CaseModel)
+  caseId!: string
+
   @Column({
     type: DataType.DATE,
     allowNull: true,
@@ -31,6 +49,7 @@ export class AdvertModel extends BaseModel<
     type: DataType.STRING,
     allowNull: false,
     field: 'publication_number',
+    defaultValue: ''.padEnd(12, '0'), // Placeholder for publication number
   })
   publicationNumber!: string
 
@@ -39,6 +58,9 @@ export class AdvertModel extends BaseModel<
     allowNull: false,
   })
   html!: string
+
+  @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
+  case!: CaseModel
 
   @BeforeCreate
   static async generatePublicationNumber(instance: AdvertModel) {
