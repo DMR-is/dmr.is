@@ -85,11 +85,12 @@ export const CacheEvict = (idParamIndex = 0, optionalParams: string[] = []) => {
 
       // Delete all cache entries containing the ID
       const keys = await cache.store.keys(cachePattern)
-      const optionalKeys = await cache.store.keys(
-        `*${optionalParams.join('*')}*`,
-      )
+      const optionalKeys =
+        optionalParams.length > 0
+          ? await cache.store.keys(`*${optionalParams.join('*')}*`)
+          : []
       const allKeys = [...keys, ...optionalKeys]
-      await cache.store.mdel(...allKeys)
+      allKeys.length > 0 && (await cache.store.mdel(...allKeys))
 
       return result
     }
