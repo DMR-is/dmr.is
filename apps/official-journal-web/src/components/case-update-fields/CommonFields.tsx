@@ -39,6 +39,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     departmentOptions,
     categoryOptions,
     canEdit,
+    handleOptimisticUpdate,
     isPublishedOrRejected,
   } = useCaseContext()
   const [mainTypeId, setMainTypeId] = useState<string | undefined>(
@@ -216,10 +217,10 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             if (!opt) {
               return toast.warning('Eitthvað fór úrskeiðis')
             }
-
-            updateDepartment({
-              departmentId: opt.value,
-            })
+            handleOptimisticUpdate(
+              { ...currentCase, advertDepartment: { ...currentCase.advertDepartment, id: opt.value } },
+              () => updateDepartment({ departmentId: opt.value }),
+            )
           }}
         />
         <OJOISelect
@@ -247,10 +248,13 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             if (!opt) {
               return toast.warning('Eitthvað fór úrskeiðis')
             }
-
-            updateType({
-              typeId: opt.value,
-            })
+            handleOptimisticUpdate(
+              {
+                ...currentCase,
+                advertType: { ...currentCase.advertType, id: opt.value },
+              },
+              () => updateType({ typeId: opt.value }),
+            )
           }}
         />
         <OJOIInput

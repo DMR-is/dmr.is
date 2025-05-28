@@ -1,5 +1,3 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
-
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
@@ -15,14 +13,9 @@ import { Tabs } from './Tabs'
 
 export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
-  const { params } = useFilters()
-
-  const [status, setStatus] = useQueryState(
-    'status',
-    parseAsStringEnum<CaseStatusEnum>(
-      Object.values(CaseStatusEnum),
-    ).withDefault(CaseStatusEnum.Innsent),
-  )
+  const { params, setParams } = useFilters({
+    initialPageSize: 50,
+  })
 
   const { cases, statuses, paging } = useCasesWithStatusCount({
     params: {
@@ -33,7 +26,7 @@ export const CaseOverviewTabs = () => {
         CaseStatusEnum.Tilbúið,
       ],
       ...params,
-      status: status,
+      status: params.status[0] as CaseStatusEnum,
     },
   })
 
@@ -135,13 +128,8 @@ export const CaseOverviewTabs = () => {
 
   return (
     <Tabs
-      onTabChange={(id) =>
-        setStatus(id as CaseStatusEnum, {
-          history: 'replace',
-          shallow: true,
-        })
-      }
-      selectedTab={status ?? CaseStatusEnum.Innsent}
+      onTabChange={(id) => setParams({ status: [id as CaseStatusEnum] })}
+      selectedTab={params.status[0] ?? CaseStatusEnum.Innsent}
       tabs={dynamicTabs || loadingTabs}
       label={formatMessage(messages.tabs.statuses)}
     />
