@@ -774,7 +774,6 @@ export class CaseUpdateService implements ICaseUpdateService {
       }
     }
 
-
     return ResultWrapper.ok()
   }
 

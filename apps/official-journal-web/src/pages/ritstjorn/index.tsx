@@ -14,15 +14,12 @@ import {
 import { CreateCase } from '../../components/create-case/CreateCase'
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'
+import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { LayoutProps } from '../../layout/Layout'
 import { Routes } from '../../lib/constants'
 import { messages as caseProccessingMessages } from '../../lib/messages/caseProcessingOverview'
-import {
-  deleteUndefined,
-  loginRedirect,
-  mapTabIdToCaseStatus,
-} from '../../lib/utils'
+import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { CustomNextError } from '../../units/error'
 import { authOptions } from '../api/auth/[...nextauth]'
 
@@ -81,25 +78,12 @@ export default function CaseProccessingOverviewScreen() {
 export const getServerSideProps: GetServerSideProps = async ({
   req,
   res,
-  query,
   resolvedUrl,
 }) => {
   const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
     return loginRedirect(resolvedUrl)
-  }
-
-  const currentStatus = query?.status
-  const status = mapTabIdToCaseStatus(currentStatus as string)
-
-  if (!currentStatus) {
-    return {
-      redirect: {
-        destination: `${Routes.ProcessingOverview}?status=${status}`,
-        permanent: false,
-      },
-    }
   }
 
   const layout: LayoutProps = {
@@ -112,6 +96,12 @@ export const getServerSideProps: GetServerSideProps = async ({
       enableCategories: true,
       enableDepartments: true,
       enableTypes: true,
+      statuses: [
+        CaseStatusEnum.Innsent,
+        CaseStatusEnum.Grunnvinnsla,
+        CaseStatusEnum.Yfirlestur,
+        CaseStatusEnum.Tilbúið,
+      ],
       breadcrumbs: [
         {
           title: caseProccessingMessages.breadcrumbs.home,

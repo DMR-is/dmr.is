@@ -1468,7 +1468,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Transactional()
   @Cacheable()
   async getCases(
     params: GetCasesQuery,
