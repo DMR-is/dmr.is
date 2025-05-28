@@ -17,6 +17,7 @@ import {
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModule } from '../modules/advert/advert.module'
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CaseStatusModel } from '../modules/case-status/case-status.model'
@@ -66,6 +67,7 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
     CaseStatusModule,
     CaseModule,
     CommonApplicationModule,
+    AdvertModule,
     HealthModule,
   ],
   controllers: [],

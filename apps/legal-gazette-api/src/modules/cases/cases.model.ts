@@ -102,7 +102,7 @@ type CaseCreateAttributes = {
       attributes: ['scheduledAt', 'publishedAt'],
     },
   ],
-  order: [['scheduledAt', 'ASC']],
+  order: [['scheduledAt', 'ASC', 'NULLS LAST']],
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({

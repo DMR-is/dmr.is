@@ -1,21 +1,24 @@
-import { Op } from 'sequelize'
 import {
   BeforeCreate,
   BelongsTo,
   Column,
   DataType,
+  DefaultScope,
   ForeignKey,
+  Scopes,
 } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
-import { CaseModel } from '@dmr.is/modules'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+
+import { CaseModel } from '../cases/cases.model'
 
 type AdvertAttributes = {
   caseId: string
   publicationNumber: string
   publishedAt: Date | null
   html: string
+  case: CaseModel
 }
 
 export type AdvertCreateAttributes = {
@@ -24,7 +27,27 @@ export type AdvertCreateAttributes = {
   caseId?: string
 }
 
+export enum AdvertVersion {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+}
+
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
+@DefaultScope(() => ({
+  order: [['publishedAt', 'DESC', 'NULLS LAST']],
+}))
+@Scopes(() => ({
+  withPublicationNumber: {
+    include: [
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+    ],
+  },
+}))
 export class AdvertModel extends BaseModel<
   AdvertAttributes,
   AdvertCreateAttributes
@@ -36,6 +59,15 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
+
+  @Column({
+    type: DataType.VIRTUAL,
+  })
+  get publicationNumber(): string {
+    const advertCase = this.getDataValue('case')
+
+    return advertCase.caseNumber
+  }
 
   @Column({
     type: DataType.DATE,
@@ -53,12 +85,12 @@ export class AdvertModel extends BaseModel<
   scheduledAt!: Date
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.ENUM(...Object.values(AdvertVersion)),
     allowNull: false,
-    field: 'publication_number',
-    defaultValue: ''.padEnd(12, '0'), // Placeholder for publication number
+    defaultValue: AdvertVersion.A,
+    field: 'version',
   })
-  publicationNumber!: string
+  version!: AdvertVersion
 
   @Column({
     type: DataType.TEXT,
@@ -70,12 +102,23 @@ export class AdvertModel extends BaseModel<
   case!: CaseModel
 
   @BeforeCreate
-  static async generatePublicationNumber(instance: AdvertModel) {
-    const year = instance.createdAt.getFullYear()
-    const count = await AdvertModel.count({
-      where: { publicationNumber: { [Op.like]: `${year}%` } },
+  static async setVersion(advert: AdvertModel): Promise<void> {
+    const siblingCount = await AdvertModel.count({
+      where: { caseId: advert.caseId },
     })
 
-    instance.publicationNumber = `${year}${String(count + 1).padStart(6, '0')}`
+    switch (siblingCount) {
+      case 0:
+        advert.version = AdvertVersion.A
+        break
+      case 1:
+        advert.version = AdvertVersion.B
+        break
+      case 2:
+        advert.version = AdvertVersion.C
+        break
+      default:
+        throw new Error('Too many adverts for the same case')
+    }
   }
 }
