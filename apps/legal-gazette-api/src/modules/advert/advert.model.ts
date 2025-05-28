@@ -46,6 +46,13 @@ export class AdvertModel extends BaseModel<
   publishedAt!: Date | null
 
   @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'scheduled_at',
+  })
+  scheduledAt!: Date
+
+  @Column({
     type: DataType.STRING,
     allowNull: false,
     field: 'publication_number',

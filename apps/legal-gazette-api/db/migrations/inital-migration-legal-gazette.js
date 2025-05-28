@@ -51,6 +51,7 @@ module.exports = {
       CASE_CATEGORY_ID UUID NOT NULL REFERENCES CASE_CATEGORY(ID),
       CASE_STATUS_ID UUID NOT NULL REFERENCES CASE_STATUS(ID) DEFAULT 'cd3bf301-52a1-493e-8c80-a391c310c840',
 
+      CASE_TITLE TEXT NOT NULL,
       CASE_NUMBER TEXT NOT NULL UNIQUE
     );
 
@@ -86,6 +87,7 @@ module.exports = {
       UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       DELETED_AT TIMESTAMPTZ,
 
+      SCHEDULED_AT TIMESTAMPTZ NOT NULL,
       PUBLISHED_AT TIMESTAMPTZ DEFAULT NULL,
       PUBLICATION_NUMBER TEXT NOT NULL UNIQUE,
       HTML TEXT NOT NULL,
@@ -94,10 +96,14 @@ module.exports = {
     );
 
     CREATE INDEX idx_case_type_title_asc ON CASE_TYPE (TITLE ASC);
+
     CREATE INDEX idx_case_category_title_asc ON CASE_CATEGORY (TITLE ASC);
+
     CREATE INDEX idx_case_status_title_asc ON CASE_STATUS (TITLE ASC);
-    CREATE INDEX idx_common_case_caption_asc ON COMMON_CASE (CAPTION ASC);
-    CREATE INDEX idx_advert_published_at_asc ON ADVERT (PUBLISHED_AT ASC) WHERE PUBLISHED_AT IS NOT NULL;
+
+    CREATE INDEX idx_advert_caseid_scheduledat ON advert (case_id, scheduled_at);
+
+    CREATE INDEX idx_advert_published_at_desc ON ADVERT (PUBLISHED_AT DESC) WHERE PUBLISHED_AT IS NOT NULL;
 
     COMMIT;
 

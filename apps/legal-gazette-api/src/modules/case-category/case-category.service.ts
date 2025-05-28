@@ -8,11 +8,11 @@ import {
 } from '@dmr.is/legal-gazette/dto'
 
 import {
-  CategoryDetailedDto,
-  CategoryDto,
-  GetCategoriesDetailedDto,
-  GetCategoriesDto,
-  GetCategoriesQueryDto,
+  CaseCategoryDetailedDto,
+  CaseCategoryDto,
+  GetCaseCategoriesDetailedDto,
+  GetCaseCategoriesDto,
+  GetCaseCategoriesQueryDto,
 } from './dto/case-category.dto'
 import { CaseCategoryModel } from './case-category.model'
 import { ICaseCategoryService } from './case-category.service.interface'
@@ -24,7 +24,9 @@ export class CaseCategoryService implements ICaseCategoryService {
     private readonly caseCategoryModel: typeof CaseCategoryModel,
   ) {}
 
-  async getCategories(query: GetCategoriesQueryDto): Promise<GetCategoriesDto> {
+  async getCategories(
+    query: GetCaseCategoriesQueryDto,
+  ): Promise<GetCaseCategoriesDto> {
     const categories = await this.caseCategoryModel
       .scope({ method: ['byType', query.type] })
       .scope('defaultScope')
@@ -32,7 +34,7 @@ export class CaseCategoryService implements ICaseCategoryService {
 
     return {
       categories: categories.map((c) =>
-        migrate<CategoryDto>({
+        migrate<CaseCategoryDto>({
           model: c,
           defaultMigration: baseEntityMigrate,
           additionalProps: [['typeId'], ['type', baseEntityMigrate]],
@@ -41,15 +43,15 @@ export class CaseCategoryService implements ICaseCategoryService {
     }
   }
   async getCategoriesDetailed(
-    query: GetCategoriesQueryDto,
-  ): Promise<GetCategoriesDetailedDto> {
+    query: GetCaseCategoriesQueryDto,
+  ): Promise<GetCaseCategoriesDetailedDto> {
     const categories = await this.caseCategoryModel
       .scope({ method: ['byType', query.type] })
       .scope('detailed')
       .findAll()
 
     const migrated = categories.map((c) =>
-      migrate<CategoryDetailedDto>({
+      migrate<CaseCategoryDetailedDto>({
         model: c,
         defaultMigration: baseEntityDetailedMigrate,
         additionalProps: [['typeId'], ['type', baseEntityDetailedMigrate]],

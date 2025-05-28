@@ -28,6 +28,7 @@ export class CommonApplicationService implements ICommonApplicationService {
         applicationId: body.applicationId,
         categoryId: body.categoryId,
         typeId: COMMON_APPLICATION_TYPE_ID,
+        caseTitle: body.caption,
         communicationChannels: body.channels.map((ch) => ({
           email: ch.email,
           name: ch.name,

@@ -1,8 +1,20 @@
 import { Type } from 'class-transformer'
-import { IsArray, IsOptional, IsUUID } from 'class-validator'
+import {
+  IsArray,
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { DetailedDto } from '@dmr.is/legal-gazette/dto'
+
+import { CaseCategoryDto } from '../../case-category/dto/case-category.dto'
+import { CaseStatusDto } from '../../case-status/dto/case-status.dto'
+import { CaseTypeDto } from '../../case-type/dto/case-type.dto'
 import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CreateCaseDto {
@@ -19,4 +31,46 @@ export class CreateCaseDto {
   @IsArray()
   @Type(() => CreateCommunicationChannelDto)
   communicationChannels?: CreateCommunicationChannelDto[]
+}
+
+export class CaseDto extends DetailedDto {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  id!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  applicationId?: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  caseNumber!: string
+
+  @ApiProperty({ type: String, nullable: true })
+  @IsDateString()
+  schedueledAt!: string | null
+
+  @ApiProperty({ type: CaseTypeDto })
+  @Type(() => CaseTypeDto)
+  @ValidateNested()
+  type!: CaseTypeDto
+
+  @ApiProperty({ type: CaseCategoryDto })
+  @Type(() => CaseCategoryDto)
+  @ValidateNested()
+  category!: CaseCategoryDto
+
+  @ApiProperty({ type: CaseStatusDto })
+  @Type(() => CaseStatusDto)
+  @ValidateNested()
+  status!: CaseStatusDto
+}
+
+export class GetCasesDto {
+  @ApiProperty({ type: [CaseDto] })
+  @IsArray()
+  @Type(() => CaseDto)
+  @ValidateNested({ each: true })
+  cases!: CaseDto[]
 }

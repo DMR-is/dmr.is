@@ -10,9 +10,9 @@ import {
 } from '@dmr.is/legal-gazette/dto'
 
 import {
-  GetCasesStatusDetailedDto,
+  CaseStatusDto,
+  CaseStatusDetailedDto,
   GetCasesStatusesDetailedDto,
-  GetCaseStatusDto,
   GetCaseStatusesDto,
 } from './dto/case-status.dto'
 import { CaseStatusModel } from './case-status.model'
@@ -64,8 +64,8 @@ export class CaseStatusController {
   }
 
   @Get(':id')
-  @LGResponse({ operationId: 'getCaseStatus', type: GetCaseStatusDto })
-  async getStatusById(@Param('id') id: string): Promise<GetCaseStatusDto> {
+  @LGResponse({ operationId: 'getCaseStatus', type: CaseStatusDto })
+  async getStatusById(@Param('id') id: string): Promise<CaseStatusDto> {
     const status = await this.caseStatusModel.findByPk(id)
 
     if (!status) {
@@ -82,11 +82,11 @@ export class CaseStatusController {
   @Get(':id/detailed')
   @LGResponse({
     operationId: 'getCaseStatusDetailed',
-    type: GetCasesStatusDetailedDto,
+    type: CaseStatusDetailedDto,
   })
   async getStatusDetailedById(
     @Param('id') id: string,
-  ): Promise<GetCasesStatusDetailedDto> {
+  ): Promise<CaseStatusDetailedDto> {
     const status = await this.caseStatusModel.scope('detailed').findByPk(id)
 
     if (!status) {

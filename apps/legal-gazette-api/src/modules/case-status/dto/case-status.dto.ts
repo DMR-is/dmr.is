@@ -16,6 +16,6 @@ export class GetCasesStatusesDetailedDto {
   statuses!: BaseEntityDetailedDto[]
 }
 
-export class GetCaseStatusDto extends BaseEntityDto {}
+export class CaseStatusDto extends BaseEntityDto {}
 
-export class GetCasesStatusDetailedDto extends BaseEntityDetailedDto {}
+export class CaseStatusDetailedDto extends BaseEntityDetailedDto {}

@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Sequelize } from 'sequelize'
 import {
   BeforeCreate,
   BelongsTo,
@@ -8,7 +8,6 @@ import {
   ForeignKey,
   HasMany,
   HasOne,
-  Scopes,
 } from 'sequelize-typescript'
 
 import {
@@ -23,10 +22,7 @@ import {
 
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CaseCategoryModel } from '../case-category/case-category.model'
-import {
-  CaseStatusModel,
-  CaseStatusSlug,
-} from '../case-status/case-status.model'
+import { CaseStatusModel } from '../case-status/case-status.model'
 import { CaseTypeModel } from '../case-type/case-type.model'
 import {
   CommonCaseCreationAttributes,
@@ -42,6 +38,8 @@ type CaseAttributes = {
   categoryId: string
   caseStatusId: string
   caseNumber: string
+  caseTitle: string
+  scheduledAt: Date | null
   type: CaseTypeModel
   category: CaseCategoryModel
   status: CaseStatusModel
@@ -53,6 +51,7 @@ type CaseAttributes = {
 type CaseCreateAttributes = {
   typeId: string
   categoryId: string
+  caseTitle: string
   applicationId?: string
   caseId?: string
   communicationChannels?: CommunicationChannelCreateAttributes[]
@@ -62,7 +61,26 @@ type CaseCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.CASES })
 @DefaultScope(() => ({
-  attributes: ['id', 'createdAt'],
+  attributes: [
+    [
+      Sequelize.literal(`(
+      SELECT MIN(advert.scheduled_at)
+      FROM advert
+      WHERE advert.case_id = "CaseModel"."id" AND advert.published_at IS NULL
+    )`),
+      'scheduledAt',
+    ],
+    'id',
+    'applicationId',
+    'typeId',
+    'categoryId',
+    'statusId',
+    'caseNumber',
+    'caseTitle',
+    'createdAt',
+    'updatedAt',
+    'deletedAt',
+  ],
   include: [
     {
       model: CaseTypeModel,
@@ -79,55 +97,12 @@ type CaseCreateAttributes = {
     {
       model: CommunicationChannelModel,
     },
+    {
+      model: AdvertModel,
+      attributes: ['scheduledAt', 'publishedAt'],
+    },
   ],
-}))
-@Scopes(() => ({
-  submitted: {
-    attributes: ['id', 'createdAt'],
-    include: [
-      {
-        model: CaseTypeModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-      },
-      {
-        model: CaseCategoryModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-      },
-      {
-        model: CaseStatusModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-        where: {
-          slug: CaseStatusSlug.SUBMITTED,
-        },
-      },
-      {
-        model: CommunicationChannelModel,
-      },
-    ],
-  },
-  readyForPublication: {
-    attributes: ['id', 'createdAt'],
-    include: [
-      {
-        model: CaseTypeModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-      },
-      {
-        model: CaseCategoryModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-      },
-      {
-        model: CaseStatusModel,
-        attributes: BASE_ENTITY_ATTRIBUTES,
-        where: {
-          slug: CaseStatusSlug.READY_FOR_PUBLICATION,
-        },
-      },
-      {
-        model: CommunicationChannelModel,
-      },
-    ],
-  },
+  order: [['scheduledAt', 'ASC']],
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
@@ -137,6 +112,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     defaultValue: null,
   })
   applicationId?: string
+
+  @Column({ type: DataType.VIRTUAL })
+  get scheduledAt(): Date | null {
+    const value = this.getDataValue('scheduledAt')
+    if (value === null) return null
+    return new Date(value)
+  }
 
   @Column({
     type: DataType.UUID,
@@ -170,6 +152,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     defaultValue: ''.padEnd(10, '0'), // Placeholder for case number
   })
   caseNumber!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'case_title',
+  })
+  caseTitle!: string
 
   @BelongsTo(() => CaseTypeModel)
   type!: CaseTypeModel

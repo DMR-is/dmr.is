@@ -5,12 +5,9 @@ import { ApiProperty } from '@nestjs/swagger'
 import { LegalGazetteApplicationTypes } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityDetailedDto, BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
-import {
-  CaseTypeDetailedDto,
-  CaseTypeDto,
-} from '../../case-type/dto/case-type.dto'
+import { CaseTypeDetailedDto } from '../../case-type/dto/case-type.dto'
 
-export class GetCategoriesQueryDto {
+export class GetCaseCategoriesQueryDto {
   @ApiProperty({
     enum: LegalGazetteApplicationTypes,
     enumName: 'ApplicationType',
@@ -22,20 +19,9 @@ export class GetCategoriesQueryDto {
   type?: LegalGazetteApplicationTypes
 }
 
-export class CategoryDto extends BaseEntityDto {
-  @ApiProperty({
-    type: String,
-  })
-  @IsUUID()
-  typeId!: string
+export class CaseCategoryDto extends BaseEntityDto {}
 
-  @ApiProperty({
-    type: CaseTypeDto,
-  })
-  type!: CaseTypeDto
-}
-
-export class CategoryDetailedDto extends BaseEntityDetailedDto {
+export class CaseCategoryDetailedDto extends BaseEntityDetailedDto {
   @ApiProperty({
     type: String,
   })
@@ -48,16 +34,16 @@ export class CategoryDetailedDto extends BaseEntityDetailedDto {
   type!: CaseTypeDetailedDto
 }
 
-export class GetCategoriesDto {
+export class GetCaseCategoriesDto {
   @ApiProperty({
-    type: [CategoryDto],
+    type: [CaseCategoryDto],
   })
-  categories!: CategoryDto[]
+  categories!: CaseCategoryDto[]
 }
 
-export class GetCategoriesDetailedDto {
+export class GetCaseCategoriesDetailedDto {
   @ApiProperty({
-    type: [CategoryDetailedDto],
+    type: [CaseCategoryDetailedDto],
   })
-  categories!: CategoryDetailedDto[]
+  categories!: CaseCategoryDetailedDto[]
 }
