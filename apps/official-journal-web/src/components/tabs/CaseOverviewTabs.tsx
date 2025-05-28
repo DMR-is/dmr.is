@@ -13,7 +13,9 @@ import { Tabs } from './Tabs'
 
 export const CaseOverviewTabs = () => {
   const { formatMessage } = useFormatMessage()
-  const { params, setParams } = useFilters()
+  const { params, setParams } = useFilters({
+    initialPageSize: 50,
+  })
 
   const { cases, statuses, paging } = useCasesWithStatusCount({
     params: {
