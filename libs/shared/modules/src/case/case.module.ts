@@ -3,10 +3,12 @@ import { LoggingModule } from '@dmr.is/logging'
 import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdvertMainTypeModel } from '../advert-type/models'
 import { ApplicationModule } from '../application/application.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import { AwsModule } from '../aws/aws'
 import { CommentModuleV2 } from '../comment/v2'
+import { ExternalModule } from '../external/external.module'
 import { SharedJournalModule } from '../journal/journal.module'
 import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
@@ -48,11 +50,13 @@ const API_MOCK = process.env.API_MOCK === 'true'
       ...caseModels,
       ...advertModels,
       AdvertDepartmentModel,
+      AdvertMainTypeModel,
     ]),
     LoggingModule,
     SharedJournalModule,
     SignatureModule,
     CommentModuleV2,
+    ExternalModule,
     forwardRef(() => PriceModule),
     forwardRef(() => PdfModule),
     forwardRef(() => AwsModule),
