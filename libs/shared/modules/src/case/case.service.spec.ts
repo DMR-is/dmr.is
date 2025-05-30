@@ -8,10 +8,12 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 
+import { AdvertMainTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAWSService } from '../aws/aws.service.interface'
 import { ICommentServiceV2 } from '../comment/v2'
+import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -47,10 +49,12 @@ describe('CaseService', () => {
   let journalService: IJournalService
   let signatureService: ISignatureService
   let attachmentService: IAttachmentService
+  let externalService: IExternalService
   let s3Service: IAWSService
   let caseModel: CaseModel
   let caseHistoryModel: CaseHistoryModel
   let advertModel: AdvertModel
+  let advertMainTypeModel: AdvertMainTypeModel
   let categoriesModel: CaseCategoriesModel
   let advertCategoryModel: AdvertCategoryModel
   let caseCategoriesModel: CaseCategoriesModel
@@ -98,6 +102,7 @@ describe('CaseService', () => {
           provide: IAttachmentService,
           useClass: jest.fn(() => ({})),
         },
+        { provide: IExternalService, useClass: jest.fn(() => ({})) },
         {
           provide: IAWSService,
           useClass: jest.fn(() => ({})),
@@ -118,6 +123,7 @@ describe('CaseService', () => {
           provide: IPriceService,
           useClass: jest.fn(() => ({})),
         },
+
         {
           provide: getModelToken(CaseModel),
           useClass: jest.fn(() => ({
@@ -189,6 +195,10 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
+          provide: getModelToken(AdvertMainTypeModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: getModelToken(CaseHistoryModel),
           useClass: jest.fn(() => ({})),
         },
@@ -231,11 +241,15 @@ describe('CaseService', () => {
     applicationService = app.get<IApplicationService>(IApplicationService)
     journalService = app.get<IJournalService>(IJournalService)
     attachmentService = app.get<IAttachmentService>(IAttachmentService)
+    externalService = app.get<IExternalService>(IExternalService)
     signatureService = app.get<ISignatureService>(ISignatureService)
     s3Service = app.get<IAWSService>(IAWSService)
     caseCreateService = app.get<ICaseCreateService>(ICaseCreateService)
     caseUpdateService = app.get<ICaseUpdateService>(ICaseUpdateService)
     advertModel = app.get<AdvertModel>(getModelToken(AdvertModel))
+    advertMainTypeModel = app.get<AdvertMainTypeModel>(
+      getModelToken(AdvertMainTypeModel),
+    )
     caseModel = app.get<CaseModel>(getModelToken(CaseModel))
     caseCategoriesModel = app.get<CaseCategoriesModel>(
       getModelToken(CaseCategoriesModel),
