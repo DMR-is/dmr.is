@@ -4,6 +4,14 @@
   "implicitDependencies": ["official-journal-api-export"],
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/official-journal-api-export-e2e",
+        "forwardAllArgs": false
+      }
+    },
     "e2e": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],

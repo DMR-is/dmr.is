@@ -10,6 +10,7 @@
           "build",
           "lint",
           "test",
+          "typecheck",
           "e2e",
           "codegen/backend-client",
           "codegen/backend-schema",
@@ -99,6 +100,9 @@
     },
     "lint": {
       "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
+    },
+    "typecheck": {
+      "inputs": ["default", "^production"]
     },
     "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]

@@ -5,6 +5,14 @@
   "projectType": "library",
   "generators": {},
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "libs/logging",
+        "forwardAllArgs": false
+      }
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {

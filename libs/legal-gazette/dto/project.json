@@ -4,6 +4,14 @@
   "sourceRoot": "libs/legal-gazette/dto/src",
   "projectType": "library",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/legal-gazette/dto",
+        "forwardAllArgs": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

@@ -14,6 +14,14 @@
       "options": {
         "jestConfig": "libs/shared/sequelize/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/sequelize",
+        "forwardAllArgs": false
+      }
     }
   },
   "tags": []
