@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -13,12 +14,10 @@ export class AdvertService implements IAdvertService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
-
-  async getAdverts(): Promise<GetAdvertsDto> {
-    const adverts = await this.advertModel
-      .scope('withPublicationNumber')
-      .findAll()
+  async getAdvertsInProgress(): Promise<GetAdvertsDto> {
+    const adverts = await this.advertModel.scope('inprogress').findAll()
 
     const migrated = adverts.map((advert) => advertMigrate(advert))
 
@@ -26,10 +25,19 @@ export class AdvertService implements IAdvertService {
       adverts: migrated,
     }
   }
+
+  async getAdverts(): Promise<GetAdvertsDto> {
+    const adverts = await this.advertModel.findAll()
+
+    const migrated = adverts.map((advert) => advertMigrate(advert))
+
+    return {
+      adverts: migrated,
+    }
+  }
+
   async getAdvertById(id: string): Promise<AdvertDto> {
-    const advert = await this.advertModel
-      .scope('withPublicationNumber')
-      .findByPk(id)
+    const advert = await this.advertModel.scope('detailed').findByPk(id)
 
     if (!advert) {
       throw new NotFoundException(`Advert with id ${id} not found`)

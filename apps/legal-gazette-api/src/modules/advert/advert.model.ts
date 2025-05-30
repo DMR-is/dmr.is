@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import {
   BelongsTo,
   Column,
@@ -7,10 +8,16 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
+import { NotFoundException } from '@nestjs/common'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { CaseTypeModel } from '../case-type/case-type.model'
 import { CaseModel } from '../cases/cases.model'
+
+const LOGGING_CATEGORY = 'advert-model'
 
 type AdvertAttributes = {
   caseId: string
@@ -35,14 +42,44 @@ export enum AdvertVersion {
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  order: [['publishedAt', 'DESC', 'NULLS LAST']],
+  include: [
+    {
+      model: CaseModel.unscoped(),
+      attributes: ['caseNumber'],
+      include: [CaseTypeModel],
+      required: true,
+    },
+  ],
+  where: {
+    publishedAt: {
+      [Op.ne]: null,
+    },
+  },
+  order: [['publishedAt', 'DESC']],
 }))
 @Scopes(() => ({
-  withPublicationNumber: {
+  inprogress: {
+    where: {
+      published: {
+        [Op.ne]: null,
+      },
+    },
     include: [
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
+        include: [CaseTypeModel],
+        required: true,
+      },
+    ],
+    order: [['scheduled_at', 'ASC']],
+  },
+  detailed: {
+    include: [
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        include: [CaseTypeModel],
         required: true,
       },
     ],
@@ -100,4 +137,27 @@ export class AdvertModel extends BaseModel<
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
+
+  static async publish(advertId: string) {
+    const now = new Date()
+    const logger = getLogger(LOGGING_CATEGORY)
+
+    const advert = await this.scope('inprogress').findByPk(advertId)
+
+    if (!advert) {
+      logger.error(`Advert with ID ${advertId} not found`, {
+        context: 'AdvertModel',
+      })
+
+      throw new NotFoundException('Advert not found')
+    }
+
+    logger.info(`Publishing advert with ID: ${advertId}`, {
+      context: 'AdvertModel',
+    })
+
+    await advert.update({
+      publishedAt: now,
+    })
+  }
 }
