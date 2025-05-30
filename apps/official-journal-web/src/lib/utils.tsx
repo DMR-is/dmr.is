@@ -357,6 +357,14 @@ export const getOverviewStatusColor = (status: string) => {
       return 'red'
     case CaseStatusEnum.TekiðÚrBirtingu:
       return 'rose'
+    case CaseStatusEnum.Tilbúið:
+      return 'mint'
+    case CaseStatusEnum.Yfirlestur:
+      return 'darkerBlue'
+    case CaseStatusEnum.Grunnvinnsla:
+      return 'yellow'
+    case CaseStatusEnum.Innsent:
+      return 'blue'
     default:
       return 'blue'
   }
