@@ -7,6 +7,9 @@ import { IAuthService } from './auth.service.interface'
 
 export * from './auth.controller'
 
+export { AuthService } from './auth.service'
+export { IAuthService } from './auth.service.interface'
+
 @Module({
   imports: [LoggingModule],
   providers: [

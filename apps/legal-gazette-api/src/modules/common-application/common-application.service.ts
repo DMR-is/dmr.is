@@ -9,6 +9,7 @@ import {
   LegalGazetteEvents,
 } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IAuthService } from '@dmr.is/modules'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
@@ -22,6 +23,7 @@ import { ICommonApplicationService } from './common-application.service.interfac
 export class CommonApplicationService implements ICommonApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IAuthService) private readonly authService: IAuthService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     private eventEmitter: EventEmitter2,
   ) {}

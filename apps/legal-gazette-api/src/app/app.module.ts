@@ -8,7 +8,7 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
-import { HealthModule } from '@dmr.is/modules'
+import { AuthModule, HealthModule } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
@@ -68,6 +68,10 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
+    {
+      module: AuthModule,
+      global: true,
+    },
     HealthModule,
   ],
   controllers: [],
