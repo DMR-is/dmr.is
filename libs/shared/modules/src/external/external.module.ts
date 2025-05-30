@@ -1,6 +1,6 @@
-import { LoggingModule } from '@dmr.is/logging'
-
 import { Module } from '@nestjs/common'
+
+import { LoggingModule } from '@dmr.is/logging'
 
 import { ExternalService } from './external.service'
 import { IExternalService } from './external.service.interface'

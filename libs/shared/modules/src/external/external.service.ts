@@ -1,12 +1,13 @@
 import * as crypto from 'crypto'
 import format from 'date-fns/format'
 import { Logger } from 'winston'
+
+import { Inject, Injectable } from '@nestjs/common'
+
 import { LogAndHandle } from '@dmr.is/decorators'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Advert } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { Inject, Injectable } from '@nestjs/common'
 
 import { IExternalService } from './external.service.interface'
 import { advertsToRegulations } from './external.service.util'

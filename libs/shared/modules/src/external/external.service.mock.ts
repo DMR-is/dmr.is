@@ -1,8 +1,9 @@
 import { Logger } from 'winston'
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
 
 import { Inject } from '@nestjs/common'
+
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { CaseModel } from '../case/models'
 
