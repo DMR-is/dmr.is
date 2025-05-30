@@ -4,7 +4,6 @@
     "/api/v1/pdf/case/{id}": {
       "get": {
         "operationId": "getPdfByCaseId",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -22,13 +21,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Pdf"]
       }
     },
     "/api/v1/pdf/application/{id}": {
       "get": {
         "operationId": "getPdfByApplicationId",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -53,13 +53,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Pdf"]
       }
     },
     "/api/v1/pdf/case/{id}/url": {
       "get": {
         "operationId": "getPdfUrlByCaseId",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -77,13 +78,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Pdf"]
       }
     },
     "/api/v1/pdf/application/{id}/url": {
       "get": {
         "operationId": "getPdfUrlByApplicationId",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -101,13 +103,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Pdf"]
       }
     },
     "/api/v1/cases/{caseId}/communication-channels": {
       "post": {
         "operationId": "createCommunicationChannel",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -134,13 +137,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{caseId}/communication-channels/{channelId}": {
       "delete": {
         "operationId": "deleteCommunicationChannel",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -156,13 +160,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/nextPublicationNumber/{departmentId}": {
       "get": {
         "operationId": "getNextPublicationNumber",
-        "summary": "",
         "parameters": [
           {
             "name": "departmentId",
@@ -183,13 +188,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/departments": {
       "get": {
         "operationId": "getDepartments",
-        "summary": "",
         "parameters": [
           {
             "name": "search",
@@ -235,13 +241,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/communicationStatuses": {
       "get": {
         "operationId": "getCommunicationStatuses",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -255,13 +262,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/tags": {
       "get": {
         "operationId": "getTags",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -273,13 +281,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/feeCodes": {
       "get": {
         "operationId": "getFeeCodes",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -293,13 +302,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{caseId}/external-payment": {
       "post": {
         "operationId": "postExternalPaymentByCaseId",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -309,13 +319,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/categories": {
       "get": {
         "operationId": "getCategories",
-        "summary": "",
         "parameters": [
           {
             "name": "search",
@@ -361,11 +372,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "post": {
         "operationId": "createCategory",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -376,13 +388,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/main-categories": {
       "get": {
         "operationId": "getMainCategories",
-        "summary": "",
         "parameters": [
           {
             "name": "search",
@@ -418,11 +431,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "post": {
         "operationId": "createMainCategory",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -433,13 +447,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/main-categories/{id}": {
       "delete": {
         "operationId": "deleteMainCategory",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -449,11 +464,12 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "put": {
         "operationId": "updateMainCategory",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -471,13 +487,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories/{categoryId}": {
       "delete": {
         "operationId": "deleteMainCategoryCategory",
-        "summary": "",
         "parameters": [
           {
             "name": "mainCategoryId",
@@ -493,13 +510,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/categories/merge": {
       "post": {
         "operationId": "mergeCategories",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -510,13 +528,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/categories/{id}": {
       "put": {
         "operationId": "updateCategory",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -534,11 +553,12 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "delete": {
         "operationId": "deleteCategory",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -548,13 +568,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/main-categories/{mainCategoryId}/categories": {
       "post": {
         "operationId": "createMainCategoryCategories",
-        "summary": "",
         "parameters": [
           {
             "name": "mainCategoryId",
@@ -574,13 +595,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/status-count/{status}": {
       "get": {
         "operationId": "getCasesWithStatusCount",
-        "summary": "",
         "parameters": [
           {
             "name": "statuses",
@@ -677,29 +699,25 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
+            "schema": { "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
+            "schema": { "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "example": "sortBy",
-            "schema": { "type": "string" }
+            "schema": { "example": "sortBy", "type": "string" }
           },
           {
             "name": "direction",
             "required": false,
             "in": "query",
-            "example": "ASC",
-            "schema": { "type": "string" }
+            "schema": { "example": "ASC", "type": "string" }
           },
           {
             "name": "status",
@@ -720,13 +738,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{caseId}/attachments/{attachmentId}": {
       "get": {
         "operationId": "getCaseAttachment",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -753,11 +772,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "put": {
         "operationId": "overwriteCaseAttachment",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -794,13 +814,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/price": {
       "put": {
         "operationId": "updatePrice",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -818,13 +839,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/price/payment-status": {
       "get": {
         "operationId": "getCasePaymentStatus",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -843,13 +865,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/fasttrack": {
       "put": {
         "operationId": "updateFasttrack",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -867,13 +890,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/tag": {
       "put": {
         "operationId": "updateTag",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -891,13 +915,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/department": {
       "put": {
         "operationId": "updateDepartment",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -917,13 +942,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/type": {
       "put": {
         "operationId": "updateCaseType",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -941,13 +967,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/communicationStatus": {
       "put": {
         "operationId": "updateCommunicationStatus",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -967,13 +994,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/publishDate": {
       "put": {
         "operationId": "updatePublishDate",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -991,13 +1019,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/title": {
       "put": {
         "operationId": "updateTitle",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1015,13 +1044,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/correction": {
       "post": {
         "operationId": "postCorrection",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1041,13 +1071,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/categories": {
       "put": {
         "operationId": "updateCategories",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1065,13 +1096,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/status/next": {
       "put": {
         "operationId": "updateNextStatus",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1081,13 +1113,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/status/previous": {
       "put": {
         "operationId": "updatePreviousStatus",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1097,13 +1130,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/assign/{userId}": {
       "put": {
         "operationId": "assignEmployee",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1119,13 +1153,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/status": {
       "put": {
         "operationId": "updateCaseStatus",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1143,13 +1178,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/update": {
       "put": {
         "operationId": "updateCaseAndAddCorrection",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1169,13 +1205,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/html": {
       "put": {
         "operationId": "updateAdvertHtml",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1193,13 +1230,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/advert": {
       "get": {
         "operationId": "getAdverts",
-        "summary": "",
         "parameters": [
           {
             "name": "search",
@@ -1275,13 +1313,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/advert/{id}": {
       "get": {
         "operationId": "getAdvert",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1300,13 +1339,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/advert/{id}/pdf-replacement": {
       "post": {
         "operationId": "advertPDFReplacement",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1335,13 +1375,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/html/appendix": {
       "post": {
         "operationId": "createAdvertAppendix",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1361,11 +1402,12 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "put": {
         "operationId": "updateAdvertAppendix",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1385,11 +1427,12 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "delete": {
         "operationId": "deleteAdvertAppendix",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1409,13 +1452,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1434,13 +1478,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases": {
       "post": {
         "operationId": "createCase",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1462,11 +1507,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       },
       "get": {
         "operationId": "getCases",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1560,29 +1606,25 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
+            "schema": { "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
+            "schema": { "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "example": "sortBy",
-            "schema": { "type": "string" }
+            "schema": { "example": "sortBy", "type": "string" }
           },
           {
             "name": "direction",
             "required": false,
             "in": "query",
-            "example": "ASC",
-            "schema": { "type": "string" }
+            "schema": { "example": "ASC", "type": "string" }
           }
         ],
         "responses": {
@@ -1595,13 +1637,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/department-count/{department}": {
       "get": {
         "operationId": "getCasesWithDepartmentCount",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1688,29 +1731,25 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
+            "schema": { "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
+            "schema": { "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "example": "sortBy",
-            "schema": { "type": "string" }
+            "schema": { "example": "sortBy", "type": "string" }
           },
           {
             "name": "direction",
             "required": false,
             "in": "query",
-            "example": "ASC",
-            "schema": { "type": "string" }
+            "schema": { "example": "ASC", "type": "string" }
           },
           {
             "name": "department",
@@ -1731,13 +1770,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/publish": {
       "post": {
         "operationId": "publish",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -1748,13 +1788,14 @@
           }
         },
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/unpublish": {
       "post": {
         "operationId": "unpublish",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1764,13 +1805,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/reject": {
       "post": {
         "operationId": "rejectCase",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1780,13 +1822,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/comments/v2": {
       "get": {
         "operationId": "getComments",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1805,13 +1848,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/comments/v2/internal": {
       "post": {
         "operationId": "createInternalComment",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1840,13 +1884,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/comments/v2/external": {
       "post": {
         "operationId": "createExternalComment",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1875,13 +1920,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/comments/{commentId}": {
       "delete": {
         "operationId": "deleteComment",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1897,13 +1943,14 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/with-publication-number/{department}": {
       "get": {
         "operationId": "getCasesWithPublicationNumber",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1930,13 +1977,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/attachments/{type}": {
       "post": {
         "operationId": "addApplicationAttachment",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -1976,13 +2024,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{caseId}/upload-assets": {
       "post": {
         "operationId": "uploadApplicationAttachment",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -2013,13 +2062,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
       }
     },
     "/api/v1/advert-types/types": {
       "post": {
         "operationId": "createType",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2055,11 +2105,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "get": {
         "operationId": "getTypes",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2143,13 +2194,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/advert-types/types/{id}": {
       "put": {
         "operationId": "updateType",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2200,11 +2252,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "delete": {
         "operationId": "deleteType",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2240,11 +2293,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "get": {
         "operationId": "getTypeById",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2286,13 +2340,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/advert-types/main-types": {
       "post": {
         "operationId": "createMainType",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2330,11 +2385,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "get": {
         "operationId": "getMainTypes",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2418,13 +2474,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/advert-types/main-types/bulk": {
       "post": {
         "operationId": "createMainTypesBulk",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2455,13 +2512,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       }
     },
     "/api/v1/advert-types/main-types/{id}": {
       "put": {
         "operationId": "updateMainType",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2512,11 +2570,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "delete": {
         "operationId": "deleteMainType",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2552,11 +2611,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["AdvertTypeAdmin"]
       },
       "get": {
         "operationId": "getMainTypeById",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2598,13 +2658,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberId}": {
       "put": {
         "operationId": "updateSignatureMember",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2633,11 +2694,12 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       },
       "delete": {
         "operationId": "deleteSignatureMember",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2658,13 +2720,14 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/{signatureId}/records/{recordId}/members/{memberType}": {
       "post": {
         "operationId": "createSignatureMember",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2685,13 +2748,14 @@
             "schema": { "enum": ["CHAIRMAN", "MEMBER"], "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/{signatureId}/records/{recordId}": {
       "put": {
         "operationId": "updateSignatureRecord",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2714,11 +2778,12 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       },
       "delete": {
         "operationId": "deleteSignatureRecord",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2733,13 +2798,14 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/{signatureId}/records": {
       "post": {
         "operationId": "createSignatureRecord",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2748,13 +2814,14 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/{caseId}": {
       "post": {
         "operationId": "createSignature",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -2771,13 +2838,14 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } }
+        "responses": { "204": { "description": "" } },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/signatures/{caseId}": {
       "get": {
         "operationId": "getSignatureByCaseId",
-        "summary": "",
         "parameters": [
           {
             "name": "caseId",
@@ -2795,13 +2863,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/signatures/{signatureId}": {
       "get": {
         "operationId": "getSignature",
-        "summary": "",
         "parameters": [
           {
             "name": "signatureId",
@@ -2819,13 +2888,14 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Signature"]
       }
     },
     "/api/v1/institutions/{id}": {
       "get": {
         "operationId": "getInstitution",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2843,11 +2913,12 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Institution"]
       },
       "put": {
         "operationId": "updateInstitution",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2874,11 +2945,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["InstitutionAdmin"]
       },
       "delete": {
         "operationId": "deleteInstitution",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -2888,27 +2960,26 @@
           }
         ],
         "responses": { "204": { "description": "" } },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["InstitutionAdmin"]
       }
     },
     "/api/v1/institutions": {
       "get": {
         "operationId": "getInstitutions",
-        "summary": "",
         "parameters": [
           {
             "name": "page",
             "required": false,
             "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
+            "schema": { "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
+            "schema": { "example": 10, "type": "number" }
           },
           {
             "name": "search",
@@ -2926,11 +2997,12 @@
               }
             }
           }
-        }
+        },
+        "summary": "",
+        "tags": ["Institution"]
       },
       "post": {
         "operationId": "createInstitution",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2950,27 +3022,26 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["InstitutionAdmin"]
       }
     },
     "/api/v1/users": {
       "get": {
         "operationId": "getUsers",
-        "summary": "",
         "parameters": [
           {
             "name": "page",
             "required": false,
             "in": "query",
-            "example": 1,
-            "schema": { "type": "number" }
+            "schema": { "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "example": 10,
-            "schema": { "type": "number" }
+            "schema": { "example": 10, "type": "number" }
           },
           {
             "name": "search",
@@ -3031,11 +3102,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       },
       "post": {
         "operationId": "createUser",
-        "summary": "",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -3083,13 +3155,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       }
     },
     "/api/v1/users/{id}": {
       "put": {
         "operationId": "updateUser",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -3134,11 +3207,12 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       },
       "delete": {
         "operationId": "deleteUser",
-        "summary": "",
         "parameters": [
           {
             "name": "id",
@@ -3178,13 +3252,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       }
     },
     "/api/v1/users/nationalId/{nationalId}": {
       "get": {
         "operationId": "getUserByNationalId",
-        "summary": "",
         "parameters": [
           {
             "name": "nationalId",
@@ -3231,13 +3306,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       }
     },
     "/api/v1/users/roles": {
       "get": {
         "operationId": "getRolesByUser",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -3279,13 +3355,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       }
     },
     "/api/v1/users/involved-parties": {
       "get": {
         "operationId": "getInvolvedPartiesByUser",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -3327,13 +3404,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["User"]
       }
     },
     "/api/v1/statistics/department/{slug}": {
       "get": {
         "operationId": "getStatisticsForDepartment",
-        "summary": "",
         "parameters": [
           {
             "name": "slug",
@@ -3354,13 +3432,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
       }
     },
     "/api/v1/statistics/overview/dashboard": {
       "get": {
         "operationId": "getStatisticsOverviewDashboard",
-        "summary": "",
         "parameters": [],
         "responses": {
           "200": {
@@ -3374,13 +3453,14 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
       }
     },
     "/api/v1/statistics/overview/{type}": {
       "get": {
         "operationId": "getStatisticsOverview",
-        "summary": "",
         "parameters": [
           {
             "name": "type",
@@ -3403,14 +3483,17 @@
             }
           }
         },
-        "security": [{ "bearer": [] }]
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
       }
     },
     "/api/v1/health": {
       "get": {
-        "operationId": "HealthController_",
+        "operationId": "HealthController__v1",
         "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } }
+        "responses": { "200": { "description": "Health check endpoint." } },
+        "tags": ["Health"]
       }
     }
   },
@@ -3619,6 +3702,19 @@
         },
         "required": ["tags"]
       },
+      "AdvertFeeType": {
+        "type": "string",
+        "enum": [
+          "BASE",
+          "ADDITIONAL_DOC",
+          "FAST_TRACK",
+          "BASE_MODIFIER",
+          "CUSTOM_MULTIPLIER",
+          "IMAGE_TIER",
+          "LOWERED",
+          "PERCENTAGE"
+        ]
+      },
       "TransactionFeeCode": {
         "type": "object",
         "properties": {
@@ -3638,19 +3734,9 @@
             "description": "Detailed description of the fee."
           },
           "feeType": {
-            "type": "string",
             "description": "Type of fee",
             "example": "BASE",
-            "enum": [
-              "BASE",
-              "ADDITIONAL_DOC",
-              "FAST_TRACK",
-              "BASE_MODIFIER",
-              "CUSTOM_MULTIPLIER",
-              "IMAGE_TIER",
-              "LOWERED",
-              "PERCENTAGE"
-            ]
+            "allOf": [{ "$ref": "#/components/schemas/AdvertFeeType" }]
           },
           "value": {
             "type": "number",
@@ -3885,7 +3971,6 @@
       },
       "CaseStatusEnum": {
         "type": "string",
-        "description": "Status of the case",
         "enum": [
           "Innsent",
           "Grunnvinnsla",
@@ -3913,7 +3998,8 @@
           },
           "title": {
             "example": "Innsent",
-            "$ref": "#/components/schemas/CaseStatusEnum"
+            "description": "Status of the case",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatusEnum" }]
           },
           "slug": {
             "type": "string",
@@ -4347,6 +4433,21 @@
         },
         "required": ["id", "title", "slug", "department"]
       },
+      "AdvertStatus": {
+        "type": "string",
+        "enum": [
+          "Virk",
+          "Afturkölluð",
+          "Drög",
+          "Eldri auglýsing",
+          "Hafnað",
+          "Í bið",
+          "Í vinnslu",
+          "Innsend",
+          "Tilbúin til útgáfu",
+          "Útgefin"
+        ]
+      },
       "AdvertPublicationNumber": {
         "type": "object",
         "properties": {
@@ -4390,6 +4491,10 @@
           }
         },
         "required": ["isLegacy", "html"]
+      },
+      "AdvertSignatureType": {
+        "type": "string",
+        "enum": ["Hefðbundin", "Nefnd"]
       },
       "AdvertSignatureMember": {
         "type": "object",
@@ -4465,10 +4570,9 @@
             "example": "00000000-0000-0000-0000-000000000000"
           },
           "type": {
-            "type": "string",
             "description": "Type of the signature",
-            "enum": ["Hefðbundin", "Nefnd"],
-            "example": "Hefðbundin"
+            "example": "Hefðbundin",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertSignatureType" }]
           },
           "additional": {
             "type": "string",
@@ -4584,22 +4688,10 @@
             "example": "GJALDSKRÁ fyrir hundahald í Reykjavíkurborg."
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "Virk",
-              "Afturkölluð",
-              "Drög",
-              "Eldri auglýsing",
-              "Hafnað",
-              "Í bið",
-              "Í vinnslu",
-              "Innsend",
-              "Tilbúin til útgáfu",
-              "Útgefin"
-            ],
             "description": "Status of the advert",
             "nullable": false,
-            "example": "Virk"
+            "example": "Virk",
+            "allOf": [{ "$ref": "#/components/schemas/AdvertStatus" }]
           },
           "publicationNumber": {
             "description": "Publication number of the advert",
@@ -4795,7 +4887,6 @@
       },
       "CaseActionEnum": {
         "type": "string",
-        "description": "The action that created the comment",
         "enum": [
           "SUBMIT",
           "ASSIGN_USER",
@@ -4830,7 +4921,10 @@
             "type": "string",
             "description": "ISO string representation of the date the comment was created"
           },
-          "action": { "$ref": "#/components/schemas/CaseActionEnum" },
+          "action": {
+            "description": "The action that created the comment",
+            "allOf": [{ "$ref": "#/components/schemas/CaseActionEnum" }]
+          },
           "caseStatus": {
             "description": "The status of the case when the comment was created",
             "allOf": [{ "$ref": "#/components/schemas/CaseStatus" }]
@@ -5084,7 +5178,8 @@
           },
           "title": {
             "example": "Innsent",
-            "$ref": "#/components/schemas/CaseStatusEnum"
+            "description": "Status of the case",
+            "allOf": [{ "$ref": "#/components/schemas/CaseStatusEnum" }]
           },
           "slug": {
             "type": "string",

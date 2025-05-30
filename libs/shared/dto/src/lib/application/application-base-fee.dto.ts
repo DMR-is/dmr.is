@@ -31,6 +31,7 @@ export class TransactionFeeCode {
     description: 'Type of fee',
     example: 'BASE',
     required: true,
+    enumName: 'AdvertFeeType',
     enum: AdvertFeeType,
     type: AdvertFeeType,
   })

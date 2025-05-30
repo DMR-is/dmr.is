@@ -56,6 +56,7 @@ export class Advert {
   readonly title!: string
 
   @ApiProperty({
+    enumName: 'AdvertStatus',
     enum: AdvertStatus,
     description: 'Status of the advert',
     required: true,
